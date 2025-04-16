@@ -1,0 +1,2 @@
+url,directory,include_files,exclude_files
+https://github.com/google/adk-docs,,docs/**/*.md, 
