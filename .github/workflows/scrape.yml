@@ -27,25 +27,22 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y miller
 
-    # Assumes you create scrape_script.sh (see below)
+    # Assumes you create scrape.sh (see below)
     - name: Make scrape script executable
-      run: chmod +x ./scrape_script.sh # Make sure the script is in your repo root or adjust path
+      run: chmod +x ./scrape.sh # Make sure the script is in your repo root or adjust path
 
     - name: Scrape sites using script
-      run: ./scrape_script.sh # Execute the external script
+      run: ./scrape.sh # Execute the external script
 
     - name: Commit and push if changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         # Check if the specific directory has changes
-        if ! git diff --quiet scraped_sites/; then
-          git add scraped_sites/
-          git commit -m "Update scraped sites"
+        if ! git diff --quiet repomix-output/; then
+          git add repomix-output/
+          git commit -m "Update repomix outputs"
           git push
         else
-          echo "No changes detected in scraped_sites."
+          echo "No changes detected in repomix-output."
         fi
-
-    - name: Run local scrape script
-      run: bash scrape_local.sh
