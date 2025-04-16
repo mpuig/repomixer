@@ -2,6 +2,13 @@
 
 This project automatically scrapes websites and repositories listed in a CSV file using [Repomix](https://www.npmjs.com/package/repomix) and GitHub Actions.
 
+## Prerequisites
+
+- Bash (with arrays and `set -o pipefail`)
+- Node.js 18+ (with `npx`)
+- Repomix (via `npx`)
+- Miller (`mlr`)
+
 ## How it Works
 
 1. The project reads URLs and configuration from a CSV file (`sites.csv`).
@@ -15,10 +22,12 @@ This project automatically scrapes websites and repositories listed in a CSV fil
 
 The `sites.csv` file should have the following columns:
 
-- `url`: The URL to scrape (required)
-- `directory`: A specific directory to scrape (optional)
-- `include_files`: Glob patterns for files to include (optional, comma-separated)
-- `exclude_files`: Glob patterns for files to exclude (optional, comma-separated)
+| Column           | Description                                          | Required |
+|------------------|------------------------------------------------------|:--------:|
+| `url`            | The URL or Git repo to scrape                        | Yes      |
+| `directory`      | Specific directory within a repo/site (optional)     | No       |
+| `include_files`  | Glob patterns to include (optional, comma-separated) | No       |
+| `exclude_files`  | Glob patterns to exclude (optional, comma-separated) | No       |
 
 Example:
 ```
