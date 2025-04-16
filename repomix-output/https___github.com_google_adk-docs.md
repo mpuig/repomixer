@@ -1,12 +1,9 @@
 This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
 
-================================================================
-Files
-================================================================
+<files>
+This section contains the contents of the repository's files.
 
-================
-File: docs/agents/workflow-agents/index.md
-================
+<file path="docs/agents/workflow-agents/index.md">
 # Workflow Agents
 
 This section introduces "*workflow agents*" - **specialized agents that control the execution flow of its sub-agents**.  
@@ -54,10 +51,9 @@ Workflow agents are essential when you need explicit control over how a series o
 * **Structure:** Allows you to build complex processes by composing agents within clear control structures.
 
 While the workflow agent manages the control flow deterministically, the sub-agents it orchestrates can themselves be any type of agent, including intelligent `LlmAgent` instances. This allows you to combine structured process control with flexible, LLM-powered task execution.
+</file>
 
-================
-File: docs/agents/workflow-agents/loop-agents.md
-================
+<file path="docs/agents/workflow-agents/loop-agents.md">
 # Loop agents
 
 ## The `LoopAgent`
@@ -104,10 +100,9 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
     ```py
     --8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py"
     ```
+</file>
 
-================
-File: docs/agents/workflow-agents/parallel-agents.md
-================
+<file path="docs/agents/workflow-agents/parallel-agents.md">
 # Parallel agents
 
 ## The `ParallelAgent`
@@ -159,10 +154,9 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
     ```py
     --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py"
     ```
+</file>
 
-================
-File: docs/agents/workflow-agents/sequential-agents.md
-================
+<file path="docs/agents/workflow-agents/sequential-agents.md">
 # Sequential agents
 
 ## The `SequentialAgent`
@@ -207,10 +201,9 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
     ```py
     --8<-- "examples/python/snippets/agents/workflow-agents/sequential_agent_code_development_agent.py"
     ```
+</file>
 
-================
-File: docs/agents/custom-agents.md
-================
+<file path="docs/agents/custom-agents.md">
 !!! warning "Advanced Concept"
 
     Building custom agents by directly implementing `_run_async_impl` provides powerful control but is more complex than using the predefined `LlmAgent` or standard `WorkflowAgent` types. We recommend understanding those foundational agent types first before tackling custom orchestration logic.
@@ -350,10 +343,9 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
     # Full runnable code for the StoryFlowAgent example
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py"
     ```
+</file>
 
-================
-File: docs/agents/index.md
-================
+<file path="docs/agents/index.md">
 # Agents
 
 In the Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
@@ -404,10 +396,9 @@ Now that you have an overview of the different agent types available in ADK, div
 * [**Custom Agents:**](custom-agents.md) Discover the principles of extending `BaseAgent` to build agents with unique logic and integrations tailored to your specific needs.
 * [**Multi-Agents:**](multi-agents.md) Understand how to combine different agent types to create sophisticated, collaborative systems capable of tackling complex problems.
 * [**Models:**](models.md) Learn about the different LLM integrations available and how to select the right model for your agents.
+</file>
 
-================
-File: docs/agents/llm-agents.md
-================
+<file path="docs/agents/llm-agents.md">
 # LLM Agent
 
 The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK, acting as the "thinking" part of your application. It leverages the power of a Large Language Model (LLM) for reasoning, understanding natural language, making decisions, generating responses, and interacting with tools.
@@ -592,10 +583,9 @@ While this page covers the core configuration of `LlmAgent`, several related con
 
 * **Callbacks:** Intercepting execution points (before/after model calls, before/after tool calls) using `before_model_callback`, `after_model_callback`, etc. See [Callbacks](../callbacks/types-of-callbacks.md).
 * **Multi-Agent Control:** Advanced strategies for agent interaction, including planning (`planner`), controlling agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`), and system-wide instructions (`global_instruction`). See [Multi-Agents](multi-agents.md).
+</file>
 
-================
-File: docs/agents/models.md
-================
+<file path="docs/agents/models.md">
 # Using Different Models with ADK
 
 The Agent Development Kit (ADK) is designed for flexibility, allowing you to
@@ -1141,10 +1131,9 @@ identifier string with the Vertex AI backend.
         # ... other agent parameters
     )
     ```
+</file>
 
-================
-File: docs/agents/multi-agents.md
-================
+<file path="docs/agents/multi-agents.md">
 # Multi-Agent Systems in ADK
 
 As agentic applications grow in complexity, structuring them as a single, monolithic agent can become challenging to develop, maintain, and reason about. The Agent Development Kit (ADK) supports building sophisticated applications by composing multiple, distinct `BaseAgent` instances into a **Multi-Agent System (MAS)**.
@@ -1616,10 +1605,9 @@ approval_workflow = SequentialAgent(
 ```
 
 These patterns provide starting points for structuring your multi-agent systems. You can mix and match them as needed to create the most effective architecture for your specific application.
+</file>
 
-================
-File: docs/artifacts/index.md
-================
+<file path="docs/artifacts/index.md">
 # Artifacts
 
 In ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
@@ -2085,10 +2073,9 @@ To use artifacts effectively and maintainably:
     * Using GCS lifecycle policies on the bucket.  
     * Building specific tools or administrative functions that utilize the `artifact_service.delete_artifact` method (note: delete is *not* exposed via context objects for safety).  
     * Carefully managing filenames to allow pattern-based deletion if needed.
+</file>
 
-================
-File: docs/callbacks/design-patterns-and-best-practices.md
-================
+<file path="docs/callbacks/design-patterns-and-best-practices.md">
 # Design Patterns and Best Practices for Callbacks
 
 Callbacks offer powerful hooks into the agent lifecycle. Here are common design patterns illustrating how to leverage them effectively in ADK, followed by best practices for implementation.
@@ -2166,10 +2153,9 @@ These patterns demonstrate typical ways to enhance or control agent behavior usi
 * **Use Correct Context Type:** Always use the specific context type provided (`CallbackContext` for agent/model, `ToolContext` for tools) to ensure access to the appropriate methods and properties.
 
 By applying these patterns and best practices, you can effectively use callbacks to create more robust, observable, and customized agent behaviors in ADK.
+</file>
 
-================
-File: docs/callbacks/index.md
-================
+<file path="docs/callbacks/index.md">
 # Callbacks: Observe, Customize, and Control Agent Behavior
 
 ## Introduction: What are Callbacks and Why Use Them?
@@ -2231,10 +2217,9 @@ This example demonstrates the common pattern for a guardrail using `before_model
 ```
 
 By understanding this mechanism of returning `None` versus returning specific objects, you can precisely control the agent's execution path, making callbacks an essential tool for building sophisticated and reliable agents with ADK.
+</file>
 
-================
-File: docs/callbacks/types-of-callbacks.md
-================
+<file path="docs/callbacks/types-of-callbacks.md">
 # Types of Callbacks
 
 The framework provides different types of callbacks that trigger at various stages of an agent's execution. Understanding when each callback fires and what context it receives is key to using them effectively.
@@ -2341,10 +2326,9 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
     ```py
     --8<-- "examples/python/snippets/callbacks/after_tool_callback.py"
     ```
+</file>
 
-================
-File: docs/context/index.md
-================
+<file path="docs/context/index.md">
 # Context
 
 ## What are Context
@@ -2836,10 +2820,9 @@ Setting `ctx.end_invocation = True` is a way to gracefully stop the entire reque
 *   **Start Simple:** Focus on `state` and basic artifact usage first. Explore authentication, memory, and advanced `InvocationContext` fields (like those for live streaming) as your needs become more complex.
 
 By understanding and effectively using these context objects, you can build more sophisticated, stateful, and capable agents with ADK.
+</file>
 
-================
-File: docs/deploy/agent-engine.md
-================
+<file path="docs/deploy/agent-engine.md">
 # Deploy to Vertex AI Agent Engine
 
 [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
@@ -3064,10 +3047,9 @@ remote_app.delete(force=True)
 ```
 
 `force=True` will also delete any child resources that were generated from the deployed agent, such as sessions.
+</file>
 
-================
-File: docs/deploy/cloud-run.md
-================
+<file path="docs/deploy/cloud-run.md">
 # Deploy to Cloud Run
 
 [Cloud Run](https://cloud.google.com/run)
@@ -3395,10 +3377,9 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
 
     * Set `"streaming": true` if you want to receive Server-Sent Events (SSE).
     * The response will contain the agent's execution events, including the final answer.
+</file>
 
-================
-File: docs/deploy/gke.md
-================
+<file path="docs/deploy/gke.md">
 # Deploy to GKE
 
 [GKE](https://cloud.google.com/gke) is Google Clouds managed Kubernetes service. It allows you to deploy and manage containerized applications using Kubernetes.
@@ -3762,10 +3743,9 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
 
     * Set `"streaming": true` if you want to receive Server-Sent Events (SSE).
     * The response will contain the agent's execution events, including the final answer.
+</file>
 
-================
-File: docs/deploy/index.md
-================
+<file path="docs/deploy/index.md">
 # Deploying Your Agent
 
 Once you've built and tested your agent using ADK,
@@ -3795,10 +3775,9 @@ Google Cloud that enables you to run your agent as a container-based
 application.
 
 Learn more about [deploying your agent to Cloud Run](cloud-run.md).
+</file>
 
-================
-File: docs/evaluate/index.md
-================
+<file path="docs/evaluate/index.md">
 # Why Evaluate Agents
 
 In traditional software development, unit tests and integration tests provide confidence that code functions as expected and remains stable through changes. These tests provide a clear "pass/fail" signal, guiding further development. However, LLM agents introduce a level of variability that makes traditional testing approaches insufficient.
@@ -4123,10 +4102,9 @@ Here are the details for each command line argument:
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`  
 * `CONFIG_FILE_PATH`: The path to the config file.  
 * `PRINT_DETAILED_RESULTS`: Prints detailed results on the console.
+</file>
 
-================
-File: docs/events/index.md
-================
+<file path="docs/events/index.md">
 # Events:
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
@@ -4470,10 +4448,9 @@ To use events effectively in your ADK applications:
 *   **Use Metadata:** Use `invocation_id` to correlate all events within a single user interaction. Use `event.id` to reference specific, unique occurrences.
 
 Treating events as structured messages with clear purposes for their content and actions is key to building, debugging, and managing complex agent behaviors in ADK.
+</file>
 
-================
-File: docs/get-started/about.md
-================
+<file path="docs/get-started/about.md">
 # Agent Development Kit (ADK)
 
 <p style="text-align:center;"> <b> Build, Evaluate and Deploy agents, seamlessly! </b> </p>
@@ -4577,10 +4554,9 @@ agentic applications:
 ## Get Started
 
 * Ready to build your first agent? [Try the quickstart](./quickstart.md)
+</file>
 
-================
-File: docs/get-started/index.md
-================
+<file path="docs/get-started/index.md">
 # Get Started
 
 Agent Development Kit (ADK) is designed to empower developers
@@ -4639,10 +4615,9 @@ agents, capable of handling complex tasks and workflows.
     [:octicons-arrow-right-24: More information](about.md)
 
 </div>
+</file>
 
-================
-File: docs/get-started/installation.md
-================
+<file path="docs/get-started/installation.md">
 # Installing ADK
 
 ## Create & activate virtual environment
@@ -4683,10 +4658,9 @@ pip show google-adk
 ## Next steps
 
 * Try creating your first agent with the [**Quickstart**](quickstart.md)
+</file>
 
-================
-File: docs/get-started/quickstart-streaming.md
-================
+<file path="docs/get-started/quickstart-streaming.md">
 # ADK Streaming Quickstart {#adk-streaming-quickstart}
 
 With this quickstart, you'll learn to create a simple agent and use ADK Streaming to enable voice and video communication with it that is low-latency and bidirectional. We will install ADK, set up a basic "Google Search" agent, try running the agent with Streaming with `adk web` tool, and then explain how to build a simple asynchronous web app by yourself using ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/).
@@ -5158,10 +5132,9 @@ Congratulations\! You've successfully created and interacted with your first Str
 ## Next steps
 
 * **Add audio/image modality:** with the Streaming, you can also have real-time communication with the agent using audio and image. We will add more samples for the multimodal support in the future. Stay tuned!
+</file>
 
-================
-File: docs/get-started/quickstart.md
-================
+<file path="docs/get-started/quickstart.md">
 # Quickstart
 
 This quickstart guides you through installing the Agent Development Kit (ADK),
@@ -5406,10 +5379,9 @@ You've successfully created and interacted with your first agent using ADK!
   interfaces.
 * **Understand Core Concepts:** Learn about
   [agents concepts](../agents/index.md).
+</file>
 
-================
-File: docs/get-started/testing.md
-================
+<file path="docs/get-started/testing.md">
 # Testing your Agents
 
 Before you deploy your agent, you should test it to ensure that it is working as
@@ -5583,10 +5555,9 @@ on to deploying your agent! Here are some ways you can deploy your agent:
 * Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
   you scale and manage your agents using serverless architecture on Google
   Cloud.
+</file>
 
-================
-File: docs/get-started/tutorial.md
-================
+<file path="docs/get-started/tutorial.md">
 # Build Your First Intelligent Agent Team: A Progressive Weather Bot with ADK
 
 <!-- Optional outer container for overall padding/spacing -->
@@ -7307,10 +7278,9 @@ Your Weather Bot team is a great starting point. Here are some ideas to further 
 ADK provides a robust foundation for building sophisticated LLM-powered applications. By mastering the concepts covered in this tutorial – tools, state, delegation, and callbacks – you are well-equipped to tackle increasingly complex agentic systems.
 
 Happy building!
+</file>
 
-================
-File: docs/guides/responsible-agents.md
-================
+<file path="docs/guides/responsible-agents.md">
 # Safety & Security for AI Agents
 
 ## Overview
@@ -7534,10 +7504,9 @@ However, identity and perimeters only provide coarse controls around agent actio
 #### Always Escape Model-Generated Content in UIs
 
 Care must be taken when agent output is visualized in a browser: if HTML or JS content isn't properly escaped in the UI, the text returned by the model could be executed, leading to data exfiltration. For example, an indirect prompt injection can trick a model to include an img tag tricking the browser to send the session content to a 3rd party site; or construct URLs that, if clicked, send data to external sites. Proper escaping of such content must ensure that model-generated text isn't interpreted as code by browsers.
+</file>
 
-================
-File: docs/runtime/index.md
-================
+<file path="docs/runtime/index.md">
 # Runtime
 
 ## What is runtime?
@@ -7794,10 +7763,9 @@ This primarily relates to how responses from the LLM are handled, especially whe
 * **Sync Callbacks/Tools:** The framework aims to handle both `async def` and regular `def` functions provided as tools or callbacks seamlessly. Long-running *synchronous* tools or callbacks, especially those performing blocking I/O, can potentially block the main `asyncio` event loop. The framework might use mechanisms like `asyncio.to_thread` to mitigate this by running such blocking synchronous code in a separate thread pool, preventing it from stalling other asynchronous tasks. CPU-bound synchronous code, however, will still block the thread it runs on.
 
 Understanding these behaviors helps you write more robust ADK applications and debug issues related to state consistency, streaming updates, and asynchronous execution.
+</file>
 
-================
-File: docs/sessions/index.md
-================
+<file path="docs/sessions/index.md">
 # Introduction to Conversational Context: Session, State, and Memory
 
 ## Why Context Matters
@@ -7855,10 +7823,9 @@ In the following sections, we'll dive deeper into each of these components:
 * **`MemoryService`**: Exploring options for storing and retrieving broader context.
 
 Understanding these concepts is fundamental to building agents that can engage in complex, stateful, and context-aware conversations.
+</file>
 
-================
-File: docs/sessions/memory.md
-================
+<file path="docs/sessions/memory.md">
 # Memory: Long-Term Knowledge with `MemoryService`
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations or access external knowledge bases? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
@@ -8031,10 +7998,9 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     # 6. Agent (LLM) receives the function response, processes the retrieved text.
     # 7. Agent generates the final answer (e.g., "Your favorite project is Project Alpha.").
     ```
+</file>
 
-================
-File: docs/sessions/session.md
-================
+<file path="docs/sessions/session.md">
 # Session: Tracking Individual Conversations
 
 Following our Introduction, let's dive into the `Session`. Think back to the idea of a "conversation thread." Just like you wouldn't start every text message from scratch, agents need context from the ongoing interaction. **`Session`** is the ADK object designed specifically to track and manage these individual conversation threads.
@@ -8162,10 +8128,9 @@ Here’s a simplified flow of how `Session` and `SessionService` work together d
 7. **End Conversation:** When the conversation is over, ideally your application calls `session_service.delete_session(...)` to clean up the stored session data.
 
 This cycle highlights how the `SessionService` ensures conversational continuity by managing the history and state associated with each `Session` object.
+</file>
 
-================
-File: docs/sessions/state.md
-================
+<file path="docs/sessions/state.md">
 # State: The Session's Scratchpad
 
 Within each `Session` (our conversation thread), the **`state`** attribute acts like the agent's dedicated scratchpad for that specific interaction. While `session.events` holds the full history, `session.state` is where the agent stores and updates dynamic details needed *during* the conversation.
@@ -8367,10 +8332,9 @@ Avoid directly modifying the `session.state` dictionary after retrieving a sessi
 * **Descriptive Keys & Prefixes:** Use clear names and appropriate prefixes (`user:`, `app:`, `temp:`, or none).  
 * **Shallow Structures:** Avoid deep nesting where possible.  
 * **Standard Update Flow:** Rely on `append_event`.
+</file>
 
-================
-File: docs/tools/authentication.md
-================
+<file path="docs/tools/authentication.md">
 # Authenticating with Tools
 
 ## Core Concepts
@@ -9023,10 +8987,9 @@ except Exception as e:
                   - code
                   - message
          ```
+</file>
 
-================
-File: docs/tools/built-in-tools.md
-================
+<file path="docs/tools/built-in-tools.md">
 # Built-in tools
 
 These built-in tools provide ready-to-use functionality such as Google Search or
@@ -9164,10 +9127,9 @@ root_agent = Agent(
     ],
 )
 ```
+</file>
 
-================
-File: docs/tools/function-tools.md
-================
+<file path="docs/tools/function-tools.md">
 # Function tools
 
 ## What are function tools?
@@ -9336,10 +9298,9 @@ The `AgentTool` class provides the following attributes for customizing its beha
 4. The `summary_agent` will process the text according to its instruction and generate a summary.  
 5. **The response from the `summary_agent` is then passed back to the `main_agent`.**  
 6. The `main_agent` can then take the summary and formulate its final response to the user (e.g., "Here's a summary of the text: ...")
+</file>
 
-================
-File: docs/tools/google-cloud-tools.md
-================
+<file path="docs/tools/google-cloud-tools.md">
 # Google Cloud Tools
 
 Google Cloud tools make it easier to connect your agents to Google Cloud’s
@@ -9721,10 +9682,9 @@ For more information, read more about the following features:
 * [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
 * [Authorized Invocations:](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations)  restrict access to use a tool based on the users Auth token
 * [OpenTelemetry](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/): get metrics and tracing from Toolbox with OpenTelemetry
+</file>
 
-================
-File: docs/tools/index.md
-================
+<file path="docs/tools/index.md">
 # Tools
 
 ## What is a Tool?
@@ -9965,10 +9925,9 @@ Here are key guidelines for defining effective tool functions:
     * **Decompose Complex Tasks:** Break down functions that perform multiple distinct logical steps into smaller, more focused tools. For instance, instead of a single `update_user_profile(profile: ProfileObject)` tool, consider separate tools like `update_user_name(name: str)`, `update_user_address(address: str)`, `update_user_preferences(preferences: list[str])`, etc. This makes it easier for the LLM to select and use the correct capability.
 
 By adhering to these guidelines, you provide the LLM with the clarity and structure it needs to effectively utilize your custom function tools, leading to more capable and reliable agent behavior.
+</file>
 
-================
-File: docs/tools/mcp-tools.md
-================
+<file path="docs/tools/mcp-tools.md">
 # Model Context Protocol Tools
 
  This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
@@ -10479,10 +10438,9 @@ When working with MCP and ADK, keep these points in mind:
 * [Model Context Protocol Documentation](https://modelcontextprotocol.io/ )
 * [MCP Specification](https://modelcontextprotocol.io/specification/)  
 * [MCP Python SDK & Examples](https://github.com/modelcontextprotocol/)
+</file>
 
-================
-File: docs/tools/openapi-tools.md
-================
+<file path="docs/tools/openapi-tools.md">
 # OpenAPI Integration
 
 ## Integrating REST APIs with OpenAPI
@@ -10573,10 +10531,9 @@ This example demonstrates generating tools from a simple Pet Store OpenAPI spec 
     ```python title="openapi_example.py"
     --8<-- "examples/python/snippets/tools/openapi_tool.py"
     ```
+</file>
 
-================
-File: docs/tools/third-party-tools.md
-================
+<file path="docs/tools/third-party-tools.md">
 # Third Party Tools
 
 ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
@@ -10718,10 +10675,9 @@ Here's the full code combining the steps above to create and run an agent using 
 ```py
 --8<-- "examples/python/snippets/tools/third-party/crewai_serper_search.py"
 ```
+</file>
 
-================
-File: docs/community.md
-================
+<file path="docs/community.md">
 # Community Resources
 
 Welcome! This page highlights resources maintained by the Agent Development Kit
@@ -10760,10 +10716,9 @@ Refer to the steps in the [Contributing Guide](contributing-guide.md) for more
 information on how to get involved!
 
 Thank you for your contributions to Agent Development Kit! ❤️
+</file>
 
-================
-File: docs/contributing-guide.md
-================
+<file path="docs/contributing-guide.md">
 Thank you for your interest in contributing to the Agent Development Kit (ADK)! We welcome contributions to both the core Python framework and its documentation.
 
 This guide provides information on how to get involved.
@@ -10853,10 +10808,9 @@ By contributing, you agree that your contributions will be licensed under the pr
 
 ## Questions?
 If you get stuck or have questions, feel free to open an issue on the relevant repository's issue tracker.
+</file>
 
-================
-File: docs/index.md
-================
+<file path="docs/index.md">
 ---
 hide:
   - toc
@@ -10975,9 +10929,6 @@ orchestration**.
     [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
 
 <div class="footer"></div>
+</file>
 
-
-
-================================================================
-End of Codebase
-================================================================
+</files>
