@@ -19,28 +19,26 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18' # Or your preferred Node.js version
+        node-version: '18'
 
-    # Optional but recommended: Install a robust CSV parser like Miller
     - name: Install Miller (mlr)
       run: |
         sudo apt-get update
         sudo apt-get install -y miller
 
-    # Assumes you create scrape.sh (see below)
     - name: Make scrape script executable
-      run: chmod +x ./scrape.sh # Make sure the script is in your repo root or adjust path
+      run: chmod +x ./scrape.sh 
 
     - name: Scrape sites using script
-      run: ./scrape.sh # Execute the external script
+      run: ./scrape.sh 
 
     - name: Commit and push if changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        # Check if the specific directory has changes
-        if ! git diff --quiet repomix-output/; then
-          git add repomix-output/
+        git add repomix-output/
+        git status
+        if ! git diff --cached --quiet; then
           git commit -m "Update repomix outputs"
           git push
         else
