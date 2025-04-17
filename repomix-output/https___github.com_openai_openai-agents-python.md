@@ -3,10 +3,213 @@ This file is a merged representation of a subset of the codebase, containing spe
 <files>
 This section contains the contents of the repository's files.
 
-<file path="docs/ja/voice/pipeline.md">
-# パイプラインとワークフロー
+<file path="docs/ja/models/index.md">
+---
+search:
+  exclude: true
+---
+# モデル
 
-[`VoicePipeline`][agents.voice.pipeline.VoicePipeline] は、エージェントワークフローを音声アプリに簡単に変換できるクラスです。実行したいワークフローを渡すと、パイプラインが入力音声の文字起こし、音声終了の検出、適切なタイミングでのワークフロー呼び出し、ワークフロー出力の音声化までを自動で処理します。
+Agents SDK には、標準で 2 種類の OpenAI モデルサポートが含まれています。
+
+- **推奨**: [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] — 新しい [Responses API](https://platform.openai.com/docs/api-reference/responses) を利用して OpenAI API を呼び出します。  
+- [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] — [Chat Completions API](https://platform.openai.com/docs/api-reference/chat) を利用して OpenAI API を呼び出します。
+
+## モデルの組み合わせ
+
+1 つのワークフロー内で、エージェントごとに異なるモデルを使用したい場合があります。たとえば、振り分けには小さく高速なモデルを、複雑なタスクには大きく高性能なモデルを使う、といった使い分けです。[`Agent`][agents.Agent] を設定する際は、以下のいずれかで特定のモデルを指定できます。
+
+1. OpenAI モデル名を直接渡す  
+2. 任意のモデル名と、それを `Model` インスタンスへマッピングできる [`ModelProvider`][agents.models.interface.ModelProvider] を渡す  
+3. [`Model`][agents.models.interface.Model] 実装を直接渡す  
+
+!!!note
+    SDK は [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] と [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] の両方の形に対応していますが、ワークフローごとに 1 つのモデル形を使用することを推奨します。2 つの形ではサポートする機能・ツールが異なるためです。どうしても混在させる場合は、利用するすべての機能が両方で利用可能であることを確認してください。
+
+```python
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
+import asyncio
+
+spanish_agent = Agent(
+    name="Spanish agent",
+    instructions="You only speak Spanish.",
+    model="o3-mini", # (1)!
+)
+
+english_agent = Agent(
+    name="English agent",
+    instructions="You only speak English",
+    model=OpenAIChatCompletionsModel( # (2)!
+        model="gpt-4o",
+        openai_client=AsyncOpenAI()
+    ),
+)
+
+triage_agent = Agent(
+    name="Triage agent",
+    instructions="Handoff to the appropriate agent based on the language of the request.",
+    handoffs=[spanish_agent, english_agent],
+    model="gpt-3.5-turbo",
+)
+
+async def main():
+    result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
+    print(result.final_output)
+```
+
+1. OpenAI モデル名を直接指定  
+2. [`Model`][agents.models.interface.Model] 実装を提供  
+
+エージェントで使用するモデルをさらに細かく設定したい場合は、`temperature` などのオプションを指定できる [`ModelSettings`][agents.models.interface.ModelSettings] を渡します。
+
+```python
+from agents import Agent, ModelSettings
+
+english_agent = Agent(
+    name="English agent",
+    instructions="You only speak English",
+    model="gpt-4o",
+    model_settings=ModelSettings(temperature=0.1),
+)
+```
+
+## 他の LLM プロバイダーの利用
+
+他の LLM プロバイダーは 3 通りの方法で利用できます（コード例は [こちら](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)）。
+
+1. [`set_default_openai_client`][agents.set_default_openai_client]  
+   OpenAI 互換の API エンドポイントを持つ場合に、`AsyncOpenAI` インスタンスをグローバルに LLM クライアントとして設定できます。`base_url` と `api_key` を設定するケースです。設定例は [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)。  
+
+2. [`ModelProvider`][agents.models.interface.ModelProvider]  
+   `Runner.run` レベルで「この実行中のすべてのエージェントにカスタムモデルプロバイダーを使う」と宣言できます。設定例は [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)。  
+
+3. [`Agent.model`][agents.agent.Agent.model]  
+   特定の Agent インスタンスにモデルを指定できます。エージェントごとに異なるプロバイダーを組み合わせられます。設定例は [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)。多くのモデルを簡単に使う方法として [LiteLLM 連携](./litellm.md) があります。  
+
+`platform.openai.com` の API キーを持たない場合は、`set_tracing_disabled()` でトレーシングを無効化するか、[別のトレーシングプロセッサー](../tracing.md) を設定することを推奨します。
+
+!!! note
+    これらの例では Chat Completions API/モデルを使用しています。多くの LLM プロバイダーがまだ Responses API をサポートしていないためです。もしプロバイダーが Responses API をサポートしている場合は、Responses の使用を推奨します。
+
+## 他の LLM プロバイダーでよくある問題
+
+### Tracing クライアントの 401 エラー
+
+トレースは OpenAI サーバーへアップロードされるため、OpenAI API キーがない場合にエラーになります。解決策は次の 3 つです。
+
+1. トレーシングを完全に無効化する: [`set_tracing_disabled(True)`][agents.set_tracing_disabled]  
+2. トレーシング用の OpenAI キーを設定する: [`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]  
+   このキーはトレースのアップロードにのみ使用され、[platform.openai.com](https://platform.openai.com/) のものが必要です。  
+3. OpenAI 以外のトレースプロセッサーを使う。詳しくは [tracing ドキュメント](../tracing.md#custom-tracing-processors) を参照してください。  
+
+### Responses API サポート
+
+SDK は既定で Responses API を使用しますが、多くの LLM プロバイダーはまだ対応していません。そのため 404 などのエラーが発生する場合があります。対処方法は 2 つです。
+
+1. [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api] を呼び出す  
+   環境変数 `OPENAI_API_KEY` と `OPENAI_BASE_URL` を設定している場合に機能します。  
+2. [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] を使用する  
+   コード例は [こちら](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/) にあります。  
+
+### structured outputs のサポート
+
+一部のモデルプロバイダーは [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) をサポートしていません。その場合、次のようなエラーが発生することがあります。
+
+```
+BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type' : value is not one of the allowed values ['text','json_object']", 'type': 'invalid_request_error'}}
+```
+
+これは一部プロバイダーの制限で、JSON 出力はサポートしていても `json_schema` を指定できません。現在修正に取り組んでいますが、JSON スキーマ出力をサポートしているプロバイダーを利用することを推奨します。そうでない場合、不正な JSON によりアプリが頻繁に壊れる可能性があります。
+</file>
+
+<file path="docs/ja/models/litellm.md">
+---
+search:
+  exclude: true
+---
+# LiteLLM 経由でのモデル利用
+
+!!! note
+
+    LiteLLM との統合は現在ベータ版です。特に小規模なモデルプロバイダーでは問題が発生する可能性があります。問題を見つけた場合は、[GitHub Issues](https://github.com/openai/openai-agents-python/issues) からご報告ください。迅速に対応いたします。
+
+[LiteLLM](https://docs.litellm.ai/docs/) は、1 つのインターフェースで 100 以上のモデルを利用できるライブラリです。Agents SDK では LiteLLM との統合により、任意の AI モデルを使用できます。
+
+## セットアップ
+
+`litellm` がインストールされていることを確認してください。オプションの `litellm` 依存関係グループをインストールすることで対応できます。
+
+```bash
+pip install "openai-agents[litellm]"
+```
+
+インストール後、任意のエージェントで [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel] を利用できます。
+
+## 例
+
+以下は動作する完全なサンプルです。実行するとモデル名と API キーの入力を求められます。例えば次のように入力できます。
+
+-   `openai/gpt-4.1` をモデル名に、OpenAI API キーを入力  
+-   `anthropic/claude-3-5-sonnet-20240620` をモデル名に、Anthropic API キーを入力  
+-   その他
+
+LiteLLM でサポートされているモデルの全リストは、[litellm providers docs](https://docs.litellm.ai/docs/providers) を参照してください。
+
+```python
+from __future__ import annotations
+
+import asyncio
+
+from agents import Agent, Runner, function_tool, set_tracing_disabled
+from agents.extensions.models.litellm_model import LitellmModel
+
+@function_tool
+def get_weather(city: str):
+    print(f"[debug] getting weather for {city}")
+    return f"The weather in {city} is sunny."
+
+
+async def main(model: str, api_key: str):
+    agent = Agent(
+        name="Assistant",
+        instructions="You only respond in haikus.",
+        model=LitellmModel(model=model, api_key=api_key),
+        tools=[get_weather],
+    )
+
+    result = await Runner.run(agent, "What's the weather in Tokyo?")
+    print(result.final_output)
+
+
+if __name__ == "__main__":
+    # First try to get model/api key from args
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", type=str, required=False)
+    parser.add_argument("--api-key", type=str, required=False)
+    args = parser.parse_args()
+
+    model = args.model
+    if not model:
+        model = input("Enter a model name for Litellm: ")
+
+    api_key = args.api_key
+    if not api_key:
+        api_key = input("Enter an API key for Litellm: ")
+
+    asyncio.run(main(model, api_key))
+```
+</file>
+
+<file path="docs/ja/voice/pipeline.md">
+---
+search:
+  exclude: true
+---
+# パイプラインと ワークフロー
+
+[`VoicePipeline`][agents.voice.pipeline.VoicePipeline] は、エージェント的なワークフローを音声アプリに簡単に変換できるクラスです。ワークフローを渡すと、パイプラインが入力音声の文字起こし、音声終了の検知、適切なタイミングでのワークフロー呼び出し、そしてワークフロー出力を音声へ変換する処理を担当します。
 
 ```mermaid
 graph LR
@@ -36,29 +239,31 @@ graph LR
 
 ## パイプラインの設定
 
-パイプラインを作成する際、以下の項目を設定できます。
+パイプラインを作成する際に、以下を設定できます。
 
-1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase]：新しい音声が文字起こしされるたびに実行されるコードです。
+1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase] ‐ 新しい音声が文字起こしされるたびに実行されるコード
 2. 使用する [`speech-to-text`][agents.voice.model.STTModel] および [`text-to-speech`][agents.voice.model.TTSModel] モデル
-3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig]：以下のような設定が可能です。
-    - モデルプロバイダー：モデル名をモデルにマッピングできます
-    - トレーシング：トレーシングの有効/無効、音声ファイルのアップロード有無、ワークフロー名、トレース ID など
-    - TTS および STT モデルの設定：プロンプト、言語、使用するデータ型など
+3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig] ‐ 以下のような内容を設定可能
+    - モデルプロバイダー。モデル名をモデルにマッピングします
+    - トレーシング。トレーシングの無効化、音声ファイルのアップロード可否、ワークフロー名、トレース ID など
+    - TTS と STT モデルの設定。プロンプト、言語、使用するデータ型など
 
 ## パイプラインの実行
 
-パイプラインは [`run()`][agents.voice.pipeline.VoicePipeline.run] メソッドで実行できます。音声入力は 2 つの形式で渡せます。
+パイプラインは [`run()`][agents.voice.pipeline.VoicePipeline.run] メソッドで実行できます。音声入力は次の 2 形式で渡せます。
 
-1. [`AudioInput`][agents.voice.input.AudioInput]：完全な音声トランスクリプトがある場合に使用し、その内容に対する結果のみを生成します。話者が話し終えたタイミングを検出する必要がない場合（例：事前録音音声や push-to-talk アプリなど、ユーザーが話し終えたことが明確な場合）に便利です。
-2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]：ユーザーが話し終えたタイミングを検出する必要がある場合に使用します。音声チャンクを検出ごとにプッシュでき、VoicePipeline が「アクティビティ検出」と呼ばれるプロセスを通じて、適切なタイミングでエージェントワークフローを自動実行します。
+1. [`AudioInput`][agents.voice.input.AudioInput]  
+   完全な音声トランスクリプトがある場合に使用し、その結果だけを生成したいときに便利です。話者の発話終了を検知する必要がないケース、たとえば録音済み音声やプッシュトゥートーク型アプリのようにユーザーが話し終えたタイミングが明確な場合に向いています。
+2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]  
+   ユーザーの発話終了検知が必要な場合に使用します。検出された音声チャンクを順次プッシュでき、音声パイプラインが「アクティビティ検知」と呼ばれるプロセスを通じて適切なタイミングでエージェント ワークフローを自動的に実行します。
 
 ## 結果
 
-VoicePipeline 実行の結果は [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult] です。これは、イベントが発生するたびにストリーミングで受け取れるオブジェクトです。いくつかの種類の [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent] があります。
+音声パイプライン実行の結果は [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult] です。これは発生したイベントをストリーミングで受け取れるオブジェクトです。いくつかの [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent] があり、主なものは次のとおりです。
 
-1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio]：音声チャンクを含みます。
-2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle]：ターンの開始や終了など、ライフサイクルイベントを通知します。
-3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError]：エラーイベントです。
+1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio] ‐ 音声チャンクを含みます
+2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] ‐ ターンの開始や終了などのライフサイクルイベントを通知します
+3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError] ‐ エラーイベントです
 
 ```python
 
@@ -78,15 +283,19 @@ async for event in result.stream():
 
 ### 割り込み
 
-Agents SDK は現在、[`StreamedAudioInput`][agents.voice.input.StreamedAudioInput] に対する組み込みの割り込みサポートを提供していません。そのため、検出された各ターンごとにワークフローの個別実行がトリガーされます。アプリケーション内で割り込みを処理したい場合は、[`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] イベントをリッスンできます。`turn_started` は新しいターンが文字起こしされ、処理が開始されたことを示します。`turn_ended` は該当ターンのすべての音声が送信された後にトリガーされます。これらのイベントを利用して、モデルがターンを開始した際に話者のマイクをミュートし、ターンに関連するすべての音声を送信し終えた後にアンミュートする、といった制御が可能です。
+Agents SDK は現在 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput] に対して、組み込みの割り込み処理をサポートしていません。そのため、検出された各ターンごとにワークフローが個別に実行されます。アプリケーション内で割り込みを処理したい場合は、[`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] イベントを監視できます。`turn_started` は新しいターンが文字起こしされ、処理が開始されたことを示します。`turn_ended` は該当ターンのすべての音声が送信された後にトリガーされます。たとえば、モデルがターンを開始した際にスピーカーのマイクをミュートし、そのターンに関連する音声をすべて送信し終えた後にアンミュートするといった制御に、これらのイベントを利用できます。
 </file>
 
 <file path="docs/ja/voice/quickstart.md">
+---
+search:
+  exclude: true
+---
 # クイックスタート
 
 ## 前提条件
 
-Agents SDK の[クイックスタート手順](../quickstart.md)に従い、仮想環境をセットアップしてください。その後、SDK からオプションの音声依存関係をインストールします。
+まずは [クイックスタート手順](../quickstart.md) に従って Agents SDK をセットアップし、仮想環境を作成してください。その後、SDK の音声関連のオプション依存関係をインストールします:
 
 ```bash
 pip install 'openai-agents[voice]'
@@ -94,11 +303,11 @@ pip install 'openai-agents[voice]'
 
 ## コンセプト
 
-主なコンセプトは [`VoicePipeline`][agents.voice.pipeline.VoicePipeline] です。これは 3 ステップのプロセスです：
+押さえておくべき主な概念は [`VoicePipeline`][agents.voice.pipeline.VoicePipeline] です。これは次の 3 ステップから成るプロセスです。
 
-1. 音声をテキストに変換する音声認識モデル（speech-to-text）を実行します。
-2. 通常はエージェント的なワークフローであるあなたのコードを実行し、結果を生成します。
-3. 結果のテキストを音声に戻す音声合成モデル（text-to-speech）を実行します。
+1. speech-to-text モデルを実行して音声をテキストに変換します。  
+2. 通常はエージェント的ワークフローであるあなたのコードを実行し、結果を生成します。  
+3. text-to-speech モデルを実行して結果のテキストを再び音声に変換します。
 
 ```mermaid
 graph LR
@@ -128,7 +337,7 @@ graph LR
 
 ## エージェント
 
-まず、いくつかのエージェントをセットアップしましょう。この SDK でエージェントを作成したことがあれば、馴染みがあるはずです。ここでは、複数のエージェント、ハンドオフ、ツールを用意します。
+まず、いくつかの エージェント をセットアップしましょう。この SDK でエージェントを構築したことがあれば、見覚えがあるはずです。ここでは複数の エージェント、ハンドオフ、そしてツールを用意します。
 
 ```python
 import asyncio
@@ -172,7 +381,7 @@ agent = Agent(
 
 ## 音声パイプライン
 
-[`SingleAgentVoiceWorkflow`][agents.voice.workflow.SingleAgentVoiceWorkflow] をワークフローとして使い、シンプルな音声パイプラインをセットアップします。
+[`SingleAgentVoiceWorkflow`][agents.voice.workflow.SingleAgentVoiceWorkflow] をワークフローとして、シンプルな音声パイプラインを構築します。
 
 ```python
 from agents.voice import SingleAgentVoiceWorkflow, VoicePipeline
@@ -204,7 +413,7 @@ async for event in result.stream():
 
 ```
 
-## すべてをまとめる
+## まとめて実行
 
 ```python
 import asyncio
@@ -275,38 +484,46 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-この例を実行すると、エージェントがあなたに話しかけます！[examples/voice/static](https://github.com/openai/openai-agents-python/tree/main/examples/voice/static) のコード例をチェックして、実際にエージェントと会話できるデモをご覧ください。
+この例を実行すると、エージェントがあなたに話しかけます。実際にエージェントと会話できるデモは、[examples/voice/static](https://github.com/openai/openai-agents-python/tree/main/examples/voice/static) をご覧ください。
 </file>
 
 <file path="docs/ja/voice/tracing.md">
+---
+search:
+  exclude: true
+---
 # トレーシング
 
-[エージェントのトレーシング](../tracing.md)と同様に、音声パイプラインも自動的にトレーシングされます。
+[エージェントのトレーシング](../tracing.md) と同様に、音声パイプラインも自動的にトレーシングされます。
 
-基本的なトレーシング情報については上記のトレーシングドキュメントをご参照いただけますが、さらに [`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] を使ってパイプラインのトレーシングを設定することも可能です。
+基本的なトレーシング情報については上記のドキュメントを参照してください。さらに、[`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] でパイプラインのトレーシング設定を行えます。
 
-主なトレーシング関連フィールドは以下の通りです：
+主なトレーシング関連フィールドは次のとおりです。
 
--   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：トレーシングを無効にするかどうかを制御します。デフォルトではトレーシングは有効です。
--   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]：トレースに音声の書き起こしなど、機密性の高いデータを含めるかどうかを制御します。これは特に音声パイプライン用であり、Workflow 内部で発生する内容には適用されません。
--   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]：トレースに音声データを含めるかどうかを制御します。
--   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]：トレースワークフローの名前です。
--   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]：トレースの `group_id` で、複数のトレースをリンクすることができます。
+-   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：トレーシングを無効にするかどうかを制御します。デフォルトではトレーシングは有効です。  
+-   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]：トレースに音声テキストなどの機微なデータを含めるかどうかを制御します。これは音声パイプライン専用であり、Workflow 内部で発生する処理には影響しません。  
+-   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]：トレースに音声データを含めるかどうかを制御します。  
+-   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]：トレース Workflow の名前です。  
+-   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]：複数のトレースを関連付けるための `group_id` です。  
 -   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：トレースに追加するメタデータです。
 </file>
 
 <file path="docs/ja/agents.md">
+---
+search:
+  exclude: true
+---
 # エージェント
 
-エージェントは、アプリケーションの中核となる基本コンポーネントです。エージェントとは、instructions とツールで構成された大規模言語モデル（LLM）のことです。
+エージェントはアプリの主要な構成ブロックです。エージェントは、大規模言語モデル ( LLM ) に instructions と tools を設定したものです。
 
 ## 基本設定
 
-エージェントで最も一般的に設定するプロパティは以下の通りです。
+エージェントで最も一般的に設定するプロパティは次のとおりです。
 
--   `instructions`：developer message や システムプロンプト(system prompt)とも呼ばれます。
--   `model`：どの LLM を使用するか、また `model_settings` で temperature や top_p などのモデル調整パラメーターを設定できます。
--   `tools`：エージェントがタスクを達成するために使用できるツールです。
+-   `instructions`: 開発者メッセージまたは system prompt とも呼ばれます。
+-   `model`: 使用する LLM と、temperature や top_p などのモデル調整パラメーターを指定する任意の `model_settings`。
+-   `tools`: エージェントがタスクを達成するために利用できるツール。
 
 ```python
 from agents import Agent, ModelSettings, function_tool
@@ -325,7 +542,7 @@ agent = Agent(
 
 ## コンテキスト
 
-エージェントは `context` 型に対して汎用的です。コンテキストは依存性注入ツールであり、`Runner.run()` に渡すオブジェクトです。これはすべてのエージェント、ツール、ハンドオフなどに渡され、エージェント実行時の依存関係や状態をまとめて管理します。任意の Python オブジェクトを context として指定できます。
+エージェントはその `context` 型について汎用的です。コンテキストは依存性注入の手段で、`Runner.run()` に渡すオブジェクトです。これはすべてのエージェント、ツール、ハンドオフなどに渡され、エージェント実行時の依存関係や状態をまとめて保持します。任意の Python オブジェクトをコンテキストとして渡せます。
 
 ```python
 @dataclass
@@ -343,7 +560,7 @@ agent = Agent[UserContext](
 
 ## 出力タイプ
 
-デフォルトでは、エージェントはプレーンテキスト（つまり `str`）出力を生成します。特定の型の出力をエージェントに生成させたい場合は、`output_type` パラメーターを使用できます。一般的な選択肢として [Pydantic](https://docs.pydantic.dev/) オブジェクトがありますが、Pydantic の [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/) でラップできる型（dataclasses、リスト、TypedDict など）であればサポートしています。
+デフォルトでは、エージェントはプレーンテキスト ( つまり `str` ) を出力します。特定の型で出力させたい場合は `output_type` パラメーターを使用します。一般的には [Pydantic](https://docs.pydantic.dev/) オブジェクトを利用しますが、Pydantic の [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/) でラップ可能な型であれば何でも対応します。たとえば dataclass、list、TypedDict などです。
 
 ```python
 from pydantic import BaseModel
@@ -364,11 +581,11 @@ agent = Agent(
 
 !!! note
 
-    `output_type` を指定すると、モデルは通常のプレーンテキスト応答の代わりに [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) を使用するよう指示されます。
+    `output_type` を渡すと、モデルは通常のプレーンテキスト応答の代わりに [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) を使用するよう指示されます。
 
 ## ハンドオフ
 
-ハンドオフは、エージェントが委任できるサブエージェントです。ハンドオフのリストを指定すると、エージェントは必要に応じてそれらに処理を委任できます。これは、単一タスクに特化したモジュール型のエージェントをオーケストレーションする強力なパターンです。詳細は [handoffs](handoffs.md) ドキュメントをご覧ください。
+ハンドオフは、エージェントが委譲できるサブエージェントです。ハンドオフのリストを渡しておくと、エージェントは必要に応じてそれらに処理を委譲できます。これにより、単一のタスクに特化したモジュール式エージェントを編成できる強力なパターンが実現します。詳細は [handoffs](handoffs.md) ドキュメントをご覧ください。
 
 ```python
 from agents import Agent
@@ -389,7 +606,7 @@ triage_agent = Agent(
 
 ## 動的 instructions
 
-多くの場合、エージェント作成時に instructions を指定できますが、関数を使って動的に instructions を提供することも可能です。この関数はエージェントと context を受け取り、プロンプトを返す必要があります。通常の関数と `async` 関数の両方が利用可能です。
+通常はエージェント作成時に instructions を指定しますが、関数を介して動的に instructions を提供することもできます。その関数はエージェントとコンテキストを受け取り、プロンプトを返す必要があります。同期関数と `async` 関数の両方に対応しています。
 
 ```python
 def dynamic_instructions(
@@ -404,17 +621,17 @@ agent = Agent[UserContext](
 )
 ```
 
-## ライフサイクルイベント（フック）
+## ライフサイクルイベント (hooks)
 
-エージェントのライフサイクルを監視したい場合があります。たとえば、イベントを記録したり、特定のイベント発生時にデータを事前取得したりしたい場合です。`hooks` プロパティを使ってエージェントのライフサイクルにフックできます。[`AgentHooks`][agents.lifecycle.AgentHooks] クラスをサブクラス化し、関心のあるメソッドをオーバーライドしてください。
+場合によっては、エージェントのライフサイクルを観察したいことがあります。たとえば、イベントをログに記録したり、特定のイベント発生時にデータを事前取得したりする場合です。`hooks` プロパティを使ってエージェントのライフサイクルにフックできます。[`AgentHooks`][agents.lifecycle.AgentHooks] クラスをサブクラス化し、関心のあるメソッドをオーバーライドしてください。
 
 ## ガードレール
 
-ガードレールを使うと、エージェントの実行と並行して user 入力のチェックやバリデーションを行えます。たとえば、user の入力が関連性のある内容かどうかをスクリーニングできます。詳細は [guardrails](guardrails.md) ドキュメントをご覧ください。
+ガードレールを使うと、エージェントの実行と並行してユーザー入力に対するチェックやバリデーションを実行できます。たとえば、ユーザーの入力内容が関連しているかをスクリーニングできます。詳細は [guardrails](guardrails.md) ドキュメントをご覧ください。
 
-## エージェントのクローン／コピー
+## エージェントの複製
 
-エージェントの `clone()` メソッドを使うことで、エージェントを複製し、任意のプロパティを変更できます。
+`clone()` メソッドを使用すると、エージェントを複製し、必要に応じて任意のプロパティを変更できます。
 
 ```python
 pirate_agent = Agent(
@@ -431,26 +648,30 @@ robot_agent = pirate_agent.clone(
 
 ## ツール使用の強制
 
-ツールのリストを指定しても、必ずしも LLM がツールを使用するとは限りません。[`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice] を設定することでツールの使用を強制できます。有効な値は以下の通りです。
+ツールの一覧を渡しても、LLM が必ずツールを使用するとは限りません。[`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice] を設定することでツール使用を強制できます。有効な値は次のとおりです。
 
-1. `auto`：LLM がツールを使うかどうかを自動で判断します。
-2. `required`：LLM にツールの使用を必須とします（どのツールを使うかは賢く選択されます）。
-3. `none`：LLM にツールを _使わない_ ことを要求します。
-4. 特定の文字列（例：`my_tool`）を指定すると、その特定のツールの使用を必須とします。
+1. `auto` — ツールを使用するかどうかを LLM が判断します。
+2. `required` — LLM にツール使用を必須化します ( ただし使用するツールは自動選択 )。
+3. `none` — LLM にツールを使用しないことを要求します。
+4. 特定の文字列 ( 例: `my_tool` ) — その特定のツールを LLM に使用させます。
 
 !!! note
 
-    無限ループを防ぐため、フレームワークはツール呼び出し後に自動的に `tool_choice` を "auto" にリセットします。この挙動は [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice] で設定可能です。無限ループは、ツールの execution results が LLM に送信され、`tool_choice` のために再度ツール呼び出しが発生し、これが繰り返されることで発生します。
+    無限ループを防ぐため、フレームワークはツール呼び出し後に `tool_choice` を自動的に "auto" にリセットします。この動作は [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice] で設定できます。無限ループが起こる理由は、ツールの結果が LLM に送られ、`tool_choice` により再びツール呼び出しが生成される、という流れが繰り返されるからです。
 
-    ツール呼び出し後にエージェントを完全に停止させたい場合（auto モードで継続させたくない場合）は、[`Agent.tool_use_behavior="stop_on_first_tool"`] を設定できます。これにより、ツールの出力がそのまま最終応答として使用され、以降の LLM 処理は行われません。
+    ツール呼び出し後にエージェントを完全に停止させたい場合 ( auto モードで続行させたくない場合 ) は、[`Agent.tool_use_behavior="stop_on_first_tool"`] を設定してください。これにより、ツールの出力を LL M の追加処理なしにそのまま最終応答として返します。
 </file>
 
 <file path="docs/ja/config.md">
+---
+search:
+  exclude: true
+---
 # SDK の設定
 
 ## API キーとクライアント
 
-デフォルトでは、SDK はインポート時に LLM リクエストやトレーシングのために `OPENAI_API_KEY` 環境変数を探します。アプリの起動前にこの環境変数を設定できない場合は、[set_default_openai_key()][agents.set_default_openai_key] 関数を使ってキーを設定できます。
+デフォルトでは、 SDK はインポートされた時点で LLM リクエストとトレーシングに使用する `OPENAI_API_KEY` 環境変数を探します。アプリ起動前にこの環境変数を設定できない場合は、 [set_default_openai_key()][agents.set_default_openai_key] 関数を利用してキーを設定できます。
 
 ```python
 from agents import set_default_openai_key
@@ -458,7 +679,7 @@ from agents import set_default_openai_key
 set_default_openai_key("sk-...")
 ```
 
-また、使用する OpenAI クライアントを設定することも可能です。デフォルトでは、SDK は環境変数または上記で設定したデフォルトキーを使って `AsyncOpenAI` インスタンスを作成します。これを変更したい場合は、[set_default_openai_client()][agents.set_default_openai_client] 関数を利用してください。
+また、使用する OpenAI クライアントを構成することも可能です。デフォルトでは、 SDK は環境変数または上記で設定したデフォルトキーを用いて `AsyncOpenAI` インスタンスを作成します。これを変更するには、 [set_default_openai_client()][agents.set_default_openai_client] 関数を使用します。
 
 ```python
 from openai import AsyncOpenAI
@@ -468,7 +689,7 @@ custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
 
-さらに、使用する OpenAI API をカスタマイズすることもできます。デフォルトでは OpenAI Responses API を使用していますが、[set_default_openai_api()][agents.set_default_openai_api] 関数を使って Chat Completions API を利用するように上書きできます。
+さらに、使用する OpenAI API をカスタマイズすることもできます。既定では OpenAI Responses API を利用します。これを Chat Completions API に変更するには、 [set_default_openai_api()][agents.set_default_openai_api] 関数を使用してください。
 
 ```python
 from agents import set_default_openai_api
@@ -478,7 +699,7 @@ set_default_openai_api("chat_completions")
 
 ## トレーシング
 
-トレーシングはデフォルトで有効になっています。デフォルトでは、上記のセクションで説明した OpenAI API キー（環境変数または設定したデフォルトキー）を使用します。トレーシング専用の API キーを設定したい場合は、[`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 関数を利用してください。
+トレーシングはデフォルトで有効になっています。前述の OpenAI API キー（環境変数または設定したデフォルトキー）が自動的に使用されます。トレーシングで使用する API キーを個別に設定したい場合は、 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 関数を利用してください。
 
 ```python
 from agents import set_tracing_export_api_key
@@ -486,7 +707,7 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-また、[`set_tracing_disabled()`][agents.set_tracing_disabled] 関数を使ってトレーシングを完全に無効化することもできます。
+トレーシングを完全に無効化するには、 [`set_tracing_disabled()`][agents.set_tracing_disabled] 関数を呼び出します。
 
 ```python
 from agents import set_tracing_disabled
@@ -496,9 +717,9 @@ set_tracing_disabled(True)
 
 ## デバッグログ
 
-SDK には、ハンドラーが設定されていない 2 つの Python ロガーがあります。デフォルトでは、警告やエラーは `stdout` に送信されますが、それ以外のログは抑制されます。
+ SDK にはハンドラーが設定されていない Python ロガーが 2 つあります。デフォルトでは、警告とエラーは `stdout` に出力されますが、それ以外のログは抑制されます。
 
-詳細なログ出力を有効にするには、[`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 関数を使用してください。
+詳細なログを有効にするには、 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 関数を使用します。
 
 ```python
 from agents import enable_verbose_stdout_logging
@@ -506,7 +727,7 @@ from agents import enable_verbose_stdout_logging
 enable_verbose_stdout_logging()
 ```
 
-また、ハンドラーやフィルター、フォーマッターなどを追加してログをカスタマイズすることも可能です。詳細は [Python ロギングガイド](https://docs.python.org/3/howto/logging.html) をご覧ください。
+必要に応じて、ハンドラー、フィルター、フォーマッターなどを追加してログをカスタマイズすることも可能です。詳しくは [Python ロギングガイド](https://docs.python.org/3/howto/logging.html) を参照してください。
 
 ```python
 import logging
@@ -525,17 +746,17 @@ logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 ```
 
-### ログ内の機微なデータ
+### ログに含まれる機微情報
 
-一部のログには機微なデータ（たとえば ユーザー データ）が含まれる場合があります。これらのデータのログ出力を無効にしたい場合は、以下の環境変数を設定してください。
+特定のログには機微情報（たとえば ユーザー データ）が含まれる場合があります。この情報が記録されるのを防ぎたい場合は、次の環境変数を設定してください。
 
-LLM の入力および出力のログ出力を無効にするには:
+LLM の入力および出力のログを無効にする:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 ```
 
-ツールの入力および出力のログ出力を無効にするには:
+ツールの入力および出力のログを無効にする:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
@@ -543,32 +764,36 @@ export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
 </file>
 
 <file path="docs/ja/context.md">
+---
+search:
+  exclude: true
+---
 # コンテキスト管理
 
-コンテキストは多義的な用語です。主に関心を持つべきコンテキストには、次の 2 つの大きなクラスがあります。
+コンテキストという言葉には複数の意味があります。ここでは主に 2 つのコンテキストについて説明します。
 
-1. コード内でローカルに利用可能なコンテキスト：これは、ツール関数の実行時や `on_handoff` のようなコールバック、ライフサイクルフックなどで必要となるデータや依存関係です。
-2. LLM に利用可能なコンテキスト：これは、LLM がレスポンスを生成する際に参照できるデータです。
+1. コード内でローカルに利用できるコンテキスト: ツール関数の実行時や `on_handoff` などのコールバック、ライフサイクルフックで必要となるデータや依存関係です。  
+2. LLM が参照できるコンテキスト: LLM がレスポンスを生成する際に見えるデータです。
 
 ## ローカルコンテキスト
 
-これは [`RunContextWrapper`][agents.run_context.RunContextWrapper] クラスおよびその中の [`context`][agents.run_context.RunContextWrapper.context] プロパティによって表現されます。仕組みは以下の通りです。
+ローカルコンテキストは [`RunContextWrapper`][agents.run_context.RunContextWrapper] クラスと、その中の [`context`][agents.run_context.RunContextWrapper.context] プロパティで表現されます。仕組みは次のとおりです。
 
-1. 任意の Python オブジェクトを作成します。一般的なパターンとしては、dataclass や Pydantic オブジェクトを使います。
-2. そのオブジェクトを各種 run メソッド（例：`Runner.run(..., **context=whatever**))`）に渡します。
-3. すべてのツール呼び出しやライフサイクルフックなどには、ラッパーオブジェクト `RunContextWrapper[T]` が渡されます。ここで `T` はコンテキストオブジェクトの型を表し、`wrapper.context` からアクセスできます。
+1. 任意の Python オブジェクトを作成します。一般的なパターンとして dataclass や Pydantic オブジェクトを使用します。  
+2. そのオブジェクトを各種 run メソッド（例: `Runner.run(..., **context=whatever** )`）に渡します。  
+3. すべてのツール呼び出しやライフサイクルフックには、ラッパーオブジェクト `RunContextWrapper[T]` が渡されます。ここで `T` はコンテキストオブジェクトの型で、`wrapper.context` からアクセスできます。
 
-**最も重要**な注意点：特定のエージェント実行において、すべてのエージェント、ツール関数、ライフサイクルなどは、同じ _型_ のコンテキストを使用する必要があります。
+**最重要ポイント**: あるエージェントの実行において、エージェント・ツール関数・ライフサイクルフックなどはすべて同じ _型_ のコンテキストを使用しなければなりません。
 
-コンテキストは以下のような用途で利用できます。
+コンテキストでは次のような用途が考えられます。
 
--   実行時のコンテキストデータ（例：ユーザー名/uid やユーザーに関するその他の情報など）
--   依存関係（例：ロガーオブジェクト、データフェッチャーなど）
+-   実行に関するデータ（例: ユーザー名 / uid やその他のユーザー情報）
+-   依存オブジェクト（例: ロガー、データフェッチャーなど）
 -   ヘルパー関数
 
-!!! danger "注意"
+!!! danger "Note"
 
-    コンテキストオブジェクトは **LLM には送信されません**。これは純粋にローカルなオブジェクトであり、読み書きやメソッド呼び出しが可能です。
+    コンテキストオブジェクトは LLM には送信されません。あくまでローカルのオブジェクトであり、読み書きやメソッド呼び出しが可能です。
 
 ```python
 import asyncio
@@ -606,106 +831,115 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-1. これはコンテキストオブジェクトです。ここでは dataclass を使用していますが、任意の型を利用できます。
-2. これはツールです。`RunContextWrapper[UserInfo]` を受け取っていることが分かります。ツールの実装はコンテキストから値を読み取ります。
-3. エージェントにはジェネリック型 `UserInfo` を指定しています。これにより、型チェッカーがエラーを検出できます（例えば、異なるコンテキスト型を受け取るツールを渡そうとした場合など）。
-4. コンテキストは `run` 関数に渡されます。
-5. エージェントは正しくツールを呼び出し、年齢を取得します。
+1. これがコンテキストオブジェクトです。ここでは dataclass を使っていますが、任意の型を使用できます。  
+2. これはツールです。`RunContextWrapper[UserInfo]` を受け取り、実装内でコンテキストを参照しています。  
+3. エージェントにジェネリック `UserInfo` を付与することで、型チェッカーが誤りを検出できます（たとえば別のコンテキスト型を受け取るツールを渡した場合など）。  
+4. `run` 関数にコンテキストを渡します。  
+5. エージェントはツールを正しく呼び出し、年齢を取得します。  
 
-## エージェント／LLM コンテキスト
+## エージェント / LLM コンテキスト
 
-LLM が呼び出される際、**唯一** 参照できるデータは会話履歴からのものです。つまり、LLM に新しいデータを利用させたい場合は、そのデータを履歴に含める必要があります。これを実現する方法はいくつかあります。
+LLM が呼び出されるとき、LLM が参照できるデータは会話履歴に含まれるものだけです。したがって、新しいデータを LLM に渡したい場合は、そのデータを履歴に含める形で提供する必要があります。方法はいくつかあります。
 
-1. エージェントの `instructions` に追加する。この方法は「システムプロンプト」や「開発者メッセージ」とも呼ばれます。システムプロンプトは静的な文字列でも、コンテキストを受け取って文字列を出力する動的な関数でも構いません。たとえば、ユーザー名や現在の日付など、常に有用な情報に適しています。
-2. `Runner.run` 関数を呼び出す際に `input` に追加する。この方法は `instructions` と似ていますが、[chain of command](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command) の下位メッセージとして追加できます。
-3. 関数ツールを通じて公開する。この方法は _オンデマンド_ のコンテキストに適しています。LLM が必要なタイミングでツールを呼び出し、データを取得できます。
-4. リトリーバルや Web 検索を利用する。これらはファイルやデータベース（リトリーバル）、または Web（Web 検索）から関連データを取得できる特別なツールです。関連するコンテキストデータに基づいたレスポンスを「グラウンディング」するのに役立ちます。
+1. Agent の `instructions` に追加する。いわゆる「system prompt」や「developer message」と呼ばれるものです。システムプロンプトは静的な文字列でも、コンテキストを受け取って文字列を返す動的な関数でも構いません。ユーザー名や現在の日付など、常に有用な情報を渡す際によく使われます。  
+2. `Runner.run` 呼び出し時の `input` に追加する。`instructions` と似ていますが、[chain of command](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command) の下位レイヤーにメッセージを配置できます。  
+3. 関数ツール経由で公開する。オンデマンドで取得するコンテキストに適しており、LLM が必要に応じてツールを呼び出してデータを取得します。  
+4. retrieval や web search を使う。これらは特別なツールで、ファイルやデータベースから関連データを取得する（retrieval）、もしくは Web から取得する（web search）ことができます。レスポンスを関連コンテキストで「グラウンディング」するのに有効です。
 </file>
 
 <file path="docs/ja/examples.md">
+---
+search:
+  exclude: true
+---
 # コード例
 
-SDK のさまざまなサンプル実装については、[リポジトリ](https://github.com/openai/openai-agents-python/tree/main/examples) のコード例セクションをご覧ください。これらのコード例は、異なるパターンや機能を示すいくつかのカテゴリーに整理されています。
+リポジトリの [examples セクション](https://github.com/openai/openai-agents-python/tree/main/examples) には、 SDK のさまざまなサンプル実装が用意されています。これらの例は、異なるパターンや機能を示す複数のカテゴリーに整理されています。
+
 
 ## カテゴリー
 
 - **[agent_patterns](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns):**  
-   このカテゴリーのコード例では、よく使われるエージェント設計パターンを紹介しています。
+  このカテゴリーの例では、一般的なエージェント設計パターンを紹介しています。
 
-    - 決定論的なワークフロー
-    - ツールとしてのエージェント
-    - エージェントの並列実行
+    - 決定論的ワークフロー  
+    - ツールとしてのエージェント  
+    - エージェントの並列実行  
 
 - **[basic](https://github.com/openai/openai-agents-python/tree/main/examples/basic):**  
-   これらのコード例では、SDK の基本的な機能を紹介しています。
+  SDK の基礎的な機能を示す例です。
 
-    - 動的なシステムプロンプト
-    - ストリーミング出力
-    - ライフサイクルイベント
+    - 動的なシステムプロンプト  
+    - ストリーミング出力  
+    - ライフサイクルイベント  
 
 - **[tool examples](https://github.com/openai/openai-agents-python/tree/main/examples/tools):**  
-   OpenAI がホストするツール（Web 検索やファイル検索など）の実装方法や、それらをエージェントに統合する方法を学べます。
+  Web 検索やファイル検索など、 OpenAI がホストするツールの実装方法と、それらをエージェントに統合する方法を学べます。
 
 - **[model providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers):**  
-   OpenAI 以外のモデルを SDK で利用する方法を紹介しています。
+  OpenAI 以外のモデルを SDK で利用する方法を探ります。
 
 - **[handoffs](https://github.com/openai/openai-agents-python/tree/main/examples/handoffs):**  
-   エージェントのハンドオフの実践的なコード例をご覧いただけます。
+  エージェントのハンドオフを実践的に示す例です。
 
 - **[mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp):**  
-   Model context protocol (MCP) を使ったエージェントの構築方法を学べます。
+  MCP を使ったエージェントの構築方法を学べます。
 
-- **[customer_service](https://github.com/openai/openai-agents-python/tree/main/examples/customer_service)** および **[research_bot](https://github.com/openai/openai-agents-python/tree/main/examples/research_bot):**  
-   実際のユースケースを示す、より発展的な 2 つのコード例です。
+- **[customer_service](https://github.com/openai/openai-agents-python/tree/main/examples/customer_service)** と **[research_bot](https://github.com/openai/openai-agents-python/tree/main/examples/research_bot):**  
+  より実践的なユースケースを示す、拡張された 2 つの例です。
 
-    - **customer_service**: 航空会社向けカスタマーサービスシステムの例。
-    - **research_bot**: シンプルなディープリサーチクローン。
+    - **customer_service**: 航空会社向けカスタマーサービスシステムの例  
+    - **research_bot**: シンプルなディープリサーチクローン  
 
 - **[voice](https://github.com/openai/openai-agents-python/tree/main/examples/voice):**  
-   TTS および STT モデルを利用した音声エージェントのコード例をご覧いただけます。
+  TTS と STT モデルを用いた音声エージェントの例をご覧ください。
 </file>
 
 <file path="docs/ja/guardrails.md">
+---
+search:
+  exclude: true
+---
 # ガードレール
 
-ガードレールは、エージェントと _並行して_ 実行され、ユーザー入力のチェックやバリデーションを行うことができます。例えば、非常に賢い（そのため遅くて高価な）モデルを使ってカスタマーリクエストに対応するエージェントがあるとします。悪意のあるユーザーがモデルに数学の宿題を手伝わせるようなリクエストを送ることは避けたいでしょう。そこで、ガードレールを高速かつ安価なモデルで実行できます。ガードレールが悪意のある利用を検知した場合、即座にエラーを発生させ、高価なモデルの実行を止めて時間やコストを節約できます。
+ガードレールは エージェント と _並列_ に実行され、 ユーザー入力 のチェックとバリデーションを行います。たとえば、顧客からのリクエストを支援するために非常に賢い (そのため遅く / 高価な) モデルを使うエージェントがあるとします。悪意のある ユーザー がモデルに数学の宿題を手伝わせようとするのは避けたいですよね。その場合、 高速 / 低コスト のモデルでガードレールを実行できます。ガードレールが悪意のある利用を検知した場合、即座にエラーを送出して高価なモデルの実行を停止し、時間と費用を節約できます。
 
-ガードレールには 2 種類あります：
+ガードレールには 2 種類あります。
 
-1. 入力ガードレール：最初のユーザー入力に対して実行されます
-2. 出力ガードレール：最終的なエージェント出力に対して実行されます
+1. Input ガードレールは最初の ユーザー入力 に対して実行されます  
+2. Output ガードレールは最終的なエージェント出力に対して実行されます  
 
-## 入力ガードレール
+## Input ガードレール
 
-入力ガードレールは 3 ステップで実行されます：
+Input ガードレールは 3 つのステップで実行されます。
 
-1. まず、ガードレールはエージェントに渡されたものと同じ入力を受け取ります。
-2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`InputGuardrailResult`][agents.guardrail.InputGuardrailResult] でラップされます。
-3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered] 例外が発生し、ユーザーへの適切な対応や例外処理が可能です。
-
-!!! Note
-
-    入力ガードレールはユーザー入力に対して実行されることを想定しているため、エージェントのガードレールは *最初* のエージェントでのみ実行されます。「なぜ `guardrails` プロパティがエージェントにあり、`Runner.run` に渡さないのか？」と疑問に思うかもしれません。これは、ガードレールが実際のエージェントに関連することが多いためです。異なるエージェントごとに異なるガードレールを実行するため、コードを同じ場所にまとめておくと可読性が向上します。
-
-## 出力ガードレール
-
-出力ガードレールも 3 ステップで実行されます：
-
-1. まず、ガードレールはエージェントに渡されたものと同じ入力を受け取ります。
-2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`OutputGuardrailResult`][agents.guardrail.OutputGuardrailResult] でラップされます。
-3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered] 例外が発生し、ユーザーへの適切な対応や例外処理が可能です。
+1. まず、ガードレールはエージェントに渡されたものと同じ入力を受け取ります。  
+2. 次に、ガードレール関数が実行され [`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`InputGuardrailResult`][agents.guardrail.InputGuardrailResult] でラップされます。  
+3. 最後に [`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered] 例外が送出されるので、 ユーザー への適切な応答や例外処理を行えます。  
 
 !!! Note
 
-    出力ガードレールは最終的なエージェント出力に対して実行されることを想定しているため、エージェントのガードレールは *最後* のエージェントでのみ実行されます。入力ガードレールと同様に、ガードレールが実際のエージェントに関連することが多いため、コードを同じ場所にまとめておくと可読性が向上します。
+    Input ガードレールは ユーザー入力 に対して実行されることを想定しているため、エージェントのガードレールが実行されるのはそのエージェントが *最初* のエージェントである場合だけです。「なぜ `guardrails` プロパティがエージェントにあり、 `Runner.run` に渡さないのか？」と思うかもしれません。ガードレールは実際の エージェント に密接に関連する場合が多く、エージェントごとに異なるガードレールを実行するため、コードを同じ場所に置くことで可読性が向上するからです。
 
-## トリップワイヤー
+## Output ガードレール
 
-入力または出力がガードレールに失敗した場合、ガードレールはトリップワイヤーでこれを通知できます。トリップワイヤーが発動したガードレールを検知した時点で、即座に `{Input,Output}GuardrailTripwireTriggered` 例外を発生させ、エージェントの実行を停止します。
+Output ガードレールは 3 つのステップで実行されます。
+
+1. まず、ガードレールはエージェントに渡されたものと同じ入力を受け取ります。  
+2. 次に、ガードレール関数が実行され [`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`OutputGuardrailResult`][agents.guardrail.OutputGuardrailResult] でラップされます。  
+3. 最後に [`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered] 例外が送出されるので、 ユーザー への適切な応答や例外処理を行えます。  
+
+!!! Note
+
+    Output ガードレールは最終的なエージェント出力に対して実行されることを想定しているため、エージェントのガードレールが実行されるのはそのエージェントが *最後* のエージェントである場合だけです。Input ガードレール同様、ガードレールは実際の エージェント に密接に関連するため、コードを同じ場所に置くことで可読性が向上します。
+
+## トリップワイヤ
+
+入力または出力がガードレールに失敗した場合、ガードレールはトリップワイヤを用いてそれを通知できます。ガードレールがトリップワイヤを発火したことを検知すると、ただちに `{Input,Output}GuardrailTripwireTriggered` 例外を送出してエージェントの実行を停止します。
 
 ## ガードレールの実装
 
-入力を受け取り、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を返す関数を用意する必要があります。この例では、内部でエージェントを実行することでこれを実現します。
+入力を受け取り、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を返す関数を用意する必要があります。次の例では、内部で エージェント を実行してこれを行います。
 
 ```python
 from pydantic import BaseModel
@@ -758,12 +992,12 @@ async def main():
         print("Math homework guardrail tripped")
 ```
 
-1. このエージェントをガードレール関数内で使用します。
-2. これはエージェントの入力やコンテキストを受け取り、結果を返すガードレール関数です。
-3. ガードレールの結果に追加情報を含めることができます。
-4. これはワークフローを定義する実際のエージェントです。
+1. この エージェント をガードレール関数内で使用します。  
+2. これはエージェントの入力 / コンテキストを受け取り、結果を返すガードレール関数です。  
+3. ガードレール結果に追加情報を含めることができます。  
+4. これはワークフローを定義する実際のエージェントです。  
 
-出力ガードレールも同様です。
+Output ガードレールも同様です。
 
 ```python
 from pydantic import BaseModel
@@ -816,28 +1050,32 @@ async def main():
         print("Math output guardrail tripped")
 ```
 
-1. これは実際のエージェントの出力型です。
-2. これはガードレールの出力型です。
-3. これはエージェントの出力を受け取り、結果を返すガードレール関数です。
+1. これは実際のエージェントの出力型です。  
+2. これはガードレールの出力型です。  
+3. これはエージェントの出力を受け取り、結果を返すガードレール関数です。  
 4. これはワークフローを定義する実際のエージェントです。
 </file>
 
 <file path="docs/ja/handoffs.md">
+---
+search:
+  exclude: true
+---
 # ハンドオフ
 
-ハンドオフは、エージェントが他のエージェントにタスクを委任できる仕組みです。これは、異なるエージェントがそれぞれ異なる分野に特化しているシナリオで特に有用です。たとえば、カスタマーサポートアプリでは、注文状況、返金、FAQ などのタスクをそれぞれ専門に扱うエージェントが存在する場合があります。
+ハンドオフを使用すると、エージェント がタスクを別の エージェント に委譲できます。これは、複数の エージェント がそれぞれ異なる分野を専門とするシナリオで特に便利です。たとえばカスタマーサポートアプリでは、注文状況、返金、 FAQ などのタスクを個別に担当する エージェント を用意できます。
 
-ハンドオフは LLM からはツールとして認識されます。たとえば、`Refund Agent` という名前のエージェントへのハンドオフがある場合、そのツール名は `transfer_to_refund_agent` となります。
+ハンドオフは LLM からはツールとして認識されます。そのため、`Refund Agent` という エージェント へのハンドオフであれば、ツール名は `transfer_to_refund_agent` になります。
 
 ## ハンドオフの作成
 
-すべてのエージェントは [`handoffs`][agents.agent.Agent.handoffs] パラメーターを持っており、これは直接 `Agent` を指定することも、ハンドオフをカスタマイズする `Handoff` オブジェクトを指定することもできます。
+すべての エージェント には [`handoffs`][agents.agent.Agent.handoffs] パラメーターがあり、直接 `Agent` を渡すことも、ハンドオフをカスタマイズする `Handoff` オブジェクトを渡すこともできます。
 
-Agents SDK で提供されている [`handoff()`][agents.handoffs.handoff] 関数を使ってハンドオフを作成できます。この関数では、ハンドオフ先のエージェントや、オプションのオーバーライドや入力フィルターを指定できます。
+Agents SDK が提供する [`handoff()`][agents.handoffs.handoff] 関数を使ってハンドオフを作成できます。この関数では、引き継ぎ先の エージェント を指定し、オーバーライドや入力フィルターをオプションで設定できます。
 
 ### 基本的な使い方
 
-シンプルなハンドオフの作成方法は以下の通りです。
+シンプルなハンドオフを作成する例を示します。
 
 ```python
 from agents import Agent, handoff
@@ -849,18 +1087,18 @@ refund_agent = Agent(name="Refund agent")
 triage_agent = Agent(name="Triage agent", handoffs=[billing_agent, handoff(refund_agent)])
 ```
 
-1. エージェントを直接指定する（例：`billing_agent`）ことも、`handoff()` 関数を使うこともできます。
+1. `billing_agent` のように エージェント を直接指定することも、`handoff()` 関数を使用することもできます。
 
 ### `handoff()` 関数によるハンドオフのカスタマイズ
 
-[`handoff()`][agents.handoffs.handoff] 関数では、さまざまなカスタマイズが可能です。
+[`handoff()`][agents.handoffs.handoff] 関数を使うと、ハンドオフを細かくカスタマイズできます。
 
--   `agent`: ハンドオフ先のエージェントです。
--   `tool_name_override`: デフォルトでは `Handoff.default_tool_name()` 関数が使われ、`transfer_to_<agent_name>` となります。これを上書きできます。
--   `tool_description_override`: デフォルトのツール説明（`Handoff.default_tool_description()`）を上書きできます。
--   `on_handoff`: ハンドオフが呼び出されたときに実行されるコールバック関数です。たとえば、ハンドオフが呼び出されたタイミングでデータ取得を開始するなどに便利です。この関数はエージェントコンテキストを受け取り、オプションで LLM が生成した入力も受け取れます。入力データは `input_type` パラメーターで制御します。
--   `input_type`: ハンドオフで期待される入力の型（オプション）です。
--   `input_filter`: 次のエージェントが受け取る入力をフィルタリングできます。詳細は下記をご覧ください。
+-   `agent`: ここで指定した エージェント に処理が引き渡されます。
+-   `tool_name_override`: デフォルトでは `Handoff.default_tool_name()` が使用され、`transfer_to_<agent_name>` という名前になります。これを上書きできます。
+-   `tool_description_override`: `Handoff.default_tool_description()` が返すデフォルトのツール説明を上書きします。
+-   `on_handoff`: ハンドオフ実行時に呼び出されるコールバック関数です。ハンドオフが呼ばれたタイミングでデータ取得を開始するなどに便利です。この関数は エージェント のコンテキストを受け取り、オプションで LLM が生成した入力も受け取れます。渡されるデータは `input_type` パラメーターで制御します。
+-   `input_type`: ハンドオフが受け取る入力の型（任意）。
+-   `input_filter`: 次の エージェント が受け取る入力をフィルタリングできます。詳細は後述します。
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -880,7 +1118,7 @@ handoff_obj = handoff(
 
 ## ハンドオフ入力
 
-状況によっては、LLM にハンドオフ時に何らかのデータを提供してほしい場合があります。たとえば、「エスカレーションエージェント」へのハンドオフを考えてみましょう。この場合、理由を提供して記録できるようにしたいことがあります。
+場合によっては、 LLM がハンドオフを呼び出す際に追加のデータを渡してほしいことがあります。たとえば「Escalation エージェント」へのハンドオフでは、ログ用に理由を渡してもらいたいかもしれません。
 
 ```python
 from pydantic import BaseModel
@@ -904,9 +1142,9 @@ handoff_obj = handoff(
 
 ## 入力フィルター
 
-ハンドオフが発生すると、新しいエージェントが会話を引き継ぎ、これまでの会話履歴全体を見ることができます。これを変更したい場合は、[`input_filter`][agents.handoffs.Handoff.input_filter] を設定できます。入力フィルターは、[`HandoffInputData`][agents.handoffs.HandoffInputData] を受け取り、新しい `HandoffInputData` を返す関数です。
+ハンドオフが発生すると、新しい エージェント が会話を引き継ぎ、これまでの会話履歴全体を閲覧できる状態になります。これを変更したい場合は [`input_filter`][agents.handoffs.Handoff.input_filter] を設定してください。入力フィルターは、[`HandoffInputData`][agents.handoffs.HandoffInputData] として渡される既存の入力を受け取り、新しい `HandoffInputData` を返す関数です。
 
-よくあるパターン（たとえば履歴からすべてのツール呼び出しを削除するなど）は、[`agents.extensions.handoff_filters`][] で実装されています。
+よくあるパターン（たとえば履歴からすべてのツール呼び出しを削除するなど）は [`agents.extensions.handoff_filters`][] に実装済みです。
 
 ```python
 from agents import Agent, handoff
@@ -920,11 +1158,11 @@ handoff_obj = handoff(
 )
 ```
 
-1. これにより、`FAQ agent` が呼び出されたときに履歴からすべてのツールが自動的に削除されます。
+1. これにより `FAQ agent` が呼ばれた際に、履歴からすべてのツール呼び出しが自動で削除されます。
 
 ## 推奨プロンプト
 
-LLM がハンドオフを正しく理解できるようにするため、エージェントにハンドオフに関する情報を含めることを推奨します。[`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] で推奨されるプレフィックスを利用するか、[`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] を呼び出して、推奨データをプロンプトに自動追加できます。
+LLM がハンドオフを正しく理解できるよう、エージェント にハンドオフに関する情報を含めることを推奨します。事前に用意したプレフィックス [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] を利用するか、[`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] を呼び出してプロンプトに推奨情報を自動で追加できます。
 
 ```python
 from agents import Agent
@@ -939,31 +1177,35 @@ billing_agent = Agent(
 </file>
 
 <file path="docs/ja/index.md">
+---
+search:
+  exclude: true
+---
 # OpenAI Agents SDK
 
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) は、非常に少ない抽象化で、軽量かつ使いやすいパッケージで エージェント 型 AI アプリを構築できる SDK です。これは、以前のエージェント向け実験プロジェクト [Swarm](https://github.com/openai/swarm/tree/main) の本番運用向けアップグレード版です。Agents SDK には、非常に少数の基本コンポーネントが含まれています。
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) は、抽象化をほとんど排した軽量で使いやすいパッケージにより、エージェントベースの AI アプリを構築できるようにします。これは、以前のエージェント向け実験プロジェクトである [Swarm](https://github.com/openai/swarm/tree/main) をプロダクションレベルへとアップグレードしたものです。Agents SDK にはごく少数の基本コンポーネントがあります。
 
--   **エージェント**： instructions と tools を備えた LLM
--   **ハンドオフ**：特定のタスクを他のエージェントに委任できる仕組み
--   **ガードレール**：エージェントへの入力を検証できる仕組み
+- **エージェント**: instructions と tools を備えた LLM  
+- **ハンドオフ**: エージェントが特定タスクを他のエージェントへ委任するしくみ  
+- **ガードレール**: エージェントへの入力を検証する機能  
 
-Python と組み合わせることで、これらの基本コンポーネントは tools と エージェント 間の複雑な関係を表現でき、急な学習コストなしに実用的なアプリケーションを構築できます。さらに、SDK には組み込みの **トレーシング** 機能があり、エージェント フローの可視化やデバッグ、評価、さらにはアプリケーション向けモデルのファインチューニングも可能です。
+Python と組み合わせることで、これらのコンポーネントはツールとエージェント間の複雑な関係を表現でき、学習コストを抑えつつ実際のアプリケーションを構築できます。さらに SDK には、エージェントフローを可視化・デバッグできる **トレーシング** が標準搭載されており、評価やファインチューニングにも活用可能です。
 
-## なぜ Agents SDK を使うのか
+## Agents SDK を使用する理由
 
 SDK には 2 つの設計原則があります。
 
-1. 使う価値のある十分な機能を持ちつつ、学習が容易なほど少ない基本コンポーネントで構成されていること。
-2. すぐに使い始められるが、動作を細かくカスタマイズできること。
+1. 使う価値のある十分な機能を備えつつ、学習が早いようコンポーネント数を絞る。  
+2. すぐに使い始められる初期設定で動作しつつ、挙動を細かくカスタマイズできる。  
 
-SDK の主な特徴は以下の通りです。
+主な機能は次のとおりです。
 
--   エージェントループ： tools の呼び出し、LLM への実行結果の送信、LLM が完了するまでのループ処理を自動で行います。
--   Python ファースト：新しい抽象化を学ぶ必要なく、Python の言語機能でエージェントのオーケストレーションや連携が可能です。
--   ハンドオフ：複数のエージェント間での調整や委任を実現する強力な機能です。
--   ガードレール：エージェントと並行して入力検証やチェックを実行し、チェックに失敗した場合は早期に処理を中断します。
--   関数ツール：任意の Python 関数を自動でスキーマ生成・Pydantic ベースのバリデーション付きツールに変換できます。
--   トレーシング：組み込みのトレーシングでワークフローの可視化・デバッグ・モニタリングができ、OpenAI の評価・ファインチューニング・蒸留ツールも利用可能です。
+- エージェントループ: ツール呼び出し、結果を LLM に送信、LLM が完了するまでのループを自動で処理。  
+- Python ファースト: 新しい抽象化を学ばずに、言語標準機能でエージェントをオーケストレーション。  
+- ハンドオフ: 複数エージェント間の協調と委譲を実現する強力な機能。  
+- ガードレール: エージェントと並列で入力バリデーションを実行し、失敗時に早期終了。  
+- 関数ツール: 任意の Python 関数をツール化し、自動スキーマ生成と Pydantic での検証を提供。  
+- トレーシング: フローの可視化・デバッグ・モニタリングに加え、OpenAI の評価・ファインチューニング・蒸留ツールを利用可能。  
 
 ## インストール
 
@@ -971,7 +1213,7 @@ SDK の主な特徴は以下の通りです。
 pip install openai-agents
 ```
 
-## Hello World サンプル
+## Hello World の例
 
 ```python
 from agents import Agent, Runner
@@ -986,7 +1228,7 @@ print(result.final_output)
 # Infinite loop's dance.
 ```
 
-(_実行する場合は、`OPENAI_API_KEY` 環境変数を設定してください_)
+(_これを実行する場合は、`OPENAI_API_KEY` 環境変数を設定してください_)
 
 ```bash
 export OPENAI_API_KEY=sk-...
@@ -994,24 +1236,28 @@ export OPENAI_API_KEY=sk-...
 </file>
 
 <file path="docs/ja/mcp.md">
+---
+search:
+  exclude: true
+---
 # Model context protocol (MCP)
 
-[Model context protocol](https://modelcontextprotocol.io/introduction)（通称 MCP）は、 LLM にツールやコンテキストを提供するための方法です。MCP ドキュメントからの引用です：
+[Model context protocol](https://modelcontextprotocol.io/introduction)（通称 MCP）は、 LLM にツールとコンテキストを提供するための仕組みです。MCP のドキュメントでは次のように説明されています。
 
-> MCP は、アプリケーションが LLM にコンテキストを提供する方法を標準化するオープンプロトコルです。MCP を AI アプリケーションのための USB-C ポートのようなものと考えてください。USB-C がさまざまな周辺機器やアクセサリにデバイスを接続する標準的な方法を提供するのと同様に、MCP は AI モデルをさまざまなデータソースやツールに接続する標準的な方法を提供します。
+> MCP は、アプリケーションが LLM にコンテキストを提供する方法を標準化するオープンプロトコルです。MCP は AI アプリケーションにとっての USB‑C ポートのようなものと考えてください。USB‑C が各種デバイスを周辺機器と接続するための標準化された方法を提供するのと同様に、MCP は AI モデルをさまざまなデータソースやツールと接続するための標準化された方法を提供します。
 
-Agents SDK は MCP をサポートしています。これにより、幅広い MCP サーバーを利用して、エージェントにツールを提供することができます。
+Agents SDK は MCP をサポートしており、これにより幅広い MCP サーバーをエージェントにツールとして追加できます。
 
 ## MCP サーバー
 
-現在、MCP 仕様では、使用するトランスポートメカニズムに基づいて 2 種類のサーバーが定義されています：
+現在、MCP 仕様では使用するトランスポート方式に基づき 2 種類のサーバーが定義されています。
 
-1. **stdio** サーバーは、アプリケーションのサブプロセスとして実行されます。ローカルで実行されるものと考えることができます。
-2. **HTTP over SSE** サーバーはリモートで実行されます。URL を介して接続します。
+1. **stdio** サーバー: アプリケーションのサブプロセスとして実行されます。ローカルで動かすイメージです。  
+2. **HTTP over SSE** サーバー: リモートで動作し、 URL 経由で接続します。
 
-これらのサーバーに接続するには、[`MCPServerStdio`][agents.mcp.server.MCPServerStdio] および [`MCPServerSse`][agents.mcp.server.MCPServerSse] クラスを使用できます。
+これらのサーバーへは [`MCPServerStdio`][agents.mcp.server.MCPServerStdio] と [`MCPServerSse`][agents.mcp.server.MCPServerSse] クラスを使用して接続できます。
 
-例えば、[公式 MCP ファイルシステムサーバー](https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem) を使用する場合は、次のようになります。
+たとえば、[公式 MCP filesystem サーバー](https://www.npmjs.com/package/@modelcontextprotocol/server-filesystem)を利用する場合は次のようになります。
 
 ```python
 async with MCPServerStdio(
@@ -1025,7 +1271,7 @@ async with MCPServerStdio(
 
 ## MCP サーバーの利用
 
-MCP サーバーはエージェントに追加できます。Agents SDK は、エージェントが実行されるたびに MCP サーバーの `list_tools()` を呼び出します。これにより、LLM は MCP サーバーのツールを認識できるようになります。LLM が MCP サーバーのツールを呼び出すと、SDK はそのサーバーの `call_tool()` を呼び出します。
+MCP サーバーはエージェントに追加できます。Agents SDK はエージェント実行時に毎回 MCP サーバーへ `list_tools()` を呼び出し、 LLM に MCP サーバーのツールを認識させます。LLM が MCP サーバーのツールを呼び出すと、SDK はそのサーバーへ `call_tool()` を実行します。
 
 ```python
 
@@ -1038,22 +1284,22 @@ agent=Agent(
 
 ## キャッシュ
 
-エージェントが実行されるたびに、MCP サーバーの `list_tools()` が呼び出されます。特にサーバーがリモートの場合、これはレイテンシの原因となることがあります。ツールリストを自動的にキャッシュするには、[`MCPServerStdio`][agents.mcp.server.MCPServerStdio] および [`MCPServerSse`][agents.mcp.server.MCPServerSse] の両方に `cache_tools_list=True` を渡すことができます。ツールリストが変更されないことが確実な場合のみ、この設定を行ってください。
+エージェントが実行されるたびに、MCP サーバーへ `list_tools()` が呼び出されます。サーバーがリモートの場合は特にレイテンシが発生します。ツール一覧を自動でキャッシュしたい場合は、[`MCPServerStdio`][agents.mcp.server.MCPServerStdio] と [`MCPServerSse`][agents.mcp.server.MCPServerSse] の両方に `cache_tools_list=True` を渡してください。ツール一覧が変更されないと確信できる場合のみ使用してください。
 
-キャッシュを無効化したい場合は、サーバーで `invalidate_tools_cache()` を呼び出すことができます。
+キャッシュを無効化したい場合は、サーバーで `invalidate_tools_cache()` を呼び出します。
 
-## エンドツーエンドの code examples
+## エンドツーエンドのコード例
 
-[examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) で、完全な動作 code examples をご覧いただけます。
+完全な動作例は [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) をご覧ください。
 
 ## トレーシング
 
-[トレーシング](../tracing.md) は、以下を含む MCP の操作を自動的に記録します：
+[トレーシング](./tracing.md) は MCP の操作を自動的にキャプチャします。具体的には次の内容が含まれます。
 
-1. MCP サーバーへのツールリスト取得の呼び出し
-2. 関数呼び出しに関する MCP 関連情報
+1. ツール一覧取得のための MCP サーバー呼び出し  
+2. 関数呼び出しに関する MCP 情報  
 
-![MCP トレーシングのスクリーンショット](../assets/images/mcp-tracing.jpg)
+![MCP Tracing Screenshot](../assets/images/mcp-tracing.jpg)
 </file>
 
 <file path="docs/ja/models.md">
@@ -1166,51 +1412,59 @@ BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type'
 </file>
 
 <file path="docs/ja/multi_agent.md">
-# 複数のエージェントのオーケストレーション
+---
+search:
+  exclude: true
+---
+# 複数エージェントのオーケストレーション
 
-オーケストレーションとは、アプリ内でのエージェントの流れを指します。どのエージェントが、どの順番で実行され、次に何が起こるかをどのように決定するかということです。エージェントをオーケストレーションする主な方法は 2 つあります。
+オーケストレーションとは、アプリ内でエージェントがどのように流れるかを指します。どのエージェントが、どの順序で実行され、その後どう決定するかを制御します。エージェントをオーケストレーションする主な方法は次の 2 つです。
 
-1. LLM に意思決定を任せる方法：これは LLM の知能を活用し、計画・推論・意思決定を行わせるものです。
-2. コードによるオーケストレーション：コードでエージェントの流れを制御する方法です。
+1.  LLM に判断させる:  LLM の知能を活用し、計画・推論を行い、その結果に基づいて次のステップを決定します。  
+2.  コードでオーケストレーションする: コード側でエージェントの流れを定義します。
 
-これらのパターンは組み合わせて使うこともできます。それぞれにメリット・デメリットがあり、以下で説明します。
+これらのパターンは組み合わせて使用できます。それぞれにトレードオフがあり、以下で説明します。
 
 ## LLM によるオーケストレーション
 
-エージェントとは、instructions、tools、handoffs を備えた LLM です。つまり、オープンエンドなタスクが与えられた場合、LLM は自律的にタスクへの取り組み方を計画し、tools を使ってアクションを実行・データを取得し、handoffs を使ってサブエージェントにタスクを委任できます。たとえば、リサーチエージェントには以下のような tools を持たせることができます。
+エージェントとは、 instructions、ツール、ハンドオフを備えた  LLM です。オープンエンドなタスクが与えられた場合、 LLM はタスクをどのように進めるかを自律的に計画し、ツールを使ってアクションやデータ取得を行い、ハンドオフでサブエージェントへタスクを委譲できます。たとえば、リサーチエージェントには次のようなツールを装備できます。
 
--   Web 検索でオンライン情報を探す
--   ファイル検索やリトリーバルで独自データや接続先を検索する
--   コンピュータ操作でコンピュータ上のアクションを実行する
--   コード実行でデータ分析を行う
--   計画やレポート作成などに特化したエージェントへの handoffs
+-   Web 検索でオンライン情報を取得する  
+-   ファイル検索で独自データや接続を調べる  
+-   コンピュータ操作でコンピュータ上のアクションを実行する  
+-   コード実行でデータ分析を行う  
+-   計画立案やレポート作成などに長けた専門エージェントへのハンドオフ  
 
-このパターンは、タスクがオープンエンドで LLM の知能に頼りたい場合に最適です。ここで重要なポイントは次のとおりです。
+このパターンはタスクがオープンエンドで、 LLM の知能に頼りたい場合に最適です。重要な戦術は次のとおりです。
 
-1. 良いプロンプトに投資しましょう。利用可能な tools、使い方、守るべきパラメーターを明確に伝えます。
-2. アプリをモニタリングし、改善を繰り返しましょう。問題が発生した箇所を確認し、プロンプトを改善します。
-3. エージェントに内省と改善を促しましょう。たとえばループで実行し、自己批評させたり、エラーメッセージを与えて改善させたりします。
-4. 何でもできる汎用エージェントではなく、1 つのタスクに特化したエージェントを用意しましょう。
-5. [evals](https://platform.openai.com/docs/guides/evals) に投資しましょう。これによりエージェントを訓練し、タスクの精度を向上させることができます。
+1.  良いプロンプトに投資する。利用可能なツール、使い方、守るべきパラメーターを明確に示します。  
+2.  アプリを監視し、改善を繰り返す。問題が起きた箇所を特定し、プロンプトを改善します。  
+3.  エージェントに内省と改善を許可する。たとえばループで実行し自己批評させたり、エラーメッセージを渡して修正させたりします。  
+4.  何でもこなす汎用エージェントより、特定タスクに特化したエージェントを用意します。  
+5.  [evals](https://platform.openai.com/docs/guides/evals) に投資する。これによりエージェントを訓練し、タスク性能を向上できます。  
 
 ## コードによるオーケストレーション
 
-LLM によるオーケストレーションは強力ですが、コードによるオーケストレーションは、速度・コスト・パフォーマンスの面でより決定的かつ予測可能になります。よく使われるパターンは次のとおりです。
+LLM によるオーケストレーションは強力ですが、コードでオーケストレーションすると速度・コスト・性能の面でより決定的かつ予測可能になります。よく使われるパターンは次のとおりです。
 
--   [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) を使い、コードで検査できる適切な形式のデータを生成する。たとえば、エージェントにタスクをいくつかのカテゴリーに分類させ、そのカテゴリーに応じて次のエージェントを選択することができます。
--   複数のエージェントを連鎖させ、一方の出力を次の入力に変換する。たとえば、ブログ記事の作成タスクを「リサーチ→アウトライン作成→記事執筆→批評→改善」といった一連のステップに分解できます。
--   タスクを実行するエージェントと、評価・フィードバックを行うエージェントを `while` ループで回し、評価者が基準を満たしたと判断するまで繰り返します。
--   複数のエージェントを並列で実行する（例：Python の基本コンポーネントである `asyncio.gather` を利用）。これは、互いに依存しない複数のタスクを高速に処理したい場合に有効です。
+-   [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) を使って、コード側で検査できる 適切な形式のデータ を生成する。たとえばエージェントにタスクをいくつかのカテゴリーに分類させ、そのカテゴリーに応じて次のエージェントを選択します。  
+-   あるエージェントの出力を次のエージェントの入力に変換して複数エージェントをチェーンする。ブログ記事執筆を「リサーチ → アウトライン作成 → 記事執筆 → 批評 → 改善」という一連のステップに分解できます。  
+-   タスクを実行するエージェントを `while` ループで回し、評価とフィードバックを行うエージェントと組み合わせ、評価者が基準を満たしたと判断するまで繰り返します。  
+-   `asyncio.gather` など Python の基本コンポーネントを用いて複数エージェントを並列実行する。互いに依存しない複数タスクがある場合に高速化できます。  
 
-[`examples/agent_patterns`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns) には、さまざまな code examples をご用意しています。
+[`examples/agent_patterns`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns) には多数のコード例があります。
 </file>
 
 <file path="docs/ja/quickstart.md">
+---
+search:
+  exclude: true
+---
 # クイックスタート
 
 ## プロジェクトと仮想環境の作成
 
-この作業は一度だけ行えば十分です。
+これは一度だけ行えば十分です。
 
 ```bash
 mkdir my_project
@@ -1220,7 +1474,7 @@ python -m venv .venv
 
 ### 仮想環境の有効化
 
-新しいターミナルセッションを開始するたびに、これを実行してください。
+新しいターミナルセッションを開始するたびに実行してください。
 
 ```bash
 source .venv/bin/activate
@@ -1240,9 +1494,9 @@ pip install openai-agents # or `uv add openai-agents`, etc
 export OPENAI_API_KEY=sk-...
 ```
 
-## 最初のエージェントを作成する
+## 最初のエージェントの作成
 
-エージェントは instructions、名前、およびオプションの設定（例： `model_config` ）で定義します。
+エージェントは instructions 、名前、`model_config` などのオプション設定で定義します。
 
 ```python
 from agents import Agent
@@ -1253,9 +1507,9 @@ agent = Agent(
 )
 ```
 
-## さらにエージェントを追加する
+## さらにエージェントを追加
 
-追加のエージェントも同様の方法で定義できます。 `handoff_descriptions` は、ハンドオフのルーティングを判断するための追加コンテキストを提供します。
+追加のエージェントも同様の方法で定義できます。`handoff_descriptions` はハンドオフのルーティングを判断するための追加コンテキストを提供します。
 
 ```python
 from agents import Agent
@@ -1273,9 +1527,9 @@ math_tutor_agent = Agent(
 )
 ```
 
-## ハンドオフを定義する
+## ハンドオフの定義
 
-各エージェントで、タスクを進めるために選択できる送信先ハンドオフオプションのインベントリを定義できます。
+各エージェントに対して、タスクを進める際に選択できるハンドオフ先の一覧を定義できます。
 
 ```python
 triage_agent = Agent(
@@ -1285,9 +1539,9 @@ triage_agent = Agent(
 )
 ```
 
-## エージェントのオーケストレーションを実行する
+## エージェントオーケストレーションの実行
 
-ワークフローが正しく動作し、トリアージエージェントが 2 つの専門エージェント間で正しくルーティングするか確認しましょう。
+ワークフローが実行され、トリアージエージェントが 2 つの専門エージェント間で正しくルーティングすることを確認しましょう。
 
 ```python
 from agents import Runner
@@ -1297,9 +1551,9 @@ async def main():
     print(result.final_output)
 ```
 
-## ガードレールを追加する
+## ガードレールの追加
 
-入力または出力に対して実行するカスタムガードレールを定義できます。
+入力または出力に対して実行されるカスタムガードレールを定義できます。
 
 ```python
 from agents import GuardrailFunctionOutput, Agent, Runner
@@ -1326,7 +1580,7 @@ async def homework_guardrail(ctx, agent, input_data):
 
 ## すべてをまとめる
 
-すべてを組み合わせて、ハンドオフと入力ガードレールを使ったワークフロー全体を実行してみましょう。
+ハンドオフと入力ガードレールを組み合わせて、ワークフロー全体を実行してみましょう。
 
 ```python
 from agents import Agent, InputGuardrail, GuardrailFunctionOutput, Runner
@@ -1384,82 +1638,91 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## トレースを確認する
+## トレースの表示
 
-エージェントの実行中に何が起こったかを確認するには、[OpenAI ダッシュボードの Trace viewer](https://platform.openai.com/traces) にアクセスして、エージェント実行のトレースを表示してください。
+エージェントの実行内容を確認するには、[OpenAI ダッシュボードの Trace viewer](https://platform.openai.com/traces) に移動してトレースを閲覧してください。
 
 ## 次のステップ
 
-より複雑なエージェントフローの構築方法を学びましょう：
+より複雑なエージェントフローの構築方法を学びましょう。
 
--   [エージェント](agents.md) の設定方法について学ぶ
--   [エージェントの実行](running_agents.md) について学ぶ
--   [tools](tools.md)、[guardrails](guardrails.md)、[models](models/index.md) について学ぶ
+-   [エージェント](agents.md) の設定方法を学ぶ。
+-   [エージェントの実行](running_agents.md) について学ぶ。
+-   [ツール](tools.md)、[ガードレール](guardrails.md)、[モデル](models/index.md) について学ぶ。
 </file>
 
 <file path="docs/ja/results.md">
+---
+search:
+  exclude: true
+---
 # 結果
 
-`Runner.run` メソッドを呼び出すと、以下のいずれかが返されます:
+`Runner.run` メソッドを呼び出すと、以下のいずれかが返されます。
 
--   `run` または `run_sync` を呼び出した場合は、[`RunResult`][agents.result.RunResult]
--   `run_streamed` を呼び出した場合は、[`RunResultStreaming`][agents.result.RunResultStreaming]
+-   `run` または `run_sync` を呼び出した場合は [`RunResult`][agents.result.RunResult]
+-   `run_streamed` を呼び出した場合は [`RunResultStreaming`][agents.result.RunResultStreaming]
 
-これらはどちらも [`RunResultBase`][agents.result.RunResultBase] を継承しており、ほとんどの有用な情報はここに含まれています。
+これらはどちらも [`RunResultBase`][agents.result.RunResultBase] を継承しており、ほとんどの有用な情報はここに格納されています。
 
 ## 最終出力
 
-[`final_output`][agents.result.RunResultBase.final_output] プロパティには、最後に実行されたエージェントの最終出力が格納されます。これは以下のいずれかです:
+[`final_output`][agents.result.RunResultBase.final_output] プロパティには、最後に実行されたエージェントの最終出力が格納されます。内容は以下のいずれかです。
 
--   最後のエージェントに `output_type` が定義されていない場合は `str`
--   エージェントに `output_type` が定義されている場合は、`last_agent.output_type` 型のオブジェクト
+-   `output_type` が定義されていない場合は `str`
+-   `output_type` が定義されている場合は `last_agent.output_type` 型のオブジェクト
 
 !!! note
 
-    `final_output` の型は `Any` です。ハンドオフのため、静的に型を決定することはできません。ハンドオフが発生した場合、どのエージェントが最後になるか分からないため、出力型の集合を静的に知ることができません。
+    `final_output` の型は `Any` です。ハンドオフが発生する可能性があるため、静的に型付けできません。ハンドオフが発生すると、どのエージェントでも最後になり得るため、可能性のある出力型を静的に特定できないのです。
 
 ## 次のターンへの入力
 
-[`result.to_input_list()`][agents.result.RunResultBase.to_input_list] を使うことで、実行結果を入力リストに変換できます。これは、あなたが提供した元の入力と、エージェント実行中に生成されたアイテムを連結したものです。これにより、あるエージェント実行の出力を別の実行に渡したり、ループで実行して毎回新しいユーザー入力を追加したりするのが簡単になります。
+[`result.to_input_list()`][agents.result.RunResultBase.to_input_list] を使用すると、エージェント実行中に生成されたアイテムを元の入力に連結した入力リストへ変換できます。これにより、あるエージェント実行の出力を別の実行へ渡したり、ループで実行して毎回新しいユーザー入力を追加したりすることが容易になります。
 
 ## 最後のエージェント
 
-[`last_agent`][agents.result.RunResultBase.last_agent] プロパティには、最後に実行されたエージェントが格納されます。アプリケーションによっては、次回ユーザーが何か入力した際にこれが役立つことがよくあります。たとえば、フロントラインのトリアージエージェントが言語特化エージェントにハンドオフする場合、最後のエージェントを保存しておき、次回ユーザーがエージェントにメッセージを送る際に再利用できます。
+[`last_agent`][agents.result.RunResultBase.last_agent] プロパティには、最後に実行されたエージェントが格納されています。アプリケーションによっては、次回ユーザーが入力する際にこれが役立つことがよくあります。例えば、フロントラインのトリアージ エージェントが言語専用のエージェントにハンドオフする場合、最後のエージェントを保存しておき、ユーザーが次にメッセージを送ったときに再利用できます。
 
 ## 新しいアイテム
 
-[`new_items`][agents.result.RunResultBase.new_items] プロパティには、実行中に生成された新しいアイテムが格納されます。これらのアイテムは [`RunItem`][agents.items.RunItem] です。RunItem は LLM によって生成された raw アイテムをラップします。
+[`new_items`][agents.result.RunResultBase.new_items] プロパティには、実行中に生成された新しいアイテムが含まれます。これらのアイテムは [`RunItem`][agents.items.RunItem] です。RunItem は、 LLM が生成した  raw  アイテムをラップします。
 
--   [`MessageOutputItem`][agents.items.MessageOutputItem] は LLM からのメッセージを示します。raw アイテムは生成されたメッセージです。
--   [`HandoffCallItem`][agents.items.HandoffCallItem] は LLM がハンドオフツールを呼び出したことを示します。raw アイテムは LLM からのツールコールアイテムです。
--   [`HandoffOutputItem`][agents.items.HandoffOutputItem] はハンドオフが発生したことを示します。raw アイテムはハンドオフツールコールへのツールレスポンスです。また、アイテムからソース/ターゲットエージェントにもアクセスできます。
--   [`ToolCallItem`][agents.items.ToolCallItem] は LLM がツールを呼び出したことを示します。
--   [`ToolCallOutputItem`][agents.items.ToolCallOutputItem] はツールが呼び出されたことを示します。raw アイテムはツールレスポンスです。また、アイテムからツール出力にもアクセスできます。
--   [`ReasoningItem`][agents.items.ReasoningItem] は LLM からの推論アイテムを示します。raw アイテムは生成された推論です。
+-   [`MessageOutputItem`][agents.items.MessageOutputItem] —  LLM からのメッセージを示します。  raw  アイテムは生成されたメッセージです。
+-   [`HandoffCallItem`][agents.items.HandoffCallItem] —  LLM がハンドオフ ツールを呼び出したことを示します。  raw  アイテムは  LLM からのツール呼び出しアイテムです。
+-   [`HandoffOutputItem`][agents.items.HandoffOutputItem] — ハンドオフが発生したことを示します。  raw  アイテムはハンドオフ ツール呼び出しに対するツール応答です。また、アイテムから送信元 / 送信先エージェントにもアクセスできます。
+-   [`ToolCallItem`][agents.items.ToolCallItem] —  LLM がツールを呼び出したことを示します。
+-   [`ToolCallOutputItem`][agents.items.ToolCallOutputItem] — ツールが呼び出されたことを示します。  raw  アイテムはツール応答です。また、アイテムからツール出力にもアクセスできます。
+-   [`ReasoningItem`][agents.items.ReasoningItem] —  LLM からの推論アイテムを示します。  raw  アイテムは生成された推論内容です。
 
 ## その他の情報
 
 ### ガードレール結果
 
-[`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] および [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] プロパティには、ガードレールの結果（存在する場合）が格納されます。ガードレール結果には、ログや保存に役立つ有用な情報が含まれることがあるため、これらを利用できるようにしています。
+[`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] と [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] プロパティには、ガードレールの結果が存在する場合に格納されます。ガードレール結果には、ログや保存を行いたい有用な情報が含まれることがあるため、これらを参照できるようにしています。
 
 ### raw レスポンス
 
-[`raw_responses`][agents.result.RunResultBase.raw_responses] プロパティには、LLM によって生成された [`ModelResponse`][agents.items.ModelResponse] が格納されます。
+[`raw_responses`][agents.result.RunResultBase.raw_responses] プロパティには、 LLM が生成した [`ModelResponse`][agents.items.ModelResponse] が格納されます。
 
 ### 元の入力
 
-[`input`][agents.result.RunResultBase.input] プロパティには、`run` メソッドに提供した元の入力が格納されます。ほとんどの場合これは必要ありませんが、必要な場合のために利用可能です。
+[`input`][agents.result.RunResultBase.input] プロパティには、`run` メソッドに渡した元の入力が格納されます。ほとんどの場合は必要ありませんが、必要に応じて参照できるように用意されています。
 </file>
 
 <file path="docs/ja/running_agents.md">
+---
+search:
+  exclude: true
+---
 # エージェントの実行
 
-エージェントは [`Runner`][agents.run.Runner] クラスを使って実行できます。3 つのオプションがあります。
+`Runner` クラス [`Runner`][agents.run.Runner] を使用して エージェント を実行できます。方法は 3 つあります。
 
-1. [`Runner.run()`][agents.run.Runner.run]：非同期で実行され、[`RunResult`][agents.result.RunResult] を返します。
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同期メソッドで、内部的には `.run()` を実行します。
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：非同期で実行され、[`RunResultStreaming`][agents.result.RunResultStreaming] を返します。LLM をストリーミングモードで呼び出し、受信したイベントをリアルタイムでストリームします。
+1. 非同期で実行し、[`RunResult`][agents.result.RunResult] を返す [`Runner.run()`][agents.run.Runner.run]  
+2. 同期メソッドで、内部的には `.run()` を呼び出す [`Runner.run_sync()`][agents.run.Runner.run_sync]  
+3. 非同期で実行し、[`RunResultStreaming`][agents.result.RunResultStreaming] を返す [`Runner.run_streamed()`][agents.run.Runner.run_streamed]  
+   LLM をストリーミングモードで呼び出し、受信したイベントを逐次 ストリーミング します。
 
 ```python
 from agents import Agent, Runner
@@ -1474,53 +1737,52 @@ async def main():
     # Infinite loop's dance.
 ```
 
-詳細は [results guide](results.md) をご覧ください。
+詳細は [結果ガイド](results.md) を参照してください。
 
 ## エージェントループ
 
-`Runner` の run メソッドを使用する際、開始するエージェントと入力を渡します。入力は文字列（ユーザーメッセージと見なされます）または入力アイテムのリスト（OpenAI Responses API のアイテム）を指定できます。
+`Runner` の run メソッドを使用する際は、開始 エージェント と入力を渡します。入力は文字列（ユーザー メッセージと見なされます）または入力項目のリスト（OpenAI Responses API の項目）です。
 
-runner は次のようなループを実行します。
+Runner は以下のループを実行します。
 
-1. 現在のエージェントと入力で LLM を呼び出します。
-2. LLM が出力を生成します。
-    1. LLM が `final_output` を返した場合、ループは終了し、結果を返します。
-    2. LLM がハンドオフを行った場合、現在のエージェントと入力を更新し、ループを再実行します。
-    3. LLM がツール呼び出しを生成した場合、それらのツール呼び出しを実行し、結果を追加してループを再実行します。
-3. 渡された `max_turns` を超えた場合、[`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 例外を発生させます。
+1. 現在の エージェント と現在の入力で LLM を呼び出します。  
+2. LLM が出力を生成します。  
+    1. `final_output` が返された場合、ループを終了して結果を返します。  
+    2. ハンドオフ が発生した場合、現在の エージェント と入力を更新し、ループを再実行します。  
+    3. ツール呼び出し がある場合、それらを実行し、結果を追加してループを再実行します。  
+3. 指定した `max_turns` を超えた場合、[`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 例外を送出します。
 
 !!! note
-
-    LLM の出力が「final output」と見なされるルールは、希望する型のテキスト出力が生成され、ツール呼び出しがない場合です。
+    LLM の出力が「最終出力」と見なされる条件は、望ましい型のテキスト出力であり、ツール呼び出しがないことです。
 
 ## ストリーミング
 
-ストリーミングを利用すると、LLM の実行中にストリーミングイベントを受け取ることができます。ストリームが完了すると、[`RunResultStreaming`][agents.result.RunResultStreaming] に実行に関するすべての情報（新たに生成されたすべての出力を含む）が格納されます。ストリーミングイベントは `.stream_events()` で取得できます。詳細は [streaming guide](streaming.md) をご覧ください。
+ストリーミング を使用すると、LLM の実行中に ストリーミング イベントを受け取れます。ストリーム完了後、[`RunResultStreaming`][agents.result.RunResultStreaming] には実行に関する完全な情報（新しく生成されたすべての出力を含む）が格納されます。`.stream_events()` を呼び出して ストリーミング イベントを取得できます。詳しくは [ストリーミングガイド](streaming.md) をご覧ください。
 
-## Run config
+## Run 設定
 
-`run_config` パラメーターでは、エージェント実行のグローバル設定をいくつか構成できます。
+`run_config` パラメーターにより、エージェント実行のグローバル設定を行えます。
 
--   [`model`][agents.run.RunConfig.model]：各エージェントの `model` 設定に関わらず、グローバルで使用する LLM モデルを指定できます。
--   [`model_provider`][agents.run.RunConfig.model_provider]：モデル名を検索するためのモデルプロバイダーで、デフォルトは OpenAI です。
--   [`model_settings`][agents.run.RunConfig.model_settings]：エージェント固有の設定を上書きします。たとえば、グローバルな `temperature` や `top_p` を設定できます。
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]：すべての実行に含める入力または出力ガードレールのリストです。
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：すべてのハンドオフに適用するグローバルな入力フィルターです（ハンドオフに既にフィルターがない場合）。入力フィルターを使うと、新しいエージェントに送信する入力を編集できます。詳細は [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] のドキュメントをご覧ください。
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：実行全体の [トレーシング](tracing.md) を無効にできます。
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：トレースに LLM やツール呼び出しの入出力など、機密性のあるデータを含めるかどうかを設定します。
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]：実行のトレーシングワークフロー名、トレース ID、トレースグループ ID を設定します。少なくとも `workflow_name` の設定を推奨します。グループ ID は複数の実行にまたがるトレースをリンクするためのオプション項目です。
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：すべてのトレースに含めるメタデータです。
+- [`model`][agents.run.RunConfig.model]: 各 Agent の `model` 設定に関わらず使用するグローバル LLM モデルを指定します。  
+- [`model_provider`][agents.run.RunConfig.model_provider]: モデル名を解決する モデルプロバイダー。デフォルトは OpenAI です。  
+- [`model_settings`][agents.run.RunConfig.model_settings]: エージェント固有設定を上書きします。例としてグローバル `temperature` や `top_p` の設定など。  
+- [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: すべての実行に適用する入力 / 出力 ガードレール のリスト。  
+- [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: ハンドオフ に入力フィルターが設定されていない場合に適用されるグローバル入力フィルター。新しい エージェント へ送信される入力を編集できます。詳細は [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] を参照してください。  
+- [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 実行全体の [トレーシング](tracing.md) を無効化します。  
+- [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: トレースに LLM やツール呼び出しの入出力など、機微なデータを含めるかどうかを設定します。  
+- [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 実行のトレーシング ワークフロー名、トレース ID、トレース グループ ID を設定します。少なくとも `workflow_name` の設定を推奨します。`group_id` を設定すると、複数の実行にまたがるトレースをリンクできます。  
+- [`trace_metadata`][agents.run.RunConfig.trace_metadata]: すべてのトレースに付与するメタデータ。  
 
-## 会話・チャットスレッド
+## 会話 / チャットスレッド
 
-いずれかの run メソッドを呼び出すと、1 つまたは複数のエージェント（および 1 つまたは複数の LLM 呼び出し）が実行されますが、チャット会話における 1 回の論理的なターンを表します。例：
+いずれかの run メソッドを呼び出すと、1 つ以上の エージェント が実行され（つまり 1 つ以上の LLM 呼び出しが行われ）、チャット会話の 1 つの論理ターンを表します。例:
 
-1. ユーザーのターン：ユーザーがテキストを入力
-2. Runner の実行：最初のエージェントが LLM を呼び出し、ツールを実行し、2 番目のエージェントにハンドオフ、2 番目のエージェントがさらにツールを実行し、出力を生成
+1. ユーザーターン: ユーザー がテキストを入力  
+2. Runner 実行: 最初の エージェント が LLM を呼び出し、ツールを実行し、2 番目の エージェント へハンドオフ。2 番目の エージェント がさらにツールを実行し、最終出力を生成。  
 
-エージェントの実行が終わったら、ユーザーに何を表示するか選択できます。たとえば、エージェントが生成したすべての新しいアイテムをユーザーに見せることも、最終出力だけを見せることもできます。いずれの場合も、ユーザーが追加の質問をした場合は、再度 run メソッドを呼び出せます。
+エージェント実行の終了時に、ユーザー に何を表示するかは自由です。たとえば、エージェント が生成したすべての新しい項目を表示する、または最終出力のみを表示する等です。いずれの場合でも、ユーザー がフォローアップ質問をしたら、再度 run メソッドを呼び出せます。
 
-次のターンの入力を取得するには、ベースの [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] メソッドを使用できます。
+次ターンの入力は、基底クラス [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] を使用して取得できます。
 
 ```python
 async def main():
@@ -1541,27 +1803,31 @@ async def main():
 
 ## 例外
 
-SDK は特定のケースで例外を発生させます。全リストは [`agents.exceptions`][] にあります。概要は以下の通りです。
+特定の状況で SDK は例外を送出します。完全な一覧は [`agents.exceptions`][] にあります。概要は以下のとおりです。
 
--   [`AgentsException`][agents.exceptions.AgentsException]：SDK で発生するすべての例外の基底クラスです。
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：run メソッドに渡した `max_turns` を超えた場合に発生します。
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：モデルが不正な出力（例：不正な JSON や存在しないツールの使用）を生成した場合に発生します。
--   [`UserError`][agents.exceptions.UserError]：SDK を使用する際に、あなた（SDK を使ってコードを書く人）がエラーを起こした場合に発生します。
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：[ガードレール](guardrails.md) が作動した場合に発生します。
+- [`AgentsException`][agents.exceptions.AgentsException]: SDK が送出するすべての例外の基底クラス  
+- [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 実行が `max_turns` を超えた場合に送出  
+- [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: モデルが不正な出力（例: JSON 形式違反、存在しないツールの呼び出しなど）を生成した場合に送出  
+- [`UserError`][agents.exceptions.UserError]: SDK の使用方法に誤りがある場合に送出  
+- [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: [ガードレール](guardrails.md) が発火した場合に送出
 </file>
 
 <file path="docs/ja/streaming.md">
+---
+search:
+  exclude: true
+---
 # ストリーミング
 
-ストリーミングを利用すると、エージェントの実行が進行するにつれて、その更新情報を購読できます。これは、エンドユーザーに進捗状況や部分的な応答を表示するのに役立ちます。
+ストリーミングを使用すると、 エージェント の実行が進行するにつれて発生する更新を購読できます。これにより、エンド ユーザーに進捗状況や部分的な応答を表示するのに役立ちます。
 
-ストリーミングを行うには、[`Runner.run_streamed()`][agents.run.Runner.run_streamed] を呼び出します。これにより、[`RunResultStreaming`][agents.result.RunResultStreaming] が返されます。`result.stream_events()` を呼び出すと、下記で説明する [`StreamEvent`][agents.stream_events.StreamEvent] オブジェクトの非同期ストリームが得られます。
+ストリーミングを行うには、 [`Runner.run_streamed()`][agents.run.Runner.run_streamed] を呼び出します。これにより [`RunResultStreaming`][agents.result.RunResultStreaming] が返されます。続いて `result.stream_events()` を呼び出すと、後述する [`StreamEvent`][agents.stream_events.StreamEvent] オブジェクトの非同期ストリームを取得できます。
 
-## raw response events
+## raw response イベント
 
-[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] は、LLM から直接渡される raw イベントです。これらは OpenAI Responses API フォーマットであり、各イベントには type（例：`response.created`、`response.output_text.delta` など）とデータが含まれます。これらのイベントは、応答メッセージが生成され次第、ユーザーにストリーミングしたい場合に便利です。
+[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] は、 LLM から直接渡される raw なイベントです。これらは OpenAI Responses API 形式であり、各イベントには `response.created` や `response.output_text.delta` などの type とデータが含まれます。生成されたメッセージを即座にユーザーへストリーミングしたい場合に便利です。
 
-例えば、以下の例では LLM が生成したテキストをトークンごとに出力します。
+たとえば、以下のコードは LLM が生成したテキストをトークンごとに出力します。
 
 ```python
 import asyncio
@@ -1584,11 +1850,11 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Run item イベントとエージェントイベント
+## Run item イベントと エージェント イベント
 
-[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] は、より高レベルなイベントです。アイテムが完全に生成されたタイミングを通知します。これにより、「メッセージが生成された」「ツールが実行された」など、各トークン単位ではなく、進捗状況をまとめてユーザーに伝えることができます。同様に、[`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] は、現在のエージェントが変更されたとき（例：ハンドオフの結果として）に更新情報を提供します。
+[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] は、より高レベルなイベントです。アイテムが完全に生成されたタイミングを通知するため、トークン単位ではなく「メッセージが生成された」「ツールが実行された」といったレベルで進捗をプッシュできます。同様に、 [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] はハンドオフなどで現在の エージェント が変わった際に更新を提供します。
 
-例えば、以下の例では raw イベントを無視し、ユーザーに更新情報のみをストリーミングします。
+たとえば、以下のコードは raw イベントを無視し、ユーザーへ更新のみをストリーミングします。
 
 ```python
 import asyncio
@@ -1641,21 +1907,25 @@ if __name__ == "__main__":
 </file>
 
 <file path="docs/ja/tools.md">
+---
+search:
+  exclude: true
+---
 # ツール
 
-ツールは エージェント がアクションを実行するためのものです。たとえば、データの取得、コードの実行、外部 API の呼び出し、さらにはコンピュータ操作などが含まれます。Agents SDK には 3 種類のツールクラスがあります。
+ツールはエージェントがアクションを実行できるようにします。たとえばデータの取得、コードの実行、外部 API の呼び出し、さらにはコンピュータ操作などです。Agents SDK には次の 3 種類のツールがあります。
 
--   Hosted tools: これらは LLM サーバー上で AI モデルとともに実行されます。OpenAI は retrieval、Web 検索、コンピュータ操作を Hosted tools として提供しています。
--   Function calling: 任意の Python 関数をツールとして利用できます。
--   Agents as tools: エージェントをツールとして利用でき、エージェントが他のエージェントをハンドオフせずに呼び出すことができます。
+-   ホストツール: これらは LLM サーバー上で AI モデルと一緒に実行されます。OpenAI は retrieval、Web 検索、コンピュータ操作をホストツールとして提供しています。
+-   関数呼び出し: 任意の Python 関数をツールとして利用できます。
+-   ツールとしてのエージェント: ハンドオフせずに、エージェントから他のエージェントを呼び出すことができます。
 
-## Hosted tools
+## ホストツール
 
 OpenAI は [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] を使用する際に、いくつかの組み込みツールを提供しています。
 
--   [`WebSearchTool`][agents.tool.WebSearchTool] は、エージェントが Web 検索を行うことを可能にします。
--   [`FileSearchTool`][agents.tool.FileSearchTool] は、OpenAI ベクトルストアから情報を取得できます。
--   [`ComputerTool`][agents.tool.ComputerTool] は、コンピュータ操作タスクの自動化を可能にします。
+-   [`WebSearchTool`][agents.tool.WebSearchTool] はエージェントに Web 検索を行わせます。
+-   [`FileSearchTool`][agents.tool.FileSearchTool] は OpenAI ベクトルストアから情報を取得します。
+-   [`ComputerTool`][agents.tool.ComputerTool] はコンピュータ操作タスクを自動化します。
 
 ```python
 from agents import Agent, FileSearchTool, Runner, WebSearchTool
@@ -1676,16 +1946,16 @@ async def main():
     print(result.final_output)
 ```
 
-## Function tools
+## 関数ツール
 
-任意の Python 関数をツールとして利用できます。Agents SDK が自動的にツールをセットアップします。
+任意の Python 関数をツールとして使用できます。Agents SDK が自動的に設定を行います。
 
--   ツール名は Python 関数名になります（または任意の名前を指定できます）
--   ツールの説明は関数の docstring から取得されます（または任意の説明を指定できます）
--   関数の引数から自動的に入力スキーマが作成されます
--   各入力の説明は、関数の docstring から取得されます（無効化も可能です）
+-   ツールの名前は Python 関数の名前になります（任意で名前を指定することも可能です）
+-   ツールの説明は関数の docstring から取得されます（任意で説明を指定することも可能です）
+-   関数の引数から自動的に入力スキーマを生成します
+-   各入力の説明は、無効化しない限り docstring から取得されます
 
-Python の `inspect` モジュールを使って関数シグネチャを抽出し、[`griffe`](https://mkdocstrings.github.io/griffe/) で docstring を解析し、`pydantic` でスキーマを作成します。
+Python の `inspect` モジュールを使用して関数シグネチャを抽出し、[`griffe`](https://mkdocstrings.github.io/griffe/) で docstring を解析し、`pydantic` でスキーマを作成します。
 
 ```python
 import json
@@ -1737,12 +2007,12 @@ for tool in agent.tools:
 
 ```
 
-1.  関数の引数には任意の Python 型を利用でき、同期・非同期どちらの関数も利用可能です。
-2.  docstring があれば、説明や引数の説明として利用されます。
-3.  関数はオプションで `context` を最初の引数として受け取れます。また、ツール名や説明、docstring スタイルの指定などのオーバーライドも可能です。
-4.  デコレートした関数をツールのリストに渡すことができます。
+1.  関数の引数には任意の Python 型を使用でき、同期・非同期どちらの関数も利用できます。
+2.  docstring が存在する場合、ツールと引数の説明を取得します。
+3.  関数はオプションで `context` を受け取れます（最初の引数である必要があります）。ツール名、説明、docstring のスタイルなどを上書き設定することも可能です。
+4.  デコレートされた関数をツールのリストに渡してください。
 
-??? note "出力を展開して表示"
+??? note "展開して出力を確認"
 
     ```
     fetch_weather
@@ -1812,14 +2082,14 @@ for tool in agent.tools:
     }
     ```
 
-### カスタム function tools
+### カスタム関数ツール
 
-場合によっては、Python 関数をツールとして使いたくないこともあります。その場合は、[`FunctionTool`][agents.tool.FunctionTool] を直接作成できます。必要な情報は以下の通りです。
+Python 関数をそのままツールにしたくない場合は、[`FunctionTool`][agents.tool.FunctionTool] を直接作成できます。次を指定する必要があります。
 
 -   `name`
 -   `description`
 -   `params_json_schema`（引数の JSON スキーマ）
--   `on_invoke_tool`（context と引数（JSON 文字列）を受け取り、ツールの出力を文字列で返す async 関数）
+-   `on_invoke_tool`（context と引数の JSON 文字列を受け取り、ツールの出力を文字列で返す async 関数）
 
 ```python
 from typing import Any
@@ -1854,16 +2124,16 @@ tool = FunctionTool(
 
 ### 引数と docstring の自動解析
 
-前述の通り、関数シグネチャを自動解析してツールのスキーマを抽出し、docstring からツールや各引数の説明を抽出します。主なポイントは以下の通りです。
+前述のとおり、関数シグネチャを自動解析してツールのスキーマを生成し、docstring を解析してツールおよび個別引数の説明を抽出します。主な注意点は次のとおりです。
 
-1. シグネチャの解析は `inspect` モジュールで行います。型アノテーションを利用して引数の型を把握し、Pydantic モデルを動的に構築して全体のスキーマを表現します。Python の基本コンポーネント、Pydantic モデル、TypedDict など、ほとんどの型をサポートしています。
-2. docstring の解析には `griffe` を使用します。サポートされている docstring フォーマットは `google`、`sphinx`、`numpy` です。docstring フォーマットは自動検出を試みますが、`function_tool` 呼び出し時に明示的に指定することもできます。`use_docstring_info` を `False` に設定することで docstring 解析を無効化できます。
+1. シグネチャ解析は `inspect` モジュールで行います。型アノテーションを用いて引数の型を認識し、Pydantic モデルを動的に構築して全体のスキーマを表現します。Python の基本型、Pydantic モデル、TypedDict などほとんどの型をサポートします。
+2. `griffe` を使用して docstring を解析します。対応する docstring 形式は `google`、`sphinx`、`numpy` です。形式は自動検出を試みますが、`function_tool` 呼び出し時に明示的に指定することもできます。`use_docstring_info` を `False` に設定すると docstring 解析を無効化できます。
 
 スキーマ抽出のコードは [`agents.function_schema`][] にあります。
 
-## Agents as tools
+## ツールとしてのエージェント
 
-一部のワークフローでは、ハンドオフせずに中央のエージェントが専門エージェントのネットワークをオーケストレーションしたい場合があります。その場合、エージェントをツールとしてモデル化することで実現できます。
+一部のワークフローでは、ハンドオフせずに中央のエージェントが複数の専門エージェントをオーケストレーションしたい場合があります。そのような場合、エージェントをツールとしてモデル化できます。
 
 ```python
 from agents import Agent, Runner
@@ -1902,66 +2172,91 @@ async def main():
     print(result.final_output)
 ```
 
-## Function tools でのエラー処理
+### ツールエージェントのカスタマイズ
 
-`@function_tool` で function tool を作成する際、`failure_error_function` を渡すことができます。これは、ツール呼び出しがクラッシュした場合に LLM へエラー応答を提供する関数です。
+`agent.as_tool` 関数はエージェントを簡単にツール化するためのヘルパーです。ただし、すべての設定に対応しているわけではありません（例: `max_turns` は設定不可）。高度なユースケースでは、ツール実装内で `Runner.run` を直接使用してください。
 
--   デフォルト（何も渡さない場合）では、`default_tool_error_function` が実行され、LLM にエラーが発生したことを伝えます。
--   独自のエラー関数を渡した場合は、それが実行され、その応答が LLM に送信されます。
--   明示的に `None` を渡した場合、ツール呼び出し時のエラーは再スローされ、ユーザー側で処理できます。たとえば、モデルが無効な JSON を生成した場合は `ModelBehaviorError`、コードがクラッシュした場合は `UserError` などです。
+```python
+@function_tool
+async def run_my_agent() -> str:
+  """A tool that runs the agent with custom configs".
 
-`FunctionTool` オブジェクトを手動で作成する場合は、`on_invoke_tool` 関数内でエラー処理を行う必要があります。
+    agent = Agent(name="My agent", instructions="...")
+
+    result = await Runner.run(
+        agent,
+        input="...",
+        max_turns=5,
+        run_config=...
+    )
+
+    return str(result.final_output)
+```
+
+## 関数ツールでのエラー処理
+
+`@function_tool` で関数ツールを作成する際、`failure_error_function` を渡せます。これはツール呼び出しが失敗した場合に LLM へ返すエラーレスポンスを生成する関数です。
+
+-   何も指定しない場合、`default_tool_error_function` が実行され、LLM にエラー発生を伝えます。
+-   独自のエラー関数を渡した場合はそちらが実行され、そのレスポンスが LLM へ送信されます。
+-   明示的に `None` を渡すと、ツール呼び出し時のエラーは再送出されます。モデルが無効な JSON を生成した場合は `ModelBehaviorError`、コードがクラッシュした場合は `UserError` などになります。
+
+`FunctionTool` オブジェクトを手動で作成する場合は、`on_invoke_tool` 関数内でエラーを処理する必要があります。
 </file>
 
 <file path="docs/ja/tracing.md">
+---
+search:
+  exclude: true
+---
 # トレーシング
 
-Agents SDK にはトレーシング機能が組み込まれており、エージェントの実行中に発生するイベント（ LLM 生成、ツール呼び出し、ハンドオフ、ガードレール、カスタムイベントなど）の包括的な記録を収集します。[Traces ダッシュボード](https://platform.openai.com/traces) を使用することで、開発中や本番環境でワークフローのデバッグ、可視化、監視が可能です。
+Agents SDK にはビルトインのトレーシング機能があり、エージェントの実行中に発生するイベント―― LLM 生成、ツール呼び出し、ハンドオフ、ガードレール、さらにカスタムイベントまで――を網羅的に記録します。開発時と本番環境の両方で [Traces dashboard](https://platform.openai.com/traces) を使用すると、ワークフローをデバッグ・可視化・モニタリングできます。
 
 !!!note
 
-    トレーシングはデフォルトで有効になっています。トレーシングを無効にする方法は 2 つあります:
+    トレーシングはデフォルトで有効です。無効化する方法は次の 2 つです:
 
-    1. 環境変数 `OPENAI_AGENTS_DISABLE_TRACING=1` を設定することで、グローバルにトレーシングを無効化できます。
-    2. 単一の実行に対しては [`agents.run.RunConfig.tracing_disabled`][] を `True` に設定することで無効化できます。
+    1. 環境変数 `OPENAI_AGENTS_DISABLE_TRACING=1` を設定してグローバルに無効化する  
+    2. 単一の実行に対しては [`agents.run.RunConfig.tracing_disabled`][] を `True` に設定する
 
-***OpenAI の API を使用し、Zero Data Retention (ZDR) ポリシーの下で運用している組織では、トレーシングは利用できません。***
+***OpenAI の API を Zero Data Retention (ZDR) ポリシーで利用している組織では、トレーシングを利用できません。***
 
 ## トレースとスパン
 
--   **トレース** は 1 つの「ワークフロー」のエンドツーエンドの操作を表します。トレースはスパンで構成されます。トレースには以下のプロパティがあります:
-    -   `workflow_name`: 論理的なワークフローやアプリ名です。例: "Code generation" や "Customer service" など。
-    -   `trace_id`: トレースの一意な ID です。指定しない場合は自動生成されます。フォーマットは `trace_<32_alphanumeric>` である必要があります。
-    -   `group_id`: オプションのグループ ID で、同じ会話からの複数のトレースをリンクするために使用します。例: チャットスレッド ID など。
-    -   `disabled`: True の場合、このトレースは記録されません。
-    -   `metadata`: トレースに付加するオプションのメタデータです。
--   **スパン** は開始時刻と終了時刻を持つ操作を表します。スパンには以下があります:
-    -   `started_at` および `ended_at` タイムスタンプ
-    -   所属するトレースを示す `trace_id`
-    -   このスパンの親スパンを指す `parent_id`（存在する場合）
-    -   スパンに関する情報を含む `span_data`。例: `AgentSpanData` はエージェントに関する情報、`GenerationSpanData` は LLM 生成に関する情報など。
+-   **トレース** は 1 度のワークフロー全体を表します。複数のスパンで構成され、次のプロパティを持ちます:
+    -   `workflow_name`: 論理的なワークフローまたはアプリ名。例: 「Code generation」や「Customer service」
+    -   `trace_id`: トレースを一意に識別する ID。指定しない場合は自動生成されます。形式は `trace_<32_alphanumeric>` である必要があります。
+    -   `group_id`: オプションのグループ ID。会話内の複数トレースを関連付けます。たとえばチャットスレッド ID など。
+    -   `disabled`: `True` の場合、このトレースは記録されません。
+    -   `metadata`: トレースに付随する任意のメタデータ。
+-   **スパン** は開始時刻と終了時刻を持つ個々の処理を表します。スパンは以下を保持します:
+    -   `started_at` と `ended_at` タイムスタンプ
+    -   所属トレースを示す `trace_id`
+    -   親スパンを指す `parent_id` (存在する場合)
+    -   スパンに関する情報を格納する `span_data`。たとえば `AgentSpanData` にはエージェント情報が、`GenerationSpanData` には LLM 生成情報が含まれます。
 
 ## デフォルトのトレーシング
 
-デフォルトでは、 SDK は以下をトレースします:
+デフォルトで SDK は以下をトレースします:
 
--   `Runner.{run, run_sync, run_streamed}()` 全体が `trace()` でラップされます。
--   エージェントが実行されるたびに `agent_span()` でラップされます。
--   LLM 生成は `generation_span()` でラップされます。
--   関数ツール呼び出しはそれぞれ `function_span()` でラップされます。
--   ガードレールは `guardrail_span()` でラップされます。
--   ハンドオフは `handoff_span()` でラップされます。
--   音声入力（音声からテキスト）は `transcription_span()` でラップされます。
--   音声出力（テキストから音声）は `speech_span()` でラップされます。
--   関連する音声スパンは `speech_group_span()` の下にまとめられる場合があります。
+-   `Runner.{run, run_sync, run_streamed}()` 全体を `trace()` でラップ
+-   エージェントが実行されるたびに `agent_span()` でラップ
+-   LLM 生成を `generation_span()` でラップ
+-   関数ツール呼び出しを `function_span()` でラップ
+-   ガードレールを `guardrail_span()` でラップ
+-   ハンドオフを `handoff_span()` でラップ
+-   音声入力 (speech‑to‑text) を `transcription_span()` でラップ
+-   音声出力 (text‑to‑speech) を `speech_span()` でラップ
+-   関連する音声スパンは `speech_group_span()` の下にネストされる場合があります
 
-デフォルトでは、トレース名は "Agent trace" です。`trace` を使用する場合、この名前を設定できます。また、[`RunConfig`][agents.run.RunConfig] で名前やその他のプロパティを設定することも可能です。
+トレース名はデフォルトで「Agent trace」です。`trace` を使用して指定したり、[`RunConfig`][agents.run.RunConfig] で名前やその他のプロパティを設定できます。
 
-さらに、[カスタムトレースプロセッサー](#custom-tracing-processors) を設定して、トレースを他の宛先に送信することもできます（置き換えや追加の宛先として）。
+さらに [カスタムトレーシングプロセッサー](#custom-tracing-processors) を設定して、トレースを別の送信先に出力（置き換えまたは追加）することも可能です。
 
-## より高レベルのトレース
+## 上位レベルのトレース
 
-複数回の `run()` 呼び出しを 1 つのトレースにまとめたい場合があります。その場合、コード全体を `trace()` でラップしてください。
+複数回の `run()` 呼び出しを 1 つのトレースにまとめたい場合があります。その場合、コード全体を `trace()` でラップします。
 
 ```python
 from agents import Agent, Runner, trace
@@ -1976,48 +2271,50 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 2 回の `Runner.run` 呼び出しが `with trace()` でラップされているため、個々の実行は 2 つのトレースを作成するのではなく、全体のトレースの一部となります。
+1. `with trace()` で 2 つの `Runner.run` 呼び出しをラップしているため、それぞれが個別のトレースを作成せず、全体で 1 つのトレースになります。
 
 ## トレースの作成
 
-[`trace()`][agents.tracing.trace] 関数を使ってトレースを作成できます。トレースは開始と終了が必要です。方法は 2 つあります:
+[`trace()`][agents.tracing.trace] 関数を使ってトレースを作成できます。開始と終了が必要で、方法は 2 つあります。
 
-1. **推奨**: トレースをコンテキストマネージャーとして使用します。例: `with trace(...) as my_trace`。これにより、トレースの開始と終了が自動的に行われます。
-2. [`trace.start()`][agents.tracing.Trace.start] および [`trace.finish()`][agents.tracing.Trace.finish] を手動で呼び出すこともできます。
+1. **推奨**: `with trace(...) as my_trace` のようにコンテキストマネージャーとして使用する。開始と終了が自動で行われます。  
+2. [`trace.start()`][agents.tracing.Trace.start] と [`trace.finish()`][agents.tracing.Trace.finish] を手動で呼び出す。
 
-現在のトレースは Python の [`contextvar`](https://docs.python.org/3/library/contextvars.html) で管理されています。これにより、自動的に並行処理にも対応します。トレースを手動で開始・終了する場合は、`start()`/`finish()` に `mark_as_current` および `reset_current` を渡して現在のトレースを更新する必要があります。
+現在のトレースは Python の [`contextvar`](https://docs.python.org/3/library/contextvars.html) で管理されているため、並行処理でも自動で機能します。手動で開始／終了する場合は `start()`／`finish()` に `mark_as_current` と `reset_current` を渡して現在のトレースを更新してください。
 
 ## スパンの作成
 
-さまざまな [`*_span()`][agents.tracing.create] メソッドを使ってスパンを作成できます。通常、スパンを手動で作成する必要はありません。カスタムスパン情報を追跡するための [`custom_span()`][agents.tracing.custom_span] 関数も用意されています。
+各種 [`*_span()`][agents.tracing.create] メソッドでスパンを作成できます。一般的には手動で作成する必要はありません。カスタム情報を追跡するための [`custom_span()`][agents.tracing.custom_span] も利用できます。
 
-スパンは自動的に現在のトレースの一部となり、最も近い現在のスパンの下にネストされます。これは Python の [`contextvar`](https://docs.python.org/3/library/contextvars.html) で管理されています。
+スパンは自動的に現在のトレースの一部となり、最も近い現在のスパンの下にネストされます。これも Python の [`contextvar`](https://docs.python.org/3/library/contextvars.html) で管理されています。
 
-## 機微なデータ
+## 機密データ
 
-一部のスパンは、機微なデータを記録する場合があります。
+一部のスパンでは機密データが収集される可能性があります。
 
-`generation_span()` は LLM 生成の入力・出力を保存し、`function_span()` は関数呼び出しの入力・出力を保存します。これらには機微なデータが含まれる場合があるため、[`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] でそのデータの記録を無効化できます。
+`generation_span()` には LLM の入力と出力、`function_span()` には関数呼び出しの入力と出力が保存されます。これらに機密データが含まれる場合、[`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] を使用して記録を無効化できます。
 
-同様に、音声スパンはデフォルトで入力・出力音声の base64 エンコード PCM データを含みます。[`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] を設定することで、この音声データの記録を無効化できます。
+同様に、音声スパンにはデフォルトで base64 エンコードされた PCM 音声データが含まれます。[`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] を設定して音声データの記録を無効化できます。
 
-## カスタムトレースプロセッサー
+## カスタムトレーシングプロセッサー
 
-トレーシングの高レベルなアーキテクチャは以下の通りです:
+トレーシングの高レベル構成は次のとおりです。
 
--   初期化時にグローバルな [`TraceProvider`][agents.tracing.setup.TraceProvider] を作成し、トレースの生成を担当します。
--   `TraceProvider` は [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] で構成されており、トレースやスパンをバッチで [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter] に送信します。これにより、スパンやトレースが OpenAI バックエンドにバッチでエクスポートされます。
+-   初期化時にグローバルな [`TraceProvider`][agents.tracing.setup.TraceProvider] を作成し、トレースを生成。
+-   `TraceProvider` は [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] を用いてスパン／トレースをバッチ送信し、[`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter] が OpenAI バックエンドへバッチでエクスポートします。
 
-このデフォルト設定をカスタマイズし、トレースを別のバックエンドや追加のバックエンドに送信したり、エクスポーターの動作を変更したりするには、2 つの方法があります:
+デフォルト設定を変更して別のバックエンドへ送信したり、エクスポーターの挙動を修正するには次の 2 通りがあります。
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor] を使うと、**追加の** トレースプロセッサーを追加できます。これにより、トレースやスパンが準備できた時点で独自の処理を行うことができ、OpenAI バックエンドへの送信に加えて独自の処理が可能です。
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors] を使うと、デフォルトのプロセッサーを独自のトレースプロセッサーに**置き換える**ことができます。この場合、OpenAI バックエンドにトレースが送信されるのは、`TracingProcessor` を含めた場合のみです。
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor]  
+   既定の送信に加え、**追加** のトレースプロセッサーを登録できます。これにより OpenAI バックエンドへの送信に加えて独自処理が可能です。  
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors]  
+   既定のプロセッサーを置き換え、**独自** のトレースプロセッサーだけを使用します。OpenAI バックエンドへ送信する場合は、その機能を持つ `TracingProcessor` を含める必要があります。
 
-## 外部トレースプロセッサー一覧
+## 外部トレーシングプロセッサー一覧
 
 -   [Weights & Biases](https://weave-docs.wandb.ai/guides/integrations/openai_agents)
--   [Arize-Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)
--   [MLflow (self-hosted/OSS](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
+-   [Arize‑Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)
+-   [MLflow (self‑hosted/OSS](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
 -   [MLflow (Databricks hosted](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
 -   [Braintrust](https://braintrust.dev/docs/guides/traces/integrations#openai-agents-sdk)
 -   [Pydantic Logfire](https://logfire.pydantic.dev/docs/integrations/llms/openai/#openai-agents)
@@ -2029,17 +2326,21 @@ async def main():
 -   [Comet Opik](https://www.comet.com/docs/opik/tracing/integrations/openai_agents)
 -   [Langfuse](https://langfuse.com/docs/integrations/openaiagentssdk/openai-agents)
 -   [Langtrace](https://docs.langtrace.ai/supported-integrations/llm-frameworks/openai-agents-sdk)
--   [Okahu-Monocle](https://github.com/monocle2ai/monocle)
+-   [Okahu‑Monocle](https://github.com/monocle2ai/monocle)
 </file>
 
 <file path="docs/ja/visualization.md">
+---
+search:
+  exclude: true
+---
 # エージェントの可視化
 
-エージェントの可視化では、 **Graphviz** を使用してエージェントとその関係性を構造的にグラフィカルに表現できます。これは、アプリケーション内でエージェント、ツール、ハンドオフがどのように相互作用しているかを理解するのに役立ちます。
+エージェントの可視化を使用すると、 ** Graphviz ** を用いてエージェントとその関係を構造化されたグラフィカル表現として生成できます。これは、アプリケーション内でエージェント、ツール、handoffs がどのように相互作用するかを理解するのに役立ちます。
 
 ## インストール
 
-オプションの `viz` 依存グループをインストールします:
+オプションの `viz` 依存関係グループをインストールします:
 
 ```bash
 pip install "openai-agents[viz]"
@@ -2047,11 +2348,11 @@ pip install "openai-agents[viz]"
 
 ## グラフの生成
 
-`draw_graph` 関数を使ってエージェントの可視化を生成できます。この関数は、以下のような有向グラフを作成します:
+`draw_graph` 関数を使用してエージェントの可視化を生成できます。この関数は有向グラフを作成し、以下のように表現します。
 
 - **エージェント** は黄色のボックスで表されます。
 - **ツール** は緑色の楕円で表されます。
-- **ハンドオフ** は、あるエージェントから別のエージェントへの有向エッジで表されます。
+- **handoffs** はエージェント間の有向エッジで示されます。
 
 ### 使用例
 
@@ -2085,32 +2386,31 @@ draw_graph(triage_agent)
 
 ![Agent Graph](../assets/images/graph.png)
 
-これにより、 **triage agent** の構造とサブエージェントやツールとの接続が視覚的に表現されたグラフが生成されます。
-
+これにより、 **triage agent** の構造と、それがサブエージェントやツールとどのようにつながっているかを視覚的に表すグラフが生成されます。
 
 ## 可視化の理解
 
-生成されたグラフには以下が含まれます:
+生成されたグラフには次の要素が含まれます。
 
 - エントリーポイントを示す **start node** (`__start__`)
-- 黄色で塗りつぶされた **長方形** で表されるエージェント
-- 緑色で塗りつぶされた **楕円** で表されるツール
-- 相互作用を示す有向エッジ:
-  - エージェント間のハンドオフには **実線の矢印**
-  - ツール呼び出しには **点線の矢印**
-- 実行が終了する場所を示す **end node** (`__end__`)
+- 黄色の塗りつぶしを持つ **矩形** のエージェント
+- 緑色の塗りつぶしを持つ **楕円** のツール
+- 相互作用を示す有向エッジ
+  - エージェント間の handoffs には **実線の矢印**
+  - ツール呼び出しには **破線の矢印**
+- 実行が終了する位置を示す **end node** (`__end__`)
 
 ## グラフのカスタマイズ
 
 ### グラフの表示
-デフォルトでは、`draw_graph` はグラフをインラインで表示します。グラフを別ウィンドウで表示したい場合は、次のように記述します:
+デフォルトでは、`draw_graph` はグラフをインラインで表示します。別ウィンドウでグラフを表示するには、次のように記述します。
 
 ```python
 draw_graph(triage_agent).view()
 ```
 
 ### グラフの保存
-デフォルトでは、`draw_graph` はグラフをインラインで表示します。ファイルとして保存したい場合は、ファイル名を指定します:
+デフォルトでは、`draw_graph` はグラフをインラインで表示します。ファイルとして保存するには、ファイル名を指定します:
 
 ```python
 draw_graph(triage_agent, filename="agent_graph.png")
