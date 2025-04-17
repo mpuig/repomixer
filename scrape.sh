@@ -5,13 +5,12 @@ set -euo pipefail # More robust error handling than just -xe
 mkdir -p repomix-logs
 mkdir -p repomix-output
 
-# Use mlr to process the CSV robustly, skipping header (implicit with --icsv)
-mlr --icsv --ocsv cat sites.csv | tail -n +2 | while IFS=',' read -r url directory include_files exclude_files; do
+# Use mlr to process the CSV robustly, output as TSV, skipping header
+mlr --icsv --otsv cat sites.csv | tail -n +2 | while IFS=$'\t' read -r url include_files exclude_files; do
   # Skip potentially empty lines from mlr output (though unlikely)
   [ -z "$url" ] && continue
 
   echo "Processing URL: $url"
-  echo " -> Directory: ${directory:-<none>}" # Use default value for clarity if empty
   echo " -> Include: ${include_files:-<none>}"
   echo " -> Exclude: ${exclude_files:-<none>}"
 
@@ -28,16 +27,12 @@ mlr --icsv --ocsv cat sites.csv | tail -n +2 | while IFS=',' read -r url directo
   output_filename="$(pwd)/repomix-output/${safe_base}.md"
 
   # --- Secure Command Construction using Arrays ---
-  cmd=("npx" "repomix" "--no-file-summary" "--no-directory-structure") # Start with base command
+  cmd=("npx" "repomix" "--style" "plain" "--no-file-summary" "--no-directory-structure") # Start with base command
 
   if [[ "$url" == *"github.com"* ]]; then
     cmd+=("--remote" "$url") # Append arguments safely
   else
     cmd+=("$url")
-  fi
-
-  if [[ -n "$directory" ]]; then
-    cmd+=("$directory")
   fi
 
   # Handle potentially comma-separated include/exclude patterns safely
@@ -80,4 +75,4 @@ mlr --icsv --ocsv cat sites.csv | tail -n +2 | while IFS=',' read -r url directo
 
 done
 
-echo "Scraping process finished." 
+echo "Scraping process finished."
