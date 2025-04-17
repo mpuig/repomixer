@@ -1,514 +1,12 @@
 This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
 
-<files>
-This section contains the contents of the repository's files.
-
-<file path="docs/ja/models/index.md">
----
-search:
-  exclude: true
----
-# モデル
-
-Agents SDK には、標準で 2 種類の OpenAI モデルサポートが含まれています。
-
-- **推奨**: [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] — 新しい [Responses API](https://platform.openai.com/docs/api-reference/responses) を利用して OpenAI API を呼び出します。  
-- [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] — [Chat Completions API](https://platform.openai.com/docs/api-reference/chat) を利用して OpenAI API を呼び出します。
-
-## モデルの組み合わせ
-
-1 つのワークフロー内で、エージェントごとに異なるモデルを使用したい場合があります。たとえば、振り分けには小さく高速なモデルを、複雑なタスクには大きく高性能なモデルを使う、といった使い分けです。[`Agent`][agents.Agent] を設定する際は、以下のいずれかで特定のモデルを指定できます。
-
-1. OpenAI モデル名を直接渡す  
-2. 任意のモデル名と、それを `Model` インスタンスへマッピングできる [`ModelProvider`][agents.models.interface.ModelProvider] を渡す  
-3. [`Model`][agents.models.interface.Model] 実装を直接渡す  
-
-!!!note
-    SDK は [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] と [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] の両方の形に対応していますが、ワークフローごとに 1 つのモデル形を使用することを推奨します。2 つの形ではサポートする機能・ツールが異なるためです。どうしても混在させる場合は、利用するすべての機能が両方で利用可能であることを確認してください。
-
-```python
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
-import asyncio
-
-spanish_agent = Agent(
-    name="Spanish agent",
-    instructions="You only speak Spanish.",
-    model="o3-mini", # (1)!
-)
-
-english_agent = Agent(
-    name="English agent",
-    instructions="You only speak English",
-    model=OpenAIChatCompletionsModel( # (2)!
-        model="gpt-4o",
-        openai_client=AsyncOpenAI()
-    ),
-)
-
-triage_agent = Agent(
-    name="Triage agent",
-    instructions="Handoff to the appropriate agent based on the language of the request.",
-    handoffs=[spanish_agent, english_agent],
-    model="gpt-3.5-turbo",
-)
-
-async def main():
-    result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
-    print(result.final_output)
-```
-
-1. OpenAI モデル名を直接指定  
-2. [`Model`][agents.models.interface.Model] 実装を提供  
-
-エージェントで使用するモデルをさらに細かく設定したい場合は、`temperature` などのオプションを指定できる [`ModelSettings`][agents.models.interface.ModelSettings] を渡します。
-
-```python
-from agents import Agent, ModelSettings
-
-english_agent = Agent(
-    name="English agent",
-    instructions="You only speak English",
-    model="gpt-4o",
-    model_settings=ModelSettings(temperature=0.1),
-)
-```
-
-## 他の LLM プロバイダーの利用
-
-他の LLM プロバイダーは 3 通りの方法で利用できます（コード例は [こちら](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)）。
-
-1. [`set_default_openai_client`][agents.set_default_openai_client]  
-   OpenAI 互換の API エンドポイントを持つ場合に、`AsyncOpenAI` インスタンスをグローバルに LLM クライアントとして設定できます。`base_url` と `api_key` を設定するケースです。設定例は [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)。  
-
-2. [`ModelProvider`][agents.models.interface.ModelProvider]  
-   `Runner.run` レベルで「この実行中のすべてのエージェントにカスタムモデルプロバイダーを使う」と宣言できます。設定例は [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)。  
-
-3. [`Agent.model`][agents.agent.Agent.model]  
-   特定の Agent インスタンスにモデルを指定できます。エージェントごとに異なるプロバイダーを組み合わせられます。設定例は [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)。多くのモデルを簡単に使う方法として [LiteLLM 連携](./litellm.md) があります。  
-
-`platform.openai.com` の API キーを持たない場合は、`set_tracing_disabled()` でトレーシングを無効化するか、[別のトレーシングプロセッサー](../tracing.md) を設定することを推奨します。
-
-!!! note
-    これらの例では Chat Completions API/モデルを使用しています。多くの LLM プロバイダーがまだ Responses API をサポートしていないためです。もしプロバイダーが Responses API をサポートしている場合は、Responses の使用を推奨します。
-
-## 他の LLM プロバイダーでよくある問題
-
-### Tracing クライアントの 401 エラー
-
-トレースは OpenAI サーバーへアップロードされるため、OpenAI API キーがない場合にエラーになります。解決策は次の 3 つです。
-
-1. トレーシングを完全に無効化する: [`set_tracing_disabled(True)`][agents.set_tracing_disabled]  
-2. トレーシング用の OpenAI キーを設定する: [`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]  
-   このキーはトレースのアップロードにのみ使用され、[platform.openai.com](https://platform.openai.com/) のものが必要です。  
-3. OpenAI 以外のトレースプロセッサーを使う。詳しくは [tracing ドキュメント](../tracing.md#custom-tracing-processors) を参照してください。  
-
-### Responses API サポート
-
-SDK は既定で Responses API を使用しますが、多くの LLM プロバイダーはまだ対応していません。そのため 404 などのエラーが発生する場合があります。対処方法は 2 つです。
-
-1. [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api] を呼び出す  
-   環境変数 `OPENAI_API_KEY` と `OPENAI_BASE_URL` を設定している場合に機能します。  
-2. [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] を使用する  
-   コード例は [こちら](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/) にあります。  
-
-### structured outputs のサポート
-
-一部のモデルプロバイダーは [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) をサポートしていません。その場合、次のようなエラーが発生することがあります。
-
-```
-BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type' : value is not one of the allowed values ['text','json_object']", 'type': 'invalid_request_error'}}
-```
-
-これは一部プロバイダーの制限で、JSON 出力はサポートしていても `json_schema` を指定できません。現在修正に取り組んでいますが、JSON スキーマ出力をサポートしているプロバイダーを利用することを推奨します。そうでない場合、不正な JSON によりアプリが頻繁に壊れる可能性があります。
-</file>
-
-<file path="docs/ja/models/litellm.md">
----
-search:
-  exclude: true
----
-# LiteLLM 経由でのモデル利用
-
-!!! note
-
-    LiteLLM との統合は現在ベータ版です。特に小規模なモデルプロバイダーでは問題が発生する可能性があります。問題を見つけた場合は、[GitHub Issues](https://github.com/openai/openai-agents-python/issues) からご報告ください。迅速に対応いたします。
-
-[LiteLLM](https://docs.litellm.ai/docs/) は、1 つのインターフェースで 100 以上のモデルを利用できるライブラリです。Agents SDK では LiteLLM との統合により、任意の AI モデルを使用できます。
-
-## セットアップ
-
-`litellm` がインストールされていることを確認してください。オプションの `litellm` 依存関係グループをインストールすることで対応できます。
-
-```bash
-pip install "openai-agents[litellm]"
-```
-
-インストール後、任意のエージェントで [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel] を利用できます。
-
-## 例
-
-以下は動作する完全なサンプルです。実行するとモデル名と API キーの入力を求められます。例えば次のように入力できます。
-
--   `openai/gpt-4.1` をモデル名に、OpenAI API キーを入力  
--   `anthropic/claude-3-5-sonnet-20240620` をモデル名に、Anthropic API キーを入力  
--   その他
-
-LiteLLM でサポートされているモデルの全リストは、[litellm providers docs](https://docs.litellm.ai/docs/providers) を参照してください。
-
-```python
-from __future__ import annotations
-
-import asyncio
-
-from agents import Agent, Runner, function_tool, set_tracing_disabled
-from agents.extensions.models.litellm_model import LitellmModel
-
-@function_tool
-def get_weather(city: str):
-    print(f"[debug] getting weather for {city}")
-    return f"The weather in {city} is sunny."
-
-
-async def main(model: str, api_key: str):
-    agent = Agent(
-        name="Assistant",
-        instructions="You only respond in haikus.",
-        model=LitellmModel(model=model, api_key=api_key),
-        tools=[get_weather],
-    )
-
-    result = await Runner.run(agent, "What's the weather in Tokyo?")
-    print(result.final_output)
-
-
-if __name__ == "__main__":
-    # First try to get model/api key from args
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=False)
-    parser.add_argument("--api-key", type=str, required=False)
-    args = parser.parse_args()
-
-    model = args.model
-    if not model:
-        model = input("Enter a model name for Litellm: ")
-
-    api_key = args.api_key
-    if not api_key:
-        api_key = input("Enter an API key for Litellm: ")
-
-    asyncio.run(main(model, api_key))
-```
-</file>
-
-<file path="docs/ja/voice/pipeline.md">
----
-search:
-  exclude: true
----
-# パイプラインと ワークフロー
-
-[`VoicePipeline`][agents.voice.pipeline.VoicePipeline] は、エージェント的なワークフローを音声アプリに簡単に変換できるクラスです。ワークフローを渡すと、パイプラインが入力音声の文字起こし、音声終了の検知、適切なタイミングでのワークフロー呼び出し、そしてワークフロー出力を音声へ変換する処理を担当します。
-
-```mermaid
-graph LR
-    %% Input
-    A["🎤 Audio Input"]
-
-    %% Voice Pipeline
-    subgraph Voice_Pipeline [Voice Pipeline]
-        direction TB
-        B["Transcribe (speech-to-text)"]
-        C["Your Code"]:::highlight
-        D["Text-to-speech"]
-        B --> C --> D
-    end
-
-    %% Output
-    E["🎧 Audio Output"]
-
-    %% Flow
-    A --> Voice_Pipeline
-    Voice_Pipeline --> E
-
-    %% Custom styling
-    classDef highlight fill:#ffcc66,stroke:#333,stroke-width:1px,font-weight:700;
-
-```
-
-## パイプラインの設定
-
-パイプラインを作成する際に、以下を設定できます。
-
-1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase] ‐ 新しい音声が文字起こしされるたびに実行されるコード
-2. 使用する [`speech-to-text`][agents.voice.model.STTModel] および [`text-to-speech`][agents.voice.model.TTSModel] モデル
-3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig] ‐ 以下のような内容を設定可能
-    - モデルプロバイダー。モデル名をモデルにマッピングします
-    - トレーシング。トレーシングの無効化、音声ファイルのアップロード可否、ワークフロー名、トレース ID など
-    - TTS と STT モデルの設定。プロンプト、言語、使用するデータ型など
-
-## パイプラインの実行
-
-パイプラインは [`run()`][agents.voice.pipeline.VoicePipeline.run] メソッドで実行できます。音声入力は次の 2 形式で渡せます。
-
-1. [`AudioInput`][agents.voice.input.AudioInput]  
-   完全な音声トランスクリプトがある場合に使用し、その結果だけを生成したいときに便利です。話者の発話終了を検知する必要がないケース、たとえば録音済み音声やプッシュトゥートーク型アプリのようにユーザーが話し終えたタイミングが明確な場合に向いています。
-2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]  
-   ユーザーの発話終了検知が必要な場合に使用します。検出された音声チャンクを順次プッシュでき、音声パイプラインが「アクティビティ検知」と呼ばれるプロセスを通じて適切なタイミングでエージェント ワークフローを自動的に実行します。
-
-## 結果
-
-音声パイプライン実行の結果は [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult] です。これは発生したイベントをストリーミングで受け取れるオブジェクトです。いくつかの [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent] があり、主なものは次のとおりです。
-
-1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio] ‐ 音声チャンクを含みます
-2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] ‐ ターンの開始や終了などのライフサイクルイベントを通知します
-3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError] ‐ エラーイベントです
-
-```python
-
-result = await pipeline.run(input)
-
-async for event in result.stream():
-    if event.type == "voice_stream_event_audio":
-        # play audio
-    elif event.type == "voice_stream_event_lifecycle":
-        # lifecycle
-    elif event.type == "voice_stream_event_error"
-        # error
-    ...
-```
-
-## ベストプラクティス
-
-### 割り込み
-
-Agents SDK は現在 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput] に対して、組み込みの割り込み処理をサポートしていません。そのため、検出された各ターンごとにワークフローが個別に実行されます。アプリケーション内で割り込みを処理したい場合は、[`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] イベントを監視できます。`turn_started` は新しいターンが文字起こしされ、処理が開始されたことを示します。`turn_ended` は該当ターンのすべての音声が送信された後にトリガーされます。たとえば、モデルがターンを開始した際にスピーカーのマイクをミュートし、そのターンに関連する音声をすべて送信し終えた後にアンミュートするといった制御に、これらのイベントを利用できます。
-</file>
-
-<file path="docs/ja/voice/quickstart.md">
----
-search:
-  exclude: true
----
-# クイックスタート
-
-## 前提条件
-
-まずは [クイックスタート手順](../quickstart.md) に従って Agents SDK をセットアップし、仮想環境を作成してください。その後、SDK の音声関連のオプション依存関係をインストールします:
-
-```bash
-pip install 'openai-agents[voice]'
-```
-
-## コンセプト
-
-押さえておくべき主な概念は [`VoicePipeline`][agents.voice.pipeline.VoicePipeline] です。これは次の 3 ステップから成るプロセスです。
-
-1. speech-to-text モデルを実行して音声をテキストに変換します。  
-2. 通常はエージェント的ワークフローであるあなたのコードを実行し、結果を生成します。  
-3. text-to-speech モデルを実行して結果のテキストを再び音声に変換します。
-
-```mermaid
-graph LR
-    %% Input
-    A["🎤 Audio Input"]
-
-    %% Voice Pipeline
-    subgraph Voice_Pipeline [Voice Pipeline]
-        direction TB
-        B["Transcribe (speech-to-text)"]
-        C["Your Code"]:::highlight
-        D["Text-to-speech"]
-        B --> C --> D
-    end
-
-    %% Output
-    E["🎧 Audio Output"]
-
-    %% Flow
-    A --> Voice_Pipeline
-    Voice_Pipeline --> E
-
-    %% Custom styling
-    classDef highlight fill:#ffcc66,stroke:#333,stroke-width:1px,font-weight:700;
-
-```
-
-## エージェント
-
-まず、いくつかの エージェント をセットアップしましょう。この SDK でエージェントを構築したことがあれば、見覚えがあるはずです。ここでは複数の エージェント、ハンドオフ、そしてツールを用意します。
-
-```python
-import asyncio
-import random
-
-from agents import (
-    Agent,
-    function_tool,
-)
-from agents.extensions.handoff_prompt import prompt_with_handoff_instructions
-
-
-
-@function_tool
-def get_weather(city: str) -> str:
-    """Get the weather for a given city."""
-    print(f"[debug] get_weather called with city: {city}")
-    choices = ["sunny", "cloudy", "rainy", "snowy"]
-    return f"The weather in {city} is {random.choice(choices)}."
-
-
-spanish_agent = Agent(
-    name="Spanish",
-    handoff_description="A spanish speaking agent.",
-    instructions=prompt_with_handoff_instructions(
-        "You're speaking to a human, so be polite and concise. Speak in Spanish.",
-    ),
-    model="gpt-4o-mini",
-)
-
-agent = Agent(
-    name="Assistant",
-    instructions=prompt_with_handoff_instructions(
-        "You're speaking to a human, so be polite and concise. If the user speaks in Spanish, handoff to the spanish agent.",
-    ),
-    model="gpt-4o-mini",
-    handoffs=[spanish_agent],
-    tools=[get_weather],
-)
-```
-
-## 音声パイプライン
-
-[`SingleAgentVoiceWorkflow`][agents.voice.workflow.SingleAgentVoiceWorkflow] をワークフローとして、シンプルな音声パイプラインを構築します。
-
-```python
-from agents.voice import SingleAgentVoiceWorkflow, VoicePipeline
-pipeline = VoicePipeline(workflow=SingleAgentVoiceWorkflow(agent))
-```
-
-## パイプラインの実行
-
-```python
-import numpy as np
-import sounddevice as sd
-from agents.voice import AudioInput
-
-# For simplicity, we'll just create 3 seconds of silence
-# In reality, you'd get microphone data
-buffer = np.zeros(24000 * 3, dtype=np.int16)
-audio_input = AudioInput(buffer=buffer)
-
-result = await pipeline.run(audio_input)
-
-# Create an audio player using `sounddevice`
-player = sd.OutputStream(samplerate=24000, channels=1, dtype=np.int16)
-player.start()
-
-# Play the audio stream as it comes in
-async for event in result.stream():
-    if event.type == "voice_stream_event_audio":
-        player.write(event.data)
-
-```
-
-## まとめて実行
-
-```python
-import asyncio
-import random
-
-import numpy as np
-import sounddevice as sd
-
-from agents import (
-    Agent,
-    function_tool,
-    set_tracing_disabled,
-)
-from agents.voice import (
-    AudioInput,
-    SingleAgentVoiceWorkflow,
-    VoicePipeline,
-)
-from agents.extensions.handoff_prompt import prompt_with_handoff_instructions
-
-
-@function_tool
-def get_weather(city: str) -> str:
-    """Get the weather for a given city."""
-    print(f"[debug] get_weather called with city: {city}")
-    choices = ["sunny", "cloudy", "rainy", "snowy"]
-    return f"The weather in {city} is {random.choice(choices)}."
-
-
-spanish_agent = Agent(
-    name="Spanish",
-    handoff_description="A spanish speaking agent.",
-    instructions=prompt_with_handoff_instructions(
-        "You're speaking to a human, so be polite and concise. Speak in Spanish.",
-    ),
-    model="gpt-4o-mini",
-)
-
-agent = Agent(
-    name="Assistant",
-    instructions=prompt_with_handoff_instructions(
-        "You're speaking to a human, so be polite and concise. If the user speaks in Spanish, handoff to the spanish agent.",
-    ),
-    model="gpt-4o-mini",
-    handoffs=[spanish_agent],
-    tools=[get_weather],
-)
-
-
-async def main():
-    pipeline = VoicePipeline(workflow=SingleAgentVoiceWorkflow(agent))
-    buffer = np.zeros(24000 * 3, dtype=np.int16)
-    audio_input = AudioInput(buffer=buffer)
-
-    result = await pipeline.run(audio_input)
-
-    # Create an audio player using `sounddevice`
-    player = sd.OutputStream(samplerate=24000, channels=1, dtype=np.int16)
-    player.start()
-
-    # Play the audio stream as it comes in
-    async for event in result.stream():
-        if event.type == "voice_stream_event_audio":
-            player.write(event.data)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-この例を実行すると、エージェントがあなたに話しかけます。実際にエージェントと会話できるデモは、[examples/voice/static](https://github.com/openai/openai-agents-python/tree/main/examples/voice/static) をご覧ください。
-</file>
-
-<file path="docs/ja/voice/tracing.md">
----
-search:
-  exclude: true
----
-# トレーシング
-
-[エージェントのトレーシング](../tracing.md) と同様に、音声パイプラインも自動的にトレーシングされます。
-
-基本的なトレーシング情報については上記のドキュメントを参照してください。さらに、[`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] でパイプラインのトレーシング設定を行えます。
-
-主なトレーシング関連フィールドは次のとおりです。
-
--   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：トレーシングを無効にするかどうかを制御します。デフォルトではトレーシングは有効です。  
--   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]：トレースに音声テキストなどの機微なデータを含めるかどうかを制御します。これは音声パイプライン専用であり、Workflow 内部で発生する処理には影響しません。  
--   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]：トレースに音声データを含めるかどうかを制御します。  
--   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]：トレース Workflow の名前です。  
--   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]：複数のトレースを関連付けるための `group_id` です。  
--   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：トレースに追加するメタデータです。
-</file>
-
-<file path="docs/models/index.md">
+================================================================
+Files
+================================================================
+
+================
+File: docs/models/index.md
+================
 # Models
 
 The Agents SDK comes with out-of-the-box support for OpenAI models in two flavors:
@@ -615,9 +113,10 @@ BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type'
 ```
 
 This is a shortcoming of some model providers - they support JSON outputs, but don't allow you to specify the `json_schema` to use for the output. We are working on a fix for this, but we suggest relying on providers that do have support for JSON schema output, because otherwise your app will often break because of malformed JSON.
-</file>
 
-<file path="docs/models/litellm.md">
+================
+File: docs/models/litellm.md
+================
 # Using any model via LiteLLM
 
 !!! note
@@ -691,15 +190,17 @@ if __name__ == "__main__":
 
     asyncio.run(main(model, api_key))
 ```
-</file>
 
-<file path="docs/ref/extensions/handoff_filters.md">
+================
+File: docs/ref/extensions/handoff_filters.md
+================
 # `Handoff filters`
 
 ::: agents.extensions.handoff_filters
-</file>
 
-<file path="docs/ref/extensions/handoff_prompt.md">
+================
+File: docs/ref/extensions/handoff_prompt.md
+================
 # `Handoff prompt`
 
 ::: agents.extensions.handoff_prompt
@@ -708,87 +209,101 @@ if __name__ == "__main__":
         members:
             - RECOMMENDED_PROMPT_PREFIX
             - prompt_with_handoff_instructions
-</file>
 
-<file path="docs/ref/extensions/litellm.md">
+================
+File: docs/ref/extensions/litellm.md
+================
 # `LiteLLM Models`
 
 ::: agents.extensions.models.litellm_model
-</file>
 
-<file path="docs/ref/mcp/server.md">
+================
+File: docs/ref/mcp/server.md
+================
 # `MCP Servers`
 
 ::: agents.mcp.server
-</file>
 
-<file path="docs/ref/mcp/util.md">
+================
+File: docs/ref/mcp/util.md
+================
 # `MCP Util`
 
 ::: agents.mcp.util
-</file>
 
-<file path="docs/ref/models/interface.md">
+================
+File: docs/ref/models/interface.md
+================
 # `Model interface`
 
 ::: agents.models.interface
-</file>
 
-<file path="docs/ref/models/openai_chatcompletions.md">
+================
+File: docs/ref/models/openai_chatcompletions.md
+================
 # `OpenAI Chat Completions model`
 
 ::: agents.models.openai_chatcompletions
-</file>
 
-<file path="docs/ref/models/openai_responses.md">
+================
+File: docs/ref/models/openai_responses.md
+================
 # `OpenAI Responses model`
 
 ::: agents.models.openai_responses
-</file>
 
-<file path="docs/ref/tracing/create.md">
+================
+File: docs/ref/tracing/create.md
+================
 # `Creating traces/spans`
 
 ::: agents.tracing.create
-</file>
 
-<file path="docs/ref/tracing/index.md">
+================
+File: docs/ref/tracing/index.md
+================
 # Tracing module
 
 ::: agents.tracing
-</file>
 
-<file path="docs/ref/tracing/processor_interface.md">
+================
+File: docs/ref/tracing/processor_interface.md
+================
 # `Processor interface`
 
 ::: agents.tracing.processor_interface
-</file>
 
-<file path="docs/ref/tracing/processors.md">
+================
+File: docs/ref/tracing/processors.md
+================
 # `Processors`
 
 ::: agents.tracing.processors
-</file>
 
-<file path="docs/ref/tracing/scope.md">
+================
+File: docs/ref/tracing/scope.md
+================
 # `Scope`
 
 ::: agents.tracing.scope
-</file>
 
-<file path="docs/ref/tracing/setup.md">
+================
+File: docs/ref/tracing/setup.md
+================
 # `Setup`
 
 ::: agents.tracing.setup
-</file>
 
-<file path="docs/ref/tracing/span_data.md">
+================
+File: docs/ref/tracing/span_data.md
+================
 # `Span data`
 
 ::: agents.tracing.span_data
-</file>
 
-<file path="docs/ref/tracing/spans.md">
+================
+File: docs/ref/tracing/spans.md
+================
 # `Spans`
 
 ::: agents.tracing.spans
@@ -798,129 +313,150 @@ if __name__ == "__main__":
             - Span
             - NoOpSpan
             - SpanImpl
-</file>
 
-<file path="docs/ref/tracing/traces.md">
+================
+File: docs/ref/tracing/traces.md
+================
 # `Traces`
 
 ::: agents.tracing.traces
-</file>
 
-<file path="docs/ref/tracing/util.md">
+================
+File: docs/ref/tracing/util.md
+================
 # `Util`
 
 ::: agents.tracing.util
-</file>
 
-<file path="docs/ref/voice/models/openai_provider.md">
+================
+File: docs/ref/voice/models/openai_provider.md
+================
 # `OpenAIVoiceModelProvider`
 
 ::: agents.voice.models.openai_model_provider
-</file>
 
-<file path="docs/ref/voice/models/openai_stt.md">
+================
+File: docs/ref/voice/models/openai_stt.md
+================
 # `OpenAI STT`
 
 ::: agents.voice.models.openai_stt
-</file>
 
-<file path="docs/ref/voice/models/openai_tts.md">
+================
+File: docs/ref/voice/models/openai_tts.md
+================
 # `OpenAI TTS`
 
 ::: agents.voice.models.openai_tts
-</file>
 
-<file path="docs/ref/voice/events.md">
+================
+File: docs/ref/voice/events.md
+================
 # `Events`
 
 ::: agents.voice.events
-</file>
 
-<file path="docs/ref/voice/exceptions.md">
+================
+File: docs/ref/voice/exceptions.md
+================
 # `Exceptions`
 
 ::: agents.voice.exceptions
-</file>
 
-<file path="docs/ref/voice/input.md">
+================
+File: docs/ref/voice/input.md
+================
 # `Input`
 
 ::: agents.voice.input
-</file>
 
-<file path="docs/ref/voice/model.md">
+================
+File: docs/ref/voice/model.md
+================
 # `Model`
 
 ::: agents.voice.model
-</file>
 
-<file path="docs/ref/voice/pipeline_config.md">
+================
+File: docs/ref/voice/pipeline_config.md
+================
 # `Pipeline Config`
 
 ::: agents.voice.pipeline_config
-</file>
 
-<file path="docs/ref/voice/pipeline.md">
+================
+File: docs/ref/voice/pipeline.md
+================
 # `Pipeline`
 
 ::: agents.voice.pipeline
-</file>
 
-<file path="docs/ref/voice/result.md">
+================
+File: docs/ref/voice/result.md
+================
 # `Result`
 
 ::: agents.voice.result
-</file>
 
-<file path="docs/ref/voice/utils.md">
+================
+File: docs/ref/voice/utils.md
+================
 # `Utils`
 
 ::: agents.voice.utils
-</file>
 
-<file path="docs/ref/voice/workflow.md">
+================
+File: docs/ref/voice/workflow.md
+================
 # `Workflow`
 
 ::: agents.voice.workflow
-</file>
 
-<file path="docs/ref/agent_output.md">
+================
+File: docs/ref/agent_output.md
+================
 # `Agent output`
 
 ::: agents.agent_output
-</file>
 
-<file path="docs/ref/agent.md">
+================
+File: docs/ref/agent.md
+================
 # `Agents`
 
 ::: agents.agent
-</file>
 
-<file path="docs/ref/exceptions.md">
+================
+File: docs/ref/exceptions.md
+================
 # `Exceptions`
 
 ::: agents.exceptions
-</file>
 
-<file path="docs/ref/function_schema.md">
+================
+File: docs/ref/function_schema.md
+================
 # `Function schema`
 
 ::: agents.function_schema
-</file>
 
-<file path="docs/ref/guardrail.md">
+================
+File: docs/ref/guardrail.md
+================
 # `Guardrails`
 
 ::: agents.guardrail
-</file>
 
-<file path="docs/ref/handoffs.md">
+================
+File: docs/ref/handoffs.md
+================
 # `Handoffs`
 
 ::: agents.handoffs
-</file>
 
-<file path="docs/ref/index.md">
+================
+File: docs/ref/index.md
+================
 # Agents module
 
 ::: agents
@@ -934,42 +470,48 @@ if __name__ == "__main__":
             - set_tracing_disabled
             - set_trace_processors
             - enable_verbose_stdout_logging
-</file>
 
-<file path="docs/ref/items.md">
+================
+File: docs/ref/items.md
+================
 # `Items`
 
 ::: agents.items
-</file>
 
-<file path="docs/ref/lifecycle.md">
+================
+File: docs/ref/lifecycle.md
+================
 # `Lifecycle`
 
 ::: agents.lifecycle
 
     options:
         show_source: false
-</file>
 
-<file path="docs/ref/model_settings.md">
+================
+File: docs/ref/model_settings.md
+================
 # `Model settings`
 
 ::: agents.model_settings
-</file>
 
-<file path="docs/ref/result.md">
+================
+File: docs/ref/result.md
+================
 # `Results`
 
 ::: agents.result
-</file>
 
-<file path="docs/ref/run_context.md">
+================
+File: docs/ref/run_context.md
+================
 # `Run context`
 
 ::: agents.run_context
-</file>
 
-<file path="docs/ref/run.md">
+================
+File: docs/ref/run.md
+================
 # `Runner`
 
 ::: agents.run
@@ -978,27 +520,31 @@ if __name__ == "__main__":
         members:
             - Runner
             - RunConfig
-</file>
 
-<file path="docs/ref/stream_events.md">
+================
+File: docs/ref/stream_events.md
+================
 # `Streaming events`
 
 ::: agents.stream_events
-</file>
 
-<file path="docs/ref/tool.md">
+================
+File: docs/ref/tool.md
+================
 # `Tools`
 
 ::: agents.tool
-</file>
 
-<file path="docs/ref/usage.md">
+================
+File: docs/ref/usage.md
+================
 # `Usage`
 
 ::: agents.usage
-</file>
 
-<file path="docs/voice/pipeline.md">
+================
+File: docs/voice/pipeline.md
+================
 # Pipelines and workflows
 
 [`VoicePipeline`][agents.voice.pipeline.VoicePipeline] is a class that makes it easy to turn your agentic workflows into a voice app. You pass in a workflow to run, and the pipeline takes care of transcribing input audio, detecting when the audio ends, calling your workflow at the right time, and turning the workflow output back into audio.
@@ -1074,9 +620,10 @@ async for event in result.stream():
 ### Interruptions
 
 The Agents SDK currently does not support any built-in interruptions support for [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]. Instead for every detected turn it will trigger a separate run of your workflow. If you want to handle interruptions inside your application you can listen to the [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] events. `turn_started` will indicate that a new turn was transcribed and processing is beginning. `turn_ended` will trigger after all the audio was dispatched for a respective turn. You could use these events to mute the microphone of the speaker when the model starts a turn and unmute it after you flushed all the related audio for a turn.
-</file>
 
-<file path="docs/voice/quickstart.md">
+================
+File: docs/voice/quickstart.md
+================
 # Quickstart
 
 ## Prerequisites
@@ -1271,9 +818,10 @@ if __name__ == "__main__":
 ```
 
 If you run this example, the agent will speak to you! Check out the example in [examples/voice/static](https://github.com/openai/openai-agents-python/tree/main/examples/voice/static) to see a demo where you can speak to the agent yourself.
-</file>
 
-<file path="docs/voice/tracing.md">
+================
+File: docs/voice/tracing.md
+================
 # Tracing
 
 Just like the way [agents are traced](../tracing.md), voice pipelines are also automatically traced.
@@ -1288,9 +836,10 @@ Key tracing related fields are:
 -   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: The name of the trace workflow.
 -   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: The `group_id` of the trace, which lets you link multiple traces.
 -   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: Additional metadata to include with the trace.
-</file>
 
-<file path="docs/agents.md">
+================
+File: docs/agents.md
+================
 # Agents
 
 Agents are the core building block in your apps. An agent is a large language model (LLM), configured with instructions and tools.
@@ -1438,9 +987,10 @@ Supplying a list of tools doesn't always mean the LLM will use a tool. You can f
     To prevent infinite loops, the framework automatically resets `tool_choice` to "auto" after a tool call. This behavior is configurable via [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice]. The infinite loop is because tool results are sent to the LLM, which then generates another tool call because of `tool_choice`, ad infinitum.
 
     If you want the Agent to completely stop after a tool call (rather than continuing with auto mode), you can set [`Agent.tool_use_behavior="stop_on_first_tool"`] which will directly use the tool output as the final response without further LLM processing.
-</file>
 
-<file path="docs/config.md">
+================
+File: docs/config.md
+================
 # Configuring the SDK
 
 ## API keys and clients
@@ -1535,9 +1085,10 @@ To disable logging tool inputs and outputs:
 ```bash
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
 ```
-</file>
 
-<file path="docs/context.md">
+================
+File: docs/context.md
+================
 # Context management
 
 Context is an overloaded term. There are two main classes of context you might care about:
@@ -1615,9 +1166,10 @@ When an LLM is called, the **only** data it can see is from the conversation his
 2. Add it to the `input` when calling the `Runner.run` functions. This is similar to the `instructions` tactic, but allows you to have messages that are lower in the [chain of command](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command).
 3. Expose it via function tools. This is useful for _on-demand_ context - the LLM decides when it needs some data, and can call the tool to fetch that data.
 4. Use retrieval or web search. These are special tools that are able to fetch relevant data from files or databases (retrieval), or from the web (web search). This is useful for "grounding" the response in relevant contextual data.
-</file>
 
-<file path="docs/examples.md">
+================
+File: docs/examples.md
+================
 # Examples
 
 Check out a variety of sample implementations of the SDK in the examples section of the [repo](https://github.com/openai/openai-agents-python/tree/main/examples). The examples are organized into several categories that demonstrate different patterns and capabilities.
@@ -1660,9 +1212,10 @@ Check out a variety of sample implementations of the SDK in the examples section
 
 - **[voice](https://github.com/openai/openai-agents-python/tree/main/examples/voice):**
   See examples of voice agents, using our TTS and STT models.
-</file>
 
-<file path="docs/guardrails.md">
+================
+File: docs/guardrails.md
+================
 # Guardrails
 
 Guardrails run _in parallel_ to your agents, enabling you to do checks and validations of user input. For example, imagine you have an agent that uses a very smart (and hence slow/expensive) model to help with customer requests. You wouldn't want malicious users to ask the model to help them with their math homework. So, you can run a guardrail with a fast/cheap model. If the guardrail detects malicious usage, it can immediately raise an error, which stops the expensive model from running and saves you time/money.
@@ -1817,9 +1370,10 @@ async def main():
 2. This is the guardrail's output type.
 3. This is the guardrail function that receives the agent's output, and returns the result.
 4. This is the actual agent that defines the workflow.
-</file>
 
-<file path="docs/handoffs.md">
+================
+File: docs/handoffs.md
+================
 # Handoffs
 
 Handoffs allow an agent to delegate tasks to another agent. This is particularly useful in scenarios where different agents specialize in distinct areas. For example, a customer support app might have agents that each specifically handle tasks like order status, refunds, FAQs, etc.
@@ -1933,9 +1487,10 @@ billing_agent = Agent(
     <Fill in the rest of your prompt here>.""",
 )
 ```
-</file>
 
-<file path="docs/index.md">
+================
+File: docs/index.md
+================
 # OpenAI Agents SDK
 
 The [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) enables you to build agentic AI apps in a lightweight, easy-to-use package with very few abstractions. It's a production-ready upgrade of our previous experimentation for agents, [Swarm](https://github.com/openai/swarm/tree/main). The Agents SDK has a very small set of primitives:
@@ -1988,9 +1543,10 @@ print(result.final_output)
 ```bash
 export OPENAI_API_KEY=sk-...
 ```
-</file>
 
-<file path="docs/mcp.md">
+================
+File: docs/mcp.md
+================
 # Model context protocol (MCP)
 
 The [Model context protocol](https://modelcontextprotocol.io/introduction) (aka MCP) is a way to provide tools and context to the LLM. From the MCP docs:
@@ -2051,9 +1607,10 @@ View complete working examples at [examples/mcp](https://github.com/openai/opena
 2. MCP-related info on function calls
 
 ![MCP Tracing Screenshot](./assets/images/mcp-tracing.jpg)
-</file>
 
-<file path="docs/multi_agent.md">
+================
+File: docs/multi_agent.md
+================
 # Orchestrating multiple agents
 
 Orchestration refers to the flow of agents in your app. Which agents run, in what order, and how do they decide what happens next? There are two main ways to orchestrate agents:
@@ -2091,9 +1648,10 @@ While orchestrating via LLM is powerful, orchestrating via code makes tasks more
 -   Running multiple agents in parallel, e.g. via Python primitives like `asyncio.gather`. This is useful for speed when you have multiple tasks that don't depend on each other.
 
 We have a number of examples in [`examples/agent_patterns`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns).
-</file>
 
-<file path="docs/quickstart.md">
+================
+File: docs/quickstart.md
+================
 # Quickstart
 
 ## Create a project and virtual environment
@@ -2283,9 +1841,10 @@ Learn how to build more complex agentic flows:
 -   Learn about how to configure [Agents](agents.md).
 -   Learn about [running agents](running_agents.md).
 -   Learn about [tools](tools.md), [guardrails](guardrails.md) and [models](models/index.md).
-</file>
 
-<file path="docs/results.md">
+================
+File: docs/results.md
+================
 # Results
 
 When you call the `Runner.run` methods, you either get a:
@@ -2338,9 +1897,10 @@ The [`raw_responses`][agents.result.RunResultBase.raw_responses] property contai
 ### Original input
 
 The [`input`][agents.result.RunResultBase.input] property contains the original input you provided to the `run` method. In most cases you won't need this, but it's available in case you do.
-</file>
 
-<file path="docs/running_agents.md">
+================
+File: docs/running_agents.md
+================
 # Running agents
 
 You can run agents via the [`Runner`][agents.run.Runner] class. You have 3 options:
@@ -2436,9 +1996,10 @@ The SDK raises exceptions in certain cases. The full list is in [`agents.excepti
 -   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError] is raised when the model produces invalid outputs, e.g. malformed JSON or using non-existent tools.
 -   [`UserError`][agents.exceptions.UserError] is raised when you (the person writing code using the SDK) make an error using the SDK.
 -   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered] is raised when a [guardrail](guardrails.md) is tripped.
-</file>
 
-<file path="docs/streaming.md">
+================
+File: docs/streaming.md
+================
 # Streaming
 
 Streaming lets you subscribe to updates of the agent run as it proceeds. This can be useful for showing the end-user progress updates and partial responses.
@@ -2526,9 +2087,10 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
-</file>
 
-<file path="docs/tools.md">
+================
+File: docs/tools.md
+================
 # Tools
 
 Tools let agents take actions: things like fetching data, running code, calling external APIs, and even using a computer. There are three classes of tools in the Agent SDK:
@@ -2820,9 +2382,10 @@ When you create a function tool via `@function_tool`, you can pass a `failure_er
 -   If you explicitly pass `None`, then any tool call errors will be re-raised for you to handle. This could be a `ModelBehaviorError` if the model produced invalid JSON, or a `UserError` if your code crashed, etc.
 
 If you are manually creating a `FunctionTool` object, then you must handle errors inside the `on_invoke_tool` function.
-</file>
 
-<file path="docs/tracing.md">
+================
+File: docs/tracing.md
+================
 # Tracing
 
 The Agents SDK includes built-in tracing, collecting a comprehensive record of events during an agent run: LLM generations, tool calls, handoffs, guardrails, and even custom events that occur. Using the [Traces dashboard](https://platform.openai.com/traces), you can debug, visualize, and monitor your workflows during development and in production.
@@ -2939,9 +2502,10 @@ To customize this default setup, to send traces to alternative or additional bac
 -   [Langfuse](https://langfuse.com/docs/integrations/openaiagentssdk/openai-agents)
 -   [Langtrace](https://docs.langtrace.ai/supported-integrations/llm-frameworks/openai-agents-sdk)
 -   [Okahu-Monocle](https://github.com/monocle2ai/monocle)
-</file>
 
-<file path="docs/visualization.md">
+================
+File: docs/visualization.md
+================
 # Agent Visualization
 
 Agent visualization allows you to generate a structured graphical representation of agents and their relationships using **Graphviz**. This is useful for understanding how agents, tools, and handoffs interact within an application.
@@ -3026,6 +2590,9 @@ draw_graph(triage_agent, filename="agent_graph.png")
 ```
 
 This will generate `agent_graph.png` in the working directory.
-</file>
 
-</files>
+
+
+================================================================
+End of Codebase
+================================================================
