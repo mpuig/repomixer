@@ -3583,13 +3583,13 @@ kubectl create serviceaccount adk-agent-sa
 ```
 
 ```bash
-gcloud projects add-iam-policy-binding projects/mofilabs \
+gcloud projects add-iam-policy-binding projects/${GOOGLE_CLOUD_PROJECT} \
     --role=roles/aiplatform.user \
-    --member=principal://iam.googleapis.com/projects/598464211339/locations/global/workloadIdentityPools/mofilabs.svc.id.goog/subject/ns/default/sa/adk-agent-sa \
+    --member=principal://iam.googleapis.com/projects/${GOOGLE_CLOUD_PROJECT_NUMBER}/locations/global/workloadIdentityPools/${GOOGLE_CLOUD_PROJECT}.svc.id.goog/subject/ns/default/sa/adk-agent-sa \
     --condition=None
 ```
 
-### Create the Kuberentes manifest files
+### Create the Kubernetes manifest files
 
 Create a Kubernetes deployment manifest file named `deployment.yaml` in your project directory. This file defines how to deploy your application on GKE.
 
@@ -7986,7 +7986,7 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     print("--- Turn 1: Capturing Information ---")
     session1_id = "session_info"
     session1 = session_service.create_session(APP_NAME, USER_ID, session1_id)
-    user_input1 = Content(parts=[Part(text="My favorite project is Project Alpha.")])
+    user_input1 = Content(parts=[Part(text="My favorite project is Project Alpha.")], role="user")
 
     # Run the agent
     final_response_text = "(No final response)"
@@ -8010,7 +8010,7 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
 
     # Switch runner to the recall agent
     runner.agent = memory_recall_agent
-    user_input2 = Content(parts=[Part(text="What is my favorite project?")])
+    user_input2 = Content(parts=[Part(text="What is my favorite project?")], role="user")
 
     # Run the recall agent
     print("Running MemoryRecallAgent...")
