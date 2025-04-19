@@ -4117,7 +4117,7 @@ adk eval \
 
 Here are the details for each command line argument:
 
-* `AGENT_MODULE_FILE_PATH`: The path to the `init.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.  
+* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.  
 * `EVAL_SET_FILE_PATH`: The path to evaluations file(s). You can specify one or more eval set file paths. For each file, all evals will be run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name, demarcated by a colon `:` .
 * For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`  
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`  
@@ -4771,20 +4771,40 @@ Copy-paste the following code block to `__init__.py` and `main.py` files.
 from . import agent
 ```
 
-## 3\. Setup Gemini API Key {#3.-setup-gemini-api-key}
+## 3\. Set up the platform {#3.-set-up-the-platform}
 
-To run your agent, you'll need to set up a Gemini API Key.
+To run the agent, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
-1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).  
-2. Inside your `app` directory, create a `.env` file.  
-3. Add these lines to `.env`, replacing `YOUR_API_KEY_HERE` with your key:
+=== "Gemini - Google AI Studio"
+    1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).
+    2. Open the **`.env`** file located inside (`app/`) and copy-paste the following code.
 
-**.env**
+        ```env title=".env"
+        GOOGLE_GENAI_USE_VERTEXAI=FALSE
+        GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
+        ```
 
-```shell
-GOOGLE_API_KEY=YOUR_API_KEY_HERE # Replace with your API Key
-GOOGLE_GENAI_USE_VERTEXAI=0
-```
+    3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
+
+=== "Gemini - Google Cloud Vertex AI"
+    1. You need an existing
+       [Google Cloud](https://cloud.google.com/?e=48754805&hl=en) account and a
+       project.
+        * Set up a
+          [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp)
+        * Set up the
+          [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
+        * Authenticate to Google Cloud, from the terminal by running
+          `gcloud auth login`.
+        * [Enable the Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
+    2. Open the **`.env`** file located inside (`app/`). Copy-paste
+       the following code and update the project ID and location.
+
+        ```env title=".env"
+        GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        GOOGLE_CLOUD_PROJECT=PASTE_YOUR_ACTUAL_PROJECT_ID
+        GOOGLE_CLOUD_LOCATION=us-central1
+        ```
 
 ## 4. Try the agent with `adk web` {#4.-try-it-adk-web}
 
@@ -4792,6 +4812,12 @@ Now it's ready to try the agent. Run the following command to launch the **dev U
 
 ```shell
 cd app
+```
+
+Also, set `SSL_CERT_FILE` variable with the following command. This is required for the voice and video tests later.
+
+```shell
+export SSL_CERT_FILE=$(python -m certifi)
 ```
 
 Then, run the dev UI:
@@ -4817,9 +4843,9 @@ The agent will use the google_search tool to get the latest information to answe
 
 ### Try with voice and video
 
-Now, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
+To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
 
-Also, click the camera button to enable the video input, and ask questions like "What do you see?". The agent will answer what they see in the video input.
+To try with video, reload the web browser, click the camera button to enable the video input, and ask questions like "What do you see?". The agent will answer what they see in the video input.
 
 ### Stop the tool
 
@@ -4841,6 +4867,20 @@ adk-streaming/  # Project folder
     ├── main.py # FastAPI web app
     └── static/ # Static content folder
         └── index.html # The web client page
+```
+
+By adding the directories and files above, the entire directory structure and files will look like:
+
+```console
+adk-streaming/  # Project folder
+└── app/ # the web app folder
+    ├── main.py # FastAPI web app
+    ├── static/ # Static content folder
+    |   └── index.html # The web client page
+    ├── .env # Gemini API key
+    └── google_search_agent/ # Agent folder
+        ├── __init__.py # Python package
+        └── agent.py # Agent definition
 ```
 
 **main.py**
@@ -4915,7 +4955,7 @@ def start_agent_session(session_id: str):
 
 
 async def agent_to_client_messaging(websocket, live_events):
-    """Agent to client communicaation"""
+    """Agent to client communication"""
     while True:
         async for event in live_events:
             # turn_complete
