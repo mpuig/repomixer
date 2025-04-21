@@ -2176,11 +2176,15 @@ File: docs/callbacks/index.md
 
 Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to hook into an agent's execution process. They allow you to observe, customize, and even control the agent's behavior at specific, predefined points without modifying the core ADK framework code.
 
-**What are they?** In essence, callbacks are standard Python functions that you define. You then associate these functions with an agent when you create it. The ADK framework automatically calls your functions at key stages in the agent's lifecycle, such as:
+**What are they?** In essence, callbacks are standard Python functions that you define. You then associate these functions with an agent when you create it. The ADK framework automatically calls your functions at key stages, letting you observe or intervene. Think of it like checkpoints during the agent's process:
 
-* Before or after the agent's main processing logic runs.  
-* Before sending a request to, or after receiving a response from, the Large Language Model (LLM).  
-* Before executing a tool (like a Python function or another agent) or after it finishes.
+* **Before the agent starts its main work on a request, and after it finishes:** When you ask an agent to do something (e.g., answer a question), it runs its internal logic to figure out the response.
+  * The `before_agent` callback executes *right before* this main work begins for that specific request.
+  * The `after_agent` callback executes *right after* the agent has finished all its steps for that request and has prepared the final result, but just before the result is returned.
+  * This "main work" encompasses the agent's *entire* process for handling that single request. This might involve deciding to call an LLM, actually calling the LLM, deciding to use a tool, using the tool, processing the results, and finally putting together the answer. These callbacks essentially wrap the whole sequence from receiving the input to producing the final output for that one interaction.
+* **Before sending a request to, or after receiving a response from, the Large Language Model (LLM):** These callbacks (`before_model`, `after_model`) allow you to inspect or modify the data going to and coming from the LLM specifically.
+* **Before executing a tool (like a Python function or another agent) or after it finishes:** Similarly, `before_tool` and `after_tool` callbacks give you control points specifically around the execution of tools invoked by the agent.
+
 
 ![intro_components.png](../assets/callback_flow.png)
 
@@ -2255,6 +2259,18 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
     --8<-- "examples/python/snippets/callbacks/before_agent_callback.py"
     ```
 
+**Note on the `before_agent_callback` Example:**
+
+* **What it Shows:** This example demonstrates the `before_agent_callback`. This callback runs *right before* the agent's main processing logic starts for a given request.
+* **How it Works:** The callback function (`check_if_agent_should_run`) looks at a flag (`skip_llm_agent`) in the session's state.
+    * If the flag is `True`, the callback returns a `types.Content` object. This tells the ADK framework to **skip** the agent's main execution entirely and use the callback's returned content as the final response.
+    * If the flag is `False` (or not set), the callback returns `None`. This tells the ADK framework to **proceed** with the agent's normal execution (calling the LLM in this case).
+* **Expected Outcome:** You'll see two scenarios:
+    1. In the session *with* the `skip_llm_agent: True` state, the agent's LLM call is bypassed, and the output comes directly from the callback ("Agent... skipped...").
+    2. In the session *without* that state flag, the callback allows the agent to run, and you see the actual response from the LLM (e.g., "Hello!").
+* **Understanding Callbacks:** This highlights how `before_` callbacks act as **gatekeepers**, allowing you to intercept execution *before* a major step and potentially prevent it based on checks (like state, input validation, permissions).
+
+
 ### After Agent Callback
 
 **When:** Called *immediately after* the agent's `_run_async_impl` (or `_run_live_impl`) method successfully completes. It does *not* run if the agent was skipped due to `before_agent_callback` returning content or if `end_invocation` was set during the agent's run.
@@ -2266,6 +2282,17 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
     ```py
     --8<-- "examples/python/snippets/callbacks/after_agent_callback.py"
     ```
+
+**Note on the `after_agent_callback` Example:**
+
+* **What it Shows:** This example demonstrates the `after_agent_callback`. This callback runs *right after* the agent's main processing logic has finished and produced its result, but *before* that result is finalized and returned.
+* **How it Works:** The callback function (`modify_output_after_agent`) checks a flag (`add_concluding_note`) in the session's state.
+    * If the flag is `True`, the callback returns a *new* `types.Content` object. This tells the ADK framework to **replace** the agent's original output with the content returned by the callback.
+    * If the flag is `False` (or not set), the callback returns `None`. This tells the ADK framework to **use** the original output generated by the agent.
+*   **Expected Outcome:** You'll see two scenarios:
+    1. In the session *without* the `add_concluding_note: True` state, the callback allows the agent's original output ("Processing complete!") to be used.
+    2. In the session *with* that state flag, the callback intercepts the agent's original output and replaces it with its own message ("Concluding note added...").
+* **Understanding Callbacks:** This highlights how `after_` callbacks allow **post-processing** or **modification**. You can inspect the result of a step (the agent's run) and decide whether to let it pass through, change it, or completely replace it based on your logic.
 
 ## LLM Interaction Callbacks
 
