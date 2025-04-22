@@ -157,8 +157,11 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
 ???+ "Code"
 
     ```py
-    --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py"
+    --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py:init"
     ```
+**NOTE:** Runnable Code Sample:
+
+To run this specific parallel research example yourself, you can find a complete, runnable Python file [here](https://github.com/google/adk-docs/blob/main/examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py)
 
 ================
 File: docs/agents/workflow-agents/sequential-agents.md
@@ -4855,7 +4858,7 @@ adk web
 
 Open the URL provided (usually `http://localhost:8000` or
 `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
-entirely on your local machine. Select `basic_search_agent`.
+entirely on your local machine. Select `google_search_agent`.
 
 ### Try with text
 
