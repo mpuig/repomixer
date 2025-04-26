@@ -102,7 +102,7 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
 ???+ "Full Code"
 
     ```py
-    --8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py"
+    --8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py:init"
     ```
 
 ================
@@ -159,9 +159,6 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
     ```py
     --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py:init"
     ```
-**NOTE:** Runnable Code Sample:
-
-To run this specific parallel research example yourself, you can find a complete, runnable Python file [here](https://github.com/google/adk-docs/blob/main/examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py)
 
 ================
 File: docs/agents/workflow-agents/sequential-agents.md
@@ -208,7 +205,7 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
 ???+ "Code"
 
     ```py
-    --8<-- "examples/python/snippets/agents/workflow-agents/sequential_agent_code_development_agent.py"
+    --8<-- "examples/python/snippets/agents/workflow-agents/sequential_agent_code_development_agent.py:init"
     ```
 
 ================
@@ -3017,14 +3014,6 @@ remote_app = agent_engines.create(
 
 This step may take several minutes to finish.
 
-## Grant the deployed agent permissions
-
-Before proceeding to query your agent on Agent Engine, your deployed agent must first be granted additional permissions before it can use managed sessions. Managed sessions are a built-in component of Agent Engine that enables agents to keep track of the state of a conversation. Without granting the deploy agent the permissions below, you may see errors when querying your deployed agent.
-
-You can follow the instructions in [Set up your service agent permissions](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/set-up#service-agent) to grant the following permissions via the [IAM admin page](https://console.cloud.google.com/iam-admin/iam):
-
-*  Vertex AI User (`roles/aiplatform.user`) to your `service-PROJECT_NUMBER@gcp-sa-aiplatform-re.iam.gserviceaccount.com` service account
-
 ### Try your agent on Agent Engine
 
 #### Create session (remote)
@@ -3085,7 +3074,7 @@ Expected output for `stream_query` (remote):
 
 ## Clean up
 
-After you've finished, it's a good practice to clean up your cloud resources.
+After you have finished, it is a good practice to clean up your cloud resources.
 You can delete the deployed Agent Engine instance to avoid any unexpected
 charges on your Google Cloud account.
 
@@ -6331,18 +6320,18 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     # Turn 1: Capture some information in a session
     print("--- Turn 1: Capturing Information ---")
     session1_id = "session_info"
-    session1 = session_service.create_session(APP_NAME, USER_ID, session1_id)
+    session1 = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
     user_input1 = Content(parts=[Part(text="My favorite project is Project Alpha.")], role="user")
 
     # Run the agent
     final_response_text = "(No final response)"
-    for event in runner.run(USER_ID, session1_id, user_input1):
+    for event in runner.run(user_id=USER_ID, session_id=session1_id, new_message=user_input1):
         if event.is_final_response() and event.content and event.content.parts:
             final_response_text = event.content.parts[0].text
     print(f"Agent 1 Response: {final_response_text}")
 
     # Get the completed session
-    completed_session1 = session_service.get_session(APP_NAME, USER_ID, session1_id)
+    completed_session1 = session_service.get_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
 
     # Add this session's content to the Memory Service
     print("\n--- Adding Session 1 to Memory ---")
@@ -6352,7 +6341,7 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     # Turn 2: In a *new* (or same) session, ask a question requiring memory
     print("\n--- Turn 2: Recalling Information ---")
     session2_id = "session_recall" # Can be same or different session ID
-    session2 = session_service.create_session(APP_NAME, USER_ID, session2_id)
+    session2 = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session2_id)
 
     # Switch runner to the recall agent
     runner.agent = memory_recall_agent
@@ -6361,7 +6350,7 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     # Run the recall agent
     print("Running MemoryRecallAgent...")
     final_response_text_2 = "(No final response)"
-    for event in runner.run(USER_ID, session2_id, user_input2):
+    for event in runner.run(user_id=USER_ID, session_id=session2_id, new_message=user_input2):
         print(f"  Event: {event.author} - Type: {'Text' if event.content and event.content.parts and event.content.parts[0].text else ''}"
             f"{'FuncCall' if event.get_function_calls() else ''}"
             f"{'FuncResp' if event.get_function_responses() else ''}")
@@ -8021,7 +8010,7 @@ information on
 Toolbox, see the
 [documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
 
-![GenAI Toolbox](../assets/mcp_db_toolbox.svg)
+![GenAI Toolbox](../assets/mcp_db_toolbox.png)
 
 ### Configure and deploy
 
@@ -8168,6 +8157,8 @@ The **ToolContext** provides access to several key pieces of information and con
 
 * Access to Services: Methods to interact with configured services like Artifacts and Memory.
 
+Note that you shouldn't include the `tool_context` parameter in the tool function docstring. Since `ToolContext` is automatically injected by the ADK framework *after* the LLM decides to call the tool function, it is not relevant for the LLM's decision-making and including it can confuse the LLM.
+
 ### **State Management**
 
 The `tool_context.state` attribute provides direct read and write access to the state associated with the current session. It behaves like a dictionary but ensures that any modifications are tracked as deltas and persisted by the session service. This enables tools to maintain and share information across different interactions and agent steps.
@@ -8280,6 +8271,7 @@ Here are key guidelines for defining effective tool functions:
     * **Explain *when* the tool should be used.** Provide context or example scenarios to guide the LLM's decision-making.
     * **Describe *each parameter* clearly.** Explain what information the LLM needs to provide for that argument.
     * Describe the **structure and meaning of the expected `dict` return value**, especially the different `status` values and associated data keys.
+    * **Do not describe the injected ToolContext parameter**. Avoid mentioning the optional `tool_context: ToolContext` parameter within the docstring description since it is not a parameter the LLM needs to know about. ToolContext is injected by ADK, *after* the LLM decides to call it. 
 
     **Example of a good definition:**
 
