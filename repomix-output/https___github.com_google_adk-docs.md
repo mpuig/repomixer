@@ -6749,9 +6749,7 @@ You set up authentication when defining your tool:
 
 ## Journey 1: Building Agentic Applications with Authenticated Tools
 
-This section focuses on using pre-existing tools (like those from `RestApiTool/ OpenAPIToolset`, `APIHubToolset`, `GoogleApiToolSet`, or custom `FunctionTools`) that require authentication within your agentic application. Your main responsibility is configuring the tools and handling the client-side part of interactive authentication flows (if required by the tool).
-
-![Authentication](../assets/auth_part1.svg)
+This section focuses on using pre-existing tools (like those from `RestApiTool/ OpenAPIToolset`, `APIHubToolset`, `GoogleApiToolSet`) that require authentication within your agentic application. Your main responsibility is configuring the tools and handling the client-side part of interactive authentication flows (if required by the tool).
 
 ### 1. Configuring Tools with Authentication
 
@@ -6794,29 +6792,29 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       from google.adk.auth import OAuth2Auth
 
       auth_scheme = OAuth2(
-         flows=OAuthFlows(
-            authorizationCode=OAuthFlowAuthorizationCode(
+          flows=OAuthFlows(
+              authorizationCode=OAuthFlowAuthorizationCode(
                   authorizationUrl="https://accounts.google.com/o/oauth2/auth",
                   tokenUrl="https://oauth2.googleapis.com/token",
                   scopes={
-                     "https://www.googleapis.com/auth/calendar": "calendar scope"
+                      "https://www.googleapis.com/auth/calendar": "calendar scope"
                   },
-            )
-         )
+              )
+          )
       )
       auth_credential = AuthCredential(
-         auth_type=AuthCredentialTypes.OAUTH2,
-         oauth2=OAuth2Auth(
-            client_id=YOUR_OAUTH_CLIENT_ID, 
-            client_secret=YOUR_OAUTH_CLIENT_SECRET
-         ),
+          auth_type=AuthCredentialTypes.OAUTH2,
+          oauth2=OAuth2Auth(
+              client_id=YOUR_OAUTH_CLIENT_ID, 
+              client_secret=YOUR_OAUTH_CLIENT_SECRET
+          ),
       )
 
       calendar_api_toolset = OpenAPIToolset(
-         spec_str=google_calendar_openapi_spec_str, # Fill this with an openapi spec
-         spec_str_type='yaml',
-         auth_scheme=auth_scheme,
-         auth_credential=auth_credential,
+          spec_str=google_calendar_openapi_spec_str, # Fill this with an openapi spec
+          spec_str_type='yaml',
+          auth_scheme=auth_scheme,
+          auth_credential=auth_credential,
       )
       ```
 
@@ -6828,15 +6826,16 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       from google.adk.tools.openapi_tool.auth.auth_helpers import service_account_dict_to_scheme_credential
       from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
 
-      service_account_cred = json.loads(service_account_json_str)auth_scheme, auth_credential = service_account_dict_to_scheme_credential(
-         config=service_account_cred,
-         scopes=["https://www.googleapis.com/auth/cloud-platform"],
+      service_account_cred = json.loads(service_account_json_str)
+      auth_scheme, auth_credential = service_account_dict_to_scheme_credential(
+          config=service_account_cred,
+          scopes=["https://www.googleapis.com/auth/cloud-platform"],
       )
       sample_toolset = OpenAPIToolset(
-         spec_str=sa_openapi_spec_str, # Fill this with an openapi spec
-         spec_str_type='json',
-         auth_scheme=auth_scheme,
-         auth_credential=auth_credential,
+          spec_str=sa_openapi_spec_str, # Fill this with an openapi spec
+          spec_str_type='json',
+          auth_scheme=auth_scheme,
+          auth_credential=auth_credential,
       )
       ```
 
@@ -6850,23 +6849,23 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
 
       auth_scheme = OpenIdConnectWithConfig(
-         authorization_endpoint=OAUTH2_AUTH_ENDPOINT_URL,
-         token_endpoint=OAUTH2_TOKEN_ENDPOINT_URL,
-         scopes=['openid', 'YOUR_OAUTH_SCOPES"]
+          authorization_endpoint=OAUTH2_AUTH_ENDPOINT_URL,
+          token_endpoint=OAUTH2_TOKEN_ENDPOINT_URL,
+          scopes=['openid', 'YOUR_OAUTH_SCOPES"]
       )
       auth_credential = AuthCredential(
-      auth_type=AuthCredentialTypes.OPEN_ID_CONNECT,
-      oauth2=OAuth2Auth(
-         client_id="...",
-         client_secret="...",
-      )
+          auth_type=AuthCredentialTypes.OPEN_ID_CONNECT,
+          oauth2=OAuth2Auth(
+              client_id="...",
+              client_secret="...",
+          )
       )
 
       userinfo_toolset = OpenAPIToolset(
-         spec_str=content, # Fill in an actual spec
-         spec_str_type='yaml',
-         auth_scheme=auth_scheme,
-         auth_credential=auth_credential,
+          spec_str=content, # Fill in an actual spec
+          spec_str_type='yaml',
+          auth_scheme=auth_scheme,
+          auth_credential=auth_credential,
       )
       ```
 
@@ -6883,17 +6882,32 @@ from google.adk.tools.google_api_tool import calendar_tool_set
 client_id = "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com"
 client_secret = "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
 
-calendar_tools = calendar_tool_set.get_tools()
-for tool in calendar_tools:
-    # Use the specific configure method for this tool type
-    tool.configure_auth(client_id=client_id, client_secret=client_secret)
+# Use the specific configure method for this toolset type
+calendar_tool_set.configure_auth(
+    client_id=oauth_client_id, client_secret=oauth_client_secret
+)
 
-# agent = LlmAgent(..., tools=calendar_tools)
+# agent = LlmAgent(..., tools=calendar_tool_set.get_tool('calendar_tool_set'))
 ```
+
+The sequence diagram of auth request flow (where tools are requesting auth credentials) looks like below:
+
+![Authentication](../assets/auth_part1.svg) 
+
 
 ### 2. Handling the Interactive OAuth/OIDC Flow (Client-Side)
 
-If a tool requires user login/consent (typically OAuth 2.0 or OIDC), the ADK framework pauses execution and signals your **Agent Client** application (the code calling `runner.run_async`, like your UI backend, CLI app, or Spark job) to handle the user interaction.
+If a tool requires user login/consent (typically OAuth 2.0 or OIDC), the ADK framework pauses execution and signals your **Agent Client** application. There are two cases:
+
+* **Agent Client** application runs the agent directly (via `runner.run_async`) in the same process. e.g. UI backend, CLI app, or Spark job etc.
+* **Agent Client** application interacts with ADK's fastapi server via `/run` or `/run_sse` endpoint. While ADK's fastapi server could be setup on the same server or different server as **Agent Client** application
+
+The second case is a special case of first case, because `/run` or `/run_sse` endpoint also invokes `runner.run_async`. The only differences are:
+
+* Whether to call a python function to run the agent (first case) or call a service endpoint to run the agent (second case).
+* Whether the result events are in-memory objects (first case) or serialized json string in http response (second case).
+
+Below sections focus on the first case and you should be able to map it to the second case very straightforward. We will also describe some differences to handle for the second case if necessary.
 
 Here's the step-by-step process for your client application:
 
@@ -6901,7 +6915,7 @@ Here's the step-by-step process for your client application:
 
 * Initiate the agent interaction using `runner.run_async`.  
 * Iterate through the yielded events.  
-* Look for a specific event where the agent calls the special function `adk_request_credential`. This event signals that user interaction is needed. Use helper functions to identify this event and extract necessary information.
+* Look for a specific function call event whose function call has a special name: `adk_request_credential`. This event signals that user interaction is needed. You can use helper functions to identify this event and extract necessary information. (For the second case, the logic is similar. You deserialize the event from the http response).
 
 ```py
 
@@ -6914,19 +6928,20 @@ events_async = runner.run_async(
     session_id=session.id, user_id='user', new_message=content
 )
 
-auth_request_event_id, auth_config = None, None
+auth_request_function_call_id, auth_config = None, None
 
 async for event in events_async:
     # Use helper to check for the specific auth request event
-    if is_pending_auth_event(event):
+    if (auth_request_function_call := get_auth_request_function_call(event)):
         print("--> Authentication required by agent.")
         # Store the ID needed to respond later
-        auth_request_event_id = get_function_call_id(event)
+        if not (auth_request_function_call_id := auth_request_function_call.id):
+            raise ValueError(f'Cannot get function call id from function call: {auth_request_function_call}')
         # Get the AuthConfig containing the auth_uri etc.
-        auth_config = get_function_call_auth_config(event)
+        auth_config = get_auth_config(auth_request_function_call)
         break # Stop processing events for now, need user interaction
 
-if not auth_request_event_id:
+if not auth_request_function_call_id:
     print("\nAuth not required or agent finished.")
     # return # Or handle final response if received
 
@@ -6937,38 +6952,30 @@ if not auth_request_event_id:
 ```py
 from google.adk.events import Event
 from google.adk.auth import AuthConfig # Import necessary type
+from google.genai import types
 
-def is_pending_auth_event(event: Event) -> bool:
-  # Checks if the event is the special auth request function call
-  return (
-      event.content and event.content.parts and event.content.parts[0]
-      and event.content.parts[0].function_call
-      and event.content.parts[0].function_call.name == 'adk_request_credential'
-      # Check if it's marked as long running (optional but good practice)
-      and event.long_running_tool_ids
-      and event.content.parts[0].function_call.id in event.long_running_tool_ids
-  )
+def get_auth_request_function_call(event: Event) -> types.FunctionCall:
+    # Get the special auth request function call from the event
+    if not event.content or event.content.parts:
+        return
+    for part in event.content.parts:
+        if (
+            part 
+            and part.function_call 
+            and part.function_call.name == 'adk_request_credential'
+            and event.long_running_tool_ids 
+            and part.function_call.id in event.long_running_tool_ids
+        ):
 
-def get_function_call_id(event: Event) -> str:
-  # Extracts the ID of the function call (works for any call, including auth)
-  if ( event and event.content and event.content.parts and event.content.parts[0]
-      and event.content.parts[0].function_call and event.content.parts[0].function_call.id ):
-    return event.content.parts[0].function_call.id
-  raise ValueError(f'Cannot get function call id from event {event}')
+            return part.function_call
 
-def get_function_call_auth_config(event: Event) -> AuthConfig:
-    # Extracts the AuthConfig object from the arguments of the auth request event
-    auth_config_dict = None
-    try:
-        auth_config_dict = event.content.parts[0].function_call.args.get('auth_config')
-        if auth_config_dict and isinstance(auth_config_dict, dict):
-            # Reconstruct the AuthConfig object
-            return AuthConfig.model_validate(auth_config_dict)
-        else:
-            raise ValueError("auth_config missing or not a dict in event args")
-    except (AttributeError, IndexError, KeyError, TypeError, ValueError) as e:
-        raise ValueError(f'Cannot get auth config from event {event}') from e
-
+def get_auth_config(auth_request_function_call: types.FunctionCall) -> AuthConfig:
+    # Extracts the AuthConfig object from the arguments of the auth request function call
+    if not auth_request_function_call.args or not (auth_config := auth_request_function_call.args.get('auth_config')):
+        raise ValueError(f'Cannot get auth config from function call: {auth_request_function_call}')
+    if not isinstance(auth_config, AuthConfig):
+        raise ValueError(f'Cannot get auth config {auth_config} is not an instance of AuthConfig.')
+    return auth_config
 ```
 
 **Step 2: Redirect User for Authorization**
@@ -6980,28 +6987,23 @@ def get_function_call_auth_config(event: Event) -> AuthConfig:
 ```py
 # (Continuing after detecting auth needed)
 
-if auth_request_event_id and auth_config:
+if auth_request_function_call_id and auth_config:
     # Get the base authorization URL from the AuthConfig
     base_auth_uri = auth_config.exchanged_auth_credential.oauth2.auth_uri
 
     if base_auth_uri:
-        redirect_uri = 'http://localhost:8000/callback' # MUST match your OAuth client config
+        redirect_uri = 'http://localhost:8000/callback' # MUST match your OAuth client app config
         # Append redirect_uri (use urlencode in production)
         auth_request_uri = base_auth_uri + f'&redirect_uri={redirect_uri}'
-
-        print("\n--- User Action Required ---")
-        print(f'1. Please open this URL in your browser:\n   {auth_request_uri}\n')
-        print(f'2. Log in and grant the requested permissions.')
-        print(f'3. After authorization, you will be redirected to: {redirect_uri}')
-        print(f'   Copy the FULL URL from your browser\'s address bar (it includes a `code=...`).')
+        # Now you need to redirect your end user to this auth_request_uri or ask them to open this auth_request_uri in their browser
+        # This auth_request_uri should be served by the corresponding auth provider and the end user should login and authorize your applicaiton to access their data
+        # And then the auth provider will redirect the end user to the redirect_uri you provided
         # Next step: Get this callback URL from the user (or your web server handler)
     else:
          print("ERROR: Auth URI not found in auth_config.")
          # Handle error
 
 ```
-
-![Authentication](../assets/auth_part2.svg)
 
 **Step 3. Handle the Redirect Callback (Client):**
 
@@ -7012,11 +7014,11 @@ if auth_request_event_id and auth_config:
 
 **Step 4. Send Authentication Result Back to ADK (Client):**
 
-* Once you have the full callback URL (containing the authorization code), retrieve the `auth_request_event_id` and the `AuthConfig` object saved in Client Step 1\.  
-* **Update the**  Set the captured callback URL into the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.  
-* **Construct a**  Create a `types.Content` object containing a `types.Part` with a `types.FunctionResponse`.  
+* Once you have the full callback URL (containing the authorization code), retrieve the `auth_request_function_call_id` and the `auth_config` object saved in Client Step 1\.  
+* Set the captured callback URL into the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.  
+* Create a `types.Content` object containing a `types.Part` with a `types.FunctionResponse`.  
       * Set `name` to `"adk_request_credential"`. (Note: This is a special name for ADK to proceed with authentication. Do not use other names.)  
-      * Set `id` to the `auth_request_event_id` you saved.  
+      * Set `id` to the `auth_request_function_call_id` you saved.  
       * Set `response` to the *serialized* (e.g., `.model_dump()`) updated `AuthConfig` object.  
 * Call `runner.run_async` **again** for the same session, passing this `FunctionResponse` content as the `new_message`.
 
@@ -7044,7 +7046,7 @@ if auth_request_event_id and auth_config:
         parts=[
             types.Part(
                 function_response=types.FunctionResponse(
-                    id=auth_request_event_id,       # Link to the original request
+                    id=auth_request_function_call_id,       # Link to the original request
                     name='adk_request_credential', # Special framework function name
                     response=auth_config.model_dump() # Send back the *updated* AuthConfig
                 )
@@ -7072,12 +7074,16 @@ if auth_request_event_id and auth_config:
 
 * ADK receives the `FunctionResponse` for `adk_request_credential`.  
 * It uses the information in the updated `AuthConfig` (including the callback URL containing the code) to perform the OAuth **token exchange** with the provider's token endpoint, obtaining the access token (and possibly refresh token).  
-* ADK internally makes these tokens available (often via `tool_context.get_auth_response()` or by updating session state).  
+* ADK internally makes these tokens available by setting them in the session state).  
 * ADK **automatically retries** the original tool call (the one that initially failed due to missing auth).  
-* This time, the tool finds the valid tokens and successfully executes the authenticated API call.  
+* This time, the tool finds the valid tokens (via `tool_context.get_auth_response()`) and successfully executes the authenticated API call.  
 * The agent receives the actual result from the tool and generates its final response to the user.
 
 ---
+
+The sequence diagram of auth response flow (where Agent Client send back the auth response and ADK retries tool calling) looks like below:
+
+![Authentication](../assets/auth_part2.svg)
 
 ## Journey 2: Building Custom Tools (`FunctionTool`) Requiring Authentication
 
@@ -7122,11 +7128,11 @@ if cached_token_info:
             tool_context.state[TOKEN_CACHE_KEY] = json.loads(creds.to_json()) # Update cache
         elif not creds.valid:
             creds = None # Invalid, needs re-auth
-            tool_context.state.pop(TOKEN_CACHE_KEY, None)
+            tool_context.state[TOKEN_CACHE_KEY] = None
     except Exception as e:
         print(f"Error loading/refreshing cached creds: {e}")
         creds = None
-        tool_context.state.pop(TOKEN_CACHE_KEY, None)
+        tool_context.state[TOKEN_CACHE_KEY] = None
 
 if creds and creds.valid:
     # Skip to Step 5: Make Authenticated API Call
@@ -7139,23 +7145,36 @@ else:
 
 **Step 2: Check for Auth Response from Client**
 
-* If Step 1 didn't yield valid credentials, check if the client just completed the interactive flow by calling `auth_response_config = tool_context.get_auth_response()`.  
-* This returns the updated `AuthConfig` object sent back by the client (containing the callback URL in `auth_response_uri`).
+* If Step 1 didn't yield valid credentials, check if the client just completed the interactive flow by calling `exchanged_credential = tool_context.get_auth_response()`.  
+* This returns the updated `exchanged_credential` object sent back by the client (containing the callback URL in `auth_response_uri`).
 
 ```py
 # Use auth_scheme and auth_credential configured in the tool.
-# exchanged_credential: AuthCredential|None
+# exchanged_credential: AuthCredential | None
 
 exchanged_credential = tool_context.get_auth_response(AuthConfig(
   auth_scheme=auth_scheme,
   raw_auth_credential=auth_credential,
 ))
-# If exchanged_credential is not None, then there is already an exchanged credetial from the auth response. Use it instea, and skip to step 5
+# If exchanged_credential is not None, then there is already an exchanged credetial from the auth response. 
+if exchanged_credential:
+   # ADK exchanged the access token already for us
+        access_token = auth_response.oauth2.access_token
+        refresh_token = auth_response.oauth2.refresh_token
+        creds = Credentials(
+            token=access_token,
+            refresh_token=refresh_token,
+            token_uri=auth_scheme.flows.authorizationCode.tokenUrl,
+            client_id=oauth_client_id,
+            client_secret=oauth_client_secret,
+            scopes=list(auth_scheme.flows.authorizationCode.scopes.keys()),
+        )
+    # Cache the token in session state and call the API, skip to step 5
 ```
 
 **Step 3: Initiate Authentication Request**
 
-If no valid credentials (Step 1.) and no auth response (Step 2.) are found, the tool needs to start the OAuth flow. Define the AuthScheme and initial AuthCredential and call `tool_context.request_credential()`. Return a status indicating authorization is needed.
+If no valid credentials (Step 1.) and no auth response (Step 2.) are found, the tool needs to start the OAuth flow. Define the AuthScheme and initial AuthCredential and call `tool_context.request_credential()`. Return a response indicating authorization is needed.
 
 ```py
 # Use auth_scheme and auth_credential configured in the tool.
@@ -7171,11 +7190,11 @@ If no valid credentials (Step 1.) and no auth response (Step 2.) are found, the 
 
 **Step 4: Exchange Authorization Code for Tokens**
 
-ADK automatically generates oauth authorization URL and presents it to your Agent Client application. Once a user completes the login flow following the authorization URL, ADK extracts the authentication callback url from Agent Client applications, automatically parses the auth code, and generates auth token. At the next Tool call, `tool_context.get_auth_response` in step 2 will contain a valid credential to use in subsequent API calls.
+ADK automatically generates oauth authorization URL and presents it to your Agent Client application. your Agent Client application should follow the same way described in Journey 1 to redirect the user to the authorization URL (with `redirect_uri` appended). Once a user completes the login flow following the authorization URL and ADK extracts the authentication callback url from Agent Client applications, automatically parses the auth code, and generates auth token. At the next Tool call, `tool_context.get_auth_response` in step 2 will contain a valid credential to use in subsequent API calls.
 
 **Step 5: Cache Obtained Credentials**
 
-After successfully obtaining the token from ADK (Step 2\) or if the token is still valid (Step 1), **immediately store** the new `Credentials` object in `tool_context.state` (serialized, e.g., as JSON) using your cache key.
+After successfully obtaining the token from ADK (Step 2) or if the token is still valid (Step 1), **immediately store** the new `Credentials` object in `tool_context.state` (serialized, e.g., as JSON) using your cache key.
 
 ```py
 # Inside your tool function, after obtaining 'creds' (either refreshed or newly exchanged)
@@ -7834,13 +7853,13 @@ agents.
 3. To use tool with default credentials: have Google Cloud CLI installed. See
    [installation guide](https://cloud.google.com/sdk/docs/install#installation_instructions)*.*
 
-   *Run :*
+   *Run:*
 
-    ```shell
-    gcloud config set project
-    gcloud auth application-default login
-    gcloud auth application-default set-quota-project <project-id>
-    ```
+   ```shell
+   gcloud config set project <project-id>
+   gcloud auth application-default login
+   gcloud auth application-default set-quota-project <project-id>
+   ```
 
 5. Set up your project structure and create required files
 
@@ -8341,9 +8360,9 @@ which adk
 which npx
 ```
 
-## 1. **Using MCP servers with ADK agents (ADK as an MCP client)**
+## 1. **Using MCP servers with ADK agents (ADK as an MCP client) in `adk web` **
 
-This section shows two examples of using MCP servers with ADK agents. This is the most common integration pattern. Your ADK agent needs to use functionality provided by an existing service that exposes itself as an MCP Server.
+This section shows two examples of using MCP servers with ADK agents. This is the **most common** integration pattern. Your ADK agent needs to use functionality provided by an existing service that exposes itself as an MCP Server.
 
 ### `MCPToolset` class
 
@@ -8355,6 +8374,10 @@ The examples use the `MCPToolset` class in ADK which acts as the bridge to the M
 4. **Expose:** Present these adapted tools to the ADK `LlmAgent`.  
 5. **Proxy Calls:** When the `LlmAgent` decides to use one of these tools, `MCPToolset` forwards the call (`call_tool` MCP method) to the MCP server and returns the result.  
 6. **Manage Connection:** Handle the lifecycle of the connection to the MCP server process, often requiring explicit cleanup.
+
+These examples assumes you interact with MCP Tools with `adk web`. If you are not using `adk web`, see "Using MCP Tools in your own Agent out of `adk web`" section below.
+
+_Note: Using MCP tool requires a slightly different syntax to export the agent containing MCP Tools. A simpler interface for using MCP in ADK is currently in progress._
 
 ### Example 1: File System MCP Server
 
@@ -8368,128 +8391,111 @@ Create `agent.py` in `./adk_agent_samples/mcp_agent/` and use the following code
 
 ```py
 # ./adk_agent_samples/mcp_agent/agent.py
-import asyncio
-from dotenv import load_dotenv
-from google.genai import types
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
 
-# Load environment variables from .env file in the parent directory
-# Place this near the top, before using env vars like API keys
-load_dotenv('../.env')
 
-# --- Step 1: Import Tools from MCP Server ---
-async def get_tools_async():
-  """Gets tools from the File System MCP Server."""
-  print("Attempting to connect to MCP Filesystem server...")
+async def create_agent():
+  """Gets tools from MCP Server."""
   tools, exit_stack = await MCPToolset.from_server(
-      # Use StdioServerParameters for local process communication
       connection_params=StdioServerParameters(
-          command='npx', # Command to run the server
+          command='npx',
           args=["-y",    # Arguments for the command
-                "@modelcontextprotocol/server-filesystem",
-                # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-                "/path/to/your/folder"],
+            "@modelcontextprotocol/server-filesystem",
+            # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
+            "/path/to/your/folder",
+          ],
       )
-      # For remote servers, you would use SseServerParams instead:
-      # connection_params=SseServerParams(url="http://remote-server:port/path", headers={...})
-  )
-  print("MCP Toolset created successfully.")
-  # MCP requires maintaining a connection to the local MCP Server.
-  # exit_stack manages the cleanup of this connection.
-  return tools, exit_stack
-
-# --- Step 2: Agent Definition ---
-async def get_agent_async():
-  """Creates an ADK Agent equipped with tools from the MCP Server."""
-  tools, exit_stack = await get_tools_async()
-  print(f"Fetched {len(tools)} tools from MCP server.")
-  root_agent = LlmAgent(
-      model='gemini-2.0-flash', # Adjust model name if needed based on availability
-      name='filesystem_assistant',
-      instruction='Help user interact with the local filesystem using available tools.',
-      tools=tools, # Provide the MCP tools to the ADK agent
-  )
-  return root_agent, exit_stack
-
-# --- Step 3: Main Execution Logic ---
-async def async_main():
-  session_service = InMemorySessionService()
-  # Artifact service might not be needed for this example
-  artifacts_service = InMemoryArtifactService()
-
-  session = session_service.create_session(
-      state={}, app_name='mcp_filesystem_app', user_id='user_fs'
   )
 
-  # TODO: Change the query to be relevant to YOUR specified folder.
-  # e.g., "list files in the 'documents' subfolder" or "read the file 'notes.txt'"
-  query = "list files in the tests folder"
-  print(f"User Query: '{query}'")
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-
-  root_agent, exit_stack = await get_agent_async()
-
-  runner = Runner(
-      app_name='mcp_filesystem_app',
-      agent=root_agent,
-      artifact_service=artifacts_service, # Optional
-      session_service=session_service,
+  agent = LlmAgent(
+      model='gemini-2.0-flash',
+      name='enterprise_assistant',
+      instruction=(
+          'Help user accessing their file systems'
+      ),
+      tools=tools,
   )
+  return agent, exit_stack
 
-  print("Running agent...")
-  events_async = runner.run_async(
-      session_id=session.id, user_id=session.user_id, new_message=content
-  )
 
-  async for event in events_async:
-    print(f"Event received: {event}")
-
-  # Crucial Cleanup: Ensure the MCP server process connection is closed.
-  print("Closing MCP server connection...")
-  await exit_stack.aclose()
-  print("Cleanup complete.")
-
-if __name__ == '__main__':
-  try:
-    asyncio.run(async_main())
-  except Exception as e:
-    print(f"An error occurred: {e}")
+root_agent = create_agent()
 ```
 
-#### Step 2: Observe the result
+If there are multiple MCP Servers, create a common exit stack and apply it to all MCPToolsets
 
-Run the script from the adk_agent_samples directory (ensure your virtual environment is active):
+```python
+# agent.py
+from contextlib import AsyncExitStack
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters, SseServerParams
+
+
+async def create_agent():
+  """Gets tools from MCP Server."""
+  common_exit_stack = AsyncExitStack()
+
+  local_tools, _ = await MCPToolset.from_server(
+      connection_params=StdioServerParameters(
+          command='npx',
+          args=["-y",    # Arguments for the command
+            "@modelcontextprotocol/server-filesystem",
+            # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
+            "/path/to/your/folder",
+          ],
+      ),
+      async_exit_stack=common_exit_stack
+  )
+
+  remote_tools, _ = await MCPToolset.from_server(
+      connection_params=SseServerParams(
+          # TODO: IMPORTANT! Change the path below to your remote MCP Server path
+          url="https://your-mcp-server-url.com/sse"
+      ),
+      async_exit_stack=common_exit_stack
+  )
+  
+
+  agent = LlmAgent(
+      model='gemini-2.0-flash',
+      name='enterprise_assistant',
+      instruction=(
+          'Help user accessing their file systems'
+      ),
+      tools=[
+        *local_tools, 
+        *remote_tools,
+      ],
+  )
+  return agent, common_exit_stack
+
+
+root_agent = create_agent()
+
+```
+
+#### Step 2: Create an __init__ file
+
+Create an `__init__.py` in the same folder as the `agent.py` above
+
+```python
+# ./adk_agent_samples/mcp_agent/__init__.py
+from . import agent
+```
+
+#### Step 3: Observe the result
+
+Run `adk web` from the adk_agent_samples directory (ensure your virtual environment is active):
 
 ```shell
 cd ./adk_agent_samples
-python3 ./mcp_agent/agent.py
+adk web
 ```
 
-The following shows the expected output for the connection attempt, the MCP server starting (via npx), the ADK agent events (including the FunctionCall to list\_directory and the FunctionResponse), and the final agent text response based on the file listing. Ensure the exit\_stack.aclose() runs at the end.
+A successfully MCPTool interaction will yield a response by accessing your local file system, like below:
 
-```text
-User Query: 'list files in the tests folder'
-Attempting to connect to MCP Filesystem server...
-# --> npx process starts here, potentially logging to stderr/stdout
-Secure MCP Filesystem Server running on stdio
-Allowed directories: [
-  '/path/to/your/folder'
-]
-# <-- npx process output ends
-MCP Toolset created successfully.
-Fetched [N] tools from MCP server. # N = number of tools like list_directory, read_file etc.
-Running agent...
-Event received: content=Content(parts=[Part(..., function_call=FunctionCall(id='...', args={'path': 'tests'}, name='list_directory'), ...)], role='model') ...
-Event received: content=Content(parts=[Part(..., function_response=FunctionResponse(id='...', name='list_directory', response={'result': CallToolResult(..., content=[TextContent(...)], ...)}), ...)], role='user') ...
-Event received: content=Content(parts=[Part(..., text='https://developers.google.com/maps/get-started#enable-api-sdk')], role='model') ...
-Closing MCP server connection...
-Cleanup complete.
+<img src="../assets/adk-tool-mcp-filesystem-adk-web-demo.png" alt="MCP with ADK Web - FileSystem Example">
 
-```
 
 ### Example 2: Google Maps MCP Server
 
@@ -8501,31 +8507,20 @@ Follow the directions at [Use API keys](https://developers.google.com/maps/docum
 
 Enable Directions API and Routes API in your Google Cloud project. For instructions, see [Getting started with Google Maps Platform](https://developers.google.com/maps/get-started#enable-api-sdk) topic.
 
-#### Step 2: Update get\_tools\_async
+#### Step 2: Update create_agent
 
-Modify get\_tools\_async in agent.py to connect to the Maps server, passing your API key via the env parameter of StdioServerParameters.
+Modify `create_agent` in agent.py to connect to the Maps server, passing your API key via the env parameter of StdioServerParameters.
 
 ```py
 # agent.py (modify get_tools_async and other parts as needed)
-import asyncio
-from dotenv import load_dotenv
-from google.genai import types
+
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
 
-load_dotenv('../.env')
 
-async def get_tools_async():
-  """ Step 1: Gets tools from the Google Maps MCP Server."""
-  # IMPORTANT: Replace with your actual key
-  google_maps_api_key = "YOUR_API_KEY_FROM_STEP_1"
-  if "YOUR_API_KEY" in google_maps_api_key:
-      raise ValueError("Please replace 'YOUR_API_KEY_FROM_STEP_1' with your actual Google Maps API key.")
+async def create_agent():
+  """Gets tools from MCP Server."""
 
-  print("Attempting to connect to MCP Google Maps server...")
   tools, exit_stack = await MCPToolset.from_server(
       connection_params=StdioServerParameters(
           command='npx',
@@ -8538,90 +8533,43 @@ async def get_tools_async():
           }
       )
   )
-  print("MCP Toolset created successfully.")
-  return tools, exit_stack
 
-# --- Step 2: Agent Definition ---
-async def get_agent_async():
-  """Creates an ADK Agent equipped with tools from the MCP Server."""
-  tools, exit_stack = await get_tools_async()
-  print(f"Fetched {len(tools)} tools from MCP server.")
-  root_agent = LlmAgent(
+  agent = LlmAgent(
       model='gemini-2.0-flash', # Adjust if needed
       name='maps_assistant',
       instruction='Help user with mapping and directions using available tools.',
       tools=tools,
   )
-  return root_agent, exit_stack
+  return agent, exit_stack
 
-# --- Step 3: Main Execution Logic (modify query) ---
-async def async_main():
-  session_service = InMemorySessionService()
-  artifacts_service = InMemoryArtifactService() # Optional
 
-  session = session_service.create_session(
-      state={}, app_name='mcp_maps_app', user_id='user_maps'
-  )
-
-  # TODO: Use specific addresses for reliable results with this server
-  query = "What is the route from 1600 Amphitheatre Pkwy to 1165 Borregas Ave"
-  print(f"User Query: '{query}'")
-  content = types.Content(role='user', parts=[types.Part(text=query)])
-
-  root_agent, exit_stack = await get_agent_async()
-
-  runner = Runner(
-      app_name='mcp_maps_app',
-      agent=root_agent,
-      artifact_service=artifacts_service, # Optional
-      session_service=session_service,
-  )
-
-  print("Running agent...")
-  events_async = runner.run_async(
-      session_id=session.id, user_id=session.user_id, new_message=content
-  )
-
-  async for event in events_async:
-    print(f"Event received: {event}")
-
-  print("Closing MCP server connection...")
-  await exit_stack.aclose()
-  print("Cleanup complete.")
-
-if __name__ == '__main__':
-  try:
-    asyncio.run(async_main())
-  except Exception as e:
-      print(f"An error occurred: {e}")
-
+root_agent = create_agent()
 ```
 
-#### Step 3: Observe the Result
 
-Run the script from the adk_agent_samples directory (ensure your virtual environment is active):
+#### Step 3: Create an __init__ file
+
+If you have already finished this from Example 1 above, skip this step.
+
+Create an `__init__.py` in the same folder as the `agent.py` above
+
+```python
+# ./adk_agent_samples/mcp_agent/__init__.py
+from . import agent
+```
+
+#### Step 4: Observe the Result
+
+Run `adk web` from the adk_agent_samples directory (ensure your virtual environment is active):
 
 ```shell
 cd ./adk_agent_samples
-python3 ./mcp_agent/agent.py
+adk web
 ```
 
-A successful run will show events indicating the agent called the relevant Google Maps tool (likely related to directions or routes) and a final response containing the directions. An example is shown below.
+A successfully MCPTool interaction will yield a response with a route plan, like below:
 
-```text
-User Query: 'What is the route from 1600 Amphitheatre Pkwy to 1165 Borregas Ave'
-Attempting to connect to MCP Google Maps server...
-# --> npx process starts...
-MCP Toolset created successfully.
-Fetched [N] tools from MCP server.
-Running agent...
-Event received: content=Content(parts=[Part(..., function_call=FunctionCall(name='get_directions', ...))], role='model') ...
-Event received: content=Content(parts=[Part(..., function_response=FunctionResponse(name='get_directions', ...))], role='user') ...
-Event received: content=Content(parts=[Part(..., text='Head north toward Amphitheatre Pkwy...')], role='model') ...
-Closing MCP server connection...
-Cleanup complete.
-
-```
+<img src="../assets/adk-tool-mcp-maps-adk-web-demo.png" alt="MCP with ADK Web - Google Maps Example">
 
 ## 2. **Building an MCP server with ADK tools (MCP server exposing ADK)**
 
@@ -8797,15 +8745,42 @@ python3 ./mcp_agent/agent.py
 
 The script will print startup messages and then wait for an MCP client to connect via its standard input/output to your MCP Server in adk\_mcp\_server.py. Any MCP-compliant client (like Claude Desktop, or a custom client using the MCP libraries) can now connect to this process, discover the load\_web\_page tool, and invoke it. The server will print log messages indicating received requests and ADK tool execution. Refer to the [documentation](https://modelcontextprotocol.io/quickstart/server#core-mcp-concepts), to try it out with Claude Desktop.
 
-## MCP with adk web
-You can also define your agent with MCP tools, and then interact with your agent with `adk web`. 
+## Using MCP Tools in your own Agent out of `adk web`
 
-Notice that an agent with MCP tools needs speical handling for now. 
-(A simpler way is being developed.)
-```py
-async def get_tools_async():
-  """Gets tools from the File System MCP Server."""
-  print("Attempting to connect to MCP Filesystem server...")
+This section is relevant to you if:
+
+* You are developing your own Agent using ADK
+* And, you are **NOT** using `adk web`,
+* And, you are exposing the agent via your own UI
+ 
+
+Using MCP Tools requires a different setup than using regular tools, due to the fact that specs for MCP Tools are fetched asynchronously
+from the MCP Server running remotely, or in another process.
+
+The following example is modified from the "Example 1: File System MCP Server" example above. The main differences are:
+
+1. Your tool and agent are created asynchronously
+2. You need to properly manage the exit stack, so that your agents and tools are destructed properly when the connection to MCP Server is closed.
+
+```python
+# agent.py (modify get_tools_async and other parts as needed)
+# ./adk_agent_samples/mcp_agent/agent.py
+import asyncio
+from dotenv import load_dotenv
+from google.genai import types
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
+
+# Load environment variables from .env file in the parent directory
+# Place this near the top, before using env vars like API keys
+load_dotenv('../.env')
+
+# --- Step 1: Agent Definition ---
+async def get_agent_async():
+  """Creates an ADK Agent equipped with tools from the MCP Server."""
   tools, exit_stack = await MCPToolset.from_server(
       # Use StdioServerParameters for local process communication
       connection_params=StdioServerParameters(
@@ -8813,31 +8788,65 @@ async def get_tools_async():
           args=["-y",    # Arguments for the command
                 "@modelcontextprotocol/server-filesystem",
                 # TODO: IMPORTANT! Change the path below to an ABSOLUTE path on your system.
-                "/path/to/your/folder/"],
+                "/path/to/your/folder"],
       )
       # For remote servers, you would use SseServerParams instead:
       # connection_params=SseServerParams(url="http://remote-server:port/path", headers={...})
   )
-  print("MCP Toolset created successfully.")
-  # MCP requires maintaining a connection to the local MCP Server.
-  # exit_stack manages the cleanup of this connection.
-  return tools, exit_stack
-
-async def create_agent():
-  """Gets tools from MCP Server."""
-  tools, exit_stack = await get_tools_async()
-
-  agent = LlmAgent(
+  print(f"Fetched {len(tools)} tools from MCP server.")
+  root_agent = LlmAgent(
       model='gemini-2.0-flash', # Adjust model name if needed based on availability
       name='filesystem_assistant',
       instruction='Help user interact with the local filesystem using available tools.',
       tools=tools, # Provide the MCP tools to the ADK agent
   )
-  return agent, exit_stack
+  return root_agent, exit_stack
 
+# --- Step 2: Main Execution Logic ---
+async def async_main():
+  session_service = InMemorySessionService()
+  # Artifact service might not be needed for this example
+  artifacts_service = InMemoryArtifactService()
 
-root_agent = create_agent()
+  session = session_service.create_session(
+      state={}, app_name='mcp_filesystem_app', user_id='user_fs'
+  )
+
+  # TODO: Change the query to be relevant to YOUR specified folder.
+  # e.g., "list files in the 'documents' subfolder" or "read the file 'notes.txt'"
+  query = "list files in the tests folder"
+  print(f"User Query: '{query}'")
+  content = types.Content(role='user', parts=[types.Part(text=query)])
+
+  root_agent, exit_stack = await get_agent_async()
+
+  runner = Runner(
+      app_name='mcp_filesystem_app',
+      agent=root_agent,
+      artifact_service=artifacts_service, # Optional
+      session_service=session_service,
+  )
+
+  print("Running agent...")
+  events_async = runner.run_async(
+      session_id=session.id, user_id=session.user_id, new_message=content
+  )
+
+  async for event in events_async:
+    print(f"Event received: {event}")
+
+  # Crucial Cleanup: Ensure the MCP server process connection is closed.
+  print("Closing MCP server connection...")
+  await exit_stack.aclose()
+  print("Cleanup complete.")
+
+if __name__ == '__main__':
+  try:
+    asyncio.run(async_main())
+  except Exception as e:
+    print(f"An error occurred: {e}")
 ```
+
 
 ## Key considerations
 
