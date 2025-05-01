@@ -126,7 +126,7 @@ This approach is particularly beneficial for operations like multi-source data r
 
 When the `ParallelAgent`'s `run_async()` method is called:
 
-1. **Concurrent Execution:** It initiates the `run()` method of *each* sub-agent present in the `sub_agents` list *concurrently*.  This means all the agents start running at (approximately) the same time.
+1. **Concurrent Execution:** It initiates the `run_async()` method of *each* sub-agent present in the `sub_agents` list *concurrently*.  This means all the agents start running at (approximately) the same time.
 2. **Independent Branches:**  Each sub-agent operates in its own execution branch.  There is ***no* automatic sharing of conversation history or state between these branches** during execution.
 3. **Result Collection:** The `ParallelAgent` manages the parallel execution and, typically, provides a way to access the results from each sub-agent after they have completed (e.g., through a list of results or events). The order of results may not be deterministic.
 
@@ -410,21 +410,42 @@ File: docs/agents/llm-agents.md
 ================
 # LLM Agent
 
-The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK, acting as the "thinking" part of your application. It leverages the power of a Large Language Model (LLM) for reasoning, understanding natural language, making decisions, generating responses, and interacting with tools.
+The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK,
+acting as the "thinking" part of your application. It leverages the power of a
+Large Language Model (LLM) for reasoning, understanding natural language, making
+decisions, generating responses, and interacting with tools.
 
-Unlike deterministic [Workflow Agents](workflow-agents/index.md) that follow predefined execution paths, `LlmAgent` behavior is non-deterministic. It uses the LLM to interpret instructions and context, deciding dynamically how to proceed, which tools to use (if any), or whether to transfer control to another agent.
+Unlike deterministic [Workflow Agents](workflow-agents/index.md) that follow
+predefined execution paths, `LlmAgent` behavior is non-deterministic. It uses
+the LLM to interpret instructions and context, deciding dynamically how to
+proceed, which tools to use (if any), or whether to transfer control to another
+agent.
 
-Building an effective `LlmAgent` involves defining its identity, clearly guiding its behavior through instructions, and equipping it with the necessary tools and capabilities.
+Building an effective `LlmAgent` involves defining its identity, clearly guiding
+its behavior through instructions, and equipping it with the necessary tools and
+capabilities.
 
 ## Defining the Agent's Identity and Purpose
 
 First, you need to establish what the agent *is* and what it's *for*.
 
-* **`name` (Required):** Every agent needs a unique string identifier. This `name` is crucial for internal operations, especially in multi-agent systems where agents need to refer to or delegate tasks to each other. Choose a descriptive name that reflects the agent's function (e.g., `customer_support_router`, `billing_inquiry_agent`). Avoid reserved names like `user`.
+* **`name` (Required):** Every agent needs a unique string identifier. This
+  `name` is crucial for internal operations, especially in multi-agent systems
+  where agents need to refer to or delegate tasks to each other. Choose a
+  descriptive name that reflects the agent's function (e.g.,
+  `customer_support_router`, `billing_inquiry_agent`). Avoid reserved names like
+  `user`.
 
-* **`description` (Optional, Recommended for Multi-Agent):** Provide a concise summary of the agent's capabilities. This description is primarily used by *other* LLM agents to determine if they should route a task to this agent. Make it specific enough to differentiate it from peers (e.g., "Handles inquiries about current billing statements," not just "Billing agent").
+* **`description` (Optional, Recommended for Multi-Agent):** Provide a concise
+  summary of the agent's capabilities. This description is primarily used by
+  *other* LLM agents to determine if they should route a task to this agent.
+  Make it specific enough to differentiate it from peers (e.g., "Handles
+  inquiries about current billing statements," not just "Billing agent").
 
-* **`model` (Required):** Specify the underlying LLM that will power this agent's reasoning. This is a string identifier like `"gemini-2.0-flash"`. The choice of model impacts the agent's capabilities, cost, and performance. See the [Models](models.md) page for available options and considerations.
+* **`model` (Required):** Specify the underlying LLM that will power this
+  agent's reasoning. This is a string identifier like `"gemini-2.0-flash"`. The
+  choice of model impacts the agent's capabilities, cost, and performance. See
+  the [Models](models.md) page for available options and considerations.
 
 ```python
 # Example: Defining the basic identity
@@ -438,7 +459,9 @@ capital_agent = LlmAgent(
 
 ## Guiding the Agent: Instructions (`instruction`)
 
-The `instruction` parameter is arguably the most critical for shaping an `LlmAgent`'s behavior. It's a string (or a function returning a string) that tells the agent:
+The `instruction` parameter is arguably the most critical for shaping an
+`LlmAgent`'s behavior. It's a string (or a function returning a string) that
+tells the agent:
 
 * Its core task or goal.
 * Its personality or persona (e.g., "You are a helpful assistant," "You are a witty pirate").
@@ -452,6 +475,13 @@ The `instruction` parameter is arguably the most critical for shaping an `LlmAge
 * **Use Markdown:** Improve readability for complex instructions using headings, lists, etc.
 * **Provide Examples (Few-Shot):** For complex tasks or specific output formats, include examples directly in the instruction.
 * **Guide Tool Use:** Don't just list tools; explain *when* and *why* the agent should use them.
+
+**State:**
+
+* The instruction is a string template, you can use the `{var}` syntax to insert dynamic values into the instruction.
+* `{var}` is used to insert the value of the state variable named var.
+* `{artifact.var}` is used to insert the text content of the artifact named var.
+* If the state variable or artifact does not exist, the agent will raise an error. If you want to ignore the error, you can append a `?` to the variable name as in `{var?}`.
 
 ```python
 # Example: Adding instructions
@@ -471,18 +501,24 @@ Example Response: "The capital of France is Paris."
 )
 ```
 
-*(Note: For instructions that apply to *all* agents in a system, consider using `global_instruction` on the root agent, detailed further in the [Multi-Agents](multi-agents.md) section.)*
+*(Note: For instructions that apply to *all* agents in a system, consider using
+`global_instruction` on the root agent, detailed further in the
+[Multi-Agents](multi-agents.md) section.)*
 
 ## Equipping the Agent: Tools (`tools`)
 
-Tools give your `LlmAgent` capabilities beyond the LLM's built-in knowledge or reasoning. They allow the agent to interact with the outside world, perform calculations, fetch real-time data, or execute specific actions.
+Tools give your `LlmAgent` capabilities beyond the LLM's built-in knowledge or
+reasoning. They allow the agent to interact with the outside world, perform
+calculations, fetch real-time data, or execute specific actions.
 
 * **`tools` (Optional):** Provide a list of tools the agent can use. Each item in the list can be:
     * A Python function (automatically wrapped as a `FunctionTool`).
     * An instance of a class inheriting from `BaseTool`.
     * An instance of another agent (`AgentTool`, enabling agent-to-agent delegation - see [Multi-Agents](multi-agents.md)).
 
-The LLM uses the function/tool names, descriptions (from docstrings or the `description` field), and parameter schemas to decide which tool to call based on the conversation and its instructions.
+The LLM uses the function/tool names, descriptions (from docstrings or the
+`description` field), and parameter schemas to decide which tool to call based
+on the conversation and its instructions.
 
 ```python
 # Define a tool function
@@ -1301,6 +1337,7 @@ info_agent = LlmAgent(name="Info", description="Provides general information and
 
 coordinator = LlmAgent(
     name="Coordinator",
+    model="gemini-2.0-flash",
     instruction="You are an assistant. Delegate booking tasks to Booker and info requests to Info.",
     description="Main coordinator.",
     # AutoFlow is typically used implicitly here
@@ -4158,7 +4195,7 @@ Here are the details for each command line argument:
 ================
 File: docs/events/index.md
 ================
-# Events:
+# Events
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
 
@@ -5658,6 +5695,62 @@ on to deploying your agent! Here are some ways you can deploy your agent:
   Cloud.
 
 ================
+File: docs/mcp/index.md
+================
+# Model Context Protocol (MCP)
+
+## What is Model Context Protocol (MCP)?
+
+The
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open standard designed to standardize how Large Language Models (LLMs) like
+Gemini and Claude communicate with external applications, data sources, and
+tools. Think of it as a universal connection mechanism that simplifies how LLMs
+obtain context, execute actions, and interact with various systems.
+
+## How does MCP work?
+
+MCP follows a client-server architecture, defining how data (resources),
+interactive templates (prompts), and actionable functions (tools) are
+exposed by an MCP server and consumed by an MCP client (which could be
+an LLM host application or an AI agent).
+
+## MCP Tools in ADK
+
+ADK helps you both use and consume MCP tools in your agents, whether you're
+trying to build a tool to call an MCP service, or exposing an MCP server for
+other developers or agents to interact with your tools.
+
+Refer to the [MCP Tools documentation](../tools/mcp-tools.md) for code samples
+and design patterns that help you use ADK together with MCP servers, including:
+
+- **Using Existing MCP Servers within ADK**: An ADK agent can act as an MCP
+  client and use tools provided by external MCP servers.
+- **Exposing ADK Tools via an MCP Server**: How to build an MCP server that
+  wraps ADK tools, making them accessible to any MCP client.
+
+## MCP Toolbox for Databases
+
+[MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
+open source MCP server that helps you build Gen AI tools so that your agents can
+access data in your database. Google’s Agent Development Kit (ADK) has built in
+support for The MCP Toolbox for Databases.
+
+Refer to the
+[MCP Toolbox for Databases](../tools/google-cloud-tools.md#toolbox-tools-for-databases)
+documentation on how you can use ADK together with the MCP Toolbox for
+Databases.
+
+![GenAI Toolbox](../assets/mcp_db_toolbox.png)
+
+## ADK Agent and FastMCP server
+[FastMCP](https://github.com/jlowin/fastmcp) handles all the complex MCP protocol details and server management, so you can focus on building great tools. It's designed to be high-level and Pythonic; in most cases, decorating a function is all you need.
+
+Refer to the
+[MCP Tools documentation](../tools/mcp-tools.md#example-3-fastmcp-server)
+documentation on how you can use ADK together with the FastMCP server running on Cloud Run.
+
+================
 File: docs/runtime/index.md
 ================
 # Runtime
@@ -5916,6 +6009,243 @@ This primarily relates to how responses from the LLM are handled, especially whe
 * **Sync Callbacks/Tools:** The framework aims to handle both `async def` and regular `def` functions provided as tools or callbacks seamlessly. Long-running *synchronous* tools or callbacks, especially those performing blocking I/O, can potentially block the main `asyncio` event loop. The framework might use mechanisms like `asyncio.to_thread` to mitigate this by running such blocking synchronous code in a separate thread pool, preventing it from stalling other asynchronous tasks. CPU-bound synchronous code, however, will still block the thread it runs on.
 
 Understanding these behaviors helps you write more robust ADK applications and debug issues related to state consistency, streaming updates, and asynchronous execution.
+
+================
+File: docs/runtime/runconfig.md
+================
+# Runtime Configuration
+
+`RunConfig` defines runtime behavior and options for agents in the ADK. It
+controls speech and streaming settings, function calling, artifact saving, and
+limits on LLM calls.
+
+When constructing an agent run, you can pass a `RunConfig` to customize how the
+agent interacts with models, handles audio, and streams responses. By default,
+no streaming is enabled and inputs aren’t retained as artifacts. Use `RunConfig`
+to override these defaults.
+
+## Class Definition
+
+The `RunConfig` class is a Pydantic model that enforces strict validation of
+configuration parameters.
+
+```python
+class RunConfig(BaseModel):
+    """Configs for runtime behavior of agents."""
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+
+    speech_config: Optional[types.SpeechConfig] = None
+    response_modalities: Optional[list[str]] = None
+    save_input_blobs_as_artifacts: bool = False
+    support_cfc: bool = False
+    streaming_mode: StreamingMode = StreamingMode.NONE
+    output_audio_transcription: Optional[types.AudioTranscriptionConfig] = None
+    max_llm_calls: int = 500
+```
+
+## Runtime Parameters
+
+| Parameter                       | Type                                         | Default                | Description                                                                                                |
+| :------------------------------ | :------------------------------------------- | :--------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `speech_config`                 | `Optional[types.SpeechConfig]`               | `None`                 | Configures speech synthesis (voice, language) via nested `types.SpeechConfig`.                             |
+| `response_modalities`           | `Optional[list[str]]`                        | `None`                 | List of desired output modalities (e.g., `["TEXT", "AUDIO"]`). Default is `None`.                            |
+| `save_input_blobs_as_artifacts` | `bool`                                       | `False`                | If `True`, saves input blobs (e.g., uploaded files) as run artifacts for debugging/auditing.             |
+| `support_cfc`                   | `bool`                                       | `False`                | Enables Compositional Function Calling. Requires `streaming_mode=SSE` and uses the LIVE API. **Experimental.** |
+| `streaming_mode`                | `StreamingMode`                              | `StreamingMode.NONE`   | Sets the streaming behavior: `NONE` (default), `SSE` (server-sent events), or `BIDI` (bidirectional).        |
+| `output_audio_transcription`    | `Optional[types.AudioTranscriptionConfig]`   | `None`                 | Configures transcription of generated audio output via `types.AudioTranscriptionConfig`.                   |
+| `max_llm_calls`                 | `int`                                        | `500`                  | Limits total LLM calls per run. `0` or negative means unlimited (warned); `sys.maxsize` raises `ValueError`. |
+
+### `speech_config`
+
+Speech configuration settings for live agents with audio capabilities. The
+`SpeechConfig` class has the following structure:
+
+```python
+class SpeechConfig(_common.BaseModel):
+    """The speech generation configuration."""
+
+    voice_config: Optional[VoiceConfig] = Field(
+        default=None,
+        description="""The configuration for the speaker to use.""",
+    )
+    language_code: Optional[str] = Field(
+        default=None,
+        description="""Language code (ISO 639. e.g. en-US) for the speech synthesization.
+        Only available for Live API.""",
+    )
+```
+
+The `voice_config` parameter uses the `VoiceConfig` class:
+
+```python
+class VoiceConfig(_common.BaseModel):
+    """The configuration for the voice to use."""
+
+    prebuilt_voice_config: Optional[PrebuiltVoiceConfig] = Field(
+        default=None,
+        description="""The configuration for the speaker to use.""",
+    )
+```
+
+And `PrebuiltVoiceConfig` has the following structure:
+
+```python
+class PrebuiltVoiceConfig(_common.BaseModel):
+    """The configuration for the prebuilt speaker to use."""
+
+    voice_name: Optional[str] = Field(
+        default=None,
+        description="""The name of the prebuilt voice to use.""",
+    )
+```
+
+These nested configuration classes allow you to specify:
+
+* `voice_config`: The name of the prebuilt voice to use (in the `PrebuiltVoiceConfig`)
+* `language_code`: ISO 639 language code (e.g., "en-US") for speech synthesis
+
+When implementing voice-enabled agents, configure these parameters to control
+how your agent sounds when speaking.
+
+### `response_modalities`
+
+Defines the output modalities for the agent. If not set, defaults to AUDIO.
+Response modalities determine how the agent communicates with users through
+various channels (e.g., text, audio).
+
+### `save_input_blobs_as_artifacts`
+
+When enabled, input blobs will be saved as artifacts during agent execution.
+This is useful for debugging and audit purposes, allowing developers to review
+the exact data received by agents.
+
+### `support_cfc`
+
+Enables Compositional Function Calling (CFC) support. Only applicable when using
+StreamingMode.SSE. When enabled, the LIVE API will be invoked as only it
+supports CFC functionality.
+
+!!! warning
+
+    The `support_cfc` feature is experimental and its API or behavior might
+    change in future releases.
+
+### `streaming_mode`
+
+Configures the streaming behavior of the agent. Possible values:
+
+* `StreamingMode.NONE`: No streaming; responses delivered as complete units
+* `StreamingMode.SSE`: Server-Sent Events streaming; one-way streaming from server to client
+* `StreamingMode.BIDI`: Bidirectional streaming; simultaneous communication in both directions
+
+Streaming modes affect both performance and user experience. SSE streaming lets users see partial responses as they're generated, while BIDI streaming enables real-time interactive experiences.
+
+### `output_audio_transcription`
+
+Configuration for transcribing audio outputs from live agents with audio
+response capability. This enables automatic transcription of audio responses for
+accessibility, record-keeping, and multi-modal applications.
+
+### `max_llm_calls`
+
+Sets a limit on the total number of LLM calls for a given agent run.
+
+* Values greater than 0 and less than `sys.maxsize`: Enforces a bound on LLM calls
+* Values less than or equal to 0: Allows unbounded LLM calls *(not recommended for production)*
+
+This parameter prevents excessive API usage and potential runaway processes.
+Since LLM calls often incur costs and consume resources, setting appropriate
+limits is crucial.
+
+## Validation Rules
+
+As a Pydantic model, `RunConfig` automatically validates parameter types.
+In addition, it includes specific validation logic for the `max_llm_calls`
+parameter:
+
+1. If set to `sys.maxsize`, a `ValueError` is raised to prevent integer overflow issues
+2. If less than or equal to 0, a warning is logged about potential unlimited LLM calls
+
+## Examples
+
+### Basic runtime configuration
+
+```python
+from google.genai.adk import RunConfig, StreamingMode
+
+config = RunConfig(
+    streaming_mode=StreamingMode.NONE,
+    max_llm_calls=100
+)
+```
+
+This configuration creates a non-streaming agent with a limit of 100 LLM calls,
+suitable for simple task-oriented agents where complete responses are
+preferable.
+
+### Enabling streaming
+
+```python
+from google.genai.adk import RunConfig, StreamingMode
+
+config = RunConfig(
+    streaming_mode=StreamingMode.SSE,
+    max_llm_calls=200
+)
+```
+Using SSE streaming allows users to see responses as they're generated,
+providing a more responsive feel for chatbots and assistants.
+
+### Enabling speech support
+
+```python
+from google.genai.adk import RunConfig, StreamingMode
+from google.genai import types
+
+config = RunConfig(
+    speech_config=types.SpeechConfig(
+        language_code="en-US",
+        voice_config=types.VoiceConfig(
+            prebuilt_voice_config=types.PrebuiltVoiceConfig(
+                voice_name="Kore"
+            )
+        ),
+    ),
+    response_modalities=["AUDIO", "TEXT"],
+    save_input_blobs_as_artifacts=True,
+    support_cfc=True,
+    streaming_mode=StreamingMode.SSE,
+    max_llm_calls=1000,
+)
+```
+
+This comprehensive example configures an agent with:
+
+* Speech capabilities using the "Kore" voice (US English)
+* Both audio and text output modalities
+* Artifact saving for input blobs (useful for debugging)
+* Experimental CFC support enabled
+* SSE streaming for responsive interaction
+* A limit of 1000 LLM calls
+
+### Enabling Experimental CFC Support
+
+```python
+from google.genai.adk import RunConfig, StreamingMode
+
+config = RunConfig(
+    streaming_mode=StreamingMode.SSE,
+    support_cfc=True,
+    max_llm_calls=150
+)
+```
+
+Enabling Compositional Function Calling creates an agent that can dynamically
+execute functions based on model outputs, powerful for applications requiring
+complex workflows.
 
 ================
 File: docs/safety/index.md
@@ -6715,6 +7045,45 @@ Avoid directly modifying the `session.state` dictionary after retrieving a sessi
 * **Descriptive Keys & Prefixes:** Use clear names and appropriate prefixes (`user:`, `app:`, `temp:`, or none).  
 * **Shallow Structures:** Avoid deep nesting where possible.  
 * **Standard Update Flow:** Rely on `append_event`.
+
+================
+File: docs/streaming/index.md
+================
+# Streaming in ADK
+
+Streaming in ADK adds the low-latency bidirectional voice and video interaction
+capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
+AI agents.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LwHPYyw7u6U" title="Shopper's Concierge" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+With streaming mode, you can provide end users with the experience of natural,
+human-like voice conversations, including the ability for the user to interrupt
+the agent's responses with voice commands. Agents with streaming can process
+text, audio, and video inputs, and they can provide text and audio output.
+
+<div class="grid cards" markdown>
+
+-   :material-console-line: **Quickstart (Streaming)**
+
+    ---
+
+    In this quickstart, you'll build a simple agent and use streaming in ADK to
+    implement low-latency and bidirectional voice and video communication.
+
+    [:octicons-arrow-right-24: More information](../get-started/quickstart-streaming.md)
+
+-   :material-console-line: **Shopper's Concierge demo**
+
+    ---
+
+    Learn how streaming in ADK can be used to build a personal shopping
+    concierge that understands your personal style and offers tailored
+    recommendations.
+
+    [:octicons-arrow-right-24: More information](https://youtu.be/LwHPYyw7u6U)
+
+</div>
 
 ================
 File: docs/tools/authentication.md
@@ -8354,16 +8723,16 @@ MCP follows a client-server architecture, defining how **data** (resources), **i
 
 This guide covers two primary integration patterns:
 
-1. **Using Existing MCP Servers within ADK:** An ADK agent acts as an MCP client, leveraging tools provided by external MCP servers.  
+1. **Using Existing MCP Servers within ADK:** An ADK agent acts as an MCP client, leveraging tools provided by external MCP servers.
 2. **Exposing ADK Tools via an MCP Server:** Building an MCP server that wraps ADK tools, making them accessible to any MCP client.
 
 ## Prerequisites
 
 Before you begin, ensure you have the following set up:
 
-* **Set up ADK:** Follow the standard ADK \[setup\]() instructions in the quickstart.  
-* **Install/update Python:** MCP requires Python version of 3.9 or higher.  
-* **Setup Node.js and npx:** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).  
+* **Set up ADK:** Follow the standard ADK \[setup\]() instructions in the quickstart.
+* **Install/update Python:** MCP requires Python version of 3.9 or higher.
+* **Setup Node.js and npx:** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).
 * **Verify Installations:** Confirm `adk` and `npx` are in your PATH within the activated virtual environment:
 
 ```shell
@@ -8372,7 +8741,7 @@ which adk
 which npx
 ```
 
-## 1. **Using MCP servers with ADK agents (ADK as an MCP client) in `adk web` **
+## 1. Using MCP servers with ADK agents (ADK as an MCP client) in `adk web`
 
 This section shows two examples of using MCP servers with ADK agents. This is the **most common** integration pattern. Your ADK agent needs to use functionality provided by an existing service that exposes itself as an MCP Server.
 
@@ -8380,11 +8749,11 @@ This section shows two examples of using MCP servers with ADK agents. This is th
 
 The examples use the `MCPToolset` class in ADK which acts as the bridge to the MCP server. Your ADK agent uses `MCPToolset` to:
 
-1. **Connect:** Establish a connection to an MCP server process. This can be a local server communicating over standard input/output (`StdioServerParameters`) or a remote server using Server-Sent Events (`SseServerParams`).  
-2. **Discover:** Query the MCP server for its available tools (`list_tools` MCP method).  
-3. **Adapt:** Convert the MCP tool schemas into ADK-compatible `BaseTool` instances.  
-4. **Expose:** Present these adapted tools to the ADK `LlmAgent`.  
-5. **Proxy Calls:** When the `LlmAgent` decides to use one of these tools, `MCPToolset` forwards the call (`call_tool` MCP method) to the MCP server and returns the result.  
+1. **Connect:** Establish a connection to an MCP server process. This can be a local server communicating over standard input/output (`StdioServerParameters`) or a remote server using Server-Sent Events (`SseServerParams`).
+2. **Discover:** Query the MCP server for its available tools (`list_tools` MCP method).
+3. **Adapt:** Convert the MCP tool schemas into ADK-compatible `BaseTool` instances.
+4. **Expose:** Present these adapted tools to the ADK `LlmAgent`.
+5. **Proxy Calls:** When the `LlmAgent` decides to use one of these tools, `MCPToolset` forwards the call (`call_tool` MCP method) to the MCP server and returns the result.
 6. **Manage Connection:** Handle the lifecycle of the connection to the MCP server process, often requiring explicit cleanup.
 
 These examples assumes you interact with MCP Tools with `adk web`. If you are not using `adk web`, see "Using MCP Tools in your own Agent out of `adk web`" section below.
@@ -8466,7 +8835,7 @@ async def create_agent():
       ),
       async_exit_stack=common_exit_stack
   )
-  
+
 
   agent = LlmAgent(
       model='gemini-2.0-flash',
@@ -8475,7 +8844,7 @@ async def create_agent():
           'Help user accessing their file systems'
       ),
       tools=[
-        *local_tools, 
+        *local_tools,
         *remote_tools,
       ],
   )
@@ -8506,7 +8875,7 @@ adk web
 
 A successfully MCPTool interaction will yield a response by accessing your local file system, like below:
 
-<img src="../assets/adk-tool-mcp-filesystem-adk-web-demo.png" alt="MCP with ADK Web - FileSystem Example">
+<img src="../../assets/adk-tool-mcp-filesystem-adk-web-demo.png" alt="MCP with ADK Web - FileSystem Example">
 
 
 ### Example 2: Google Maps MCP Server
@@ -8581,7 +8950,136 @@ adk web
 
 A successfully MCPTool interaction will yield a response with a route plan, like below:
 
-<img src="../assets/adk-tool-mcp-maps-adk-web-demo.png" alt="MCP with ADK Web - Google Maps Example">
+<img src="../../assets/adk-tool-mcp-maps-adk-web-demo.png" alt="MCP with ADK Web - Google Maps Example">
+
+
+### Example 3: FastMCP Server
+
+This example demonstrates connecting to a remote FastMCP server that provides math operations(eg. addition).
+
+#### Step 0: Deploy FastMCP Server to Cloud Run
+
+```py
+#server.py
+from fastmcp import FastMCP
+import asyncio
+
+mcp = FastMCP("FastMCP Demo Server")
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    """Add two numbers"""
+    return a + b
+
+if __name__ == "__main__":
+    asyncio.run(mcp.run_sse_async(host="0.0.0.0", port=8080))
+```
+Ensure your MCP server project has the following files in the root directory(eg. `./fastmcp-demo`):
+
+*   `server.py`: Your main application code using FastMCP.
+
+*   `requirements.txt`: Lists the Python dependencies.
+    ```txt
+    fastmcp
+    asyncio
+    ```
+
+*   `Procfile`: Tells Cloud Run how to start your web server. 
+    ```Procfile
+    web: python server.py
+    ```
+    *(Note: This assumes your FastMCP instance is named `mcp` within your `server.py` file. Adjust `server:mcp` if your filename or instance name is different.)*
+
+Execute Cloud Run Deployment command from your FastMCP server directory(eg. `./fastmcp-demo`):
+```shell
+    gcloud run deploy fastmcp-demo \
+        --source . \
+        --region YOUR_REGION \
+        --allow-unauthenticated
+```
+#### Step 1: Attach the FastMCP Server to your ADK agent via `MCPToolset`
+
+Create `agent.py` in `./adk_agent_samples/fastmcp_agent/` and use the following code snippet to define a function that initializes the `MCPToolset`.
+
+* **Important:** Replace Cloud Run service url with the one you deployed in previous step.
+
+```py
+# ./adk_agent_samples/fastmcp_agent/agent.py
+
+import os
+
+import google.auth
+from google.adk.agents import Agent
+from google.adk.tools.tool_context import ToolContext
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams
+
+_, project_id = google.auth.default()
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
+os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+
+
+async def get_sum(a: int, b: int) -> int:
+    """Calculate the sum of two numbers.
+
+    Args:
+        a: number
+        b: number
+
+    Returns:
+        the sum of two numbers.
+    """
+    common_exit_stack = AsyncExitStack()
+
+    tools, _ = await MCPToolset.from_server(
+        connection_params=SseServerParams(
+            url="https://fastmcp-demo-00000000000.us-central1.run.app/sse",
+            project_id="YOUR-GCP-PROJECT-ID",
+            location="us-central1",
+        ),
+        async_exit_stack=common_exit_stack
+    )
+
+    return await tools[0].run_async(
+        args={
+            "a": a,
+            "b": b,
+        },
+        tool_context=None,
+    )
+
+root_agent = Agent(
+    name="root_agent",
+    model="gemini-2.0-flash",
+    instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
+    tools=[get_sum],
+)
+```
+
+
+#### Step 2: Create an __init__ file
+
+Create an `__init__.py` in the same folder as the `agent.py` above
+
+```python
+# ./adk_agent_samples/fastmcp_agent/__init__.py
+from . import agent
+```
+
+#### Step 3: Observe the result
+
+Run `adk web` from the adk_agent_samples directory (ensure your virtual environment is active):
+
+```shell
+cd ./adk_agent_samples
+adk web
+```
+
+A successfully interaction will yield a response by accessing your remote FastMCP server, like below:
+
+<img src="../../assets/adk-tool-mcp-fastmcp-adk-web-demo.png" alt="FastMCP with ADK Web - Summing numbers example">
+
+
 
 ## 2. **Building an MCP server with ADK tools (MCP server exposing ADK)**
 
@@ -8591,8 +9089,8 @@ This pattern allows you to wrap ADK's tools and make them available to any stand
 
 You will create a standard Python MCP server application using the model-context-protocol library. Within this server, you will:
 
-1. Instantiate the ADK tool(s) you want to expose (e.g., FunctionTool(load\_web\_page)).  
-2. Implement the MCP server's @app.list\_tools handler to advertise the ADK tool(s), converting the ADK tool definition to the MCP schema using adk\_to\_mcp\_tool\_type.  
+1. Instantiate the ADK tool(s) you want to expose (e.g., FunctionTool(load\_web\_page)).
+2. Implement the MCP server's @app.list\_tools handler to advertise the ADK tool(s), converting the ADK tool definition to the MCP schema using adk\_to\_mcp\_tool\_type.
 3. Implement the MCP server's @app.call\_tool handler to receive requests from MCP clients, identify if the request targets your wrapped ADK tool, execute the ADK tool's .run\_async() method, and format the result into an MCP-compliant response (e.g., types.TextContent).
 
 ### Prerequisites
@@ -8764,7 +9262,7 @@ This section is relevant to you if:
 * You are developing your own Agent using ADK
 * And, you are **NOT** using `adk web`,
 * And, you are exposing the agent via your own UI
- 
+
 
 Using MCP Tools requires a different setup than using regular tools, due to the fact that specs for MCP Tools are fetched asynchronously
 from the MCP Server running remotely, or in another process.
@@ -8868,21 +9366,21 @@ When working with MCP and ADK, keep these points in mind:
 
 * **ADK Tools vs. MCP Tools:**
 
-    * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.  
-    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. MCPToolset makes these look like ADK tools to an LlmAgent.  
+    * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.
+    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. MCPToolset makes these look like ADK tools to an LlmAgent.
     * Langchain/CrewAI Tools are specific implementations within those libraries, often simple functions or classes, lacking the server/protocol structure of MCP. ADK offers wrappers (LangchainTool, CrewaiTool) for some interoperability.
 
 * **Asynchronous nature:** Both ADK and the MCP Python library are heavily based on the asyncio Python library. Tool implementations and server handlers should generally be async functions.
 
 * **Stateful sessions (MCP):** MCP establishes stateful, persistent connections between a client and server instance. This differs from typical stateless REST APIs.
 
-    * **Deployment:** This statefulness can pose challenges for scaling and deployment, especially for remote servers handling many users. The original MCP design often assumed client and server were co-located. Managing these persistent connections requires careful infrastructure considerations (e.g., load balancing, session affinity).  
+    * **Deployment:** This statefulness can pose challenges for scaling and deployment, especially for remote servers handling many users. The original MCP design often assumed client and server were co-located. Managing these persistent connections requires careful infrastructure considerations (e.g., load balancing, session affinity).
     * **ADK MCPToolset:** Manages this connection lifecycle. The exit\_stack pattern shown in the examples is crucial for ensuring the connection (and potentially the server process) is properly terminated when the ADK agent finishes.
 
 ## Further Resources
 
 * [Model Context Protocol Documentation](https://modelcontextprotocol.io/ )
-* [MCP Specification](https://modelcontextprotocol.io/specification/)  
+* [MCP Specification](https://modelcontextprotocol.io/specification/)
 * [MCP Python SDK & Examples](https://github.com/modelcontextprotocol/)
 
 ================
