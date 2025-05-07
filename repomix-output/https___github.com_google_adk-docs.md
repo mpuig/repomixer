@@ -116,7 +116,7 @@ The `ParallelAgent` is a [workflow agent](index.md) that executes its sub-agents
 
 Use `ParallelAgent` when: For scenarios prioritizing speed and involving independent, resource-intensive tasks, a `ParallelAgent` facilitates efficient parallel execution. **When sub-agents operate without dependencies, their tasks can be performed concurrently**, significantly reducing overall processing time.
 
-As with other [workflow agents](index.md), the `ParallelAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned only with their execution (i.e. in parallel), and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
+As with other [workflow agents](index.md), the `ParallelAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned with their execution (i.e. executing sub-agents in parallel), and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
 
 ### Example
 
@@ -3473,6 +3473,8 @@ File: docs/deploy/gke.md
 
 To deploy your agent you will need to have a Kubernetes cluster running on GKE. You can create a cluster using the Google Cloud Console or the `gcloud` command line tool.
 
+In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Vertex AI or AI Studio as the LLM provider using a Environment variable.
+
 ## Agent sample
 
 For each of the commands, we will reference a `capital_agent` sample defined in on the [LLM agent](../agents/llm-agents.md) page. We will assume it's in a `capital_agent` directory.
@@ -3514,6 +3516,18 @@ You can deploy your agent to GKE using the `gcloud` and `kubectl` cli and Kubern
 
 Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
 
+### Enable APIs
+
+Enable the necessary APIs for your project. You can do this using the `gcloud` command line tool.
+
+```bash
+gcloud services enable \
+    container.googleapis.com \
+    artifactregistry.googleapis.com \
+    cloudbuild.googleapis.com \
+    aiplatform.googleapis.com
+```
+
 ### Create a GKE cluster
 
 You can create a GKE cluster using the `gcloud` command line tool. This example creates an Autopilot cluster named `adk-cluster` in the `us-central1` region.
@@ -3532,17 +3546,6 @@ After creating the cluster, you need to connect to it using `kubectl`. This comm
 gcloud container clusters get-credentials adk-cluster \
     --location=$GOOGLE_CLOUD_LOCATION \
     --project=$GOOGLE_CLOUD_PROJECT
-```
-
-### Artifact Registry
-
-You need to create a Google Artifact Registry repository to store your container images. You can do this using the `gcloud` command line tool.
-
-```bash
-gcloud artifacts repositories create adk-repo \
-    --repository-format=docker \
-    --location=$GOOGLE_CLOUD_LOCATION \
-    --description="ADK repository"
 ```
 
 ### Project Structure
@@ -3633,6 +3636,15 @@ Create the following files (`main.py`, `requirements.txt`, `Dockerfile`) in the 
 
 ### Build the container image
 
+You need to create a Google Artifact Registry repository to store your container images. You can do this using the `gcloud` command line tool.
+
+```bash
+gcloud artifacts repositories create adk-repo \
+    --repository-format=docker \
+    --location=$GOOGLE_CLOUD_LOCATION \
+    --description="ADK repository"
+```
+
 Build the container image using the `gcloud` command line tool. This example builds the image and tags it as `adk-repo/adk-agent:latest`.
 
 ```bash
@@ -3642,9 +3654,19 @@ gcloud builds submit \
     .
 ```
 
+Verify the image is built and pushed to the Artifact Registry:
+
+```bash
+gcloud artifacts docker images list \
+  $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo \
+  --project=$GOOGLE_CLOUD_PROJECT
+```
+
 ### Configure Kubernetes Service Account for Vertex AI
 
 If your agent uses Vertex AI, you need to create a Kubernetes service account with the necessary permissions. This example creates a service account named `adk-agent-sa` and binds it to the `Vertex AI User` role.
+
+> If you are using AI Studio and accessing the model with an API key you can skip this step.
 
 ```bash
 kubectl create serviceaccount adk-agent-sa
@@ -3680,7 +3702,8 @@ spec:
       serviceAccount: adk-agent-sa
       containers:
       - name: adk-agent
-        image: $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:v0.0.4
+        imagePullPolicy: Always
+        image: $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest
         resources:
           limits:
             memory: "128Mi"
@@ -3701,6 +3724,9 @@ spec:
             value: GOOGLE_CLOUD_LOCATION
           - name: GOOGLE_GENAI_USE_VERTEXAI
             value: GOOGLE_GENAI_USE_VERTEXAI
+          # If using AI Studio, set GOOGLE_GENAI_USE_VERTEXAI to false and set the following:
+          # - name: GOOGLE_API_KEY
+          #   value: GOOGLE_API_KEY
           # Add any other necessary environment variables your agent might need
 ---
 apiVersion: v1
@@ -3830,6 +3856,63 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
 
     * Set `"streaming": true` if you want to receive Server-Sent Events (SSE).
     * The response will contain the agent's execution events, including the final answer.
+
+## Troubleshooting
+
+These are some common issues you might encounter when deploying your agent to GKE:
+
+### 403 Permission Denied for `Gemini 2.0 Flash`
+
+This usually means that the Kubernetes service account does not have the necessary permission to access the Vertex AI API. Ensure that you have created the service account and bound it to the `Vertex AI User` role as described in the [Configure Kubernetes Service Account for Vertex AI](#configure-kubernetes-service-account-for-vertex-ai) section. If you are using AI Studio, ensure that you have set the `GOOGLE_API_KEY` environment variable in the deployment manifest and it is valid.
+
+### Attempt to write a readonly database
+
+You might see there is no session id created in the UI and the agent does not respond to any messages. This is usually caused by the SQLite database being read-only. This can happen if you run the agent locally and then create the container image which copies the SQLite database into the container. The database is then read-only in the container.
+
+```bash
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) attempt to write a readonly database
+[SQL: UPDATE app_states SET state=?, update_time=CURRENT_TIMESTAMP WHERE app_states.app_name = ?]
+```
+
+To fix this issue, you can either:
+
+Delete the SQLite database file from your local machine before building the container image. This will create a new SQLite database when the container is started.
+
+```bash
+rm -f sessions.db
+```
+
+or (recommended) you can add a `.dockerignore` file to your project directory to exclude the SQLite database from being copied into the container image.
+
+```txt title=".dockerignore"
+sessions.db
+```
+
+Build the container image abd deploy the application again.
+
+## Cleanup
+
+To delete the GKE cluster and all associated resources, run:
+
+```bash
+gcloud container clusters delete adk-cluster \
+    --location=$GOOGLE_CLOUD_LOCATION \
+    --project=$GOOGLE_CLOUD_PROJECT
+```
+
+To delete the Artifact Registry repository, run:
+
+```bash
+gcloud artifacts repositories delete adk-repo \
+    --location=$GOOGLE_CLOUD_LOCATION \
+    --project=$GOOGLE_CLOUD_PROJECT
+```
+
+You can also delete the project if you no longer need it. This will delete all resources associated with the project, including the GKE cluster, Artifact Registry repository, and any other resources you created.
+
+```bash
+gcloud projects delete $GOOGLE_CLOUD_PROJECT
+```
 
 ================
 File: docs/deploy/index.md
@@ -4119,11 +4202,13 @@ pytest tests/integration/
 Here is an example of a `pytest` test case that runs a single test file:
 
 ```py
+from google.adk.evaluation.agent_evaluator import AgentEvaluator
+
 def test_with_single_test_file():
     """Test the agent's basic ability via a session file."""
     AgentEvaluator.evaluate(
-        agent_module="tests.integration.fixture.home_automation_agent",
-        eval_dataset="tests/integration/fixture/home_automation_agent/simple_test.test.json",
+        agent_module="home_automation_agent",
+        eval_dataset_file_path_or_dir="tests/integration/fixture/home_automation_agent/simple_test.test.json",
     )
 ```
 
@@ -4152,11 +4237,13 @@ Here is a sample session json file:
 And the sample code will look like this:
 
 ```py
+from google.adk.evaluation.agent_evaluator import AgentEvaluator
+
 def test_with_single_test_file():
     """Test the agent's basic ability via a session file."""
     AgentEvaluator.evaluate(
-        agent_module="tests.integration.fixture.trip_planner_agent",
-        eval_dataset="tests/integration/fixture/trip_planner_agent/simple_test.test.json",
+        agent_module="trip_planner_agent",
+        eval_dataset_file_path_or_dir="tests/integration/fixture/trip_planner_agent/simple_test.test.json",
         initial_session_file="tests/integration/fixture/trip_planner_agent/initial.session.json"
     )
 ```
@@ -7051,6 +7138,10 @@ File: docs/streaming/index.md
 ================
 # Streaming in ADK
 
+!!! Experimental
+
+    This is an experimental feature.
+
 Streaming in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
 AI agents.
@@ -7084,6 +7175,168 @@ text, audio, and video inputs, and they can provide text and audio output.
     [:octicons-arrow-right-24: More information](https://youtu.be/LwHPYyw7u6U)
 
 </div>
+
+
+## Learn more
+
+Learn more about [streaming tools](streaming-tools.md).
+
+================
+File: docs/streaming/streaming-tools.md
+================
+# Streaming Tools
+
+!!! info
+
+    This is only supported in streaming(live) agents/api.
+
+Streaming tools allows tools(functions) to stream intermediate results back to agents and agents can respond to those intermediate results. 
+For example, we can use streaming tools to monitor the changes of the stock price and have the agent react to it. Another example is we can have the agent monitor the video stream, and when there is changes in video stream, the agent can report the changes.
+
+To define a streaming tool, you must adhere to the following:
+
+1.  **Asynchronous Function:** The tool must be an `async` Python function.
+2.  **AsyncGenerator Return Type:** The function must be typed to return an `AsyncGenerator`. The first type parameter to `AsyncGenerator` is the type of the data you `yield` (e.g., `str` for text messages, or a custom object for structured data). The second type parameter is typically `None` if the generator doesn't receive values via `send()`.
+
+
+We support two types of streaming tools:
+- Simple type. This is a one type of streaming tools that only take non video/audio streams(the streams that you feed to adk web or adk runner) as input.
+- Video streaming tools. This only works in video streaming and the video stream(the streams that you feed to adk web or adk runner) will be passed into this function.
+
+Now let's define an agent that can monitor stock price changes and monitor the video stream changes. 
+
+```python
+import asyncio
+from typing import AsyncGenerator
+
+from agents.agents import LiveRequestQueue
+from agents.agents.llm_agent import Agent
+from agents.tools.function_tool import FunctionTool
+from google.genai import Client
+from google.genai import types as genai_types
+
+
+async def monitor_stock_price(stock_symbol: str) -> AsyncGenerator[str, None]:
+  """This function will monitor the price for the given stock_symbol in a continuous, streaming and asynchronously way."""
+  print(f"Start monitor stock price for {stock_symbol}!")
+
+  # Let's mock stock price change.
+  await asyncio.sleep(4)
+  price_alert1 = f"the price for {stock_symbol} is 300"
+  yield price_alert1
+  print(price_alert1)
+
+  await asyncio.sleep(4)
+  price_alert1 = f"the price for {stock_symbol} is 400"
+  yield price_alert1
+  print(price_alert1)
+
+  await asyncio.sleep(20)
+  price_alert1 = f"the price for {stock_symbol} is 900"
+  yield price_alert1
+  print(price_alert1)
+
+  await asyncio.sleep(20)
+  price_alert1 = f"the price for {stock_symbol} is 500"
+  yield price_alert1
+  print(price_alert1)
+
+
+# for video streaming, `input_stream: LiveRequestQueue` is required and reserved key parameter for ADK to pass the video streams in.
+async def monitor_video_stream(
+    input_stream: LiveRequestQueue,
+) -> AsyncGenerator[str, None]:
+  """Monitor how many people are in the video streams."""
+  print("start monitor_video_stream!")
+  client = Client(vertexai=False)
+  prompt_text = (
+      "Count the number of people in this image. Just respond with a numeric"
+      " number."
+  )
+  last_count = None
+  while True:
+    last_valid_req = None
+    print("Start monitoring loop")
+
+    # use this loop to pull the latest images and discard the old ones
+    while input_stream._queue.qsize() != 0:
+      live_req = await input_stream.get()
+
+      if live_req.blob is not None and live_req.blob.mime_type == "image/jpeg":
+        last_valid_req = live_req
+
+    # If we found a valid image, process it
+    if last_valid_req is not None:
+      print("Processing the most recent frame from the queue")
+
+      # Create an image part using the blob's data and mime type
+      image_part = genai_types.Part.from_bytes(
+          data=last_valid_req.blob.data, mime_type=last_valid_req.blob.mime_type
+      )
+
+      contents = genai_types.Content(
+          role="user",
+          parts=[image_part, genai_types.Part.from_text(prompt_text)],
+      )
+
+      # Call the model to generate content based on the provided image and prompt
+      response = client.models.generate_content(
+          model="gemini-2.0-flash-exp",
+          contents=contents,
+          config=genai_types.GenerateContentConfig(
+              system_instruction=(
+                  "You are a helpful video analysis assistant. You can count"
+                  " the number of people in this image or video. Just respond"
+                  " with a numeric number."
+              )
+          ),
+      )
+      if not last_count:
+        last_count = response.candidates[0].content.parts[0].text
+      elif last_count != response.candidates[0].content.parts[0].text:
+        last_count = response.candidates[0].content.parts[0].text
+        yield response
+        print("response:", response)
+
+    # Wait before checking for new images
+    await asyncio.sleep(0.5)
+
+
+# Use this exact function to help ADK stop your streaming tools when requested.
+# for example, if we want to stop `monitor_stock_price`, then the agent will
+# invoke this function with stop_streaming(function_name=monitor_stock_price).
+def stop_streaming(function_name: str):
+  """Stop the streaming
+
+  Args:
+    function_name: The name of the streaming function to stop.
+  """
+  pass
+
+
+root_agent = Agent(
+    model="gemini-2.0-flash-exp",
+    name="video_streaming_agent",
+    instruction="""
+      You are a monitoring agent. You can do video monitoring and stock price monitoring
+      using the provided tools/functions.
+      When users want to monitor a video stream,
+      You can use monitor_video_stream function to do that. When monitor_video_stream
+      returns the alert, you should tell the users.
+      When users want to monitor a stock price, you can use monitor_stock_price.
+      Don't ask too many questions. Don't be too talkative.
+    """,
+    tools=[
+        monitor_video_stream,
+        monitor_stock_price,
+        FunctionTool(stop_streaming),
+    ]
+)
+```
+
+Here are some sample queries to test:
+- Help me monitor the stock price for $XYZ stock.
+- Help me monitor how many people are there in the video stream.
 
 ================
 File: docs/tools/authentication.md
@@ -7778,7 +8031,7 @@ agent that needs to retrieve information from the web can directly use the
 
 Once added to an agent, the agent can decide to use the tool based on the **user
 prompt** and its **instructions**. The framework handles the execution of the
-tool when the agent calls it.
+tool when the agent calls it. Important: check the ***Limitations*** section of this page.
 
 ## Available Built-in tools
 
@@ -7855,17 +8108,17 @@ root_agent = Agent(
 !!! warning
 
     Currently, for each root agent or single agent, only one built-in tool is
-    supported.
+    supported. No other tools of any type can be used in the same agent.
 
- For example, the following approach that uses two or more built-in tools within
- a root agent (or a single agent) is **not** currently supported:
+ For example, the following approach that uses ***a built-in tool along with
+ other tools*** within a single agent is **not** currently supported:
 
 ```py
 root_agent = Agent(
     name="RootAgent",
     model="gemini-2.0-flash",
     description="Root Agent",
-    tools=[built_in_code_execution, custom_function],
+    tools=[built_in_code_execution, custom_function], # <-- not supported
 )
 ```
 
@@ -7923,7 +8176,7 @@ ADK offers several ways to create functions tools, each suited to different leve
 
 ## 1. Function Tool
 
-Transforming a function into a tool is a straightforward way to integrate custom logic into your agents. This approach offers flexibility and quick integration.
+Transforming a function into a tool is a straightforward way to integrate custom logic into your agents. In fact, when you assign a Python function to an agent’s tools list, the framework will automatically wrap it as a Function Tool for you. This approach offers flexibility and quick integration.
 
 ### Parameters
 
@@ -8196,7 +8449,7 @@ you only need to follow a subset of these steps.
     )
     ```
 
-5. Configure your \`\_\_init\_\_.py\` to expose your agent
+5. Configure your `__init__.py` to expose your agent
 
     ```py
     from . import agent
@@ -8284,7 +8537,7 @@ Connect your agent to enterprise applications using
 
 **Steps:**
 
-1.  Create a tool with `ApplicationIntegrationToolset`
+1.  Create a tool with `ApplicationIntegrationToolset` within your `tools.py` file
 
     ```py
     from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
@@ -8323,7 +8576,7 @@ Connect your agent to enterprise applications using
     )
     ```
 
-3. Configure your  \`\_\_init\_\_.py\` to expose your agent
+3. Configure your  `__init__.py` to expose your agent
 
     ```py
     from . import agent
@@ -8347,7 +8600,7 @@ workflow as a tool for your agent or create a new one.
 
 **Steps:**
 
-1. Create a tool with `ApplicationIntegrationToolset`
+1. Create a tool with `ApplicationIntegrationToolset` within your `tools.py` file
 
     ```py
     integration_tool = ApplicationIntegrationToolset(
