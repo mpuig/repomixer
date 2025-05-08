@@ -4895,20 +4895,20 @@ For `model`, please double check the model ID as described earlier in the [Model
 
 ```py
 from google.adk.agents import Agent
-from google.adk.tools import built_in_google_search  # Import the tool
+from google.adk.tools import google_search  # Import the tool
 
 root_agent = Agent(
    # A unique name for the agent.
    name="basic_search_agent",
    # The Large Language Model (LLM) that agent will use.
-   model="gemini-2.0-flash-exp", # Google AI Studio
-   #model="gemini-2.0-flash-live-preview-04-09" # Vertex AI Studio
+   model="gemini-2.0-flash-exp",
+   # model="gemini-2.0-flash-live-001",  # New streaming model version as of Feb 2025
    # A short description of the agent's purpose.
    description="Agent to answer questions using Google Search.",
    # Instructions to set the agent's behavior.
    instruction="You are an expert researcher. You always stick to the facts.",
    # Add google_search tool to perform grounding with Google search.
-   tools=[built_in_google_search]
+   tools=[google_search]
 )
 ```
 
@@ -5196,12 +5196,12 @@ This code creates a real-time chat application using ADK and FastAPI. It sets up
 
 Key functionalities:
 
-* Loads the Gemini API key.  
-* Uses ADK to manage agent sessions and run the \`google\_search\_agent\`.  
-* \`start\_agent\_session\` initializes an agent session with a live request queue for real-time communication.  
-* \`agent\_to\_client\_messaging\` asynchronously streams the agent's text responses and status updates (turn complete, interrupted) to the connected WebSocket client.  
-* \`client\_to\_agent\_messaging\` asynchronously receives text messages from the WebSocket client and sends them as user input to the agent.  
-* FastAPI serves a static frontend and handles WebSocket connections at \`/ws/{session\_id}\`.  
+* Loads the Gemini API key.
+* Uses ADK to manage agent sessions and run the \`google\_search\_agent\`.
+* \`start\_agent\_session\` initializes an agent session with a live request queue for real-time communication.
+* \`agent\_to\_client\_messaging\` asynchronously streams the agent's text responses and status updates (turn complete, interrupted) to the connected WebSocket client.
+* \`client\_to\_agent\_messaging\` asynchronously receives text messages from the WebSocket client and sends them as user input to the agent.
+* FastAPI serves a static frontend and handles WebSocket connections at \`/ws/{session\_id}\`.
 * When a client connects, it starts an agent session and creates concurrent tasks for bidirectional communication between the client and the agent via WebSockets.
 
 Copy-paste the following code block to the `index.html` file.
@@ -5316,12 +5316,12 @@ Copy-paste the following code block to the `index.html` file.
 
 This HTML file sets up a basic webpage with:
 
-* A form (\`messageForm\`) with an input field for typing messages and a "Send" button.  
-* JavaScript that:  
-  * Connects to a WebSocket server at \`wss://\[current host\]/ws/\[random session ID\]\`.  
-  * Enables the "Send" button upon successful connection.  
-  * Appends received messages from the WebSocket to the \`messages\` div, handling streaming responses and turn completion.  
-  * Sends the text entered in the input field to the WebSocket server when the form is submitted.  
+* A form (\`messageForm\`) with an input field for typing messages and a "Send" button.
+* JavaScript that:
+  * Connects to a WebSocket server at \`wss://\[current host\]/ws/\[random session ID\]\`.
+  * Enables the "Send" button upon successful connection.
+  * Appends received messages from the WebSocket to the \`messages\` div, handling streaming responses and turn completion.
+  * Sends the text entered in the input field to the WebSocket server when the form is submitted.
   * Attempts to reconnect if the WebSocket connection closes.
 
 ## 6\. Interact with Your Streaming app {#4.-interact-with-your-streaming-app}
@@ -5346,8 +5346,8 @@ Try asking a question `What is Gemini?`. The agent will use Google Search to res
 
 Benefits over conventional synchronous web apps:
 
-* Real-time two-way communication: Seamless interaction.  
-* More responsive and engaging: No need to wait for full responses or constant refreshing. Feels like a live conversation.  
+* Real-time two-way communication: Seamless interaction.
+* More responsive and engaging: No need to wait for full responses or constant refreshing. Feels like a live conversation.
 * Can be extended to multimodal apps with audio, image and video streaming support.
 
 Congratulations\! You've successfully created and interacted with your first Streaming agent using ADK\!
@@ -8220,62 +8220,111 @@ While you have considerable flexibility in defining your function, remember that
 
 Designed for tasks that require a significant amount of processing time without blocking the agent's execution. This tool is a subclass of `FunctionTool`.
 
-When using a `LongRunningFunctionTool`, your Python function can initiate the long-running operation and optionally return an **intermediate result** to keep the model and user informed about the progress. The agent can then continue with other tasks. An example is the human-in-the-loop scenario where the agent needs human approval before proceeding with a task.
+When using a `LongRunningFunctionTool`, your Python function can initiate the long-running operation and optionally return an **initial result**** (e.g. the long-running operation id). Once a long running function tool is invoked the agent runner will pause the agent run and let the agent client to decide whether to continue or wait until the long-running operation finishes. The agent client can query the progress of the long-running operation and send back an intermediate or final response. The agent can then continue with other tasks. An example is the human-in-the-loop scenario where the agent needs human approval before proceeding with a task.
 
 ### How it Works
 
-You wrap a Python *generator* function (a function using `yield`) with `LongRunningFunctionTool`.
+You wrap a Python function with LongRunningFunctionTool.
 
-1. **Initiation:** When the LLM calls the tool, your generator function starts executing.
+1. **Initiation:** When the LLM calls the tool, your python function starts the long-running operation.
 
-2. **Intermediate Updates (`yield`):** Your function should yield intermediate Python objects (typically dictionaries) periodically to report progress. The ADK framework takes each yielded value and sends it back to the LLM packaged within a `FunctionResponse`. This allows the LLM to inform the user (e.g., status, percentage complete, messages).
+2. **Initial Updates:** Your function should optionally return an initial result (e.g. the long-running operaiton id). The ADK framework takes the result and sends it back to the LLM packaged within a `FunctionResponse`. This allows the LLM to inform the user (e.g., status, percentage complete, messages). And then the agent run is ended / paused.
 
-3. **Completion (`return`):** When the task is finished, the generator function uses `return` to provide the final Python object result.
+3. **Continue or Wait:** After each agent run is completed. Agent client can query the progress of the long-running operation and decide whether to continue the agent run with an intermediate response (to update the progress) or wait until a final response is retrieved. Agent client should send the intermediate or final response back to the agent for the next run.
 
-4. **Framework Handling:** The ADK framework manages the execution. It sends each yielded value back as an intermediate `FunctionResponse`. When the generator completes, the framework sends the returned value as the content of the final `FunctionResponse`, signaling the end of the long-running operation to the LLM.
+4. **Framework Handling:** The ADK framework manages the execution. It sends the intermediate or final `FunctionResponse` sent by agent client to the LLM to generate a user friendly message.
 
 ### Creating the Tool
 
-Define your generator function and wrap it using the `LongRunningFunctionTool` class:
+Define your tool function and wrap it using the `LongRunningFunctionTool` class:
 
 ```py
 from google.adk.tools import LongRunningFunctionTool
 
-# Define your generator function (see example below)
-def my_long_task_generator(*args, **kwargs):
-    # ... setup ...
-    yield {"status": "pending", "message": "Starting task..."} # Framework sends this as FunctionResponse
-    # ... perform work incrementally ...
-    yield {"status": "pending", "progress": 50}               # Framework sends this as FunctionResponse
-    # ... finish work ...
-    return {"status": "completed", "result": "Final outcome"} # Framework sends this as final FunctionResponse
+# Define your long running function (see example below)
+def ask_for_approval(
+    purpose: str, amount: float, tool_context: ToolContext
+) -> dict[str, Any]:
+  """Ask for approval for the reimbursement."""
+  # create a ticket for the approval
+  # Send a notification to the approver with the link of the ticket
+  return {'status': 'pending', 'approver': 'Sean Zhou', 'purpose' : purpose, 'amount': amount, 'ticket-id': 'approval-ticket-1'}
 
 # Wrap the function
-my_tool = LongRunningFunctionTool(func=my_long_task_generator)
+approve_tool = LongRunningFunctionTool(func=ask_for_approval)
 ```
 
-### Intermediate Updates
+### Intermediate / Final result Updates
 
-Yielding structured Python objects (like dictionaries) is crucial for providing meaningful updates. Include keys like:
+Agent client received an event with long running function calls and check the status of the ticket. Then Agent client can send the intermediate or final response back to update the progress. The framework packages this value (even if it's None) into the content of the `FunctionResponse` sent back to the LLM.
 
-* status: e.g., "pending", "running", "waiting_for_input"
+```py
+# runner = Runner(...)
+# session = session_service.create_session(...)
+# content = types.Content(...) # User's initial query
 
-* progress: e.g., percentage, steps completed
+def get_long_running_function_call(event: Event) -> types.FunctionCall:
+    # Get the long running function call from the event
+    if not event.long_running_tool_ids or not event.content or not event.content.parts:
+        return
+    for part in event.content.parts:
+        if (
+            part 
+            and part.function_call 
+            and event.long_running_tool_ids 
+            and part.function_call.id in event.long_running_tool_ids
+        ):
+            return part.function_call
 
-* message: Descriptive text for the user/LLM
+def get_function_response(event: Event, function_call_id: str) -> types.FunctionResponse:
+    # Get the function response for the fuction call with specified id.
+    if not event.content or not event.content.parts:
+        return
+    for part in event.content.parts:
+        if (
+            part 
+            and part.function_response
+            and part.function_response.id == function_call_id
+        ):
+            return part.function_response
 
-* estimated_completion_time: If calculable
+print("\nRunning agent...")
+events_async = runner.run_async(
+    session_id=session.id, user_id='user', new_message=content
+)
 
-Each value you yield is packaged into a FunctionResponse by the framework and sent to the LLM.
 
-### Final Result
+long_running_function_call, long_running_function_response, ticket_id = None, None, None
+async for event in events_async:
+    # Use helper to check for the specific auth request event
+    if not long_running_function_call:
+        long_running_function_call = get_long_running_function_call(event)
+    else:
+        long_running_function_response = get_function_response(event, long_running_function_call.id)
+        if long_running_function_response:
+            ticket_id = long_running_function_response.response['ticket_id']
+    if event.content and event.content.parts:
+        if text := ''.join(part.text or '' for part in event.content.parts):
+            print(f'[{event.author}]: {text}')
 
-The Python object your generator function returns is considered the final result of the tool execution. The framework packages this value (even if it's None) into the content of the final `FunctionResponse` sent back to the LLM, indicating the tool execution is complete.
+    if long_running_function_response:
+        # query the status of the correpsonding ticket via tciket_id
+        # send back an intermediate / final response
+        updated_response = long_running_function_response.model_copy(deep=True)
+        updated_response.response = {'status': 'approved'}
+        async for event in runner.run_async(
+          session_id=session.id, user_id='user', new_message=types.Content(parts=[types.Part(function_response = updated_response)], role='user')
+        ):
+            if event.content and event.content.parts:
+                if text := ''.join(part.text or '' for part in event.content.parts):
+                    print(f'[{event.author}]: {text}')   
+```
+
 
 ??? "Example: File Processing Simulation"
 
     ```py
-    --8<-- "examples/python/snippets/tools/function-tools/file_processor.py"
+    --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py"
     ```
 
 #### Key aspects of this example
@@ -9260,6 +9309,7 @@ Create `agent.py` in `./adk_agent_samples/fastmcp_agent/` and use the following 
 # ./adk_agent_samples/fastmcp_agent/agent.py
 
 import os
+from contextlib import AsyncExitStack
 
 import google.auth
 from google.adk.agents import Agent
@@ -9287,8 +9337,6 @@ async def get_sum(a: int, b: int) -> int:
     tools, _ = await MCPToolset.from_server(
         connection_params=SseServerParams(
             url="https://fastmcp-demo-00000000000.us-central1.run.app/sse",
-            project_id="YOUR-GCP-PROJECT-ID",
-            location="us-central1",
         ),
         async_exit_stack=common_exit_stack
     )
