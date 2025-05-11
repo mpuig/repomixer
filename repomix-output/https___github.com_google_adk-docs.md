@@ -7210,9 +7210,9 @@ Now let's define an agent that can monitor stock price changes and monitor the v
 import asyncio
 from typing import AsyncGenerator
 
-from agents.agents import LiveRequestQueue
-from agents.agents.llm_agent import Agent
-from agents.tools.function_tool import FunctionTool
+from google.adk.agents import LiveRequestQueue
+from google.adk.agents.llm_agent import Agent
+from google.adk.tools.function_tool import FunctionTool
 from google.genai import Client
 from google.genai import types as genai_types
 
@@ -11895,6 +11895,12 @@ integrations here.*
 
 *Discover video walkthroughs, talks, and demos showcasing ADK.*
 
+*   **[Agent Development Kit (ADK) Masterclass: Build AI Agents & Automate Workflows (Beginner to Pro)](https://www.youtube.com/watch?v=P4VFL9nIaIA)**
+
+    > A comprehensive crash course that takes you from beginner to expert in Google's Agent Development Kit. 
+    > Covers 12 hands-on examples progressing from single agent setup to advanced multi-agent workflows.
+    > Includes step-by-step code walkthroughs and downloadable source code for all examples.
+
 ## Contributing Your Resource
 
 Have an ADK resource to share (tutorial, translation, tool, video, example)?
@@ -12114,6 +12120,7 @@ from simple tasks to complex workflows.
     [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
 
 <div class="footer"></div>
+
 
 
 
