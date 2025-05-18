@@ -9408,7 +9408,7 @@ This guide covers two primary integration patterns:
 
 Before you begin, ensure you have the following set up:
 
-* **Set up ADK:** Follow the standard ADK \[setup\]() instructions in the quickstart.
+* **Set up ADK:** Follow the standard ADK \[setup\](https://google.github.io/adk-docs/get-started/quickstart/#venv-install) instructions in the quickstart.
 * **Install/update Python:** MCP requires Python version of 3.9 or higher.
 * **Setup Node.js and npx:** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).
 * **Verify Installations:** Confirm `adk` and `npx` are in your PATH within the activated virtual environment:
@@ -12266,6 +12266,12 @@ Community-provided translations of the ADK documentation.
 *Find community-written guides covering ADK features, use cases, and
 integrations here.*
 
+*   **[Build an e-commerce recommendation AI agents with ADK + Vector Search](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/shop_agent.ipynb)**
+
+    > In this tutorial, we will explore how to build a simple multi-agent system for an 
+    > e-commerce site, designed to offer the "Generative Recommendations" you find in the 
+    > [Shopper's Concierge demo](https://www.youtube.com/watch?v=LwHPYyw7u6U).
+
 ## Videos & Screencasts
 
 Discover video walkthroughs, talks, and demos showcasing ADK.
@@ -12294,6 +12300,13 @@ Discover video walkthroughs, talks, and demos showcasing ADK.
       <iframe src="https://www.youtube-nocookie.com/embed/hPzjkQFV5yI?si=GNbDQ1iqP4fok-SY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
   </div>
+
+  <div class="video-item">
+    <div class="video-container">
+      <iframe src="https://www.youtube-nocookie.com/embed/LwHPYyw7u6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </div>
+
 </div>
 
 *   **[Agent Development Kit (ADK) Masterclass: Build AI Agents & Automate Workflows (Beginner to Pro)](https://www.youtube.com/watch?v=P4VFL9nIaIA)**
