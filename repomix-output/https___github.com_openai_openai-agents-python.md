@@ -1,5 +1,3 @@
-This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
-
 ================================================================
 Files
 ================================================================
