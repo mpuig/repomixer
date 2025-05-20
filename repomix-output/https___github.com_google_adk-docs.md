@@ -7592,12 +7592,14 @@ Streaming in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
 AI agents.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LwHPYyw7u6U" title="Shopper's Concierge" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 With streaming mode, you can provide end users with the experience of natural,
 human-like voice conversations, including the ability for the user to interrupt
 the agent's responses with voice commands. Agents with streaming can process
 text, audio, and video inputs, and they can provide text and audio output.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Tu7-voU7nnw" title="Shopper's Concierge" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LwHPYyw7u6U" title="Shopper's Concierge" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 <div class="grid cards" markdown>
 
@@ -9182,27 +9184,28 @@ documentation:
 
 ### Install client SDK
 
-ADK relies on the `toolbox-langchain` python package to use Toolbox. Install the
+ADK relies on the `toolbox-core` python package to use Toolbox. Install the
 package before getting started:
 
 ```shell
-pip install toolbox-langchain langchain
+pip install toolbox-core
 ```
 
 ### Loading Toolbox Tools
 
-Once you’ve Toolbox server is configured and up and running, you can load tools
-from your server using the ADK:
+Once you’re Toolbox server is configured and up and running, you can load tools
+from your server using ADK:
 
-```py
-from google.adk.tools.toolbox_tool import ToolboxTool
+```python
+from google.adk.agents import Agent
+from toolbox_core import ToolboxSyncClient
 
-toolbox = ToolboxTool("https://127.0.0.1:5000")
+toolbox = ToolboxSyncClient("https://127.0.0.1:5000")
 
 # Load a specific set of tools
-tools = toolbox.get_toolset(toolset_name='my-toolset-name'),
+tools = toolbox.load_toolset('my-toolset-name'),
 # Load single tool
-tools = toolbox.get_tool(tool_name='my-tool-name'),
+tools = toolbox.load_tool('my-tool-name'),
 
 root_agent = Agent(
     ...,
