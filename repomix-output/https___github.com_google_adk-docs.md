@@ -1194,6 +1194,25 @@ layer, providing a standardized, OpenAI-compatible interface to over 100+ LLMs.
         )
         ```
 
+!!!info "Note for Windows users"
+
+    ### Avoiding LiteLLM UnicodeDecodeError on Windows
+    When using ADK agents with LiteLlm on Windows, users might encounter the following error:
+    ```
+    UnicodeDecodeError: 'charmap' codec can't decode byte...
+    ```
+    This issue occurs because `litellm` (used by LiteLlm) reads cached files (e.g., model pricing information) using the default Windows encoding (`cp1252`) instead of UTF-8.
+    Windows users can prevent this issue by setting the `PYTHONUTF8` environment variable to `1`. This forces Python to use UTF-8 globally.
+    **Example (PowerShell):**
+    ```powershell
+    # Set for current session
+    $env:PYTHONUTF8 = "1"
+    # Set persistently for the user
+    [System.Environment]::SetEnvironmentVariable('PYTHONUTF8', '1', [System.EnvironmentVariableTarget]::User)
+    Applying this setting ensures that Python reads cached files using UTF-8, avoiding the decoding error.
+    ```
+
+
 ## Using Open & Local Models via LiteLLM
 
 ![python_only](https://img.shields.io/badge/Supported_in-Python-blue)
@@ -2991,7 +3010,7 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
     )
 
     # You can also use the convenience constructor:
-    # image_artifact_alt = types.Part.from_data(data=image_bytes, mime_type="image/png")
+    # image_artifact_alt = types.Part.from_bytes(data=image_bytes, mime_type="image/png")
 
     print(f"Artifact MIME Type: {image_artifact.inline_data.mime_type}")
     print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
@@ -3134,7 +3153,6 @@ Understanding artifacts involves grasping a few key components: the service that
     * `data` (`bytes`): The raw binary content of the artifact.  
     * `mime_type` (`str`): A standard MIME type string (e.g., `'application/pdf'`, `'image/png'`, `'audio/mpeg'`) describing the nature of the binary data. **This is crucial for correct interpretation when loading the artifact.**
 
-
 === "Python"
 
     ```python
@@ -3150,11 +3168,11 @@ Understanding artifacts involves grasping a few key components: the service that
     )
 
     # Using the convenience class method (equivalent)
-    pdf_artifact_alt_py = types.Part.from_data(data=pdf_bytes, mime_type=pdf_mime_type)
+    pdf_artifact_alt_py = types.Part.from_bytes(data=pdf_bytes, mime_type=pdf_mime_type)
 
     print(f"Created Python artifact with MIME type: {pdf_artifact_py.inline_data.mime_type}")
     ```
-
+    
 === "Java"
 
     ```java
@@ -4176,7 +4194,8 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     
         ```python
         # Pseudocode: Agent implementation receiving InvocationContext
-        from google.adk.agents import BaseAgent, InvocationContext
+        from google.adk.agents import BaseAgent
+        from google.adk.agents.invocation_context import InvocationContext
         from google.adk.events import Event
         from typing import AsyncGenerator
     
@@ -4921,7 +4940,8 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
 
 ```python
 # Pseudocode: Inside agent's _run_async_impl
-from google.adk.agents import InvocationContext, BaseAgent
+from google.adk.agents import BaseAgent
+from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 from typing import AsyncGenerator
 
@@ -5341,7 +5361,6 @@ export GOOGLE_GENAI_USE_VERTEXAI=True
         import os
 
         import uvicorn
-        from fastapi import FastAPI
         from google.adk.cli.fast_api import get_fast_api_app
 
         # Get the directory where main.py is located
@@ -5355,7 +5374,7 @@ export GOOGLE_GENAI_USE_VERTEXAI=True
 
         # Call the function to get the FastAPI app instance
         # Ensure the agent directory name ('capital_agent') matches your agent folder
-        app: FastAPI = get_fast_api_app(
+        app = get_fast_api_app(
             agent_dir=AGENT_DIR,
             session_db_url=SESSION_DB_URL,
             allow_origins=ALLOWED_ORIGINS,
@@ -5402,6 +5421,23 @@ export GOOGLE_GENAI_USE_VERTEXAI=True
 
         CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
         ```
+
+    #### Defining Multiple Agents
+
+    You can define and deploy multiple agents within the same Cloud Run instance by creating separate folders in the root of `your-project-directory/`. Each folder represents one agent and must define a `root_agent` in its configuration.
+
+    Example structure:
+
+    ```txt
+    your-project-directory/
+    ├── capital_agent/
+    │   ├── __init__.py
+    │   └── agent.py       # contains `root_agent` definition
+    ├── population_agent/
+    │   ├── __init__.py
+    │   └── agent.py       # contains `root_agent` definition
+    └── ...
+    ```
 
     #### Deploy using `gcloud`
 
@@ -7810,7 +7846,7 @@ Notice how easily you integrated [grounding with Google Search](https://ai.googl
 
 ![intro_components.png](../../assets/quickstart-streaming-tool.png)
 
-Copy-paste the following code block to `__init__.py` and `main.py` files.
+Copy-paste the following code block to `__init__.py` file.
 
 ```py title="__init__.py"
 from . import agent
@@ -7870,6 +7906,11 @@ Then, run the dev UI:
 ```shell
 adk web
 ```
+
+!!!info "Note for Windows users"
+
+    When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
+
 
 Open the URL provided (usually `http://localhost:8000` or
 `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
@@ -8141,7 +8182,7 @@ File: docs/get-started/installation.md
         <artifactId>google-adk-dev</artifactId>
         <version>0.1.0</version>
       </dependency>
-    <dependencies>
+    </dependencies>
     ```
 
     Here's a [complete pom.xml](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run/pom.xml) file for reference.
@@ -8372,6 +8413,11 @@ agent will be unable to function.
         ```shell
         adk web
         ```
+        
+        !!!info "Note for Windows users"
+
+            When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
+
 
         **Step 1:** Open the URL provided (usually `http://localhost:8000` or
         `http://127.0.0.1:8000`) directly in your browser.
@@ -10219,10 +10265,8 @@ are its key properties:
 
 *   **Identification (`id`, `appName`, `userId`):** Unique labels for the
     conversation.
-    *   `id`: A unique identifier for *this specific* conversation thread,
-        essential for retrieving it later.
-    *   `appName`: Identifies which agent application this conversation belongs
-        to.
+    * `id`: A unique identifier for *this specific* conversation thread, essential for retrieving it later. A SessionService object can handle multiple `Session`(s). This field identifies which particular session object are we referring to. For example, "test_id_modification".
+    * `app_name`: Identifies which agent application this conversation belongs to. For example, "id_modifier_workflow". 
     *   `userId`: Links the conversation to a particular user.
 *   **History (`events`):** A chronological sequence of all interactions
     (`Event` objects – user messages, agent responses, tool actions) that have
@@ -10684,6 +10728,32 @@ Avoid directly modifying the `session.state` dictionary after retrieving a sessi
 * **Standard Update Flow:** Rely on `append_event`.
 
 ================
+File: docs/streaming/configuration.md
+================
+# Configurating streaming behaviour
+
+There are some configurations you can set for live(streaming) agents. 
+
+It's set by [RunConfig](https://github.com/google/adk-python/blob/main/src/google/adk/agents/run_config.py). You should use RunConfig with your [Runner.run_live(...)](https://github.com/google/adk-python/blob/main/src/google/adk/runners.py). 
+
+For example, if you want to set voice config, you can leverage speech_config. 
+
+```python
+voice_config = genai_types.VoiceConfig(
+    prebuilt_voice_config=genai_types.PrebuiltVoiceConfigDict(
+        voice_name='Aoede'
+    )
+)
+speech_config = genai_types.SpeechConfig(voice_config=voice_config)
+run_config = RunConfig(speech_config=speech_config)
+
+runner.run_live(
+    ...,
+    run_config=run_config,
+)
+```
+
+================
 File: docs/streaming/custom-streaming-ws.md
 ================
 # Custom Audio Streaming app (WebSocket) {#custom-streaming-websocket}
@@ -10797,8 +10867,8 @@ from google.adk.tools import google_search  # Import the tool
 
 root_agent = Agent(
    name="google_search_agent",
-   model="gemini-2.0-flash-live-001", # if this model does not work, try "gemini-2.0-flash-exp"
-   # model="gemini-2.0-flash-exp",
+   model="gemini-2.0-flash-exp", # if this model does not work, try below
+   #model="gemini-2.0-flash-live-001",
    description="Agent to answer questions using Google Search.",
    instruction="Answer the question using the Google Search tool.",
    tools=[google_search],
@@ -10864,7 +10934,7 @@ These console logs are important in case you develop your own streaming applicat
 6\. **Troubleshooting tips**
 
 - **When `ws://` doesn't work:** If you see any errors on the Chrome DevTools with regard to `ws://` connection, try replacing `ws://` with `wss://` on `app/static/js/app.js` at line 28. This may happen when you are running the sample on a cloud environment and using a proxy connection to connect from your browser.
-- **When `gemini-2.0-flash-live-001` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-live-001` model availability, try replacing it with `gemini-2.0-flash-exp` on `app/google_search_agent/agent.py` at line 6. This may happen when you are running the sample with Vertex AI.
+- **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
 ## 4. Server code overview {#4.-server-side-code-overview}
 
@@ -11431,6 +11501,12 @@ Install ADK:
 pip install google-adk==1.0.0
 ```
 
+Set `SSL_CERT_FILE` variable with the following command.
+
+```shell
+export SSL_CERT_FILE=$(python -m certifi)
+```
+
 Download the sample code:
 
 ```bash
@@ -11493,29 +11569,6 @@ To run the sample app, choose a platform from either Google AI Studio or Google 
         ```
 
 
-### agent.py
-
-The agent definition code `agent.py` in the `google_search_agent` folder is where the agent's logic is written:
-
-
-```py
-from google.adk.agents import Agent
-from google.adk.tools import google_search  # Import the tool
-
-root_agent = Agent(
-   name="google_search_agent",
-   model="gemini-2.0-flash-live-001", # if this model does not work, try "gemini-2.0-flash-exp"
-   # model="gemini-2.0-flash-exp",
-   description="Agent to answer questions using Google Search.",
-   instruction="Answer the question using the Google Search tool.",
-   tools=[google_search],
-)
-```
-
-Notice how easily you integrated [grounding with Google Search](https://ai.google.dev/gemini-api/docs/grounding?lang=python#configure-search) capabilities.  The `Agent` class and the `google_search` tool handle the complex interactions with the LLM and grounding with the search API, allowing you to focus on the agent's *purpose* and *behavior*.
-
-![intro_components.png](../assets/quickstart-streaming-tool.png)
-
 ## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
 
 1\. **Navigate to the Correct Directory:**
@@ -11566,40 +11619,96 @@ These console logs are important in case you develop your own streaming applicat
 
 6\. **Troubleshooting tips**
 
-- **When `gemini-2.0-flash-live-001` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-live-001` model availability, try replacing it with `gemini-2.0-flash-exp` on `app/google_search_agent/agent.py` at line 6. This may happen when you are running the sample with Vertex AI.
+- **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
-## 4. Bidirectional communication overview {#4.-bidi-comm-overview}
+## 4. Agent definition
+
+The agent definition code `agent.py` in the `google_search_agent` folder is where the agent's logic is written:
+
+
+```py
+from google.adk.agents import Agent
+from google.adk.tools import google_search  # Import the tool
+
+root_agent = Agent(
+   name="google_search_agent",
+   model="gemini-2.0-flash-exp", # if this model does not work, try below
+   #model="gemini-2.0-flash-live-001",
+   description="Agent to answer questions using Google Search.",
+   instruction="Answer the question using the Google Search tool.",
+   tools=[google_search],
+)
+```
+
+Notice how easily you integrated [grounding with Google Search](https://ai.google.dev/gemini-api/docs/grounding?lang=python#configure-search) capabilities.  The `Agent` class and the `google_search` tool handle the complex interactions with the LLM and grounding with the search API, allowing you to focus on the agent's *purpose* and *behavior*.
+
+![intro_components.png](../assets/quickstart-streaming-tool.png)
+
 
 The server and client architecture enables real-time, bidirectional communication between web clients and AI agents with proper session isolation and resource management.
-
-### Client-to-Agent Flow:
-1. **Connection Establishment** - Client opens SSE connection to `/events/{user_id}`, triggering session creation and storing request queue in `active_sessions`
-2. **Message Transmission** - Client sends POST to `/send/{user_id}` with JSON payload containing `mime_type` and `data`
-3. **Queue Processing** - Server retrieves session's `live_request_queue` and forwards message to agent via `send_content()` or `send_realtime()`
-
-### Agent-to-Client Flow:
-1. **Event Generation** - Agent processes requests and generates events through `live_events` async generator
-2. **Stream Processing** - `agent_to_client_sse()` filters events and formats them as SSE-compatible JSON
-3. **Real-time Delivery** - Events stream to client via persistent HTTP connection with proper SSE headers
-
-### Session Management:
-- **Per-User Isolation** - Each user gets unique session stored in `active_sessions` dict
-- **Lifecycle Management** - Sessions auto-cleanup on disconnect with proper resource disposal
-- **Concurrent Support** - Multiple users can have simultaneous active sessions
-
-### Error Handling:
-- **Session Validation** - POST requests validate session existence before processing
-- **Stream Resilience** - SSE streams handle exceptions and perform cleanup automatically
-- **Connection Recovery** - Clients can reconnect by re-establishing SSE connection
-
 
 ## 5. Server side code overview {#5.-server-side-code-overview}
 
 The FastAPI server provides real-time communication between web clients and the AI agent.
 
+### Bidirectional communication overview {#4.-bidi-comm-overview}
+
+#### Client-to-Agent Flow:
+1. **Connection Establishment** - Client opens SSE connection to `/events/{user_id}`, triggering session creation and storing request queue in `active_sessions`
+2. **Message Transmission** - Client sends POST to `/send/{user_id}` with JSON payload containing `mime_type` and `data`
+3. **Queue Processing** - Server retrieves session's `live_request_queue` and forwards message to agent via `send_content()` or `send_realtime()`
+
+#### Agent-to-Client Flow:
+1. **Event Generation** - Agent processes requests and generates events through `live_events` async generator
+2. **Stream Processing** - `agent_to_client_sse()` filters events and formats them as SSE-compatible JSON
+3. **Real-time Delivery** - Events stream to client via persistent HTTP connection with proper SSE headers
+
+#### Session Management:
+- **Per-User Isolation** - Each user gets unique session stored in `active_sessions` dict
+- **Lifecycle Management** - Sessions auto-cleanup on disconnect with proper resource disposal
+- **Concurrent Support** - Multiple users can have simultaneous active sessions
+
+#### Error Handling:
+- **Session Validation** - POST requests validate session existence before processing
+- **Stream Resilience** - SSE streams handle exceptions and perform cleanup automatically
+- **Connection Recovery** - Clients can reconnect by re-establishing SSE connection
+
+
 ### Agent Session Management
 
 The `start_agent_session()` function creates isolated AI agent sessions:
+
+```py
+async def start_agent_session(user_id, is_audio=False):
+    """Starts an agent session"""
+
+    # Create a Runner
+    runner = InMemoryRunner(
+        app_name=APP_NAME,
+        agent=root_agent,
+    )
+
+    # Create a Session
+    session = await runner.session_service.create_session(
+        app_name=APP_NAME,
+        user_id=user_id,  # Replace with actual user ID
+    )
+
+    # Set response modality
+    modality = "AUDIO" if is_audio else "TEXT"
+    run_config = RunConfig(response_modalities=[modality])
+
+    # Create a LiveRequestQueue for this session
+    live_request_queue = LiveRequestQueue()
+
+    # Start agent session
+    live_events = runner.run_live(
+        session=session,
+        live_request_queue=live_request_queue,
+        run_config=run_config,
+    )
+    return live_events, live_request_queue
+```
 
 - **InMemoryRunner Setup** - Creates a runner instance that manages the agent lifecycle in memory, with the app name "ADK Streaming example" and the Google Search agent.
 
@@ -11614,6 +11723,50 @@ The `start_agent_session()` function creates isolated AI agent sessions:
 ### Server-Sent Events (SSE) Streaming
 
 The `agent_to_client_sse()` function handles real-time streaming from agent to client:
+
+```py
+async def agent_to_client_sse(live_events):
+    """Agent to client communication via SSE"""
+    async for event in live_events:
+        # If the turn complete or interrupted, send it
+        if event.turn_complete or event.interrupted:
+            message = {
+                "turn_complete": event.turn_complete,
+                "interrupted": event.interrupted,
+            }
+            yield f"data: {json.dumps(message)}\n\n"
+            print(f"[AGENT TO CLIENT]: {message}")
+            continue
+
+        # Read the Content and its first Part
+        part: Part = (
+            event.content and event.content.parts and event.content.parts[0]
+        )
+        if not part:
+            continue
+
+        # If it's audio, send Base64 encoded audio data
+        is_audio = part.inline_data and part.inline_data.mime_type.startswith("audio/pcm")
+        if is_audio:
+            audio_data = part.inline_data and part.inline_data.data
+            if audio_data:
+                message = {
+                    "mime_type": "audio/pcm",
+                    "data": base64.b64encode(audio_data).decode("ascii")
+                }
+                yield f"data: {json.dumps(message)}\n\n"
+                print(f"[AGENT TO CLIENT]: audio/pcm: {len(audio_data)} bytes.")
+                continue
+
+        # If it's text and a parial text, send it
+        if part.text and event.partial:
+            message = {
+                "mime_type": "text/plain",
+                "data": part.text
+            }
+            yield f"data: {json.dumps(message)}\n\n"
+            print(f"[AGENT TO CLIENT]: text/plain: {message}")
+```
 
 - **Event Processing Loop** - Iterates through `live_events` async generator, processing each event as it arrives from the agent.
 
@@ -11636,6 +11789,48 @@ The `agent_to_client_sse()` function handles real-time streaming from agent to c
 **GET /** - Serves `static/index.html` as the main application interface using FastAPI's `FileResponse`.
 
 #### SSE Events Endpoint
+
+```py
+@app.get("/events/{user_id}")
+async def sse_endpoint(user_id: int, is_audio: str = "false"):
+    """SSE endpoint for agent to client communication"""
+
+    # Start agent session
+    user_id_str = str(user_id)
+    live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true")
+
+    # Store the request queue for this user
+    active_sessions[user_id_str] = live_request_queue
+
+    print(f"Client #{user_id} connected via SSE, audio mode: {is_audio}")
+
+    def cleanup():
+        live_request_queue.close()
+        if user_id_str in active_sessions:
+            del active_sessions[user_id_str]
+        print(f"Client #{user_id} disconnected from SSE")
+
+    async def event_generator():
+        try:
+            async for data in agent_to_client_sse(live_events):
+                yield data
+        except Exception as e:
+            print(f"Error in SSE stream: {e}")
+        finally:
+            cleanup()
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        }
+    )
+```
+
 **GET /events/{user_id}** - Establishes persistent SSE connection:
 
 - **Parameters** - Takes `user_id` (int) and optional `is_audio` query parameter (defaults to "false")
@@ -11651,6 +11846,39 @@ The `agent_to_client_sse()` function handles real-time streaming from agent to c
 - **Cleanup Logic** - Handles connection termination by closing the request queue and removing from active sessions, with error handling for stream interruptions.
 
 #### Message Sending Endpoint
+
+```py
+@app.post("/send/{user_id}")
+async def send_message_endpoint(user_id: int, request: Request):
+    """HTTP endpoint for client to agent communication"""
+
+    user_id_str = str(user_id)
+
+    # Get the live request queue for this user
+    live_request_queue = active_sessions.get(user_id_str)
+    if not live_request_queue:
+        return {"error": "Session not found"}
+
+    # Parse the message
+    message = await request.json()
+    mime_type = message["mime_type"]
+    data = message["data"]
+
+    # Send the message to the agent
+    if mime_type == "text/plain":
+        content = Content(role="user", parts=[Part.from_text(text=data)])
+        live_request_queue.send_content(content=content)
+        print(f"[CLIENT TO AGENT]: {data}")
+    elif mime_type == "audio/pcm":
+        decoded_data = base64.b64decode(data)
+        live_request_queue.send_realtime(Blob(data=decoded_data, mime_type=mime_type))
+        print(f"[CLIENT TO AGENT]: audio/pcm: {len(decoded_data)} bytes")
+    else:
+        return {"error": f"Mime type not supported: {mime_type}"}
+
+    return {"status": "sent"}
+```
+
 **POST /send/{user_id}** - Receives client messages:
 
 - **Session Lookup** - Retrieves `live_request_queue` from `active_sessions` or returns error if session doesn't exist
@@ -11668,6 +11896,32 @@ The client-side consists of a web interface with real-time communication and aud
 
 ### HTML Interface (`static/index.html`)
 
+```html
+<!doctype html>
+<html>
+  <head>
+    <title>ADK Streaming Test (Audio)</title>
+    <script src="/static/js/app.js" type="module"></script>
+  </head>
+
+  <body>
+    <h1>ADK Streaming Test</h1>
+    <div
+      id="messages"
+      style="height: 300px; overflow-y: auto; border: 1px solid black"></div>
+    <br />
+
+    <form id="messageForm">
+      <label for="message">Message:</label>
+      <input type="text" id="message" name="message" />
+      <button type="submit" id="sendButton" disabled>Send</button>
+      <button type="button" id="startAudioButton">Start Audio</button>
+    </form>
+  </body>
+
+</html>
+```
+
 Simple web interface with:
 - **Messages Display** - Scrollable div for conversation history
 - **Text Input Form** - Input field and send button for text messages
@@ -11676,12 +11930,58 @@ Simple web interface with:
 ### Main Application Logic (`static/js/app.js`)
 
 #### Session Management (`app.js`)
+
+```js
+const sessionId = Math.random().toString().substring(10);
+const sse_url =
+  "http://" + window.location.host + "/events/" + sessionId;
+const send_url =
+  "http://" + window.location.host + "/send/" + sessionId;
+let is_audio = false;
+```
+
 - **Random Session ID** - Generates unique session ID for each browser instance
 - **URL Construction** - Builds SSE and send endpoints with session ID
 - **Audio Mode Flag** - Tracks whether audio mode is enabled
 
 #### Server-Sent Events Connection (`app.js`)
 **connectSSE()** function handles real-time server communication:
+
+```js
+// SSE handlers
+function connectSSE() {
+  // Connect to SSE endpoint
+  eventSource = new EventSource(sse_url + "?is_audio=" + is_audio);
+
+  // Handle connection open
+  eventSource.onopen = function () {
+    // Connection opened messages
+    console.log("SSE connection opened.");
+    document.getElementById("messages").textContent = "Connection opened";
+
+    // Enable the Send button
+    document.getElementById("sendButton").disabled = false;
+    addSubmitHandler();
+  };
+
+  // Handle incoming messages
+  eventSource.onmessage = function (event) {
+    ...
+  };
+
+  // Handle connection close
+  eventSource.onerror = function (event) {
+    console.log("SSE connection error or closed.");
+    document.getElementById("sendButton").disabled = true;
+    document.getElementById("messages").textContent = "Connection closed";
+    eventSource.close();
+    setTimeout(function () {
+      console.log("Reconnecting...");
+      connectSSE();
+    }, 5000);
+  };
+}
+```
 
 - **EventSource Setup** - Creates SSE connection with audio mode parameter
 - **Connection Handlers**:
@@ -11692,12 +11992,74 @@ Simple web interface with:
 #### Message Processing (`app.js`)
 Handles different message types from server:
 
+```js
+  // Handle incoming messages
+  eventSource.onmessage = function (event) {
+    // Parse the incoming message
+    const message_from_server = JSON.parse(event.data);
+    console.log("[AGENT TO CLIENT] ", message_from_server);
+
+    // Check if the turn is complete
+    // if turn complete, add new message
+    if (
+      message_from_server.turn_complete &&
+      message_from_server.turn_complete == true
+    ) {
+      currentMessageId = null;
+      return;
+    }
+
+    // If it's audio, play it
+    if (message_from_server.mime_type == "audio/pcm" && audioPlayerNode) {
+      audioPlayerNode.port.postMessage(base64ToArray(message_from_server.data));
+    }
+
+    // If it's a text, print it
+    if (message_from_server.mime_type == "text/plain") {
+      // add a new message for a new turn
+      if (currentMessageId == null) {
+        currentMessageId = Math.random().toString(36).substring(7);
+        const message = document.createElement("p");
+        message.id = currentMessageId;
+        // Append the message element to the messagesDiv
+        messagesDiv.appendChild(message);
+      }
+
+      // Add message text to the existing message element
+      const message = document.getElementById(currentMessageId);
+      message.textContent += message_from_server.data;
+
+      // Scroll down to the bottom of the messagesDiv
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+```
+
 - **Turn Management** - Detects `turn_complete` to reset message state
 - **Audio Playback** - Decodes Base64 PCM data and sends to audio worklet
 - **Text Display** - Creates new message elements and appends partial text updates for real-time typing effect
 
 #### Message Sending (`app.js`)
 **sendMessage()** function sends data to server:
+
+```js
+async function sendMessage(message) {
+  try {
+    const response = await fetch(send_url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(message)
+    });
+    
+    if (!response.ok) {
+      console.error('Failed to send message:', response.statusText);
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+}
+```
 
 - **HTTP POST** - Sends JSON payload to `/send/{session_id}` endpoint
 - **Error Handling** - Logs failed requests and network errors
@@ -11747,11 +12109,9 @@ The client architecture enables seamless real-time communication with both text 
 This application demonstrates a complete real-time AI agent system with the following key features:
 
 **Architecture Highlights**:
-- **Scalable**: Per-user session isolation supports multiple concurrent users
 - **Real-time**: Streaming responses with partial text updates and continuous audio
 - **Robust**: Comprehensive error handling and automatic recovery mechanisms
 - **Modern**: Uses latest web standards (AudioWorklet, SSE, ES6 modules)
-- **Flexible**: Easy switching between text and audio interaction modes
 
 The system provides a foundation for building sophisticated AI applications that require real-time interaction, web search capabilities, and multimedia communication.
 
@@ -11782,17 +12142,21 @@ To deploy this system in a production environment, consider implementing the fol
 ================
 File: docs/streaming/index.md
 ================
-# Streaming in ADK
+# Bidi-streaming(live) in ADK
 
 !!! info
 
     This is an experimental feature. Currrently available in Python.
 
-Streaming in ADK adds the low-latency bidirectional voice and video interaction
+!!! info
+
+    This is different from server-side stremaing or token-leven stremaing. This section is for bidi-streaming(live).
+    
+Bidi-streaming(live) in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
 AI agents.
 
-With streaming mode, you can provide end users with the experience of natural,
+With bidi-streaming(live) mode, you can provide end users with the experience of natural,
 human-like voice conversations, including the ability for the user to interrupt
 the agent's responses with voice commands. Agents with streaming can process
 text, audio, and video inputs, and they can provide text and audio output.
@@ -11849,6 +12213,13 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     [:octicons-arrow-right-24: More information](https://youtu.be/LwHPYyw7u6U)
 
+-   :material-console-line: **Streaming Configurations**
+
+    ---
+
+    There are some configurations you can set for live(streaming) agents.
+
+    [:octicons-arrow-right-24: More information](configuration.md)
 </div>
 
 ================
@@ -12420,6 +12791,9 @@ Implement the following steps inside your function:
 Inside your tool function, first check if valid credentials (e.g., access/refresh tokens) are already stored from a previous run in this session. Credentials for the current sessions should be stored in `tool_context.invocation_context.session.state` (a dictionary of state) Check existence of existing credentials by checking `tool_context.invocation_context.session.state.get(credential_name, None)`.
 
 ```py
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+
 # Inside your tool function
 TOKEN_CACHE_KEY = "my_tool_tokens" # Choose a unique key
 SCOPES = ["scope1", "scope2"] # Define required scopes
@@ -12465,14 +12839,14 @@ exchanged_credential = tool_context.get_auth_response(AuthConfig(
 # If exchanged_credential is not None, then there is already an exchanged credetial from the auth response. 
 if exchanged_credential:
    # ADK exchanged the access token already for us
-        access_token = auth_response.oauth2.access_token
-        refresh_token = auth_response.oauth2.refresh_token
+        access_token = exchanged_credential.oauth2.access_token
+        refresh_token = exchanged_credential.oauth2.refresh_token
         creds = Credentials(
             token=access_token,
             refresh_token=refresh_token,
             token_uri=auth_scheme.flows.authorizationCode.tokenUrl,
-            client_id=oauth_client_id,
-            client_secret=oauth_client_secret,
+            client_id=auth_credential.oauth2.client_id,
+            client_secret=auth_credential.oauth2.client_secret,
             scopes=list(auth_scheme.flows.authorizationCode.scopes.keys()),
         )
     # Cache the token in session state and call the API, skip to step 5
@@ -12549,7 +12923,7 @@ except Exception as e:
     === "Tools and Agent"
 
          ```py title="tools_and_agent.py"
-         --8<-- "examples/python/snippets/tools/auth/agent_cli.py"
+         --8<-- "examples/python/snippets/tools/auth/tools_and_agent.py"
          ```
     === "Agent CLI"
 
@@ -12707,7 +13081,7 @@ tool when the agent calls it. Important: check the ***Limitations*** section of 
 
 ## Available Built-in tools
 
-Note: Java only supports Google Search and Code Execition tools currently.
+Note: Java only supports Google Search and Code Execution tools currently.
 
 ### Google Search
 
@@ -13983,6 +14357,7 @@ Here are key guidelines for defining effective tool functions:
     * **Provide type hints in Python**  for all parameters (e.g., `city: str`, `user_id: int`, `items: list[str]`). This is essential for ADK to generate the correct schema for the LLM.
     * Ensure all parameter types are **JSON serializable**. All java primitives as well as standard Python types like `str`, `int`, `float`, `bool`, `list`, `dict`, and their combinations are generally safe. Avoid complex custom class instances as direct parameters unless they have a clear JSON representation.
     * **Do not set default values** for parameters. E.g., `def my_func(param1: str = "default")`. Default values are not reliably supported or used by the underlying models during function call generation. All necessary information should be derived by the LLM from the context or explicitly requested if missing.
+    * **`self` / `cls` Handled Automatically:** Implicit parameters like `self` (for instance methods) or `cls` (for class methods) are automatically handled by ADK and excluded from the schema shown to the LLM. You only need to define type hints and descriptions for the logical parameters your tool requires the LLM to provide.
 
 * **Return Type:**
     * The function's return value **must be a dictionary (`dict`)** in Python or a **Map** in Java.
@@ -14136,7 +14511,7 @@ This guide covers two primary integration patterns:
 
 Before you begin, ensure you have the following set up:
 
-* **Set up ADK:** Follow the standard ADK [setup instructions](../get-started/quickstart.md) in the quickstart.
+* **Set up ADK:** Follow the standard ADK [setup instructions](../get-started/quickstart.md/#venv-install) in the quickstart.
 * **Install/update Python/Java:** MCP requires Python version of 3.9 or higher for Python or Java 17+.
 * **Setup Node.js and npx:** **(Python only)** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).
 * **Verify Installations:** **(Python only)** Confirm `adk` and `npx` are in your PATH within the activated virtual environment:
@@ -14172,6 +14547,7 @@ This example demonstrates connecting to a local MCP server that provides file sy
 Create an `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). The `MCPToolset` is instantiated directly within the `tools` list of your `LlmAgent`.
 
 *   **Important:** Replace `"/path/to/your/folder"` in the `args` list with the **absolute path** to an actual folder on your local system that the MCP server can access.
+*   **Important:** Place the `.env` file in the parent directory of the `./adk_agent_samples` directory.
 
 ```python
 # ./adk_agent_samples/mcp_agent/agent.py
@@ -14232,6 +14608,11 @@ Navigate to the parent directory of `mcp_agent` (e.g., `adk_agent_samples`) in y
 cd ./adk_agent_samples # Or your equivalent parent directory
 adk web
 ```
+
+!!!info "Note for Windows users"
+
+    When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
+
 
 Once the ADK Web UI loads in your browser:
 
@@ -14758,15 +15139,7 @@ Follow these steps to integrate an OpenAPI spec into your agent:
     # toolset = OpenAPIToolset(spec_dict=openapi_spec_dict)
     ```
 
-3. **Retrieve Tools**: Get the list of generated `RestApiTool` instances from the toolset.
-
-    ```python
-    api_tools = toolset.get_tools()
-    # Or get a specific tool by its generated name (snake_case operationId)
-    # specific_tool = toolset.get_tool("list_pets")
-    ```
-
-4. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
+3. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
 
     ```python
     from google.adk.agents import LlmAgent
@@ -14774,13 +15147,13 @@ Follow these steps to integrate an OpenAPI spec into your agent:
     my_agent = LlmAgent(
         name="api_interacting_agent",
         model="gemini-2.0-flash", # Or your preferred model
-        tools=api_tools, # Pass the list of generated tools
+        tools=[toolset], # Pass the toolset
         # ... other agent config ...
     )
     ```
 
-5. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
-6. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
+4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
+5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
 
 ## Example
 
