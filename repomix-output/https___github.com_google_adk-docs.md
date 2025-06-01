@@ -12150,7 +12150,7 @@ File: docs/streaming/index.md
 
 !!! info
 
-    This is different from server-side stremaing or token-leven stremaing. This section is for bidi-streaming(live).
+    This is different from server-side streaming or token-leven streaming. This section is for bidi-streaming(live).
     
 Bidi-streaming(live) in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
@@ -16879,7 +16879,7 @@ if 'runner_root_model_guardrail' in globals() and runner_root_model_guardrail:
         print(f"Guardrail Triggered Flag: {final_session.state.get('guardrail_block_keyword_triggered', 'Not Set (or False)')}")
         print(f"Last Weather Report: {final_session.state.get('last_weather_report', 'Not Set')}") # Should be London weather if successful
         print(f"Temperature Unit: {final_session.state.get('user_preference_temperature_unit', 'Not Set')}") # Should be Fahrenheit
-        # print(f"Full State Dict: {final_session.state.as_dict()}") # For detailed view
+        # print(f"Full State Dict: {final_session.state}") # For detailed view
     else:
         print("\n❌ Error: Could not retrieve final session state.")
 
@@ -17170,7 +17170,7 @@ if 'runner_root_tool_guardrail' in globals() and runner_root_tool_guardrail:
         print(f"Tool Guardrail Triggered Flag: {final_session.state.get('guardrail_tool_block_triggered', 'Not Set (or False)')}")
         print(f"Last Weather Report: {final_session.state.get('last_weather_report', 'Not Set')}") # Should be London weather if successful
         print(f"Temperature Unit: {final_session.state.get('user_preference_temperature_unit', 'Not Set')}") # Should be Fahrenheit
-        # print(f"Full State Dict: {final_session.state.as_dict()}") # For detailed view
+        # print(f"Full State Dict: {final_session.state}") # For detailed view
     else:
         print("\n❌ Error: Could not retrieve final session state.")
 
