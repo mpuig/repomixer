@@ -519,6 +519,16 @@ File: docs/ref/model_settings.md
 ::: agents.model_settings
 
 ================
+File: docs/ref/repl.md
+================
+# `repl`
+
+::: agents.repl
+    options:
+        members:
+            - run_demo_loop
+
+================
 File: docs/ref/result.md
 ================
 # `Results`
@@ -1865,6 +1875,51 @@ Learn how to build more complex agentic flows:
 -   Learn about how to configure [Agents](agents.md).
 -   Learn about [running agents](running_agents.md).
 -   Learn about [tools](tools.md), [guardrails](guardrails.md) and [models](models/index.md).
+
+================
+File: docs/release.md
+================
+# Release process
+
+The project follows a slightly modified version of semantic versioning using the form `0.Y.Z`. The leading `0` indicates the SDK is still evolving rapidly. Increment the components as follows:
+
+## Minor (`Y`) versions
+
+We will increase minor versions `Y` for **breaking changes** to any public interfaces that are not marked as beta. For example, going from `0.0.x` to `0.1.x` might include breaking changes.
+
+If you don't want breaking changes, we recommend pinning to `0.0.x` versions in your project.
+
+## Patch (`Z`) versions
+
+We will increment `Z` for non-breaking changes:
+
+- Bug fixes
+- New features
+- Changes to private interfaces
+- Updates to beta features
+
+================
+File: docs/repl.md
+================
+# REPL utility
+
+The SDK provides `run_demo_loop` for quick interactive testing.
+
+```python
+import asyncio
+from agents import Agent, run_demo_loop
+
+async def main() -> None:
+    agent = Agent(name="Assistant", instructions="You are a helpful assistant.")
+    await run_demo_loop(agent)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+`run_demo_loop` prompts for user input in a loop, keeping the conversation
+history between turns. By default it streams model output as it is produced.
+Type `quit` or `exit` (or press `Ctrl-D`) to leave the loop.
 
 ================
 File: docs/results.md
