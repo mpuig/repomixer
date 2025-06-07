@@ -13491,21 +13491,8 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
 === "Python"
 
     ```py
-    from google.adk.tools import LongRunningFunctionTool
-
-    # Define your long running function (see example below)
-    def ask_for_approval(
-        purpose: str, amount: float, tool_context: ToolContext
-    ) -> dict[str, Any]:
-    """Ask for approval for the reimbursement."""
-    # create a ticket for the approval
-    # Send a notification to the approver with the link of the ticket
-    return {'status': 'pending', 'approver': 'Sean Zhou', 'purpose' : purpose, 'amount': amount, 'ticket-id': 'approval-ticket-1'}
-
-    # Wrap the function
-    approve_tool = LongRunningFunctionTool(func=ask_for_approval)
+    --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py:define_long_running_function"
     ```
-
 
 === "Java"
 
@@ -13583,68 +13570,11 @@ Agent client received an event with long running function calls and check the st
     ```
     This constraint is temporary and will be removed.
 
+
 === "Python"
 
     ```py
-    # runner = Runner(...)
-    # session = await session_service.create_session(...)
-    # content = types.Content(...) # User's initial query
-
-    def get_long_running_function_call(event: Event) -> types.FunctionCall:
-        # Get the long running function call from the event
-        if not event.long_running_tool_ids or not event.content or not event.content.parts:
-            return
-        for part in event.content.parts:
-            if (
-                part 
-                and part.function_call 
-                and event.long_running_tool_ids 
-                and part.function_call.id in event.long_running_tool_ids
-            ):
-                return part.function_call
-
-    def get_function_response(event: Event, function_call_id: str) -> types.FunctionResponse:
-        # Get the function response for the fuction call with specified id.
-        if not event.content or not event.content.parts:
-            return
-        for part in event.content.parts:
-            if (
-                part 
-                and part.function_response
-                and part.function_response.id == function_call_id
-            ):
-                return part.function_response
-
-    print("\nRunning agent...")
-    events_async = runner.run_async(
-        session_id=session.id, user_id='user', new_message=content
-    )
-
-
-    long_running_function_call, long_running_function_response, ticket_id = None, None, None
-    async for event in events_async:
-        # Use helper to check for the specific auth request event
-        if not long_running_function_call:
-            long_running_function_call = get_long_running_function_call(event)
-        else:
-            long_running_function_response = get_function_response(event, long_running_function_call.id)
-            if long_running_function_response:
-                ticket_id = long_running_function_response.response['ticket_id']
-        if event.content and event.content.parts:
-            if text := ''.join(part.text or '' for part in event.content.parts):
-                print(f'[{event.author}]: {text}')
-
-        if long_running_function_response:
-            # query the status of the correpsonding ticket via tciket_id
-            # send back an intermediate / final response
-            updated_response = long_running_function_response.model_copy(deep=True)
-            updated_response.response = {'status': 'approved'}
-            async for event in runner.run_async(
-            session_id=session.id, user_id='user', new_message=types.Content(parts=[types.Part(function_response = updated_response)], role='user')
-            ):
-                if event.content and event.content.parts:
-                    if text := ''.join(part.text or '' for part in event.content.parts):
-                        print(f'[{event.author}]: {text}')   
+    --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py:call_reimbursement_tool"
     ```
 
 === "Java"
@@ -13654,7 +13584,7 @@ Agent client received an event with long running function calls and check the st
     ```
 
 
-??? "Example: File Processing Simulation"
+??? "Python complete example: File Processing Simulation"
 
     ```py
     --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py"
@@ -13958,6 +13888,56 @@ Connect your agent to enterprise applications using
     -   To find the list of supported entities and actions for a connection, use the connectors apis:
         [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions) or 
         [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes)
+
+    `ApplicationIntegrationToolset` now also supports providing auth_scheme and auth_credential for dynamic OAuth2 authentication for Integration Connectors. To use it create a tool similar to this within your `tools.py` file:
+
+     ```py
+    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+    from google.adk.tools.openapi_tool.auth.auth_helpers import dict_to_auth_scheme
+    from google.adk.auth import AuthCredential
+    from google.adk.auth import AuthCredentialTypes
+    from google.adk.auth import OAuth2Auth
+
+    oauth2_data_google_cloud = {
+      "type": "oauth2",
+      "flows": {
+          "authorizationCode": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "scopes": {
+                  "https://www.googleapis.com/auth/cloud-platform": (
+                      "View and manage your data across Google Cloud Platform"
+                      " services"
+                  ),
+                  "https://www.googleapis.com/auth/calendar.readonly": "View your calendars"
+              },
+          }
+      },
+    }
+
+    oauth2_scheme = dict_to_auth_scheme(oauth2_data_google_cloud)
+    
+    auth_credential = AuthCredential(
+      auth_type=AuthCredentialTypes.OAUTH2,
+      oauth2=OAuth2Auth(
+          client_id="...", #TODO: replace with client_id
+          client_secret="...", #TODO: replace with client_secret
+      ),
+    )
+
+    connector_tool = ApplicationIntegrationToolset(
+        project="test-project", # TODO: replace with GCP project of the connection
+        location="us-central1", #TODO: replace with location of the connection
+        connection="test-connection", #TODO: replace with connection name
+        entity_operations={"Entity_One": ["LIST","CREATE"], "Entity_Two": []},#empty list for actions means all operations on the entity are supported.
+        actions=["GET_calendars/%7BcalendarId%7D/events"], #TODO: replace with actions. this one is for list events
+        service_account_credentials='{...}', # optional. Stringified json for service account key
+        tool_name_prefix="tool_prefix2",
+        tool_instructions="...",
+        auth_scheme=auth_scheme,
+        auth_credential=auth_credential
+    )
+    ```
 
 
 2. Add the tool to your agent. Update your `agent.py` file
@@ -15468,6 +15448,7 @@ If you prefer a setup that handles the runner and session management automatical
 
 **Ready to build your agent team? Let's dive in!**
 
+> **Note:** This tutorial works with adk version 1.0.0 and above
 
 ```python
 # @title Step 0: Setup and Installation
