@@ -10826,6 +10826,8 @@ In order to use voice/video streaming in ADK, you will need to use Gemini models
 - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
 - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
+There is also a [SSE](custom-streaming.md) version of the sample is available.
+
 ## 1. Install ADK {#1.-setup-installation}
 
 Create & Activate Virtual Environment (Recommended):
@@ -10842,7 +10844,7 @@ python -m venv .venv
 Install ADK:
 
 ```bash
-pip install google-adk==1.0.0
+pip install --upgrade google-adk==1.2.1
 ```
 
 Set `SSL_CERT_FILE` variable with the following command.
@@ -11539,6 +11541,8 @@ This article overviews the server and client code for a custom asynchronous web 
 - Automatic reconnection and error handling
 - Base64 encoding for audio data transmission
 
+There is also a [WebSocket](custom-streaming-ws.md) version of the sample is available.
+
 ## 1. Install ADK {#1.-setup-installation}
 
 Create & Activate Virtual Environment (Recommended):
@@ -11555,7 +11559,7 @@ python -m venv .venv
 Install ADK:
 
 ```bash
-pip install google-adk==1.0.0
+pip install --upgrade google-adk==1.2.1
 ```
 
 Set `SSL_CERT_FILE` variable with the following command.
@@ -11676,6 +11680,7 @@ These console logs are important in case you develop your own streaming applicat
 
 6\. **Troubleshooting tips**
 
+- **When your browser can't connect to the server via SSH proxy:** SSH proxy used in various cloud services may not work with SSE. Please try without SSH proxy, such as using a local laptop, or try the [WebSocket](custom-streaming-ws.md) version.
 - **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
 ## 4. Agent definition
@@ -12257,8 +12262,16 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and FastAPI, enabling real-time, bidirectional audio and text communication with both Server Sent Events (SSE) and WebSockets.
 
-    [:octicons-arrow-right-24: More information (SSE)](custom-streaming.md)
-    [:octicons-arrow-right-24: More information (WebSockets)](custom-streaming-ws.md)
+    [:octicons-arrow-right-24: More information (SSE)](custom-streaming.md) and 
+    [:octicons-arrow-right-24: (WebSockets)](custom-streaming-ws.md)
+
+-   :material-console-line: **Blog post: Google ADK + Vertex AI Live API**
+
+    ---
+
+    This article shows how to use Bidi-streaming (live) in ADK for real-time audio/video streaming. It offers a Python server example using LiveRequestQueue to build custom, interactive AI agents.
+
+    [:octicons-arrow-right-24: More information](https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e)
 
 -   :material-console-line: **Shopper's Concierge demo**
 
@@ -17327,6 +17340,20 @@ Community-provided translations of the ADK documentation.
     > documentation, maintained by an individual. The documentation is
     > continuously updated and translated to provide a localized reading
     > experience for developers in China.
+
+*   **[ADK Documentation (Korean, 한국어)](https://adk-labs.github.io/adk-docs/ko/)**
+
+    > the Korean version of the Agent Development Kit
+    > documentation, maintained by an individual. The documentation is
+    > continuously updated and translated to provide a localized reading
+    > experience for developers in South Korea.
+
+*   **[ADK Documentation (Japanese, 日本語)](https://adk-labs.github.io/adk-docs/ja/)**
+
+    > the Japanese version of the Agent Development Kit
+    > documentation, maintained by an individual. The documentation is
+    > continuously updated and translated to provide a localized reading
+    > experience for developers in Japan.
 
 ## Tutorials, Guides & Blog Posts
 
