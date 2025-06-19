@@ -7863,7 +7863,7 @@ adk-streaming/  # Project folder
 
 ### agent.py
 
-Copy-paste the following code block to the [`agent.py`](http://agent.py).
+Copy-paste the following code block into the `agent.py` file.
 
 For `model`, please double check the model ID as described earlier in the [Models section](#supported-models).
 
@@ -10563,28 +10563,28 @@ Within each `Session` (our conversation thread), the **`state`** attribute acts 
 
 Conceptually, `session.state` is a collection (dictionary or Map) holding key-value pairs. It's designed for information the agent needs to recall or track to make the current conversation effective:
 
-* **Personalize Interaction:** Remember user preferences mentioned earlier (e.g., `'user_preference_theme': 'dark'`).  
-* **Track Task Progress:** Keep tabs on steps in a multi-turn process (e.g., `'booking_step': 'confirm_payment'`).  
-* **Accumulate Information:** Build lists or summaries (e.g., `'shopping_cart_items': ['book', 'pen']`).  
+* **Personalize Interaction:** Remember user preferences mentioned earlier (e.g., `'user_preference_theme': 'dark'`).
+* **Track Task Progress:** Keep tabs on steps in a multi-turn process (e.g., `'booking_step': 'confirm_payment'`).
+* **Accumulate Information:** Build lists or summaries (e.g., `'shopping_cart_items': ['book', 'pen']`).
 * **Make Informed Decisions:** Store flags or values influencing the next response (e.g., `'user_is_authenticated': True`).
 
 ### Key Characteristics of `State`
 
-1. **Structure: Serializable Key-Value Pairs**  
+1. **Structure: Serializable Key-Value Pairs**
 
-    * Data is stored as `key: value`.  
-    * **Keys:** Always strings (`str`). Use clear names (e.g., `'departure_city'`, `'user:language_preference'`).  
-    * **Values:** Must be **serializable**. This means they can be easily saved and loaded by the `SessionService`. Stick to basic types in the specific languages (Python/ Java) like strings, numbers, booleans, and simple lists or dictionaries containing *only* these basic types. (See API documentation for precise details).  
+    * Data is stored as `key: value`.
+    * **Keys:** Always strings (`str`). Use clear names (e.g., `'departure_city'`, `'user:language_preference'`).
+    * **Values:** Must be **serializable**. This means they can be easily saved and loaded by the `SessionService`. Stick to basic types in the specific languages (Python/ Java) like strings, numbers, booleans, and simple lists or dictionaries containing *only* these basic types. (See API documentation for precise details).
     * **⚠️ Avoid Complex Objects:** **Do not store non-serializable objects** (custom class instances, functions, connections, etc.) directly in the state. Store simple identifiers if needed, and retrieve the complex object elsewhere.
 
-2. **Mutability: It Changes**  
+2. **Mutability: It Changes**
 
     * The contents of the `state` are expected to change as the conversation evolves.
 
-3. **Persistence: Depends on `SessionService`**  
+3. **Persistence: Depends on `SessionService`**
 
-    * Whether state survives application restarts depends on your chosen service:  
-      * `InMemorySessionService`: **Not Persistent.** State is lost on restart.  
+    * Whether state survives application restarts depends on your chosen service:
+      * `InMemorySessionService`: **Not Persistent.** State is lost on restart.
       * `DatabaseSessionService` / `VertexAiSessionService`: **Persistent.** State is saved reliably.
 
 !!! Note
@@ -10594,32 +10594,32 @@ Conceptually, `session.state` is a collection (dictionary or Map) holding key-va
 
 Prefixes on state keys define their scope and persistence behavior, especially with persistent services:
 
-* **No Prefix (Session State):**  
+* **No Prefix (Session State):**
 
-    * **Scope:** Specific to the *current* session (`id`).  
-    * **Persistence:** Only persists if the `SessionService` is persistent (`Database`, `VertexAI`).  
-    * **Use Cases:** Tracking progress within the current task (e.g., `'current_booking_step'`), temporary flags for this interaction (e.g., `'needs_clarification'`).  
+    * **Scope:** Specific to the *current* session (`id`).
+    * **Persistence:** Only persists if the `SessionService` is persistent (`Database`, `VertexAI`).
+    * **Use Cases:** Tracking progress within the current task (e.g., `'current_booking_step'`), temporary flags for this interaction (e.g., `'needs_clarification'`).
     * **Example:** `session.state['current_intent'] = 'book_flight'`
 
-* **`user:` Prefix (User State):**  
+* **`user:` Prefix (User State):**
 
-    * **Scope:** Tied to the `user_id`, shared across *all* sessions for that user (within the same `app_name`).  
-    * **Persistence:** Persistent with `Database` or `VertexAI`. (Stored by `InMemory` but lost on restart).  
-    * **Use Cases:** User preferences (e.g., `'user:theme'`), profile details (e.g., `'user:name'`).  
+    * **Scope:** Tied to the `user_id`, shared across *all* sessions for that user (within the same `app_name`).
+    * **Persistence:** Persistent with `Database` or `VertexAI`. (Stored by `InMemory` but lost on restart).
+    * **Use Cases:** User preferences (e.g., `'user:theme'`), profile details (e.g., `'user:name'`).
     * **Example:** `session.state['user:preferred_language'] = 'fr'`
 
-* **`app:` Prefix (App State):**  
+* **`app:` Prefix (App State):**
 
-    * **Scope:** Tied to the `app_name`, shared across *all* users and sessions for that application.  
-    * **Persistence:** Persistent with `Database` or `VertexAI`. (Stored by `InMemory` but lost on restart).  
-    * **Use Cases:** Global settings (e.g., `'app:api_endpoint'`), shared templates.  
+    * **Scope:** Tied to the `app_name`, shared across *all* users and sessions for that application.
+    * **Persistence:** Persistent with `Database` or `VertexAI`. (Stored by `InMemory` but lost on restart).
+    * **Use Cases:** Global settings (e.g., `'app:api_endpoint'`), shared templates.
     * **Example:** `session.state['app:global_discount_code'] = 'SAVE10'`
 
-* **`temp:` Prefix (Temporary Session State):**  
+* **`temp:` Prefix (Temporary Session State):**
 
-    * **Scope:** Specific to the *current* session processing turn.  
-    * **Persistence:** **Never Persistent.** Guaranteed to be discarded, even with persistent services.  
-    * **Use Cases:** Intermediate results needed only immediately, data you explicitly don't want stored.  
+    * **Scope:** Specific to the *current* session processing turn.
+    * **Persistence:** **Never Persistent.** Guaranteed to be discarded, even with persistent services.
+    * **Use Cases:** Intermediate results needed only immediately, data you explicitly don't want stored.
     * **Example:** `session.state['temp:raw_api_response'] = {...}`
 
 **How the Agent Sees It:** Your agent code interacts with the *combined* state through the single `session.state` collection (dict/ Map). The `SessionService` handles fetching/merging state from the correct underlying storage based on prefixes.
@@ -10639,7 +10639,7 @@ This is the simplest method for saving an agent's final text response directly i
     from google.adk.sessions import InMemorySessionService, Session
     from google.adk.runners import Runner
     from google.genai.types import Content, Part
-    
+
     # Define agent with output_key
     greeting_agent = LlmAgent(
         name="Greeter",
@@ -10647,7 +10647,7 @@ This is the simplest method for saving an agent's final text response directly i
         instruction="Generate a short, friendly greeting.",
         output_key="last_greeting" # Save response to state['last_greeting']
     )
-    
+
     # --- Setup Runner and Session ---
     app_name, user_id, session_id = "state_app", "user1", "session1"
     session_service = InMemorySessionService()
@@ -10656,21 +10656,21 @@ This is the simplest method for saving an agent's final text response directly i
         app_name=app_name,
         session_service=session_service
     )
-    session = await session_service.create_session(app_name=app_name, 
-                                        user_id=user_id, 
+    session = await session_service.create_session(app_name=app_name,
+                                        user_id=user_id,
                                         session_id=session_id)
     print(f"Initial state: {session.state}")
-    
+
     # --- Run the Agent ---
     # Runner handles calling append_event, which uses the output_key
     # to automatically create the state_delta.
     user_message = Content(parts=[Part(text="Hello")])
-    for event in runner.run(user_id=user_id, 
-                            session_id=session_id, 
+    for event in runner.run(user_id=user_id,
+                            session_id=session_id,
                             new_message=user_message):
         if event.is_final_response():
           print(f"Agent responded.") # Response text is also in event.content
-    
+
     # --- Check Updated State ---
     updated_session = await session_service.get_session(app_name=APP_NAME, user_id=USER_ID, session_id=session_id)
     print(f"State after agent run: {updated_session.state}")
@@ -10734,7 +10734,7 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
 
     # --- Check Updated State ---
     updated_session = await session_service.get_session(app_name=app_name,
-                                                user_id=user_id, 
+                                                user_id=user_id,
                                                 session_id=session_id)
     print(f"State after event: {updated_session.state}")
     # Expected: {'user:login_count': 1, 'task_status': 'active', 'user:last_login_ts': <timestamp>}
@@ -10758,7 +10758,7 @@ These context objects are specifically designed to manage state changes within t
 
 This method abstracts away the manual creation of `EventActions` and `state_delta` for most common state update scenarios within callbacks and tools, making your code cleaner and less error-prone.
 
-For more comprehensive details on context objects, refer to the [Context documentation](docs/context/index.md).
+For more comprehensive details on context objects, refer to the [Context documentation](../context/index.md).
 
 === "Python"
 
@@ -10804,10 +10804,10 @@ For more comprehensive details on context objects, refer to the [Context documen
 
 **What `append_event` Does:**
 
-* Adds the `Event` to `session.events`.  
-* Reads the `state_delta` from the event's `actions`.  
-* Applies these changes to the state managed by the `SessionService`, correctly handling prefixes and persistence based on the service type.  
-* Updates the session's `last_update_time`.  
+* Adds the `Event` to `session.events`.
+* Reads the `state_delta` from the event's `actions`.
+* Applies these changes to the state managed by the `SessionService`, correctly handling prefixes and persistence based on the service type.
+* Updates the session's `last_update_time`.
 * Ensures thread-safety for concurrent updates.
 
 ### ⚠️ A Warning About Direct State Modification
@@ -10818,19 +10818,19 @@ State modifications *within* callbacks or tools using `CallbackContext.state` or
 
 **Why direct modification (outside of contexts) is strongly discouraged:**
 
-1. **Bypasses Event History:** The change isn't recorded as an `Event`, losing auditability.  
-2. **Breaks Persistence:** Changes made this way **will likely NOT be saved** by `DatabaseSessionService` or `VertexAiSessionService`. They rely on `append_event` to trigger saving.  
-3. **Not Thread-Safe:** Can lead to race conditions and lost updates.  
+1. **Bypasses Event History:** The change isn't recorded as an `Event`, losing auditability.
+2. **Breaks Persistence:** Changes made this way **will likely NOT be saved** by `DatabaseSessionService` or `VertexAiSessionService`. They rely on `append_event` to trigger saving.
+3. **Not Thread-Safe:** Can lead to race conditions and lost updates.
 4. **Ignores Timestamps/Logic:** Doesn't update `last_update_time` or trigger related event logic.
 
 **Recommendation:** Stick to updating state via `output_key`, `EventActions.state_delta` (when manually creating events), or by modifying the `state` property of `CallbackContext` or `ToolContext` objects when within their respective scopes. These methods ensure reliable, trackable, and persistent state management. Use direct access to `session.state` (from a `SessionService`-retrieved session) only for *reading* state.
 
 ### Best Practices for State Design Recap
 
-* **Minimalism:** Store only essential, dynamic data.  
-* **Serialization:** Use basic, serializable types.  
-* **Descriptive Keys & Prefixes:** Use clear names and appropriate prefixes (`user:`, `app:`, `temp:`, or none).  
-* **Shallow Structures:** Avoid deep nesting where possible.  
+* **Minimalism:** Store only essential, dynamic data.
+* **Serialization:** Use basic, serializable types.
+* **Descriptive Keys & Prefixes:** Use clear names and appropriate prefixes (`user:`, `app:`, `temp:`, or none).
+* **Shallow Structures:** Avoid deep nesting where possible.
 * **Standard Update Flow:** Rely on `append_event`.
 
 ================
@@ -13824,8 +13824,8 @@ you only need to follow a subset of these steps.
     from the API, use
     `` `projects/my-project-id/locations/us-west1/apis/my-api-id` ``
 
-4. Create your agent file [Agent.py](http://Agent.py) and add the created tools
-   to your agent definition:
+4. Create your agent file Agent.py and add the created tools to your agent
+   definition:
 
     ```py
     from google.adk.agents.llm_agent import LlmAgent
@@ -13910,20 +13910,20 @@ Connect your agent to enterprise applications using
 
 
    ![Google Cloud Tools](../assets/application-integration-overview.png)
-   
+
 2. Go to [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
    template from the template library and click on "USE TEMPLATE" button.
 
 
     ![Google Cloud Tools](../assets/use-connection-tool-template.png)
-   
+
 3. Fill the Integration Name as **ExecuteConnection** (It is mandatory to use this integration name only) and
    select the region same as the connection region. Click on "CREATE".
 
 4. Publish the integration by using the "PUBLISH" button on the Application Integration Editor.
 
 
-    ![Google Cloud Tools](../assets/publish-integration.png)  
+    ![Google Cloud Tools](../assets/publish-integration.png)
 
 **Steps:**
 
@@ -13945,7 +13945,7 @@ Connect your agent to enterprise applications using
     ```
 
     **Note:**
-    
+
     * You can provide service account to be used instead of using default credentials by generating [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and providing right Application Integration and Integration Connector IAM roles to the service account.
     * To find the list of supported entities and actions for a connection, use the connectors apis: [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions) or [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes)
 
@@ -13977,7 +13977,7 @@ Connect your agent to enterprise applications using
     }
 
     oauth_scheme = dict_to_auth_scheme(oauth2_data_google_cloud)
-    
+
     auth_credential = AuthCredential(
       auth_type=AuthCredentialTypes.OAUTH2,
       oauth2=OAuth2Auth(
@@ -14046,7 +14046,7 @@ workflow as a tool for your agent or create a new one.
         project="test-project", # TODO: replace with GCP project of the connection
         location="us-central1", #TODO: replace with location of the connection
         integration="test-integration", #TODO: replace with integration name
-        triggers=["api_trigger/test_trigger"],#TODO: replace with trigger id(s). Empty list would mean all api triggers in the integration to be considered. 
+        triggers=["api_trigger/test_trigger"],#TODO: replace with trigger id(s). Empty list would mean all api triggers in the integration to be considered.
         service_account_credentials='{...}', #optional. Stringified json for service account key
         tool_name_prefix="tool_prefix1",
         tool_instructions="..."
