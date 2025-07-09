@@ -8532,6 +8532,26 @@ agent will be unable to function.
         export GOOGLE_CLOUD_LOCATION=LOCATION
         ```
 
+=== "Gemini - Google Cloud Vertex AI with Express Mode"
+    1. You can sign up for a free Google Cloud project and use Gemini for free with an eligible account!
+        * Set up a
+          [Google Cloud project with Vertex AI Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview)
+        * Get an API key from your Express mode project. This key can be used with ADK to use Gemini models for free, as well as access to Agent Engine services.
+    2. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
+    the following code and update the project ID and location.
+
+        ```env title="multi_tool_agent/.env"
+        GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+        ```
+
+        When using Java, define environment variables:
+
+        ```console title="terminal"
+        export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+        ```
+
 ## 4. Run Your Agent {#run-your-agent}
 
 === "Python"
@@ -10389,6 +10409,117 @@ However, identity and perimeters only provide coarse controls around agent actio
 Care must be taken when agent output is visualized in a browser: if HTML or JS content isn't properly escaped in the UI, the text returned by the model could be executed, leading to data exfiltration. For example, an indirect prompt injection can trick a model to include an img tag tricking the browser to send the session content to a 3rd party site; or construct URLs that, if clicked, send data to external sites. Proper escaping of such content must ensure that model-generated text isn't interpreted as code by browsers.
 
 ================
+File: docs/sessions/express-mode.md
+================
+# Vertex Express Mode: Using Sessions and Memory for Free
+
+If you are interested in using either the `VertexAiSessionService` or `VertexAiMemoryBankService` but you don't have a Google Cloud Project, you can sign up for Vertex AI Express Mode and get access
+for free and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview). 
+Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#api-keys) and you can get started using your local ADK agent with Vertex AI Session and Memory services!
+
+!!! info Vertex AI Express mode limitations
+
+    Vertex AI Express Mode has certain limitations in the free tier. Free Express mode projects are only valid for 90 days and only select services are available to be used with limited quota. For example, the number of Agent Engines is restricted to 10 and deployment to Agent Engine is reserved for the paid tier only. To remove the quota restrictions and use all of Vertex AI's services, add a billing account to your Express Mode project.
+
+## Create an Agent Engine
+
+`Session` objects are children of an `AgentEngine`. When using Vertex AI Express Mode, we can create an empty `AgentEngine` parent to manage all of our `Session` and `Memory` objects.
+First, ensure that your enviornment variables are set correctly. For example, in Python:
+
+          ```env title="multi_tool_agent/.env"
+          GOOGLE_GENAI_USE_VERTEXAI=TRUE
+          GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+          ```
+
+Next, we can create our Agent Engine instance. You can use the Gen AI sdk.
+
+=== "GenAI SDK"
+    1. Import Gen AI SDK.
+
+        ```
+        from google import genai
+        ```
+
+    2. Set Vertex AI to be True, then use a POST request to create the Agent Engine
+        
+        ```
+        # Create Agent Engine with GenAI SDK
+        client = genai.Client(vertexai = True)._api_client
+
+        response = client.request(
+                http_method='POST',
+                path=f'reasoningEngines',
+                request_dict={"displayName": "YOUR_AGENT_ENGINE_DISPLAY_NAME", "description": "YOUR_AGENT_ENGINE_DESCRIPTION"},
+            )
+        response
+        ```
+
+    3. Replace `YOUR_AGENT_ENGINE_DISPLAY_NAME` and `YOUR_AGENT_ENGINE_DESCRIPTION` with your use case.
+    4. Get the Agent Engine name and ID from the response
+
+        ```
+        APP_NAME="/".join(response['name'].split("/")[:6])
+        APP_ID=APP_NAME.split('/')[-1]
+        ```
+
+## Managing Sessions with a `VertexAiSessionService`
+
+[VertexAiSessionService](session.md###sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+instead initialize the session object without any project or location.
+
+           ```py
+           # Requires: pip install google-adk[vertexai]
+           # Plus environment variable setup:
+           # GOOGLE_GENAI_USE_VERTEXAI=TRUE
+           # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+           from google.adk.sessions import VertexAiSessionService
+
+           # The app_name used with this service should be the Reasoning Engine ID or name
+           APP_ID = "your-reasoning-engine-id"
+
+           # Project and location are not required when initializing with Vertex Express Mode
+           session_service = VertexAiSessionService(agent_engine_id=APP_ID)
+           # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
+           # session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
+           ```
+!!! info Session Service Quotas
+
+    For Free Express Mode Projects, `VertexAiSessionService` has the following quota:
+    - 100 Session Entities
+    - 10,000 Event Entities
+
+## Managing Memories with a `VertexAiMemoryBankService`
+
+[VertexAiMemoryBankService](memory.md###memoryservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+instead initialize the memory object without any project or location.
+
+           ```py
+           # Requires: pip install google-adk[vertexai]
+           # Plus environment variable setup:
+           # GOOGLE_GENAI_USE_VERTEXAI=TRUE
+           # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+           from google.adk.sessions import VertexAiMemoryBankService
+
+           # The app_name used with this service should be the Reasoning Engine ID or name
+           APP_ID = "your-reasoning-engine-id"
+
+           # Project and location are not required when initializing with Vertex Express Mode
+           session_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
+           # Generate a memory from that session so the Agent can remember relevant details about the user
+           # memory = await memory_service.add_session_to_memory(session)
+           ```
+!!! info Memory Service Quotas
+
+    For Free Express Mode Projects, `VertexAiMemoryBankService` has the following quota:
+    - 200 Memory Entities
+
+## Code Sample: Weather Agent with Session and Memory using Vertex AI Express Mode
+
+In this sample, we create a weather agent that utilizes both `VertexAiSessionService` and `VertexAiMemoryBankService` for context maangement, allowing our agent to recall user prefereneces and conversations!
+
+**[Weather Agent with Session and Memory using Vertex Express Mode](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)**
+
+================
 File: docs/sessions/index.md
 ================
 # Introduction to Conversational Context: Session, State, and Memory
@@ -10498,64 +10629,34 @@ The `BaseMemoryService` defines the interface for managing this searchable, long
 1. **Ingesting Information (`add_session_to_memory`):** Taking the contents of a (usually completed) `Session` and adding relevant information to the long-term knowledge store.  
 2. **Searching Information (`search_memory`):** Allowing an agent (typically via a `Tool`) to query the knowledge store and retrieve relevant snippets or context based on a search query.
 
-## `MemoryService` Implementations
+## Choosing the Right Memory Service
 
-ADK provides different ways to implement this long-term knowledge store:
+The ADK offers two distinct `MemoryService` implementations, each tailored to different use cases. Use the table below to decide which is the best fit for your agent.
 
-1. **`InMemoryMemoryService`**  
+| **Feature** | **InMemoryMemoryService** | **[NEW!] VertexAiMemoryBankService** |
+| :--- | :--- | :--- |
+| **Persistence** | None (data is lost on restart) | Yes (Managed by Vertex AI) |
+| **Primary Use Case** | Prototyping, local development, and simple testing. | Building meaningful, evolving memories from user conversations. |
+| **Memory Extraction** | Stores full conversation | Extracts [meaningful information](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories) from conversations and consolidates it with existing memories (powered by LLM) |
+| **Search Capability** | Basic keyword matching. | Advanced semantic search. |
+| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) in Vertex AI. |
+| **Dependencies** | None. | Google Cloud Project, Vertex AI API |
+| **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. |
 
-    * **How it works:** Stores session information in the application's memory and performs basic keyword matching for searches.  
-    * **Persistence:** None. **All stored knowledge is lost if the application restarts.**  
-    * **Requires:** Nothing extra.  
-    * **Best for:** Prototyping, simple testing, scenarios where only basic keyword recall is needed and persistence isn't required.
+## In-Memory Memory
 
-    ```py
-    from google.adk.memory import InMemoryMemoryService
-    memory_service = InMemoryMemoryService()
-    ```
+The `InMemoryMemoryService` stores session information in the application's memory and performs basic keyword matching for searches. It requires no setup and is best for prototyping and simple testing scenarios where persistence isn't required.
 
-2. **`VertexAiRagMemoryService`**  
+```py
+from google.adk.memory import InMemoryMemoryService
+memory_service = InMemoryMemoryService()
+```
 
-    * **How it works:** Leverages Google Cloud's Vertex AI RAG (Retrieval-Augmented Generation) service. It ingests session data into a specified RAG Corpus and uses powerful semantic search capabilities for retrieval.  
-    * **Persistence:** Yes. The knowledge is stored persistently within the configured Vertex AI RAG Corpus.  
-    * **Requires:** A Google Cloud project, appropriate permissions, necessary SDKs (`pip install google-adk[vertexai]`), and a pre-configured Vertex AI RAG Corpus resource name/ID.  
-    * **Best for:** Production applications needing scalable, persistent, and semantically relevant knowledge retrieval, especially when deployed on Google Cloud.
+**Example: Adding and Searching Memory**
 
-    ```py
-    # Requires: pip install google-adk[vertexai]
-    # Plus GCP setup, RAG Corpus, and authentication
-    from google.adk.memory import VertexAiRagMemoryService
+This example demonstrates the basic flow using the `InMemoryMemoryService` for simplicity.
 
-    # The RAG Corpus name or ID
-    RAG_CORPUS_RESOURCE_NAME = "projects/your-gcp-project-id/locations/us-central1/ragCorpora/your-corpus-id"
-    # Optional configuration for retrieval
-    SIMILARITY_TOP_K = 5
-    VECTOR_DISTANCE_THRESHOLD = 0.7
-
-    memory_service = VertexAiRagMemoryService(
-        rag_corpus=RAG_CORPUS_RESOURCE_NAME,
-        similarity_top_k=SIMILARITY_TOP_K,
-        vector_distance_threshold=VECTOR_DISTANCE_THRESHOLD
-    )
-    ```
-
-## How Memory Works in Practice
-
-The typical workflow involves these steps:
-
-1. **Session Interaction:** A user interacts with an agent via a `Session`, managed by a `SessionService`. Events are added, and state might be updated.  
-2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or RAG Corpus).  
-3. **Later Query:** In a *different* (or the same) session, the user might ask a question requiring past context (e.g., "What did we discuss about project X last week?").  
-4. **Agent Uses Memory Tool:** An agent equipped with a memory-retrieval tool (like the built-in `load_memory` tool) recognizes the need for past context. It calls the tool, providing a search query (e.g., "discussion project X last week").  
-5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name, user_id, query)`.  
-6. **Results Returned:** The `MemoryService` searches its store (using keyword matching or semantic search) and returns relevant snippets as a `SearchMemoryResponse` containing a list of `MemoryResult` objects (each potentially holding events from a relevant past session).  
-7. **Agent Uses Results:** The tool returns these results to the agent, usually as part of the context or function response. The agent can then use this retrieved information to formulate its final answer to the user.
-
-## Example: Adding and Searching Memory
-
-This example demonstrates the basic flow using the `InMemory` services for simplicity.
-
-???+ "Full Code"
+??? "Full Code"
 
     ```py
     import asyncio
@@ -10623,37 +10724,151 @@ This example demonstrates the basic flow using the `InMemory` services for simpl
     print("\n--- Adding Session 1 to Memory ---")
     memory_service = await memory_service.add_session_to_memory(completed_session1)
     print("Session added to memory.")
-
-    # Turn 2: In a *new* (or same) session, ask a question requiring memory
-    print("\n--- Turn 2: Recalling Information ---")
-    session2_id = "session_recall" # Can be same or different session ID
-    session2 = await runner.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session2_id)
-
-    # Switch runner to the recall agent
-    runner.agent = memory_recall_agent
-    user_input2 = Content(parts=[Part(text="What is my favorite project?")], role="user")
-
-    # Run the recall agent
-    print("Running MemoryRecallAgent...")
-    final_response_text_2 = "(No final response)"
-    async for event in runner.run_async(user_id=USER_ID, session_id=session2_id, new_message=user_input2):
-        print(f"  Event: {event.author} - Type: {'Text' if event.content and event.content.parts and event.content.parts[0].text else ''}"
-            f"{'FuncCall' if event.get_function_calls() else ''}"
-            f"{'FuncResp' if event.get_function_responses() else ''}")
-        if event.is_final_response() and event.content and event.content.parts:
-            final_response_text_2 = event.content.parts[0].text
-            print(f"Agent 2 Final Response: {final_response_text_2}")
-            break # Stop after final response
-
-    # Expected Event Sequence for Turn 2:
-    # 1. User sends "What is my favorite project?"
-    # 2. Agent (LLM) decides to call `load_memory` tool with a query like "favorite project".
-    # 3. Runner executes the `load_memory` tool, which calls `memory_service.search_memory`.
-    # 4. `InMemoryMemoryService` finds the relevant text ("My favorite project is Project Alpha.") from session1.
-    # 5. Tool returns this text in a FunctionResponse event.
-    # 6. Agent (LLM) receives the function response, processes the retrieved text.
-    # 7. Agent generates the final answer (e.g., "Your favorite project is Project Alpha.").
     ```
+
+## Vertex AI Memory Bank
+
+The `VertexAiMemoryBankService` connects your agent to [Vertex AI Memory Bank](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview), a fully managed Google Cloud service that provides sophisticated, persistent memory capabilities for conversational agents.
+
+### How It Works
+
+The service automatically handles two key operations:
+
+*   **Generating Memories:** At the end of a conversation, the ADK sends the session's events to the Memory Bank, which intelligently processes and stores the information as "memories."
+*   **Retrieving Memories:** Your agent code can issue a search query against the Memory Bank to retrieve relevant memories from past conversations.
+
+### Prerequisites
+
+Before you can use this feature, you must have:
+
+1.  **A Google Cloud Project:** With the Vertex AI API enabled.
+2.  **An Agent Engine:** You need to create an Agent Engine in Vertex AI. This will provide you with the **Agent Engine ID** required for configuration.
+3.  **Authentication:** Ensure your local environment is authenticated to access Google Cloud services. The simplest way is to run:
+    ```bash
+    gcloud auth application-default login
+    ```
+4.  **Environment Variables:** The service requires your Google Cloud Project ID and Location. Set them as environment variables:
+    ```bash
+    export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+    export GOOGLE_CLOUD_LOCATION="your-gcp-location"
+    ```
+
+### Configuration
+
+To connect your agent to the Memory Bank, you use the `--memory_service_uri` flag when starting the ADK server (`adk web` or `adk api_server`). The URI must be in the format `agentengine://<agent_engine_id>`.
+
+```bash title="bash"
+adk web path/to/your/agents_dir --memory_service_uri="agentengine://1234567890"
+```
+
+Or, you can configure your agent to use the Memory Bank by manually instantiating the `VertexAiMemoryBankService` and passing it to the `Runner`.
+
+```py
+from google.adk.memory import VertexAiMemoryBankService
+
+agent_engine_id = agent_engine.api_resource.name.split("/")[-1]
+
+memory_service = VertexAiMemoryBankService(
+    project="PROJECT_ID",
+    location="LOCATION",
+    agent_engine_id=agent_engine_id
+)
+
+runner = adk.Runner(
+    ...
+    memory_service=memory_service
+)
+``` 
+
+### Using Memory in Your Agent
+
+With the service configured, the ADK automatically saves session data to the Memory Bank. To make your agent use this memory, you need to call the `search_memory` method from your agent's code.
+
+This is typically done at the beginning of a turn to fetch relevant context before generating a response.
+
+**Example:**
+
+```python
+from google.adk.agents import Agent
+from google.genai import types
+
+class MyAgent(Agent):
+    async def run(self, request: types.Content, **kwargs) -> types.Content:
+        # Get the user's latest message
+        user_query = request.parts[0].text
+
+        # Search the memory for context related to the user's query
+        search_result = await self.search_memory(query=user_query)
+
+        # Create a prompt that includes the retrieved memories
+        prompt = f"Based on my memory, here's what I recall about your query: {search_result.memories}\n\nNow, please respond to: {user_query}"
+
+        # Call the LLM with the enhanced prompt
+        return await self.llm.generate_content_async(prompt)
+```
+
+## Advanced Concepts
+
+### How Memory Works in Practice
+
+The memory workflow internally involves these steps:
+
+1. **Session Interaction:** A user interacts with an agent via a `Session`, managed by a `SessionService`. Events are added, and state might be updated.  
+2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or RAG Corpus).  
+3. **Later Query:** In a *different* (or the same) session, the user might ask a question requiring past context (e.g., "What did we discuss about project X last week?").  
+4. **Agent Uses Memory Tool:** An agent equipped with a memory-retrieval tool (like the built-in `load_memory` tool) recognizes the need for past context. It calls the tool, providing a search query (e.g., "discussion project X last week").  
+5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name, user_id, query)`.  
+6. **Results Returned:** The `MemoryService` searches its store (using keyword matching or semantic search) and returns relevant snippets as a `SearchMemoryResponse` containing a list of `MemoryResult` objects (each potentially holding events from a relevant past session).  
+7. **Agent Uses Results:** The tool returns these results to the agent, usually as part of the context or function response. The agent can then use this retrieved information to formulate its final answer to the user.
+
+### Can an agent have access to more than one memory service?
+
+*   **Through Standard Configuration: No.** The framework (`adk web`, `adk api_server`) is designed to be configured with one single memory service at a time via the `--memory_service_uri` flag. This single service is then provided to the agent and accessed through the built-in `self.search_memory()` method. From a configuration standpoint, you can only choose one backend (`InMemory`, `VertexAiMemoryBankService`) for all agents served by that process.
+
+*   **Within Your Agent's Code: Yes, absolutely.** There is nothing preventing you from manually importing and instantiating another memory service directly inside your agent's code. This allows you to access multiple memory sources within a single agent turn.
+
+For example, your agent could use the framework-configured `VertexAiMemoryBankService` to recall conversational history, and also manually instantiate a `InMemoryMemoryService` to look up information in a technical manual.
+
+#### Example: Using Two Memory Services
+
+Here’s how you could implement that in your agent's code:
+
+```python
+from google.adk.agents import Agent
+from google.adk.memory import InMemoryMemoryService, VertexAiMemoryBankService
+from google.genai import types
+
+class MultiMemoryAgent(Agent):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.memory_service = InMemoryMemoryService()
+        # Manually instantiate a second memory service for document lookups
+        self.vertexai_memorybank_service = VertexAiMemoryBankService(
+            project="PROJECT_ID",
+            location="LOCATION",
+            agent_engine_id="AGENT_ENGINE_ID"
+        )
+
+    async def run(self, request: types.Content, **kwargs) -> types.Content:
+        user_query = request.parts[0].text
+
+        # 1. Search conversational history using the framework-provided memory
+        #    (This would be InMemoryMemoryService if configured)
+        conversation_context = await self.search_memory(query=user_query)
+
+        # 2. Search the document knowledge base using the manually created service
+        document_context = await self.vertexai_memorybank_service.search_memory(query=user_query)
+
+        # Combine the context from both sources to generate a better response
+        prompt = "From our past conversations, I remember:\n"
+        prompt += f"{conversation_context.memories}\n\n"
+        prompt += "From the technical manuals, I found:\n"
+        prompt += f"{document_context.memories}\n\n"
+        prompt += f"Based on all this, here is my answer to '{user_query}':"
+
+        return await self.llm.generate_content_async(prompt)
+```
 
 ================
 File: docs/sessions/session.md
@@ -10813,6 +11028,7 @@ the storage backend that best suits your needs:
             [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
         *   A Reasoning Engine resource name/ID that can setup following this
             [tutorial](https://google.github.io/adk-docs/deploy/agent-engine/).
+        *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService for free, see how to [try Session and Memory for free.](express-mode.md)
     *   **Best for:** Scalable production applications deployed on Google Cloud,
         especially when integrating with other Vertex AI features.
 
