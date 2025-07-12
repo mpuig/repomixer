@@ -422,6 +422,9 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 These are standard `LlmAgent` definitions, responsible for specific tasks. Their `output key` parameter is crucial for placing results into the `session.state` where other agents or the custom orchestrator can access them.
 
+!!! tip "Direct State Injection in Instructions"
+    Notice the `story_generator`'s instruction. The `{var}` syntax is a placeholder. Before the instruction is sent to the LLM, the ADK framework automatically replaces (Example:`{topic}`) with the value of `session.state['topic']`. This is the recommended way to provide context to an agent, using templating in the instructions. For more details, see the [State documentation](../sessions/state.md#accessing-session-state-in-agent-instructions).
+
 === "Python"
 
     ```python
@@ -868,14 +871,68 @@ Control whether the agent receives the prior conversation history.
             .build();
     ```
 
-### Planning & Code Execution
+### Planner
 
 ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
 
-For more complex reasoning involving multiple steps or executing code:
+**`planner` (Optional):** Assign a `BasePlanner` instance to enable multi-step reasoning and planning before execution. There are two main planners:
 
-* **`planner` (Optional):** Assign a `BasePlanner` instance to enable multi-step reasoning and planning before execution. (See [Multi-Agents](multi-agents.md) patterns).
-* **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks (e.g., Python) found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
+* **`BuiltInPlanner`:** Leverages the model's built-in planning capabilities (e.g., Gemini's thinking feature). See [Gemini Thinking](https://ai.google.dev/gemini-api/docs/thinking) for details and examples.
+
+    Here, the `thinking_budget` parameter guides the model on the number of thinking tokens to use when generating a response. The `include_thoughts` parameter controls whether the model should include its raw thoughts and internal reasoning process in the response.
+
+    ```python
+    from google.adk import Agent
+    from google.adk.planners import BuiltInPlanner
+    from google.genai import types
+
+    my_agent = Agent(
+        model="gemini-2.5-flash",
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
+                thinking_budget=1024,
+            )
+        ),
+        # ... your tools here
+    )
+    ```
+    
+* **`PlanReActPlanner`:** This planner instructs the model to follow a specific structure in its output: first create a plan, then execute actions (like calling tools), and provide reasoning for its steps. *It's particularly useful for models that don't have a built-in "thinking" feature*.
+
+    ```python
+    from google.adk import Agent
+    from google.adk.planners import PlanReActPlanner
+
+    my_agent = Agent(
+        model="gemini-2.0-flash",
+        planner=PlanReActPlanner(),
+        # ... your tools here
+    )
+    ```
+
+    The agent's response will follow a structured format:
+
+    ```
+    [user]: ai news
+    [google_search_agent]: /*PLANNING*/
+    1. Perform a Google search for "latest AI news" to get current updates and headlines related to artificial intelligence.
+    2. Synthesize the information from the search results to provide a summary of recent AI news.
+
+    /*ACTION*/
+    /*REASONING*/
+    The search results provide a comprehensive overview of recent AI news, covering various aspects like company developments, research breakthroughs, and applications. I have enough information to answer the user's request.
+
+    /*FINAL_ANSWER*/
+    Here's a summary of recent AI news:
+    ....
+    ```
+
+### Code Execution
+
+![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
+* **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
 
 ## Putting It Together: Example
 
@@ -1759,7 +1816,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     from google.adk.agents import SequentialAgent, LlmAgent
 
     step1 = LlmAgent(name="Step1_Fetch", output_key="data") # Saves output to state['data']
-    step2 = LlmAgent(name="Step2_Process", instruction="Process data from state key 'data'.")
+    step2 = LlmAgent(name="Step2_Process", instruction="Process data from {data}.")
 
     pipeline = SequentialAgent(name="MyPipeline", sub_agents=[step1, step2])
     # When pipeline runs, Step2 can access the state['data'] set by Step1.
@@ -1773,7 +1830,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     import com.google.adk.agents.LlmAgent;
 
     LlmAgent step1 = LlmAgent.builder().name("Step1_Fetch").outputKey("data").build(); // Saves output to state.get("data")
-    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from state key 'data'.").build();
+    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from {data}.").build();
 
     SequentialAgent pipeline = SequentialAgent.builder().name("MyPipeline").subAgents(step1, step2).build();
     // When pipeline runs, Step2 can access the state.get("data") set by Step1.
@@ -1911,7 +1968,7 @@ The most fundamental way for agents operating within the same invocation (and th
     from google.adk.agents import LlmAgent, SequentialAgent
     
     agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
-    agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in state key 'capital_city'.")
+    agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in {capital_city}.")
     
     pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
     # AgentA runs, saves "Paris" to state['capital_city'].
@@ -1933,7 +1990,7 @@ The most fundamental way for agents operating within the same invocation (and th
     
     LlmAgent agentB = LlmAgent.builder()
         .name("AgentB")
-        .instruction("Tell me about the city stored in state key 'capital_city'.")
+        .instruction("Tell me about the city stored in {capital_city}.")
         .outputKey("capital_city")
         .build();
     
@@ -2192,8 +2249,8 @@ By combining ADK's composition primitives, you can implement various established
     from google.adk.agents import SequentialAgent, LlmAgent
     
     validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
-    processor = LlmAgent(name="ProcessData", instruction="Process data if state key 'validation_status' is 'valid'.", output_key="result")
-    reporter = LlmAgent(name="ReportResult", instruction="Report the result from state key 'result'.")
+    processor = LlmAgent(name="ProcessData", instruction="Process data if {validation_status} is 'valid'.", output_key="result")
+    reporter = LlmAgent(name="ReportResult", instruction="Report the result from {result}.")
     
     data_pipeline = SequentialAgent(
         name="DataPipeline",
@@ -2218,13 +2275,13 @@ By combining ADK's composition primitives, you can implement various established
     
     LlmAgent processor = LlmAgent.builder()
         .name("ProcessData")
-        .instruction("Process data if state key 'validation_status' is 'valid'")
+        .instruction("Process data if {validation_status} is 'valid'")
         .outputKey("result") // Saves its main text output to session.state["result"]
         .build();
     
     LlmAgent reporter = LlmAgent.builder()
         .name("ReportResult")
-        .instruction("Report the result from state key 'result'")
+        .instruction("Report the result from {result}")
         .build();
     
     SequentialAgent dataPipeline = SequentialAgent.builder()
@@ -2261,7 +2318,7 @@ By combining ADK's composition primitives, you can implement various established
     
     synthesizer = LlmAgent(
         name="Synthesizer",
-        instruction="Combine results from state keys 'api1_data' and 'api2_data'."
+        instruction="Combine results from {api1_data} and {api2_data}."
     )
     
     overall_workflow = SequentialAgent(
@@ -2298,7 +2355,7 @@ By combining ADK's composition primitives, you can implement various established
 
     LlmAgent synthesizer = LlmAgent.builder()
         .name("Synthesizer")
-        .instruction("Combine results from state keys 'api1_data' and 'api2_data'.")
+        .instruction("Combine results from {api1_data} and {api2_data}.")
         .build();
 
     SequentialAgent overallWorfklow = SequentialAgent.builder()
@@ -2415,7 +2472,7 @@ By combining ADK's composition primitives, you can implement various established
     
     reviewer = LlmAgent(
         name="FactChecker",
-        instruction="Review the text in state key 'draft_text' for factual accuracy. Output 'valid' or 'invalid' with reasons.",
+        instruction="Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.",
         output_key="review_status"
     )
     
@@ -2444,7 +2501,7 @@ By combining ADK's composition primitives, you can implement various established
     
     LlmAgent reviewer = LlmAgent.builder()
         .name("FactChecker")
-        .instruction("Review the text in state key 'draft_text' for factual accuracy. Output 'valid' or 'invalid' with reasons.")
+        .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
         .outputKey("review_status")
         .build();
     
@@ -2608,7 +2665,7 @@ By combining ADK's composition primitives, you can implement various established
     # Agent that proceeds based on human decision
     process_decision = LlmAgent(
         name="ProcessDecision",
-        instruction="Check state key 'human_decision'. If 'approved', proceed. If 'rejected', inform user."
+        instruction="Check {human_decision}. If 'approved', proceed. If 'rejected', inform user."
     )
     
     approval_workflow = SequentialAgent(
@@ -2652,7 +2709,7 @@ By combining ADK's composition primitives, you can implement various established
     // Agent that proceeds based on human decision
     LlmAgent processDecision = LlmAgent.builder()
         .name("ProcessDecision")
-        .instruction("Check state key 'human_decision'. If 'approved', proceed. If 'rejected', inform user.")
+        .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
         .build();
     
     SequentialAgent approvalWorkflow = SequentialAgent.builder()
@@ -5010,7 +5067,7 @@ pip install google-cloud-aiplatform[adk,agent_engines]
 ```
 
 !!!info
-    Agent Engine only supported Python version >=3.9 and <=3.12.
+    Agent Engine only supports Python version >=3.9 and <=3.13.
 
 ### Initialization
 
@@ -5050,6 +5107,9 @@ app = reasoning_engines.AdkApp(
     enable_tracing=True,
 )
 ```
+
+!!!info
+    When an AdkApp is deployed to Agent Engine, it automatically uses `VertexAiSessionService` for persistent, managed session state. This provides multi-turn conversational memory without any additional configuration. For local testing, the application defaults to a temporary, in-memory session service.
 
 ### Try your agent locally
 
@@ -5230,6 +5290,7 @@ To proceed, confirm that your agent code is configured as follows:
     1. Agent code is in a file called `agent.py` within your agent directory.
     2. Your agent variable is named `root_agent`.
     3. `__init__.py` is within your agent directory and contains `from . import agent`.
+    4. Your `requirements.txt` file is present in the agent directory.
 
 === "Java"
 
@@ -8981,6 +9042,10 @@ In this guide, you'll discover:
 - **Response Structure**: How to interpret grounded responses and their metadata
 - **Best Practices**: Guidelines for displaying search results and citations to users
 
+### Additional resource
+
+As an additional resource, [Gemini Fullstack Agent Development Kit (ADK) Quickstart](https://github.com/google/adk-samples/tree/main/python/agents/gemini-fullstack) has [a great practical use of the Google Search grounding](https://github.com/google/adk-samples/blob/main/python/agents/gemini-fullstack/app/agent.py) as a full stack application example.
+
 ## Google Search Grounding Quickstart
 
 This quickstart guides you through creating an ADK agent with Google Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.9+ and terminal access.
@@ -9271,7 +9336,7 @@ This quickstart guides you through creating an ADK agent with Vertex AI Search g
 
 ### 1. Prepare Vertex AI Search
 
-If you already have a Vertex AI Search Data Store and its Data Store ID, you can skip this section. If not, follow the instruction in the [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) until the end of [Create a data store](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_a_data_store), with selecting the `Unstructured data` tab. With this instruction, you will build a sample Data Store with earning report PDFs from the [Alphabet invector site](https://abc.xyz/).
+If you already have a Vertex AI Search Data Store and its Data Store ID, you can skip this section. If not, follow the instruction in the [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) until the end of [Create a data store](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_a_data_store), with selecting the `Unstructured data` tab. With this instruction, you will build a sample Data Store with earning report PDFs from the [Alphabet investor site](https://abc.xyz/).
 
 After finishing the Create a data store section, open the [Data Stores](https://console.cloud.google.com/gen-app-builder/data-stores/) and select the data store you created, and find the `Data store ID`:
 
@@ -9627,6 +9692,145 @@ and the
 [Genkit example](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia/sample-agents/genkit).
 
 ================
+File: docs/observability/agentops.md
+================
+# Agent Observability with AgentOps
+
+**With just two lines of code**, [AgentOps](https://www.agentops.ai) provides session replays, metrics, and monitoring for agents.
+
+## Why AgentOps for ADK?
+
+Observability is a key aspect of developing and deploying conversational AI agents. It allows developers to understand how their agents are performing, how their agents are interacting with users, and how their agents use external tools and APIs.
+
+By integrating AgentOps, developers can gain deep insights into their ADK agent's behavior, LLM interactions, and tool usage.
+
+Google ADK includes its own OpenTelemetry-based tracing system, primarily aimed at providing developers with a way to trace the basic flow of execution within their agents. AgentOps enhances this by offering a dedicated and more comprehensive observability platform with:
+
+*   **Unified Tracing and Replay Analytics:** Consolidate traces from ADK and other components of your AI stack.
+*   **Rich Visualization:** Intuitive dashboards to visualize agent execution flow, LLM calls, and tool performance.
+*   **Detailed Debugging:** Drill down into specific spans, view prompts, completions, token counts, and errors.
+*   **LLM Cost and Latency Tracking:** Track latencies, costs (via token usage), and identify bottlenecks.
+*   **Simplified Setup:** Get started with just a few lines of code.
+
+![AgentOps Agent Observability Dashboard](https://raw.githubusercontent.com/AgentOps-AI/agentops/refs/heads/main/docs/images/external/app_screenshots/overview.png)
+
+![AgentOps Dashboard showing an ADK trace with nested agent, LLM, and tool spans.](../assets/agentops-adk-trace-example.jpg)
+
+*AgentOps dashboard displaying a trace from a multi-step ADK application execution. You can see the hierarchical structure of spans, including the main agent workflow, individual sub-agents, LLM calls, and tool executions. Note the clear hierarchy: the main workflow agent span contains child spans for various sub-agent operations, LLM calls, and tool executions.*
+
+## Getting Started with AgentOps and ADK
+
+Integrating AgentOps into your ADK application is straightforward:
+
+1.  **Install AgentOps:**
+    ```bash
+    pip install -U agentops
+    ```
+
+2. **Create an API Key**
+    Create a user API key here: [Create API Key](https://app.agentops.ai/settings/projects) and configure your environment:
+
+    Add your API key to your environment variables:
+    ```
+    AGENTOPS_API_KEY=<YOUR_AGENTOPS_API_KEY>
+    ```
+
+3.  **Initialize AgentOps:**
+    Add the following lines at the beginning of your ADK application script (e.g., your main Python file running the ADK `Runner`):
+
+    ```python
+    import agentops
+    agentops.init()
+    ```
+
+    This will initiate an AgentOps session as well as automatically track ADK agents.
+
+    Detailed example:
+
+    ```python
+    import agentops
+    import os
+    from dotenv import load_dotenv
+
+    # Load environment variables (optional, if you use a .env file for API keys)
+    load_dotenv()
+
+    agentops.init(
+        api_key=os.getenv("AGENTOPS_API_KEY"), # Your AgentOps API Key
+        trace_name="my-adk-app-trace"  # Optional: A name for your trace
+        # auto_start_session=True is the default.
+        # Set to False if you want to manually control session start/end.
+    )
+    ```
+
+    > 🚨 🔑 You can find your AgentOps API key on your [AgentOps Dashboard](https://app.agentops.ai/) after signing up. It's recommended to set it as an environment variable (`AGENTOPS_API_KEY`).
+
+Once initialized, AgentOps will automatically begin instrumenting your ADK agent.
+
+**This is all you need to capture all telemetry data for your ADK agent**
+
+## How AgentOps Instruments ADK
+
+AgentOps employs a sophisticated strategy to provide seamless observability without conflicting with ADK's native telemetry:
+
+1.  **Neutralizing ADK's Native Telemetry:**
+    AgentOps detects ADK and intelligently patches ADK's internal OpenTelemetry tracer (typically `trace.get_tracer('gcp.vertex.agent')`). It replaces it with a `NoOpTracer`, ensuring that ADK's own attempts to create telemetry spans are effectively silenced. This prevents duplicate traces and allows AgentOps to be the authoritative source for observability data.
+
+2.  **AgentOps-Controlled Span Creation:**
+    AgentOps takes control by wrapping key ADK methods to create a logical hierarchy of spans:
+
+    *   **Agent Execution Spans (e.g., `adk.agent.MySequentialAgent`):**
+        When an ADK agent (like `BaseAgent`, `SequentialAgent`, or `LlmAgent`) starts its `run_async` method, AgentOps initiates a parent span for that agent's execution.
+
+    *   **LLM Interaction Spans (e.g., `adk.llm.gemini-pro`):**
+        For calls made by an agent to an LLM (via ADK's `BaseLlmFlow._call_llm_async`), AgentOps creates a dedicated child span, typically named after the LLM model. This span captures request details (prompts, model parameters) and, upon completion (via ADK's `_finalize_model_response_event`), records response details like completions, token usage, and finish reasons.
+
+    *   **Tool Usage Spans (e.g., `adk.tool.MyCustomTool`):**
+        When an agent uses a tool (via ADK's `functions.__call_tool_async`), AgentOps creates a single, comprehensive child span named after the tool. This span includes the tool's input parameters and the result it returns.
+
+3.  **Rich Attribute Collection:**
+    AgentOps reuses ADK's internal data extraction logic. It patches ADK's specific telemetry functions (e.g., `google.adk.telemetry.trace_tool_call`, `trace_call_llm`). The AgentOps wrappers for these functions take the detailed information ADK gathers and attach it as attributes to the *currently active AgentOps span*.
+
+## Visualizing Your ADK Agent in AgentOps
+
+When you instrument your ADK application with AgentOps, you gain a clear, hierarchical view of your agent's execution in the AgentOps dashboard.
+
+1.  **Initialization:**
+    When `agentops.init()` is called (e.g., `agentops.init(trace_name="my_adk_application")`), an initial parent span is created if the init param `auto_start_session=True` (true by default). This span, often named similar to `my_adk_application.session`, will be the root for all operations within that trace.
+
+2.  **ADK Runner Execution:**
+    When an ADK `Runner` executes a top-level agent (e.g., a `SequentialAgent` orchestrating a workflow), AgentOps creates a corresponding agent span under the session trace. This span will reflect the name of your top-level ADK agent (e.g., `adk.agent.YourMainWorkflowAgent`).
+
+3.  **Sub-Agent and LLM/Tool Calls:**
+    As this main agent executes its logic, including calling sub-agents, LLMs, or tools:
+    *   Each **sub-agent execution** will appear as a nested child span under its parent agent.
+    *   Calls to **Large Language Models** will generate further nested child spans (e.g., `adk.llm.<model_name>`), capturing prompt details, responses, and token usage.
+    *   **Tool invocations** will also result in distinct child spans (e.g., `adk.tool.<your_tool_name>`), showing their parameters and results.
+
+This creates a waterfall of spans, allowing you to see the sequence, duration, and details of each step in your ADK application. All relevant attributes, such as LLM prompts, completions, token counts, tool inputs/outputs, and agent names, are captured and displayed.
+
+For a practical demonstration, you can explore a sample Jupyter Notebook that illustrates a human approval workflow using Google ADK and AgentOps:
+[Google ADK Human Approval Example on GitHub](https://github.com/AgentOps-AI/agentops/blob/main/examples/google_adk_example/adk_human_approval_example.ipynb).
+
+This example showcases how a multi-step agent process with tool usage is visualized in AgentOps.
+
+## Benefits
+
+*   **Effortless Setup:** Minimal code changes for comprehensive ADK tracing.
+*   **Deep Visibility:** Understand the inner workings of complex ADK agent flows.
+*   **Faster Debugging:** Quickly pinpoint issues with detailed trace data.
+*   **Performance Optimization:** Analyze latencies and token usage.
+
+By integrating AgentOps, ADK developers can significantly enhance their ability to build, debug, and maintain robust AI agents. 
+
+## Further Information
+
+To get started, [create an AgentOps account](http://app.agentops.ai). For feature requests or bug reports, please reach out to the AgentOps team on the [AgentOps Repo](https://github.com/AgentOps-AI/agentops).
+
+### Extra links
+🐦 [Twitter](http://x.com/agentopsai)   •   📢 [Discord](http://x.com/agentopsai)   •   🖇️ [AgentOps Dashboard](http://app.agentops.ai)   •   📙 [Documentation](http://docs.agentops.ai)
+
+================
 File: docs/observability/arize-ax.md
 ================
 # Agent Observability with Arize AX
@@ -9760,6 +9964,161 @@ async for event in runner.run_async(
 - [Arize AX Documentation](https://arize.com/docs/ax/observe/tracing-integrations-auto/google-adk)
 - [Arize Community Slack](https://arize-ai.slack.com/join/shared_invite/zt-11t1vbu4x-xkBIHmOREQnYnYDH1GDfCg#/shared-invite/email)
 - [OpenInference Package](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
+
+================
+File: docs/observability/logging.md
+================
+# Logging in the Agent Development Kit (ADK)
+
+The Agent Development Kit (ADK) uses Python's standard `logging` module to provide flexible and powerful logging capabilities. Understanding how to configure and interpret these logs is crucial for monitoring agent behavior and debugging issues effectively.
+
+## Logging Philosophy
+
+ADK's approach to logging is to provide detailed diagnostic information without being overly verbose by default. It is designed to be configured by the application developer, allowing you to tailor the log output to your specific needs, whether in a development or production environment.
+
+- **Standard Library:** It uses the standard `logging` library, so any configuration or handler that works with it will work with ADK.
+- **Hierarchical Loggers:** Loggers are named hierarchically based on the module path (e.g., `google_adk.google.adk.agents.llm_agent`), allowing for fine-grained control over which parts of the framework produce logs.
+- **User-Configured:** The framework does not configure logging itself. It is the responsibility of the developer using the framework to set up the desired logging configuration in their application's entry point.
+
+## How to Configure Logging
+
+You can configure logging in your main application script (e.g., `main.py`) before you initialize and run your agent. The simplest way is to use `logging.basicConfig`.
+
+### Example Configuration
+
+To enable detailed logging, including `DEBUG` level messages, add the following to the top of your script:
+
+```python
+import logging
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
+
+# Your ADK agent code follows...
+# from google.adk.agents import LlmAgent
+# ...
+```
+
+### Log Levels
+
+ADK uses standard log levels to categorize the importance of a message:
+
+-   `DEBUG`: The most verbose level. Used for fine-grained diagnostic information, such as the full prompt sent to the LLM, detailed state changes, and internal logic flow. **Crucial for debugging.**
+-   `INFO`: General information about the agent's lifecycle. This includes events like agent startup, session creation, and tool execution.
+-   `WARNING`: Indicates a potential issue or the use of a deprecated feature. The agent can continue to function, but the issue may require attention.
+-   `ERROR`: A serious error occurred that prevented the agent from performing an operation.
+
+> **Note:** It is recommended to use `INFO` or `WARNING` in production environments and only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
+
+## What is Logged
+
+Depending on the configured log level, you can expect to see the following information:
+
+| Level     | Type of Information Logged                                                                                             |
+| :-------- | :--------------------------------------------------------------------------------------------------------------------- |
+| **DEBUG** | - **Full LLM Prompts:** The complete request sent to the language model, including system instructions, history, and tools. |
+|           | - Detailed API responses from services.                                                                                |
+|           | - Internal state transitions and variable values.                                                                      |
+| **INFO**  | - Agent initialization and startup.                                                                                    |
+|           | - Session creation and deletion events.                                                                                |
+|           | - Execution of a tool, including the tool name and arguments.                                                          |
+| **WARNING**| - Use of deprecated methods or parameters.                                                                             |
+|           | - Non-critical errors that the system can recover from.                                                                 |
+| **ERROR** | - Failed API calls to external services (e.g., LLM, Session Service).                                                  |
+|           | - Unhandled exceptions during agent execution.                                                                         |
+|           | - Configuration errors.                                                                                                |
+
+## Reading and Understanding the Logs
+
+The `format` string in the `basicConfig` example determines the structure of each log message. Let's break down a sample log entry:
+
+`2025-07-08 11:22:33,456 - DEBUG - google_adk.google.adk.models.google_llm - LLM Request: contents { ... }`
+
+-   `2025-07-08 11:22:33,456`: `%(asctime)s` - The timestamp of when the log was recorded.
+-   `DEBUG`: `%(levelname)s` - The severity level of the message.
+-   `google_adk.google.adk.models.google_llm`: `%(name)s` - The name of the logger. This hierarchical name tells you exactly which module in the ADK framework produced the log. In this case, it's the Google LLM model wrapper.
+-   `Request to LLM: contents { ... }`: `%(message)s` - The actual log message.
+
+By reading the logger name, you can immediately pinpoint the source of the log and understand its context within the agent's architecture.
+
+## Debugging with Logs: A Practical Example
+
+**Scenario:** Your agent is not producing the expected output, and you suspect the prompt being sent to the LLM is incorrect or missing information.
+
+**Steps:**
+
+1.  **Enable DEBUG Logging:** In your `main.py`, set the logging level to `DEBUG` as shown in the configuration example.
+
+    ```python
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+    )
+    ```
+
+2.  **Run Your Agent:** Execute your agent's task as you normally would.
+
+3.  **Inspect the Logs:** Look through the console output for a message from the `google.adk.models.google_llm` logger that starts with `LLM Request:`.
+
+    ```log
+    ...
+    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.GEMINI_API, stream: False
+    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - 
+    LLM Request:
+    -----------------------------------------------------------
+    System Instruction:
+
+          You roll dice and answer questions about the outcome of the dice rolls.
+          You can roll dice of different sizes.
+          You can use multiple tools in parallel by calling functions in parallel(in one request and in one round).
+          It is ok to discuss previous dice roles, and comment on the dice rolls.
+          When you are asked to roll a die, you must call the roll_die tool with the number of sides. Be sure to pass in an integer. Do not pass in a string.
+          You should never roll a die on your own.
+          When checking prime numbers, call the check_prime tool with a list of integers. Be sure to pass in a list of integers. You should never pass in a string.
+          You should not check prime numbers before calling the tool.
+          When you are asked to roll a die and check prime numbers, you should always make the following two function calls:
+          1. You should first call the roll_die tool to get a roll. Wait for the function response before calling the check_prime tool.
+          2. After you get the function response from roll_die tool, you should call the check_prime tool with the roll_die result.
+            2.1 If user asks you to check primes based on previous rolls, make sure you include the previous rolls in the list.
+          3. When you respond, you must include the roll_die result from step 1.
+          You should always perform the previous 3 steps when asking for a roll and checking prime numbers.
+          You should not rely on the previous history on prime results.
+        
+
+    You are an agent. Your internal name is "hello_world_agent".
+
+    The description about you is "hello world agent that can roll a dice of 8 sides and check prime numbers."
+    -----------------------------------------------------------
+    Contents:
+    {"parts":[{"text":"Roll a 6 sided dice"}],"role":"user"}
+    {"parts":[{"function_call":{"args":{"sides":6},"name":"roll_die"}}],"role":"model"}
+    {"parts":[{"function_response":{"name":"roll_die","response":{"result":2}}}],"role":"user"}
+    -----------------------------------------------------------
+    Functions:
+    roll_die: {'sides': {'type': <Type.INTEGER: 'INTEGER'>}} 
+    check_prime: {'nums': {'items': {'type': <Type.INTEGER: 'INTEGER'>}, 'type': <Type.ARRAY: 'ARRAY'>}} 
+    -----------------------------------------------------------
+
+    2025-07-10 15:26:13,779 - INFO - google_genai.models - AFC is enabled with max remote calls: 10.
+    2025-07-10 15:26:14,309 - INFO - google_adk.google.adk.models.google_llm - 
+    LLM Response:
+    -----------------------------------------------------------
+    Text:
+    I have rolled a 6 sided die, and the result is 2.
+    ...
+    ```
+
+4.  **Analyze the Prompt:** By examining the `System Instruction`, `contents`, `functions` sections of the logged request, you can verify:
+    -   Is the system instruction correct?
+    -   Is the conversation history (`user` and `model` turns) accurate?
+    -   Is the most recent user query included?
+    -   Are the correct tools being provided to the model?
+    -   Are the tools correctly called by the model?
+    -   How long it takes for the model to respond?
+
+This detailed output allows you to diagnose a wide range of issues, from incorrect prompt engineering to problems with tool definitions, directly from the log files.
 
 ================
 File: docs/observability/phoenix.md
@@ -11004,7 +11363,7 @@ Care must be taken when agent output is visualized in a browser: if HTML or JS c
 ================
 File: docs/sessions/express-mode.md
 ================
-# Vertex Express Mode: Using Sessions and Memory for Free
+# Vertex AI Express Mode: Using Vertex AI Sessions and Memory for Free
 
 If you are interested in using either the `VertexAiSessionService` or `VertexAiMemoryBankService` but you don't have a Google Cloud Project, you can sign up for Vertex AI Express Mode and get access
 for free and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview). 
@@ -11019,12 +11378,12 @@ Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative
 `Session` objects are children of an `AgentEngine`. When using Vertex AI Express Mode, we can create an empty `AgentEngine` parent to manage all of our `Session` and `Memory` objects.
 First, ensure that your enviornment variables are set correctly. For example, in Python:
 
-          ```env title="multi_tool_agent/.env"
-          GOOGLE_GENAI_USE_VERTEXAI=TRUE
-          GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-          ```
+      ```env title="weather_agent/.env"
+      GOOGLE_GENAI_USE_VERTEXAI=TRUE
+      GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+      ```
 
-Next, we can create our Agent Engine instance. You can use the Gen AI sdk.
+Next, we can create our Agent Engine instance. You can use the Gen AI SDK.
 
 === "GenAI SDK"
     1. Import Gen AI SDK.
@@ -11060,24 +11419,25 @@ Next, we can create our Agent Engine instance. You can use the Gen AI sdk.
 [VertexAiSessionService](session.md###sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
 instead initialize the session object without any project or location.
 
-           ```py
-           # Requires: pip install google-adk[vertexai]
-           # Plus environment variable setup:
-           # GOOGLE_GENAI_USE_VERTEXAI=TRUE
-           # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-           from google.adk.sessions import VertexAiSessionService
+       ```py
+       # Requires: pip install google-adk[vertexai]
+       # Plus environment variable setup:
+       # GOOGLE_GENAI_USE_VERTEXAI=TRUE
+       # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+       from google.adk.sessions import VertexAiSessionService
 
-           # The app_name used with this service should be the Reasoning Engine ID or name
-           APP_ID = "your-reasoning-engine-id"
+       # The app_name used with this service should be the Reasoning Engine ID or name
+       APP_ID = "your-reasoning-engine-id"
 
-           # Project and location are not required when initializing with Vertex Express Mode
-           session_service = VertexAiSessionService(agent_engine_id=APP_ID)
-           # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
-           # session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
-           ```
+       # Project and location are not required when initializing with Vertex Express Mode
+       session_service = VertexAiSessionService(agent_engine_id=APP_ID)
+       # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
+       # session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
+       ```
 !!! info Session Service Quotas
 
     For Free Express Mode Projects, `VertexAiSessionService` has the following quota:
+
     - 100 Session Entities
     - 10,000 Event Entities
 
@@ -11086,31 +11446,32 @@ instead initialize the session object without any project or location.
 [VertexAiMemoryBankService](memory.md###memoryservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
 instead initialize the memory object without any project or location.
 
-           ```py
-           # Requires: pip install google-adk[vertexai]
-           # Plus environment variable setup:
-           # GOOGLE_GENAI_USE_VERTEXAI=TRUE
-           # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-           from google.adk.sessions import VertexAiMemoryBankService
+       ```py
+       # Requires: pip install google-adk[vertexai]
+       # Plus environment variable setup:
+       # GOOGLE_GENAI_USE_VERTEXAI=TRUE
+       # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+       from google.adk.sessions import VertexAiMemoryBankService
 
-           # The app_name used with this service should be the Reasoning Engine ID or name
-           APP_ID = "your-reasoning-engine-id"
+       # The app_name used with this service should be the Reasoning Engine ID or name
+       APP_ID = "your-reasoning-engine-id"
 
-           # Project and location are not required when initializing with Vertex Express Mode
-           session_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
-           # Generate a memory from that session so the Agent can remember relevant details about the user
-           # memory = await memory_service.add_session_to_memory(session)
-           ```
+       # Project and location are not required when initializing with Vertex Express Mode
+       session_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
+       # Generate a memory from that session so the Agent can remember relevant details about the user
+       # memory = await memory_service.add_session_to_memory(session)
+       ```
 !!! info Memory Service Quotas
 
     For Free Express Mode Projects, `VertexAiMemoryBankService` has the following quota:
+
     - 200 Memory Entities
 
 ## Code Sample: Weather Agent with Session and Memory using Vertex AI Express Mode
 
 In this sample, we create a weather agent that utilizes both `VertexAiSessionService` and `VertexAiMemoryBankService` for context maangement, allowing our agent to recall user prefereneces and conversations!
 
-**[Weather Agent with Session and Memory using Vertex Express Mode](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)**
+**[Weather Agent with Session and Memory using Vertex AI Express Mode](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)**
 
 ================
 File: docs/sessions/index.md
@@ -11794,7 +12155,100 @@ Prefixes on state keys define their scope and persistence behavior, especially w
 
 **How the Agent Sees It:** Your agent code interacts with the *combined* state through the single `session.state` collection (dict/ Map). The `SessionService` handles fetching/merging state from the correct underlying storage based on prefixes.
 
+### Accessing Session State in Agent Instructions
+
+When working with `LlmAgent` instances, you can directly inject session state values into the agent's instruction string using a simple templating syntax. This allows you to create dynamic and context-aware instructions without relying solely on natural language directives.
+
+#### Using `{key}` Templating
+
+To inject a value from the session state, enclose the key of the desired state variable within curly braces: `{key}`. The framework will automatically replace this placeholder with the corresponding value from `session.state` before passing the instruction to the LLM.
+
+**Example:**
+
+```python
+from google.adk.agents import LlmAgent
+
+story_generator = LlmAgent(
+    name="StoryGenerator",
+    model="gemini-2.0-flash",
+    instruction="""Write a short story about a cat, focusing on the theme: {topic}."""
+)
+
+# Assuming session.state['topic'] is set to "friendship", the LLM 
+# will receive the following instruction:
+# "Write a short story about a cat, focusing on the theme: friendship."
+```
+
+#### Important Considerations
+
+* Key Existence: Ensure that the key you reference in the instruction string exists in the session.state. If the key is missing, the agent might misbehave or throw an error.
+* Data Types: The value associated with the key should be a string or a type that can be easily converted to a string.
+* Escaping: If you need to use literal curly braces in your instruction (e.g., for JSON formatting), you'll need to escape them.
+
+#### Bypassing State Injection with `InstructionProvider`
+
+In some cases, you might want to use `{{` and `}}` literally in your instructions without triggering the state injection mechanism. For example, you might be writing instructions for an agent that helps with a templating language that uses the same syntax.
+
+To achieve this, you can provide a function to the `instruction` parameter instead of a string. This function is called an `InstructionProvider`. When you use an `InstructionProvider`, the ADK will not attempt to inject state, and your instruction string will be passed to the model as-is.
+
+The `InstructionProvider` function receives a `ReadonlyContext` object, which you can use to access session state or other contextual information if you need to build the instruction dynamically.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.agents.readonly_context import ReadonlyContext
+
+    # This is an InstructionProvider
+    def my_instruction_provider(context: ReadonlyContext) -> str:
+        # You can optionally use the context to build the instruction
+        # For this example, we'll return a static string with literal braces.
+        return "This is an instruction with {{literal_braces}} that will not be replaced."
+
+    agent = LlmAgent(
+        model="gemini-2.0-flash",
+        name="template_helper_agent",
+        instruction=my_instruction_provider
+    )
+    ```
+
+If you want to both use an `InstructionProvider` *and* inject state into your instructions, you can use the `inject_session_state` utility function.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.agents.readonly_context import ReadonlyContext
+    from google.adk.utils import instructions_utils
+
+    async def my_dynamic_instruction_provider(context: ReadonlyContext) -> str:
+        template = "This is a {adjective} instruction with {{literal_braces}}."
+        # This will inject the 'adjective' state variable but leave the literal braces.
+        return await instructions_utils.inject_session_state(template, context)
+
+    agent = LlmAgent(
+        model="gemini-2.0-flash",
+        name="dynamic_template_helper_agent",
+        instruction=my_dynamic_instruction_provider
+    )
+    ```
+
+**Benefits of Direct Injection**
+
+* Clarity: Makes it explicit which parts of the instruction are dynamic and based on session state.
+* Reliability: Avoids relying on the LLM to correctly interpret natural language instructions to access state.
+* Maintainability: Simplifies instruction strings and reduces the risk of errors when updating state variable names.
+
+**Relation to Other State Access Methods**
+
+This direct injection method is specific to LlmAgent instructions. Refer to the following section for more information on other state access methods.
+
 ### How State is Updated: Recommended Methods
+
+!!! note "The Right Way to Modify State"
+    When you need to change the session state, the correct and safest method is to **directly modify the `state` object on the `Context`** provided to your function (e.g., `callback_context.state['my_key'] = 'new_value'`). This is considered "direct state manipulation" in the right way, as the framework automatically tracks these changes.
+
+    This is critically different from directly modifying the `state` on a `Session` object you retrieve from the `SessionService` (e.g., `my_session.state['my_key'] = 'new_value'`). **You should avoid this**, as it bypasses the ADK's event tracking and can lead to lost data. The "Warning" section at the end of this page has more details on this important distinction.
 
 State should **always** be updated as part of adding an `Event` to the session history using `session_service.append_event()`. This ensures changes are tracked, persistence works correctly, and updates are thread-safe.
 
@@ -14886,7 +15340,7 @@ to use built-in tools with other tools by using multiple agents:
         instruction="""
         You're a specialist in Code Execution
         """,
-        code_executor=[BuiltInCodeExecutor],
+        tools=[BuiltInCodeExecutor],
     )
     root_agent = Agent(
         name="RootAgent",
@@ -14972,8 +15426,7 @@ to use built-in tools with other tools by using multiple agents:
         name="RootAgent",
         model="gemini-2.0-flash",
         description="Root Agent",
-        tools=[custom_function], 
-        executor=[BuiltInCodeExecutor] # <-- not supported when used with tools
+        tools=[custom_function, BuiltInCodeExecutor], # <-- BuiltInCodeExecutor not supported when used with tools
     )
     ```
 
@@ -15013,7 +15466,7 @@ is **not** currently supported:
         instruction="""
         You're a specialist in Code Execution
         """,
-        executor=[BuiltInCodeExecutor],
+        tools=[BuiltInCodeExecutor],
     )
     root_agent = Agent(
         name="RootAgent",
