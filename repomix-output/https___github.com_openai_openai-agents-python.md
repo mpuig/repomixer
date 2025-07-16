@@ -1276,6 +1276,9 @@ Check out a variety of sample implementations of the SDK in the examples section
 - **[voice](https://github.com/openai/openai-agents-python/tree/main/examples/voice):**
   See examples of voice agents, using our TTS and STT models.
 
+- **[realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime):**
+  Examples showing how to build realtime experiences using the SDK.
+
 ================
 File: docs/guardrails.md
 ================
@@ -2057,6 +2060,10 @@ We will increment `Z` for non-breaking changes:
 -   Updates to beta features
 
 ## Breaking change changelog
+
+### 0.2.0
+
+In this version, a few places that used to take `Agent` as an arg, now take `AgentBase` as an arg instead. For example, the `list_tools()` call in MCP servers. This is a purely typing change, you will still receive `Agent` objects. To update, just fix type errors by replacing `Agent` with `AgentBase`.
 
 ### 0.1.0
 
@@ -2874,7 +2881,7 @@ Sometimes, you don't want to use a Python function as a tool. You can directly c
 -   `name`
 -   `description`
 -   `params_json_schema`, which is the JSON schema for the arguments
--   `on_invoke_tool`, which is an async function that receives the context and the arguments as a JSON string, and must return the tool output as a string.
+-   `on_invoke_tool`, which is an async function that receives a [`ToolContext`][agents.tool_context.ToolContext] and the arguments as a JSON string, and must return the tool output as a string.
 
 ```python
 from typing import Any
