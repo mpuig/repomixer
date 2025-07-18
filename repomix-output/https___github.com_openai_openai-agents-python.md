@@ -373,6 +373,17 @@ Send audio to the session using [`session.send_audio(audio_bytes)`][agents.realt
 
 For audio output, listen for `audio` events and play the audio data through your preferred audio library. Make sure to listen for `audio_interrupted` events to stop playback immediately and clear any queued audio when the user interrupts the agent.
 
+## Direct model access
+
+You can access the underlying model to add custom listeners or perform advanced operations:
+
+```python
+# Add a custom listener to the model
+session.model.add_listener(my_custom_listener)
+```
+
+This gives you direct access to the [`RealtimeModel`][agents.realtime.model.RealtimeModel] interface for advanced use cases where you need lower-level control over the connection.
+
 ## Examples
 
 For complete working examples, check out the [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) which includes demos with and without UI components.
@@ -2601,7 +2612,7 @@ async def main():
     print(result.final_output)
     # Code within the code,
     # Functions calling themselves,
-    # Infinite loop's dance.
+    # Infinite loop's dance
 ```
 
 Read more in the [results guide](results.md).
@@ -2625,7 +2636,7 @@ The runner then runs a loop:
 
 ## Streaming
 
-Streaming allows you to additionally receive streaming events as the LLM runs. Once the stream is done, the [`RunResultStreaming`][agents.result.RunResultStreaming] will contain the complete information about the run, including all the new outputs produces. You can call `.stream_events()` for the streaming events. Read more in the [streaming guide](streaming.md).
+Streaming allows you to additionally receive streaming events as the LLM runs. Once the stream is done, the [`RunResultStreaming`][agents.result.RunResultStreaming] will contain the complete information about the run, including all the new outputs produced. You can call `.stream_events()` for the streaming events. Read more in the [streaming guide](streaming.md).
 
 ## Run config
 
@@ -2658,6 +2669,7 @@ You can manually manage conversation history using the [`RunResultBase.to_input_
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
+    thread_id = "thread_123"  # Example thread ID
     with trace(workflow_name="Conversation", group_id=thread_id):
         # First turn
         result = await Runner.run(agent, "What city is the Golden Gate Bridge in?")
