@@ -5214,7 +5214,11 @@ remote_app = agent_engines.create(
 )
 ```
 
-This step may take several minutes to finish. Each deployed agent has a unique identifier. You can run the following command to get the resource_name identifier for your deployed agent:
+This step may take several minutes to finish.
+
+You can check and monitor the deployment of your ADK agent on the [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines) on Google Cloud.
+
+Each deployed agent has a unique identifier. You can run the following command to get the resource_name identifier for your deployed agent:
 
 ```python
 remote_app.resource_name
@@ -5222,7 +5226,7 @@ remote_app.resource_name
 
 The response should look like the following string:
 
-```
+```shell
 f"projects/{PROJECT_NUMBER}/locations/{LOCATION}/reasoningEngines/{RESOURCE_ID}"
 ```
 
@@ -5284,7 +5288,7 @@ Expected output for `stream_query` (remote):
 {'parts': [{'text': 'The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).'}], 'role': 'model'}
 ```
 
-
+## Using the Agent Engine UI
 
 ## Clean up
 
@@ -5297,6 +5301,8 @@ remote_app.delete(force=True)
 ```
 
 `force=True` will also delete any child resources that were generated from the deployed agent, such as sessions.
+
+You can also delete your deployed agent via the [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines) on Google Cloud.
 
 ================
 File: docs/deploy/cloud-run.md
