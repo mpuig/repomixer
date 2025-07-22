@@ -568,6 +568,20 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
 
 ================
+File: docs/ref/extensions/models/litellm_model.md
+================
+# `LiteLLM Model`
+
+::: agents.extensions.models.litellm_model
+
+================
+File: docs/ref/extensions/models/litellm_provider.md
+================
+# `LiteLLM Provider`
+
+::: agents.extensions.models.litellm_provider
+
+================
 File: docs/ref/extensions/handoff_filters.md
 ================
 # `Handoff filters`
@@ -594,6 +608,13 @@ File: docs/ref/extensions/litellm.md
 ::: agents.extensions.models.litellm_model
 
 ================
+File: docs/ref/extensions/visualization.md
+================
+# `Visualization`
+
+::: agents.extensions.visualization
+
+================
 File: docs/ref/mcp/server.md
 ================
 # `MCP Servers`
@@ -608,6 +629,34 @@ File: docs/ref/mcp/util.md
 ::: agents.mcp.util
 
 ================
+File: docs/ref/models/chatcmpl_converter.md
+================
+# `Chatcmpl Converter`
+
+::: agents.models.chatcmpl_converter
+
+================
+File: docs/ref/models/chatcmpl_helpers.md
+================
+# `Chatcmpl Helpers`
+
+::: agents.models.chatcmpl_helpers
+
+================
+File: docs/ref/models/chatcmpl_stream_handler.md
+================
+# `Chatcmpl Stream Handler`
+
+::: agents.models.chatcmpl_stream_handler
+
+================
+File: docs/ref/models/fake_id.md
+================
+# `Fake Id`
+
+::: agents.models.fake_id
+
+================
 File: docs/ref/models/interface.md
 ================
 # `Model interface`
@@ -615,11 +664,25 @@ File: docs/ref/models/interface.md
 ::: agents.models.interface
 
 ================
+File: docs/ref/models/multi_provider.md
+================
+# `Multi Provider`
+
+::: agents.models.multi_provider
+
+================
 File: docs/ref/models/openai_chatcompletions.md
 ================
 # `OpenAI Chat Completions model`
 
 ::: agents.models.openai_chatcompletions
+
+================
+File: docs/ref/models/openai_provider.md
+================
+# `OpenAI Provider`
+
+::: agents.models.openai_provider
 
 ================
 File: docs/ref/models/openai_responses.md
@@ -749,6 +812,13 @@ File: docs/ref/tracing/index.md
 ::: agents.tracing
 
 ================
+File: docs/ref/tracing/logger.md
+================
+# `Logger`
+
+::: agents.tracing.logger
+
+================
 File: docs/ref/tracing/processor_interface.md
 ================
 # `Processor interface`
@@ -761,6 +831,13 @@ File: docs/ref/tracing/processors.md
 # `Processors`
 
 ::: agents.tracing.processors
+
+================
+File: docs/ref/tracing/provider.md
+================
+# `Provider`
+
+::: agents.tracing.provider
 
 ================
 File: docs/ref/tracing/scope.md
@@ -811,6 +888,13 @@ File: docs/ref/tracing/util.md
 ::: agents.tracing.util
 
 ================
+File: docs/ref/voice/models/openai_model_provider.md
+================
+# `OpenAI Model Provider`
+
+::: agents.voice.models.openai_model_provider
+
+================
 File: docs/ref/voice/models/openai_provider.md
 ================
 # `OpenAIVoiceModelProvider`
@@ -844,6 +928,13 @@ File: docs/ref/voice/exceptions.md
 # `Exceptions`
 
 ::: agents.voice.exceptions
+
+================
+File: docs/ref/voice/imports.md
+================
+# `Imports`
+
+::: agents.voice.imports
 
 ================
 File: docs/ref/voice/input.md
@@ -909,6 +1000,13 @@ File: docs/ref/agent.md
 ::: agents.agent
 
 ================
+File: docs/ref/computer.md
+================
+# `Computer`
+
+::: agents.computer
+
+================
 File: docs/ref/exceptions.md
 ================
 # `Exceptions`
@@ -971,6 +1069,13 @@ File: docs/ref/lifecycle.md
         show_source: false
 
 ================
+File: docs/ref/logger.md
+================
+# `Logger`
+
+::: agents.logger
+
+================
 File: docs/ref/memory.md
 ================
 # Memory
@@ -988,6 +1093,13 @@ File: docs/ref/model_settings.md
 # `Model settings`
 
 ::: agents.model_settings
+
+================
+File: docs/ref/prompts.md
+================
+# `Prompts`
+
+::: agents.prompts
 
 ================
 File: docs/ref/repl.md
@@ -1033,6 +1145,20 @@ File: docs/ref/stream_events.md
 ::: agents.stream_events
 
 ================
+File: docs/ref/strict_schema.md
+================
+# `Strict Schema`
+
+::: agents.strict_schema
+
+================
+File: docs/ref/tool_context.md
+================
+# `Tool Context`
+
+::: agents.tool_context
+
+================
 File: docs/ref/tool.md
 ================
 # `Tools`
@@ -1045,6 +1171,13 @@ File: docs/ref/usage.md
 # `Usage`
 
 ::: agents.usage
+
+================
+File: docs/ref/version.md
+================
+# `Version`
+
+::: agents.version
 
 ================
 File: docs/voice/pipeline.md
