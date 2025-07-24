@@ -784,6 +784,13 @@ File: docs/ref/realtime/events.md
 ::: agents.realtime.events.RealtimeRawModelEvent
 
 ================
+File: docs/ref/realtime/model.md
+================
+# `Model`
+
+::: agents.realtime.model
+
+================
 File: docs/ref/realtime/runner.md
 ================
 # `RealtimeRunner`
@@ -3653,7 +3660,7 @@ By default, the SDK traces the following:
 -   Audio outputs (text-to-speech) are wrapped in a `speech_span()`
 -   Related audio spans may be parented under a `speech_group_span()`
 
-By default, the trace is named "Agent trace". You can set this name if you use `trace`, or you can can configure the name and other properties with the [`RunConfig`][agents.run.RunConfig].
+By default, the trace is named "Agent workflow". You can set this name if you use `trace`, or you can configure the name and other properties with the [`RunConfig`][agents.run.RunConfig].
 
 In addition, you can set up [custom trace processors](#custom-tracing-processors) to push traces to other destinations (as a replacement, or secondary destination).
 
