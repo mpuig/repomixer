@@ -1502,6 +1502,7 @@ from agents import Agent, ModelSettings, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
+     """returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
 
 agent = Agent(
