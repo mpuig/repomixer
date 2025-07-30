@@ -3,6 +3,698 @@ Files
 ================================================================
 
 ================
+File: docs/a2a/index.md
+================
+# ADK with Agent2Agent (A2A) Protocol
+
+With Agent Development Kit (ADK), you can build complex multi-agent systems where different agents need to collaborate and interact using [Agent2Agent (A2A) Protocol](https://a2aprotocol.ai/)! This section provides a comprehensive guide to building powerful multi-agent systems where agents can communicate and collaborate securely and efficiently.
+
+Navigate through the guides below to learn about ADK's A2A capabilities:
+
+  **[Introduction to A2A](./intro.md)**
+
+  Start here to learn the fundamentals of A2A by building a multi-agent system with a root agent, a local sub-agent, and a remote A2A agent.
+
+  **[A2A Quickstart (Exposing)](./quickstart-exposing.md)**
+
+  This quickstart covers: **"I have an agent. How do I expose it so that other agents can use my agent via A2A?"**.
+
+  **[A2A Quickstart (Consuming)](./quickstart-consuming.md)**
+
+  This quickstart covers: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**.
+
+  [**Official Website for Agent2Agent (A2A) Protocol**](https://a2aprotocol.ai/)
+
+  The official website for A2A Protocol.
+
+================
+File: docs/a2a/intro.md
+================
+# Introduction to A2A
+
+As you build more complex agentic systems, you will find that a single agent
+is often not enough. You will want to create specialized agents that can
+collaborate to solve a problem. The [**Agent2Agent (A2A) Protocol**](https://a2aprotocol.ai/) is the
+standard that allows these agents to communicate with each other.
+
+## When to Use A2A vs. Local Sub-Agents
+
+- **Local Sub-Agents:** These are agents that run *within the same application
+  process* as your main agent. They are like internal modules or libraries, used
+  to organize your code into logical, reusable components. Communication between
+  a main agent and its local sub-agents is very fast because it happens
+  directly in memory, without network overhead.
+
+- **Remote Agents (A2A):** These are independent agents that run as separate
+  services, communicating over a network. A2A defines the standard protocol
+  for this communication.
+
+Consider using **A2A** when:
+
+- The agent you need to talk to is a **separate, standalone service** (e.g., a
+  specialized financial modeling agent).
+- The agent is maintained by a **different team or organization**.
+- You need to connect agents written in **different programming languages or
+  agent frameworks**.
+- You want to enforce a **strong, formal contract** (the A2A protocol) between
+  your system's components.
+
+### When to Use A2A: Concrete Examples
+
+- **Integrating with a Third-Party Service:** Your main agent needs to get
+  real-time stock prices from an external financial data provider. This
+  provider exposes its data through an A2A-compatible agent.
+- **Microservices Architecture:** You have a large system broken down into
+  smaller, independent services (e.g., an Order Processing Agent, an Inventory
+  Management Agent, a Shipping Agent). A2A is ideal for these services to
+  communicate with each other across network boundaries.
+- **Cross-Language Communication:** Your core business logic is in a Python
+  agent, but you have a legacy system or a specialized component written in Java
+  that you want to integrate as an agent. A2A provides the standardized
+  communication layer.
+- **Formal API Enforcement:** You are building a platform where different teams
+  contribute agents, and you need a strict contract for how these agents
+  interact to ensure compatibility and stability.
+
+### When NOT to Use A2A: Concrete Examples (Prefer Local Sub-Agents)
+
+- **Internal Code Organization:** You are breaking down a complex task within a
+  single agent into smaller, manageable functions or modules (e.g., a
+  `DataValidator` sub-agent that cleans input data before processing). These are
+  best handled as local sub-agents for performance and simplicity.
+- **Performance-Critical Internal Operations:** A sub-agent is responsible for a
+  high-frequency, low-latency operation that is tightly coupled with the main
+  agent's execution (e.g., a `RealTimeAnalytics` sub-agent that processes data
+  streams within the same application).
+- **Shared Memory/Context:** When sub-agents need direct access to the main
+  agent's internal state or shared memory for efficiency, A2A's network
+  overhead and serialization/deserialization would be counterproductive.
+- **Simple Helper Functions:** For small, reusable pieces of logic that don't
+  require independent deployment or complex state management, a simple function
+  or class within the same agent is more appropriate than a separate A2A agent.
+
+## The A2A Workflow in ADK: A Simplified View
+
+Agent Development Kit (ADK) simplifies the process of building and connecting
+agents using the A2A protocol. Here's a straightforward breakdown of how it
+works:
+
+1. **Making an Agent Accessible (Exposing):** You start with an existing ADK
+    agent that you want other agents to be able to interact with. The ADK
+    provides a simple way to "expose" this agent, turning it into an
+    **A2AServer**. This server acts as a public interface, allowing other agents
+    to send requests to your agent over a network. Think of it like setting up a
+    web server for your agent.
+
+2. **Connecting to an Accessible Agent (Consuming):** In a separate agent
+    (which could be running on the same machine or a different one), you'll use
+    a special ADK component called `RemoteA2aAgent`. This `RemoteA2aAgent` acts
+    as a client that knows how to communicate with the **A2AServer** you
+    exposed earlier. It handles all the complexities of network communication,
+    authentication, and data formatting behind the scenes.
+
+From your perspective as a developer, once you've set up this connection,
+interacting with the remote agent feels just like interacting with a local tool
+or function. The ADK abstracts away the network layer, making distributed agent
+systems as easy to work with as local ones.
+
+## Visualizing the A2A Workflow
+
+To further clarify the A2A workflow, let's look at the "before and after" for
+both exposing and consuming agents, and then the combined system.
+
+### Exposing an Agent
+
+**Before Exposing:**
+Your agent code runs as a standalone component, but in this scenario, you want
+to expose it so that other remote agents can interact with your agent.
+
+```text
++-------------------+
+| Your Agent Code   |
+|   (Standalone)    |
++-------------------+
+```
+
+**After Exposing:**
+Your agent code is integrated with an `A2AServer` (an ADK component), making it
+accessible over a network to other remote agents.
+
+```text
++-----------------+
+|   A2A Server    |
+| (ADK Component) |<--------+
++-----------------+         |
+        |                   |
+        v                   |
++-------------------+       |
+| Your Agent Code   |       |
+| (Now Accessible)  |       |
++-------------------+       |
+                            |
+                            | (Network Communication)
+                            v
++-----------------------------+
+|       Remote Agent(s)       |
+|    (Can now communicate)    |
++-----------------------------+
+```
+
+### Consuming an Agent
+
+**Before Consuming:**
+Your agent (referred to as the "Root Agent" in this context) is the application
+you are developing that needs to interact with a remote agent. Before
+consuming, it lacks the direct mechanism to do so.
+
+```text
++----------------------+         +-------------------------------------------------------------+
+|      Root Agent      |         |                        Remote Agent                         |
+| (Your existing code) |         | (External Service that you want your Root Agent to talk to) |
++----------------------+         +-------------------------------------------------------------+
+```
+
+**After Consuming:**
+Your Root Agent uses a `RemoteA2aAgent` (an ADK component that acts as a
+client-side proxy for the remote agent) to establish communication with the
+remote agent.
+
+```text
++----------------------+         +-----------------------------------+
+|      Root Agent      |         |         RemoteA2aAgent            |
+| (Your existing code) |<------->|         (ADK Client Proxy)        |
++----------------------+         |                                   |
+                                 |  +-----------------------------+  |
+                                 |  |         Remote Agent        |  |
+                                 |  |      (External Service)     |  |
+                                 |  +-----------------------------+  |
+                                 +-----------------------------------+
+      (Now talks to remote agent via RemoteA2aAgent)
+```
+
+### Final System (Combined View)
+
+This diagram shows how the consuming and exposing parts connect to form a
+complete A2A system.
+
+```text
+Consuming Side:
++----------------------+         +-----------------------------------+
+|      Root Agent      |         |         RemoteA2aAgent            |
+| (Your existing code) |<------->|         (ADK Client Proxy)        |
++----------------------+         |                                   |
+                                 |  +-----------------------------+  |
+                                 |  |         Remote Agent        |  |
+                                 |  |      (External Service)     |  |
+                                 |  +-----------------------------+  |
+                                 +-----------------------------------+
+                                                 |
+                                                 | (Network Communication)
+                                                 v
+Exposing Side:
+                                               +-----------------+
+                                               |   A2A Server    |
+                                               | (ADK Component) |
+                                               +-----------------+
+                                                       |
+                                                       v
+                                               +-------------------+
+                                               | Your Agent Code   |
+                                               | (Exposed Service) |
+                                               +-------------------+
+```
+
+## Concrete Use Case: Customer Service and Product Catalog Agents
+
+Let's consider a practical example: a **Customer Service Agent** that needs to
+retrieve product information from a separate **Product Catalog Agent**.
+
+### Before A2A
+
+Initially, your Customer Service Agent might not have a direct, standardized
+way to query the Product Catalog Ageny, especially if it's a separate service
+or managed by a different team.
+
+```text
++-------------------------+         +--------------------------+
+| Customer Service Agent  |         |  Product Catalog Agent   |
+| (Needs Product Info)    |         | (Contains Product Data)  |
++-------------------------+         +--------------------------+
+      (No direct, standardized communication)
+```
+
+### After A2A
+
+By using the A2A Protocol, the Product Catalog Agent can expose its
+functionality as an A2A service. Your Customer Service Agent can then easily
+consume this service using ADK's `RemoteA2aAgent`.
+
+```text
++-------------------------+         +-----------------------------------+
+| Customer Service Agent  |         |         RemoteA2aAgent            |
+| (Your Root Agent)       |<------->|         (ADK Client Proxy)        |
++-------------------------+         |                                   |
+                                    |  +-----------------------------+  |
+                                    |  |     Product Catalog Agent   |  |
+                                    |  |      (External Service)     |  |
+                                    |  +-----------------------------+  |
+                                    +-----------------------------------+
+                                                 |
+                                                 | (Network Communication)
+                                                 v
+                                               +-----------------+
+                                               |   A2A Server    |
+                                               | (ADK Component) |
+                                               +-----------------+
+                                                       |
+                                                       v
+                                               +------------------------+
+                                               | Product Catalog Agent  |
+                                               | (Exposed Service)      |
+                                               +------------------------+
+```
+
+In this setup, first, the Product Catalog Agent needs to be exposed via an A2A
+Server. Then, the Customer Service Agent can simply call methods on the
+`RemoteA2aAgent` as if it were a tool, and the ADK handles all the underlying
+communication to the Product Catalog Agent. This allows for clear separation of
+concerns and easy integration of specialized agents.
+
+## Next Steps
+
+Now that you understand the "why" of A2A, let's dive into the "how."
+
+- **Continue to the next guide:**
+  [Quickstart: Exposing Your Agent](./quickstart-exposing.md)
+
+================
+File: docs/a2a/quickstart-consuming.md
+================
+# Quickstart: Consuming a remote agent via A2A
+
+This quickstart covers the most common starting point for any developer: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
+
+## Overview
+
+This sample demonstrates the **Agent-to-Agent (A2A)** architecture in the Agent Development Kit (ADK), showcasing how multiple agents can work together to handle complex tasks. The sample implements an agent that can roll dice and check if numbers are prime.
+
+```text
+┌─────────────────┐    ┌──────────────────┐    ┌────────────────────┐
+│   Root Agent    │───▶│   Roll Agent     │    │   Remote Prime     │
+│  (Local)        │    │   (Local)        │    │   Agent            │
+│                 │    │                  │    │  (localhost:8001)  │
+│                 │───▶│                  │◀───│                    │
+└─────────────────┘    └──────────────────┘    └────────────────────┘
+```
+
+The A2A Basic sample consists of:
+
+- **Root Agent** (`root_agent`): The main orchestrator that delegates tasks to specialized sub-agents
+- **Roll Agent** (`roll_agent`): A local sub-agent that handles dice rolling operations
+- **Prime Agent** (`prime_agent`): A remote A2A agent that checks if numbers are prime, this agent is running on a separate A2A server
+
+## Exposing Your Agent with the ADK Server
+
+  The ADK comes with a built-in CLI command, `adk api_server --a2a` to expose your agent using the A2A protocol.
+
+  In the a2a_basic example, you will first need to expose the `check_prime_agent` via an A2A server, so that the local root agent can use it.
+
+### 1. Getting the Sample Code
+
+You can clone and navigate to the [**a2a_basic** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic) here:
+
+```bash
+git clone https://github.com/google/adk-python.git
+cd adk-python/contributing/samples/a2a_basic
+```
+
+As you'll see, the folder structure is as follows:
+
+```text
+a2a_basic/
+├── remote_a2a/
+│   └── check_prime_agent/
+│       ├── __init__.py
+│       ├── agent.json
+│       └── agent.py
+├── README.md
+├── __init__.py
+└── agent.py # local root agent
+```
+
+#### Main Agent (`a2a_basic/agent.py`)
+
+- **`roll_die(sides: int)`**: Function tool for rolling dice
+- **`roll_agent`**: Local agent specialized in dice rolling
+- **`prime_agent`**: Remote A2A agent configuration
+- **`root_agent`**: Main orchestrator with delegation logic
+
+#### Remote Prime Agent (`a2a_basic/remote_a2a/check_prime_agent/`)
+
+- **`agent.py`**: Implementation of the prime checking service
+- **`agent.json`**: Agent card of the A2A agent
+- **`check_prime(nums: list[int])`**: Prime number checking algorithm
+
+### 2. Start the Remote Prime Agent server
+
+To show how your ADK agent can consume a remote agent via A2A, you'll first need to start a remote agent server, which will host the prime agent (under `check_prime_agent`).
+
+```bash
+# Start the remote a2a server that serves the check_prime_agent on port 8001
+adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a
+```
+
+??? note "Adding logging for debugging with `--log_level debug`"
+    To enable debug-level logging, you can add `--log_level debug` to your `adk api_server`, as in:
+    ```bash
+    adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a --log_level debug
+    ```
+    This will give richer logs for you to inspect when testing your agents.
+
+??? note "Why use port 8001?"
+    In this quickstart, when testing locally, your agents will be using localhost, so the `port` for the A2A server for the exposed agent (the remote, prime agent) must be different from the consuming agent's port. The default port for `adk web` where you will interact with the consuming agent is `8000`, which is why the A2A server is created using a separate port, `8001`.
+
+Once executed, you should see something like:
+
+``` shell
+INFO:     Started server process [56558]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
+```
+  
+### 3. Look out for the required agent card (`agent.json`) of the remote agent
+
+A2A Protocol requires that each agent must have an agent card that describes what it does.
+
+If someone else has already built the remote A2A agent that you are looking to consume in your agent, then you should confirm that they have an agent card (`agent.json`).
+
+In the sample, the `check_prime_agent` already has an agent card provided:
+
+```json title="a2a_basic/remote_a2a/check_prime_agent/agent.json"
+
+{
+  "capabilities": {},
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["application/json"],
+  "description": "An agent specialized in checking whether numbers are prime. It can efficiently determine the primality of individual numbers or lists of numbers.",
+  "name": "check_prime_agent",
+  "skills": [
+    {
+      "id": "prime_checking",
+      "name": "Prime Number Checking",
+      "description": "Check if numbers in a list are prime using efficient mathematical algorithms",
+      "tags": ["mathematical", "computation", "prime", "numbers"]
+    }
+  ],
+  "url": "http://localhost:8001/a2a/check_prime_agent",
+  "version": "1.0.0"
+}
+```
+
+??? note "More info on agent cards in ADK"
+
+    In ADK, you can use a `to_a2a(root_agent)` wrapper which automatically generates an agent card for you. If you're interested in learning more about how to expose your existing agent so others can use it, then please look at the [A2A Quickstart (Exposing)](quickstart-exposing.md) tutorial. 
+
+### 4. Run the Main (Consuming) Agent
+
+  ```bash
+  # In a separate terminal, run the adk web server
+  adk web contributing/samples/
+  ```
+
+#### How it works
+
+The main agent uses the `RemoteA2aAgent()` function to consume the remote agent (`prime_agent` in our example). As you can see below, `RemoteA2aAgent()` requires the `name`, `description`, and the URL of the `agent_card`.
+
+```python title="a2a_basic/agent.py"
+<...code truncated...>
+
+prime_agent = RemoteA2aAgent(
+    name="prime_agent",
+    description="Agent that handles checking if numbers are prime.",
+    agent_card=(
+        f"http://localhost:8001/a2a/check_prime_agent{AGENT_CARD_WELL_KNOWN_PATH}"
+    ),
+)
+
+<...code truncated>
+```
+
+Then, you can simply use the `RemoteA2aAgent` in your agent. In this case, `prime_agent` is used as one of the sub-agents in the `root_agent` below:
+
+```python title="a2a_basic/agent.py"
+root_agent = Agent(
+    model="gemini-2.0-flash",
+    name="root_agent",
+    instruction="""
+      <You are a helpful assistant that can roll dice and check if numbers are prime.
+      You delegate rolling dice tasks to the roll_agent and prime checking tasks to the prime_agent.
+      Follow these steps:
+      1. If the user asks to roll a die, delegate to the roll_agent.
+      2. If the user asks to check primes, delegate to the prime_agent.
+      3. If the user asks to roll a die and then check if the result is prime, call roll_agent first, then pass the result to prime_agent.
+      Always clarify the results before proceeding.>
+    """,
+    global_instruction=(
+        "You are DicePrimeBot, ready to roll dice and check prime numbers."
+    ),
+    sub_agents=[roll_agent, prime_agent],
+    tools=[example_tool],
+    generate_content_config=types.GenerateContentConfig(
+        safety_settings=[
+            types.SafetySetting(  # avoid false alarm about rolling dice.
+                category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                threshold=types.HarmBlockThreshold.OFF,
+            ),
+        ]
+    ),
+)
+```
+
+## Example Interactions
+
+Once both your main and remote agents are running, you can interact with the root agent to see how it calls the remote agent via A2A:
+
+**Simple Dice Rolling:**
+This interaction uses a local agent, the Roll Agent:
+
+```text
+User: Roll a 6-sided die
+Bot: I rolled a 4 for you.
+```
+
+**Prime Number Checking:**
+
+This interaction uses a remote agent via A2A, the Prime Agent:
+
+```text
+User: Is 7 a prime number?
+Bot: Yes, 7 is a prime number.
+```
+
+**Combined Operations:**
+
+This interaction uses both the local Roll Agent and the remote Prime Agent:
+
+```text
+User: Roll a 10-sided die and check if it's prime
+Bot: I rolled an 8 for you.
+Bot: 8 is not a prime number.
+```
+
+## Next Steps
+
+Now that you have created an agent that's using a remote agent via an A2A server, the next step is to learn how to connect to it from another agent.
+
+- [**A2A Quickstart (Exposing)**](./quickstart-exposing.md): Learn how to expose your existing agent so that other agents can use it via the A2A Protocol.
+
+================
+File: docs/a2a/quickstart-exposing.md
+================
+# Quickstart: Exposing a remote agent via A2A
+
+This quickstart covers the most common starting point for any developer: **"I have an agent. How do I expose it so that other agents can use my agent via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
+
+## Overview
+
+This sample demonstrates how you can easily expose an ADK agent so that it can be then consumed by another agent using the A2A Protocol.
+
+There are two main ways to expose an ADK agent via A2A.
+
+* **by using the `to_a2a(root_agent)` function**: use this function if you just want to convert an existing agent to work with A2A, and be able to expose it via a server through `uvicorn`, instead of `adk deploy api_server`. This means that you have tighter control over what you want to expose via `uvicorn` when you want to productionize your agent. Furthermore, the `to_a2a()` function auto-generates an agent card based on your agent code.
+* **by creating your own agent card (`agent.json`) and hosting it using `adk api_server --a2a`**: There are two main benefits of using this approach. First, `adk api_server --a2a` works with `adk web`, making it easy to use, debug, and test your agent. Second, with `adk api_server`, you can specify a parent folder with multiple, separate agents. Those agents that have an agent card (`agent.json`), will automatically be usable via A2A by other agents through the same server. However, you will need to create your own agent cards. To create an agent card, you can follow the [A2A Python tutorial](https://a2aprotocol.ai/docs/guide/python-a2a-tutorial).
+
+This quickstart will focus on `to_a2a()`, as it is the easiest way to expose your agent and will also autogenerate the agent card behind-the-scenes. If you'd like to use the `adk api_server` approach, you can see it being used in the [A2A Quickstart (Consuming) documentation](quickstart-consuming.md).
+
+```text
+Before:
+                                                ┌────────────────────┐
+                                                │ Hello World Agent  │
+                                                │  (Python Object)   │
+                                                | without agent card │
+                                                └────────────────────┘
+
+                                                          │
+                                                          │ to_a2a()
+                                                          ▼
+
+After:
+┌────────────────┐                             ┌───────────────────────────────┐
+│   Root Agent   │       A2A Protocol          │ A2A-Exposed Hello World Agent │
+│(RemoteA2aAgent)│────────────────────────────▶│      (localhost: 8001)         │
+│(localhost:8000)│                             └───────────────────────────────┘
+└────────────────┘
+```
+
+The sample consists of :
+
+- **Remote Hello World Agent** (`remote_a2a/hello_world/agent.py`): This is the agent that you want to expose so that other agents can use it via A2A. It is an agent that handles dice rolling and prime number checking. It becomes exposed using the `to_a2a()` function and is served using `uvicorn`.
+- **Root Agent** (`agent.py`): A simple agent that is just calling the remote Hello World agent.
+
+## Exposing the Remote Agent with the `to_a2a(root_agent)` function
+
+You can take an existing agent built using ADK and make it A2A-compatible by simply wrapping it using the `to_a2a()` function. For example, if you have an agent like the following defined in `root_agent`:
+
+```python
+# Your agent code here
+root_agent = Agent(
+    model='gemini-2.0-flash',
+    name='hello_world_agent',
+    
+    <...your agent code...>
+)
+```
+
+Then you can make it A2A-compatible simply by using `to_a2a(root_agent)`:
+
+```python
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+
+# Make your agent A2A-compatible
+a2a_app = to_a2a(root_agent, port=8001)
+```
+
+The `to_a2a()` function will even auto-generate an agent card in-memory behind-the-scenes by [extracting skills, capabilities, and metadata from the ADK agent](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/utils/agent_card_builder.py), so that the well-known agent card is made available when the agent endpoint is served using `uvicorn`.
+
+Now let's dive into the sample code.
+
+### 1. Getting the Sample Code
+
+You can clone and navigate to the [**a2a_root** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_root) here:
+
+```bash
+git clone https://github.com/google/adk-python.git
+cd adk-python/contributing/samples/a2a_root
+```
+
+As you'll see, the folder structure is as follows:
+
+```text
+a2a_root/
+├── remote_a2a/
+│   └── hello_world/    
+│       ├── __init__.py
+│       └── agent.py    # Remote Hello World Agent
+├── README.md
+└── agent.py            # Root agent
+```
+
+#### Root Agent (`a2a_root/agent.py`)
+
+- **`root_agent`**: A `RemoteA2aAgent` that connects to the remote A2A service
+- **Agent Card URL**: Points to the well-known agent card endpoint on the remote server
+
+#### Remote Hello World Agent (`a2a_root/remote_a2a/hello_world/agent.py`)
+
+- **`roll_die(sides: int)`**: Function tool for rolling dice with state management
+- **`check_prime(nums: list[int])`**: Async function for prime number checking
+- **`root_agent`**: The main agent with comprehensive instructions
+- **`a2a_app`**: The A2A application created using `to_a2a()` utility
+
+### 2. Start the Remote A2A Agent server
+
+You can now start the remote agent server, which will host the `a2a_app` within the hello_world agent:
+
+```bash
+# Ensure current working directory is adk-python/
+# Start the remote agent using uvicorn
+uvicorn contributing.samples.a2a_root.remote_a2a.hello_world.agent:a2a_app --host localhost --port 8001
+```
+
+??? note "Why use port 8001?"
+    In this quickstart, when testing locally, your agents will be using localhost, so the `port` for the A2A server for the exposed agent (the remote, prime agent) must be different from the consuming agent's port. The default port for `adk web` where you will interact with the consuming agent is `8000`, which is why the A2A server is created using a separate port, `8001`.
+
+Once executed, you should see something like:
+
+```shell
+INFO:     Started server process [10615]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://localhost:8001 (Press CTRL+C to quit)
+```
+
+### 3. Check that your remote agent is running
+
+You can check that your agent is up and running by visiting the agent card that was auto-generated earlier as part of your `to_a2a()` function in `a2a_root/remote_a2a/hello_world/agent.py`:
+
+[http://localhost:8001/.well-known/agent.json](http://localhost:8001/.well-known/agent.json)
+
+You should see the contents of the agent card, which should look like:
+
+```json
+{"capabilities":{},"defaultInputModes":["text/plain"],"defaultOutputModes":["text/plain"],"description":"hello world agent that can roll a dice of 8 sides and check prime numbers.","name":"hello_world_agent","protocolVersion":"0.2.6","skills":[{"description":"hello world agent that can roll a dice of 8 sides and check prime numbers. \n      I roll dice and answer questions about the outcome of the dice rolls.\n      I can roll dice of different sizes.\n      I can use multiple tools in parallel by calling functions in parallel(in one request and in one round).\n      It is ok to discuss previous dice roles, and comment on the dice rolls.\n      When I are asked to roll a die, I must call the roll_die tool with the number of sides. Be sure to pass in an integer. Do not pass in a string.\n      I should never roll a die on my own.\n      When checking prime numbers, call the check_prime tool with a list of integers. Be sure to pass in a list of integers. I should never pass in a string.\n      I should not check prime numbers before calling the tool.\n      When I are asked to roll a die and check prime numbers, I should always make the following two function calls:\n      1. I should first call the roll_die tool to get a roll. Wait for the function response before calling the check_prime tool.\n      2. After I get the function response from roll_die tool, I should call the check_prime tool with the roll_die result.\n        2.1 If user asks I to check primes based on previous rolls, make sure I include the previous rolls in the list.\n      3. When I respond, I must include the roll_die result from step 1.\n      I should always perform the previous 3 steps when asking for a roll and checking prime numbers.\n      I should not rely on the previous history on prime results.\n    ","id":"hello_world_agent","name":"model","tags":["llm"]},{"description":"Roll a die and return the rolled result.\n\nArgs:\n  sides: The integer number of sides the die has.\n  tool_context: the tool context\nReturns:\n  An integer of the result of rolling the die.","id":"hello_world_agent-roll_die","name":"roll_die","tags":["llm","tools"]},{"description":"Check if a given list of numbers are prime.\n\nArgs:\n  nums: The list of numbers to check.\n\nReturns:\n  A str indicating which number is prime.","id":"hello_world_agent-check_prime","name":"check_prime","tags":["llm","tools"]}],"supportsAuthenticatedExtendedCard":false,"url":"http://localhost:8001","version":"0.0.1"}
+```
+
+### 4. Run the Main (Consuming) Agent
+
+Now that your remote agent is running, you can launch the dev UI and select "a2a_root" as your agent.
+
+```bash
+# In a separate terminal, run the adk web server
+adk web contributing/samples/
+```
+
+To open the adk web server, go to: [http://localhost:8000](http://localhost:8000).
+
+## Example Interactions
+
+Once both services are running, you can interact with the root agent to see how it calls the remote agent via A2A:
+
+**Simple Dice Rolling:**
+This interaction uses a local agent, the Roll Agent:
+
+```text
+User: Roll a 6-sided die
+Bot: I rolled a 4 for you.
+```
+
+**Prime Number Checking:**
+
+This interaction uses a remote agent via A2A, the Prime Agent:
+
+```text
+User: Is 7 a prime number?
+Bot: Yes, 7 is a prime number.
+```
+
+**Combined Operations:**
+
+This interaction uses both the local Roll Agent and the remote Prime Agent:
+
+```text
+User: Roll a 10-sided die and check if it's prime
+Bot: I rolled an 8 for you.
+Bot: 8 is not a prime number.
+```
+
+## Next Steps
+
+Now that you have created an agent that's exposing a remote agent via an A2A server, the next step is to learn how to consume it from another agent.
+
+- [**A2A Quickstart (Consuming)**](./quickstart-consuming.md): Learn how your agent can use other agents using the A2A Protocol.
+
+================
 File: docs/agents/workflow-agents/index.md
 ================
 # Workflow Agents
@@ -4363,7 +5055,7 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     
         ```python
         # Pseudocode: Instruction provider receiving ReadonlyContext
-        from google.adk.agents import ReadonlyContext
+        from google.adk.agents.readonly_context import ReadonlyContext
     
         def my_instruction_provider(context: ReadonlyContext) -> str:
             # Read-only access example
@@ -4742,7 +5434,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
     
                ```python
                # Pseudocode: In a callback or initial tool
-               from google.adk.agents import CallbackContext # Or ToolContext
+               from google.adk.agents.callback_context import CallbackContext # Or ToolContext
                from google.genai import types
                 
                def save_document_reference(context: CallbackContext, file_path: str) -> None:
