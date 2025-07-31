@@ -9571,7 +9571,7 @@ File: docs/get-started/testing.md
 
 Before you deploy your agent, you should test it to ensure that it is working as
 intended. The easiest way to test your agent in your development environment is
-to use the ADK web UI with the following commands. 
+to use the ADK API server.
 
 === "Python"
 
@@ -9589,8 +9589,11 @@ to use the ADK web UI with the following commands.
     ```
     In Java, both the Dev UI and the API server are bundled together.
 
-This command will launch a local web
-server, where you can run cURL commands or send API requests to test your agent.
+This command will launch a local web server, where you can run cURL commands or send API requests to test your agent.
+
+!!! tip "Advanced Usage and Debugging"
+
+    For a complete reference on all available endpoints, request/response formats, and tips for debugging (including how to use the interactive API documentation), see the **ADK API Server Guide** below.
 
 ## Local testing
 
@@ -9655,8 +9658,8 @@ Let's break down what's happening:
 This should return the session information if it was created successfully. The
 output should appear similar to:
 
-```shell
-{"id":"s_123","appName":"my_sample_agent","userId":"u_123","state":{"state":{"key1":"value1","key2":42}},"events":[],"lastUpdateTime":1743711430.022186}
+```json
+{"id":"s_123","appName":"my_sample_agent","userId":"u_123","state":{"key1":"value1","key2":42},"events":[],"lastUpdateTime":1743711430.022186}
 ```
 
 !!! info
@@ -9685,10 +9688,10 @@ There are two ways to send queries via POST to your agent, via the `/run` or
 curl -X POST http://localhost:8000/run \
 -H "Content-Type: application/json" \
 -d '{
-"appName": "my_sample_agent",
-"userId": "u_123",
-"sessionId": "s_123",
-"newMessage": {
+"app_name": "my_sample_agent",
+"user_id": "u_123",
+"session_id": "s_123",
+"new_message": {
     "role": "user",
     "parts": [{
     "text": "Hey whats the weather in new york today"
@@ -9700,7 +9703,7 @@ curl -X POST http://localhost:8000/run \
 If using `/run`, you will see the full output of events at the same time, as a
 list, which should appear similar to:
 
-```shell
+```json
 [{"content":{"parts":[{"functionCall":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","args":{"city":"new york"},"name":"get_weather"}}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"longRunningToolIds":[],"id":"2Btee6zW","timestamp":1743712220.385936},{"content":{"parts":[{"functionResponse":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","name":"get_weather","response":{"status":"success","report":"The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}}}],"role":"user"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"PmWibL2m","timestamp":1743712221.895042},{"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"sYT42eVC","timestamp":1743712221.899018}]
 ```
 
@@ -9710,10 +9713,10 @@ list, which should appear similar to:
 curl -X POST http://localhost:8000/run_sse \
 -H "Content-Type: application/json" \
 -d '{
-"appName": "my_sample_agent",
-"userId": "u_123",
-"sessionId": "s_123",
-"newMessage": {
+"app_name": "my_sample_agent",
+"user_id": "u_123",
+"session_id": "s_123",
+"new_message": {
     "role": "user",
     "parts": [{
     "text": "Hey whats the weather in new york today"
@@ -9762,6 +9765,211 @@ on to deploying your agent! Here are some ways you can deploy your agent:
 * Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
   you scale and manage your agents using serverless architecture on Google
   Cloud.
+
+
+## The ADK API Server
+
+The ADK API Server is a pre-packaged [FastAPI](https://fastapi.tiangolo.com/) web server that exposes your agents through a RESTful API. It is the primary tool for local testing and development, allowing you to interact with your agents programmatically before deploying them.
+
+## Running the Server
+
+To start the server, run the following command from your project's root directory:
+
+```shell
+adk api_server
+```
+
+By default, the server runs on `http://localhost:8000`. You will see output confirming that the server has started:
+
+```shell
+INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
+```
+
+## Debugging with Interactive API Docs
+
+The API server automatically generates interactive API documentation using Swagger UI. This is an invaluable tool for exploring endpoints, understanding request formats, and testing your agent directly from your browser.
+
+To access the interactive docs, start the API server and navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your web browser.
+
+You will see a complete, interactive list of all available API endpoints, which you can expand to see detailed information about parameters, request bodies, and response schemas. You can even click "Try it out" to send live requests to your running agents.
+
+## API Endpoints
+
+The following sections detail the primary endpoints for interacting with your agents.
+
+!!! note "JSON Naming Convention"
+    - **Request bodies** must use `snake_case` for field names (e.g., `"app_name"`).
+    - **Response bodies** will use `camelCase` for field names (e.g., `"appName"`).
+
+### Utility Endpoints
+
+#### List Available Agents
+
+Returns a list of all agent applications discovered by the server.
+
+*   **Method:** `GET`
+*   **Path:** `/list-apps`
+
+**Example Request**
+```shell
+curl -X GET http://localhost:8000/list-apps
+```
+
+**Example Response**
+```json
+["my_sample_agent", "another_agent"]
+```
+
+---
+
+### Session Management
+
+Sessions store the state and event history for a specific user's interaction with an agent.
+
+#### Create or Update a Session
+
+Creates a new session or updates an existing one. If a session with the given IDs already exists, its state will be overwritten with the new state provided.
+
+*   **Method:** `POST`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Request Body**
+```json
+{
+  "state": {
+    "key1": "value1",
+    "key2": 42
+  }
+}
+```
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc \
+  -H "Content-Type: application/json" \
+  -d '{"state": {"visit_count": 5}}'
+```
+
+**Example Response**
+```json
+{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[],"lastUpdateTime":1743711430.022186}
+```
+
+#### Get a Session
+
+Retrieves the details of a specific session, including its current state and all associated events.
+
+*   **Method:** `GET`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Example Request**
+```shell
+curl -X GET http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
+```
+
+**Example Response**
+```json
+{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[...],"lastUpdateTime":1743711430.022186}
+```
+
+#### Delete a Session
+
+Deletes a session and all of its associated data.
+
+*   **Method:** `DELETE`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Example Request**
+```shell
+curl -X DELETE http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
+```
+
+**Example Response**
+A successful deletion returns an empty response with a `204 No Content` status code.
+
+---
+
+### Agent Execution
+
+These endpoints are used to send a new message to an agent and get a response.
+
+#### Run Agent (Single Response)
+
+Executes the agent and returns all generated events in a single JSON array after the run is complete.
+
+*   **Method:** `POST`
+*   **Path:** `/run`
+
+**Request Body**
+```json
+{
+  "app_name": "my_sample_agent",
+  "user_id": "u_123",
+  "session_id": "s_abc",
+  "new_message": {
+    "role": "user",
+    "parts": [
+      { "text": "What is the capital of France?" }
+    ]
+  }
+}
+```
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_name": "my_sample_agent",
+    "user_id": "u_123",
+    "session_id": "s_abc",
+    "new_message": {
+      "role": "user",
+      "parts": [{"text": "What is the capital of France?"}]
+    }
+  }'
+```
+
+#### Run Agent (Streaming)
+
+Executes the agent and streams events back to the client as they are generated using [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
+
+*   **Method:** `POST`
+*   **Path:** `/run_sse`
+
+**Request Body**
+The request body is the same as for `/run`, with an additional optional `streaming` flag.
+```json
+{
+  "app_name": "my_sample_agent",
+  "user_id": "u_123",
+  "session_id": "s_abc",
+  "new_message": {
+    "role": "user",
+    "parts": [
+      { "text": "What is the weather in New York?" }
+    ]
+  },
+  "streaming": true
+}
+```
+- `streaming`: (Optional) Set to `true` to enable token-level streaming for model responses. Defaults to `false`.
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/run_sse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_name": "my_sample_agent",
+    "user_id": "u_123",
+    "session_id": "s_abc",
+    "new_message": {
+      "role": "user",
+      "parts": [{"text": "What is the weather in New York?"}]
+    },
+    "streaming": false
+  }'
+```
 
 ================
 File: docs/grounding/google_search_grounding.md
@@ -10705,6 +10913,270 @@ async for event in runner.run_async(
 - [OpenInference Package](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
 
 ================
+File: docs/observability/cloud-trace.md
+================
+# Agent Observability with Cloud Trace
+
+With ADK, you’ve already capable of inspecting and observing your agent interaction locally utilizing the powerful web development UI discussed in [here](https://google.github.io/adk-docs/evaluate/#debugging-with-the-trace-view). However, if we aim for cloud deployment, we will need a centralized dashboard to observe real traffic.
+
+Cloud Trace is a component of Google Cloud Observability. It is a powerful tool for monitoring, debugging, and improving the performance of your applications by focusing specifically on tracing capabilities. For Agent Development Kit (ADK) applications, Cloud Trace enables comprehensive tracing, helping you understand how requests flow through your agent's interactions and identify performance bottlenecks or errors within your AI agents.
+
+## Overview
+
+Cloud Trace is built on [OpenTelemetry](https://opentelemetry.io/), an open-source standard that supports many languages and ingestion methods for generating trace data. This aligns with observability practices for ADK applications, which also leverage OpenTelemetry-compatible instrumentation, allowing you to :
+
+- Trace agent interactions : Cloud Trace continuously gathers and analyzes trace data from your project, enabling you to rapidly diagnose latency issues and errors within your ADK applications. This automatic data collection simplifies the process of identifying problems in complex agent workflows.
+- Debug issues : Quickly diagnose latency issues and errors by analyzing detailed traces. Crucial for understanding issues that manifest as increased communication latency across different services or during specific agent actions like tool calls.
+- In-depth Analysis and Visualization: Trace Explorer is the primary tool for analyzing traces, offering visual aids like heatmaps for span duration and line charts for request/error rates. It also provides a spans table, groupable by service and operation, which gives one-click access to representative traces and a waterfall view to easily identify bottlenecks and sources of errors within your agent's execution path
+
+The following example will assume the following agent directory structure
+
+```
+working_dir/
+├── weather_agent/
+│   ├── agent.py
+│   └── __init__.py
+└── deploy_agent_engine.py
+└── deploy_fast_api_app.py
+└── agent_runner.py
+```
+
+```python
+# weather_agent/agent.py
+
+import os
+from google.adk.agents import Agent
+
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "{your-project-id}")
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+
+
+# Define a tool function
+def get_weather(city: str) -> dict:
+    """Retrieves the current weather report for a specified city.
+
+    Args:
+        city (str): The name of the city for which to retrieve the weather report.
+
+    Returns:
+        dict: status and result or error msg.
+    """
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": (
+                "The weather in New York is sunny with a temperature of 25 degrees"
+                " Celsius (77 degrees Fahrenheit)."
+            ),
+        }
+    else:
+        return {
+            "status": "error",
+            "error_message": f"Weather information for '{city}' is not available.",
+        }
+
+
+# Create an agent with tools
+root_agent = Agent(
+    name="weather_agent",
+    model="gemini-2.5-flash",
+    description="Agent to answer questions using weather tools.",
+    instruction="You must use the available tools to find an answer.",
+    tools=[get_weather],
+)
+```
+
+## Cloud Trace Setup
+
+### Setup for Agent Engine Deployment
+
+#### Agent Engine Deployment - from ADK CLI
+
+You can enable cloud tracing by adding `--trace_to_cloud` flag when deploying your agent using `adk deploy agent_engine` command for agent engine deployment.
+
+```bash
+adk deploy agent_engine \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION \
+    --staging_bucket=$STAGING_BUCKET \
+    --trace_to_cloud \
+    $AGENT_PATH
+```
+
+#### Agent Engine Deployment - from Python SDK
+
+If you prefer using Python SDK, you can enable cloud tracing by adding `enable_tracing=True` when initialize the `AdkApp` object
+
+```python
+# deploy_agent_engine.py
+
+from vertexai.preview import reasoning_engines
+from vertexai import agent_engines
+from weather_agent.agent import root_agent
+
+import vertexai
+
+PROJECT_ID = "{your-project-id}"
+LOCATION = "{your-preferred-location}"
+STAGING_BUCKET = "{your-staging-bucket}"
+
+vertexai.init(
+    project=PROJECT_ID,
+    location=LOCATION,
+    staging_bucket=STAGING_BUCKET,
+)
+
+adk_app = reasoning_engines.AdkApp(
+    agent=root_agent,
+    enable_tracing=True,
+)
+
+
+remote_app = agent_engines.create(
+    agent_engine=adk_app,
+    extra_packages=[
+        "./weather_agent",
+    ],
+    requirements=[
+        "google-cloud-aiplatform[adk,agent_engines]",
+    ],
+)
+```
+
+### Setup for Cloud Run Deployment
+
+#### Cloud Run Deployment - from ADK CLI
+
+You can enable cloud tracing by adding `--trace_to_cloud` flag when deploying your agent using `adk deploy cloud_run` command for cloud run deployment.
+
+```bash
+adk deploy cloud_run \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION \
+    --trace_to_cloud \
+    $AGENT_PATH
+```
+
+If you want to enable cloud tracing and using a customized agent service deployment on Cloud Run, you can refer to the [Setup for Customized Deployment](#setup-for-customized-deployment) section below
+
+### Setup for Customized Deployment
+
+#### From Built-in `get_fast_api_app` Module
+
+If you want to customize your own agent service, you can enable cloud tracing by initialize the FastAPI app using built-in `get_fast_api_app` module and set `trace_to_cloud=True`
+
+```python
+# deploy_fast_api_app.py
+
+import os
+from google.adk.cli.fast_api import get_fast_api_app
+from fastapi import FastAPI
+
+# Set GOOGLE_CLOUD_PROJECT environment variable for cloud tracing
+os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "alvin-exploratory-2")
+
+# Discover the `weather_agent` directory in current working dir
+AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Create FastAPI app with enabled cloud tracing
+app: FastAPI = get_fast_api_app(
+    agents_dir=AGENT_DIR,
+    web=True,
+    trace_to_cloud=True,
+)
+
+app.title = "weather-agent"
+app.description = "API for interacting with the Agent weather-agent"
+
+
+# Main execution
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8080)
+```
+
+
+#### From Customized Agent Runner
+
+If you want to fully customize your ADK agent runtime, you can enable cloud tracing by using `CloudTraceSpanExporter` module from Opentelemetry.
+
+```python
+# agent_runner.py
+
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from weather_agent.agent import root_agent as weather_agent
+from google.genai.types import Content, Part
+from opentelemetry import trace
+from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace import TracerProvider
+
+APP_NAME = "weather_agent"
+USER_ID = "u_123"
+SESSION_ID = "s_123"
+
+provider = TracerProvider()
+processor = export.BatchSpanProcessor(
+    CloudTraceSpanExporter(project_id="{your-project-id}")
+)
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+
+session_service = InMemorySessionService()
+runner = Runner(agent=weather_agent, app_name=APP_NAME, session_service=session_service)
+
+
+async def main():
+    session = await session_service.get_session(
+        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+    )
+    if session is None:
+        session = await session_service.create_session(
+            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+        )
+
+    user_content = Content(
+        role="user", parts=[Part(text="what's weather in paris?")]
+    )
+
+    final_response_content = "No response"
+    async for event in runner.run_async(
+        user_id=USER_ID, session_id=SESSION_ID, new_message=user_content
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            final_response_content = event.content.parts[0].text
+
+    print(final_response_content)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())
+```
+
+## Inspect Cloud Traces
+
+After the setup is complete, whenever you interact with the agent it will automatically send trace data to Cloud Trace. You can inspect the traces by going to [console.cloud.google.com](https://console.cloud.google.com) and visit the Trace Explorer on the configured Google Cloud Project
+
+![cloud-trace](../assets/cloud-trace1.png)
+
+And then you will see all available traces produced by ADK agent which configured in several span names such as `invocation` , `agent_run` . `call_llm` and `execute_tool`
+
+![cloud-trace](../assets/cloud-trace2.png)
+
+If you click on one of the traces, you will see the waterfall view of the detailed process, similar to what we see in the web development UI with `adk web` command.
+
+![cloud-trace](../assets/cloud-trace3.png)
+
+## Resources
+
+- [Google Cloud Trace Documentation](https://cloud.google.com/trace)
+
+================
 File: docs/observability/logging.md
 ================
 # Logging in the Agent Development Kit (ADK)
@@ -10739,6 +11211,35 @@ logging.basicConfig(
 # from google.adk.agents import LlmAgent
 # ...
 ```
+
+### Configuring Logging with the ADK CLI
+
+When running agents using the ADK's built-in web or API servers, you can easily control the log verbosity directly from the command line. The `adk web`, `adk api_server`, and `adk deploy cloud_run` commands all accept a `--log-level` option.
+
+This provides a convenient way to set the logging level without modifying your agent's source code.
+
+**Example using `adk web`:**
+
+To start the web server with `DEBUG` level logging, run:
+
+```bash
+adk web --log-level DEBUG path/to/your/agents_dir
+```
+
+The available log levels for the `--log-level` option are:
+- `DEBUG`
+- `INFO` (default)
+- `WARNING`
+- `ERROR`
+- `CRITICAL`
+
+> For the `DEBUG` level, you can also use `-v` or `--verbose` as a a shortcut for `--log_level DEBUG`. For example:
+> 
+> ```bash
+> adk web -v path/to/your/agents_dir
+> ```
+
+This command-line setting overrides any programmatic configuration (like `logging.basicConfig`) you might have in your code for the ADK's loggers.
 
 ### Log Levels
 
@@ -12502,7 +13003,6 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
         model=MODEL,
         name="InfoCaptureAgent",
         instruction="Acknowledge the user's statement.",
-        # output_key="captured_info" # Could optionally save to state too
     )
 
     # Agent 2: Agent that can use memory
@@ -12514,40 +13014,66 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
         tools=[load_memory] # Give the agent the tool
     )
 
-    # --- Services and Runner ---
+    # --- Services ---
+    # Services must be shared across runners to share state and memory
     session_service = InMemorySessionService()
     memory_service = InMemoryMemoryService() # Use in-memory for demo
 
-    runner = Runner(
-        # Start with the info capture agent
-        agent=info_capture_agent,
-        app_name=APP_NAME,
-        session_service=session_service,
-        memory_service=memory_service # Provide the memory service to the Runner
-    )
+    async def run_scenario():
+        # --- Scenario ---
 
-    # --- Scenario ---
+        # Turn 1: Capture some information in a session
+        print("--- Turn 1: Capturing Information ---")
+        runner1 = Runner(
+            # Start with the info capture agent
+            agent=info_capture_agent,
+            app_name=APP_NAME,
+            session_service=session_service,
+            memory_service=memory_service # Provide the memory service to the Runner
+        )
+        session1_id = "session_info"
+        await runner1.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
+        user_input1 = Content(parts=[Part(text="My favorite project is Project Alpha.")], role="user")
 
-    # Turn 1: Capture some information in a session
-    print("--- Turn 1: Capturing Information ---")
-    session1_id = "session_info"
-    session1 = await runner.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
-    user_input1 = Content(parts=[Part(text="My favorite project is Project Alpha.")], role="user")
+        # Run the agent
+        final_response_text = "(No final response)"
+        async for event in runner1.run_async(user_id=USER_ID, session_id=session1_id, new_message=user_input1):
+            if event.is_final_response() and event.content and event.content.parts:
+                final_response_text = event.content.parts[0].text
+        print(f"Agent 1 Response: {final_response_text}")
 
-    # Run the agent
-    final_response_text = "(No final response)"
-    async for event in runner.run_async(user_id=USER_ID, session_id=session1_id, new_message=user_input1):
-        if event.is_final_response() and event.content and event.content.parts:
-            final_response_text = event.content.parts[0].text
-    print(f"Agent 1 Response: {final_response_text}")
+        # Get the completed session
+        completed_session1 = await runner1.session_service.get_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
 
-    # Get the completed session
-    completed_session1 = await runner.session_service.get_session(app_name=APP_NAME, user_id=USER_ID, session_id=session1_id)
+        # Add this session's content to the Memory Service
+        print("\n--- Adding Session 1 to Memory ---")
+        await memory_service.add_session_to_memory(completed_session1)
+        print("Session added to memory.")
 
-    # Add this session's content to the Memory Service
-    print("\n--- Adding Session 1 to Memory ---")
-    memory_service = await memory_service.add_session_to_memory(completed_session1)
-    print("Session added to memory.")
+        # Turn 2: Recall the information in a new session
+        print("\n--- Turn 2: Recalling Information ---")
+        runner2 = Runner(
+            # Use the second agent, which has the memory tool
+            agent=memory_recall_agent,
+            app_name=APP_NAME,
+            session_service=session_service, # Reuse the same service
+            memory_service=memory_service   # Reuse the same service
+        )
+        session2_id = "session_recall"
+        await runner2.session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=session2_id)
+        user_input2 = Content(parts=[Part(text="What is my favorite project?")], role="user")
+
+        # Run the second agent
+        final_response_text_2 = "(No final response)"
+        async for event in runner2.run_async(user_id=USER_ID, session_id=session2_id, new_message=user_input2):
+            if event.is_final_response() and event.content and event.content.parts:
+                final_response_text_2 = event.content.parts[0].text
+        print(f"Agent 2 Response: {final_response_text_2}")
+
+    # To run this example, you can use the following snippet:
+    # asyncio.run(run_scenario())
+
+    # await run_scenario()
     ```
 
 ## Vertex AI Memory Bank
@@ -12925,9 +13451,8 @@ conversation history and temporary data are stored and persist.
 Here’s a simplified flow of how `Session` and `SessionService` work together
 during a conversation turn:
 
-1.  **Start or Resume:** Your application's `Runner` uses the `SessionService`
-    to either `create_session` (for a new chat) or `get_session` (to retrieve an
-    existing one).
+1.  **Start or Resume:** Your application needs to use the `SessionService` to
+    either `create_session` (for a new chat) or use an existing session id.
 2.  **Context Provided:** The `Runner` gets the appropriate `Session` object
     from the appropriate service method, providing the agent with access to the
     corresponding Session's `state` and `events`.
@@ -15471,16 +15996,16 @@ Pass the scheme and credential during toolset initialization. The toolset applie
 
       ```py
       from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
-      from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
+      from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+
       auth_scheme, auth_credential = token_to_scheme_credential(
-         "apikey", "query", "apikey", YOUR_API_KEY_STRING
+          "apikey", "query", "apikey", "YOUR_API_KEY_STRING"
       )
-      sample_api_toolset = APIHubToolset(
-         name="sample-api-requiring-api-key",
-         description="A tool using an API protected by API Key",
-         apihub_resource_name="...",
-         auth_scheme=auth_scheme,
-         auth_credential=auth_credential,
+      sample_api_toolset = OpenAPIToolset(
+          spec_str="...",  # Fill this with an OpenAPI spec string
+          spec_str_type="yaml",
+          auth_scheme=auth_scheme,
+          auth_credential=auth_credential,
       )
       ```
 
@@ -16397,21 +16922,97 @@ ADK offers several ways to create functions tools, each suited to different leve
 
 ## 1. Function Tool
 
-Transforming a function into a tool is a straightforward way to integrate custom logic into your agents. In fact, when you assign a function to an agent’s tools list, the framework will automatically wrap it as a Function Tool for you. This approach offers flexibility and quick integration.
+Transforming a Python function into a tool is a straightforward way to integrate custom logic into your agents. When you assign a function to an agent’s `tools` list, the framework automatically wraps it as a `FunctionTool`.
 
-### Parameters
+### How it Works
 
-Define your function parameters using standard **JSON-serializable types** (e.g., string, integer, list, dictionary). It's important to avoid setting default values for parameters, as the language model (LLM) does not currently support interpreting them.
+The ADK framework automatically inspects your Python function's signature—including its name, docstring, parameters, type hints, and default values—to generate a schema. This schema is what the LLM uses to understand the tool's purpose, when to use it, and what arguments it requires.
 
-### Return Type
+### Defining Function Signatures
+
+A well-defined function signature is crucial for the LLM to use your tool correctly.
+
+#### Parameters
+
+You can define functions with required parameters, optional parameters, and variadic arguments. Here’s how each is handled:
+
+##### Required Parameters
+A parameter is considered **required** if it has a type hint but **no default value**. The LLM must provide a value for this argument when it calls the tool.
+
+???+ "Example: Required Parameters"
+    === "Python"
+        ```python
+        def get_weather(city: str, unit: str):
+            """
+            Retrieves the weather for a city in the specified unit.
+
+            Args:
+                city (str): The city name.
+                unit (str): The temperature unit, either 'Celsius' or 'Fahrenheit'.
+            """
+            # ... function logic ...
+            return {"status": "success", "report": f"Weather for {city} is sunny."}
+        ```
+    In this example, both `city` and `unit` are mandatory. If the LLM tries to call `get_weather` without one of them, the ADK will return an error to the LLM, prompting it to correct the call.
+
+##### Optional Parameters with Default Values
+A parameter is considered **optional** if you provide a **default value**. This is the standard Python way to define optional arguments. The ADK correctly interprets these and does not list them in the `required` field of the tool schema sent to the LLM.
+
+???+ "Example: Optional Parameter with Default Value"
+    === "Python"
+        ```python
+        def search_flights(destination: str, departure_date: str, flexible_days: int = 0):
+            """
+            Searches for flights.
+
+            Args:
+                destination (str): The destination city.
+                departure_date (str): The desired departure date.
+                flexible_days (int, optional): Number of flexible days for the search. Defaults to 0.
+            """
+            # ... function logic ...
+            if flexible_days > 0:
+                return {"status": "success", "report": f"Found flexible flights to {destination}."}
+            return {"status": "success", "report": f"Found flights to {destination} on {departure_date}."}
+        ```
+    Here, `flexible_days` is optional. The LLM can choose to provide it, but it's not required.
+
+##### Optional Parameters with `typing.Optional`
+You can also mark a parameter as optional using `typing.Optional[SomeType]` or the `| None` syntax (Python 3.10+). This signals that the parameter can be `None`. When combined with a default value of `None`, it behaves as a standard optional parameter.
+
+???+ "Example: `typing.Optional`"
+    === "Python"
+        ```python
+        from typing import Optional
+
+        def create_user_profile(username: str, bio: Optional[str] = None):
+            """
+            Creates a new user profile.
+
+            Args:
+                username (str): The user's unique username.
+                bio (str, optional): A short biography for the user. Defaults to None.
+            """
+            # ... function logic ...
+            if bio:
+                return {"status": "success", "message": f"Profile for {username} created with a bio."}
+            return {"status": "success", "message": f"Profile for {username} created."}
+        ```
+
+##### Variadic Parameters (`*args` and `**kwargs`)
+While you can include `*args` (variable positional arguments) and `**kwargs` (variable keyword arguments) in your function signature for other purposes, they are **ignored by the ADK framework** when generating the tool schema for the LLM. The LLM will not be aware of them and cannot pass arguments to them. It's best to rely on explicitly defined parameters for all data you expect from the LLM.
+
+#### Return Type
 
 The preferred return type for a Function Tool is a **dictionary** in Python or **Map** in Java. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary, the framework automatically wraps it into a dictionary with a single key named **"result"**.
 
-Strive to make your return values as descriptive as possible. *For example,* instead of returning a numeric error code, return a dictionary with an "error\_message" key containing a human-readable explanation. **Remember that the LLM**, not a piece of code, needs to understand the result. As a best practice, include a "status" key in your return dictionary to indicate the overall outcome (e.g., "success", "error", "pending"), providing the LLM with a clear signal about the operation's state.
+Strive to make your return values as descriptive as possible. *For example,* instead of returning a numeric error code, return a dictionary with an "error_message" key containing a human-readable explanation. **Remember that the LLM**, not a piece of code, needs to understand the result. As a best practice, include a "status" key in your return dictionary to indicate the overall outcome (e.g., "success", "error", "pending"), providing the LLM with a clear signal about the operation's state.
 
-### Docstring / Source code comments
+#### Docstrings
 
-The docstring (or comments above) your function serve as the tool's description and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values.
+The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values.
+
+### Example
 
 ??? "Example"
 
@@ -16790,21 +17391,22 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
 
 ### Prerequisites
 
-1. [Install ADK](../get-started/installation.md).
-2. Use an existing
+=== "Python"
+* [Install ADK](../get-started/installation.md).
+* Use an existing
    [Application Integration](https://cloud.google.com/application-integration/docs/overview)
    workflow or
    [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview)
    connection you want to use with your agent.
-3. To use tool with default credentials, install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions) and run the following commands:
-   
+* To use tool with default credentials, install the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions) and run the following commands:
+
    ```shell
    gcloud config set project <project-id>
    gcloud auth application-default login
    gcloud auth application-default set-quota-project <project-id>
    ```
-  
-4. Set up your project structure and create required files. 
+
+* Set up your project structure and create required files.
     ```console
     project_root_folder
     |-- .env
@@ -16814,14 +17416,46 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
         `__ tools.py
     ```
     When running the agent, make sure to run `adk web` in the `project\_root\_folder`.
+    
+* To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
 
-5. To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
-   
    - `roles/integration.editor`
    - `roles/connectors.user`
    - `roles/secretmanager.secretAccessor`
-         
+     
 > **Note:** For Agent Engine (AE), don't use `roles/integration.invoker`, as it can result in 403 errors. Use `roles/integration.editor`    instead.
+
+=== "Java"
+*   You must have the Google Cloud CLI installed. For more information, see the [installation
+    guide](https://cloud.google.com/sdk/docs/install#installation_instructions).
+
+*   Run the following commands:
+
+    ```bash
+    gcloud config set project <project-id>
+    gcloud auth application-default login
+    gcloud auth application-default set-quota-project <project-id>
+    ```
+
+*   To use a Connector from Integration Connectors, you need to provision
+    Application Integration in the same region as your connection.
+*   Import and publish the [Connection
+    Tool](https://pantheon.corp.google.com/integrations/templates/connection-tool/locations/us-central1)
+    from the template library.
+*   Follow the [Agent Development Kit
+    Walkthrough](https://docs.google.com/document/d/1oqXkqX9m5wjWE-rkwp-qO0CGpSEQHBTYAYQcWRf91XU/edit?tab=t.0#heading=h.7k9wrm8jpdug)
+    and use the [latest version of adk](https://github.com/google/adk-python).
+
+*   The project structure should be as follows:
+
+    ```
+    project_root_folder/
+      └── my_agent/
+          ├── agent.java
+          └── pom.xml
+    ```
+*   When running the agent, make sure you are in the `project_root_f` directory.
+   
 
 ### Use Integration Connectors
 
@@ -16838,23 +17472,24 @@ Connect your agent to enterprise applications using
    
    
 
-3. Go to the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
+2. Go to the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
    template in the template library and click **USE TEMPLATE**.
 
 
     ![Google Cloud Tools](../assets/use-connection-tool-template.png)
 
-4. Enter the Integration Name as *ExecuteConnection* (it is mandatory to use this exact integration name only).
+3. Enter the Integration Name as *ExecuteConnection* (it is mandatory to use this exact integration name only).
    Then, select the region to match your connection region and click **CREATE**.
 
-5. Click **PUBLISH** to publish the integration in the <i>Application Integration</i> editor.
+4. Click **PUBLISH** to publish the integration in the <i>Application Integration</i> editor.
 
 
     ![Google Cloud Tools](../assets/publish-integration.png)
    
    
-
 #### Create an Application Integration Toolset
+
+Application Integration Toolset supports `auth_scheme` and `auth_credential` for **dynamic OAuth2 authentication** for Integration Connectors. 
 
 To create an Application Integration Toolset for Integration Connectors, follow these steps: 
 
@@ -16963,7 +17598,7 @@ After completing the above steps, go to [http://localhost:8000](http://localhost
    `my\_agent` agent (which is the same as the agent folder name).
 
 
-### Use App Integration Workflows
+### Use Application Integration Workflows
 
 Use an existing
 [Application Integration](https://cloud.google.com/application-integration/docs/overview)
@@ -16971,7 +17606,10 @@ workflow as a tool for your agent or create a new one.
 
 #### Create an Application Integration Workflow Toolset
 
-To create an Application Integration Toolset for Application Integration Workflows, follow these steps: 
+
+=== "Python"
+
+To create an Application Integration Toolset for Application Integration Workflows using Python, follow these steps: 
 
 1. Create a tool with `ApplicationIntegrationToolset` in the `tools.py` file:
 
@@ -17019,6 +17657,107 @@ To create an Application Integration Toolset for Application Integration Workflo
 
 After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose
    ` my\_agent` agent (which is the same as the agent folder name).
+
+=== "Java"
+
+To create an Application Integration Toolset for Application Integration
+Workflows using Java, follow these steps:
+
+1.  Create a tool with `ApplicationIntegrationToolset` in the `tools.java` file:
+
+    ```java    
+    import com.google.adk.tools.applicationintegrationtoolset.ApplicationIntegrationToolset;
+    import com.google.common.collect.ImmutableList;
+    import com.google.common.collect.ImmutableMap;
+
+    public class Tools {
+        private static ApplicationIntegrationToolset integrationTool;
+        private static ApplicationIntegrationToolset connectionsTool;
+
+        static {
+            integrationTool = new ApplicationIntegrationToolset(
+                    "test-project",
+                    "us-central1",
+                    "test-integration",
+                    ImmutableList.of("api_trigger/test-api"),
+                    null,
+                    null,
+                    null,
+                    "{...}",
+                    "tool_prefix1",
+                    "...");
+
+            connectionsTool = new ApplicationIntegrationToolset(
+                    "test-project",
+                    "us-central1",
+                    null,
+                    null,
+                    "test-connection",
+                    ImmutableMap.of("Issue", ImmutableList.of("GET")),
+                    ImmutableList.of("ExecuteCustomQuery"),
+                    "{...}",
+                    "tool_prefix",
+                    "...");
+        }
+    }
+    ```
+
+    **Note:** You can provide service account to be used instead of using
+    default credentials by generating [Service Account
+    Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and
+    providing right [Application Integration and Integration Connector IAM
+    roles](#prerequisites) to the service account. For more details about the
+    IAM roles, refer to the [Prerequisites](#prerequisites) section.
+
+2.  Update the `agent.java` file and add tool to your agent:
+
+    ```java  
+    import com.google.adk.agent.LlmAgent;
+    import com.google.adk.tools.BaseTool;
+    import com.google.common.collect.ImmutableList;
+
+    public class MyAgent {
+        public static void main(String[] args) {
+            // Assuming Tools class is defined as in the previous step
+            ImmutableList<BaseTool> tools = ImmutableList.<BaseTool>builder()
+                    .add(Tools.integrationTool)
+                    .add(Tools.connectionsTool)
+                    .build();
+
+            // Finally, create your agent with the tools generated automatically.
+            LlmAgent rootAgent = LlmAgent.builder()
+                    .name("science-teacher")
+                    .description("Science teacher agent")
+                    .model("gemini-2.0-flash")
+                    .instruction(
+                            "Help user, leverage the tools you have access to."
+                    )
+                    .tools(tools)
+                    .build();
+
+            // You can now use rootAgent to interact with the LLM
+            // For example, you can start a conversation with the agent.
+        }
+    }
+    ```
+
+    **Note:** To find the list of supported entities and actions for a
+    connection, use these Connector APIs: `listActions`, `listEntityTypes`.
+
+3.  Start the Google ADK Web UI and use your agent:
+
+    ```bash
+    mvn install
+
+    mvn exec:java \
+        -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
+        -Dexec.args="--adk.agents.source-dir=src/main/java" \
+        -Dexec.classpathScope="compile"
+    ```
+
+After completing the above steps, go to
+[http://localhost:8000](http://localhost:8000), and choose `my_agent` agent
+(which is the same as the agent folder name).
 
 ---
 
