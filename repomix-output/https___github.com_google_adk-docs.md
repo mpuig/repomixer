@@ -6463,17 +6463,7 @@ File: docs/deploy/gke.md
 
 To deploy your agent you will need to have a Kubernetes cluster running on GKE. You can create a cluster using the Google Cloud Console or the `gcloud` command line tool.
 
-In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Vertex AI or AI Studio as the LLM provider using a Environment variable.
-
-## Agent sample
-
-For each of the commands, we will reference a `capital_agent` sample defined in on the [LLM agent](../agents/llm-agents.md) page. We will assume it's in a `capital_agent` directory.
-
-To proceed, confirm that your agent code is configured as follows:
-
-1. Agent code is in a file called `agent.py` within your agent directory.
-2. Your agent variable is named `root_agent`.
-3. `__init__.py` is within your agent directory and contains `from . import agent`.
+In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Vertex AI or AI Studio as the LLM provider using the Environment variable `GOOGLE_GENAI_USE_VERTEXAI`.
 
 ## Environment variables
 
@@ -6498,15 +6488,11 @@ And copy the project number from the output.
 export GOOGLE_CLOUD_PROJECT_NUMBER=YOUR_PROJECT_NUMBER
 ```
 
-## Deployment options
 
-### Option 1: Manual Deployment using gcloud and kubectl
 
-You can deploy your agent to GKE either **manually using Kubernetes manifests** or **automatically using the `adk deploy gke` command**. Choose the approach that best suits your workflow.
+## Enable APIs and Permissions
 
 Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
-
-### Enable APIs
 
 Enable the necessary APIs for your project. You can do this using the `gcloud` command line tool.
 
@@ -6517,7 +6503,32 @@ gcloud services enable \
     cloudbuild.googleapis.com \
     aiplatform.googleapis.com
 ```
-### Option 1: Manual Deployment using gcloud and kubectl
+
+Grant necessary roles to the default compute engine service account required by the `gcloud builds submit` command.
+
+
+
+```bash
+ROLES_TO_ASSIGN=(
+    "roles/artifactregistry.writer"
+    "roles/storage.objectViewer"
+    "roles/logging.viewer"
+    "roles/logging.logWriter"
+)
+
+for ROLE in "${ROLES_TO_ASSIGN[@]}"; do
+    gcloud projects add-iam-policy-binding "${GOOGLE_CLOUD_PROJECT}" \
+        --member="serviceAccount:${GOOGLE_CLOUD_PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+        --role="${ROLE}"
+done
+```
+
+## Deployment options
+
+You can deploy your agent to GKE either **manually using Kubernetes manifests** or **automatically using the `adk deploy gke` command**. Choose the approach that best suits your workflow.
+
+
+## Option 1: Manual Deployment using gcloud and kubectl
 
 ### Create a GKE cluster
 
@@ -6539,25 +6550,61 @@ gcloud container clusters get-credentials adk-cluster \
     --project=$GOOGLE_CLOUD_PROJECT
 ```
 
-### Project Structure
+### Create Your Agent
 
-Organize your project files as follows:
+We will reference the `capital_agent` example defined on the [LLM agents](../agents/llm-agents.md) page.
+
+To proceed, organize your project files as follows:
 
 ```txt
 your-project-directory/
 ├── capital_agent/
 │   ├── __init__.py
-│   └── agent.py       # Your agent code (see "Agent sample" tab)
+│   └── agent.py       # Your agent code (see "Capital Agent example" below)
 ├── main.py            # FastAPI application entry point
 ├── requirements.txt   # Python dependencies
 └── Dockerfile         # Container build instructions
 ```
 
-Create the following files (`main.py`, `requirements.txt`, `Dockerfile`) in the root of `your-project-directory/`.
+
 
 ### Code files
 
-1. This file sets up the FastAPI application using `get_fast_api_app()` from ADK:
+Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capital_agent/agent.py`, `capital_agent/__init__.py`) in the root of `your-project-directory/`.
+
+1. This is the Capital Agent example inside the `capital_agent` directory
+
+    ```python title="capital_agent/agent.py"
+    from google.adk.agents import LlmAgent 
+
+    # Define a tool function
+    def get_capital_city(country: str) -> str:
+      """Retrieves the capital city for a given country."""
+      # Replace with actual logic (e.g., API call, database lookup)
+      capitals = {"france": "Paris", "japan": "Tokyo", "canada": "Ottawa"}
+      return capitals.get(country.lower(), f"Sorry, I don't know the capital of {country}.")
+
+    # Add the tool to the agent
+    capital_agent = LlmAgent(
+        model="gemini-2.0-flash",
+        name="capital_agent", #name of your agent
+        description="Answers user questions about the capital city of a given country.",
+        instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
+        tools=[get_capital_city] # Provide the function directly
+    )
+
+    # ADK will discover the root_agent instance
+    root_agent = capital_agent
+    ```
+    
+    Mark your directory as a python package
+
+    ```python title="capital_agent/__init__.py"
+
+    from . import agent
+    ```
+
+2. This file sets up the FastAPI application using `get_fast_api_app()` from ADK:
 
     ```python title="main.py"
     import os
@@ -6597,14 +6644,14 @@ Create the following files (`main.py`, `requirements.txt`, `Dockerfile`) in the 
 
     *Note: We specify `agent_dir` to the directory `main.py` is in and use `os.environ.get("PORT", 8080)` for Cloud Run compatibility.*
 
-2. List the necessary Python packages:
+3. List the necessary Python packages:
 
     ```txt title="requirements.txt"
     google_adk
     # Add any other dependencies your agent needs
     ```
 
-3. Define the container image:
+4. Define the container image:
 
     ```dockerfile title="Dockerfile"
     FROM python:3.13-slim
@@ -6710,14 +6757,14 @@ spec:
           - name: PORT
             value: "8080"
           - name: GOOGLE_CLOUD_PROJECT
-            value: GOOGLE_CLOUD_PROJECT
+            value: $GOOGLE_CLOUD_PROJECT
           - name: GOOGLE_CLOUD_LOCATION
-            value: GOOGLE_CLOUD_LOCATION
+            value: $GOOGLE_CLOUD_LOCATION
           - name: GOOGLE_GENAI_USE_VERTEXAI
-            value: GOOGLE_GENAI_USE_VERTEXAI
+            value: "$GOOGLE_GENAI_USE_VERTEXAI"
           # If using AI Studio, set GOOGLE_GENAI_USE_VERTEXAI to false and set the following:
           # - name: GOOGLE_API_KEY
-          #   value: GOOGLE_API_KEY
+          #   value: $GOOGLE_API_KEY
           # Add any other necessary environment variables your agent might need
 ---
 apiVersion: v1
@@ -6764,7 +6811,7 @@ You can get the external IP address of your service using:
 kubectl get svc adk-agent -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
-### Option 2: Automated Deployment using `adk deploy gke` (Coming Soon)
+## Option 2: Automated Deployment using `adk deploy gke` (Coming Soon)
 
 ADK provides a CLI command to streamline GKE deployment. This avoids the need to manually build images, write Kubernetes manifests, or push to Artifact Registry.
 
@@ -6892,7 +6939,7 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
     Replace the example URL with the actual URL of your deployed Cloud Run service.
 
     ```bash
-    export APP_URL="KUBERNETES_SERVICE_URL"
+    export APP_URL=$(kubectl get service adk-agent -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     ```
 
     #### List available apps
@@ -6948,6 +6995,16 @@ These are some common issues you might encounter when deploying your agent to GK
 
 This usually means that the Kubernetes service account does not have the necessary permission to access the Vertex AI API. Ensure that you have created the service account and bound it to the `Vertex AI User` role as described in the [Configure Kubernetes Service Account for Vertex AI](#configure-kubernetes-service-account-for-vertex-ai) section. If you are using AI Studio, ensure that you have set the `GOOGLE_API_KEY` environment variable in the deployment manifest and it is valid.
 
+### 404 or Not Found response
+
+This usually means there is an error in your request. Check the application logs to diagnose the problem. 
+
+```bash
+
+export POD_NAME=$(kubectl get pod -l app=adk-agent -o jsonpath='{.items[0].metadata.name}')
+kubectl logs $POD_NAME
+```
+
 ### Attempt to write a readonly database
 
 You might see there is no session id created in the UI and the agent does not respond to any messages. This is usually caused by the SQLite database being read-only. This can happen if you run the agent locally and then create the container image which copies the SQLite database into the container. The database is then read-only in the container.
@@ -6972,6 +7029,20 @@ sessions.db
 ```
 
 Build the container image abd deploy the application again.
+
+### Insufficent Permission to Stream Logs `ERROR: (gcloud.builds.submit)`
+
+This error can occur when you don't have sufficient permissions to stream build logs, or your VPC-SC security policy restricts access to the default logs bucket.
+
+To check the progress of the build, follow the link provided in the error message or navigate to the Cloud Build page in the Google Cloud Console.
+
+You can also verify the image was built and pushed to the Artifact Registry using the command under the [Build the container image](#build-the-container-image) section.
+
+### Gemini-2.0-Flash Not Supported in Live Api
+
+When using the ADK Dev UI for your deployed agent, text-based chat works, but voice (e.g., clicking the microphone button) fail. You might see a `websockets.exceptions.ConnectionClosedError` in the pod logs indicating that your model is "not supported in the live api".
+
+This error occurs because the agent is configured with a model (like `gemini-2.0-flash` in the example) that does not support the Gemini Live API. The Live API is required for real-time, bidirectional streaming of audio and video.
 
 ## Cleanup
 
@@ -7038,6 +7109,17 @@ environment. GKE is a good option if you need more control over the deployment a
 for running Open Models.
 
 Learn more about [deploying your agent to GKE](gke.md).
+
+### Other Container-friendly Infrastructure
+
+You can manually package your Agent into a container image and then run it in
+any environment that supports container images.  For example you can run it
+locally in Docker or Podman. This is a good option if you prefer to run offline
+or disconnected, or otherwise in a system that has no connection to Google
+Cloud.
+
+Follow the instructions for [deploying your agent to Cloud Run](cloud-run.md),
+specifically the case where you it describes how to use a custom Dockerfile.
 
 ================
 File: docs/evaluate/index.md
@@ -11623,6 +11705,516 @@ By following these steps, you can effectively integrate Google ADK with Weave, e
 - **[Navigate the Trace View](https://weave-docs.wandb.ai/guides/tracking/trace-tree)** - Learn how to effectively analyze and debug your traces in the Weave UI, including understanding trace hierarchies and span details.
 
 - **[Weave Integrations](https://weave-docs.wandb.ai/guides/integrations/)** - Explore other framework integrations and see how Weave can work with your entire AI stack.
+
+================
+File: docs/plugins/index.md
+================
+# Plugins
+
+## What is a Plugin?
+
+A Plugin in Agent Development Kit (ADK) is a custom code module that can be
+executed at various stages of an agent workflow lifecycle using callback hooks.
+You use Plugins for functionality that is applicable across your agent workflow.
+Some typical applications of Plugins are as follows:
+
+-   **Logging and tracing**: Create detailed logs of agent, tool, and
+    generative AI model activity for debugging and performance analysis.
+-   **Policy enforcement**: Implement security guardrails, such as a
+    function that checks if users are authorized to use a specific tool and
+    prevent its execution if they do not have permission.
+-   **Monitoring and metrics**: Collect and export metrics on token usage,
+    execution times, and invocation counts to monitoring systems such as
+    Prometheus or 
+    [Google Cloud Observability](https://cloud.google.com/stackdriver/docs) 
+    (formerly Stackdriver).
+-   **Response caching**: Check if a request has been made before, so you
+    can return a cached response, skipping expensive or time consuming AI model
+    or tool calls.
+-   **Request or response modification**: Dynamically add information to AI
+    model prompts or standardize tool output responses.
+
+**Caution:** Plugins are not supported by the
+[ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui).
+If your ADK workflow uses Plugins, you must run your workflow without the web
+interface.
+
+## How do Plugins work?
+
+An ADK Plugin extends the `BasePlugin` class and contains one or more
+`callback` methods, indicating where in the agent lifecycle the Plugin should be
+executed. You integrate Plugins into an agent by registering them in your
+agent's `Runner` class. For more information on how and where you can trigger
+Plugins in your agent application, see
+[Plugin callback hooks](#plugin-callback-hooks).
+
+Plugin functionality builds on
+[Callbacks](../callbacks/), which is a key design
+element of the ADK's extensible architecture. While a typical Agent Callback is
+configured on a *single agent, a single tool* for a *specific task*, a Plugin is
+registered *once* on the `Runner` and its callbacks apply *globally* to every
+agent, tool, and LLM call managed by that runner. Plugins let you package
+related callback functions together to be used across a workflow. This makes
+Plugins an ideal solution for implementing features that cut across your entire
+agent application.
+
+## Define and register Plugins
+
+This section explains how to define Plugin classes and register them as part of
+your agent workflow. For a complete code example, see
+[Plugin Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_basic)
+in the repository.
+
+### Create Plugin class
+
+Start by extending the `BasePlugin` class and add one or more `callback`
+methods, as shown in the following code example:
+
+```
+# count_plugin.py
+from google.adk.agents.base_agent import BaseAgent
+from google.adk.agents.callback_context import CallbackContext
+from google.adk.models.llm_request import LlmRequest
+from google.adk.plugins.base_plugin import BasePlugin
+
+class CountInvocationPlugin(BasePlugin):
+  """A custom plugin that counts agent and tool invocations."""
+
+  def __init__(self) -> None:
+    """Initialize the plugin with counters."""
+    super().__init__(name="count_invocation")
+    self.agent_count: int = 0
+    self.tool_count: int = 0
+    self.llm_request_count: int = 0
+
+  async def before_agent_callback(
+      self, *, agent: BaseAgent, callback_context: CallbackContext
+  ) -> None:
+    """Count agent runs."""
+    self.agent_count += 1
+    print(f"[Plugin] Agent run count: {self.agent_count}")
+
+  async def before_model_callback(
+      self, *, callback_context: CallbackContext, llm_request: LlmRequest
+  ) -> None:
+    """Count LLM requests."""
+    self.llm_request_count += 1
+    print(f"[Plugin] LLM request count: {self.llm_request_count}")
+```
+
+This example code implements callbacks for `before_agent_callback` and
+`before_model_callback` to count execution of these tasks during the lifecycle
+of the agent.
+
+### Register Plugin class
+
+Integrate your Plugin class by registering it during your agent initialization
+as part of your `Runner` class, using the `plugins` parameter. You can specify
+multiple Plugins with this parameter. The following code example shows how to
+register the `CountInvocationPlugin` plugin defined in the previous section with
+a simple ADK agent.
+
+
+```
+from google.adk.runners import InMemoryRunner
+from google.adk import Agent
+from google.adk.tools.tool_context import ToolContext
+from google.genai import types
+import asyncio
+
+# Import the plugin.
+from .count_plugin import CountInvocationPlugin
+
+async def hello_world(tool_context: ToolContext, query: str):
+  print(f'Hello world: query is [{query}]')
+
+root_agent = Agent(
+    model='gemini-2.0-flash',
+    name='hello_world',
+    description='Prints hello world with user query.',
+    instruction="""Use hello_world tool to print hello world and user query.
+    """,
+    tools=[hello_world],
+)
+
+async def main():
+  """Main entry point for the agent."""
+  prompt = 'hello world'
+  runner = InMemoryRunner(
+      agent=root_agent,
+      app_name='test_app_with_plugin',
+
+      # Add your plugin here. You can add multiple plugins.
+      plugins=[CountInvocationPlugin()],
+  )
+
+  # The rest is the same as starting a regular ADK runner.
+  session = await runner.session_service.create_session(
+      user_id='user',
+      app_name='test_app_with_plugin',
+  )
+
+  async for event in runner.run_async(
+      user_id='user',
+      session_id=session.id,
+      new_message=types.Content(
+        role='user', parts=[types.Part.from_text(text=prompt)]
+      )
+  ):
+    print(f'** Got event from {event.author}')
+
+if __name__ == "__main__":
+  asyncio.run(main())
+```
+
+### Run the agent with the Plugin
+
+Run the plugin as you typically would. The following shows how to run the
+command line:
+
+```
+> python3 -m path.to.main
+```
+
+Plugins are not supported by the
+[ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui).
+If your ADK workflow uses Plugins, you must run your workflow without the web
+interface.
+
+The output of this previously described agent should look similar to the
+following:
+
+```
+[Plugin] Agent run count: 1
+[Plugin] LLM request count: 1
+** Got event from hello_world
+Hello world: query is [hello world]
+** Got event from hello_world
+[Plugin] LLM request count: 2
+** Got event from hello_world
+```
+
+
+For more information on running ADK agents, see the
+[Quickstart](/get-started/quickstart/#run-your-agent)
+guide.
+
+## Build workflows with Plugins
+
+Plugin callback hooks are a mechanism for implementing logic that intercepts,
+modifies, and even controls the agent's execution lifecycle. Each hook is a
+specific method in your Plugin class that you can implement to run code at a key
+moment. You have a choice between two modes of operation based on your hook's
+return value:
+
+-   **To Observe:** Implement a hook with no return value (`None`). This
+    approach is for tasks such as logging or collecting metrics, as it allows
+    the agent's workflow to proceed to the next step without interruption. For
+    example, you could use `after_tool_callback` in a Plugin to log every
+    tool's result for debugging.
+-   **To Intervene:** Implement a hook and return a value. This approach
+    short-circuits the workflow. The `Runner` halts processing, skips any
+    subsequent plugins and the original intended action, like a Model call, and
+    use a Plugin callback's return value as the result. A common use case is
+    implementing `before_model_callback` to return a cached `LlmResponse`,
+    preventing a redundant and costly API call.
+-   **To Amend:** Implement a hook and modify the Context object. This
+    approach allows you to modify the context data for the module to be
+    executed without otherwise interrupting the execution of that module. For
+    example, adding additional, standardized prompt text for Model object execution.
+
+**Caution:** Plugin callback functions have precedence over callbacks
+implemented at the object level. This behavior means that Any Plugin callbacks
+code is executed *before* any Agent, Model, or Tool objects callbacks are
+executed. Furthermore, if a Plugin-level agent callback returns any value, and
+not an empty (`None`) response, the Agent, Model, or Tool-level callback is *not
+executed* (skipped).
+
+The Plugin design establishes a hierarchy of code execution and separates
+global concerns from local agent logic. A Plugin is the stateful *module* you
+build, such as `PerformanceMonitoringPlugin`, while the callback hooks are the
+specific *functions* within that module that get executed. This architecture
+differs fundamentally from standard Agent Callbacks in these critical ways:
+
+-   **Scope:** Plugin hooks are *global*. You register a Plugin once on the
+    `Runner`, and its hooks apply universally to every Agent, Model, and Tool
+    it manages. In contrast, Agent Callbacks are *local*, configured
+    individually on a specific agent instance.
+-   **Execution Order:** Plugins have *precedence*. For any given event, the
+    Plugin hooks always run before any corresponding Agent Callback. This
+    system behavior makes Plugins the correct architectural choice for
+    implementing cross-cutting features like security policies, universal
+    caching, and consistent logging across your entire application.
+
+### Agent Callbacks and Plugins
+
+As mentioned in the previous section, there are some functional similarities
+between Plugins and Agent Callbacks. The following table compares the
+differences between Plugins and Agent Callbacks in more detail.
+
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th><strong>Plugins</strong></th>
+      <th><strong>Agent Callbacks</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Scope</strong></td>
+      <td><strong>Global</strong>: Apply to all agents/tools/LLMs in the
+<code>Runner</code>.</td>
+      <td><strong>Local</strong>: Apply only to the specific agent instance
+they are configured on.</td>
+    </tr>
+    <tr>
+      <td><strong>Primary Use Case</strong></td>
+      <td><strong>Horizontal Features</strong>: Logging, policy, monitoring,
+global caching.</td>
+      <td><strong>Specific Agent Logic</strong>: Modifying the behavior or
+state of a single agent.</td>
+    </tr>
+    <tr>
+      <td><strong>Configuration</strong></td>
+      <td>Configure once on the <code>Runner</code>.</td>
+      <td>Configure individually on each <code>BaseAgent</code> instance.</td>
+    </tr>
+    <tr>
+      <td><strong>Execution Order</strong></td>
+      <td>Plugin callbacks run <strong>before</strong> Agent Callbacks.</td>
+      <td>Agent callbacks run <strong>after</strong> Plugin callbacks.</td>
+    </tr>
+  </tbody>
+</table>
+
+## Plugin callback hooks
+
+You define when a Plugin is called with the callback functions to define in
+your Plugin class. Callbacks are available when a user message is received,
+before and after an `Runner`, `Agent`, `Model`, or `Tool` is called, for
+`Events`, and when a `Model`, or `Tool` error occurs. These callbacks include,
+and take precedence over, the any callbacks defined within your Agent, Model,
+and Tool classes.
+
+The following diagram illustrates callback points where you can attach and run
+Plugin functionality during your agents workflow:
+
+![ADK Plugin callback hooks](../assets/workflow-plugin-hooks.svg)
+**Figure 1.** Diagram of ADK agent workflow with Plugin callback hook
+locations.
+
+The following sections describe the available callback hooks for Plugins in
+more detail.
+
+-   [User Message callbacks](#user-message-callbacks)
+-   [Runner start callbacks](#runner-start-callbacks)
+-   [Agent execution callbacks](#agent-execution-callbacks)
+-   [Model callbacks](#model-callbacks)
+-   [Tool callbacks](#tool-callbacks)
+-   [Runner end callbacks](#runner-end-callbacks)
+
+### User Message callbacks
+
+*A User Message c*allback (`on_user_message_callback`) happens when a user
+sends a message. The `on_user_message_callback` is the very first hook to run,
+giving you a chance to inspect or modify the initial input.\
+
+-   **When It Runs:** This callback happens immediately after
+    `runner.run()`, before any other processing.
+-   **Purpose:** The first opportunity to inspect or modify the user's raw
+    input.
+-   **Flow Control:** Returns a `types.Content` object to **replace** the
+    user's original message.
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def on_user_message_callback(
+    self,
+    *,
+    invocation_context: InvocationContext,
+    user_message: types.Content,
+) -> Optional[types.Content]:
+```
+
+### Runner start callbacks
+
+A *Runner start* callback (`before_run_callback`) happens when the `Runner`
+object takes the potentially modified user message and prepares for execution.
+The `before_run_callback` fires here, allowing for global setup before any agent
+logic begins.
+
+-   **When It Runs:** Immediately after `runner.run()` is called, before
+    any other processing.
+-   **Purpose:** The first opportunity to inspect or modify the user's raw
+    input.
+-   **Flow Control:** Return a `types.Content` object to **replace** the
+    user's original message.
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def before_run_callback(
+    self, *, invocation_context: InvocationContext
+) -> Optional[types.Content]:
+```
+
+### Agent execution callbacks
+
+*Agent execution* callbacks (`before_agent`, `after_agent`) happen when a
+`Runner` object invokes an agent. The `before_agent_callback` runs immediately
+before the agent's main work begins. The main work encompasses the agent's
+entire process for handling the request, which could involve calling models or
+tools. After the agent has finished all its steps and prepared a result, the
+`after_agent_callback` runs.
+
+**Caution:** Plugins that implement these callbacks are executed *before* the
+Agent-level callbacks are executed. Furthermore, if a Plugin-level agent
+callback returns anything other than a `None` or null response, the Agent-level
+callback is *not executed* (skipped).
+
+For more information about Agent callbacks defined as part of an Agent object,
+see
+[Types of Callbacks](../callbacks/types-of-callbacks/#agent-lifecycle-callbacks).
+
+### Model callbacks
+
+Model callbacks **(`before_model`, `after_model`, `on_model_error`)** happen
+before and after a Model object executes. The Plugins feature also supports a
+callback in the event of an error, as detailed below:
+
+-   If an agent needs to call an AI model, `before_model_callback` runs first.
+-   If the model call is successful, `after_model_callback` runs next.
+-   If the model call fails with an exception, the `on_model_error_callback`
+    is triggered instead, allowing for graceful recovery.
+
+**Caution:** Plugins that implement the **`before_model`** and  `**after_model`
+**callback methods are executed *before* the Model-level callbacks are executed.
+Furthermore, if a Plugin-level model callback returns anything other than a
+`None` or null response, the Model-level callback is *not executed* (skipped).
+
+#### Model on error callback details
+
+The on error callback for Model objects is only supported by the Plugins
+feature works as follows:
+
+-   **When It Runs:** When an exception is raised during the model call.
+-   **Common Use Cases:** Graceful error handling, logging the specific
+    error, or returning a fallback response, such as "The AI service is
+    currently unavailable."
+-   **Flow Control:**
+    -   Returns an `LlmResponse` object to **suppress the exception**
+        and provide a fallback result.
+    -   Returns `None` to allow the original exception to be raised.
+
+**Note**: If the execution of the Model object returns a `LlmResponse`, the
+system resumes the execution flow, and `after_model_callback` will be triggered
+normally.****
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def on_model_error_callback(
+    self,
+    *,
+    callback_context: CallbackContext,
+    llm_request: LlmRequest,
+    error: Exception,
+) -> Optional[LlmResponse]:
+```
+
+### Tool callbacks
+
+Tool callbacks **(`before_tool`, `after_tool`, `on_tool_error`)** for Plugins
+happen before or after the execution of a tool, or when an error occurs. The
+Plugins feature also supports a callback in the event of an error, as detailed
+below:\
+
+-   When an agent executes a Tool, `before_tool_callback` runs first.
+-   If the tool executes successfully, `after_tool_callback` runs next.
+-   If the tool raises an exception, the `on_tool_error_callback` is
+    triggered instead, giving you a chance to handle the failure. If
+    `on_tool_error_callback` returns a dict, `after_tool_callback` will be
+    triggered normally.
+
+**Caution:** Plugins that implement these callbacks are executed *before* the
+Tool-level callbacks are executed. Furthermore, if a Plugin-level tool callback
+returns anything other than a `None` or null response, the Tool-level callback
+is *not executed* (skipped).
+
+#### Tool on error callback details
+
+The on error callback for Tool objects is only supported by the Plugins feature
+works as follows:
+
+-   **When It Runs:** When an exception is raised during the execution of a
+    tool's `run` method.
+-   **Purpose:** Catching specific tool exceptions (like `APIError`),
+    logging the failure, and providing a user-friendly error message back to
+    the LLM.
+-   **Flow Control:** Return a `dict` to **suppress the exception**, provide
+    a fallback result. Return `None` to allow the original exception to be raised.
+
+**Note**: By returning a `dict`, this resumes the execution flow, and
+`after_tool_callback` will be triggered normally.
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def on_tool_error_callback(
+    self,
+    *,
+    tool: BaseTool,
+    tool_args: dict[str, Any],
+    tool_context: ToolContext,
+    error: Exception,
+) -> Optional[dict]:
+```
+
+### Event callbacks
+
+An *Event callback* (`on_event_callback`) happens when an agent produces
+outputs such as a text response or a tool call result, it yields them as `Event`
+objects. The `on_event_callback` fires for each event, allowing you to modify it
+before it's streamed to the client.
+
+-   **When It Runs:** After an agent yields an `Event` but before it's sent
+    to the user. An agent's run may produce multiple events.
+-   **Purpose:** Useful for modifying or enriching events (e.g., adding
+    metadata) or for triggering side effects based on specific events.
+-   **Flow Control:** Return an `Event` object to **replace** the original
+    event.
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def on_event_callback(
+    self, *, invocation_context: InvocationContext, event: Event
+) -> Optional[Event]:
+```
+
+### Runner end callbacks
+
+The *Runner end* callback **(`after_run_callback`)** happens when the agent has
+finished its entire process and all events have been handled, the `Runner`
+completes its run. The `after_run_callback` is the final hook, perfect for
+cleanup and final reporting.
+
+-   **When It Runs:** After the `Runner` fully completes the execution of a
+    request.
+-   **Purpose:** Ideal for global cleanup tasks, such as closing connections
+    or finalizing logs and metrics data.
+-   **Flow Control:** This callback is for teardown only and cannot alter
+    the final result.
+
+The following code example shows the basic syntax of this callback:
+
+```
+async def after_run_callback(
+    self, *, invocation_context: InvocationContext
+) -> Optional[None]:
+```
 
 ================
 File: docs/runtime/index.md
@@ -18325,7 +18917,7 @@ Create an `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). T
 # ./adk_agent_samples/mcp_agent/agent.py
 import os # Required for path operations
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams, StdioServerParams
 
 # It's good practice to define paths dynamically if possible,
 # or ensure the user understands the need for an ABSOLUTE path.
@@ -18343,17 +18935,19 @@ root_agent = LlmAgent(
     tools=[
         MCPToolset(
             connection_params=StdioConnectionParams(
-                command='npx',
-                args=[
-                    "-y",  # Argument for npx to auto-confirm install
-                    "@modelcontextprotocol/server-filesystem",
-                    # IMPORTANT: This MUST be an ABSOLUTE path to a folder the
-                    # npx process can access.
-                    # Replace with a valid absolute path on your system.
-                    # For example: "/Users/youruser/accessible_mcp_files"
-                    # or use a dynamically constructed absolute path:
-                    os.path.abspath(TARGET_FOLDER_PATH),
-                ],
+                server_params = StdioServerParams(
+                    command='npx',
+                    args=[
+                        "-y",  # Argument for npx to auto-confirm install
+                        "@modelcontextprotocol/server-filesystem",
+                        # IMPORTANT: This MUST be an ABSOLUTE path to a folder the
+                        # npx process can access.
+                        # Replace with a valid absolute path on your system.
+                        # For example: "/Users/youruser/accessible_mcp_files"
+                        # or use a dynamically constructed absolute path:
+                        os.path.abspath(TARGET_FOLDER_PATH),
+                    ],
+                ),
             ),
             # Optional: Filter which tools from the MCP server are exposed
             # tool_filter=['list_directory', 'read_file']
@@ -18419,7 +19013,7 @@ Modify your `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`).
 # ./adk_agent_samples/mcp_agent/agent.py
 import os
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams, StdioServerParams
 
 # Retrieve the API key from an environment variable or directly insert it.
 # Using an environment variable is generally safer.
@@ -18441,16 +19035,18 @@ root_agent = LlmAgent(
     tools=[
         MCPToolset(
             connection_params=StdioConnectionParams(
-                command='npx',
-                args=[
-                    "-y",
-                    "@modelcontextprotocol/server-google-maps",
-                ],
-                # Pass the API key as an environment variable to the npx process
-                # This is how the MCP server for Google Maps expects the key.
-                env={
-                    "GOOGLE_MAPS_API_KEY": google_maps_api_key
-                }
+                server_params = StdioServerParams(
+                    command='npx',
+                    args=[
+                        "-y",
+                        "@modelcontextprotocol/server-google-maps",
+                    ],
+                    # Pass the API key as an environment variable to the npx process
+                    # This is how the MCP server for Google Maps expects the key.
+                    env={
+                        "GOOGLE_MAPS_API_KEY": google_maps_api_key
+                    }
+                ),
             ),
             # You can filter for specific Maps tools if needed:
             # tool_filter=['get_directions', 'find_place_by_id']
@@ -18657,7 +19253,7 @@ Create an `agent.py` (e.g., in `./adk_agent_samples/mcp_client_agent/agent.py`):
 # ./adk_agent_samples/mcp_client_agent/agent.py
 import os
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioConnectionParams, StdioServerParams
 
 # IMPORTANT: Replace this with the ABSOLUTE path to your my_adk_mcp_server.py script
 PATH_TO_YOUR_MCP_SERVER_SCRIPT = "/path/to/your/my_adk_mcp_server.py" # <<< REPLACE
@@ -18673,8 +19269,10 @@ root_agent = LlmAgent(
     tools=[
         MCPToolset(
             connection_params=StdioConnectionParams(
-                command='python3', # Command to run your MCP server script
-                args=[PATH_TO_YOUR_MCP_SERVER_SCRIPT], # Argument is the path to the script
+                server_params = StdioServerParams(
+                    command='python3', # Command to run your MCP server script
+                    args=[PATH_TO_YOUR_MCP_SERVER_SCRIPT], # Argument is the path to the script
+                )
             )
             # tool_filter=['load_web_page'] # Optional: ensure only specific tools are loaded
         )
@@ -18743,7 +19341,7 @@ from google.adk.agents.llm_agent import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseConnectionParams, StdioConnectionParams
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseConnectionParams, StdioConnectionParams, StdioServerParams
 
 # Load environment variables from .env file in the parent directory
 # Place this near the top, before using env vars like API keys
@@ -18758,10 +19356,12 @@ async def get_agent_async():
   toolset = MCPToolset(
       # Use StdioConnectionParams for local process communication
       connection_params=StdioConnectionParams(
-          command='npx', # Command to run the server
-          args=["-y",    # Arguments for the command
+          server_params = StdioServerParams(
+            command='npx', # Command to run the server
+            args=["-y",    # Arguments for the command
                 "@modelcontextprotocol/server-filesystem",
                 TARGET_FOLDER_PATH],
+          ),
       ),
       tool_filter=['read_file', 'list_directory'] # Optional: filter specific tools
       # For remote servers, you would use SseConnectionParams instead:
