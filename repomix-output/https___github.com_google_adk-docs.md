@@ -321,11 +321,16 @@ The A2A Basic sample consists of:
 
 ### 1. Getting the Sample Code
 
+First, make sure you have the necessary dependencies installed:
+
+```bash
+pip install google-adk[a2a]
+```
+
 You can clone and navigate to the [**a2a_basic** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic) here:
 
 ```bash
 git clone https://github.com/google/adk-python.git
-cd adk-python/contributing/samples/a2a_basic
 ```
 
 As you'll see, the folder structure is as follows:
@@ -581,11 +586,16 @@ Now let's dive into the sample code.
 
 ### 1. Getting the Sample Code
 
+First, make sure you have the necessary dependencies installed:
+
+```bash
+pip install google-adk[a2a]
+```
+
 You can clone and navigate to the [**a2a_root** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_root) here:
 
 ```bash
 git clone https://github.com/google/adk-python.git
-cd adk-python/contributing/samples/a2a_root
 ```
 
 As you'll see, the folder structure is as follows:
@@ -6195,7 +6205,7 @@ export GOOGLE_API_KEY=your-api-key
     2. List the necessary Python packages:
 
         ```txt title="requirements.txt"
-        google_adk
+        google-adk
         # Add any other dependencies your agent needs
         ```
 
@@ -6657,7 +6667,7 @@ Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capita
 3. List the necessary Python packages:
 
     ```txt title="requirements.txt"
-    google_adk
+    google-adk
     # Add any other dependencies your agent needs
     ```
 
@@ -18072,10 +18082,10 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
      Set up your project structure and create required files.
       
         ```console
-        project_root_folder
-        |-- my_agent
-        |   |-- agent.java
-        |   `-- pom.xml
+          project_root_folder
+          |-- my_agent
+          |   |-- agent.java
+          |   `-- pom.xml
         ```
         
       When running the agent, make sure to run the commands in the `project\_root_folder`.
@@ -18338,10 +18348,10 @@ workflow as a tool for your agent or create a new one.
 
     To update the `agent.java` file and add the tool to your agent, use the following code:
     
-      ```java  
-            import com.google.adk.agent.LlmAgent;
-            import com.google.adk.tools.BaseTool;
-            import com.google.common.collect.ImmutableList;
+      ```java
+           import com.google.adk.agent.LlmAgent;
+           import com.google.adk.tools.BaseTool;
+           import com.google.common.collect.ImmutableList;
         
             public class MyAgent {
                 public static void main(String[] args) {
@@ -18366,11 +18376,11 @@ workflow as a tool for your agent or create a new one.
                     // For example, you can start a conversation with the agent.
                 }
             }
-        ```
+      ```
         
     **Note:** To find the list of supported entities and actions for a
-        connection, use these Connector APIs: `listActions`, `listEntityTypes`.
-
+        connection, use these Connector APIs: `listActions`, `listEntityTypes`.    
+      
 #### 3. Expose your agent
 
 === "Python"
