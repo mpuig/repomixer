@@ -319,7 +319,7 @@ The A2A Basic sample consists of:
 
   In the a2a_basic example, you will first need to expose the `check_prime_agent` via an A2A server, so that the local root agent can use it.
 
-### 1. Getting the Sample Code
+### 1. Getting the Sample Code { #getting-the-sample-code }
 
 First, make sure you have the necessary dependencies installed:
 
@@ -360,7 +360,7 @@ a2a_basic/
 - **`agent.json`**: Agent card of the A2A agent
 - **`check_prime(nums: list[int])`**: Prime number checking algorithm
 
-### 2. Start the Remote Prime Agent server
+### 2. Start the Remote Prime Agent server { #start-the-remote-prime-agent-server }
 
 To show how your ADK agent can consume a remote agent via A2A, you'll first need to start a remote agent server, which will host the prime agent (under `check_prime_agent`).
 
@@ -388,7 +388,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
 ```
   
-### 3. Look out for the required agent card (`agent.json`) of the remote agent
+### 3. Look out for the required agent card (`agent.json`) of the remote agent { #look-out-for-the-required-agent-card-agent-json-of-the-remote-agent }
 
 A2A Protocol requires that each agent must have an agent card that describes what it does.
 
@@ -421,7 +421,7 @@ In the sample, the `check_prime_agent` already has an agent card provided:
 
     In ADK, you can use a `to_a2a(root_agent)` wrapper which automatically generates an agent card for you. If you're interested in learning more about how to expose your existing agent so others can use it, then please look at the [A2A Quickstart (Exposing)](quickstart-exposing.md) tutorial. 
 
-### 4. Run the Main (Consuming) Agent
+### 4. Run the Main (Consuming) Agent { #run-the-main-consuming-agent }
 
   ```bash
   # In a separate terminal, run the adk web server
@@ -584,7 +584,7 @@ The `to_a2a()` function will even auto-generate an agent card in-memory behind-t
 
 Now let's dive into the sample code.
 
-### 1. Getting the Sample Code
+### 1. Getting the Sample Code { #getting-the-sample-code }
 
 First, make sure you have the necessary dependencies installed:
 
@@ -622,7 +622,7 @@ a2a_root/
 - **`root_agent`**: The main agent with comprehensive instructions
 - **`a2a_app`**: The A2A application created using `to_a2a()` utility
 
-### 2. Start the Remote A2A Agent server
+### 2. Start the Remote A2A Agent server { #start-the-remote-a2a-agent-server }
 
 You can now start the remote agent server, which will host the `a2a_app` within the hello_world agent:
 
@@ -644,7 +644,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:8001 (Press CTRL+C to quit)
 ```
 
-### 3. Check that your remote agent is running
+### 3. Check that your remote agent is running { #check-that-your-remote-agent-is-running }
 
 You can check that your agent is up and running by visiting the agent card that was auto-generated earlier as part of your `to_a2a()` function in `a2a_root/remote_a2a/hello_world/agent.py`:
 
@@ -656,7 +656,7 @@ You should see the contents of the agent card, which should look like:
 {"capabilities":{},"defaultInputModes":["text/plain"],"defaultOutputModes":["text/plain"],"description":"hello world agent that can roll a dice of 8 sides and check prime numbers.","name":"hello_world_agent","protocolVersion":"0.2.6","skills":[{"description":"hello world agent that can roll a dice of 8 sides and check prime numbers. \n      I roll dice and answer questions about the outcome of the dice rolls.\n      I can roll dice of different sizes.\n      I can use multiple tools in parallel by calling functions in parallel(in one request and in one round).\n      It is ok to discuss previous dice roles, and comment on the dice rolls.\n      When I are asked to roll a die, I must call the roll_die tool with the number of sides. Be sure to pass in an integer. Do not pass in a string.\n      I should never roll a die on my own.\n      When checking prime numbers, call the check_prime tool with a list of integers. Be sure to pass in a list of integers. I should never pass in a string.\n      I should not check prime numbers before calling the tool.\n      When I are asked to roll a die and check prime numbers, I should always make the following two function calls:\n      1. I should first call the roll_die tool to get a roll. Wait for the function response before calling the check_prime tool.\n      2. After I get the function response from roll_die tool, I should call the check_prime tool with the roll_die result.\n        2.1 If user asks I to check primes based on previous rolls, make sure I include the previous rolls in the list.\n      3. When I respond, I must include the roll_die result from step 1.\n      I should always perform the previous 3 steps when asking for a roll and checking prime numbers.\n      I should not rely on the previous history on prime results.\n    ","id":"hello_world_agent","name":"model","tags":["llm"]},{"description":"Roll a die and return the rolled result.\n\nArgs:\n  sides: The integer number of sides the die has.\n  tool_context: the tool context\nReturns:\n  An integer of the result of rolling the die.","id":"hello_world_agent-roll_die","name":"roll_die","tags":["llm","tools"]},{"description":"Check if a given list of numbers are prime.\n\nArgs:\n  nums: The list of numbers to check.\n\nReturns:\n  A str indicating which number is prime.","id":"hello_world_agent-check_prime","name":"check_prime","tags":["llm","tools"]}],"supportsAuthenticatedExtendedCard":false,"url":"http://localhost:8001","version":"0.0.1"}
 ```
 
-### 4. Run the Main (Consuming) Agent
+### 4. Run the Main (Consuming) Agent { #run-the-main-consuming-agent }
 
 Now that your remote agent is running, you can launch the dev UI and select "a2a_root" as your agent.
 
@@ -1068,7 +1068,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 ---
 
-### Part 1: Simplified custom agent Initialization
+### Part 1: Simplified custom agent Initialization { #part-1-simplified-custom-agent-initialization }
 
 === "Python"
 
@@ -1087,7 +1087,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
     ```
 ---
 
-### Part 2: Defining the Custom Execution Logic
+### Part 2: Defining the Custom Execution Logic { #part-2-defining-the-custom-execution-logic }
 
 === "Python"
 
@@ -1120,7 +1120,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 ---
 
-### Part 3: Defining the LLM Sub-Agents
+### Part 3: Defining the LLM Sub-Agents { #part-3-defining-the-llm-sub-agents }
 
 These are standard `LlmAgent` definitions, responsible for specific tasks. Their `output key` parameter is crucial for placing results into the `session.state` where other agents or the custom orchestrator can access them.
 
@@ -1141,7 +1141,7 @@ These are standard `LlmAgent` definitions, responsible for specific tasks. Their
 
 ---
 
-### Part 4: Instantiating and Running the custom agent
+### Part 4: Instantiating and Running the custom agent { #part-4-instantiating-and-running-the-custom-agent }
 
 Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
 
@@ -2468,14 +2468,14 @@ You can compose various types of agents derived from `BaseAgent` to build these 
 
 The following sections detail the core ADK primitives—such as agent hierarchy, workflow agents, and interaction mechanisms—that enable you to construct and manage these multi-agent systems effectively.
 
-## 1. ADK Primitives for Agent Composition
+## 1. ADK Primitives for Agent Composition { #adk-primitives-for-agent-composition }
 
 ADK provides core building blocks—primitives—that enable you to structure and manage interactions within your multi-agent system.
 
 !!! Note
     The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `sub_agents` in Python, `subAgents` in Java). Refer to the language-specific API documentation for details.
 
-### 1.1. Agent Hierarchy (Parent agent, Sub Agents)
+### 1.1. Agent Hierarchy (Parent agent, Sub Agents) { #agent-hierarchy-parent-agent-sub-agents }
 
 The foundation for structuring multi-agent systems is the parent-child relationship defined in `BaseAgent`.
 
@@ -2533,7 +2533,7 @@ The foundation for structuring multi-agent systems is the parent-child relations
     // assert taskDoer.parentAgent().equals(coordinator);
     ```
 
-### 1.2. Workflow Agents as Orchestrators
+### 1.2. Workflow Agents as Orchestrators { #workflow-agents-as-orchestrators }
 
 ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
 
@@ -2679,7 +2679,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     // until Checker escalates (state.get("status") == "completed") or 10 iterations pass.
     ```
 
-### 1.3. Interaction & Communication Mechanisms
+### 1.3. Interaction & Communication Mechanisms { #interaction-communication-mechanisms }
 
 Agents within a system often need to exchange data or trigger actions in one another. ADK facilitates this through:
 
@@ -2900,7 +2900,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
 
 These primitives provide the flexibility to design multi-agent interactions ranging from tightly coupled sequential workflows to dynamic, LLM-driven delegation networks.
 
-## 2. Common Multi-Agent Patterns using ADK Primitives
+## 2. Common Multi-Agent Patterns using ADK Primitives { #common-multi-agent-patterns-using-adk-primitives }
 
 By combining ADK's composition primitives, you can implement various established patterns for multi-agent collaboration.
 
@@ -4546,31 +4546,31 @@ Callbacks offer powerful hooks into the agent lifecycle. Here are common design 
 
 These patterns demonstrate typical ways to enhance or control agent behavior using callbacks:
 
-### 1. Guardrails & Policy Enforcement
+### 1. Guardrails & Policy Enforcement { #guardrails-policy-enforcement }
 
 * **Pattern:** Intercept requests before they reach the LLM or tools to enforce rules.
 * **How:** Use `before_model_callback` to inspect the `LlmRequest` prompt or `before_tool_callback` to inspect tool arguments. If a policy violation is detected (e.g., forbidden topics, profanity), return a predefined response (`LlmResponse` or `dict`/ `Map`) to block the operation and optionally update `context.state` to log the violation.
 * **Example:** A `before_model_callback` checks `llm_request.contents` for sensitive keywords and returns a standard "Cannot process this request" `LlmResponse` if found, preventing the LLM call.
 
-### 2. Dynamic State Management
+### 2. Dynamic State Management { #dynamic-state-management }
 
 * **Pattern:** Read from and write to session state within callbacks to make agent behavior context-aware and pass data between steps.
 * **How:** Access `callback_context.state` or `tool_context.state`. Modifications (`state['key'] = value`) are automatically tracked in the subsequent `Event.actions.state_delta` for persistence by the `SessionService`.
 * **Example:** An `after_tool_callback` saves a `transaction_id` from the tool's result to `tool_context.state['last_transaction_id']`. A later `before_agent_callback` might read `state['user_tier']` to customize the agent's greeting.
 
-### 3. Logging and Monitoring
+### 3. Logging and Monitoring { #logging-and-monitoring }
 
 * **Pattern:** Add detailed logging at specific lifecycle points for observability and debugging.
 * **How:** Implement callbacks (e.g., `before_agent_callback`, `after_tool_callback`, `after_model_callback`) to print or send structured logs containing information like agent name, tool name, invocation ID, and relevant data from the context or arguments.
 * **Example:** Log messages like `INFO: [Invocation: e-123] Before Tool: search_api - Args: {'query': 'ADK'}`.
 
-### 4. Caching
+### 4. Caching { #caching }
 
 * **Pattern:** Avoid redundant LLM calls or tool executions by caching results.
 * **How:** In `before_model_callback` or `before_tool_callback`, generate a cache key based on the request/arguments. Check `context.state` (or an external cache) for this key. If found, return the cached `LlmResponse` or result directly, skipping the actual operation. If not found, allow the operation to proceed and use the corresponding `after_` callback (`after_model_callback`, `after_tool_callback`) to store the new result in the cache using the key.
 *   **Example:** `before_tool_callback` for `get_stock_price(symbol)` checks `state[f"cache:stock:{symbol}"]`. If present, returns the cached price; otherwise, allows the API call and `after_tool_callback` saves the result to the state key.
 
-### 5. Request/Response Modification
+### 5. Request/Response Modification { #request-response-modification }
 
 * **Pattern:** Alter data just before it's sent to the LLM/tool or just after it's received.
 * **How:**
@@ -4580,13 +4580,13 @@ These patterns demonstrate typical ways to enhance or control agent behavior usi
     *  `after_tool_callback`: Modify the `tool_response` dictionary (or Map in Java).
 * **Example:** `before_model_callback` appends "User language preference: Spanish" to `llm_request.config.system_instruction` if `context.state['lang'] == 'es'`.
 
-### 6. Conditional Skipping of Steps
+### 6. Conditional Skipping of Steps { #conditional-skipping-of-steps }
 
 * **Pattern:** Prevent standard operations (agent run, LLM call, tool execution) based on certain conditions.
 * **How:** Return a value from a `before_` callback (`Content` from `before_agent_callback`, `LlmResponse` from `before_model_callback`, `dict` from `before_tool_callback`). The framework interprets this returned value as the result for that step, skipping the normal execution.
 * **Example:** `before_tool_callback` checks `tool_context.state['api_quota_exceeded']`. If `True`, it returns `{'error': 'API quota exceeded'}`, preventing the actual tool function from running.
 
-### 7. Tool-Specific Actions (Authentication & Summarization Control)
+### 7. Tool-Specific Actions (Authentication & Summarization Control) { #tool-specific-actions-authentication-summarization-control }
 
 * **Pattern:** Handle actions specific to the tool lifecycle, primarily authentication and controlling LLM summarization of tool results.
 * **How:** Use `ToolContext` within tool callbacks (`before_tool_callback`, `after_tool_callback`).
@@ -4594,7 +4594,7 @@ These patterns demonstrate typical ways to enhance or control agent behavior usi
     * **Summarization:** Set `tool_context.actions.skip_summarization = True` if the raw dictionary output of the tool should be passed back to the LLM or potentially displayed directly, bypassing the default LLM summarization step.
 * **Example:** A `before_tool_callback` for a secure API checks for an auth token in state; if missing, it calls `request_credential`. An `after_tool_callback` for a tool returning structured JSON might set `skip_summarization = True`.
 
-### 8. Artifact Handling
+### 8. Artifact Handling { #artifact-handling }
 
 * **Pattern:** Save or load session-related files or large data blobs during the agent lifecycle.
 * **How:** Use `callback_context.save_artifact` / `await tool_context.save_artifact` to store data (e.g., generated reports, logs, intermediate data). Use `load_artifact` to retrieve previously stored artifacts. Changes are tracked via `Event.actions.artifact_delta`.
@@ -8816,7 +8816,7 @@ In order to use voice/video streaming in ADK, you will need to use Gemini models
 - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
 - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
-## 1. Setup Environment & Install ADK {#1.-setup-installation}
+## 1. Setup Environment & Install ADK { #setup-environment-install-adk }
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -8835,7 +8835,7 @@ Install ADK:
 pip install google-adk
 ```
 
-## 2. Project Structure {#2.-project-structure}
+## 2. Project Structure { #project-structure }
 
 Create the following folder structure with empty files:
 
@@ -8886,7 +8886,7 @@ Copy-paste the following code block to `__init__.py` file.
 from . import agent
 ```
 
-## 3\. Set up the platform {#3.-set-up-the-platform}
+## 3\. Set up the platform { #set-up-the-platform }
 
 To run the agent, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -8921,7 +8921,7 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
         GOOGLE_CLOUD_LOCATION=us-central1
         ```
 
-## 4. Try the agent with `adk web` {#4.-try-it-adk-web}
+## 4. Try the agent with `adk web` { #try-the-agent-with-adk-web }
 
 Now it's ready to try the agent. Run the following command to launch the **dev UI**. First, make sure to set the current directory to `app`:
 
@@ -9251,7 +9251,7 @@ This quickstart assumes a local IDE (VS Code, PyCharm, IntelliJ IDEA, etc.)
 with Python 3.9+ or Java 17+ and terminal access. This method runs the
 application entirely on your machine and is recommended for internal development.
 
-## 1. Set up Environment & Install ADK {#venv-install}
+## 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
 === "Python"
 
@@ -9276,7 +9276,7 @@ application entirely on your machine and is recommended for internal development
 
     To install ADK and setup the environment, proceed to the following steps.
 
-## 2. Create Agent Project {#create-agent-project}
+## 2. Create Agent Project { #create-agent-project }
 
 ### Project structure
 
@@ -9371,7 +9371,7 @@ application entirely on your machine and is recommended for internal development
 
 ![intro_components.png](../assets/quickstart-flow-tool.png)
 
-## 3. Set up the model {#set-up-the-model}
+## 3. Set up the model { #set-up-the-model }
 
 Your agent's ability to understand user requests and generate responses is
 powered by a Large Language Model (LLM). Your agent needs to make secure calls
@@ -9443,7 +9443,7 @@ agent will be unable to function.
         export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
         ```
 
-## 4. Run Your Agent {#run-your-agent}
+## 4. Run Your Agent { #run-your-agent }
 
 === "Python"
 
@@ -10099,7 +10099,7 @@ As an additional resource, [Gemini Fullstack Agent Development Kit (ADK) Quickst
 
 This quickstart guides you through creating an ADK agent with Google Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.9+ and terminal access.
 
-### 1. Set up Environment & Install ADK {#venv-install}
+### 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
 Create & Activate Virtual Environment:
 
@@ -10119,7 +10119,7 @@ Install ADK:
 pip install google-adk==1.4.2
 ```
 
-### 2. Create Agent Project {#create-agent-project}
+### 2. Create Agent Project { #create-agent-project }
 
 Under a project directory, run the following commands:
 
@@ -10161,7 +10161,7 @@ my_project/
     .env
 ```
 
-### 3. Choose a platform {#choose-a-platform}
+### 3. Choose a platform { #choose-a-platform }
 
 To run the agent, you need to select a platform that the agent will use for calling the Gemini model. Choose one from Google AI Studio or Vertex AI:
 
@@ -10195,7 +10195,7 @@ To run the agent, you need to select a platform that the agent will use for call
         GOOGLE_CLOUD_LOCATION=LOCATION
         ```
 
-### 4. Run Your Agent {#run-your-agent}
+### 4. Run Your Agent { #run-your-agent }
 
 There are multiple ways to interact with your agent:
 
@@ -10383,7 +10383,7 @@ In this guide, you'll discover:
 
 This quickstart guides you through creating an ADK agent with Vertex AI Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.9+ and terminal access.
 
-### 1. Prepare Vertex AI Search
+### 1. Prepare Vertex AI Search { #prepare-vertex-ai-search }
 
 If you already have a Vertex AI Search Data Store and its Data Store ID, you can skip this section. If not, follow the instruction in the [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) until the end of [Create a data store](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_a_data_store), with selecting the `Unstructured data` tab. With this instruction, you will build a sample Data Store with earning report PDFs from the [Alphabet investor site](https://abc.xyz/).
 
@@ -10393,7 +10393,7 @@ After finishing the Create a data store section, open the [Data Stores](https://
 
 Note this `Data store ID` as we will use this later.
 
-### 2. Set up Environment & Install ADK {#venv-install}
+### 2. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
 Create & Activate Virtual Environment:
 
@@ -10413,7 +10413,7 @@ Install ADK:
 pip install google-adk==1.5.0
 ```
 
-### 3. Create Agent Project {#create-agent-project}
+### 3. Create Agent Project { #create-agent-project }
 
 Under a project directory, run the following commands:
 
@@ -10458,7 +10458,7 @@ my_project/
     .env
 ```
 
-### 4. Authentication Setup {#choose-a-platform}
+### 4. Authentication Setup { #authentication-setup }
 
 **Note: Vertex AI Search requires Google Cloud Platform (Vertex AI) authentication. Google AI Studio is not supported for this tool.**
 
@@ -10473,7 +10473,7 @@ my_project/
     ```
 
 
-### 5. Run Your Agent {#run-your-agent}
+### 5. Run Your Agent { #run-your-agent }
 
 There are multiple ways to interact with your agent:
 
@@ -10909,7 +10909,7 @@ pip install openinference-instrumentation-google-adk google-adk arize-otel
 
 ## Setup
 
-### 1. Configure Environment Variables
+### 1. Configure Environment Variables { #configure-environment-variables }
 
 Set your Google API key:
 
@@ -10917,7 +10917,7 @@ Set your Google API key:
 export GOOGLE_API_KEY=[your_key_here]
 ```
 
-### 2. Connect your application to Arize AX
+### 2. Connect your application to Arize AX { #connect-your-application-to-arize-ax }
 
 ```python
 from arize.otel import register
@@ -11481,7 +11481,7 @@ Phoenix can automatically collect traces from Google ADK using [OpenInference in
 
 ## Installation
 
-### 1. Install Required Packages
+### 1. Install Required Packages { #install-required-packages }
 
 ```bash
 pip install openinference-instrumentation-google-adk google-adk arize-phoenix-otel
@@ -11489,7 +11489,7 @@ pip install openinference-instrumentation-google-adk google-adk arize-phoenix-ot
 
 ## Setup
 
-### 1. Launch Phoenix
+### 1. Launch Phoenix { #launch-phoenix }
 
 These instructions show you how to use Phoenix Cloud. You can also [launch Phoenix](https://arize.com/docs/phoenix/integrations/llm-providers/google-gen-ai/google-adk-tracing) in a notebook, from your terminal, or self-host it using a container. 
 
@@ -11509,7 +11509,7 @@ os.environ["PHOENIX_COLLECTOR_ENDPOINT"] = "ADD YOUR PHOENIX COLLECTOR ENDPOINT"
 # os.environ["PHOENIX_CLIENT_HEADERS"] = f"api_key={os.getenv('PHOENIX_API_KEY')}"
 ```
 
-### 2.  Connect your application to Phoenix
+### 2.  Connect your application to Phoenix { #connect-your-application-to-phoenix }
 
 ```python
 from phoenix.otel import register
@@ -14473,7 +14473,7 @@ Welcome to the world of bidirectional streaming with [Agent Development Kit (ADK
 
 Imagine building an AI assistant that doesn't just wait for you to finish speaking before responding, but actively listens and can be interrupted mid-sentence when you have a sudden thought. Picture creating customer support bots that handle audio, video, and text simultaneously while maintaining context throughout the conversation. This is the power of bidirectional streaming, and ADK makes it accessible to every developer.
 
-## 1.1 What is Bidi-streaming?
+## 1.1 What is Bidi-streaming? { #what-is-bidi-streaming }
 
 Bidi-streaming (Bidirectional streaming) represents a fundamental shift from traditional AI interactions. Instead of the rigid "ask-and-wait" pattern, it enables **real-time, two-way communication** where both human and AI can speak, listen, and respond simultaneously. This creates natural, human-like conversations with immediate responses and the revolutionary ability to interrupt ongoing interactions.
 
@@ -14556,7 +14556,7 @@ Also, you can think of many possible real-world applications for bidirectional s
     - **Multimodality (Screen Sharing)**: The agent can share its screen to display charts, graphs, and portfolio performance data. The client could also share their screen to point to a specific news article and ask, "What is the potential impact of this event on my tech stocks?"
     - **Live Interaction**: Analyze the client's current portfolio allocation by accessing their account data.Simulate the impact of a potential trade on the portfolio's risk profile.
 
-## 1.2 ADK Bidi-streaming Architecture Overview
+## 1.2 ADK Bidi-streaming Architecture Overview { #adk-bidi-streaming-architecture-overview }
 
 ADK Bidi-streaming architecture enables bidirectional AI conversations feel as natural as human dialogue. The architecture seamlessly integrates with Google's [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) through a sophisticated pipeline that has been designed for low latency and high-throughput communication.
 
@@ -14613,7 +14613,7 @@ graph TB
 |:----------------------------|:------------------|:------------------------------|
 | **Web / Mobile**: Frontend applications that users interact with, handling UI/UX, user input capture, and response display<br><br>**[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) / [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) Server**: Real-time communication server (such as [FastAPI](https://fastapi.tiangolo.com/)) that manages client connections, handles streaming protocols, and routes messages between clients and ADK<br><br>**Agent**: Custom AI agent definition with specific instructions, tools, and behavior tailored to your application's needs | **[LiveRequestQueue](https://github.com/google/adk-python/blob/main/src/google/adk/agents/live_request_queue.py)**: Message queue that buffers and sequences incoming user messages (text content, audio blobs, control signals) for orderly processing by the agent<br><br>**[Runner](https://github.com/google/adk-python/blob/main/src/google/adk/runners.py)**: Execution engine that orchestrates agent sessions, manages conversation state, and provides the `run_live()` streaming interface<br><br>**[LLM Flow](https://github.com/google/adk-python/blob/main/src/google/adk/flows/llm_flows/base_llm_flow.py)**: Processing pipeline that handles streaming conversation logic, manages context, and coordinates with language models<br><br>**[GeminiLlmConnection](https://github.com/google/adk-python/blob/main/src/google/adk/models/gemini_llm_connection.py)**: Abstraction layer that bridges ADK's streaming architecture with Gemini Live API, handling protocol translation and connection management | **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)**: Google's real-time language model service that processes streaming input, generates responses, handles interruptions, supports multimodal content (text, audio, video), and provides advanced AI capabilities like function calling and contextual understanding |
 
-## 1.3 Setting Up Your Development Environment
+## 1.3 Setting Up Your Development Environment { #setting-up-your-development-environment }
 
 Now that you understand the gist of ADK Bidi-streaming architecture and the value it provides, it's time to get hands-on experience. This section will prepare your development environment so you can start building the streaming agents and applications described in the previous sections.
 
@@ -14621,7 +14621,7 @@ By the end of this setup, you'll have everything needed to create the intelligen
 
 ### Installation Steps
 
-#### 1. Create Virtual Environment (Recommended)
+#### 1. Create Virtual Environment (Recommended) { #create-virtual-environment-recommended }
 
 ```bash
 # Create virtual environment
@@ -14636,7 +14636,7 @@ source .venv/bin/activate
 # .venv\Scripts\Activate.ps1
 ```
 
-#### 2. Install ADK
+#### 2. Install ADK { #install-adk }
 
 Create a `requirements.txt` file in your project root. Note that `google-adk` library includes FastAPI and uvicorn that you can use as the web server for bidi-streaming applications.
 
@@ -14651,14 +14651,14 @@ Install all dependencies:
 pip install -r requirements.txt
 ```
 
-#### 3. Set SSL Certificate Path (macOS only)
+#### 3. Set SSL Certificate Path (macOS only) { #set-ssl-certificate-path-macos-only }
 
 ```bash
 # Required for proper SSL handling on macOS
 export SSL_CERT_FILE=$(python -m certifi)
 ```
 
-#### 4. Set Up API Keys
+#### 4. Set Up API Keys { #set-up-api-keys }
 
 Choose your preferred platform for running agents:
 
@@ -14686,7 +14686,7 @@ Choose your preferred platform for running agents:
     GOOGLE_CLOUD_LOCATION=us-central1
     ```
 
-#### 5. Create Environment Setup Script
+#### 5. Create Environment Setup Script { #create-environment-setup-script }
 
 We will create the validation script that will verify your installation:
 
@@ -14925,7 +14925,7 @@ In order to use voice/video streaming in ADK, you will need to use Gemini models
 
 There is also a [SSE](custom-streaming.md) version of the sample is available.
 
-## 1. Install ADK {#1.-setup-installation}
+## 1. Install ADK { #install-adk }
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -14976,7 +14976,7 @@ adk-streaming-ws/
         └── agent.py # Agent definition
 ```
 
-## 2\. Set up the platform {#2.-set-up-the-platform}
+## 2\. Set up the platform { #set-up-the-platform }
 
 To run the sample app, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -15037,7 +15037,7 @@ Notice how easily you integrated [grounding with Google Search](https://ai.googl
 
 ![intro_components.png](../assets/quickstart-streaming-tool.png)
 
-## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
+## 3\. Interact with Your Streaming app { #interact-with-your-streaming-app }
 
 1\. **Navigate to the Correct Directory:**
 
@@ -15092,7 +15092,7 @@ These console logs are important in case you develop your own streaming applicat
 - **When `ws://` doesn't work:** If you see any errors on the Chrome DevTools with regard to `ws://` connection, try replacing `ws://` with `wss://` on `app/static/js/app.js` at line 28. This may happen when you are running the sample on a cloud environment and using a proxy connection to connect from your browser.
 - **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
-## 4. Server code overview {#4.-server-side-code-overview}
+## 4. Server code overview { #server-code-overview }
 
 This server app enables real-time, streaming interaction with ADK agent via WebSockets. Clients send text/audio to the ADK agent and receive streamed text/audio responses.
 
@@ -15352,7 +15352,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
     *   `agent_to_client_messaging`: ADK `live_events` -> Client WebSocket.
 4.  Bidirectional streaming continues until disconnection or error.
 
-## 5. Client code overview {#5.-client-side-code-overview}
+## 5. Client code overview { #client-code-overview }
 
 The JavaScript `app.js` (in `app/static/js`) manages client-side interaction with the ADK Streaming WebSocket backend. It handles sending text/audio and receiving/displaying streamed responses.
 
@@ -15640,7 +15640,7 @@ This article overviews the server and client code for a custom asynchronous web 
 
 There is also a [WebSocket](custom-streaming-ws.md) version of the sample is available.
 
-## 1. Install ADK {#1.-setup-installation}
+## 1. Install ADK { #install-adk }
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -15691,7 +15691,7 @@ adk-streaming/
         └── agent.py # Agent definition
 ```
 
-## 2\. Set up the platform {#2.-set-up-the-platform}
+## 2\. Set up the platform { #set-up-the-platform }
 
 To run the sample app, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -15727,7 +15727,7 @@ To run the sample app, choose a platform from either Google AI Studio or Google 
         ```
 
 
-## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
+## 3\. Interact with Your Streaming app { #interact-with-your-streaming-app }
 
 1\. **Navigate to the Correct Directory:**
 
@@ -15780,7 +15780,7 @@ These console logs are important in case you develop your own streaming applicat
 - **When your browser can't connect to the server via SSH proxy:** SSH proxy used in various cloud services may not work with SSE. Please try without SSH proxy, such as using a local laptop, or try the [WebSocket](custom-streaming-ws.md) version.
 - **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
-## 4. Agent definition
+## 4. Agent definition { #agent-definition }
 
 The agent definition code `agent.py` in the `google_search_agent` folder is where the agent's logic is written:
 
@@ -15806,7 +15806,7 @@ Notice how easily you integrated [grounding with Google Search](https://ai.googl
 
 The server and client architecture enables real-time, bidirectional communication between web clients and AI agents with proper session isolation and resource management.
 
-## 5. Server side code overview {#5.-server-side-code-overview}
+## 5. Server side code overview { #server-side-code-overview }
 
 The FastAPI server provides real-time communication between web clients and the AI agent.
 
@@ -16049,7 +16049,7 @@ async def send_message_endpoint(user_id: int, request: Request):
 - **Error Handling** - Returns appropriate error responses for unsupported MIME types or missing sessions.
 
 
-## 6. Client side code overview {#6.-client-side-code-overview}
+## 6. Client side code overview { #client-side-code-overview }
 
 The client-side consists of a web interface with real-time communication and audio capabilities:
 
@@ -21824,19 +21824,19 @@ Thank you for your interest in contributing to the Agent Development Kit (ADK)! 
 
 This guide provides information on how to get involved.
 
-## 1. [`google/adk-python`](https://github.com/google/adk-python)
+## 1. [`google/adk-python`](https://github.com/google/adk-python) { #google-adk-python }
 
 Contains the core Python library source code.
 
-## 2. [`google/adk-java`](https://github.com/google/adk-java)
+## 2. [`google/adk-java`](https://github.com/google/adk-java) { #google-adk-java }
 
 Contains the core Java library source code.
 
-## 3. [`google/adk-docs`](https://github.com/google/adk-docs)
+## 3. [`google/adk-docs`](https://github.com/google/adk-docs) { #google-adk-docs }
 
 Contains the source for the documentation site you are currently reading.
 
-## 4. [`google/adk-web`](https://github.com/google/adk-web)
+## 4. [`google/adk-web`](https://github.com/google/adk-web) { #google-adk-web }
 
 Contains the source for the `adk web` dev UI.
 
@@ -21876,28 +21876,28 @@ This is the primary place for:
 
 There are several ways you can contribute to the ADK:
 
-### 1. Reporting Issues (Bugs & Errors)
+### 1. Reporting Issues (Bugs & Errors) { #reporting-issues-bugs-errors }
 
 If you find a bug in the framework or an error in the documentation:
 
 * **Framework Bugs:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new) or in [`google/adk-java`](https://github.com/google/adk-java/issues/new)
 * **Documentation Errors:** [Open an issue in `google/adk-docs` (use bug template)](https://github.com/google/adk-docs/issues/new?template=bug_report.md)
 
-### 2. Suggesting Enhancements
+### 2. Suggesting Enhancements { #suggesting-enhancements }
 
 Have an idea for a new feature or an improvement to an existing one?
 
 * **Framework Enhancements:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new) or in [`google/adk-java`](https://github.com/google/adk-java/issues/new)
 * **Documentation Enhancements:** [Open an issue in `google/adk-docs`](https://github.com/google/adk-docs/issues/new)
 
-### 3. Improving Documentation
+### 3. Improving Documentation { #improving-documentation }
 
 Found a typo, unclear explanation, or missing information? Submit your changes directly:
 
 * **How:** Submit a Pull Request (PR) with your suggested improvements.
 * **Where:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
 
-### 4. Writing Code
+### 4. Writing Code { #writing-code }
 
 Help fix bugs, implement new features or contribute code samples for the documentation:
 
