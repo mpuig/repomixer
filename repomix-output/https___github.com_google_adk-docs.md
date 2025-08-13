@@ -1982,22 +1982,19 @@ layer, providing a standardized, OpenAI-compatible interface to over 100+ LLMs.
         )
         ```
 
-!!!info "Note for Windows users"
+!!!warning "Windows Encoding Note for LiteLLM"
 
-    ### Avoiding LiteLLM UnicodeDecodeError on Windows
-    When using ADK agents with LiteLlm on Windows, users might encounter the following error:
-    ```
-    UnicodeDecodeError: 'charmap' codec can't decode byte...
-    ```
-    This issue occurs because `litellm` (used by LiteLlm) reads cached files (e.g., model pricing information) using the default Windows encoding (`cp1252`) instead of UTF-8.
-    Windows users can prevent this issue by setting the `PYTHONUTF8` environment variable to `1`. This forces Python to use UTF-8 globally.
+    When using ADK agents with LiteLLM on Windows, you might encounter a `UnicodeDecodeError`. This error occurs because LiteLLM may attempt to read cached files using the default Windows encoding (`cp1252`) instead of UTF-8.
+
+    To prevent this, we recommend setting the `PYTHONUTF8` environment variable to `1`. This forces Python to use UTF-8 for all file I/O.
+
     **Example (PowerShell):**
     ```powershell
-    # Set for current session
+    # Set for the current session
     $env:PYTHONUTF8 = "1"
+
     # Set persistently for the user
     [System.Environment]::SetEnvironmentVariable('PYTHONUTF8', '1', [System.EnvironmentVariableTarget]::User)
-    Applying this setting ensures that Python reads cached files using UTF-8, avoiding the decoding error.
     ```
 
 
@@ -3737,6 +3734,16 @@ File: docs/api-reference/index.md
 The Agent Development Kit (ADK) provides comprehensive API references for both Python and Java, allowing you to dive deep into all available classes, methods, and functionalities.
 
 <div class.="grid cards" markdown>
+
+-   :fontawesome-brands-python:{ .lg .middle } **CLI Reference**
+
+    ---
+    Explore the complete API documentation for the CLI inclding all of the 
+    valid options and subcommands. 
+
+    [:octicons-arrow-right-24: View CLI Docs](cli/index.html) <br>
+
+<!-- This comment forces a block separation -->
 
 -   :fontawesome-brands-python:{ .lg .middle } **Python API Reference**
 
@@ -6183,8 +6190,8 @@ export GOOGLE_API_KEY=your-api-key
         # Call the function to get the FastAPI app instance
         # Ensure the agent directory name ('capital_agent') matches your agent folder
         app = get_fast_api_app(
-            agents_dir=AGENT_DIR,
-            session_service_uri=SESSION_SERVICE_URI,
+            agent_dir=AGENT_DIR,
+            session_db_url=SESSION_SERVICE_URI,
             allow_origins=ALLOWED_ORIGINS,
             web=SERVE_WEB_INTERFACE,
         )
@@ -7218,12 +7225,10 @@ This approach involves creating individual test files, each representing a singl
     through the right path to generate final response.
 -   `Final Response`: The expected final response from the agent.
 
-You can give the file any name for example `evaluation.test.json`.The framework only checks for the `.test.json` suffix, and the preceding part of the filename is not constrained. Here is a test file with a few examples:
-
-NOTE: The test files are now backed by a formal Pydantic data model. The two key
-schema files are
+You can give the file any name for example `evaluation.test.json`.The framework only checks for the `.test.json` suffix, and the preceding part of the filename is not constrained. The test files are backed by a formal Pydantic data model. The two key schema files are
 [Eval Set](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) and
-[Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py)
+[Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py).
+Here is a test file with a few examples:
 
 *(Note: Comments are included for explanatory purposes and should be removed for the JSON to be valid.)*
 
@@ -7300,12 +7305,13 @@ The evalset approach utilizes a dedicated dataset called an "evalset" for evalua
 
 An evalset file contains multiple "evals," each representing a distinct session. Each eval consists of one or more "turns," which include the user query, expected tool use, expected intermediate agent responses, and a reference response. These fields have the same meaning as they do in the test file approach. Each eval is identified by a unique name. Furthermore, each eval includes an associated initial session state.
 
-Creating evalsets manually can be complex, therefore UI tools are provided to help capture relevant sessions and easily convert them into evals within your evalset. Learn more about using the web UI for evaluation below. Here is an example evalset containing two sessions.
-
-NOTE: The eval set files are now backed by a formal Pydantic data model. The two key
-schema files are
+Creating evalsets manually can be complex, therefore UI tools are provided to help capture relevant sessions and easily convert them into evals within your evalset. Learn more about using the web UI for evaluation below. Here is an example evalset containing two sessions. The eval set files are  backed by a formal Pydantic data model. The two key schema files are
 [Eval Set](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) and
-[Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py)
+[Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py).
+
+!!! warning
+    This evalset evaluation method requires the use of a paid service,
+    [Vertex Gen AI Evaluation Service API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/evaluation).
 
 *(Note: Comments are included for explanatory purposes and should be removed for the JSON to be valid.)*
 
@@ -14925,7 +14931,7 @@ In order to use voice/video streaming in ADK, you will need to use Gemini models
 
 There is also a [SSE](custom-streaming.md) version of the sample is available.
 
-## 1. Install ADK { #install-adk }
+## 1. Install ADK {#1.-setup-installation}
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -14976,7 +14982,7 @@ adk-streaming-ws/
         └── agent.py # Agent definition
 ```
 
-## 2\. Set up the platform { #set-up-the-platform }
+## 2\. Set up the platform {#2.-set-up-the-platform}
 
 To run the sample app, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -15037,7 +15043,7 @@ Notice how easily you integrated [grounding with Google Search](https://ai.googl
 
 ![intro_components.png](../assets/quickstart-streaming-tool.png)
 
-## 3\. Interact with Your Streaming app { #interact-with-your-streaming-app }
+## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
 
 1\. **Navigate to the Correct Directory:**
 
@@ -15092,7 +15098,7 @@ These console logs are important in case you develop your own streaming applicat
 - **When `ws://` doesn't work:** If you see any errors on the Chrome DevTools with regard to `ws://` connection, try replacing `ws://` with `wss://` on `app/static/js/app.js` at line 28. This may happen when you are running the sample on a cloud environment and using a proxy connection to connect from your browser.
 - **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
-## 4. Server code overview { #server-code-overview }
+## 4. Server code overview {#4.-server-side-code-overview}
 
 This server app enables real-time, streaming interaction with ADK agent via WebSockets. Clients send text/audio to the ADK agent and receive streamed text/audio responses.
 
@@ -15157,6 +15163,12 @@ async def start_agent_session(user_id, is_audio=False):
     # Set response modality
     modality = "AUDIO" if is_audio else "TEXT"
     run_config = RunConfig(response_modalities=[modality])
+    
+    # Optional: Enable session resumption for improved reliability
+    # run_config = RunConfig(
+    #     response_modalities=[modality],
+    #     session_resumption=types.SessionResumptionConfig()
+    # )
 
     # Create a LiveRequestQueue for this session
     live_request_queue = LiveRequestQueue()
@@ -15187,6 +15199,49 @@ This function initializes an ADK agent live session.
     *   `live_request_queue`: Queue to send data to the agent.
 
 **Returns:** `(live_events, live_request_queue)`.
+
+### Session Resumption Configuration
+
+ADK supports live session resumption to improve reliability during streaming conversations. This feature enables automatic reconnection when live connections are interrupted due to network issues.
+
+#### Enabling Session Resumption
+
+To enable session resumption, you need to:
+
+1. **Import the required types**:
+```py
+from google.genai import types
+```
+
+2. **Configure session resumption in RunConfig**:
+```py
+run_config = RunConfig(
+    response_modalities=[modality],
+    session_resumption=types.SessionResumptionConfig()
+)
+```
+
+#### Session Resumption Features
+
+- **Automatic Handle Caching** - The system automatically caches session resumption handles during live conversations
+- **Transparent Reconnection** - When connections are interrupted, the system attempts to resume using cached handles
+- **Context Preservation** - Conversation context and state are maintained across reconnections
+- **Network Resilience** - Provides better user experience during unstable network conditions
+
+#### Implementation Notes
+
+- Session resumption handles are managed internally by the ADK framework
+- No additional client-side code changes are required
+- The feature is particularly beneficial for long-running streaming conversations
+- Connection interruptions become less disruptive to the user experience
+
+#### Troubleshooting
+
+If you encounter errors with session resumption:
+
+1. **Check model compatibility** - Ensure you're using a model that supports session resumption
+2. **API limitations** - Some session resumption features may not be available in all API versions
+3. **Remove session resumption** - If issues persist, you can disable session resumption by removing the `session_resumption` parameter from `RunConfig`
 
 ### `agent_to_client_messaging(websocket, live_events)`
 
@@ -15352,7 +15407,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
     *   `agent_to_client_messaging`: ADK `live_events` -> Client WebSocket.
 4.  Bidirectional streaming continues until disconnection or error.
 
-## 5. Client code overview { #client-code-overview }
+## 5. Client code overview {#5.-client-side-code-overview}
 
 The JavaScript `app.js` (in `app/static/js`) manages client-side interaction with the ADK Streaming WebSocket backend. It handles sending text/audio and receiving/displaying streamed responses.
 
@@ -15640,7 +15695,7 @@ This article overviews the server and client code for a custom asynchronous web 
 
 There is also a [WebSocket](custom-streaming-ws.md) version of the sample is available.
 
-## 1. Install ADK { #install-adk }
+## 1. Install ADK {#1.-setup-installation}
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -15691,7 +15746,7 @@ adk-streaming/
         └── agent.py # Agent definition
 ```
 
-## 2\. Set up the platform { #set-up-the-platform }
+## 2\. Set up the platform {#2.-set-up-the-platform}
 
 To run the sample app, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -15727,7 +15782,7 @@ To run the sample app, choose a platform from either Google AI Studio or Google 
         ```
 
 
-## 3\. Interact with Your Streaming app { #interact-with-your-streaming-app }
+## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
 
 1\. **Navigate to the Correct Directory:**
 
@@ -15780,7 +15835,7 @@ These console logs are important in case you develop your own streaming applicat
 - **When your browser can't connect to the server via SSH proxy:** SSH proxy used in various cloud services may not work with SSE. Please try without SSH proxy, such as using a local laptop, or try the [WebSocket](custom-streaming-ws.md) version.
 - **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
 
-## 4. Agent definition { #agent-definition }
+## 4. Agent definition
 
 The agent definition code `agent.py` in the `google_search_agent` folder is where the agent's logic is written:
 
@@ -15806,7 +15861,7 @@ Notice how easily you integrated [grounding with Google Search](https://ai.googl
 
 The server and client architecture enables real-time, bidirectional communication between web clients and AI agents with proper session isolation and resource management.
 
-## 5. Server side code overview { #server-side-code-overview }
+## 5. Server side code overview {#5.-server-side-code-overview}
 
 The FastAPI server provides real-time communication between web clients and the AI agent.
 
@@ -15832,6 +15887,11 @@ The FastAPI server provides real-time communication between web clients and the 
 - **Stream Resilience** - SSE streams handle exceptions and perform cleanup automatically
 - **Connection Recovery** - Clients can reconnect by re-establishing SSE connection
 
+#### Session Resumption:
+- **Live Session Resumption** - Enables transparent reconnection to interrupted live conversations
+- **Handle Caching** - System automatically caches session handles for recovery
+- **Reliability Enhancement** - Improves resilience against network instability during streaming
+
 
 ### Agent Session Management
 
@@ -15856,6 +15916,12 @@ async def start_agent_session(user_id, is_audio=False):
     # Set response modality
     modality = "AUDIO" if is_audio else "TEXT"
     run_config = RunConfig(response_modalities=[modality])
+    
+    # Optional: Enable session resumption for improved reliability
+    # run_config = RunConfig(
+    #     response_modalities=[modality],
+    #     session_resumption=types.SessionResumptionConfig()
+    # )
 
     # Create a LiveRequestQueue for this session
     live_request_queue = LiveRequestQueue()
@@ -16004,6 +16070,49 @@ async def sse_endpoint(user_id: int, is_audio: str = "false"):
 
 - **Cleanup Logic** - Handles connection termination by closing the request queue and removing from active sessions, with error handling for stream interruptions.
 
+### Session Resumption Configuration
+
+ADK supports live session resumption to improve reliability during streaming conversations. This feature enables automatic reconnection when live connections are interrupted due to network issues.
+
+#### Enabling Session Resumption
+
+To enable session resumption, you need to:
+
+1. **Import the required types**:
+```py
+from google.genai import types
+```
+
+2. **Configure session resumption in RunConfig**:
+```py
+run_config = RunConfig(
+    response_modalities=[modality],
+    session_resumption=types.SessionResumptionConfig()
+)
+```
+
+#### Session Resumption Features
+
+- **Automatic Handle Caching** - The system automatically caches session resumption handles during live conversations
+- **Transparent Reconnection** - When connections are interrupted, the system attempts to resume using cached handles
+- **Context Preservation** - Conversation context and state are maintained across reconnections
+- **Network Resilience** - Provides better user experience during unstable network conditions
+
+#### Implementation Notes
+
+- Session resumption handles are managed internally by the ADK framework
+- No additional client-side code changes are required
+- The feature is particularly beneficial for long-running streaming conversations
+- Connection interruptions become less disruptive to the user experience
+
+#### Troubleshooting
+
+If you encounter errors with session resumption:
+
+1. **Check model compatibility** - Ensure you're using a model that supports session resumption
+2. **API limitations** - Some session resumption features may not be available in all API versions
+3. **Remove session resumption** - If issues persist, you can disable session resumption by removing the `session_resumption` parameter from `RunConfig`
+
 #### Message Sending Endpoint
 
 ```py
@@ -16049,7 +16158,7 @@ async def send_message_endpoint(user_id: int, request: Request):
 - **Error Handling** - Returns appropriate error responses for unsupported MIME types or missing sessions.
 
 
-## 6. Client side code overview { #client-side-code-overview }
+## 6. Client side code overview {#6.-client-side-code-overview}
 
 The client-side consists of a web interface with real-time communication and audio capabilities:
 
@@ -18048,7 +18157,7 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
 
     Use an existing [Application Integration](https://cloud.google.com/application-integration/docs/overview) workflow or [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview) connection you want to use with your agent. You can also create a new [Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration) or a [connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
     
-    Import and publish the [Connection Tool](https://pantheon.corp.google.com/integrations/templates/connection-tool/locations/us-central1) from the template library.
+    Import and publish the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global) from the template library.
     
     **Note**: To use a connector from Integration Connectors, you need to provision Application Integration in the same region as your connection.
 
@@ -18056,7 +18165,7 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
 
     Use an existing [Application Integration](https://cloud.google.com/application-integration/docs/overview) workflow or [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview) connection you want to use with your agent. You can also create a new [Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration) or a [connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
     
-    Import and publish the [Connection Tool](https://pantheon.corp.google.com/integrations/templates/connection-tool/locations/us-central1) from the template library.
+    Import and publish the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global) from the template library.
     
     **Note**: To use a connector from Integration Connectors, you need to provision Application Integration in the same region as your connection, import and publish Connection Tool from the template library.
 
@@ -18120,7 +18229,7 @@ Connect your agent to enterprise applications using
 
 #### Before you begin
 
-**Note:** The *ExecuteConnection* integration is typically created automatically when you provision Application Integration in a given region. If the *ExecuteConnection* doesn't exist in the [list of integrations](https://pantheon.corp.google.com/integrations/list?hl=en&inv=1&invt=Ab2u5g&project=standalone-ip-prod-testing), you must follow these steps to create it:
+**Note:** The *ExecuteConnection* integration is typically created automatically when you provision Application Integration in a given region. If the *ExecuteConnection* doesn't exist in the [list of integrations](https://console.cloud.google.com/integrations/list), you must follow these steps to create it:
 
 1. To use a connector from Integration Connectors, click **QUICK SETUP** and [provision](https://console.cloud.google.com/integrations)
    Application Integration in the same region as your connection.
@@ -21962,13 +22071,13 @@ from simple tasks to complex workflows.
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>0.1.0</version>
+        <version>0.2.0</version>
     </dependency>
     ```
 
     ```gradle title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:0.1.0'
+        implementation 'com.google.adk:google-adk:0.2.0'
     }
     ```
 </div>
