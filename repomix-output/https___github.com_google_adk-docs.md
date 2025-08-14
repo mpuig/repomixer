@@ -7,7 +7,7 @@ File: docs/a2a/index.md
 ================
 # ADK with Agent2Agent (A2A) Protocol
 
-With Agent Development Kit (ADK), you can build complex multi-agent systems where different agents need to collaborate and interact using [Agent2Agent (A2A) Protocol](https://a2aprotocol.ai/)! This section provides a comprehensive guide to building powerful multi-agent systems where agents can communicate and collaborate securely and efficiently.
+With Agent Development Kit (ADK), you can build complex multi-agent systems where different agents need to collaborate and interact using [Agent2Agent (A2A) Protocol](https://a2a-protocol.org/)! This section provides a comprehensive guide to building powerful multi-agent systems where agents can communicate and collaborate securely and efficiently.
 
 Navigate through the guides below to learn about ADK's A2A capabilities:
 
@@ -23,7 +23,7 @@ Navigate through the guides below to learn about ADK's A2A capabilities:
 
   This quickstart covers: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**.
 
-  [**Official Website for Agent2Agent (A2A) Protocol**](https://a2aprotocol.ai/)
+  [**Official Website for Agent2Agent (A2A) Protocol**](https://a2a-protocol.org/)
 
   The official website for A2A Protocol.
 
@@ -34,7 +34,7 @@ File: docs/a2a/intro.md
 
 As you build more complex agentic systems, you will find that a single agent
 is often not enough. You will want to create specialized agents that can
-collaborate to solve a problem. The [**Agent2Agent (A2A) Protocol**](https://a2aprotocol.ai/) is the
+collaborate to solve a problem. The [**Agent2Agent (A2A) Protocol**](https://a2a-protocol.org) is the
 standard that allows these agents to communicate with each other.
 
 ## When to Use A2A vs. Local Sub-Agents
@@ -528,7 +528,7 @@ This sample demonstrates how you can easily expose an ADK agent so that it can b
 There are two main ways to expose an ADK agent via A2A.
 
 * **by using the `to_a2a(root_agent)` function**: use this function if you just want to convert an existing agent to work with A2A, and be able to expose it via a server through `uvicorn`, instead of `adk deploy api_server`. This means that you have tighter control over what you want to expose via `uvicorn` when you want to productionize your agent. Furthermore, the `to_a2a()` function auto-generates an agent card based on your agent code.
-* **by creating your own agent card (`agent.json`) and hosting it using `adk api_server --a2a`**: There are two main benefits of using this approach. First, `adk api_server --a2a` works with `adk web`, making it easy to use, debug, and test your agent. Second, with `adk api_server`, you can specify a parent folder with multiple, separate agents. Those agents that have an agent card (`agent.json`), will automatically be usable via A2A by other agents through the same server. However, you will need to create your own agent cards. To create an agent card, you can follow the [A2A Python tutorial](https://a2aprotocol.ai/docs/guide/python-a2a-tutorial).
+* **by creating your own agent card (`agent.json`) and hosting it using `adk api_server --a2a`**: There are two main benefits of using this approach. First, `adk api_server --a2a` works with `adk web`, making it easy to use, debug, and test your agent. Second, with `adk api_server`, you can specify a parent folder with multiple, separate agents. Those agents that have an agent card (`agent.json`), will automatically be usable via A2A by other agents through the same server. However, you will need to create your own agent cards. To create an agent card, you can follow the [A2A Python tutorial](https://a2a-protocol.org/latest/tutorials/python/1-introduction/).
 
 This quickstart will focus on `to_a2a()`, as it is the easiest way to expose your agent and will also autogenerate the agent card behind-the-scenes. If you'd like to use the `adk api_server` approach, you can see it being used in the [A2A Quickstart (Consuming) documentation](quickstart-consuming.md).
 
@@ -4555,71 +4555,167 @@ These patterns demonstrate typical ways to enhance or control agent behavior usi
 
 ### 1. Guardrails & Policy Enforcement { #guardrails-policy-enforcement }
 
-* **Pattern:** Intercept requests before they reach the LLM or tools to enforce rules.
-* **How:** Use `before_model_callback` to inspect the `LlmRequest` prompt or `before_tool_callback` to inspect tool arguments. If a policy violation is detected (e.g., forbidden topics, profanity), return a predefined response (`LlmResponse` or `dict`/ `Map`) to block the operation and optionally update `context.state` to log the violation.
-* **Example:** A `before_model_callback` checks `llm_request.contents` for sensitive keywords and returns a standard "Cannot process this request" `LlmResponse` if found, preventing the LLM call.
+**Pattern Overview:**
+Intercept requests before they reach the LLM or tools to enforce rules.
+
+**Implementation:**
+- Use `before_model_callback` to inspect the `LlmRequest` prompt
+- Use `before_tool_callback` to inspect tool arguments
+- If a policy violation is detected (e.g., forbidden topics, profanity):
+  - Return a predefined response (`LlmResponse` or `dict`/`Map`) to block the operation
+  - Optionally update `context.state` to log the violation
+
+**Example Use Case:**
+A `before_model_callback` checks `llm_request.contents` for sensitive keywords and returns a standard "Cannot process this request" `LlmResponse` if found, preventing the LLM call.
 
 ### 2. Dynamic State Management { #dynamic-state-management }
 
-* **Pattern:** Read from and write to session state within callbacks to make agent behavior context-aware and pass data between steps.
-* **How:** Access `callback_context.state` or `tool_context.state`. Modifications (`state['key'] = value`) are automatically tracked in the subsequent `Event.actions.state_delta` for persistence by the `SessionService`.
-* **Example:** An `after_tool_callback` saves a `transaction_id` from the tool's result to `tool_context.state['last_transaction_id']`. A later `before_agent_callback` might read `state['user_tier']` to customize the agent's greeting.
+**Pattern Overview:**
+Read from and write to session state within callbacks to make agent behavior context-aware and pass data between steps.
+
+**Implementation:**
+- Access `callback_context.state` or `tool_context.state`
+- Modifications (`state['key'] = value`) are automatically tracked in the subsequent `Event.actions.state_delta`
+- Changes are persisted by the `SessionService`
+
+**Example Use Case:**
+An `after_tool_callback` saves a `transaction_id` from the tool's result to `tool_context.state['last_transaction_id']`. A later `before_agent_callback` might read `state['user_tier']` to customize the agent's greeting.
 
 ### 3. Logging and Monitoring { #logging-and-monitoring }
 
-* **Pattern:** Add detailed logging at specific lifecycle points for observability and debugging.
-* **How:** Implement callbacks (e.g., `before_agent_callback`, `after_tool_callback`, `after_model_callback`) to print or send structured logs containing information like agent name, tool name, invocation ID, and relevant data from the context or arguments.
-* **Example:** Log messages like `INFO: [Invocation: e-123] Before Tool: search_api - Args: {'query': 'ADK'}`.
+**Pattern Overview:**
+Add detailed logging at specific lifecycle points for observability and debugging.
+
+**Implementation:**
+- Implement callbacks (e.g., `before_agent_callback`, `after_tool_callback`, `after_model_callback`)
+- Print or send structured logs containing:
+  - Agent name
+  - Tool name
+  - Invocation ID
+  - Relevant data from the context or arguments
+
+**Example Use Case:**
+Log messages like `INFO: [Invocation: e-123] Before Tool: search_api - Args: {'query': 'ADK'}`.
 
 ### 4. Caching { #caching }
 
-* **Pattern:** Avoid redundant LLM calls or tool executions by caching results.
-* **How:** In `before_model_callback` or `before_tool_callback`, generate a cache key based on the request/arguments. Check `context.state` (or an external cache) for this key. If found, return the cached `LlmResponse` or result directly, skipping the actual operation. If not found, allow the operation to proceed and use the corresponding `after_` callback (`after_model_callback`, `after_tool_callback`) to store the new result in the cache using the key.
-*   **Example:** `before_tool_callback` for `get_stock_price(symbol)` checks `state[f"cache:stock:{symbol}"]`. If present, returns the cached price; otherwise, allows the API call and `after_tool_callback` saves the result to the state key.
+**Pattern Overview:**
+Avoid redundant LLM calls or tool executions by caching results.
+
+**Implementation Steps:**
+1. **Before Operation:** In `before_model_callback` or `before_tool_callback`:
+   - Generate a cache key based on the request/arguments
+   - Check `context.state` (or an external cache) for this key
+   - If found, return the cached `LlmResponse` or result directly
+
+2. **After Operation:** If cache miss occurred:
+   - Use the corresponding `after_` callback to store the new result in the cache using the key
+
+**Example Use Case:**
+`before_tool_callback` for `get_stock_price(symbol)` checks `state[f"cache:stock:{symbol}"]`. If present, returns the cached price; otherwise, allows the API call and `after_tool_callback` saves the result to the state key.
 
 ### 5. Request/Response Modification { #request-response-modification }
 
-* **Pattern:** Alter data just before it's sent to the LLM/tool or just after it's received.
-* **How:**
-    * `before_model_callback`: Modify `llm_request` (e.g., add system instructions based on `state`).
-    * `after_model_callback`: Modify the returned `LlmResponse` (e.g., format text, filter content).
-    *  `before_tool_callback`: Modify the tool `args` dictionary (or Map in Java).
-    *  `after_tool_callback`: Modify the `tool_response` dictionary (or Map in Java).
-* **Example:** `before_model_callback` appends "User language preference: Spanish" to `llm_request.config.system_instruction` if `context.state['lang'] == 'es'`.
+**Pattern Overview:**
+Alter data just before it's sent to the LLM/tool or just after it's received.
+
+**Implementation Options:**
+- **`before_model_callback`:** Modify `llm_request` (e.g., add system instructions based on `state`)
+- **`after_model_callback`:** Modify the returned `LlmResponse` (e.g., format text, filter content)
+- **`before_tool_callback`:** Modify the tool `args` dictionary (or Map in Java)
+- **`after_tool_callback`:** Modify the `tool_response` dictionary (or Map in Java)
+
+**Example Use Case:**
+`before_model_callback` appends "User language preference: Spanish" to `llm_request.config.system_instruction` if `context.state['lang'] == 'es'`.
 
 ### 6. Conditional Skipping of Steps { #conditional-skipping-of-steps }
 
-* **Pattern:** Prevent standard operations (agent run, LLM call, tool execution) based on certain conditions.
-* **How:** Return a value from a `before_` callback (`Content` from `before_agent_callback`, `LlmResponse` from `before_model_callback`, `dict` from `before_tool_callback`). The framework interprets this returned value as the result for that step, skipping the normal execution.
-* **Example:** `before_tool_callback` checks `tool_context.state['api_quota_exceeded']`. If `True`, it returns `{'error': 'API quota exceeded'}`, preventing the actual tool function from running.
+**Pattern Overview:**
+Prevent standard operations (agent run, LLM call, tool execution) based on certain conditions.
+
+**Implementation:**
+- Return a value from a `before_` callback to skip the normal execution:
+  - `Content` from `before_agent_callback`
+  - `LlmResponse` from `before_model_callback`
+  - `dict` from `before_tool_callback`
+- The framework interprets this returned value as the result for that step
+
+**Example Use Case:**
+`before_tool_callback` checks `tool_context.state['api_quota_exceeded']`. If `True`, it returns `{'error': 'API quota exceeded'}`, preventing the actual tool function from running.
 
 ### 7. Tool-Specific Actions (Authentication & Summarization Control) { #tool-specific-actions-authentication-summarization-control }
 
-* **Pattern:** Handle actions specific to the tool lifecycle, primarily authentication and controlling LLM summarization of tool results.
-* **How:** Use `ToolContext` within tool callbacks (`before_tool_callback`, `after_tool_callback`).
-    * **Authentication:** Call `tool_context.request_credential(auth_config)` in `before_tool_callback` if credentials are required but not found (e.g., via `tool_context.get_auth_response` or state check). This initiates the auth flow.
-    * **Summarization:** Set `tool_context.actions.skip_summarization = True` if the raw dictionary output of the tool should be passed back to the LLM or potentially displayed directly, bypassing the default LLM summarization step.
-* **Example:** A `before_tool_callback` for a secure API checks for an auth token in state; if missing, it calls `request_credential`. An `after_tool_callback` for a tool returning structured JSON might set `skip_summarization = True`.
+**Pattern Overview:**
+Handle actions specific to the tool lifecycle, primarily authentication and controlling LLM summarization of tool results.
+
+**Implementation:**
+Use `ToolContext` within tool callbacks (`before_tool_callback`, `after_tool_callback`):
+
+- **Authentication:** Call `tool_context.request_credential(auth_config)` in `before_tool_callback` if credentials are required but not found (e.g., via `tool_context.get_auth_response` or state check). This initiates the auth flow.
+- **Summarization:** Set `tool_context.actions.skip_summarization = True` if the raw dictionary output of the tool should be passed back to the LLM or potentially displayed directly, bypassing the default LLM summarization step.
+
+**Example Use Case:**
+A `before_tool_callback` for a secure API checks for an auth token in state; if missing, it calls `request_credential`. An `after_tool_callback` for a tool returning structured JSON might set `skip_summarization = True`.
 
 ### 8. Artifact Handling { #artifact-handling }
 
-* **Pattern:** Save or load session-related files or large data blobs during the agent lifecycle.
-* **How:** Use `callback_context.save_artifact` / `await tool_context.save_artifact` to store data (e.g., generated reports, logs, intermediate data). Use `load_artifact` to retrieve previously stored artifacts. Changes are tracked via `Event.actions.artifact_delta`.
-* **Example:** An `after_tool_callback` for a "generate_report" tool saves the output file using `await tool_context.save_artifact("report.pdf", report_part)`. A `before_agent_callback` might load a configuration artifact using `callback_context.load_artifact("agent_config.json")`.
+**Pattern Overview:**
+Save or load session-related files or large data blobs during the agent lifecycle.
+
+**Implementation:**
+- **Saving:** Use `callback_context.save_artifact` / `await tool_context.save_artifact` to store data:
+  - Generated reports
+  - Logs
+  - Intermediate data
+- **Loading:** Use `load_artifact` to retrieve previously stored artifacts
+- **Tracking:** Changes are tracked via `Event.actions.artifact_delta`
+
+**Example Use Case:**
+An `after_tool_callback` for a "generate_report" tool saves the output file using `await tool_context.save_artifact("report.pdf", report_part)`. A `before_agent_callback` might load a configuration artifact using `callback_context.load_artifact("agent_config.json")`.
 
 ## Best Practices for Callbacks
 
-* **Keep Focused:** Design each callback for a single, well-defined purpose (e.g., just logging, just validation). Avoid monolithic callbacks.
-* **Mind Performance:** Callbacks execute synchronously within the agent's processing loop. Avoid long-running or blocking operations (network calls, heavy computation). Offload if necessary, but be aware this adds complexity.
-* **Handle Errors Gracefully:** Use `try...except/ catch` blocks within your callback functions. Log errors appropriately and decide if the agent invocation should halt or attempt recovery. Don't let callback errors crash the entire process.
-* **Manage State Carefully:**
-    * Be deliberate about reading from and writing to `context.state`. Changes are immediately visible within the *current* invocation and persisted at the end of the event processing.
-    * Use specific state keys rather than modifying broad structures to avoid unintended side effects.
-    *  Consider using state prefixes (`State.APP_PREFIX`, `State.USER_PREFIX`, `State.TEMP_PREFIX`) for clarity, especially with persistent `SessionService` implementations.
-* **Consider Idempotency:** If a callback performs actions with external side effects (e.g., incrementing an external counter), design it to be idempotent (safe to run multiple times with the same input) if possible, to handle potential retries in the framework or your application.
-* **Test Thoroughly:** Unit test your callback functions using mock context objects. Perform integration tests to ensure callbacks function correctly within the full agent flow.
-* **Ensure Clarity:** Use descriptive names for your callback functions. Add clear docstrings explaining their purpose, when they run, and any side effects (especially state modifications).
-* **Use Correct Context Type:** Always use the specific context type provided (`CallbackContext` for agent/model, `ToolContext` for tools) to ensure access to the appropriate methods and properties.
+### Design Principles
+
+**Keep Focused:**
+Design each callback for a single, well-defined purpose (e.g., just logging, just validation). Avoid monolithic callbacks.
+
+**Mind Performance:**
+Callbacks execute synchronously within the agent's processing loop. Avoid long-running or blocking operations (network calls, heavy computation). Offload if necessary, but be aware this adds complexity.
+
+### Error Handling
+
+**Handle Errors Gracefully:**
+- Use `try...except/catch` blocks within your callback functions
+- Log errors appropriately
+- Decide if the agent invocation should halt or attempt recovery
+- Don't let callback errors crash the entire process
+
+### State Management
+
+**Manage State Carefully:**
+- Be deliberate about reading from and writing to `context.state`
+- Changes are immediately visible within the _current_ invocation and persisted at the end of the event processing
+- Use specific state keys rather than modifying broad structures to avoid unintended side effects
+- Consider using state prefixes (`State.APP_PREFIX`, `State.USER_PREFIX`, `State.TEMP_PREFIX`) for clarity, especially with persistent `SessionService` implementations
+
+### Reliability
+
+**Consider Idempotency:**
+If a callback performs actions with external side effects (e.g., incrementing an external counter), design it to be idempotent (safe to run multiple times with the same input) if possible, to handle potential retries in the framework or your application.
+
+### Testing & Documentation
+
+**Test Thoroughly:**
+- Unit test your callback functions using mock context objects
+- Perform integration tests to ensure callbacks function correctly within the full agent flow
+
+**Ensure Clarity:**
+- Use descriptive names for your callback functions
+- Add clear docstrings explaining their purpose, when they run, and any side effects (especially state modifications)
+
+**Use Correct Context Type:**
+Always use the specific context type provided (`CallbackContext` for agent/model, `ToolContext` for tools) to ensure access to the appropriate methods and properties.
 
 By applying these patterns and best practices, you can effectively use callbacks to create more robust, observable, and customized agent behaviors in ADK.
 
@@ -5996,6 +6092,33 @@ Expected output for `stream_query` (remote):
 {'parts': [{'function_response': {'id': 'af-f1906423-a531-4ecf-a1ef-723b05e85321', 'name': 'get_weather', 'response': {'status': 'success', 'report': 'The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).'}}}], 'role': 'user'}
 {'parts': [{'text': 'The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).'}], 'role': 'model'}
 ```
+#### Sending Multimodal Queries
+
+To send multimodal queries (e.g., including images) to your agent, you can construct the `message` parameter of `stream_query` with a list of `types.Part` objects. Each part can be text or an image.
+
+To include an image, you can use `types.Part.from_uri`, providing a Google Cloud Storage (GCS) URI for the image.
+
+```python
+from google.genai import types
+
+image_part = types.Part.from_uri(
+    file_uri="gs://cloud-samples-data/generative-ai/image/scones.jpg",
+    mime_type="image/jpeg",
+)
+text_part = types.Part.from_text(
+    text="What is in this image?",
+)
+
+for event in remote_app.stream_query(
+    user_id="u_456",
+    session_id=remote_session["id"],
+    message=[text_part, image_part],
+):
+    print(event)
+```
+
+!!!note
+    While the underlying communication with the model may involve Base64 encoding for images, the recommended and supported method for sending image data to an agent deployed on Agent Engine is by providing a GCS URI.
 
 ## Using the Agent Engine UI
 
@@ -6877,7 +7000,7 @@ adk deploy gke [OPTIONS] AGENT_PATH
 | --cluster_name   | The name of your GKE cluster.    | Yes |
 | --region    | The Google Cloud region of your cluster (e.g., us-central1).    | Yes |
 | --with_ui   | Deploys both the agent's back-end API and a companion front-end user interface.    | No |
-| --verbosity   | Sets the logging level for the deployment process. Options: debug, info, warning, error.     | No |
+| --log_level   | Sets the logging level for the deployment process. Options: debug, info, warning, error.     | No |
 
 
 ### How It Works
@@ -6905,7 +7028,7 @@ adk deploy gke \
     --cluster_name test \
     --region us-central1 \
     --with_ui \
-    --verbosity info \
+    --log_level info \
     ~/agents/multi_tool_agent/
 ```
 
@@ -11322,7 +11445,7 @@ logging.basicConfig(
 
 ### Configuring Logging with the ADK CLI
 
-When running agents using the ADK's built-in web or API servers, you can easily control the log verbosity directly from the command line. The `adk web`, `adk api_server`, and `adk deploy cloud_run` commands all accept a `--log-level` option.
+When running agents using the ADK's built-in web or API servers, you can easily control the log verbosity directly from the command line. The `adk web`, `adk api_server`, and `adk deploy cloud_run` commands all accept a `--log_level` option.
 
 This provides a convenient way to set the logging level without modifying your agent's source code.
 
@@ -11331,10 +11454,10 @@ This provides a convenient way to set the logging level without modifying your a
 To start the web server with `DEBUG` level logging, run:
 
 ```bash
-adk web --log-level DEBUG path/to/your/agents_dir
+adk web --log_level DEBUG path/to/your/agents_dir
 ```
 
-The available log levels for the `--log-level` option are:
+The available log levels for the `--log_level` option are:
 - `DEBUG`
 - `INFO` (default)
 - `WARNING`
@@ -14947,7 +15070,7 @@ python -m venv .venv
 Install ADK:
 
 ```bash
-pip install --upgrade google-adk==1.2.1
+pip install --upgrade google-adk==1.10.0
 ```
 
 Set `SSL_CERT_FILE` variable with the following command.
@@ -15711,7 +15834,7 @@ python -m venv .venv
 Install ADK:
 
 ```bash
-pip install --upgrade google-adk==1.2.1
+pip install --upgrade google-adk==1.10.0
 ```
 
 Set `SSL_CERT_FILE` variable with the following command.
@@ -16412,13 +16535,14 @@ File: docs/streaming/index.md
 ================
 # Bidi-streaming(live) in ADK
 
-!!! info
+!!! warning
 
     This is an experimental feature. Currrently available in Python.
 
 !!! info
 
-    This is different from server-side streaming or token-level streaming. This section is for bidi-streaming(live).
+    This is different from server-side streaming or token-level streaming. 
+    Token-level streaming is a one-way process where a language model generates a response and sends it back to the user one token at a time. This creates a "typing" effect, giving the impression of an immediate response and reducing the time it takes to see the start of the answer. The user sends their full prompt, the model processes it, and then the model begins to generate and send back the response piece by piece. This section is for bidi-streaming (live).
     
 Bidi-streaming (live) in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
@@ -18456,11 +18580,11 @@ workflow as a tool for your agent or create a new one.
 === "Java"
 
     To update the `agent.java` file and add the tool to your agent, use the following code:
-    
-      ```java
-           import com.google.adk.agent.LlmAgent;
-           import com.google.adk.tools.BaseTool;
-           import com.google.common.collect.ImmutableList;
+
+    ```java
+          import com.google.adk.agent.LlmAgent;
+          import com.google.adk.tools.BaseTool;
+          import com.google.common.collect.ImmutableList;
         
             public class MyAgent {
                 public static void main(String[] args) {
@@ -21320,7 +21444,7 @@ if greeting_agent and farewell_agent and 'get_weather_stateful' in globals() and
         instruction="You are the main Weather Agent. Provide weather using 'get_weather_stateful'. "
                     "Delegate simple greetings to 'greeting_agent' and farewells to 'farewell_agent'. "
                     "Handle only weather requests, greetings, and farewells.",
-        tools=[get_weather],
+        tools=[get_weather_stateful],
         sub_agents=[greeting_agent, farewell_agent], # Reference the redefined sub-agents
         output_key="last_weather_report", # Keep output_key from Step 4
         before_model_callback=block_keyword_guardrail # <<< Assign the guardrail callback
