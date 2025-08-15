@@ -647,6 +647,13 @@ File: docs/ref/mcp/util.md
 ::: agents.mcp.util
 
 ================
+File: docs/ref/memory/session.md
+================
+# `Session`
+
+::: agents.memory.session
+
+================
 File: docs/ref/models/chatcmpl_converter.md
 ================
 # `Chatcmpl Converter`
@@ -802,11 +809,46 @@ File: docs/ref/realtime/events.md
 ::: agents.realtime.events.RealtimeRawModelEvent
 
 ================
+File: docs/ref/realtime/handoffs.md
+================
+# `Handoffs`
+
+::: agents.realtime.handoffs
+
+================
+File: docs/ref/realtime/items.md
+================
+# `Items`
+
+::: agents.realtime.items
+
+================
+File: docs/ref/realtime/model_events.md
+================
+# `Model Events`
+
+::: agents.realtime.model_events
+
+================
+File: docs/ref/realtime/model_inputs.md
+================
+# `Model Inputs`
+
+::: agents.realtime.model_inputs
+
+================
 File: docs/ref/realtime/model.md
 ================
 # `Model`
 
 ::: agents.realtime.model
+
+================
+File: docs/ref/realtime/openai_realtime.md
+================
+# `Openai Realtime`
+
+::: agents.realtime.openai_realtime
 
 ================
 File: docs/ref/realtime/runner.md
@@ -1619,7 +1661,7 @@ Sometimes, you want to observe the lifecycle of an agent. For example, you may w
 
 ## Guardrails
 
-Guardrails allow you to run checks/validations on user input, in parallel to the agent running. For example, you could screen the user's input for relevance. Read more in the [guardrails](guardrails.md) documentation.
+Guardrails allow you to run checks/validations on user input in parallel to the agent running, and on the agent's output once it is produced. For example, you could screen the user's input and agent's output for relevance. Read more in the [guardrails](guardrails.md) documentation.
 
 ## Cloning/copying agents
 
@@ -2175,6 +2217,7 @@ The [`handoff()`][agents.handoffs.handoff] function lets you customize things.
 -   `on_handoff`: A callback function executed when the handoff is invoked. This is useful for things like kicking off some data fetching as soon as you know a handoff is being invoked. This function receives the agent context, and can optionally also receive LLM generated input. The input data is controlled by the `input_type` param.
 -   `input_type`: The type of input expected by the handoff (optional).
 -   `input_filter`: This lets you filter the input received by the next agent. See below for more.
+-   `is_enabled`: Whether the handoff is enabled. This can be a boolean or a function that returns a boolean, allowing you to dynamically enable or disable the handoff at runtime.
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -3735,6 +3778,27 @@ When you create a function tool via `@function_tool`, you can pass a `failure_er
 -   By default (i.e. if you don't pass anything), it runs a `default_tool_error_function` which tells the LLM an error occurred.
 -   If you pass your own error function, it runs that instead, and sends the response to the LLM.
 -   If you explicitly pass `None`, then any tool call errors will be re-raised for you to handle. This could be a `ModelBehaviorError` if the model produced invalid JSON, or a `UserError` if your code crashed, etc.
+
+```python
+from agents import function_tool, RunContextWrapper
+from typing import Any
+
+def my_custom_error_function(context: RunContextWrapper[Any], error: Exception) -> str:
+    """A custom function to provide a user-friendly error message."""
+    print(f"A tool call failed with the following error: {error}")
+    return "An internal server error occurred. Please try again later."
+
+@function_tool(failure_error_function=my_custom_error_function)
+def get_user_profile(user_id: str) -> str:
+    """Fetches a user profile from a mock API.
+     This function demonstrates a 'flaky' or failing API call.
+    """
+    if user_id == "user_123":
+        return "User profile for user_123 successfully retrieved."
+    else:
+        raise ValueError(f"Could not retrieve profile for user_id: {user_id}. API returned an error.")
+
+```
 
 If you are manually creating a `FunctionTool` object, then you must handle errors inside the `on_invoke_tool` function.
 
