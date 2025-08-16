@@ -1636,6 +1636,129 @@ Control whether the agent receives the prior conversation history.
 
 * **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
 
+Example for using built-in-planner:
+```python
+
+
+
+
+from dotenv import load_dotenv
+
+
+import asyncio
+import os
+
+from google.genai import types
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
+from google.adk.planners import BasePlanner, BuiltInPlanner, PlanReActPlanner
+from google.adk.models import LlmRequest
+
+from google.genai.types import ThinkingConfig
+from google.genai.types import GenerateContentConfig
+
+import datetime
+from zoneinfo import ZoneInfo
+
+APP_NAME = "weather_app"
+USER_ID = "1234"
+SESSION_ID = "session1234"
+
+def get_weather(city: str) -> dict:
+    """Retrieves the current weather report for a specified city.
+
+    Args:
+        city (str): The name of the city for which to retrieve the weather report.
+
+    Returns:
+        dict: status and result or error msg.
+    """
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": (
+                "The weather in New York is sunny with a temperature of 25 degrees"
+                " Celsius (77 degrees Fahrenheit)."
+            ),
+        }
+    else:
+        return {
+            "status": "error",
+            "error_message": f"Weather information for '{city}' is not available.",
+        }
+
+
+def get_current_time(city: str) -> dict:
+    """Returns the current time in a specified city.
+
+    Args:
+        city (str): The name of the city for which to retrieve the current time.
+
+    Returns:
+        dict: status and result or error msg.
+    """
+
+    if city.lower() == "new york":
+        tz_identifier = "America/New_York"
+    else:
+        return {
+            "status": "error",
+            "error_message": (
+                f"Sorry, I don't have timezone information for {city}."
+            ),
+        }
+
+    tz = ZoneInfo(tz_identifier)
+    now = datetime.datetime.now(tz)
+    report = (
+        f'The current time in {city} is {now.strftime("%Y-%m-%d %H:%M:%S %Z%z")}'
+    )
+    return {"status": "success", "report": report}
+
+# Step 1: Create a ThinkingConfig
+thinking_config = ThinkingConfig(
+    include_thoughts=True,   # Ask the model to include its thoughts in the response
+    thinking_budget=256      # Limit the 'thinking' to 256 tokens (adjust as needed)
+)
+print("ThinkingConfig:", thinking_config)
+
+# Step 2: Instantiate BuiltInPlanner
+planner = BuiltInPlanner(
+    thinking_config=thinking_config
+)
+print("BuiltInPlanner created.")
+
+# Step 3: Wrap the planner in an LlmAgent
+agent = LlmAgent(
+    model="gemini-2.5-pro-preview-03-25",  # Set your model name
+    name="weather_and_time_agent",
+    instruction="You are an agent that returns time and weather",
+    planner=planner,
+    tools=[get_weather, get_current_time]
+)
+
+# Session and Runner
+session_service = InMemorySessionService()
+session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+runner = Runner(agent=agent, app_name=APP_NAME, session_service=session_service)
+
+# Agent Interaction
+def call_agent(query):
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+
+    for event in events:
+        print(f"\nDEBUG EVENT: {event}\n")
+        if event.is_final_response() and event.content:
+            final_answer = event.content.parts[0].text.strip()
+            print("\n🟢 FINAL ANSWER\n", final_answer, "\n")
+
+call_agent("If it's raining in New York right now, what is the current temperature?")
+
+```
+
 ## Putting It Together: Example
 
 ??? "Code"
@@ -3727,6 +3850,81 @@ the terms above.
 ```
 
 ================
+File: docs/api-reference/rest/index.md
+================
+# REST API Reference
+
+This page provides a reference for the REST API provided by the ADK web server.
+For details on using the ADK REST API in practice, see
+[Testing](../../get-started/testing.md). 
+
+!!! tip
+    You can view an updated API reference on a running ADK web server by browsing 
+    the `/docs` location, for example at: `http://localhost:8000/docs`
+
+## Endpoints
+
+### `/run`
+
+This endpoint executes an agent run. It takes a JSON payload with the details of the run and returns a list of events generated during the run.
+
+**Request Body**
+
+The request body should be a JSON object with the following fields:
+
+- `app_name` (string, required): The name of the agent to run.
+- `user_id` (string, required): The ID of the user.
+- `session_id` (string, required): The ID of the session.
+- `new_message` (Content, required): The new message to send to the agent. See the [Content](#content-object) section for more details.
+- `streaming` (boolean, optional): Whether to use streaming. Defaults to `false`.
+- `state_delta` (object, optional): A delta of the state to apply before the run.
+
+**Response Body**
+
+The response body is a JSON array of [Event](#event-object) objects.
+
+### `/run_sse`
+
+This endpoint executes an agent run using Server-Sent Events (SSE) for streaming responses. It takes the same JSON payload as the `/run` endpoint.
+
+**Request Body**
+
+The request body is the same as for the `/run` endpoint.
+
+**Response Body**
+
+The response is a stream of Server-Sent Events. Each event is a JSON object representing an [Event](#event-object).
+
+## Objects
+
+### `Content` object
+
+The `Content` object represents the content of a message. It has the following structure:
+
+```json
+{
+  "parts": [
+    {
+      "text": "..."
+    }
+  ],
+  "role": "..."
+}
+```
+
+- `parts`: A list of parts. Each part can be either text or a function call.
+- `role`: The role of the author of the message (e.g., "user", "model").
+
+### `Event` object
+
+The `Event` object represents an event that occurred during an agent run. It has a complex structure with many optional fields. The most important fields are:
+
+- `id`: The ID of the event.
+- `timestamp`: The timestamp of the event.
+- `author`: The author of the event.
+- `content`: The content of the event.
+
+================
 File: docs/api-reference/index.md
 ================
 # API Reference
@@ -3734,16 +3932,6 @@ File: docs/api-reference/index.md
 The Agent Development Kit (ADK) provides comprehensive API references for both Python and Java, allowing you to dive deep into all available classes, methods, and functionalities.
 
 <div class.="grid cards" markdown>
-
--   :fontawesome-brands-python:{ .lg .middle } **CLI Reference**
-
-    ---
-    Explore the complete API documentation for the CLI inclding all of the 
-    valid options and subcommands. 
-
-    [:octicons-arrow-right-24: View CLI Docs](cli/index.html) <br>
-
-<!-- This comment forces a block separation -->
 
 -   :fontawesome-brands-python:{ .lg .middle } **Python API Reference**
 
@@ -3766,6 +3954,26 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     <!-- Assuming your Java API docs (Javadocs) are in a 'java' subdirectory -->
     <!-- Or link to an external Javadoc hosting site -->
     <!-- [:octicons-arrow-right-24: View Java API Docs](java/index.html) -->
+
+<!-- This comment forces a block separation -->
+
+-   :material-console:{ .lg .middle } **CLI Reference**
+
+    ---
+    Explore the complete API documentation for the CLI inclding all of the 
+    valid options and subcommands. 
+
+    [:octicons-arrow-right-24: View CLI Docs](cli/index.html) <br>
+
+
+<!-- This comment forces a block separation -->
+
+-   :material-api:{ .lg .middle } **REST API Reference**
+
+    ---
+    Explore the REST API for the ADK web server. This reference provides details on the available endpoints, request and response formats, and more.
+
+    [:octicons-arrow-right-24: View REST API Docs](rest/index.md) <br>
 
 </div>
 
@@ -9551,7 +9759,7 @@ agent will be unable to function.
 === "Gemini - Google Cloud Vertex AI"
     1. Set up a [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp) and [enable the Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
     2. Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local).
-    3. Authenticate to Google Cloud from the terminal by running `gcloud auth login`.
+    3. Authenticate to Google Cloud from the terminal by running `gcloud auth application-default login`.
     4. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
     the following code and update the project ID and location.
 
@@ -9678,6 +9886,15 @@ agent will be unable to function.
 
     === "Terminal (adk run)"
 
+        !!! tip
+
+            When using `adk run` you can inject prompts into the agent to start by
+            piping text to the command like so:
+
+            ```shell
+            "Please start by listing files" | adk run file_listing_agent
+            ```
+            
         Run the following command, to chat with your Weather agent.
 
         ```
@@ -17627,7 +17844,7 @@ to use built-in tools with other tools by using multiple agents:
         instruction="""
         You're a specialist in Code Execution
         """,
-        tools=[BuiltInCodeExecutor],
+        code_executor=BuiltInCodeExecutor(),
     )
     root_agent = Agent(
         name="RootAgent",
@@ -17713,7 +17930,8 @@ to use built-in tools with other tools by using multiple agents:
         name="RootAgent",
         model="gemini-2.0-flash",
         description="Root Agent",
-        tools=[custom_function, BuiltInCodeExecutor], # <-- BuiltInCodeExecutor not supported when used with tools
+        tools=[custom_function], 
+        code_executor=BuiltInCodeExecutor() # <-- not supported when used with tools
     )
     ```
 
@@ -17753,7 +17971,7 @@ is **not** currently supported:
         instruction="""
         You're a specialist in Code Execution
         """,
-        tools=[BuiltInCodeExecutor],
+        code_executor=BuiltInCodeExecutor(),
     )
     root_agent = Agent(
         name="RootAgent",
