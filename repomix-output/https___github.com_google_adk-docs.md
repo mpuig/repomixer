@@ -764,7 +764,7 @@ File: docs/agents/workflow-agents/loop-agents.md
 
 The `LoopAgent` is a workflow agent that executes its sub-agents in a loop (i.e. iteratively). It **_repeatedly runs_ a sequence of agents** for a specified number of iterations or until a termination condition is met.
 
-Use the `LoopAgent` when your workflow involves repetition or iterative refinement, such as like revising code.
+Use the `LoopAgent` when your workflow involves repetition or iterative refinement, such as revising code.
 
 ### Example
 
@@ -909,6 +909,9 @@ SequentialAgent(sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAg
 ```
 
 This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](../llm-agents.md#structuring-data-input_schema-output_schema-output_key)**.
+
+!!! note "Shared Invocation Context"
+    The `SequentialAgent` passes the same `InvocationContext` to each of its sub-agents. This means they all share the same session state, including the temporary (`temp:`) namespace, making it easy to pass data between steps within a single turn.
 
 ???+ "Code"
 
@@ -2811,6 +2814,9 @@ The most fundamental way for agents operating within the same invocation (and th
 * **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
 * **Nature:** Asynchronous, passive communication. Ideal for pipelines orchestrated by `SequentialAgent` or passing data across `LoopAgent` iterations.
 * **See Also:** [State Management](../sessions/state.md)
+
+!!! note "Invocation Context and `temp:` State"
+    When a parent agent invokes a sub-agent, it passes the same `InvocationContext`. This means they share the same temporary (`temp:`) state, which is ideal for passing data that is only relevant for the current turn.
 
 === "Python"
 
@@ -5653,12 +5659,13 @@ You'll frequently need to read information stored within the context.
         }
         ```
     
-### Managing Session State
+### Managing State
 
 State is crucial for memory and data flow. When you modify state using `CallbackContext` or `ToolContext`, the changes are automatically tracked and persisted by the framework.
 
 *   **How it Works:** Writing to `callback_context.state['my_key'] = my_value` or `tool_context.state['my_key'] = my_value` adds this change to the `EventActions.state_delta` associated with the current step's event. The `SessionService` then applies these deltas when persisting the event.
-*   **Passing Data Between Tools:**
+
+#### Passing Data Between Tools
 
     === "Python"
     
@@ -6216,20 +6223,35 @@ Expected output for `stream_query` (local):
 
 ### Deploy your agent to Agent Engine
 
-```python
-from vertexai import agent_engines
+You can deploy your agent to Agent Engine using the following methods:
 
-remote_app = agent_engines.create(
-    agent_engine=app,
-    requirements=[
-        "google-cloud-aiplatform[adk,agent_engines]"   
-    ]
-)
-```
+=== "CLI"
 
-This step may take several minutes to finish.
+    ```
+    adk deploy agent_engine –project=[project] –region=[region] \
+        –staging_bucket=[staging_bucket] –display_name=[app_name] \ 
+        path/to/my_agent
+    ```
 
-You can check and monitor the deployment of your ADK agent on the [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines) on Google Cloud.
+=== "Python"
+
+    ```python
+    from vertexai import agent_engines
+
+    remote_app = agent_engines.create(
+        agent_engine=app,
+        requirements=[
+            "google-cloud-aiplatform[adk,agent_engines]"   
+        ]
+    )
+    ```
+
+This step may take several minutes to finish. You can check and monitor the
+deployment of your ADK agent on the
+[Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
+on Google Cloud. For more information about the command line interface
+parameters for `adk deploy`, see the 
+[ADK CLI reference](https://google.github.io/adk-docs/api-reference/cli/cli.html#adk-deploy).
 
 Each deployed agent has a unique identifier. You can run the following command to get the resource_name identifier for your deployed agent:
 
@@ -9561,6 +9583,21 @@ File: docs/get-started/installation.md
         <version>0.2.0</version>
       </dependency>
     </dependencies>
+
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.14.0</version>
+          <configuration>
+            <compilerArgs>
+              <arg>-parameters</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
     ```
 
     Here's a [complete pom.xml](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run/pom.xml) file for reference.
@@ -9573,6 +9610,8 @@ File: docs/get-started/installation.md
         implementation 'com.google.adk:google-adk-dev:0.2.0'
     }
     ```
+
+    You should also configure Gradle to pass `-parameters` to `javac`. (Alternatively, use `@Schema(name = "...")`).
 
 
 ## Next steps
@@ -12894,7 +12933,7 @@ Several components work together within the ADK Runtime to execute an agent invo
 6. ### `Invocation`
 
       * **Role:** A conceptual term representing everything that happens in response to a *single* user query, from the moment the `Runner` receives it until the agent logic finishes yielding events for that query.
-      * **Function:** An invocation might involve multiple agent runs (if using agent transfer or `AgentTool`), multiple LLM calls, tool executions, and callback executions, all tied together by a single `invocation_id` within the `InvocationContext`.
+      * **Function:** An invocation might involve multiple agent runs (if using agent transfer or `AgentTool`), multiple LLM calls, tool executions, and callback executions, all tied together by a single `invocation_id` within the `InvocationContext`. State variables prefixed with `temp:` are strictly scoped to a single invocation and discarded afterwards.
 
 These players interact continuously through the Event Loop to process a user's request.
 
@@ -14546,12 +14585,16 @@ Prefixes on state keys define their scope and persistence behavior, especially w
     * **Use Cases:** Global settings (e.g., `'app:api_endpoint'`), shared templates.
     * **Example:** `session.state['app:global_discount_code'] = 'SAVE10'`
 
-* **`temp:` Prefix (Temporary Session State):**
+* **`temp:` Prefix (Temporary Invocation State):**
 
-    * **Scope:** Specific to the *current* session processing turn.
-    * **Persistence:** **Never Persistent.** Guaranteed to be discarded, even with persistent services.
-    * **Use Cases:** Intermediate results needed only immediately, data you explicitly don't want stored.
+    * **Scope:** Specific to the current **invocation** (the entire process from an agent receiving user input to generating the final output for that input).
+    * **Persistence:** **Not Persistent.** Discarded after the invocation completes and does not carry over to the next one.
+    * **Use Cases:** Storing intermediate calculations, flags, or data passed between tool calls within a single invocation.
+    * **When Not to Use:** For information that must persist across different invocations, such as user preferences, conversation history summaries, or accumulated data.
     * **Example:** `session.state['temp:raw_api_response'] = {...}`
+
+!!! note "Sub-Agents and Invocation Context"
+    When a parent agent calls a sub-agent (e.g., using `SequentialAgent` or `ParallelAgent`), it passes its `InvocationContext` to the sub-agent. This means the entire chain of agent calls shares the same invocation ID and, therefore, the same `temp:` state.
 
 **How the Agent Sees It:** Your agent code interacts with the *combined* state through the single `session.state` collection (dict/ Map). The `SessionService` handles fetching/merging state from the correct underlying storage based on prefixes.
 
@@ -17784,6 +17827,48 @@ like calculations, data manipulation, or running small scripts.
     --8<-- "examples/java/snippets/src/main/java/tools/CodeExecutionAgentApp.java:full_code"
     ```
 
+### GKE Code Executor
+
+The `GkeCodeExecutor` provides a secure and scalable method for running
+LLM-generated code by leveraging the GKE (Google Kubernetes Engine) Sandbox
+environment, which uses gVisor for workload isolation.
+
+For each code execution request, it dynamically creates an ephemeral, sandboxed
+Kubernetes Job with a hardened Pod configuration. This is the recommended
+executor for production environments on GKE where security and isolation are
+critical.
+
+!!! note "Prerequisites"
+
+    - You must have a GKE cluster with a **gVisor-enabled node pool**.
+    - The agent's service account requires specific **RBAC permissions**, which allow it to:
+        - Create, watch, and delete **Jobs** for each execution request.
+        - Manage **ConfigMaps** to inject code into the Job's pod.
+        - List **Pods** and read their **logs** to retrieve the execution result
+    - See the complete, ready-to-use configuration in `contributing/samples/gke_agent_sandbox/deployment_rbac.yaml`.
+    - Install the necessary client library: `pip install google-adk[gke]`
+
+=== "Python"
+
+    ```py
+    from google.adk.agents import LlmAgent
+    from google.adk.code_executors import GkeCodeExecutor
+
+    # Initialize the executor, targeting the namespace where its ServiceAccount
+    # has the required RBAC permissions.
+    gke_executor = GkeCodeExecutor(
+        namespace="agent-sandbox",
+        timeout_seconds=600,
+    )
+
+    # The agent will now use this executor for any code it generates.
+    gke_agent = LlmAgent(
+        name="gke_coding_agent",
+        model="gemini-2.0-flash",
+        instruction="You are a helpful AI agent that writes and executes Python code.",
+        code_executor=gke_executor,
+    )
+    ```
 
 ### Vertex AI Search
 
@@ -18121,6 +18206,15 @@ Strive to make your return values as descriptive as possible. *For example,* ins
 #### Docstrings
 
 The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values.
+
+### Passing Data Between Tools
+
+When an agent calls multiple tools in a sequence, you might need to pass data from one tool to another. The recommended way to do this is by using the `temp:` prefix in the session state.
+
+A tool can write data to a `temp:` variable, and a subsequent tool can read it. This data is only available for the current invocation and is discarded afterwards.
+
+!!! note "Shared Invocation Context"
+    All tool calls within a single agent turn share the same `InvocationContext`. This means they also share the same temporary (`temp:`) state, which is how data can be passed between them.
 
 ### Example
 
