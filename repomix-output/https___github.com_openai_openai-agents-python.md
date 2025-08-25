@@ -627,6 +627,13 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
 
 ================
+File: docs/ref/extensions/memory/sqlalchemy_session.md
+================
+# `SQLAlchemySession`
+
+::: agents.extensions.memory.sqlalchemy_session.SQLAlchemySession
+
+================
 File: docs/ref/extensions/models/litellm_model.md
 ================
 # `LiteLLM Model`
@@ -3366,7 +3373,8 @@ Use meaningful session IDs that help you organize conversations:
 
 -   Use in-memory SQLite (`SQLiteSession("session_id")`) for temporary conversations
 -   Use file-based SQLite (`SQLiteSession("session_id", "path/to/db.sqlite")`) for persistent conversations
--   Consider implementing custom session backends for production systems (Redis, PostgreSQL, etc.)
+-   Use SQLAlchemy-powered sessions (`SQLAlchemySession("session_id", engine=engine, create_tables=True)`) for production systems with existing databases supported by SQLAlchemy
+-   Consider implementing custom session backends for other production systems (Redis, Django, etc.) for more advanced use cases
 
 ### Session management
 
@@ -3462,6 +3470,7 @@ For detailed API documentation, see:
 
 -   [`Session`][agents.memory.Session] - Protocol interface
 -   [`SQLiteSession`][agents.memory.SQLiteSession] - SQLite implementation
+-   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy-powered implementation
 
 ================
 File: docs/streaming.md
