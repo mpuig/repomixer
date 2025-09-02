@@ -291,7 +291,7 @@ Realtime agents allow for conversational flows, processing audio and text inputs
 
 The realtime system consists of several key components:
 
--   **RealtimeAgent**: An agent, configured wiht instructions, tools and handoffs.
+-   **RealtimeAgent**: An agent, configured with instructions, tools and handoffs.
 -   **RealtimeRunner**: Manages configuration. You can call `runner.run()` to get a session.
 -   **RealtimeSession**: A single interaction session. You typically create one each time a user starts a conversation, and keep it alive until the conversation is done.
 -   **RealtimeModel**: The underlying model interface (typically OpenAI's WebSocket implementation)
@@ -1610,7 +1610,7 @@ from agents import Agent, ModelSettings, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
-     """returns weather info for the specified city."""
+    """returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
 
 agent = Agent(
