@@ -695,11 +695,25 @@ File: docs/ref/mcp/util.md
 ::: agents.mcp.util
 
 ================
+File: docs/ref/memory/openai_conversations_session.md
+================
+# `Openai Conversations Session`
+
+::: agents.memory.openai_conversations_session
+
+================
 File: docs/ref/memory/session.md
 ================
 # `Session`
 
 ::: agents.memory.session
+
+================
+File: docs/ref/memory/sqlite_session.md
+================
+# `Sqlite Session`
+
+::: agents.memory.sqlite_session
 
 ================
 File: docs/ref/models/chatcmpl_converter.md
@@ -721,6 +735,13 @@ File: docs/ref/models/chatcmpl_stream_handler.md
 # `Chatcmpl Stream Handler`
 
 ::: agents.models.chatcmpl_stream_handler
+
+================
+File: docs/ref/models/default_models.md
+================
+# `Default Models`
+
+::: agents.models.default_models
 
 ================
 File: docs/ref/models/fake_id.md
@@ -1665,9 +1686,47 @@ agent = Agent(
 
     When you pass an `output_type`, that tells the model to use [structured outputs](https://platform.openai.com/docs/guides/structured-outputs) instead of regular plain text responses.
 
-## Handoffs
+## Multi-agent system design patterns
 
-Handoffs are sub-agents that the agent can delegate to. You provide a list of handoffs, and the agent can choose to delegate to them if relevant. This is a powerful pattern that allows orchestrating modular, specialized agents that excel at a single task. Read more in the [handoffs](handoffs.md) documentation.
+There are many ways to design multi‑agent systems, but we commonly see two broadly applicable patterns:
+
+1. Manager (agents as tools): A central manager/orchestrator invokes specialized sub‑agents as tools and retains control of the conversation.
+2. Handoffs: Peer agents hand off control to a specialized agent that takes over the conversation. This is decentralized.
+
+See [our practical guide to building agents](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf) for more details.
+
+### Manager (agents as tools)
+
+The `customer_facing_agent` handles all user interaction and invokes specialized sub‑agents exposed as tools. Read more in the [tools](tools.md#agents-as-tools) documentation.
+
+```python
+from agents import Agent
+
+booking_agent = Agent(...)
+refund_agent = Agent(...)
+
+customer_facing_agent = Agent(
+    name="Customer-facing agent",
+    instructions=(
+        "Handle all direct user communication. "
+        "Call the relevant tools when specialized expertise is needed."
+    ),
+    tools=[
+        booking_agent.as_tool(
+            tool_name="booking_expert",
+            tool_description="Handles booking questions and requests.",
+        ),
+        refund_agent.as_tool(
+            tool_name="refund_expert",
+            tool_description="Handles refund questions and requests.",
+        )
+    ],
+)
+```
+
+### Handoffs
+
+Handoffs are sub‑agents the agent can delegate to. When a handoff occurs, the delegated agent receives the conversation history and takes over the conversation. This pattern enables modular, specialized agents that excel at a single task. Read more in the [handoffs](handoffs.md) documentation.
 
 ```python
 from agents import Agent
@@ -1678,9 +1737,9 @@ refund_agent = Agent(...)
 triage_agent = Agent(
     name="Triage agent",
     instructions=(
-        "Help the user with their questions."
-        "If they ask about booking, handoff to the booking agent."
-        "If they ask about refunds, handoff to the refund agent."
+        "Help the user with their questions. "
+        "If they ask about booking, hand off to the booking agent. "
+        "If they ask about refunds, hand off to the refund agent."
     ),
     handoffs=[booking_agent, refund_agent],
 )
@@ -1749,13 +1808,14 @@ agent = Agent(
     name="Weather Agent",
     instructions="Retrieve weather details.",
     tools=[get_weather],
-    model_settings=ModelSettings(tool_choice="get_weather") 
+    model_settings=ModelSettings(tool_choice="get_weather")
 )
 ```
 
 ## Tool Use Behavior
 
 The `tool_use_behavior` parameter in the `Agent` configuration controls how tool outputs are handled:
+
 - `"run_llm_again"`: The default. Tools are run, and the LLM processes the results to produce a final response.
 - `"stop_on_first_tool"`: The output of the first tool call is used as the final response, without further LLM processing.
 
@@ -1776,6 +1836,7 @@ agent = Agent(
 ```
 
 - `StopAtTools(stop_at_tool_names=[...])`: Stops if any specified tool is called, using its output as the final response.
+
 ```python
 from agents import Agent, Runner, function_tool
 from agents.agent import StopAtTools
@@ -1797,6 +1858,7 @@ agent = Agent(
     tool_use_behavior=StopAtTools(stop_at_tool_names=["get_weather"])
 )
 ```
+
 - `ToolsToFinalOutputFunction`: A custom function that processes tool results and decides whether to stop or continue with the LLM.
 
 ```python
@@ -3215,6 +3277,27 @@ print(f"Agent: {result.final_output}")
 result = await Runner.run(agent, "Hello")
 ```
 
+### OpenAI Conversations API memory
+
+Use the [OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) to persist
+conversation state without managing your own database. This is helpful when you already rely on OpenAI-hosted infrastructure
+for storing conversation history.
+
+```python
+from agents import OpenAIConversationsSession
+
+session = OpenAIConversationsSession()
+
+# Optionally resume a previous conversation by passing a conversation ID
+# session = OpenAIConversationsSession(conversation_id="conv_123")
+
+result = await Runner.run(
+    agent,
+    "Hello",
+    session=session,
+)
+```
+
 ### SQLite memory
 
 ```python
@@ -3375,6 +3458,7 @@ Use meaningful session IDs that help you organize conversations:
 -   Use in-memory SQLite (`SQLiteSession("session_id")`) for temporary conversations
 -   Use file-based SQLite (`SQLiteSession("session_id", "path/to/db.sqlite")`) for persistent conversations
 -   Use SQLAlchemy-powered sessions (`SQLAlchemySession("session_id", engine=engine, create_tables=True)`) for production systems with existing databases supported by SQLAlchemy
+-   Use OpenAI-hosted storage (`OpenAIConversationsSession()`) when you prefer to store history in the OpenAI Conversations API
 -   Consider implementing custom session backends for other production systems (Redis, Django, etc.) for more advanced use cases
 
 ### Session management
@@ -3471,6 +3555,7 @@ For detailed API documentation, see:
 
 -   [`Session`][agents.memory.Session] - Protocol interface
 -   [`SQLiteSession`][agents.memory.SQLiteSession] - SQLite implementation
+-   [`OpenAIConversationsSession`](ref/memory/openai_conversations_session.md) - OpenAI Conversations API implementation
 -   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy-powered implementation
 
 ================
