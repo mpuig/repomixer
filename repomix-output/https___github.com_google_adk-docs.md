@@ -232,7 +232,7 @@ retrieve product information from a separate **Product Catalog Agent**.
 ### Before A2A
 
 Initially, your Customer Service Agent might not have a direct, standardized
-way to query the Product Catalog Ageny, especially if it's a separate service
+way to query the Product Catalog Agent, especially if it's a separate service
 or managed by a different team.
 
 ```text
@@ -317,7 +317,7 @@ The A2A Basic sample consists of:
 
   The ADK comes with a built-in CLI command, `adk api_server --a2a` to expose your agent using the A2A protocol.
 
-  In the a2a_basic example, you will first need to expose the `check_prime_agent` via an A2A server, so that the local root agent can use it.
+  In the `a2a_basic` example, you will first need to expose the `check_prime_agent` via an A2A server, so that the local root agent can use it.
 
 ### 1. Getting the Sample Code { #getting-the-sample-code }
 
@@ -327,7 +327,7 @@ First, make sure you have the necessary dependencies installed:
 pip install google-adk[a2a]
 ```
 
-You can clone and navigate to the [**a2a_basic** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic) here:
+You can clone and navigate to the [**`a2a_basic`** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic) here:
 
 ```bash
 git clone https://github.com/google/adk-python.git
@@ -388,15 +388,15 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
 ```
   
-### 3. Look out for the required agent card (`agent.json`) of the remote agent { #look-out-for-the-required-agent-card-agent-json-of-the-remote-agent }
+### 3. Look out for the required agent card (`agent-card.json`) of the remote agent { #look-out-for-the-required-agent-card-agent-json-of-the-remote-agent }
 
 A2A Protocol requires that each agent must have an agent card that describes what it does.
 
-If someone else has already built the remote A2A agent that you are looking to consume in your agent, then you should confirm that they have an agent card (`agent.json`).
+If someone else has already built the remote A2A agent that you are looking to consume in your agent, then you should confirm that they have an agent card (`agent-card.json`).
 
 In the sample, the `check_prime_agent` already has an agent card provided:
 
-```json title="a2a_basic/remote_a2a/check_prime_agent/agent.json"
+```json title="a2a_basic/remote_a2a/check_prime_agent/agent-card.json"
 
 {
   "capabilities": {},
@@ -435,6 +435,9 @@ The main agent uses the `RemoteA2aAgent()` function to consume the remote agent 
 ```python title="a2a_basic/agent.py"
 <...code truncated...>
 
+from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
 prime_agent = RemoteA2aAgent(
     name="prime_agent",
     description="Agent that handles checking if numbers are prime.",
@@ -449,6 +452,9 @@ prime_agent = RemoteA2aAgent(
 Then, you can simply use the `RemoteA2aAgent` in your agent. In this case, `prime_agent` is used as one of the sub-agents in the `root_agent` below:
 
 ```python title="a2a_basic/agent.py"
+from google.adk.agents.llm_agent import Agent
+from google.genai import types
+
 root_agent = Agent(
     model="gemini-2.0-flash",
     name="root_agent",
@@ -648,7 +654,7 @@ INFO:     Uvicorn running on http://localhost:8001 (Press CTRL+C to quit)
 
 You can check that your agent is up and running by visiting the agent card that was auto-generated earlier as part of your `to_a2a()` function in `a2a_root/remote_a2a/hello_world/agent.py`:
 
-[http://localhost:8001/.well-known/agent.json](http://localhost:8001/.well-known/agent.json)
+[http://localhost:8001/.well-known/agent-card.json](http://localhost:8001/.well-known/agent-card.json)
 
 You should see the contents of the agent card, which should look like:
 
@@ -1730,7 +1736,7 @@ Beyond the core parameters, `LlmAgent` offers several options for finer control:
 
 You can adjust how the underlying LLM generates responses using `generate_content_config`.
 
-* **`generate_content_config` (Optional):** Pass an instance of `google.genai.types.GenerateContentConfig` to control parameters like `temperature` (randomness), `max_output_tokens` (response length), `top_p`, `top_k`, and safety settings.
+* **`generate_content_config` (Optional):** Pass an instance of [`google.genai.types.GenerateContentConfig`](https://googleapis.github.io/python-genai/genai.html#genai.types.GenerateContentConfig) to control parameters like `temperature` (randomness), `max_output_tokens` (response length), `top_p`, `top_k`, and safety settings.
 
 === "Python"
 
@@ -1741,7 +1747,13 @@ You can adjust how the underlying LLM generates responses using `generate_conten
         # ... other params
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2, # More deterministic output
-            max_output_tokens=250
+            max_output_tokens=250,
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=types.HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
+                )
+            ]
         )
     )
     ```
@@ -4211,7 +4223,7 @@ File: docs/api-reference/index.md
 
 The Agent Development Kit (ADK) provides comprehensive API references for both Python and Java, allowing you to dive deep into all available classes, methods, and functionalities.
 
-<div class.="grid cards" markdown>
+<div class="grid cards" markdown>
 
 -   :fontawesome-brands-python:{ .lg .middle } **Python API Reference**
 
@@ -5953,10 +5965,10 @@ State is crucial for memory and data flow. When you modify state using `Callback
 
 *   **How it Works:** Writing to `callback_context.state['my_key'] = my_value` or `tool_context.state['my_key'] = my_value` adds this change to the `EventActions.state_delta` associated with the current step's event. The `SessionService` then applies these deltas when persisting the event.
 
-#### Passing Data Between Tools
+*  **Passing Data Between Tools**
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Tool 1 - Fetches user ID
         from google.adk.tools import ToolContext
@@ -5978,9 +5990,9 @@ State is crucial for memory and data flow. When you modify state using `Callback
             # ... logic to fetch orders using user_id ...
             return {"orders": ["order123", "order456"]}
         ```
-    
+
     === "Java"
-    
+
         ```java
         // Pseudocode: Tool 1 - Fetches user ID
         import com.google.adk.tools.ToolContext;
@@ -10591,6 +10603,33 @@ data: {"content":{"parts":[{"functionResponse":{"id":"af-f83f8af9-f732-46b6-8cb5
 
 data: {"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"rAnWGSiV","timestamp":1743712257.391317}
 ```
+**Send a query with a base64 encoded file using `/run` or `/run_sse`**
+
+```shell
+curl -X POST http://localhost:8000/run \
+--H 'Content-Type: application/json' \
+--d '{
+   "appName":"my_sample_agent",
+   "userId":"u_123",
+   "sessionId":"s_123",
+   "newMessage":{
+      "role":"user",
+      "parts":[
+         {
+            "text":"Describe this image"
+         },
+         {
+            "inlineData":{
+               "displayName":"my_image.png",
+               "data":"iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAAsTAAALEwEAmpw...",
+               "mimeType":"image/png"
+            }
+         }
+      ]
+   },
+   "streaming":false
+}'
+```
 
 !!! info
 
@@ -11489,9 +11528,56 @@ and design patterns that help you use ADK together with MCP servers, including:
 ## MCP Toolbox for Databases
 
 [MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
-open source MCP server that helps you build Gen AI tools so that your agents can
-access data in your database. Google’s Agent Development Kit (ADK) has built in
-support for The MCP Toolbox for Databases.
+open-source MCP server that securely exposes your backend data sources as a
+set of pre-built, production-ready tools for Gen AI agents. It functions as a
+universal abstraction layer, allowing your ADK agent to securely query, analyze,
+and retrieve information from a wide array of databases with built-in support.
+
+The MCP Toolbox server includes a comprehensive library of connectors, ensuring that
+agents can safely interact with your complex data estate.
+
+### Supported Data Sources
+
+MCP Toolbox provides out-of-the-box toolsets for the following databases and data platforms:
+
+#### Google Cloud
+
+* BigQuery (including tools for SQL execution, schema discovery, and ML forecasting)
+* AlloyDB (PostgreSQL-compatible, with tools for both standard queries and natural language queries)
+* Spanner (supporting both GoogleSQL and PostgreSQL dialects)
+* Cloud SQL (with dedicated support for Cloud SQL for PostgreSQL, Cloud SQL for MySQL, and Cloud SQL for SQL Server)
+* Firestore
+* Bigtable
+* Dataplex (for data discovery and metadata search)
+
+#### Relational & SQL Databases
+
+* PostgreSQL (generic)
+* MySQL (generic)
+* Microsoft SQL Server (generic)
+* ClickHouse
+* TiDB
+* OceanBase
+* Firebird
+* SQLite
+
+#### NoSQL & Key-Value Stores
+* MongoDB
+* Couchbase
+* Redis
+* Valkey
+
+#### Graph Databases
+
+* Neo4j (with tools for Cypher queries and schema inspection)
+* Dgraph
+
+#### Data Platforms & Federation
+
+* Looker (for running Looks, queries, and building dashboards via the Looker API)
+* Trino (for running federated queries across multiple sources)
+
+### Documentation
 
 Refer to the
 [MCP Toolbox for Databases](../tools/google-cloud-tools.md#toolbox-tools-for-databases)
@@ -12101,6 +12187,8 @@ When running agents using the ADK's built-in web or API servers, you can easily 
 
 This provides a convenient way to set the logging level without modifying your agent's source code.
 
+> **Note:** The command-line setting always takes precedence over the programmatic configuration (like `logging.basicConfig`) for ADK's loggers. It's recommended to use `INFO` or `WARNING` in production and enable `DEBUG` only when troubleshooting.
+
 **Example using `adk web`:**
 
 To start the web server with `DEBUG` level logging, run:
@@ -12110,59 +12198,48 @@ adk web --log_level DEBUG path/to/your/agents_dir
 ```
 
 The available log levels for the `--log_level` option are:
+
 - `DEBUG`
 - `INFO` (default)
 - `WARNING`
 - `ERROR`
 - `CRITICAL`
 
-> For the `DEBUG` level, you can also use `-v` or `--verbose` as a a shortcut for `--log_level DEBUG`. For example:
-> 
+> You can also use `-v` or `--verbose` as a a shortcut for `--log_level DEBUG`.
+>
 > ```bash
 > adk web -v path/to/your/agents_dir
 > ```
 
-This command-line setting overrides any programmatic configuration (like `logging.basicConfig`) you might have in your code for the ADK's loggers.
-
 ### Log Levels
 
-ADK uses standard log levels to categorize the importance of a message:
+ADK uses standard log levels to categorize messages. The configured level determines what information gets logged.
 
--   `DEBUG`: The most verbose level. Used for fine-grained diagnostic information, such as the full prompt sent to the LLM, detailed state changes, and internal logic flow. **Crucial for debugging.**
--   `INFO`: General information about the agent's lifecycle. This includes events like agent startup, session creation, and tool execution.
--   `WARNING`: Indicates a potential issue or the use of a deprecated feature. The agent can continue to function, but the issue may require attention.
--   `ERROR`: A serious error occurred that prevented the agent from performing an operation.
+| Level | Description | Type of Information Logged  |
+| :--- | :--- | :--- |
+| **`DEBUG`** | **Crucial for debugging.** The most verbose level for fine-grained diagnostic information. | <ul><li>**Full LLM Prompts:** The complete request sent to the language model, including system instructions, history, and tools.</li><li>Detailed API responses from services.</li><li>Internal state transitions and variable values.</li></ul> |
+| **`INFO`** | General information about the agent's lifecycle. | <ul><li>Agent initialization and startup.</li><li>Session creation and deletion events.</li><li>Execution of a tool, including its name and arguments.</li></ul> |
+| **`WARNING`** | Indicates a potential issue or deprecated feature use. The agent continues to function, but attention may be required. | <ul><li>Use of deprecated methods or parameters.</li><li>Non-critical errors that the system recovered from.</li></ul> |
+| **`ERROR`** | A serious error that prevented an operation from completing. | <ul><li>Failed API calls to external services (e.g., LLM, Session Service).</li><li>Unhandled exceptions during agent execution.</li><li>Configuration errors.</li></ul> |
 
-> **Note:** It is recommended to use `INFO` or `WARNING` in production environments and only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
-
-## What is Logged
-
-Depending on the configured log level, you can expect to see the following information:
-
-| Level     | Type of Information Logged                                                                                             |
-| :-------- | :--------------------------------------------------------------------------------------------------------------------- |
-| **DEBUG** | - **Full LLM Prompts:** The complete request sent to the language model, including system instructions, history, and tools. |
-|           | - Detailed API responses from services.                                                                                |
-|           | - Internal state transitions and variable values.                                                                      |
-| **INFO**  | - Agent initialization and startup.                                                                                    |
-|           | - Session creation and deletion events.                                                                                |
-|           | - Execution of a tool, including the tool name and arguments.                                                          |
-| **WARNING**| - Use of deprecated methods or parameters.                                                                             |
-|           | - Non-critical errors that the system can recover from.                                                                 |
-| **ERROR** | - Failed API calls to external services (e.g., LLM, Session Service).                                                  |
-|           | - Unhandled exceptions during agent execution.                                                                         |
-|           | - Configuration errors.                                                                                                |
+> **Note:** It is recommended to use `INFO` or `WARNING` in production environments. Only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
 
 ## Reading and Understanding the Logs
 
-The `format` string in the `basicConfig` example determines the structure of each log message. Let's break down a sample log entry:
+The `format` string in the `basicConfig` example determines the structure of each log message.  
 
-`2025-07-08 11:22:33,456 - DEBUG - google_adk.google.adk.models.google_llm - LLM Request: contents { ... }`
+Here’s a sample log entry:
 
--   `2025-07-08 11:22:33,456`: `%(asctime)s` - The timestamp of when the log was recorded.
--   `DEBUG`: `%(levelname)s` - The severity level of the message.
--   `google_adk.google.adk.models.google_llm`: `%(name)s` - The name of the logger. This hierarchical name tells you exactly which module in the ADK framework produced the log. In this case, it's the Google LLM model wrapper.
--   `Request to LLM: contents { ... }`: `%(message)s` - The actual log message.
+```text
+2025-07-08 11:22:33,456 - DEBUG - google_adk.google.adk.models.google_llm - LLM Request: contents { ... }
+```
+
+| Log Segment                     | Format Specifier | Meaning                                        |
+| ------------------------------- | ---------------- | ---------------------------------------------- |
+| `2025-07-08 11:22:33,456`       | `%(asctime)s`    | Timestamp                                      |
+| `DEBUG`                         | `%(levelname)s`  | Severity level                                 |
+| `google_adk.models.google_llm`  | `%(name)s`       | Logger name (the module that produced the log) |
+| `LLM Request: contents { ... }` | `%(message)s`    | The actual log message                         |
 
 By reading the logger name, you can immediately pinpoint the source of the log and understand its context within the agent's architecture.
 
@@ -12579,8 +12656,7 @@ in the repository.
 Start by extending the `BasePlugin` class and add one or more `callback`
 methods, as shown in the following code example:
 
-```
-# count_plugin.py
+```py title="count_plugin.py"
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models.llm_request import LlmRequest
@@ -12623,8 +12699,7 @@ multiple Plugins with this parameter. The following code example shows how to
 register the `CountInvocationPlugin` plugin defined in the previous section with
 a simple ADK agent.
 
-
-```
+```py
 from google.adk.runners import InMemoryRunner
 from google.adk import Agent
 from google.adk.tools.tool_context import ToolContext
@@ -12681,8 +12756,8 @@ if __name__ == "__main__":
 Run the plugin as you typically would. The following shows how to run the
 command line:
 
-```
-> python3 -m path.to.main
+```sh
+python3 -m path.to.main
 ```
 
 Plugins are not supported by the
@@ -12693,7 +12768,7 @@ interface.
 The output of this previously described agent should look similar to the
 following:
 
-```
+```log
 [Plugin] Agent run count: 1
 [Plugin] LLM request count: 1
 ** Got event from hello_world
@@ -12838,7 +12913,7 @@ giving you a chance to inspect or modify the initial input.\
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def on_user_message_callback(
     self,
     *,
@@ -12863,7 +12938,7 @@ logic begins.
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def before_run_callback(
     self, *, invocation_context: InvocationContext
 ) -> Optional[types.Content]:
@@ -12923,7 +12998,7 @@ normally.****
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def on_model_error_callback(
     self,
     *,
@@ -12970,7 +13045,7 @@ works as follows:
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def on_tool_error_callback(
     self,
     *,
@@ -12997,7 +13072,7 @@ before it's streamed to the client.
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def on_event_callback(
     self, *, invocation_context: InvocationContext, event: Event
 ) -> Optional[Event]:
@@ -13019,7 +13094,7 @@ cleanup and final reporting.
 
 The following code example shows the basic syntax of this callback:
 
-```
+```py
 async def after_run_callback(
     self, *, invocation_context: InvocationContext
 ) -> Optional[None]:
@@ -13803,7 +13878,7 @@ File: docs/safety/index.md
 
 As AI agents grow in capability, ensuring they operate safely, securely, and align with your brand values is paramount. Uncontrolled agents can pose risks, including executing misaligned or harmful actions, such as data exfiltration, and generating inappropriate content that can impact your brand’s reputation. **Sources of risk include vague instructions, model hallucination, jailbreaks and prompt injections from adversarial users, and indirect prompt injections via tool use.**
 
-[Google Cloud's Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/overview) provides a multi-layered approach to mitigate these risks, enabling you to build powerful *and* trustworthy agents. It offers several mechanisms to establish strict boundaries, ensuring agents only perform actions you've explicitly allowed:
+[Google Cloud Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/overview) provides a multi-layered approach to mitigate these risks, enabling you to build powerful *and* trustworthy agents. It offers several mechanisms to establish strict boundaries, ensuring agents only perform actions you've explicitly allowed:
 
 1. **Identity and Authorization**: Control who the agent **acts as** by defining agent and user auth.
 2. **Guardrails to screen inputs and outputs:** Control your model and tool calls precisely.
@@ -14119,7 +14194,7 @@ File: docs/sessions/express-mode.md
 # Vertex AI Express Mode: Using Vertex AI Sessions and Memory for Free
 
 If you are interested in using either the `VertexAiSessionService` or `VertexAiMemoryBankService` but you don't have a Google Cloud Project, you can sign up for Vertex AI Express Mode and get access
-for free and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview). 
+for free and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
 Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#api-keys) and you can get started using your local ADK agent with Vertex AI Session and Memory services!
 
 !!! info Vertex AI Express mode limitations
@@ -14129,64 +14204,66 @@ Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative
 ## Create an Agent Engine
 
 `Session` objects are children of an `AgentEngine`. When using Vertex AI Express Mode, we can create an empty `AgentEngine` parent to manage all of our `Session` and `Memory` objects.
-First, ensure that your enviornment variables are set correctly. For example, in Python:
+First, ensure that your environment variables are set correctly. For example, in Python:
 
-      ```env title="weather_agent/.env"
-      GOOGLE_GENAI_USE_VERTEXAI=TRUE
-      GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-      ```
+```env title="weather_agent/.env"
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+```
 
 Next, we can create our Agent Engine instance. You can use the Gen AI SDK.
 
-=== "GenAI SDK"
+=== "Gen AI SDK"
+
     1. Import Gen AI SDK.
 
-        ```
+        ```py
         from google import genai
         ```
 
-    2. Set Vertex AI to be True, then use a POST request to create the Agent Engine
+    2. Set Vertex AI to be True, then use a `POST` request to create the Agent Engine
         
-        ```
-        # Create Agent Engine with GenAI SDK
-        client = genai.Client(vertexai = True)._api_client
+        ```py
+        # Create Agent Engine with Gen AI SDK
+        client = genai.Client(vertexai=True)._api_client
 
         response = client.request(
-                http_method='POST',
-                path=f'reasoningEngines',
-                request_dict={"displayName": "YOUR_AGENT_ENGINE_DISPLAY_NAME", "description": "YOUR_AGENT_ENGINE_DESCRIPTION"},
-            )
+            http_method='POST',
+            path=f'reasoningEngines',
+            request_dict={"displayName": "YOUR_AGENT_ENGINE_DISPLAY_NAME", "description": "YOUR_AGENT_ENGINE_DESCRIPTION"},
+        )
         response
         ```
 
     3. Replace `YOUR_AGENT_ENGINE_DISPLAY_NAME` and `YOUR_AGENT_ENGINE_DESCRIPTION` with your use case.
     4. Get the Agent Engine name and ID from the response
 
-        ```
-        APP_NAME="/".join(response['name'].split("/")[:6])
-        APP_ID=APP_NAME.split('/')[-1]
+        ```py
+        APP_NAME = "/".join(response['name'].split("/")[:6])
+        APP_ID = APP_NAME.split('/')[-1]
         ```
 
 ## Managing Sessions with a `VertexAiSessionService`
 
-[VertexAiSessionService](session.md###sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+[`VertexAiSessionService`](session.md###sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
 instead initialize the session object without any project or location.
 
-       ```py
-       # Requires: pip install google-adk[vertexai]
-       # Plus environment variable setup:
-       # GOOGLE_GENAI_USE_VERTEXAI=TRUE
-       # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-       from google.adk.sessions import VertexAiSessionService
+```py
+# Requires: pip install google-adk[vertexai]
+# Plus environment variable setup:
+# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+from google.adk.sessions import VertexAiSessionService
 
-       # The app_name used with this service should be the Reasoning Engine ID or name
-       APP_ID = "your-reasoning-engine-id"
+# The app_name used with this service should be the Reasoning Engine ID or name
+APP_ID = "your-reasoning-engine-id"
 
-       # Project and location are not required when initializing with Vertex Express Mode
-       session_service = VertexAiSessionService(agent_engine_id=APP_ID)
-       # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
-       # session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
-       ```
+# Project and location are not required when initializing with Vertex Express Mode
+session_service = VertexAiSessionService(agent_engine_id=APP_ID)
+# Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
+# session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
+```
+
 !!! info Session Service Quotas
 
     For Free Express Mode Projects, `VertexAiSessionService` has the following quota:
@@ -14196,24 +14273,25 @@ instead initialize the session object without any project or location.
 
 ## Managing Memories with a `VertexAiMemoryBankService`
 
-[VertexAiMemoryBankService](memory.md###memoryservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+[`VertexAiMemoryBankService`](memory.md###memoryservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
 instead initialize the memory object without any project or location.
 
-       ```py
-       # Requires: pip install google-adk[vertexai]
-       # Plus environment variable setup:
-       # GOOGLE_GENAI_USE_VERTEXAI=TRUE
-       # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-       from google.adk.sessions import VertexAiMemoryBankService
+```py
+# Requires: pip install google-adk[vertexai]
+# Plus environment variable setup:
+# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+from google.adk.sessions import VertexAiMemoryBankService
 
-       # The app_name used with this service should be the Reasoning Engine ID or name
-       APP_ID = "your-reasoning-engine-id"
+# The app_name used with this service should be the Reasoning Engine ID or name
+APP_ID = "your-reasoning-engine-id"
 
-       # Project and location are not required when initializing with Vertex Express Mode
-       memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
-       # Generate a memory from that session so the Agent can remember relevant details about the user
-       # memory = await memory_service.add_session_to_memory(session)
-       ```
+# Project and location are not required when initializing with Vertex Express Mode
+memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
+# Generate a memory from that session so the Agent can remember relevant details about the user
+# memory = await memory_service.add_session_to_memory(session)
+```
+
 !!! info Memory Service Quotas
 
     For Free Express Mode Projects, `VertexAiMemoryBankService` has the following quota:
@@ -14222,7 +14300,7 @@ instead initialize the memory object without any project or location.
 
 ## Code Sample: Weather Agent with Session and Memory using Vertex AI Express Mode
 
-In this sample, we create a weather agent that utilizes both `VertexAiSessionService` and `VertexAiMemoryBankService` for context maangement, allowing our agent to recall user prefereneces and conversations!
+In this sample, we create a weather agent that utilizes both `VertexAiSessionService` and `VertexAiMemoryBankService` for context management, allowing our agent to recall user preferences and conversations!
 
 **[Weather Agent with Session and Memory using Vertex AI Express Mode](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)**
 
@@ -14587,7 +14665,7 @@ class MultiMemoryAgent(Agent):
 
         # 1. Search conversational history using the framework-provided memory
         #    (This would be InMemoryMemoryService if configured)
-        conversation_context = await self.search_memory(query=user_query)
+        conversation_context = await self.memory_service.search_memory(query=user_query)
 
         # 2. Search the document knowledge base using the manually created service
         document_context = await self.vertexai_memorybank_service.search_memory(query=user_query)
@@ -14750,7 +14828,7 @@ the storage backend that best suits your needs:
 
 2.  **`VertexAiSessionService`**
 
-    *   **How it works:** Uses Google Cloud's Vertex AI infrastructure via API
+    *   **How it works:** Uses Google Cloud Vertex AI infrastructure via API
         calls for session management.
     *   **Persistence:** Yes. Data is managed reliably and scalably via
         [Vertex AI Agent Engine](https://google.github.io/adk-docs/deploy/agent-engine/).
@@ -18233,7 +18311,7 @@ Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples
 
 ### Vertex AI Search
 
-The `vertex_ai_search_tool` uses Google Cloud's Vertex AI Search, enabling the
+The `vertex_ai_search_tool` uses Google Cloud Vertex AI Search, enabling the
 agent to search across your private, configured data stores (e.g., internal
 documents, company policies, knowledge bases). This built-in tool requires you
 to provide the specific data store ID during configuration. For further details of the tool, see [Understanding Vertex AI Search grounding](../grounding/vertex_ai_search_grounding.md).
@@ -18271,7 +18349,7 @@ to use built-in tools with other tools by using multiple agents:
 === "Python"
 
     ```py
-    from google.adk.tools import agent_tool
+    from google.adk.tools.agent_tool import AgentTool
     from google.adk.agents import Agent
     from google.adk.tools import google_search
     from google.adk.code_executors import BuiltInCodeExecutor
@@ -18297,7 +18375,7 @@ to use built-in tools with other tools by using multiple agents:
         name="RootAgent",
         model="gemini-2.0-flash",
         description="Root Agent",
-        tools=[agent_tool.AgentTool(agent=search_agent), agent_tool.AgentTool(agent=coding_agent)],
+        tools=[AgentTool(agent=search_agent), AgentTool(agent=coding_agent)],
     )
     ```
 
@@ -19126,7 +19204,7 @@ you only need to follow a subset of these steps.
         "apikey", "query", "apikey", apikey_credential_str
     )
 
-    sample_toolset_with_auth = APIHubToolset(
+    sample_toolset = APIHubToolset(
         name="apihub-sample-tool",
         description="Sample Tool",
         access_token="...",  # Copy your access token generated in step 1
@@ -19281,21 +19359,21 @@ It supports both on-premise and SaaS applications. In addition, you can turn you
 
     To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
     
-      - `roles/integration.editor`
-      - `roles/connectors.user`
+      - `roles/integrations.integrationEditor`
+      - `roles/connectors.invoker`
       - `roles/secretmanager.secretAccessor`
     
-    **Note:** For Agent Engine (AE), don't use `roles/integration.invoker`, as it can result in 403 errors. Use `roles/integration.editor` instead.
+    **Note:** For Agent Engine (AE), don't use `roles/integrations.integrationInvoker`, as it can result in 403 errors. Use `roles/integrations.integrationEditor` instead.
 
 === "Java"
 
     To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
     
-      - `roles/integration.editor`
-      - `roles/connectors.user`
+      - `roles/integrations.integrationEditor`
+      - `roles/connectors.invoker`
       - `roles/secretmanager.secretAccessor`
 
-    **Note:** For Agent Engine (AE), don't use `roles/integration.invoker`, as it can result in 403 errors. Use `roles/integration.editor` instead.
+    **Note:** For Agent Engine (AE), don't use `roles/integrations.integrationInvoker`, as it can result in 403 errors. Use `roles/integrations.integrationEditor` instead.
     
 
 ### Use Integration Connectors
