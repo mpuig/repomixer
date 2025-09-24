@@ -12132,7 +12132,7 @@ File: docs/observability/arize-ax.md
 ================
 # Agent Observability with Arize AX
 
-[Arize AX](https://arize.com/docs/ax) is a production-grade observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing, evaluation, and monitoring capabilities for your Google ADK applications. To get started, sign up for a [free account](https://app.arize.com/auth/join). 
+[Arize AX](https://arize.com/docs/ax) is a production-grade observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing, evaluation, and monitoring capabilities for your Google ADK applications. To get started, sign up for a [free account](https://app.arize.com/auth/join).
 
 For an open-source, self-hosted alternative, check out [Phoenix](https://arize.com/docs/phoenix).
 
@@ -12258,7 +12258,7 @@ async for event in runner.run_async(
 ![Agent Experiments](https://storage.googleapis.com/arize-phoenix-assets/assets/images/google-adk-experiments.png)
 
 ## Support and Resources
-- [Arize AX Documentation](https://arize.com/docs/ax/observe/tracing-integrations-auto/google-adk)
+- [Arize AX Documentation](https://arize.com/docs/ax/integrations/frameworks-and-platforms/google-adk)
 - [Arize Community Slack](https://arize-ai.slack.com/join/shared_invite/zt-11t1vbu4x-xkBIHmOREQnYnYDH1GDfCg#/shared-invite/email)
 - [OpenInference Package](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
 
@@ -18720,6 +18720,27 @@ They are packaged in the toolset `BigQueryToolset`.
 
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/bigquery.py"
+```
+
+
+### Spanner
+
+These are a set of tools aimed to provide integration with Spanner, namely:
+
+* **`list_table_names`**: Fetches table names present in a GCP Spanner database.
+* **`list_table_indexes`**: Fetches table indexes present in a GCP Spanner database.
+* **`list_table_index_columns`**: Fetches table index columns present in a GCP Spanner database.
+* **`list_named_schemas`**: Fetches named schema for a Spanner database.
+* **`get_table_schema`**: Fetches Spanner database table schema and metadata information.
+* **`execute_sql`**: Runs a SQL query in Spanner database and fetch the result.
+* **`similarity_search`**: Similarity search in Spanner using a text query.
+
+They are packaged in the toolset `SpannerToolset`.
+
+
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/spanner.py"
 ```
 
 ## Use Built-in tools with other tools
