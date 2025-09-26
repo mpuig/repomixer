@@ -697,6 +697,13 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
 
 ================
+File: docs/ref/extensions/memory/redis_session.md
+================
+# `RedisSession`
+
+::: agents.extensions.memory.redis_session.RedisSession
+
+================
 File: docs/ref/extensions/memory/sqlalchemy_session.md
 ================
 # `SQLAlchemySession`
