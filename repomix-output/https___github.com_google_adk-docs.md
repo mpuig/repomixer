@@ -10858,11 +10858,38 @@ to use the ADK API server.
 === "Java"
 
     Make sure to update the port number.
-
-    ```java
-    mvn compile exec:java \
+    === "Maven"
+        With Maven, compile and run the ADK web server:
+        ```console
+        mvn compile exec:java \
          -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8080"
-    ```
+        ```
+    === "Gradle"
+        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
+
+        ```groovy
+        plugins {
+            id('java')
+            // other plugins
+        }
+        ```
+        Then, elsewhere in the build file, at the top-level, create a new task:
+
+        ```groovy
+        tasks.register('runADKWebServer', JavaExec) {
+            dependsOn classes 
+            classpath = sourceSets.main.runtimeClasspath
+            mainClass = 'com.google.adk.web.AdkWebServer'
+            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8080'
+        }
+        ```
+
+        Finally, on the command-line, run the following command:
+        ```console
+        gradle runADKWebServer
+        ```
+
+    
     In Java, both the Dev UI and the API server are bundled together.
 
 This command will launch a local web server, where you can run cURL commands or send API requests to test your agent.
@@ -14811,7 +14838,7 @@ File: docs/sessions/memory.md
 
 ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
 
-We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations or access external knowledge bases? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
+We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
 
 Think of it this way:
 
@@ -14829,13 +14856,13 @@ The `BaseMemoryService` defines the interface for managing this searchable, long
 
 The ADK offers two distinct `MemoryService` implementations, each tailored to different use cases. Use the table below to decide which is the best fit for your agent.
 
-| **Feature** | **InMemoryMemoryService** | **[NEW!] VertexAiMemoryBankService** |
+| **Feature** | **InMemoryMemoryService** | **VertexAiMemoryBankService** |
 | :--- | :--- | :--- |
 | **Persistence** | None (data is lost on restart) | Yes (Managed by Vertex AI) |
 | **Primary Use Case** | Prototyping, local development, and simple testing. | Building meaningful, evolving memories from user conversations. |
 | **Memory Extraction** | Stores full conversation | Extracts [meaningful information](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories) from conversations and consolidates it with existing memories (powered by LLM) |
 | **Search Capability** | Basic keyword matching. | Advanced semantic search. |
-| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) in Vertex AI. |
+| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) instance in Vertex AI. |
 | **Dependencies** | None. | Google Cloud Project, Vertex AI API |
 | **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. |
 
@@ -14953,9 +14980,9 @@ The `VertexAiMemoryBankService` connects your agent to [Vertex AI Memory Bank](h
 
 ### How It Works
 
-The service automatically handles two key operations:
+The service handles two key operations:
 
-*   **Generating Memories:** At the end of a conversation, the ADK sends the session's events to the Memory Bank, which intelligently processes and stores the information as "memories."
+*   **Generating Memories:** At the end of a conversation, you can send the session's events to the Memory Bank, which intelligently processes and stores the information as "memories."
 *   **Retrieving Memories:** Your agent code can issue a search query against the Memory Bank to retrieve relevant memories from past conversations.
 
 ### Prerequisites
@@ -14963,7 +14990,7 @@ The service automatically handles two key operations:
 Before you can use this feature, you must have:
 
 1.  **A Google Cloud Project:** With the Vertex AI API enabled.
-2.  **An Agent Engine:** You need to create an Agent Engine in Vertex AI. This will provide you with the **Agent Engine ID** required for configuration.
+2.  **An Agent Engine:** You need to create an Agent Engine in Vertex AI. You do not need to deploy your agent to Agent Engine Runtime to use Memory Bank. This will provide you with the **Agent Engine ID** required for configuration.
 3.  **Authentication:** Ensure your local environment is authenticated to access Google Cloud services. The simplest way is to run:
     ```bash
     gcloud auth application-default login
@@ -15001,31 +15028,43 @@ runner = adk.Runner(
 )
 ``` 
 
-### Using Memory in Your Agent
+## Using Memory in Your Agent
 
-With the service configured, the ADK automatically saves session data to the Memory Bank. To make your agent use this memory, you need to call the `search_memory` method from your agent's code.
+When a memory service is configured, your agent can use a tool or callback to retrieve memories. ADK includes two pre-built tools for retrieving memories:
 
-This is typically done at the beginning of a turn to fetch relevant context before generating a response.
+* `PreloadMemory`: Always retrieve memory at the beginning of each turn (similar to a callback).
+* `LoadMemory`: Retrieve memory when your agent decides it would be helpful.
 
 **Example:**
 
 ```python
 from google.adk.agents import Agent
-from google.genai import types
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
-class MyAgent(Agent):
-    async def run(self, request: types.Content, **kwargs) -> types.Content:
-        # Get the user's latest message
-        user_query = request.parts[0].text
+agent = Agent(
+    model=MODEL_ID,
+    name='weather_sentiment_agent',
+    instruction="...",
+    tools=[PreloadMemoryTool()]
+)
+```
 
-        # Search the memory for context related to the user's query
-        search_result = await self.search_memory(query=user_query)
+To extract memories from your session, you need to call `add_session_to_memory`. For example, you can automate this via a callback:
 
-        # Create a prompt that includes the retrieved memories
-        prompt = f"Based on my memory, here's what I recall about your query: {search_result.memories}\n\nNow, please respond to: {user_query}"
+```python
+from google import adk
 
-        # Call the LLM with the enhanced prompt
-        return await self.llm.generate_content_async(prompt)
+async def auto_save_session_to_memory_callback(callback_context):
+    await callback_context._invocation_context.memory_service.add_session_to_memory(
+        callback_context._invocation_context.session)
+
+agent = Agent(
+    model=MODEL,
+    name="Generic_QA_Agent",
+    instruction="Answer the user's questions",
+    tools=[adk.tools.preload_memory_tool.PreloadMemoryTool()],
+    after_agent_callback=auto_save_session_to_memory_callback,
+)
 ```
 
 ## Advanced Concepts
@@ -15035,7 +15074,7 @@ class MyAgent(Agent):
 The memory workflow internally involves these steps:
 
 1. **Session Interaction:** A user interacts with an agent via a `Session`, managed by a `SessionService`. Events are added, and state might be updated.  
-2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or RAG Corpus).  
+2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or Agent Engine Memory Bank).  
 3. **Later Query:** In a *different* (or the same) session, the user might ask a question requiring past context (e.g., "What did we discuss about project X last week?").  
 4. **Agent Uses Memory Tool:** An agent equipped with a memory-retrieval tool (like the built-in `load_memory` tool) recognizes the need for past context. It calls the tool, providing a search query (e.g., "discussion project X last week").  
 5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name, user_id, query)`.  
@@ -19752,126 +19791,105 @@ you only need to follow a subset of these steps.
 
 ## Application Integration Tools
 
-With **ApplicationIntegrationToolset**, you can seamlessly give your agents secure and governed access to enterprise applications using Integration Connectors' 100+ pre-built connectors for systems like Salesforce, ServiceNow, JIRA, SAP, and more. 
+With **ApplicationIntegrationToolset**, you can seamlessly give your agents
+secure and governed access to enterprise applications using Integration
+Connectors' 100+ pre-built connectors for systems like Salesforce, ServiceNow,
+JIRA, SAP, and more.
 
-It supports both on-premise and SaaS applications. In addition, you can turn your existing Application Integration process automations into agentic workflows by providing application integration workflows as tools to your ADK agents. 
+It supports both on-premise and SaaS applications. In addition, you can turn
+your existing Application Integration process automations into agentic workflows
+by providing application integration workflows as tools to your ADK agents.
 
-Federated search within Application Integration lets you use ADK agents to query multiple enterprise applications and data sources simultaneously. 
+Federated search within Application Integration lets you use ADK agents to query
+multiple enterprise applications and data sources simultaneously.
 
-[:fontawesome-brands-youtube:{.youtube-red-icon} Watch "Federated Search in Application Integration"!](https://www.youtube.com/watch?v=JdlWOQe5RgU&t=1s target="_blank" rel="noopener noreferrer")
+[:fontawesome-brands-youtube:{.youtube-red-icon} See how ADK Federated Search in Application Integration works in this video walkthrough](https://www.youtube.com/watch?v=JdlWOQe5RgU){: target="_blank" rel="noopener noreferrer"}
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JdlWOQe5RgU?si=bFY_-jJ6Oliy5UMG" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ### Prerequisites
 
-
 #### 1. Install ADK
 
-=== "Python"
-
-    Install the latest version of [ADK](../get-started/installation.md). For information about the latest version of ADK, see [Agent Development Kit Walkthrough](https://docs.google.com/document/d/1oqXkqX9m5wjWE-rkwp-qO0CGpSEQHBTYAYQcWRf91XU/edit?tab=t.0#heading=h.7k9wrm8jpdug).
-
-=== "Java"
-
-    Install the latest version of [ADK](../get-started/installation.md). For information about the latest version of ADK, see [Agent Development Kit Walkthrough](https://docs.google.com/document/d/1oqXkqX9m5wjWE-rkwp-qO0CGpSEQHBTYAYQcWRf91XU/edit?tab=t.0#heading=h.7k9wrm8jpdug).
-
+Install Agent Development Kit following the steps in the
+[installation guide](../get-started/installation.md).
 
 #### 2. Install CLI
 
-=== "Python"
+Install the
+[Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions).
+To use the tool with default credentials, run the following commands:
 
-    Install [Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions). To use the tool with default credentials, run the following commands:
-    
-      ```shell
-      gcloud config set project <project-id>
-      gcloud auth application-default login
-      gcloud auth application-default set-quota-project <project-id>
-      ```
-    
-    Replace `<project-id>` with the unique ID of your Google Cloud project.
-    
-=== "Java"
+```shell
+gcloud config set project <project-id>
+gcloud auth application-default login
+gcloud auth application-default set-quota-project <project-id>
+```
 
-    Install [Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions). To use the tool with default credentials, run the following commands:
-    
-      ```bash
-      gcloud config set project <project-id>
-      gcloud auth application-default login
-      gcloud auth application-default set-quota-project <project-id>
-      ```
-    
-    Replace `<project-id>` with the unique ID of your Google Cloud project.
-
+Replace `<project-id>` with the unique ID of your Google Cloud project.
 
 #### 3. Provision Application Integration workflow and publish Connection Tool
 
-=== "Python"
+Use an existing
+[Application Integration](https://cloud.google.com/application-integration/docs/overview)
+workflow or
+[Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview)
+connection you want to use with your agent. You can also create a new
+[Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration)
+or a
+[connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
 
-    Use an existing [Application Integration](https://cloud.google.com/application-integration/docs/overview) workflow or [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview) connection you want to use with your agent. You can also create a new [Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration) or a [connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
-    
-    Import and publish the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global) from the template library.
-    
-    **Note**: To use a connector from Integration Connectors, you need to provision Application Integration in the same region as your connection.
+Import and publish the
+[Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global)
+from the template library.
 
-=== "Java"
-
-    Use an existing [Application Integration](https://cloud.google.com/application-integration/docs/overview) workflow or [Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview) connection you want to use with your agent. You can also create a new [Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration) or a [connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
-    
-    Import and publish the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global) from the template library.
-    
-    **Note**: To use a connector from Integration Connectors, you need to provision Application Integration in the same region as your connection, import and publish Connection Tool from the template library.
+**Note**: To use a connector from Integration Connectors, you need to provision
+the Application Integration in the same region as your connection.
 
 #### 4. Create project structure
 
 === "Python"
 
-    Set up your project structure and create required files.
-    
+    Set up your project structure and create the required files:
+
       ```console
       project_root_folder
-      |-- .env
-      `-- my_agent
-          |-- __init__.py
-          |-- agent.py
-          `__ tools.py
+      ├── .env
+      └── my_agent
+          ├── __init__.py
+          ├── agent.py
+          └── tools.py
       ```
-    
-    When running the agent, make sure to run `adk web` in the `project\_root_folder`.
+
+    When running the agent, make sure to run `adk web` from the `project_root_folder`.
 
 === "Java"
 
-     Set up your project structure and create required files.
-      
-        ```console
-          project_root_folder
-          |-- my_agent
-          |   |-- agent.java
-          |   `-- pom.xml
-        ```
-        
-      When running the agent, make sure to run the commands in the `project\_root_folder`.
+    Set up your project structure and create the required files:
+
+      ```console
+        project_root_folder
+        └── my_agent
+            ├── agent.java
+            └── pom.xml
+      ```
+
+     When running the agent, make sure to run the commands from the `project_root_folder`.
 
 #### 5. Set roles and permissions
 
-=== "Python"
+To get the permissions that you need to set up
+**ApplicationIntegrationToolset**, you must have the following IAM roles on the
+project (common to both Integration Connectors and Application Integration
+Workflows):
 
-    To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
-    
-      - `roles/integrations.integrationEditor`
-      - `roles/connectors.invoker`
-      - `roles/secretmanager.secretAccessor`
-    
-    **Note:** For Agent Engine (AE), don't use `roles/integrations.integrationInvoker`, as it can result in 403 errors. Use `roles/integrations.integrationEditor` instead.
+    - roles/integrations.integrationEditor
+    - roles/connectors.invoker
+    - roles/secretmanager.secretAccessor
 
-=== "Java"
-
-    To get the permissions that you need to set up **ApplicationIntegrationToolset**, you must have the following IAM roles on the project (common to both Integration Connectors and Application Integration Workflows):
-    
-      - `roles/integrations.integrationEditor`
-      - `roles/connectors.invoker`
-      - `roles/secretmanager.secretAccessor`
-
-    **Note:** For Agent Engine (AE), don't use `roles/integrations.integrationInvoker`, as it can result in 403 errors. Use `roles/integrations.integrationEditor` instead.
-    
+**Note:** When using Agent Engine (AE) for deployment, don't use
+`roles/integrations.integrationInvoker`, as it can result in 403 errors. Use
+`roles/integrations.integrationEditor` instead.
 
 ### Use Integration Connectors
 
@@ -19886,8 +19904,8 @@ Connect your agent to enterprise applications using
    Application Integration in the same region as your connection.
 
    ![Google Cloud Tools](../assets/application-integration-overview.png)
-   
-   
+
+
 
 2. Go to the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
    template in the template library and click **USE TEMPLATE**.
@@ -19902,11 +19920,11 @@ Connect your agent to enterprise applications using
 
 
     ![Google Cloud Tools](../assets/publish-integration.png)
-   
-   
+
+
 #### Create an Application Integration Toolset
 
-To create an Application Integration Toolset for Integration Connectors, follow these steps: 
+To create an Application Integration Toolset for Integration Connectors, follow these steps:
 
 1.  Create a tool with `ApplicationIntegrationToolset` in the `tools.py` file:
 
@@ -20020,12 +20038,12 @@ Use an existing
 workflow as a tool for your agent or create a new one.
 
 
-#### 1. Create a tool 
+#### 1. Create a tool
 
 === "Python"
 
     To create a tool with `ApplicationIntegrationToolset` in the `tools.py` file, use the following code:
-    
+
       ```py
           integration_tool = ApplicationIntegrationToolset(
               project="test-project", # TODO: replace with GCP project of the connection
@@ -20037,23 +20055,23 @@ workflow as a tool for your agent or create a new one.
               tool_instructions="..."
           )
       ```
-      
-      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct 
+
+      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct
          [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
 
 === "Java"
 
     To create a tool with `ApplicationIntegrationToolset` in the `tools.java` file, use the following code:
-    
-      ```java    
+
+      ```java
           import com.google.adk.tools.applicationintegrationtoolset.ApplicationIntegrationToolset;
           import com.google.common.collect.ImmutableList;
           import com.google.common.collect.ImmutableMap;
-      
+
           public class Tools {
               private static ApplicationIntegrationToolset integrationTool;
               private static ApplicationIntegrationToolset connectionsTool;
-      
+
               static {
                   integrationTool = new ApplicationIntegrationToolset(
                           "test-project",
@@ -20066,7 +20084,7 @@ workflow as a tool for your agent or create a new one.
                           "{...}",
                           "tool_prefix1",
                           "...");
-      
+
                   connectionsTool = new ApplicationIntegrationToolset(
                           "test-project",
                           "us-central1",
@@ -20081,7 +20099,7 @@ workflow as a tool for your agent or create a new one.
               }
           }
       ```
-    
+
       **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
 
 #### 2. Add the tool to your agent
@@ -20089,11 +20107,11 @@ workflow as a tool for your agent or create a new one.
 === "Python"
 
     To update the `agent.py` file and add the tool to your agent, use the following code:
-    
+
       ```py
           from google.adk.agents.llm_agent import LlmAgent
           from .tools import integration_tool, connector_tool
-      
+
           root_agent = LlmAgent(
               model='gemini-2.0-flash',
               name='integration_agent',
@@ -20110,7 +20128,7 @@ workflow as a tool for your agent or create a new one.
           import com.google.adk.agent.LlmAgent;
           import com.google.adk.tools.BaseTool;
           import com.google.common.collect.ImmutableList;
-        
+
             public class MyAgent {
                 public static void main(String[] args) {
                     // Assuming Tools class is defined as in the previous step
@@ -20118,7 +20136,7 @@ workflow as a tool for your agent or create a new one.
                             .add(Tools.integrationTool)
                             .add(Tools.connectionsTool)
                             .build();
-        
+
                     // Finally, create your agent with the tools generated automatically.
                     LlmAgent rootAgent = LlmAgent.builder()
                             .name("science-teacher")
@@ -20129,22 +20147,22 @@ workflow as a tool for your agent or create a new one.
                             )
                             .tools(tools)
                             .build();
-        
+
                     // You can now use rootAgent to interact with the LLM
                     // For example, you can start a conversation with the agent.
                 }
             }
         ```
-        
-    **Note:** To find the list of supported entities and actions for a
-        connection, use these Connector APIs: `listActions`, `listEntityTypes`.    
-      
+
+**Note:** To find the list of supported entities and actions for a
+        connection, use these Connector APIs: `listActions`, `listEntityTypes`.
+
 #### 3. Expose your agent
 
 === "Python"
 
     To configure `__init__.py` to expose your agent, use the following code:
-    
+
       ```py
           from . import agent
       ```
@@ -20154,28 +20172,28 @@ workflow as a tool for your agent or create a new one.
 === "Python"
 
     To start the Google ADK Web UI and use your agent, use the following commands:
-    
+
       ```shell
           # make sure to run `adk web` from your project_root_folder
           adk web
       ```
     After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
-    
+
 === "Java"
 
     To start the Google ADK Web UI and use your agent, use the following commands:
-    
+
       ```bash
           mvn install
-      
+
           mvn exec:java \
               -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
               -Dexec.args="--adk.agents.source-dir=src/main/java" \
               -Dexec.classpathScope="compile"
       ```
-    
+
     After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
-  
+
 ---
 
 ## Toolbox Tools for Databases
