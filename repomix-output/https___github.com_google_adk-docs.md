@@ -9318,7 +9318,7 @@ Treating events as structured messages with clear purposes for their content and
 ================
 File: docs/get-started/streaming/index.md
 ================
-# Streaming Quickstarts
+# Build a streaming agent
 
 The Agent Development Kit (ADK) enables real-time, interactive experiences with your AI agents through streaming. This allows for features like live voice conversations, real-time tool use, and continuous updates from your agent.
 
@@ -9326,7 +9326,7 @@ This page provides quickstart examples to get you up and running with streaming 
 
 <div class.="grid cards" markdown>
 
--   :fontawesome-brands-python:{ .lg .middle } **Python ADK: Streaming Quickstart**
+-   :fontawesome-brands-python:{ .lg .middle } **Python ADK: Streaming agent**
 
     ---
     This example demonstrates how to set up a basic streaming interaction with an agent using Python ADK. It typically involves using the `Runner.run_live()` method and handling asynchronous events.
@@ -9336,7 +9336,7 @@ This page provides quickstart examples to get you up and running with streaming 
 
 <!-- This comment forces a block separation -->
 
--   :fontawesome-brands-java:{ .lg .middle } **Java ADK: Streaming Quickstart**
+-   :fontawesome-brands-java:{ .lg .middle } **Java ADK: Streaming agent**
 
     ---
     This example demonstrates how to set up a basic streaming interaction with an agent using Java ADK. It involves using the `Runner.runLive()` method, a `LiveRequestQueue`, and handling the `Flowable<Event>` stream.
@@ -9349,7 +9349,7 @@ This page provides quickstart examples to get you up and running with streaming 
 ================
 File: docs/get-started/streaming/quickstart-streaming-java.md
 ================
-# Quickstart (Streaming / Java) {#adk-streaming-quickstart-java}
+# Build a streaming agent with Java
 
 This quickstart guide will walk you through the process of creating a basic agent and leveraging ADK Streaming with Java to facilitate low-latency, bidirectional voice interactions.
 
@@ -9931,7 +9931,7 @@ Streaming for ADK enables developers to create agents capable of low-latency, bi
 ================
 File: docs/get-started/streaming/quickstart-streaming.md
 ================
-# Quickstart (Streaming / Python) {#adk-streaming-quickstart}
+# Build a streaming agent with Python
 
 With this quickstart, you'll learn to create a simple agent and use ADK Streaming to enable voice and video communication with it that is low-latency and bidirectional. We will install ADK, set up a basic "Google Search" agent, try running the agent with Streaming with `adk web` tool, and then explain how to build a simple asynchronous web app by yourself using ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/).
 
@@ -10229,62 +10229,27 @@ agentic applications:
 ================
 File: docs/get-started/index.md
 ================
-# Get Started
+# Get started
 
-Agent Development Kit (ADK) is designed to empower developers
-to build, manage, evaluate and deploy AI-powered agents. It provides a robust
-and flexible environment for creating both conversational and non-conversational
-agents, capable of handling complex tasks and workflows.
+Agent Development Kit (ADK) is designed to empower developers to quickly build,
+manage, evaluate and deploy AI-powered agents. These quick start guides get you
+set up and running a simple agent in less than 20 minutes.
 
 <div class="grid cards" markdown>
 
--   :material-console-line: **Installation**
+-   :fontawesome-brands-python:{ .lg .middle } **Python Quickstart**
 
     ---
+    Create your first Python ADK agent in minutes.
 
-    Install `google-adk` for Python or Java and get up and running in minutes.
+    [:octicons-arrow-right-24: Start with Python](/adk-docs/get-started/python) <br>
 
-    [:octicons-arrow-right-24: More information](installation.md)
-
--   :material-console-line: **Quickstart**
-
-    ---
-
-    Create your first ADK agent with tools in minutes.
-
-    [:octicons-arrow-right-24: More information](quickstart.md)
-
--   :material-console-line: **Quickstart (streaming)**
+-   :fontawesome-brands-java:{ .lg .middle } **Java Quickstart**
 
     ---
+    Create your first Java ADK agent in minutes.
 
-    Create your first streaming ADK agent.
-
-    [:octicons-arrow-right-24: More information](streaming/quickstart-streaming.md)
-
--   :material-console-line: **Tutorial**
-
-    ---
-
-    Create your first ADK multi-agent.
-
-    [:octicons-arrow-right-24: More information](../tutorials/index.md)
-
--   :material-rocket-launch-outline: **Discover sample agents**
-
-    ---
-
-    Discover sample agents for retail, travel, customer service, and more!
-
-    [:octicons-arrow-right-24: Discover adk-samples](https://github.com/google/adk-samples){:target="_blank"}
-
--   :material-graph: **About**
-
-    ---
-
-    Learn about the key components of building and deploying ADK agents.
-
-    [:octicons-arrow-right-24: More information](about.md)
+    [:octicons-arrow-right-24: Start with Java](/adk-docs/get-started/java.md) <br>
 
 </div>
 
@@ -10340,36 +10305,39 @@ File: docs/get-started/installation.md
     If you are using maven, add the following to your `pom.xml`:
 
     ```xml title="pom.xml"
-    <dependencies>
-      <!-- The ADK Core dependency -->
-      <dependency>
-        <groupId>com.google.adk</groupId>
-        <artifactId>google-adk</artifactId>
-        <version>0.2.0</version>
-      </dependency>
-      
-      <!-- The ADK Dev Web UI to debug your agent (Optional) -->
-      <dependency>
-        <groupId>com.google.adk</groupId>
-        <artifactId>google-adk-dev</artifactId>
-        <version>0.2.0</version>
-      </dependency>
-    </dependencies>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        <modelVersion>4.0.0</modelVersion>
 
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.14.0</version>
-          <configuration>
-            <compilerArgs>
-              <arg>-parameters</arg>
-            </compilerArgs>
-          </configuration>
-        </plugin>
-      </plugins>
-    </build>
+        <groupId>com.example.agent</groupId>
+        <artifactId>adk-agents</artifactId>
+        <version>1.0-SNAPSHOT</version>
+
+        <!-- Specify the version of Java you'll be using -->
+        <properties>
+            <maven.compiler.source>17</maven.compiler.source>
+            <maven.compiler.target>17</maven.compiler.target>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        </properties>
+
+        <dependencies>
+            <!-- The ADK core dependency -->
+            <dependency>
+                <groupId>com.google.adk</groupId>
+                <artifactId>google-adk</artifactId>
+                <version>0.3.0</version>
+            </dependency>
+            <!-- The ADK dev web UI to debug your agent -->
+            <dependency>
+                <groupId>com.google.adk</groupId>
+                <artifactId>google-adk-dev</artifactId>
+                <version>0.3.0</version>
+            </dependency>
+        </dependencies>
+
+    </project>
     ```
 
     Here's a [complete pom.xml](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run/pom.xml) file for reference.
@@ -10391,9 +10359,429 @@ File: docs/get-started/installation.md
 * Try creating your first agent with the [**Quickstart**](quickstart.md)
 
 ================
+File: docs/get-started/java.md
+================
+# Java Quickstart for ADK
+
+This guide shows you how to get up and running with Agent Development Kit
+for Java. Before you start, make sure you have the following installed:
+
+*   Java 17 or later
+*   Maven 3.9 or later
+
+## Create an agent project
+
+Create an agent project with the following files and directory structure:
+
+```none
+my_agent/
+    src/main/java/com/example/agent/
+                        HelloTimeAgent.java # main agent code
+                        AgentCliRunner.java # command-line interface
+    pom.xml                                 # project configuration
+    .env                                    # API keys or project IDs
+```
+
+??? tip "Create this project structure using the command line"
+
+    === "Windows"
+
+        ```console
+        mkdir my_agent\src\main\java\com\example\agent
+        type nul > my_agent\src\main\java\com\example\agent\HelloTimeAgent.java
+        type nul > my_agent\src\main\java\com\example\agent\AgentCliRunner.java
+        type nul > my_agent\pom.xml
+        type nul > my_agent\.env
+        ```
+
+    === "MacOS / Linux"
+
+        ```bash
+        mkdir -p my_agent/src/main/java/com/example/agent && \
+            touch my_agent/src/main/java/com/example/agent/HelloTimeAgent.java \
+            touch my_agent/src/main/java/com/example/agent/AgentCliRunner.java \
+            touch my_agent/pom.xml my_agent/.env
+        ```
+
+### Define the agent code
+
+Create the code for a basic agent, including a simple implementation of an ADK 
+[Function Tool](/adk-docs/tools/function-tools/), called `getCurrentTime()`.
+Add the following code to the `HelloTimeAgent.java` file in your project
+directory: 
+
+```java title="my_agent/src/main/java/com/example/agent/HelloTimeAgent.java"
+package com.example.agent;
+
+import com.google.adk.agents.BaseAgent;
+import com.google.adk.agents.LlmAgent;
+import com.google.adk.tools.Annotations.Schema;
+import com.google.adk.tools.FunctionTool;
+
+import java.util.Map;
+
+public class HelloTimeAgent {
+
+    public static BaseAgent ROOT_AGENT = initAgent();
+
+    private static BaseAgent initAgent() {
+        return LlmAgent.builder()
+            .name("hello-time-agent")
+            .description("Tells the current time in a specified city")
+            .instruction("""
+                You are a helpful assistant that tells the current time in a city.                
+                Use the 'getCurrentTime' tool for this purpose.
+                """)
+            .model("gemini-2.5-flash")
+            .tools(FunctionTool.create(HelloTimeAgent.class, "getCurrentTime"))
+            .build();
+    }
+
+    /** Mock tool implementation */
+    @Schema(description = "Get the current time for a given city")
+    public static Map<String, String> getCurrentTime(
+        @Schema(name = "city", description = "Name of the city to get the time for") String city) {
+        return Map.of(
+            "city", city,
+            "forecast", "The time is 10:30am."
+        );
+    }
+}
+```
+
+### Configure project and dependencies
+
+An ADK agent project requires this dependency in your
+`pom.xml` project file:
+
+```xml title="my_agent/pom.xml (partial)"
+<dependencies>
+    <dependency>
+        <groupId>com.google.adk</groupId>
+        <artifactId>adk-core</artifactId>
+        <version>0.3.0</version>
+    </dependency>
+</dependencies>
+```
+
+Update the `pom.xml` project file to include this dependency and
+addtional settings with the following configuration code:
+
+??? info "Complete `pom.xml` configuration for project"
+    The following code shows a complete `pom.xml` configuration for
+    this project:
+
+    ```xml title="my_agent/pom.xml"
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+        <modelVersion>4.0.0</modelVersion>
+
+        <groupId>com.example.agent</groupId>
+        <artifactId>adk-agents</artifactId>
+        <version>1.0-SNAPSHOT</version>
+
+        <!-- Specify the version of Java you'll be using -->
+        <properties>
+            <maven.compiler.source>17</maven.compiler.source>
+            <maven.compiler.target>17</maven.compiler.target>
+            <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        </properties>
+
+        <dependencies>
+            <!-- The ADK core dependency -->
+            <dependency>
+                <groupId>com.google.adk</groupId>
+                <artifactId>google-adk</artifactId>
+                <version>0.3.0</version>
+            </dependency>
+            <!-- The ADK dev web UI to debug your agent -->
+            <dependency>
+                <groupId>com.google.adk</groupId>
+                <artifactId>google-adk-dev</artifactId>
+                <version>0.3.0</version>
+            </dependency>
+        </dependencies>
+
+    </project>
+    ```
+
+### Set your API key
+
+This project uses the Gemini API, which requires an API key. If you
+don't already have Gemini API key, create a key in Google AI Studio on the 
+[API Keys](https://aistudio.google.com/app/apikey) page.
+
+In a terminal window, write your API key into your `.env` file of your project
+to set environment variables:
+
+=== "MacOS / Linux"
+
+    ```bash title="Update: my_agent/.env"
+    echo 'export GOOGLE_API_KEY="YOUR_API_KEY"' > .env
+    ```
+
+=== "Windows"
+
+    ```console title="Update: my_agent/.env"
+    echo 'set GOOGLE_API_KEY="YOUR_API_KEY"' > env.bat
+    ```
+
+??? tip "Using other AI models with ADK"
+    ADK supports the use of many generative AI models. For more
+    information on configuring other models in ADK agents, see
+    [Models & Authentication](/adk-docs/agents/models).
+
+### Create an agent command-line interface
+
+Create a `AgentCliRunner.java` class to allow you to run and interact with
+`HelloTimeAgent` from the command line. This code shows how to create a
+`RunConfig` object to run the agent and a `Session` object to interact with the
+running agent.
+
+```java title="my_agent/src/main/java/com/example/agent/AgentCliRunner.java"
+package com.example.agent;
+
+import com.google.adk.agents.RunConfig;
+import com.google.adk.events.Event;
+import com.google.adk.runner.InMemoryRunner;
+import com.google.adk.sessions.Session;
+import com.google.genai.types.Content;
+import com.google.genai.types.Part;
+import io.reactivex.rxjava3.core.Flowable;
+import java.util.Scanner;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+public class AgentCliRunner {
+
+    public static void main(String[] args) {
+        RunConfig runConfig = RunConfig.builder().build();
+        InMemoryRunner runner = new InMemoryRunner(HelloTimeAgent.ROOT_AGENT);
+
+        Session session = runner
+                .sessionService()
+                .createSession(runner.appName(), "user1234")
+                .blockingGet();
+
+        try (Scanner scanner = new Scanner(System.in, UTF_8)) {
+            while (true) {
+                System.out.print("\nYou > ");
+                String userInput = scanner.nextLine();
+                if ("quit".equalsIgnoreCase(userInput)) {
+                    break;
+                }
+
+                Content userMsg = Content.fromParts(Part.fromText(userInput));
+                Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg, runConfig);
+
+                System.out.print("\nAgent > ");
+                events.blockingForEach(event -> {
+                    if (event.finalResponse()) {
+                        System.out.println(event.stringifyContent());
+                    }
+                });
+            }
+        }
+    }
+}
+```
+
+## Run your agent
+
+You can run your ADK agent using the interactive command-line interface
+`AgentCliRunner` class you defined or the ADK web user interface provided by
+the ADK using the `AdkWebServer` class. Both these options allow you to test and
+interact with your agent.
+
+### Run with command-line interface
+
+Run your agent with the command-line interface `AgentCliRunner` class
+using the following Maven command:
+
+```console
+# Remember to load keys and settings: source .env OR env.bat
+mvn compile exec:java -Dexec.mainClass="com.example.agent.AgentCliRunner"
+```
+
+![adk-run.png](/adk-docs/assets/adk-run.png)
+
+### Run with web interface
+
+Run your agent with the ADK web interface using the following Maven command:
+
+```console
+# Remember to load keys and settings: source .env OR env.bat
+mvn compile exec:java \
+    -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
+    -Dexec.args="--adk.agents.source-dir=target --server.port=8000"
+```
+
+This command starts a web server with a chat interface for your agent. You can
+access the web interface at (http://localhost:8000). Select your agent at the
+upper right corner and type a request.
+
+![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+
+## Next: Build your agent
+
+Now that you have ADK installed and your first agent running, try building
+your own agent with our build guides:
+
+*  [Build your agent](/adk-docs/tutorials/)
+
+================
+File: docs/get-started/python.md
+================
+# Python Quickstart for ADK
+
+This guide shows you how to get up and running with Agent Development Kit
+(ADK) for Python. Before you start, make sure you have the following installed:
+
+*   Python 3.9 or later
+*   `pip` for installing packages   
+
+## Installation
+
+Install ADK by running the following command:
+
+```shell
+pip install google-adk
+```
+
+??? tip "Recommended: create and activate a Python virtual environment"
+
+    Create a Python virtual environment:
+
+    ```shell
+    python -m venv .venv
+    ```
+
+    Activate the Python virtual environment:
+
+    === "Windows CMD"
+
+        ```console
+        .venv\Scripts\activate.bat
+        ```
+
+    === "Windows Powershell"
+
+        ```console
+        .venv\Scripts\Activate.ps1
+        ```
+
+    === "MacOS / Linux"
+
+        ```bash
+        source .venv/bin/activate
+        ```
+
+## Create an agent project
+
+Run the `adk create` command to start a new agent project. 
+
+```shell
+adk create my_agent
+```
+
+### Explore the agent project
+
+The created agent project has the following structure, with the `agent.py`
+file containing the main control code for the agent.
+
+```none
+my_agent/
+    agent.py      # main agent code
+    .env          # API keys or project IDs
+    __init__.py
+```
+
+## Update your agent project
+
+The `agent.py` file contains a `root_agent` definition which is the only
+required element of an ADK agent. You can also define tools for the agent to
+use. Update the generated `agent.py` code to include a `get_current_time` tool
+for use by the agent, as shown in the following code:
+
+```python
+from google.adk.agents.llm_agent import Agent
+
+# Mock tool implementation
+def get_current_time(city: str) -> dict:
+    """Returns the current time in a specified city."""
+    return {"status": "success", "city": city, "time": "10:30 AM"}
+
+root_agent = Agent(
+    model='gemini-2.5-flash',
+    name='root_agent',
+    description="Tells the current time in a specified city.",
+    instruction="You are a helpful assistant that tells the current time in cities. Use the 'get_current_time' tool for this purpose.",
+    tools=[get_current_time],
+)
+```
+
+### Set your API key
+
+This project uses the Gemini API, which requires an API key. If you
+don't already have Gemini API key, create a key in Google AI Studio on the 
+[API Keys](https://aistudio.google.com/app/apikey) page.
+
+In a terminal window, write your API key into an `.env` file as an environment variable:
+
+```console title="Update: my_agent/.env"
+echo 'GOOGLE_API_KEY="YOUR_API_KEY"' > .env
+```
+
+??? tip "Using other AI models with ADK"
+    ADK supports the use of many generative AI models. For more
+    information on configuring other models in ADK agents, see
+    [Models & Authentication](/adk-docs/agents/models).
+
+## Run your agent
+
+You can run your ADK agent with an interactive command-line interface using the
+`adk run` command or the ADK web user interface provided by the ADK using the
+`adk web` command. Both these options allow you to test and interact with your
+agent.
+
+### Run with command-line interface
+
+Run your agent using the `adk run` command-line tool.
+
+```console
+adk run my_agent
+```
+
+![adk-run.png](/adk-docs/assets/adk-run.png)
+
+### Run with web interface
+
+The ADK framework provides web interface you can use to test and interact with
+your agent. You can start the web interface using the following command:
+
+```console
+adk web --port 8000 my_agent
+```
+
+This command starts a web server with a chat interface for your agent. You can
+access the web interface at (http://localhost:8000). Select the agent at the
+upper right corner and type a request.
+
+![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+
+## Next: Build your agent
+
+Now that you have ADK installed and your first agent running, try building
+your own agent with our build guides:
+
+*  [Build your agent](/adk-docs/tutorials/)
+
+================
 File: docs/get-started/quickstart.md
 ================
-# Quickstart
+# Build a multi-tool agent
 
 This quickstart guides you through installing the Agent Development Kit (ADK),
 setting up a basic agent with multiple tools, and running it locally either in the terminal or in the interactive, browser-based dev UI.
@@ -24248,7 +24636,7 @@ Happy building!
 ================
 File: docs/tutorials/index.md
 ================
-# ADK Tutorials!
+# Build your agent with ADK
 
 Get started with the Agent Development Kit (ADK) through our collection of
 practical guides. These tutorials are designed in a simple, progressive,
@@ -24263,16 +24651,38 @@ applications with ADK. Explore our collection below and happy building:
 
 <div class="grid cards" markdown>
 
--   :material-console-line: **Agent Team**
+-   :material-console-line: **Multi-tool agent**
 
     ---
 
-    Learn to build an intelligent multi-agent weather bot and master key ADK
-    features: defining Tools, using multiple LLMs (Gemini, GPT, Claude) with
-    LiteLLM, orchestrating agent delegation, adding memory with session state,
-    and ensuring safety via callbacks.
+    Create a workflow that uses multiple tools.
 
-    [:octicons-arrow-right-24: Start learning here](agent-team.md)
+    [:octicons-arrow-right-24: Build a multi-tool agent](/adk-docs/get-started/index.md)
+
+-   :material-console-line: **Agent team**
+
+    ---
+
+    Build an multi-agent workflow including agent delegation,
+    session management, and safety callbacks. 
+
+    [:octicons-arrow-right-24: Build an agent team](/adk-docs/tutorials/agent-team.md)
+
+-   :material-console-line: **Streaming agent**
+
+    ---
+
+    Create an agent for handling streamed content.
+
+    [:octicons-arrow-right-24: Build a streaming agent](/adk-docs/get-started/streaming/)
+
+-   :material-rocket-launch-outline: **Discover sample agents**
+
+    ---
+
+    Discover sample agents for retail, travel, customer service, and more!
+
+    [:octicons-arrow-right-24: Discover adk-samples](https://github.com/google/adk-samples){:target="_blank"}
 
 </div>
 
@@ -24499,18 +24909,12 @@ hide:
   - toc
 ---
 
-!!! tip "What's new"
-    Build agents without code. Check out the
-    [Agent Config](/adk-docs/agents/config/) feature.
-
 <div style="text-align: center;">
   <div class="centered-logo-text-group">
     <img src="assets/agent-development-kit.png" alt="Agent Development Kit Logo" width="100">
     <h1>Agent Development Kit</h1>
   </div>
 </div>
-
-## What is Agent Development Kit?
 
 Agent Development Kit (ADK) is a flexible and modular framework for **developing
 and deploying AI agents**. While optimized for Gemini and the Google ecosystem,
@@ -24547,13 +24951,10 @@ from simple tasks to complex workflows.
     ```
 </div>
 
-
 <p style="text-align:center;">
-  <a href="get-started/quickstart/" class="md-button" style="margin:3px">Quickstart</a>
-  <a href="tutorials/" class="md-button" style="margin:3px">Tutorials</a>
-  <a href="http://github.com/google/adk-samples" class="md-button" target="_blank" style="margin:3px">Sample Agents</a>
-  <a href="api-reference/" class="md-button" style="margin:3px">API Reference</a>
-  <a href="contributing-guide/" class="md-button" style="margin:3px">Contribute ❤️</a>
+  <a href="/adk-docs/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
+  <a href="/adk-docs/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
+  <a href="/adk-docs/get-started/about/" class="md-button" style="margin:3px">Technical overview</a>
 </p>
 
 ---
