@@ -10242,14 +10242,14 @@ set up and running a simple agent in less than 20 minutes.
     ---
     Create your first Python ADK agent in minutes.
 
-    [:octicons-arrow-right-24: Start with Python](/adk-docs/get-started/python) <br>
+    [:octicons-arrow-right-24: Start with Python](python.md) <br>
 
 -   :fontawesome-brands-java:{ .lg .middle } **Java Quickstart**
 
     ---
     Create your first Java ADK agent in minutes.
 
-    [:octicons-arrow-right-24: Start with Java](/adk-docs/get-started/java.md) <br>
+    [:octicons-arrow-right-24: Start with Java](java.md) <br>
 
 </div>
 
@@ -24657,16 +24657,16 @@ applications with ADK. Explore our collection below and happy building:
 
     Create a workflow that uses multiple tools.
 
-    [:octicons-arrow-right-24: Build a multi-tool agent](/adk-docs/get-started/index.md)
+    [:octicons-arrow-right-24: Build a multi-tool agent](../get-started/quickstart.md)
 
 -   :material-console-line: **Agent team**
 
     ---
 
     Build an multi-agent workflow including agent delegation,
-    session management, and safety callbacks. 
+    session management, and safety callbacks.
 
-    [:octicons-arrow-right-24: Build an agent team](/adk-docs/tutorials/agent-team.md)
+    [:octicons-arrow-right-24: Build an agent team](../tutorials/agent-team.md)
 
 -   :material-console-line: **Streaming agent**
 
@@ -24674,7 +24674,7 @@ applications with ADK. Explore our collection below and happy building:
 
     Create an agent for handling streamed content.
 
-    [:octicons-arrow-right-24: Build a streaming agent](/adk-docs/get-started/streaming/)
+    [:octicons-arrow-right-24: Build a streaming agent](../get-started/streaming/index.md)
 
 -   :material-rocket-launch-outline: **Discover sample agents**
 
