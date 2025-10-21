@@ -18902,6 +18902,14 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     - [Blog post: Google ADK + Vertex AI Live API](https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e)
 
+-   :material-console-line: **Blog post: Supercharge ADK Development with Claude Code Skills**
+
+    ---
+
+    This article demonstrates how to use Claude Code Skills to accelerate ADK development, with an example of building a Bidi-streaming chat app. Learn how to leverage AI-powered coding assistance to build better agents faster.
+
+    - [Blog post: Supercharge ADK Development with Claude Code Skills](https://medium.com/@kazunori279/supercharge-adk-development-with-claude-code-skills-d192481cbe72)
+
 </div>
 
 ================
@@ -19060,6 +19068,241 @@ root_agent = Agent(
 Here are some sample queries to test:
 - Help me monitor the stock price for $XYZ stock.
 - Help me monitor how many people are there in the video stream.
+
+================
+File: docs/tools/third-party/index.md
+================
+# Third Party Tools
+
+![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
+ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
+
+## 1. Using LangChain Tools
+
+ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
+
+### Example: Web Search using LangChain's Tavily tool
+
+[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
+
+1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+
+2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
+
+    ```bash
+    pip install langchain_community tavily-python
+    ```
+
+3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
+
+    ```bash
+    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
+    ```
+
+4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
+
+    ```py
+    from google.adk.tools.langchain_tool import LangchainTool
+    from langchain_community.tools import TavilySearchResults
+    ```
+
+5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
+
+    ```py
+    # Instantiate the LangChain tool
+    tavily_tool_instance = TavilySearchResults(
+        max_results=5,
+        search_depth="advanced",
+        include_answer=True,
+        include_raw_content=True,
+        include_images=True,
+    )
+
+    # Wrap it with LangchainTool for ADK
+    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
+    ```
+
+6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
+
+    ```py
+    from google.adk import Agent
+
+    # Define the ADK agent, including the wrapped tool
+    my_agent = Agent(
+        name="langchain_tool_agent",
+        model="gemini-2.0-flash",
+        description="Agent to answer questions using TavilySearch.",
+        instruction="I can answer your questions by searching the internet. Just ask me anything!",
+        tools=[adk_tavily_tool] # Add the wrapped tool here
+    )
+    ```
+
+### Full Example: Tavily Search
+
+Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
+
+```py
+--8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
+```
+
+## 2. Using CrewAI tools
+
+ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library.
+
+### Example: Web Search using CrewAI's Serper API
+
+[Serper API](https://serper.dev/) provides access to Google Search results programmatically. It allows applications, like AI agents, to perform real-time Google searches (including news, images, etc.) and get structured data back without needing to scrape web pages directly.
+
+1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+
+2. **Install Dependencies:** Install the necessary CrewAI tools package. For example, to use the SerperDevTool:
+
+    ```bash
+    pip install crewai-tools
+    ```
+
+3. Obtain a [Serper API KEY](https://serper.dev/) and export it as an environment variable.
+
+    ```bash
+    export SERPER_API_KEY=<REPLACE_WITH_API_KEY>
+    ```
+
+4. **Import:** Import `CrewaiTool` from ADK and the desired CrewAI tool (e.g, `SerperDevTool`).
+
+    ```py
+    from google.adk.tools.crewai_tool import CrewaiTool
+    from crewai_tools import SerperDevTool
+    ```
+
+5. **Instantiate & Wrap:** Create an instance of the CrewAI tool. Pass it to the `CrewaiTool` constructor. **Crucially, you must provide a name and description** to the ADK wrapper, as these are used by ADK's underlying model to understand when to use the tool.
+
+    ```py
+    # Instantiate the CrewAI tool
+    serper_tool_instance = SerperDevTool(
+        n_results=10,
+        save_file=False,
+        search_type="news",
+    )
+
+    # Wrap it with CrewaiTool for ADK, providing name and description
+    adk_serper_tool = CrewaiTool(
+        name="InternetNewsSearch",
+        description="Searches the internet specifically for recent news articles using Serper.",
+        tool=serper_tool_instance
+    )
+    ```
+
+6. **Add to Agent:** Include the wrapped `CrewaiTool` instance in your agent's `tools` list.
+
+    ```py
+    from google.adk import Agent
+ 
+    # Define the ADK agent
+    my_agent = Agent(
+        name="crewai_search_agent",
+        model="gemini-2.0-flash",
+        description="Agent to find recent news using the Serper search tool.",
+        instruction="I can find the latest news for you. What topic are you interested in?",
+        tools=[adk_serper_tool] # Add the wrapped tool here
+    )
+    ```
+
+### Full Example: Serper API
+
+Here's the full code combining the steps above to create and run an agent using the CrewAI Serper API search tool.
+
+```py
+--8<-- "examples/python/snippets/tools/third-party/crewai_serper_search.py"
+```
+
+================
+File: docs/tools/third-party/openapi-tools.md
+================
+# OpenAPI Integration
+
+![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
+## Integrating REST APIs with OpenAPI
+
+ADK simplifies interacting with external REST APIs by automatically generating callable tools directly from an [OpenAPI Specification (v3.x)](https://swagger.io/specification/). This eliminates the need to manually define individual function tools for each API endpoint.
+
+!!! tip "Core Benefit"
+    Use `OpenAPIToolset` to instantly create agent tools (`RestApiTool`) from your existing API documentation (OpenAPI spec), enabling agents to seamlessly call your web services.
+
+## Key Components
+
+* **`OpenAPIToolset`**: This is the primary class you'll use. You initialize it with your OpenAPI specification, and it handles the parsing and generation of tools.
+* **`RestApiTool`**: This class represents a single, callable API operation (like `GET /pets/{petId}` or `POST /pets`). `OpenAPIToolset` creates one `RestApiTool` instance for each operation defined in your spec.
+
+## How it Works
+
+The process involves these main steps when you use `OpenAPIToolset`:
+
+1. **Initialization & Parsing**:
+    * You provide the OpenAPI specification to `OpenAPIToolset` either as a Python dictionary, a JSON string, or a YAML string.
+    * The toolset internally parses the spec, resolving any internal references (`$ref`) to understand the complete API structure.
+
+2. **Operation Discovery**:
+    * It identifies all valid API operations (e.g., `GET`, `POST`, `PUT`, `DELETE`) defined within the `paths` object of your specification.
+
+3. **Tool Generation**:
+    * For each discovered operation, `OpenAPIToolset` automatically creates a corresponding `RestApiTool` instance.
+    * **Tool Name**: Derived from the `operationId` in the spec (converted to `snake_case`, max 60 chars). If `operationId` is missing, a name is generated from the method and path.
+    * **Tool Description**: Uses the `summary` or `description` from the operation for the LLM.
+    * **API Details**: Stores the required HTTP method, path, server base URL, parameters (path, query, header, cookie), and request body schema internally.
+
+4. **`RestApiTool` Functionality**: Each generated `RestApiTool`:
+    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on the operation's parameters and request body. This schema tells the LLM how to call the tool (what arguments are expected).
+    * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
+    * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
+
+5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](../tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+
+## Usage Workflow
+
+Follow these steps to integrate an OpenAPI spec into your agent:
+
+1. **Obtain Spec**: Get your OpenAPI specification document (e.g., load from a `.json` or `.yaml` file, fetch from a URL).
+2. **Instantiate Toolset**: Create an `OpenAPIToolset` instance, passing the spec content and type (`spec_str`/`spec_dict`, `spec_str_type`). Provide authentication details (`auth_scheme`, `auth_credential`) if required by the API.
+
+    ```python
+    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+
+    # Example with a JSON string
+    openapi_spec_json = '...' # Your OpenAPI JSON string
+    toolset = OpenAPIToolset(spec_str=openapi_spec_json, spec_str_type="json")
+
+    # Example with a dictionary
+    # openapi_spec_dict = {...} # Your OpenAPI spec as a dict
+    # toolset = OpenAPIToolset(spec_dict=openapi_spec_dict)
+    ```
+
+3. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    my_agent = LlmAgent(
+        name="api_interacting_agent",
+        model="gemini-2.0-flash", # Or your preferred model
+        tools=[toolset], # Pass the toolset
+        # ... other agent config ...
+    )
+    ```
+
+4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
+5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
+
+## Example
+
+This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
+
+???+ "Code: Pet Store API"
+
+    ```python title="openapi_example.py"
+    --8<-- "examples/python/snippets/tools/openapi_tool.py"
+    ```
 
 ================
 File: docs/tools/authentication.md
@@ -21461,11 +21704,11 @@ Check out the many pre-built Tools you can use with ADK agents:
 
 ### Third-party tools
 
-*   **[LangChain Tools](/adk-docs/tools/third-party-tools/#using-langchain-tools)**:
+*   **[LangChain Tools](/adk-docs/tools/third-party/#using-langchain-tools)**:
     Integrate tools from the LangChain ecosystem.
-*   **[CrewAI tools](/adk-docs/tools/third-party-tools/#using-crewai-tools)**:
+*   **[CrewAI tools](/adk-docs/tools/third-party/#using-crewai-tools)**:
     Integrate tools from the CrewAI library.
-*   **[OpenAPI Integration](/adk-docs/tools/openapi-tools/)**:
+*   **[OpenAPI Integration](/adk-docs/tools/third-party/openapi-tools/)**:
     Generate callable tools directly from an OpenAPI Specification.
 
 ## Build your tools
@@ -22677,94 +22920,6 @@ MCPToolset(
 * [MCP Python SDK & Examples](https://github.com/modelcontextprotocol/)
 
 ================
-File: docs/tools/openapi-tools.md
-================
-# OpenAPI Integration
-
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-## Integrating REST APIs with OpenAPI
-
-ADK simplifies interacting with external REST APIs by automatically generating callable tools directly from an [OpenAPI Specification (v3.x)](https://swagger.io/specification/). This eliminates the need to manually define individual function tools for each API endpoint.
-
-!!! tip "Core Benefit"
-    Use `OpenAPIToolset` to instantly create agent tools (`RestApiTool`) from your existing API documentation (OpenAPI spec), enabling agents to seamlessly call your web services.
-
-## Key Components
-
-* **`OpenAPIToolset`**: This is the primary class you'll use. You initialize it with your OpenAPI specification, and it handles the parsing and generation of tools.
-* **`RestApiTool`**: This class represents a single, callable API operation (like `GET /pets/{petId}` or `POST /pets`). `OpenAPIToolset` creates one `RestApiTool` instance for each operation defined in your spec.
-
-## How it Works
-
-The process involves these main steps when you use `OpenAPIToolset`:
-
-1. **Initialization & Parsing**:
-    * You provide the OpenAPI specification to `OpenAPIToolset` either as a Python dictionary, a JSON string, or a YAML string.
-    * The toolset internally parses the spec, resolving any internal references (`$ref`) to understand the complete API structure.
-
-2. **Operation Discovery**:
-    * It identifies all valid API operations (e.g., `GET`, `POST`, `PUT`, `DELETE`) defined within the `paths` object of your specification.
-
-3. **Tool Generation**:
-    * For each discovered operation, `OpenAPIToolset` automatically creates a corresponding `RestApiTool` instance.
-    * **Tool Name**: Derived from the `operationId` in the spec (converted to `snake_case`, max 60 chars). If `operationId` is missing, a name is generated from the method and path.
-    * **Tool Description**: Uses the `summary` or `description` from the operation for the LLM.
-    * **API Details**: Stores the required HTTP method, path, server base URL, parameters (path, query, header, cookie), and request body schema internally.
-
-4. **`RestApiTool` Functionality**: Each generated `RestApiTool`:
-    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on the operation's parameters and request body. This schema tells the LLM how to call the tool (what arguments are expected).
-    * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
-    * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
-
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](../tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
-
-## Usage Workflow
-
-Follow these steps to integrate an OpenAPI spec into your agent:
-
-1. **Obtain Spec**: Get your OpenAPI specification document (e.g., load from a `.json` or `.yaml` file, fetch from a URL).
-2. **Instantiate Toolset**: Create an `OpenAPIToolset` instance, passing the spec content and type (`spec_str`/`spec_dict`, `spec_str_type`). Provide authentication details (`auth_scheme`, `auth_credential`) if required by the API.
-
-    ```python
-    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
-
-    # Example with a JSON string
-    openapi_spec_json = '...' # Your OpenAPI JSON string
-    toolset = OpenAPIToolset(spec_str=openapi_spec_json, spec_str_type="json")
-
-    # Example with a dictionary
-    # openapi_spec_dict = {...} # Your OpenAPI spec as a dict
-    # toolset = OpenAPIToolset(spec_dict=openapi_spec_dict)
-    ```
-
-3. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
-
-    ```python
-    from google.adk.agents import LlmAgent
-
-    my_agent = LlmAgent(
-        name="api_interacting_agent",
-        model="gemini-2.0-flash", # Or your preferred model
-        tools=[toolset], # Pass the toolset
-        # ... other agent config ...
-    )
-    ```
-
-4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
-5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
-
-## Example
-
-This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
-
-???+ "Code: Pet Store API"
-
-    ```python title="openapi_example.py"
-    --8<-- "examples/python/snippets/tools/openapi_tool.py"
-    ```
-
-================
 File: docs/tools/performance.md
 ================
 # Increase tool performance with parallel execution
@@ -22950,153 +23105,6 @@ the samples in the
 repository.
 
 ================
-File: docs/tools/third-party-tools.md
-================
-# Third Party Tools
-
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
-
-## 1. Using LangChain Tools
-
-ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
-
-### Example: Web Search using LangChain's Tavily tool
-
-[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
-
-1. Follow [ADK installation and setup](../get-started/installation.md) guide.
-
-2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
-
-    ```bash
-    pip install langchain_community tavily-python
-    ```
-
-3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
-
-    ```bash
-    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
-    ```
-
-4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
-
-    ```py
-    from google.adk.tools.langchain_tool import LangchainTool
-    from langchain_community.tools import TavilySearchResults
-    ```
-
-5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
-
-    ```py
-    # Instantiate the LangChain tool
-    tavily_tool_instance = TavilySearchResults(
-        max_results=5,
-        search_depth="advanced",
-        include_answer=True,
-        include_raw_content=True,
-        include_images=True,
-    )
-
-    # Wrap it with LangchainTool for ADK
-    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
-    ```
-
-6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
-
-    ```py
-    from google.adk import Agent
-
-    # Define the ADK agent, including the wrapped tool
-    my_agent = Agent(
-        name="langchain_tool_agent",
-        model="gemini-2.0-flash",
-        description="Agent to answer questions using TavilySearch.",
-        instruction="I can answer your questions by searching the internet. Just ask me anything!",
-        tools=[adk_tavily_tool] # Add the wrapped tool here
-    )
-    ```
-
-### Full Example: Tavily Search
-
-Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
-
-```py
---8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
-```
-
-## 2. Using CrewAI tools
-
-ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library.
-
-### Example: Web Search using CrewAI's Serper API
-
-[Serper API](https://serper.dev/) provides access to Google Search results programmatically. It allows applications, like AI agents, to perform real-time Google searches (including news, images, etc.) and get structured data back without needing to scrape web pages directly.
-
-1. Follow [ADK installation and setup](../get-started/installation.md) guide.
-
-2. **Install Dependencies:** Install the necessary CrewAI tools package. For example, to use the SerperDevTool:
-
-    ```bash
-    pip install crewai-tools
-    ```
-
-3. Obtain a [Serper API KEY](https://serper.dev/) and export it as an environment variable.
-
-    ```bash
-    export SERPER_API_KEY=<REPLACE_WITH_API_KEY>
-    ```
-
-4. **Import:** Import `CrewaiTool` from ADK and the desired CrewAI tool (e.g, `SerperDevTool`).
-
-    ```py
-    from google.adk.tools.crewai_tool import CrewaiTool
-    from crewai_tools import SerperDevTool
-    ```
-
-5. **Instantiate & Wrap:** Create an instance of the CrewAI tool. Pass it to the `CrewaiTool` constructor. **Crucially, you must provide a name and description** to the ADK wrapper, as these are used by ADK's underlying model to understand when to use the tool.
-
-    ```py
-    # Instantiate the CrewAI tool
-    serper_tool_instance = SerperDevTool(
-        n_results=10,
-        save_file=False,
-        search_type="news",
-    )
-
-    # Wrap it with CrewaiTool for ADK, providing name and description
-    adk_serper_tool = CrewaiTool(
-        name="InternetNewsSearch",
-        description="Searches the internet specifically for recent news articles using Serper.",
-        tool=serper_tool_instance
-    )
-    ```
-
-6. **Add to Agent:** Include the wrapped `CrewaiTool` instance in your agent's `tools` list.
-
-    ```py
-    from google.adk import Agent
- 
-    # Define the ADK agent
-    my_agent = Agent(
-        name="crewai_search_agent",
-        model="gemini-2.0-flash",
-        description="Agent to find recent news using the Serper search tool.",
-        instruction="I can find the latest news for you. What topic are you interested in?",
-        tools=[adk_serper_tool] # Add the wrapped tool here
-    )
-    ```
-
-### Full Example: Serper API
-
-Here's the full code combining the steps above to create and run an agent using the CrewAI Serper API search tool.
-
-```py
---8<-- "examples/python/snippets/tools/third-party/crewai_serper_search.py"
-```
-
-================
 File: docs/tools-custom/index.md
 ================
 # Custom Tools for ADK
@@ -23166,7 +23174,7 @@ ADK offers flexibility by supporting several types of tools:
     * **[Long Running Function Tools](../tools/function-tools.md#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
 2. **[Built-in Tools](../tools/built-in-tools.md):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
-3. **[Third-Party Tools](../tools/third-party-tools.md):** Integrate tools seamlessly from popular external libraries.
+3. **[Third-Party Tools](/adk-docs/tools/third-party/):** Integrate tools seamlessly from popular external libraries.
         Examples: LangChain Tools, CrewAI Tools.
 
 Navigate to the respective documentation pages linked above for detailed information and examples for each tool type.
