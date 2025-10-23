@@ -13023,7 +13023,7 @@ When you instrument your ADK application with AgentOps, you gain a clear, hierar
 This creates a waterfall of spans, allowing you to see the sequence, duration, and details of each step in your ADK application. All relevant attributes, such as LLM prompts, completions, token counts, tool inputs/outputs, and agent names, are captured and displayed.
 
 For a practical demonstration, you can explore a sample Jupyter Notebook that illustrates a human approval workflow using Google ADK and AgentOps:
-[Google ADK Human Approval Example on GitHub](https://github.com/AgentOps-AI/agentops/blob/main/examples/google_adk_example/adk_human_approval_example.ipynb).
+[Google ADK Human Approval Example on GitHub](https://github.com/AgentOps-AI/agentops/blob/main/examples/google_adk/human_approval.ipynb).
 
 This example showcases how a multi-step agent process with tool usage is visualized in AgentOps.
 
@@ -13034,7 +13034,7 @@ This example showcases how a multi-step agent process with tool usage is visuali
 *   **Faster Debugging:** Quickly pinpoint issues with detailed trace data.
 *   **Performance Optimization:** Analyze latencies and token usage.
 
-By integrating AgentOps, ADK developers can significantly enhance their ability to build, debug, and maintain robust AI agents. 
+By integrating AgentOps, ADK developers can significantly enhance their ability to build, debug, and maintain robust AI agents.
 
 ## Further Information
 
@@ -19078,7 +19078,7 @@ File: docs/tools/third-party/index.md
 
 ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
 
-## 1. Using LangChain Tools
+## Using LangChain Tools
 
 ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
 
@@ -19086,7 +19086,7 @@ ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain e
 
 [Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
 
-1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
 
 2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
 
@@ -19146,7 +19146,7 @@ Here's the full code combining the steps above to create and run an agent using 
 --8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
 ```
 
-## 2. Using CrewAI tools
+## Using CrewAI tools
 
 ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library.
 
@@ -19154,7 +19154,7 @@ ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library
 
 [Serper API](https://serper.dev/) provides access to Google Search results programmatically. It allows applications, like AI agents, to perform real-time Google searches (including news, images, etc.) and get structured data back without needing to scrape web pages directly.
 
-1. Follow [ADK installation and setup](../get-started/installation.md) guide.
+1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
 
 2. **Install Dependencies:** Install the necessary CrewAI tools package. For example, to use the SerperDevTool:
 
@@ -19197,7 +19197,7 @@ ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library
 
     ```py
     from google.adk import Agent
- 
+
     # Define the ADK agent
     my_agent = Agent(
         name="crewai_search_agent",
@@ -19257,7 +19257,7 @@ The process involves these main steps when you use `OpenAPIToolset`:
     * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
     * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
 
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](../tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/adk-docs/tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
 
 ## Usage Workflow
 
@@ -19673,6 +19673,20 @@ if auth_request_function_call_id and auth_config:
         print(event) # Print the full event for inspection
 
 ```
+
+!!! note "Note: Authorization response with Resume feature"
+
+    If your ADK agent workflow is configured with the 
+    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    the Invocation ID (`invocation_id`) parameter with the authorization
+    response. The Invocation ID you provide must be the same invocation
+    that generated the authorization request, otherwise the system
+    starts a new invocation with the authorization response. If your
+    agent uses the Resume feature, consider including the Invocation ID
+    as a parameter with your authorization request, so it can be included
+    with the authorization response. For more details on using the Resume 
+    feature, see
+    [Resume stopped agents](/adk-docs/runtime/resume/).
 
 **Step 5: ADK Handles Token Exchange & Tool Retry and gets Tool result**
 
@@ -20350,9 +20364,15 @@ to use built-in tools with other tools by using multiple agents:
                 .build();
     ```
 
+ADK Python has a built-in workaroud which bypasses this limitation for 
+`GoogleSearchTool` and `VertexAiSearchTool` (use `bypass_multi_tools_limit=True` to enable it), e.g.
+[sample agent](https://github.com/google/adk-python/tree/main/contributing/samples/built_in_multi_tools).
+
 !!! warning
 
-    Built-in tools cannot be used within a sub-agent.
+    Built-in tools cannot be used within a sub-agent, with the exception of
+    `GoogleSearchTool` and `VertexAiSearchTool` in ADK Python because of the
+    workaround mentioned above.
 
 For example, the following approach that uses built-in tools within sub-agents
 is **not** currently supported:
@@ -20360,13 +20380,13 @@ is **not** currently supported:
 === "Python"
 
     ```py
-    search_agent = Agent(
+    url_context_agent = Agent(
         model='gemini-2.0-flash',
-        name='SearchAgent',
+        name='UrlContextAgent',
         instruction="""
-        You're a specialist in Google Search
+        You're a specialist in URL Context
         """,
-        tools=[google_search],
+        tools=[url_context],
     )
     coding_agent = Agent(
         model='gemini-2.0-flash',
@@ -20381,7 +20401,7 @@ is **not** currently supported:
         model="gemini-2.0-flash",
         description="Root Agent",
         sub_agents=[
-            search_agent,
+            url_context_agent,
             coding_agent
         ],
     )
@@ -20627,6 +20647,20 @@ requirements:
 -   The `name` should be `adk_request_confirmation`.
 -   The `response` object contains the confirmation status and any
     additional payload data required by the tool.
+
+!!! note "Note: Confirmation with Resume feature"
+
+    If your ADK agent workflow is configured with the 
+    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    the Invocation ID (`invocation_id`) parameter with the confirmation
+    response. The Invocation ID you provide must be the same invocation
+    that generated the confirmation request, otherwise the system
+    starts a new invocation with the confirmation response. If your
+    agent uses the Resume feature, consider including the Invocation ID
+    as a parameter with your confirmation request, so it can be
+    included with the response. For more details on using the Resume
+    feature, see
+    [Resume stopped agents](/adk-docs/runtime/resume/).
 
 ## Known limitations {#known-limitations}
 
@@ -20887,6 +20921,20 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
 ### Intermediate / Final result Updates
 
 Agent client received an event with long running function calls and check the status of the ticket. Then Agent client can send the intermediate or final response back to update the progress. The framework packages this value (even if it's None) into the content of the `FunctionResponse` sent back to the LLM.
+
+!!! note "Note: Long running function response with Resume feature"
+
+    If your ADK agent workflow is configured with the 
+    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    the Invocation ID (`invocation_id`) parameter with the long running 
+    function response. The Invocation ID you provide must be the same 
+    invocation that generated the long running function request, otherwise 
+    the system starts a new invocation with the response. If your
+    agent uses the Resume feature, consider including the Invocation ID
+    as a parameter with your long running function request, so it can be
+    included with the response. For more details on using the Resume 
+    feature, see
+    [Resume stopped agents](/adk-docs/runtime/resume/).
 
 ??? Tip "Applies to only Java ADK"
 
@@ -21670,37 +21718,136 @@ For more information, read more about the following features:
 ================
 File: docs/tools/index.md
 ================
-# Tools for Agents: ADK Tools list
+---
+hide:
+  - toc
+---
 
-Check out the many pre-built Tools you can use with ADK agents:
+# Tools for Agents
+
+Check out the following pre-built tools that you can use with ADK agents:
 
 ### Gemini tools
 
-*   **[Google Search](/adk-docs/tools/built-in-tools/#google-search)**:
-    Perform web searches using Google Search with Gemini.
-*   **[Code Execution](/adk-docs/tools/built-in-tools/#code-execution)**:
-    Execute code using Gemini 2 models.
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/built-in-tools/#google-search" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-google-search.png" alt="Google Search">
+    </div>
+    <div class="tool-card-content">
+      <h3>Google Search</h3>
+      <p>Perform web searches using Google Search with Gemini</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#code-execution" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-gemini.png" alt="Gemini">
+    </div>
+    <div class="tool-card-content">
+      <h3>Code Execution</h3>
+      <p>Execute code using Gemini models</p>
+    </div>
+  </a>
+
+</div>
 
 ### Google Cloud tools
 
-*   **[Apigee API Hub Tools](/adk-docs/tools/google-cloud-tools/#apigee-api-hub-tools)**:
-    Turn any documented API from Apigee API hub into a tool.
-*   **[Application Integration Tools](/adk-docs/tools/google-cloud-tools/#application-integration-tools)**:
-    Link your agents to enterprise applications using Integration Connectors.
-*   **[BigQuery Tools](/adk-docs/tools/built-in-tools/#bigquery)**:
-    Connect with BigQuery to retrieve data and perform analysis.
-*   **[Bigtable Tools](/adk-docs/tools/built-in-tools/#bigtable)**:
-    Interact with Bigtable to retrieve data and and execute SQL.
-*   **[GKE Code Executor](/adk-docs/tools/built-in-tools/#gke-code-executor)**:
-    Run AI-generated code in a secure and scalable GKE Sandbox environment.
-*   **[Spanner Tools](/adk-docs/tools/built-in-tools/#spanner)**:
-    Interact with Spanner to retrieve data, search, and execute SQL.
-*   **[MCP Toolbox for Databases](/adk-docs/tools/google-cloud-tools/#toolbox-tools-for-databases)**:
-    Connect over 30 different data sources to your agents.
-*   **[Vertex AI RAG Engine](/adk-docs/tools/built-in-tools/#vertex-ai-rag-engine)**:
-    Perform private data retrieval using Vertex AI RAG Engine.
-*   **[Vertex AI Search](/adk-docs/tools/built-in-tools/#vertex-ai-search)**:
-    Search across your private, configured data stores in Vertex AI Search.
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/google-cloud-tools/#apigee-api-hub-tools" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-apigee.png" alt="Apigee">
+    </div>
+    <div class="tool-card-content">
+      <h3>Apigee API Hub</h3>
+      <p>Turn any documented API from Apigee API hub into a tool</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud-tools/#application-integration-tools" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-apigee-integration.png" alt="Apigee Integration">
+    </div>
+    <div class="tool-card-content">
+      <h3>Application Integration</h3>
+      <p>Link your agents to enterprise applications using Integration Connectors</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#bigquery" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-bigquery.png" alt="BigQuery">
+    </div>
+    <div class="tool-card-content">
+      <h3>BigQuery Tools</h3>
+      <p>Connect with BigQuery to retrieve data and perform analysis</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#bigtable" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-bigtable.png" alt="Bigtable">
+    </div>
+    <div class="tool-card-content">
+      <h3>Bigtable Tools</h3>
+      <p>Interact with Bigtable to retrieve data and and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#gke-code-executor" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-gke.png" alt="Google Kubernetes Engine">
+    </div>
+    <div class="tool-card-content">
+      <h3>GKE Code Executor</h3>
+      <p>Run AI-generated code in a secure and scalable GKE Sandbox environment</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#spanner" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-spanner.png" alt="Spanner">
+    </div>
+    <div class="tool-card-content">
+      <h3>Spanner Tools</h3>
+      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud-tools/#toolbox-tools-for-databases" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
+    </div>
+    <div class="tool-card-content">
+      <h3>MCP Toolbox for Databases</h3>
+      <p>Connect over 30 different data sources to your agents</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#vertex-ai-rag-engine" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI RAG Engine</h3>
+      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/built-in-tools/#vertex-ai-search" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI Search</h3>
+      <p>Search across your private, configured data stores in Vertex AI Search</p>
+    </div>
+  </a>
+
+</div>
 
 ### Third-party tools
 
@@ -21713,7 +21860,7 @@ Check out the many pre-built Tools you can use with ADK agents:
 
 ## Build your tools
 
-If these tools don't meet your needs, you can build tools for your ADK
+If the above tools don't meet your needs, you can build tools for your ADK
 workflows using the following guides:
 
 *   **[Function Tools](/adk-docs/tools/function-tools/)**: Build custom tools for
