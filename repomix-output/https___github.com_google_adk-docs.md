@@ -12884,7 +12884,7 @@ MCP Toolbox provides out-of-the-box toolsets for the following databases and dat
 ### Documentation
 
 Refer to the
-[MCP Toolbox for Databases](../tools/google-cloud-tools.md#toolbox-tools-for-databases)
+[MCP Toolbox for Databases](/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/)
 documentation on how you can use ADK together with the MCP Toolbox for
 Databases. For getting started with the MCP Toolbox for Databases, a blog post [Tutorial : MCP Toolbox for Databases - Exposing Big Query Datasets](https://medium.com/google-cloud/tutorial-mcp-toolbox-for-databases-exposing-big-query-datasets-9321f0064f4e) and Codelab [MCP Toolbox for Databases:Making BigQuery datasets available to MCP clients](https://codelabs.developers.google.com/mcp-toolbox-bigquery-dataset?hl=en#0) are also available.
 
@@ -19419,81 +19419,134 @@ For a complete version of an ADK agent using this example code, see the
 [agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
 
 ================
-File: docs/tools/third-party/index.md
+File: docs/tools/google-cloud/mcp-toolbox-for-databases.md
 ================
-# Third Party Tools
+# MCP Toolbox for Databases
+
+[MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
+open source MCP server for databases. It was designed with enterprise-grade and
+production-quality in mind. It enables you to develop tools easier, faster, and
+more securely by handling the complexities such as connection pooling,
+authentication, and more.
+
+Google’s Agent Development Kit (ADK) has built in support for Toolbox. For more
+information on
+[getting started](https://googleapis.github.io/genai-toolbox/getting-started/) or
+[configuring](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
+Toolbox, see the
+[documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
+
+![GenAI Toolbox](../../assets/mcp_db_toolbox.png)
+
+## Supported Data Sources
+
+MCP Toolbox provides out-of-the-box toolsets for the following databases and data platforms:
+
+### Google Cloud
+
+*   [BigQuery](https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/) (including tools for SQL execution, schema discovery, and AI-powered time series forecasting)
+*   [AlloyDB](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/) (PostgreSQL-compatible, with tools for both standard queries and natural language queries)
+*   [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/)
+*   [Spanner](https://googleapis.github.io/genai-toolbox/resources/sources/spanner/) (supporting both GoogleSQL and PostgreSQL dialects)
+*   Cloud SQL (with dedicated support for [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-pg/), [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mysql/), and [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mssql/))
+*   [Cloud SQL Admin](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-admin/)
+*   [Firestore](https://googleapis.github.io/genai-toolbox/resources/sources/firestore/)
+*   [Bigtable](https://googleapis.github.io/genai-toolbox/resources/sources/bigtable/)
+*   [Dataplex](https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/) (for data discovery and metadata search)
+*   [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-monitoring/)
+
+### Relational & SQL Databases
+
+*   [PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/postgres/) (generic)
+*   [MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/mysql/) (generic)
+*   [Microsoft SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/) (generic)
+*   [ClickHouse](https://googleapis.github.io/genai-toolbox/resources/sources/clickhouse/)
+*   [TiDB](https://googleapis.github.io/genai-toolbox/resources/sources/tidb/)
+*   [OceanBase](https://googleapis.github.io/genai-toolbox/resources/sources/oceanbase/)
+*   [Firebird](https://googleapis.github.io/genai-toolbox/resources/sources/firebird/)
+*   [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/)
+*   [YugabyteDB](https://googleapis.github.io/genai-toolbox/resources/sources/yugabytedb/)
+
+### NoSQL & Key-Value Stores
+
+*   [MongoDB](https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/)
+*   [Couchbase](https://googleapis.github.io/genai-toolbox/resources/sources/couchbase/)
+*   [Redis](https://googleapis.github.io/genai-toolbox/resources/sources/redis/)
+*   [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/)
+*   [Cassandra](https://googleapis.github.io/genai-toolbox/resources/sources/cassandra/)
+
+### Graph Databases
+
+*   [Neo4j](https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/) (with tools for Cypher queries and schema inspection)
+*   [Dgraph](https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/)
+
+### Data Platforms & Federation
+
+*   [Looker](https://googleapis.github.io/genai-toolbox/resources/sources/looker/) (for running Looks, queries, and building dashboards via the Looker API)
+*   [Trino](https://googleapis.github.io/genai-toolbox/resources/sources/trino/) (for running federated queries across multiple sources)
+
+### Other
+
+*   [HTTP](https://googleapis.github.io/genai-toolbox/resources/sources/http/)
+
+## Configure and deploy
+
+Toolbox is an open source server that you deploy and manage yourself. For more
+instructions on deploying and configuring, see the official Toolbox
+documentation:
+
+* [Installing the Server](https://googleapis.github.io/genai-toolbox/getting-started/introduction/#installing-the-server)
+* [Configuring Toolbox](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
+
+## Install client SDK for ADK
+
+ADK relies on the `toolbox-core` python package to use Toolbox. Install the
+package before getting started:
+
+```shell
+pip install toolbox-core
+```
+
+## Loading Toolbox Tools
+
+Once you’re Toolbox server is configured and up and running, you can load tools
+from your server using ADK:
+
+```python
+from google.adk.agents import Agent
+from toolbox_core import ToolboxSyncClient
+
+toolbox = ToolboxSyncClient("https://127.0.0.1:5000")
+
+# Load a specific set of tools
+tools = toolbox.load_toolset('my-toolset-name'),
+# Load single tool
+tools = toolbox.load_tool('my-tool-name'),
+
+root_agent = Agent(
+    ...,
+    tools=tools # Provide the list of tools to the Agent
+
+)
+```
+
+## Advanced Toolbox Features
+
+Toolbox has a variety of features to make developing Gen AI tools for databases.
+For more information, read more about the following features:
+
+* [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
+* [Authorized Invocations:](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations)  restrict access to use a tool based on the users Auth token
+* [OpenTelemetry](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/): get metrics and tracing from Toolbox with OpenTelemetry
+
+================
+File: docs/tools/third-party/crewai.md
+================
+# Integrate with CrewAI Tools
 
 ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
 
-ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** like CrewAI and LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
-
-## Using LangChain Tools
-
-ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
-
-### Example: Web Search using LangChain's Tavily tool
-
-[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
-
-1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
-
-2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
-
-    ```bash
-    pip install langchain_community tavily-python
-    ```
-
-3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
-
-    ```bash
-    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
-    ```
-
-4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
-
-    ```py
-    from google.adk.tools.langchain_tool import LangchainTool
-    from langchain_community.tools import TavilySearchResults
-    ```
-
-5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
-
-    ```py
-    # Instantiate the LangChain tool
-    tavily_tool_instance = TavilySearchResults(
-        max_results=5,
-        search_depth="advanced",
-        include_answer=True,
-        include_raw_content=True,
-        include_images=True,
-    )
-
-    # Wrap it with LangchainTool for ADK
-    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
-    ```
-
-6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
-
-    ```py
-    from google.adk import Agent
-
-    # Define the ADK agent, including the wrapped tool
-    my_agent = Agent(
-        name="langchain_tool_agent",
-        model="gemini-2.0-flash",
-        description="Agent to answer questions using TavilySearch.",
-        instruction="I can answer your questions by searching the internet. Just ask me anything!",
-        tools=[adk_tavily_tool] # Add the wrapped tool here
-    )
-    ```
-
-### Full Example: Tavily Search
-
-Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
-
-```py
---8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
-```
+ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** such as CrewAI. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
 
 ## Using CrewAI tools
 
@@ -19566,92 +19619,355 @@ Here's the full code combining the steps above to create and run an agent using 
 ```
 
 ================
-File: docs/tools/third-party/openapi-tools.md
+File: docs/tools/third-party/github.md
 ================
-# OpenAPI Integration
+# GitHub
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+The [GitHub MCP Server](https://github.com/github/github-mcp-server) connects AI
+tools directly to GitHub's platform. This gives your ADK agent the ability to
+read repositories and code files, manage issues and PRs, analyze code, and
+automate workflows using natural language.
 
-## Integrating REST APIs with OpenAPI
+## Use cases
 
-ADK simplifies interacting with external REST APIs by automatically generating callable tools directly from an [OpenAPI Specification (v3.x)](https://swagger.io/specification/). This eliminates the need to manually define individual function tools for each API endpoint.
+- **Repository Management**: Browse and query code, search files, analyze
+  commits, and understand project structure across any repository you have
+  access to.
+- **Issue & PR Automation**: Create, update, and manage issues and pull
+  requests. Let AI help triage bugs, review code changes, and maintain project
+  boards.
+- **Code Analysis**: Examine security findings, review Dependabot alerts,
+  understand code patterns, and get comprehensive insights into your codebase.
 
-!!! tip "Core Benefit"
-    Use `OpenAPIToolset` to instantly create agent tools (`RestApiTool`) from your existing API documentation (OpenAPI spec), enabling agents to seamlessly call your web services.
+## Prerequisites
 
-## Key Components
+- Create a
+  [Personal Access Token](https://github.com/settings/personal-access-tokens/new) in GitHub. Refer to the [documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) for more information.
 
-* **`OpenAPIToolset`**: This is the primary class you'll use. You initialize it with your OpenAPI specification, and it handles the parsing and generation of tools.
-* **`RestApiTool`**: This class represents a single, callable API operation (like `GET /pets/{petId}` or `POST /pets`). `OpenAPIToolset` creates one `RestApiTool` instance for each operation defined in your spec.
+## Use with agent
 
-## How it Works
-
-The process involves these main steps when you use `OpenAPIToolset`:
-
-1. **Initialization & Parsing**:
-    * You provide the OpenAPI specification to `OpenAPIToolset` either as a Python dictionary, a JSON string, or a YAML string.
-    * The toolset internally parses the spec, resolving any internal references (`$ref`) to understand the complete API structure.
-
-2. **Operation Discovery**:
-    * It identifies all valid API operations (e.g., `GET`, `POST`, `PUT`, `DELETE`) defined within the `paths` object of your specification.
-
-3. **Tool Generation**:
-    * For each discovered operation, `OpenAPIToolset` automatically creates a corresponding `RestApiTool` instance.
-    * **Tool Name**: Derived from the `operationId` in the spec (converted to `snake_case`, max 60 chars). If `operationId` is missing, a name is generated from the method and path.
-    * **Tool Description**: Uses the `summary` or `description` from the operation for the LLM.
-    * **API Details**: Stores the required HTTP method, path, server base URL, parameters (path, query, header, cookie), and request body schema internally.
-
-4. **`RestApiTool` Functionality**: Each generated `RestApiTool`:
-    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on the operation's parameters and request body. This schema tells the LLM how to call the tool (what arguments are expected).
-    * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
-    * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
-
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/adk-docs/tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
-
-## Usage Workflow
-
-Follow these steps to integrate an OpenAPI spec into your agent:
-
-1. **Obtain Spec**: Get your OpenAPI specification document (e.g., load from a `.json` or `.yaml` file, fetch from a URL).
-2. **Instantiate Toolset**: Create an `OpenAPIToolset` instance, passing the spec content and type (`spec_str`/`spec_dict`, `spec_str_type`). Provide authentication details (`auth_scheme`, `auth_credential`) if required by the API.
+=== "Remote MCP Server"
 
     ```python
-    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
-    # Example with a JSON string
-    openapi_spec_json = '...' # Your OpenAPI JSON string
-    toolset = OpenAPIToolset(spec_str=openapi_spec_json, spec_str_type="json")
+    GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
 
-    # Example with a dictionary
-    # openapi_spec_dict = {...} # Your OpenAPI spec as a dict
-    # toolset = OpenAPIToolset(spec_dict=openapi_spec_dict)
-    ```
-
-3. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
-
-    ```python
-    from google.adk.agents import LlmAgent
-
-    my_agent = LlmAgent(
-        name="api_interacting_agent",
-        model="gemini-2.0-flash", # Or your preferred model
-        tools=[toolset], # Pass the toolset
-        # ... other agent config ...
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="github_agent",
+        instruction="Help users get information from GitHub",
+        tools=[
+            MCPToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://api.githubcopilot.com/mcp/",
+                    headers={
+                        "Authorization": f"Bearer {GITHUB_TOKEN}",
+                        "X-MCP-Toolsets": "all",
+                        "X-MCP-Readonly": "true"
+                    },
+                ),
+            )
+        ],
     )
     ```
 
-4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
-5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
+## Available tools
 
-## Example
+Tool | Description
+---- | -----------
+`context` | Tools that provide context about the current user and GitHub context you are operating in
+`copilot` | Copilot related tools (e.g. Copilot Coding Agent)
+`copilot_spaces` | Copilot Spaces related tools
+`actions` | GitHub Actions workflows and CI/CD operations
+`code_security` | Code security related tools, such as GitHub Code Scanning
+`dependabot` | Dependabot tools
+`discussions` | GitHub Discussions related tools
+`experiments` | Experimental features that are not considered stable yet
+`gists` | GitHub Gist related tools
+`github_support_docs_search` | Search docs to answer GitHub product and support questions
+`issues` | GitHub Issues related tools
+`labels` | GitHub Labels related tools
+`notifications` | GitHub Notifications related tools
+`orgs` | GitHub Organization related tools
+`projects` | GitHub Projects related tools
+`pull_requests` | GitHub Pull Request related tools
+`repos` | GitHub Repository related tools
+`secret_protection` | Secret protection related tools, such as GitHub Secret Scanning
+`security_advisories` | Security advisories related tools
+`stargazers` | GitHub Stargazers related tools
+`users` | GitHub User related tools
 
-This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
+## Configuration
 
-???+ "Code: Pet Store API"
+The Remote GitHub MCP server has optional headers that can be used to configure
+available toolsets and read-only mode:
 
-    ```python title="openapi_example.py"
-    --8<-- "examples/python/snippets/tools/openapi_tool.py"
+- `X-MCP-Toolsets`: Comma-separated list of toolsets to enable. (e.g., "repos,issues")
+    - If the list is empty, default toolsets will be used. If a bad toolset is
+      provided, the server will fail to start and emit a 400 bad request status.
+      Whitespace is ignored.
+
+- `X-MCP-Readonly`: Enables only "read" tools.
+    - If this header is empty, "false", "f", "no", "n", "0", or "off" (ignoring
+      whitespace and case), it will be interpreted as false. All other values
+      are interpreted as true.
+
+
+## Additional resources
+
+- [GitHub MCP Server Repository](https://github.com/github/github-mcp-server)
+- [Remote GitHub MCP Server Documentation](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md)
+- [Policies and Governance for the GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/policies-and-governance.md)
+
+================
+File: docs/tools/third-party/hugging-face.md
+================
+# Hugging Face
+
+The [Hugging Face MCP Server](https://github.com/huggingface/hf-mcp-server) can be used to connect
+your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
+
+## Use cases
+
+- **Discover AI/ML Assets**: Search and filter the Hub for models, datasets, and
+  papers based on tasks, libraries, or keywords.
+- **Build Multi-Step Workflows**: Chain tools together, such as transcribing
+  audio with one tool and then summarizing the resulting text with another.
+- **Find AI Applications**: Search for Gradio Spaces that can perform a specific
+  task, like background removal or text-to-speech.
+
+## Prerequisites
+
+- Create a [user access token](https://huggingface.co/settings/tokens) in
+  Hugging Face. Refer to the
+  [documentation](https://huggingface.co/docs/hub/en/security-tokens) for more
+  information.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="hugging_face_agent",
+        instruction="Help users get information from Hugging Face",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@llmindset/hf-mcp-server",
+                        ],
+                        env={
+                            "HF_TOKEN": "YOUR-HUGGING-FACE-TOKEN",
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
     ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+    HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="hugging_face_agent",
+        instruction="""Help users get information from Hugging Face""",
+        tools=[
+            MCPToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://huggingface.co/mcp",
+                    headers={
+                        "Authorization": f"Bearer {HUGGING_FACE_TOKEN}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+Spaces Semantic Search | Find the best AI Apps via natural language queries
+Papers Semantic Search | Find ML Research Papers via natural language queries
+Model Search | Search for ML models with filters for task, library, etc…
+Dataset Search | Search for datasets with filters for author, tags, etc…
+Documentation Semantic Search | Search the Hugging Face documentation library
+Hub Repository Details | Get detailed information about Models, Datasets and Spaces
+
+## Configuration
+
+To configure which tools are available in your Hugging Face Hub MCP server,
+visit the [MCP Settings Page](https://huggingface.co/settings/mcp) in your
+Hugging Face account.
+
+
+To configure the local MCP server, you can use the following environment
+variables:
+
+- `TRANSPORT`: The transport type to use (`stdio`, `sse`, `streamableHttp`, or
+  `streamableHttpJson`)
+- `DEFAULT_HF_TOKEN`: ⚠️ Requests are serviced with the `HF_TOKEN` received in
+  the Authorization: Bearer header. The DEFAULT_HF_TOKEN is used if no header
+  was sent. Only set this in Development / Test environments or for local STDIO
+  Deployments. ⚠️
+- If running with stdio transport, `HF_TOKEN` is used if `DEFAULT_HF_TOKEN` is
+  not set.
+- `HF_API_TIMEOUT`: Timeout for Hugging Face API requests in milliseconds
+  (default: 12500ms / 12.5 seconds)
+- `USER_CONFIG_API`: URL to use for User settings (defaults to Local front-end)
+- `MCP_STRICT_COMPLIANCE`: set to True for GET 405 rejects in JSON Mode (default
+  serves a welcome page).
+- `AUTHENTICATE_TOOL`: whether to include an Authenticate tool to issue an OAuth
+  challenge when called
+- `SEARCH_ENABLES_FETCH`: When set to true, automatically enables the
+  hf_doc_fetch tool whenever hf_doc_search is enabled
+
+
+## Additional resources
+
+- [Hugging Face MCP Server Repository](https://github.com/huggingface/hf-mcp-server)
+- [Hugging Face MCP Server Documentation](https://huggingface.co/docs/hub/en/hf-mcp-server)
+
+================
+File: docs/tools/third-party/index.md
+================
+# Third-Party Tools
+
+Check out the following third-party tools that you can use with ADK agents:
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-github.png" alt="GitHub">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitHub</h3>
+      <p>Analyze code, manage issues and PRs, and automate workflows</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-hugging-face.png" alt="Hugging Face">
+    </div>
+    <div class="tool-card-content">
+      <h3>Hugging Face</h3>
+      <p>Access models, datasets, research papers, and AI tools</p>
+    </div>
+  </a>
+
+</div>
+
+## Integrate with existing tools
+
+ADK provides wrappers that can be used to integrate with existing tools from the
+LangChain and CrewAI ecosystems:
+
+*   **[LangChain Tools](/adk-docs/tools/third-party/langchain/)**:
+    Integrate tools from the LangChain ecosystem.
+*   **[CrewAI Tools](/adk-docs/tools/third-party/crewai/)**:
+    Integrate tools from the CrewAI library.
+
+================
+File: docs/tools/third-party/langchain.md
+================
+# Integrate with LangChain Tools
+
+![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
+ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** such as LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
+
+## Using LangChain Tools
+
+ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
+
+### Example: Web Search using LangChain's Tavily tool
+
+[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
+
+1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
+
+2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
+
+    ```bash
+    pip install langchain_community tavily-python
+    ```
+
+3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
+
+    ```bash
+    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
+    ```
+
+4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
+
+    ```py
+    from google.adk.tools.langchain_tool import LangchainTool
+    from langchain_community.tools import TavilySearchResults
+    ```
+
+5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
+
+    ```py
+    # Instantiate the LangChain tool
+    tavily_tool_instance = TavilySearchResults(
+        max_results=5,
+        search_depth="advanced",
+        include_answer=True,
+        include_raw_content=True,
+        include_images=True,
+    )
+
+    # Wrap it with LangchainTool for ADK
+    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
+    ```
+
+6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
+
+    ```py
+    from google.adk import Agent
+
+    # Define the ADK agent, including the wrapped tool
+    my_agent = Agent(
+        name="langchain_tool_agent",
+        model="gemini-2.0-flash",
+        description="Agent to answer questions using TavilySearch.",
+        instruction="I can answer your questions by searching the internet. Just ask me anything!",
+        tools=[adk_tavily_tool] # Add the wrapped tool here
+    )
+    ```
+
+### Full Example: Tavily Search
+
+Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
+
+```py
+--8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
+```
 
 ================
 File: docs/tools/authentication.md
@@ -21944,126 +22260,6 @@ workflow as a tool for your agent or create a new one.
 
     After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
 
----
-
-## Toolbox Tools for Databases
-
-[MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
-open source MCP server for databases. It was designed with enterprise-grade and
-production-quality in mind. It enables you to develop tools easier, faster, and
-more securely by handling the complexities such as connection pooling,
-authentication, and more.
-
-Google’s Agent Development Kit (ADK) has built in support for Toolbox. For more
-information on
-[getting started](https://googleapis.github.io/genai-toolbox/getting-started) or
-[configuring](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
-Toolbox, see the
-[documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
-
-![GenAI Toolbox](../assets/mcp_db_toolbox.png)
-
-### Supported Data Sources
-
-MCP Toolbox provides out-of-the-box toolsets for the following databases and data platforms:
-
-#### Google Cloud
-
-*   [BigQuery](https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/) (including tools for SQL execution, schema discovery, and AI-powered time series forecasting)
-*   [AlloyDB](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/) (PostgreSQL-compatible, with tools for both standard queries and natural language queries)
-*   [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/)
-*   [Spanner](https://googleapis.github.io/genai-toolbox/resources/sources/spanner/) (supporting both GoogleSQL and PostgreSQL dialects)
-*   Cloud SQL (with dedicated support for [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-pg/), [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mysql/), and [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mssql/))
-*   [Cloud SQL Admin](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-admin/)
-*   [Firestore](https://googleapis.github.io/genai-toolbox/resources/sources/firestore/)
-*   [Bigtable](https://googleapis.github.io/genai-toolbox/resources/sources/bigtable/)
-*   [Dataplex](https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/) (for data discovery and metadata search)
-*   [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-monitoring/)
-
-#### Relational & SQL Databases
-
-*   [PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/postgres/) (generic)
-*   [MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/mysql/) (generic)
-*   [Microsoft SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/) (generic)
-*   [ClickHouse](https://googleapis.github.io/genai-toolbox/resources/sources/clickhouse/)
-*   [TiDB](https://googleapis.github.io/genai-toolbox/resources/sources/tidb/)
-*   [OceanBase](https://googleapis.github.io/genai-toolbox/resources/sources/oceanbase/)
-*   [Firebird](https://googleapis.github.io/genai-toolbox/resources/sources/firebird/)
-*   [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/)
-*   [YugabyteDB](https://googleapis.github.io/genai-toolbox/resources/sources/yugabytedb/)
-
-#### NoSQL & Key-Value Stores
-
-*   [MongoDB](https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/)
-*   [Couchbase](https://googleapis.github.io/genai-toolbox/resources/sources/couchbase/)
-*   [Redis](https://googleapis.github.io/genai-toolbox/resources/sources/redis/)
-*   [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/)
-*   [Cassandra](https://googleapis.github.io/genai-toolbox/resources/sources/cassandra/)
-
-#### Graph Databases
-
-*   [Neo4j](https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/) (with tools for Cypher queries and schema inspection)
-*   [Dgraph](https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/)
-
-#### Data Platforms & Federation
-
-*   [Looker](https://googleapis.github.io/genai-toolbox/resources/sources/looker/) (for running Looks, queries, and building dashboards via the Looker API)
-*   [Trino](https://googleapis.github.io/genai-toolbox/resources/sources/trino/) (for running federated queries across multiple sources)
-
-#### Other
-
-*   [HTTP](https://googleapis.github.io/genai-toolbox/resources/sources/http/)
-
-### Configure and deploy
-
-Toolbox is an open source server that you deploy and manage yourself. For more
-instructions on deploying and configuring, see the official Toolbox
-documentation:
-
-* [Installing the Server](https://googleapis.github.io/genai-toolbox/getting-started/introduction/#installing-the-server)
-* [Configuring Toolbox](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
-
-### Install client SDK
-
-ADK relies on the `toolbox-core` python package to use Toolbox. Install the
-package before getting started:
-
-```shell
-pip install toolbox-core
-```
-
-### Loading Toolbox Tools
-
-Once you’re Toolbox server is configured and up and running, you can load tools
-from your server using ADK:
-
-```python
-from google.adk.agents import Agent
-from toolbox_core import ToolboxSyncClient
-
-toolbox = ToolboxSyncClient("https://127.0.0.1:5000")
-
-# Load a specific set of tools
-tools = toolbox.load_toolset('my-toolset-name'),
-# Load single tool
-tools = toolbox.load_tool('my-tool-name'),
-
-root_agent = Agent(
-    ...,
-    tools=tools # Provide the list of tools to the Agent
-
-)
-```
-
-### Advanced Toolbox Features
-
-Toolbox has a variety of features to make developing Gen AI tools for databases.
-For more information, read more about the following features:
-
-* [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
-* [Authorized Invocations:](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations)  restrict access to use a tool based on the users Auth token
-* [OpenTelemetry](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/): get metrics and tracing from Toolbox with OpenTelemetry
-
 ================
 File: docs/tools/index.md
 ================
@@ -22166,7 +22362,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
   </a>
 
-  <a href="/adk-docs/tools/google-cloud-tools/#toolbox-tools-for-databases" class="tool-card">
+  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
     </div>
@@ -22200,12 +22396,39 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 ### Third-party tools
 
-*   **[LangChain Tools](/adk-docs/tools/third-party/#using-langchain-tools)**:
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-github.png" alt="GitHub">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitHub</h3>
+      <p>Analyze code, manage issues and PRs, and automate workflows</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-hugging-face.png" alt="Hugging Face">
+    </div>
+    <div class="tool-card-content">
+      <h3>Hugging Face</h3>
+      <p>Access models, datasets, research papers, and AI tools</p>
+    </div>
+  </a>
+
+</div>
+
+## Integrate with existing tools
+
+ADK provides wrappers that can be used to integrate with existing tools from the
+LangChain and CrewAI ecosystems:
+
+*   **[LangChain Tools](/adk-docs/tools/third-party/langchain/)**:
     Integrate tools from the LangChain ecosystem.
-*   **[CrewAI tools](/adk-docs/tools/third-party/#using-crewai-tools)**:
+*   **[CrewAI Tools](/adk-docs/tools/third-party/crewai/)**:
     Integrate tools from the CrewAI library.
-*   **[OpenAPI Integration](/adk-docs/tools/third-party/openapi-tools/)**:
-    Generate callable tools directly from an OpenAPI Specification.
 
 ## Build your tools
 
@@ -22216,6 +22439,8 @@ workflows using the following guides:
     your specific ADK agent needs.
 *   **[MCP Tools](/adk-docs/tools/function-tools/)**: Connect MCP servers as tools
     for your ADK agents.
+*   **[OpenAPI Integration](/adk-docs/tools-custom/openapi-tools/)**:
+    Generate callable tools directly from an OpenAPI Specification.
 
 ================
 File: docs/tools/mcp-tools.md
@@ -23607,8 +23832,8 @@ File: docs/tools-custom/index.md
 
 In an ADK agent workflow, Tools are programming functions with structured input
 and output that can be called by an ADK Agent to perform actions. ADK Tools
-function similarly to how you use a 
-[Function Call](https://ai.google.dev/gemini-api/docs/function-calling) 
+function similarly to how you use a
+[Function Call](https://ai.google.dev/gemini-api/docs/function-calling)
 with Gemini or other generative AI models. You can perform various actions and
 programming functions with an ADK Tool, such as:
 
@@ -23620,7 +23845,7 @@ programming functions with an ADK Tool, such as:
 *   Interacting with other software or services
 
 !!! tip "[ADK Tools list](/adk-docs/tools/)"
-    Before building your own Tools for ADK, check out the 
+    Before building your own Tools for ADK, check out the
     **[ADK Tools list](/adk-docs/tools/)**
     for pre-built tools you can use with ADK Agents.
 
@@ -23641,7 +23866,7 @@ external systems or data.
 
 ### Key Characteristics
 
-**Action-Oriented:** Tools perform specific actions for an agent, such as 
+**Action-Oriented:** Tools perform specific actions for an agent, such as
 searching for information, calling an API, or performing calculations.
 
 **Extends Agent capabilities:** They empower agents to access real-time information, affect external systems, and overcome the knowledge limitations inherent in their training data.
@@ -23670,8 +23895,8 @@ ADK offers flexibility by supporting several types of tools:
     * **[Long Running Function Tools](../tools/function-tools.md#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
 2. **[Built-in Tools](../tools/built-in-tools.md):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
-3. **[Third-Party Tools](/adk-docs/tools/third-party/):** Integrate tools seamlessly from popular external libraries.
-        Examples: LangChain Tools, CrewAI Tools.
+3. **Third-Party Tools:** Integrate tools seamlessly from popular external libraries.
+        Examples: [LangChain Tools](/adk-docs/tools/third-party/langchain/), [CrewAI Tools](/adk-docs/tools/third-party/crewai/).
 
 Navigate to the respective documentation pages linked above for detailed information and examples for each tool type.
 
@@ -23752,17 +23977,17 @@ The `tool_context.state` attribute provides direct read and write access to the 
     // Updates a user-specific preference.
     public Map<String, String> updateUserThemePreference(String value, ToolContext toolContext) {
       String userPrefsKey = "user:preferences:theme";
-  
+
       // Get current preferences or initialize if none exist
       String preference = toolContext.state().getOrDefault(userPrefsKey, "").toString();
       if (preference.isEmpty()) {
         preference = value;
       }
-  
+
       // Write the updated dictionary back to the state
       toolContext.state().put("user:preferences", preference);
       System.out.printf("Tool: Updated user preference %s to %s", userPrefsKey, preference);
-  
+
       return Map.of("status", "success", "updated_preference", toolContext.state().get(userPrefsKey).toString());
       // When the LLM calls updateUserThemePreference("dark"):
       // The toolContext.state will be updated, and the change will be part of the
@@ -23850,11 +24075,11 @@ These methods provide convenient ways for your tool to interact with persistent 
         @Annotations.Schema(description = "The name of the document to analyze.") String documentName,
         @Annotations.Schema(description = "The query for the analysis.") String analysisQuery,
         ToolContext toolContext) {
-  
+
       // 1. List all available artifacts
       System.out.printf(
           "Listing all available artifacts %s:", toolContext.listArtifacts().blockingGet());
-  
+
       // 2. Load an artifact to memory
       System.out.println("Tool: Attempting to load artifact: " + documentName);
       Part documentPart = toolContext.loadArtifact(documentName, Optional.empty()).blockingGet();
@@ -23867,7 +24092,7 @@ These methods provide convenient ways for your tool to interact with persistent 
       String documentText = documentPart.text().orElse("");
       System.out.println(
           "Tool: Loaded document '" + documentName + "' (" + documentText.length() + " chars).");
-  
+
       // 3. Perform analysis (placeholder)
       String analysisResult =
           "Analysis of '"
@@ -23876,13 +24101,13 @@ These methods provide convenient ways for your tool to interact with persistent 
               + analysisQuery
               + " [Placeholder Analysis Result]";
       System.out.println("Tool: Performed analysis.");
-  
+
       // 4. Save the analysis result as a new artifact
       Part analysisPart = Part.fromText(analysisResult);
       String newArtifactName = "analysis_" + documentName;
-  
+
       toolContext.saveArtifact(newArtifactName, analysisPart);
-  
+
       return Maybe.just(
           ImmutableMap.<String, Object>builder()
               .put("status", "success")
@@ -23929,12 +24154,12 @@ Here are key guidelines for defining effective tool functions:
     * **Explain *when* the tool should be used.** Provide context or example scenarios to guide the LLM's decision-making.
     * **Describe *each parameter* clearly.** Explain what information the LLM needs to provide for that argument.
     * Describe the **structure and meaning of the expected `dict` return value**, especially the different `status` values and associated data keys.
-    * **Do not describe the injected ToolContext parameter**. Avoid mentioning the optional `tool_context: ToolContext` parameter within the docstring description since it is not a parameter the LLM needs to know about. ToolContext is injected by ADK, *after* the LLM decides to call it. 
+    * **Do not describe the injected ToolContext parameter**. Avoid mentioning the optional `tool_context: ToolContext` parameter within the docstring description since it is not a parameter the LLM needs to know about. ToolContext is injected by ADK, *after* the LLM decides to call it.
 
     **Example of a good definition:**
 
 === "Python"
-    
+
     ```python
     def lookup_order_status(order_id: str) -> dict:
       """Fetches the current status of a customer's order using its ID.
@@ -24052,6 +24277,94 @@ In this example:
 *   The `close()` method is called to ensure any resources held by the toolset are released.
 
 Toolsets offer a powerful way to organize, manage, and dynamically provide collections of tools to your ADK agents, leading to more modular, maintainable, and adaptable agentic applications.
+
+================
+File: docs/tools-custom/openapi-tools.md
+================
+# OpenAPI Integration
+
+![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
+## Integrating REST APIs with OpenAPI
+
+ADK simplifies interacting with external REST APIs by automatically generating callable tools directly from an [OpenAPI Specification (v3.x)](https://swagger.io/specification/). This eliminates the need to manually define individual function tools for each API endpoint.
+
+!!! tip "Core Benefit"
+    Use `OpenAPIToolset` to instantly create agent tools (`RestApiTool`) from your existing API documentation (OpenAPI spec), enabling agents to seamlessly call your web services.
+
+## Key Components
+
+* **`OpenAPIToolset`**: This is the primary class you'll use. You initialize it with your OpenAPI specification, and it handles the parsing and generation of tools.
+* **`RestApiTool`**: This class represents a single, callable API operation (like `GET /pets/{petId}` or `POST /pets`). `OpenAPIToolset` creates one `RestApiTool` instance for each operation defined in your spec.
+
+## How it Works
+
+The process involves these main steps when you use `OpenAPIToolset`:
+
+1. **Initialization & Parsing**:
+    * You provide the OpenAPI specification to `OpenAPIToolset` either as a Python dictionary, a JSON string, or a YAML string.
+    * The toolset internally parses the spec, resolving any internal references (`$ref`) to understand the complete API structure.
+
+2. **Operation Discovery**:
+    * It identifies all valid API operations (e.g., `GET`, `POST`, `PUT`, `DELETE`) defined within the `paths` object of your specification.
+
+3. **Tool Generation**:
+    * For each discovered operation, `OpenAPIToolset` automatically creates a corresponding `RestApiTool` instance.
+    * **Tool Name**: Derived from the `operationId` in the spec (converted to `snake_case`, max 60 chars). If `operationId` is missing, a name is generated from the method and path.
+    * **Tool Description**: Uses the `summary` or `description` from the operation for the LLM.
+    * **API Details**: Stores the required HTTP method, path, server base URL, parameters (path, query, header, cookie), and request body schema internally.
+
+4. **`RestApiTool` Functionality**: Each generated `RestApiTool`:
+    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on the operation's parameters and request body. This schema tells the LLM how to call the tool (what arguments are expected).
+    * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
+    * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
+
+5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/adk-docs/tools/authentication.md) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+
+## Usage Workflow
+
+Follow these steps to integrate an OpenAPI spec into your agent:
+
+1. **Obtain Spec**: Get your OpenAPI specification document (e.g., load from a `.json` or `.yaml` file, fetch from a URL).
+2. **Instantiate Toolset**: Create an `OpenAPIToolset` instance, passing the spec content and type (`spec_str`/`spec_dict`, `spec_str_type`). Provide authentication details (`auth_scheme`, `auth_credential`) if required by the API.
+
+    ```python
+    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+
+    # Example with a JSON string
+    openapi_spec_json = '...' # Your OpenAPI JSON string
+    toolset = OpenAPIToolset(spec_str=openapi_spec_json, spec_str_type="json")
+
+    # Example with a dictionary
+    # openapi_spec_dict = {...} # Your OpenAPI spec as a dict
+    # toolset = OpenAPIToolset(spec_dict=openapi_spec_dict)
+    ```
+
+3. **Add to Agent**: Include the retrieved tools in your `LlmAgent`'s `tools` list.
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    my_agent = LlmAgent(
+        name="api_interacting_agent",
+        model="gemini-2.0-flash", # Or your preferred model
+        tools=[toolset], # Pass the toolset
+        # ... other agent config ...
+    )
+    ```
+
+4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
+5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
+
+## Example
+
+This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
+
+???+ "Code: Pet Store API"
+
+    ```python title="openapi_example.py"
+    --8<-- "examples/python/snippets/tools/openapi_tool.py"
+    ```
 
 ================
 File: docs/tutorials/ag-ui.md
