@@ -1053,7 +1053,7 @@ To create an ADK project for use with Agent Config:
             GOOGLE_GENAI_USE_VERTEXAI=0
             GOOGLE_API_KEY=<your-Google-Gemini-API-key>
 
-        You can get an API key from the Google AI Studio 
+        You can get an API key from the Google AI Studio
         [API Keys](https://aistudio.google.com/app/apikey) page.
 
     1.  For Gemini model access through Google Cloud, add these lines to the file:
@@ -1091,7 +1091,7 @@ the web interface, command line terminal execution, or API server mode.
 
 To run your Agent Config-defined agent:
 
-1.  In your terminal, navigate to the `my_agent/` directory containing the 
+1.  In your terminal, navigate to the `my_agent/` directory containing the
     `root_agent.yaml` file.
 1.  Type one of the following commands to run your agent:
     -   `adk web` - Run web UI interface for your agent.
@@ -1103,7 +1103,7 @@ To run your Agent Config-defined agent:
 For more information on the ways to run your agent, see the *Run Your Agent*
 topic in the
 [Quickstart](/adk-docs/get-started/quickstart/#run-your-agent).
-For more information about the ADK command line options, see the 
+For more information about the ADK command line options, see the
 [ADK CLI reference](/adk-docs/api-reference/cli/).
 
 ## Example configs
@@ -1188,12 +1188,12 @@ For more details, see the full code for this sample in the
 
 ## Deploy agent configs
 
-You can deploy Agent Config agents with 
-[Cloud Run](/adk-docs/deploy/cloud-run/) and 
-[Agent Engine](/adk-docs/deploy/agent-engine/), 
-using the same procedure as code-based agents. For more information on how 
-to prepare and deploy Agent Config-based agents, see the 
-[Cloud Run](/adk-docs/deploy/cloud-run/) and 
+You can deploy Agent Config agents with
+[Cloud Run](/adk-docs/deploy/cloud-run/) and
+[Agent Engine](/adk-docs/deploy/agent-engine/),
+using the same procedure as code-based agents. For more information on how
+to prepare and deploy Agent Config-based agents, see the
+[Cloud Run](/adk-docs/deploy/cloud-run/) and
 [Agent Engine](/adk-docs/deploy/agent-engine/)
 deployment guides.
 
@@ -1217,14 +1217,12 @@ limitations:
     -   `enterprise_web_search`
     -   `load_web_page`: Requires a fully-qualified path to access web
         pages.
--   **Agent Type Support:** The `LangGraphAgent` and `A2aAgent` types are 
+-   **Agent Type Support:** The `LangGraphAgent` and `A2aAgent` types are
     not yet supported.
     -   `AgentTool`
     -   `LongRunningFunctionTool`
     -   `VertexAiSearchTool`
     -   `MCPToolset`
-    -   `CrewaiTool`
-    -   `LangchainTool`
     -   `ExampleTool`
 
 ## Next steps
@@ -1232,7 +1230,7 @@ limitations:
 For ideas on how and what to build with ADK Agent Configs, see the yaml-based
 agent definitions in the ADK
 [adk-samples](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C//+root_agent.yaml&type=code)
-repository. For detailed information on the syntax and settings supported by 
+repository. For detailed information on the syntax and settings supported by
 the Agent Config format, see the
 [Agent Config syntax reference](/adk-docs/api-reference/agentconfig/).
 
@@ -5538,6 +5536,113 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         ```
 
 ================
+File: docs/context/compaction.md
+================
+# Compress agent context for performance
+
+As an ADK agent runs it collects *context* information, including user
+instructions, retrieved data, tool responses, and generated content. As the size
+of this context data grows, agent processing times typically also increase.
+More and more data is sent to the generative AI model used by the agent,
+increasing processing time and slowing down responses. The ADK Context
+Compaction feature is designed to reduce the size of context as an agent
+is running by summarizing older parts of the agent workflow event history. 
+
+The Context Compaction feature uses a *sliding window* approach for collecting
+and summarizing agent workflow event data within a
+[Session](/adk-docs/sessions/session/). When you configure this feature in your
+agent, it summarizes data from older events once it reaches a threshold of a
+specific number of workflow events, or invocations, with the current Session.
+
+## Configure context compaction
+
+Add context compaction to your agent workflow by adding an Events Compaction
+Configuration setting to the App object of your workflow. As part of the
+configuration, you must specify a compaction interval and overlap size, as shown
+in the following sample code:
+
+```python
+from google.adk.apps.app import App
+from google.adk.apps.app import EventsCompactionConfig
+
+app = App(
+    name='my-agent',
+    root_agent=root_agent,
+    events_compaction_config=EventsCompactionConfig(
+        compaction_interval=3,  # Trigger compaction every 3 new invocations.
+        overlap_size=1          # Include last invocation from the previous window.
+    ),
+)
+```
+
+Once configured, the ADK `Runner` handles the compaction process in the
+background each time the session reaches the interval.
+
+## Example of context compaction
+
+If you set `compaction_interval` to 3 and `overlap_size` to 1, the event data is
+compressed upon completion of events 3, 6, 9, and so on. The overlap setting
+increases size of the second summary compression, and each summary afterwards,
+as shown in Figure 1. 
+
+![Context compaction example illustration](/adk-docs/assets/context-compaction.svg)
+**Figure 1.** Ilustration of event compaction configuration with a interval of 3
+and overlap of 1.
+
+With this example configuration, the context compression tasks happen as follows:
+
+1.  **Event 3 completes**: All 3 events are compressed into a summary
+1.  **Event 6 completes**: Events 3 to 6 are compressed, including the overlap
+    of 1 prior event
+1.  **Event 9 completes**: Events 6 to 9 are compressed, including the overlap
+    of 1 prior event
+
+## Configuration settings
+
+The configuration settings for this feature control how frequently event data is compressed
+and how much data is retained as the agent workflow runs. Optionally, you can configure
+a compactor object 
+
+*   **`compaction_interval`**: Set the number of completed events that triggers compaction
+    of the prior event data. 
+*   **`overlap_size`**: Set how many of the previously compacted events are included in a
+    newly compacted context set.
+*   **`compactor`**: (Optional) Define a compactor object including a specific AI model
+    to use for summarization. For more information, see 
+    [Define a compactor](#define-compactor).    
+
+### Define a Compactor {#define-compactor}
+
+You can define a Compactor object using the `SlidingWindowCompactor` class to
+customize the operation of context compression. The following code example
+demonstrates how to define a compactor:
+
+```python
+from google.adk.apps.app import App
+from google.adk.apps.app import EventsCompactionConfig
+from google.adk.models import Gemini
+from google.adk.apps.sliding_window_compactor import SlidingWindowCompactor
+
+# Define a compactor using a specific AI model:
+summarization_llm = Gemini(model="gemini-2.5-flash")
+my_compactor = SlidingWindowCompactor(llm=summarization_llm)
+
+app = App(
+    name='my-agent',
+    root_agent=root_agent,
+    events_compaction_config=EventsCompactionConfig(
+        compactor=my_compactor,
+        compaction_interval=3, overlap_size=1
+    ),
+)    
+```
+
+You can further refine the operation of the `SlidingWindowCompactor` by
+by modifying its summarizer class `LlmEventSummarizer` including changing
+the `prompt_template` setting of that class. For more details, see the
+[`LlmEventSummarizer` code](https://github.com/google/adk-python/blob/main/src/google/adk/apps/llm_event_summarizer.py#L60).
+
+================
 File: docs/context/index.md
 ================
 # Context
@@ -7550,7 +7655,7 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
     curl -X POST -H "Authorization: Bearer $TOKEN" \
         $APP_URL/apps/capital_agent/users/user_123/sessions/session_abc \
         -H "Content-Type: application/json" \
-        -d '{"state": {"preferred_language": "English", "visit_count": 5}}'
+        -d '{"preferred_language": "English", "visit_count": 5}'
     ```
 
     #### Run the Agent
@@ -8106,7 +8211,7 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
     curl -X POST \
         $APP_URL/apps/capital_agent/users/user_123/sessions/session_abc \
         -H "Content-Type: application/json" \
-        -d '{"state": {"preferred_language": "English", "visit_count": 5}}'
+        -d '{"preferred_language": "English", "visit_count": 5}'
     ```
 
     #### Run the Agent
@@ -9935,7 +10040,7 @@ Run the following command from the terminal to launch the Dev UI.
 ```console title="terminal"
 mvn exec:java \
     -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
-    -Dexec.args="--adk.agents.source-dir=src/main/java" \
+    -Dexec.args="--adk.agents.source-dir=." \
     -Dexec.classpathScope="compile"
 ```
 
@@ -9948,8 +10053,7 @@ the dropdown. Select "science-app".
 !!!note "Troubleshooting"
 
     If you do not see "science-app" in the dropdown menu, make sure you
-    are running the `mvn` command at the location where your Java source code
-    is located (usually `src/main/java`).
+    are running the `mvn` command from the root of your maven project.
 
 ## Try Dev UI with text
 
@@ -10674,8 +10778,7 @@ agentic applications:
    generated reports during their execution.
 9. **Extensibility and Interoperability:** ADK promotes an open
    ecosystem. While providing core tools, it allows developers to easily
-   integrate and reuse tools from other popular agent frameworks including
-   LangChain and CrewAI.
+   integrate and reuse third-party tools and data connectors.
 10. **State and Memory Management:** Automatically handles short-term
     conversational memory (`State` within a `Session`) managed by the
     `SessionService`. Provides integration points for longer-term `Memory`
@@ -11799,7 +11902,7 @@ a new session with the agent using:
 ```shell
 curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_123 \
   -H "Content-Type: application/json" \
-  -d '{"state": {"key1": "value1", "key2": 42}}'
+  -d '{"key1": "value1", "key2": 42}'
 ```
 
 Let's break down what's happening:
@@ -11810,7 +11913,7 @@ Let's break down what's happening:
   can replace `my_sample_agent` with the name of your agent folder. You can
   replace `u_123` with a specific user ID, and `s_123` with a specific session
   ID.
-* `{"state": {"key1": "value1", "key2": 42}}`: This is optional. You can use
+* `{"key1": "value1", "key2": 42}`: This is optional. You can use
   this to customize the agent's pre-existing state (dict) when creating the
   session.
 
@@ -12022,10 +12125,8 @@ Creates a new session or updates an existing one. If a session with the given ID
 **Request Body**
 ```json
 {
-  "state": {
-    "key1": "value1",
-    "key2": 42
-  }
+  "key1": "value1",
+  "key2": 42
 }
 ```
 
@@ -12033,7 +12134,7 @@ Creates a new session or updates an existing one. If a session with the given ID
 ```shell
 curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc \
   -H "Content-Type: application/json" \
-  -d '{"state": {"visit_count": 5}}'
+  -d '{"visit_count": 5}'
 ```
 
 **Example Response**
@@ -17329,9 +17430,9 @@ runner.run_live(
 ================
 File: docs/streaming/custom-streaming-ws.md
 ================
-# Custom Audio Streaming app (WebSocket) {#custom-streaming-websocket}
+# Custom Audio Streaming Application (WebSocket) {#custom-streaming-websocket}
 
-This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/), enabling real-time, bidirectional audio and text communication with WebSockets.
+This article overviews the server and client code for a custom Bidi-streaming web application built with ADK Bidi-streaming and [FastAPI](https://fastapi.tiangolo.com/), enabling real-time, bidirectional audio and text communication with WebSockets.
 
 **Note:** This guide assumes you have experience of JavaScript and Python `asyncio` programming.
 
@@ -17342,9 +17443,16 @@ In order to use voice/video streaming in ADK, you will need to use Gemini models
 - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
 - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
-There is also a [SSE](custom-streaming.md) version of the sample is available.
+## 1. Install ADK {#1-setup-installation}
 
-## 1. Install ADK {#1.-setup-installation}
+Download the sample code:
+
+```bash
+curl -L https://github.com/google/adk-docs/archive/refs/heads/main.tar.gz | \
+  tar xz --strip=5 adk-docs-main/examples/python/snippets/streaming/adk-streaming-ws
+
+cd adk-streaming-ws
+```
 
 Create & Activate Virtual Environment (Recommended):
 
@@ -17360,24 +17468,19 @@ python -m venv .venv
 Install ADK:
 
 ```bash
-pip install --upgrade google-adk==1.10.0
+pip install --upgrade google-adk==1.17.0
 ```
 
 Set `SSL_CERT_FILE` variable with the following command.
 
-```shell
+```bash
 export SSL_CERT_FILE=$(python -m certifi)
 ```
 
-Download the sample code:
+Navigate to the app folder:
 
 ```bash
-git clone --no-checkout https://github.com/google/adk-docs.git
-cd adk-docs
-git sparse-checkout init --cone
-git sparse-checkout set examples/python/snippets/streaming/adk-streaming-ws
-git checkout main
-cd examples/python/snippets/streaming/adk-streaming-ws/app
+cd app
 ```
 
 This sample code has the following files and folders:
@@ -17395,7 +17498,7 @@ adk-streaming-ws/
         └── agent.py # Agent definition
 ```
 
-## 2\. Set up the platform {#2.-set-up-the-platform}
+## 2. Set up the platform {#2-set-up-the-platform}
 
 To run the sample app, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
 
@@ -17406,6 +17509,8 @@ To run the sample app, choose a platform from either Google AI Studio or Google 
         ```env title=".env"
         GOOGLE_GENAI_USE_VERTEXAI=FALSE
         GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
+        DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-09-2025
+        #DEMO_AGENT_MODEL=gemini-2.0-flash-exp # if the model above doesn't work
         ```
 
     3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
@@ -17428,6 +17533,8 @@ To run the sample app, choose a platform from either Google AI Studio or Google 
         GOOGLE_GENAI_USE_VERTEXAI=TRUE
         GOOGLE_CLOUD_PROJECT=PASTE_YOUR_ACTUAL_PROJECT_ID
         GOOGLE_CLOUD_LOCATION=us-central1
+        DEMO_AGENT_MODEL=gemini-live-2.5-flash-preview-native-audio-09-2025
+        #DEMO_AGENT_MODEL=gemini-2.0-flash-exp # if the model above doesn't work
         ```
 
 
@@ -17437,38 +17544,43 @@ The agent definition code `agent.py` in the `google_search_agent` folder is wher
 
 
 ```py
+import os
 from google.adk.agents import Agent
 from google.adk.tools import google_search  # Import the tool
 
 root_agent = Agent(
    name="google_search_agent",
-   model="gemini-2.0-flash-exp", # if this model does not work, try below
-   #model="gemini-2.0-flash-live-001",
+   model=os.getenv("DEMO_AGENT_MODEL"),
    description="Agent to answer questions using Google Search.",
    instruction="Answer the question using the Google Search tool.",
    tools=[google_search],
 )
 ```
 
-**Note:**  To enable both text and audio/video input, the model must support the generateContent (for text) and bidiGenerateContent methods. Verify these capabilities by referring to the [List Models Documentation](https://ai.google.dev/api/models#method:-models.list). This quickstart utilizes the gemini-2.0-flash-exp model for demonstration purposes.
+**Note:** This application uses the Gemini Live API (also known as `bidiGenerateContent`), which enables real-time bidirectional streaming for both text and audio/video input. The model must support the Live API for Bidi-streaming to work. Verify model capabilities by referring to:
+
+- [Gemini Live API - Supported Models](https://ai.google.dev/gemini-api/docs/live#supported-models)
+- [Vertex AI Live API - Model Support](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api#models)
+
+The agent uses the model specified in the `DEMO_AGENT_MODEL` environment variable (from the `.env` file).
 
 Notice how easily you integrated [grounding with Google Search](https://ai.google.dev/gemini-api/docs/grounding?lang=python#configure-search) capabilities.  The `Agent` class and the `google_search` tool handle the complex interactions with the LLM and grounding with the search API, allowing you to focus on the agent's *purpose* and *behavior*.
 
 ![intro_components.png](../assets/quickstart-streaming-tool.png)
 
-## 3\. Interact with Your Streaming app {#3.-interact-with-your-streaming-app}
+## 3. Interact with Your Streaming Application {#3-interact-with-your-streaming-app}
 
-1\. **Navigate to the Correct Directory:**
+1. **Navigate to the Correct Directory:**
 
    To run your agent effectively, make sure you are in the **app folder (`adk-streaming-ws/app`)**
 
-2\. **Start the Fast API**: Run the following command to start CLI interface with
+2. **Start the Fast API**: Run the following command to start CLI interface with
 
-```console
+```bash
 uvicorn main:app --reload
 ```
 
-3\. **Access the app with the text mode:** Once the app starts, the terminal will display a local URL (e.g., [http://localhost:8000](http://localhost:8000)). Click this link to open the UI in your browser.
+3. **Access the app with the text mode:** Once the app starts, the terminal will display a local URL (e.g., [http://localhost:8000](http://localhost:8000)). Click this link to open the UI in your browser.
 
 Now you should see the UI like this:
 
@@ -17476,7 +17588,7 @@ Now you should see the UI like this:
 
 Try asking a question `What time is it now?`. The agent will use Google Search to respond to your queries. You would notice that the UI shows the agent's response as streaming text. You can also send messages to the agent at any time, even while the agent is still responding. This demonstrates the bidirectional communication capability of ADK Streaming.
 
-4\. **Access the app with the audio mode:** Now click the `Start Audio` button. The app reconnects with the server in an audio mode, and the UI will show the following dialog for the first time:
+4. **Access the app with the audio mode:** Now click the `Start Audio` button. The app reconnects with the server in an audio mode, and the UI will show the following dialog for the first time:
 
 ![ADK Streaming app](../assets/adk-streaming-audio-dialog.png)
 
@@ -17486,7 +17598,7 @@ Click `Allow while visiting the site`, then you will see the microphone icon wil
 
 Now you can talk to the agent with voice. Ask questions like `What time is it now?` with voice and you will hear the agent responding in voice too. As Streaming for ADK supports [multiple languages](https://ai.google.dev/gemini-api/docs/live#supported-languages), it can also respond to question in the supported languages.
 
-5\. **Check console logs**
+5. **Check console logs**
 
 If you are using the Chrome browser, use the right click and select `Inspect` to open the DevTools. On the `Console`, you can see the incoming and outgoing audio data such as `[CLIENT TO AGENT]` and `[AGENT TO CLIENT]`, representing the audio data streaming in and out between the browser and the server.
 
@@ -17506,20 +17618,60 @@ INFO:     127.0.0.1:50082 - "GET /favicon.ico HTTP/1.1" 404 Not Found
 
 These console logs are important in case you develop your own streaming application. In many cases, the communication failure between the browser and server becomes a major cause for the streaming application bugs.
 
-6\. **Troubleshooting tips**
+6. **Troubleshooting tips**
 
 - **When `ws://` doesn't work:** If you see any errors on the Chrome DevTools with regard to `ws://` connection, try replacing `ws://` with `wss://` on `app/static/js/app.js` at line 28. This may happen when you are running the sample on a cloud environment and using a proxy connection to connect from your browser.
-- **When `gemini-2.0-flash-exp` model doesn't work:** If you see any errors on the app server console with regard to `gemini-2.0-flash-exp` model availability, try replacing it with `gemini-2.0-flash-live-001` on `app/google_search_agent/agent.py` at line 6.
+- **When the model doesn't work:** If you see any errors on the app server console with regard to model availability, try using the alternative model by uncommenting the `#DEMO_AGENT_MODEL=gemini-2.0-flash-exp` line in your `.env` file and commenting out the current `DEMO_AGENT_MODEL` line.
 
-## 4. Server code overview {#4.-server-side-code-overview}
+## 4. Server code overview {#4-server-side-code-overview}
 
-This server app enables real-time, streaming interaction with ADK agent via WebSockets. Clients send text/audio to the ADK agent and receive streamed text/audio responses.
+This server application enables real-time, streaming interaction with an ADK agent via WebSockets. Clients send text/audio to the ADK agent and receive streamed text/audio responses.
 
 Core functions:
 1.  Initialize/manage ADK agent sessions.
 2.  Handle client WebSocket connections.
 3.  Relay client messages to the ADK agent.
 4.  Stream ADK agent responses (text/audio) to clients.
+
+### Architecture Overview
+
+The following diagram illustrates how components interact in this streaming application:
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant FastAPI
+    participant ADK Runner
+    participant Gemini Live API
+
+    Note over Browser,Gemini Live API: Connection Establishment
+    Browser->>FastAPI: WebSocket Connect
+    FastAPI->>ADK Runner: start_agent_session()
+    ADK Runner->>Gemini Live API: Establish Live Session
+    Gemini Live API-->>ADK Runner: Session Ready
+
+    Note over Browser,Gemini Live API: Bidirectional Communication
+    Browser->>FastAPI: Send Text/Audio Message
+    FastAPI->>ADK Runner: send_content() / send_realtime()
+    ADK Runner->>Gemini Live API: Forward to Model
+    Gemini Live API-->>ADK Runner: Stream Response (live_events)
+    ADK Runner-->>FastAPI: Process Events
+    FastAPI-->>Browser: Send Response (Text/Audio)
+
+    Note over Browser,Gemini Live API: Continuous Streaming
+    loop Until Disconnection
+        Browser->>FastAPI: Additional Messages
+        FastAPI->>ADK Runner: Process Input
+        ADK Runner->>Gemini Live API: Forward
+        Gemini Live API-->>Browser: Streamed Responses
+    end
+```
+
+**Key Components:**
+- **Browser:** WebSocket client that sends/receives text and audio data
+- **FastAPI:** Server handling WebSocket connections and routing messages
+- **ADK Runner:** Manages agent sessions and coordinates with Gemini Live API
+- **Gemini Live API:** Processes requests and streams responses (text/audio)
 
 ### ADK Streaming Setup
 
@@ -17528,10 +17680,15 @@ import os
 import json
 import asyncio
 import base64
+import warnings
 
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Load environment variables BEFORE importing the agent
+load_dotenv()
+
+from google.genai import types
 from google.genai.types import (
     Part,
     Content,
@@ -17540,130 +17697,240 @@ from google.genai.types import (
 
 from google.adk.runners import Runner
 from google.adk.agents import LiveRequestQueue
-from google.adk.agents.run_config import RunConfig
+from google.adk.agents.run_config import RunConfig, StreamingMode
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 from fastapi import FastAPI, WebSocket
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.websockets import WebSocketDisconnect
 
 from google_search_agent.agent import root_agent
+
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 ```
 
-*   **Imports:** Includes standard Python libraries, `dotenv` for environment variables, Google ADK, and FastAPI.
-*   **`load_dotenv()`:** Loads environment variables.
+*   **Imports:** Includes standard Python libraries (`os`, `json`, `asyncio`, `base64`, `warnings`), `dotenv` for environment variables, Google ADK (`types`, `Part`, `Content`, `Blob`, `Runner`, `LiveRequestQueue`, `RunConfig`, `StreamingMode`, `InMemorySessionService`), and FastAPI (`FastAPI`, `WebSocket`, `StaticFiles`, `FileResponse`, `WebSocketDisconnect`).
+*   **`load_dotenv()`:** Called immediately after importing dotenv and **before** importing the agent. This ensures environment variables (like `DEMO_AGENT_MODEL`) are available when the agent module initializes.
+*   **`warnings.filterwarnings()`:** Suppresses Pydantic UserWarnings to reduce console noise during development.
+
+**Initialization:**
+
+```py
+#
+# ADK Streaming
+#
+
+# Application configuration
+APP_NAME = "adk-streaming-ws"
+
+# Initialize session service
+session_service = InMemorySessionService()
+
+# APP_NAME and session_service are defined in the Initialization section above
+runner = Runner(
+    app_name=APP_NAME,
+    agent=root_agent,
+    session_service=session_service,
+)
+```
+
 *   **`APP_NAME`**: Application identifier for ADK.
 *   **`session_service = InMemorySessionService()`**: Initializes an in-memory ADK session service, suitable for single-instance or development use. Production might use a persistent store.
+*   **`runner = Runner(...)`**: Creates the Runner instance **once at module level** (production-ready pattern). This reuses the same runner for all connections, improving performance and resource utilization.
 
-### `start_agent_session(session_id, is_audio=False)`
+#### `start_agent_session(user_id, is_audio=False)`
 
 ```py
 async def start_agent_session(user_id, is_audio=False):
     """Starts an agent session"""
 
-    # Create a Runner
-    runner = InMemoryRunner(
+    # Get or create session (recommended pattern for production)
+    session_id = f"{APP_NAME}_{user_id}"
+    session = await runner.session_service.get_session(
         app_name=APP_NAME,
-        agent=root_agent,
+        user_id=user_id,
+        session_id=session_id,
+    )
+    if not session:
+        session = await runner.session_service.create_session(
+            app_name=APP_NAME,
+            user_id=user_id,
+            session_id=session_id,
+        )
+
+    # Configure response format based on client preference
+    # IMPORTANT: You must choose exactly ONE modality per session
+    # Either ["TEXT"] for text responses OR ["AUDIO"] for voice responses
+    # You cannot use both modalities simultaneously in the same session
+
+    # Force AUDIO modality for native audio models regardless of client preference
+    model_name = root_agent.model if isinstance(root_agent.model, str) else root_agent.model.model
+    is_native_audio = "native-audio" in model_name.lower()
+
+    modality = "AUDIO" if (is_audio or is_native_audio) else "TEXT"
+
+    # Enable session resumption for improved reliability
+    # For audio mode, enable output transcription to get text for UI display
+    run_config = RunConfig(
+        streaming_mode=StreamingMode.BIDI,
+        response_modalities=[modality],
+        session_resumption=types.SessionResumptionConfig(),
+        output_audio_transcription=types.AudioTranscriptionConfig() if (is_audio or is_native_audio) else None,
     )
 
-    # Create a Session
-    session = await runner.session_service.create_session(
-        app_name=APP_NAME,
-        user_id=user_id,  # Replace with actual user ID
-    )
-
-    # Set response modality
-    modality = "AUDIO" if is_audio else "TEXT"
-    run_config = RunConfig(response_modalities=[modality])
-    
-    # Optional: Enable session resumption for improved reliability
-    # run_config = RunConfig(
-    #     response_modalities=[modality],
-    #     session_resumption=types.SessionResumptionConfig()
-    # )
-
-    # Create a LiveRequestQueue for this session
+    # Create LiveRequestQueue in async context (recommended best practice)
+    # This ensures the queue uses the correct event loop
     live_request_queue = LiveRequestQueue()
 
-    # Start agent session
+    # Start streaming session - returns async iterator for agent responses
     live_events = runner.run_live(
-        session=session,
+        user_id=user_id,
+        session_id=session.id,
         live_request_queue=live_request_queue,
         run_config=run_config,
     )
     return live_events, live_request_queue
 ```
 
-This function initializes an ADK agent live session.
+This function initializes an ADK agent live session. It uses `APP_NAME` and `session_service` which are defined in the Initialization section above.
 
-| Parameter    | Type    | Description                                             |
-|--------------|---------|---------------------------------------------------------|
-| `user_id` | `str`   | Unique client identifier.                       |
-| `is_audio`   | `bool`  | `True` for audio responses, `False` for text (default). |
+| **Parameter** | **Type** | **Description** |
+|---|---|---|
+| `user_id` | `str` | Unique client identifier. |
+| `is_audio` | `bool` | `True` for audio responses, `False` for text (default). |
 
 **Key Steps:**
-1\.  **Create Runner:** Instantiates the ADK runner for the `root_agent`.
-2\.  **Create Session:** Establishes an ADK session.
-3\.  **Set Response Modality:** Configures agent response as "AUDIO" or "TEXT".
-4\.  **Create LiveRequestQueue:** Creates a queue for client inputs to the agent.
-5\.  **Start Agent Session:** `runner.run_live(...)` starts the agent, returning:
-    *   `live_events`: Asynchronous iterable for agent events (text, audio, completion).
-    *   `live_request_queue`: Queue to send data to the agent.
+1.  **Get or Create Session:** Attempts to retrieve an existing session, or creates a new one if it doesn't exist. This pattern supports session persistence and resumption.
+2.  **Detect Native Audio Models:** Checks if the agent's model name contains "native-audio" to automatically force AUDIO modality for native audio models.
+3.  **Configure Response Modality:** Sets modality to "AUDIO" if either `is_audio=True` or the model is a native audio model, otherwise "TEXT". Note: You must choose exactly ONE modality per session.
+4.  **Enable Session Resumption:** Configures `session_resumption=types.SessionResumptionConfig()` for improved reliability during network interruptions.
+5.  **Enable Output Transcription (Audio Mode):** When using audio mode or native audio models, enables `output_audio_transcription` to get text representation of audio responses for UI display.
+6.  **Create LiveRequestQueue:** Creates a queue in async context (best practice) for sending client inputs to the agent.
+7.  **Start Agent Session:** Calls `runner.run_live(...)` to start the streaming session, returning `live_events` (async iterator for agent responses) and the `live_request_queue`.
 
 **Returns:** `(live_events, live_request_queue)`.
 
-### Session Resumption Configuration
+#### Output Audio Transcription
+
+When using audio mode (`is_audio=True`) or native audio models (`is_native_audio=True`), the application enables output audio transcription through `RunConfig`:
+
+```py
+output_audio_transcription=types.AudioTranscriptionConfig() if (is_audio or is_native_audio) else None,
+```
+
+**Audio Transcription Features:**
+
+- **Native Audio Model Support** - Works with models that have native audio output capability
+- **Text Representation** - Provides text transcription of audio responses for UI display
+- **Dual Output** - Enables both audio playback and text visualization simultaneously
+- **Enhanced Accessibility** - Allows users to see what the agent is saying while hearing it
+
+**Use Cases:**
+
+- Display audio responses as text in the UI for better user experience
+- Enable accessibility features for users who prefer text
+- Support debugging by logging what the agent says
+- Create conversation transcripts alongside audio
+
+**Note:** This feature requires models that support output audio transcription. Not all Live API models may support this capability.
+
+#### Session Resumption Configuration
 
 ADK supports live session resumption to improve reliability during streaming conversations. This feature enables automatic reconnection when live connections are interrupted due to network issues.
 
-#### Enabling Session Resumption
+This sample application enables session resumption by default in the `RunConfig`:
 
-To enable session resumption, you need to:
-
-1. **Import the required types**:
-```py
-from google.genai import types
-```
-
-2. **Configure session resumption in RunConfig**:
 ```py
 run_config = RunConfig(
+    streaming_mode=StreamingMode.BIDI,
     response_modalities=[modality],
     session_resumption=types.SessionResumptionConfig()
 )
 ```
 
-#### Session Resumption Features
+##### Session Resumption Features
 
 - **Automatic Handle Caching** - The system automatically caches session resumption handles during live conversations
 - **Transparent Reconnection** - When connections are interrupted, the system attempts to resume using cached handles
 - **Context Preservation** - Conversation context and state are maintained across reconnections
 - **Network Resilience** - Provides better user experience during unstable network conditions
 
-#### Implementation Notes
+##### Implementation Notes
 
 - Session resumption handles are managed internally by the ADK framework
 - No additional client-side code changes are required
 - The feature is particularly beneficial for long-running streaming conversations
 - Connection interruptions become less disruptive to the user experience
 
-#### Troubleshooting
+##### Disabling Session Resumption (Optional)
 
-If you encounter errors with session resumption:
+If you encounter errors with session resumption or want to disable it:
 
 1. **Check model compatibility** - Ensure you're using a model that supports session resumption
 2. **API limitations** - Some session resumption features may not be available in all API versions
-3. **Remove session resumption** - If issues persist, you can disable session resumption by removing the `session_resumption` parameter from `RunConfig`
+3. **Disable session resumption** - You can disable session resumption by removing the `session_resumption` parameter from `RunConfig`:
 
-### `agent_to_client_messaging(websocket, live_events)`
+```py
+# Disable session resumption
+run_config = RunConfig(
+    streaming_mode=StreamingMode.BIDI,
+    response_modalities=[modality]
+)
+```
+
+---
+
+Now that we've covered session initialization and optional enhancements, let's explore the core messaging functions that handle bidirectional communication between the client and the ADK agent.
+
+#### `agent_to_client_messaging(websocket, live_events)`
 
 ```py
 
 async def agent_to_client_messaging(websocket, live_events):
     """Agent to client communication"""
-    while True:
+    try:
         async for event in live_events:
+
+            # Handle output audio transcription for native audio models
+            # This provides text representation of audio output for UI display
+            if event.output_transcription and event.output_transcription.text:
+                transcript_text = event.output_transcription.text
+                message = {
+                    "mime_type": "text/plain",
+                    "data": transcript_text,
+                    "is_transcript": True
+                }
+                await websocket.send_text(json.dumps(message))
+                print(f"[AGENT TO CLIENT]: audio transcript: {transcript_text}")
+                # Continue to process audio data if present
+                # Don't return here as we may want to send both transcript and audio
+
+            # Read the Content and its first Part
+            part: Part = (
+                event.content and event.content.parts and event.content.parts[0]
+            )
+            if part:
+                # Audio data must be Base64-encoded for JSON transport
+                is_audio = part.inline_data and part.inline_data.mime_type.startswith("audio/pcm")
+                if is_audio:
+                    audio_data = part.inline_data and part.inline_data.data
+                    if audio_data:
+                        message = {
+                            "mime_type": "audio/pcm",
+                            "data": base64.b64encode(audio_data).decode("ascii")
+                        }
+                        await websocket.send_text(json.dumps(message))
+                        print(f"[AGENT TO CLIENT]: audio/pcm: {len(audio_data)} bytes.")
+
+                # If it's text and a partial text, send it (for cascade audio models or text mode)
+                if part.text and event.partial:
+                    message = {
+                        "mime_type": "text/plain",
+                        "data": part.text
+                    }
+                    await websocket.send_text(json.dumps(message))
+                    print(f"[AGENT TO CLIENT]: text/plain: {message}")
 
             # If the turn complete or interrupted, send it
             if event.turn_complete or event.interrupted:
@@ -17673,74 +17940,73 @@ async def agent_to_client_messaging(websocket, live_events):
                 }
                 await websocket.send_text(json.dumps(message))
                 print(f"[AGENT TO CLIENT]: {message}")
-                continue
-
-            # Read the Content and its first Part
-            part: Part = (
-                event.content and event.content.parts and event.content.parts[0]
-            )
-            if not part:
-                continue
-
-            # If it's audio, send Base64 encoded audio data
-            is_audio = part.inline_data and part.inline_data.mime_type.startswith("audio/pcm")
-            if is_audio:
-                audio_data = part.inline_data and part.inline_data.data
-                if audio_data:
-                    message = {
-                        "mime_type": "audio/pcm",
-                        "data": base64.b64encode(audio_data).decode("ascii")
-                    }
-                    await websocket.send_text(json.dumps(message))
-                    print(f"[AGENT TO CLIENT]: audio/pcm: {len(audio_data)} bytes.")
-                    continue
-
-            # If it's text and a parial text, send it
-            if part.text and event.partial:
-                message = {
-                    "mime_type": "text/plain",
-                    "data": part.text
-                }
-                await websocket.send_text(json.dumps(message))
-                print(f"[AGENT TO CLIENT]: text/plain: {message}")
+    except WebSocketDisconnect:
+        print("Client disconnected from agent_to_client_messaging")
+    except Exception as e:
+        print(f"Error in agent_to_client_messaging: {e}")
 ```
 
 This asynchronous function streams ADK agent events to the WebSocket client.
 
 **Logic:**
 1.  Iterates through `live_events` from the agent.
-2.  **Turn Completion/Interruption:** Sends status flags to the client.
+2.  **Audio Transcription (Native Audio Models):** If the event contains output audio transcription text, sends it to the client with an `is_transcript` flag: `{ "mime_type": "text/plain", "data": "<transcript_text>", "is_transcript": True }`. This enables displaying the audio content as text in the UI.
 3.  **Content Processing:**
-    *   Extracts the first `Part` from event content.
+    *   Extracts the first `Part` from event content (if it exists).
     *   **Audio Data:** If audio (PCM), Base64 encodes and sends it as JSON: `{ "mime_type": "audio/pcm", "data": "<base64_audio>" }`.
-    *   **Text Data:** If partial text, sends it as JSON: `{ "mime_type": "text/plain", "data": "<partial_text>" }`.
-4.  Logs messages.
+    *   **Text Data (Cascade Audio Models or Text Mode):** If partial text, sends it as JSON: `{ "mime_type": "text/plain", "data": "<partial_text>" }`.
+4.  **Turn Completion/Interruption:** Sends status flags to the client at the end of each event (see explanation below).
+5.  Logs messages.
 
-### `client_to_agent_messaging(websocket, live_request_queue)`
+**Understanding Turn Completion and Interruption Events:**
+
+These events are critical for managing bidirectional streaming conversations:
+
+- **`turn_complete`**: Signals that the agent has finished generating a complete response. This event:
+  - Marks the end of the agent's response turn
+  - Allows the UI to prepare for the next conversation turn
+  - Helps manage conversation state and flow
+  - In the UI: Resets `currentMessageId` to `null` so the next agent response creates a new message element
+
+- **`interrupted`**: Signals that the agent's response was interrupted (e.g., when the user starts speaking during the agent's audio response). This event:
+  - Indicates the current agent turn was cut short
+  - Enables natural conversation flow where users can interrupt the agent
+  - In the UI: Stops audio playback immediately by sending `{ command: "endOfAudio" }` to the audio player worklet
+  - Prevents the agent from continuing to speak while the user is talking
+
+Both events are handled silently in the UI without visual indicators, prioritizing a seamless conversational experience.
+
+#### `client_to_agent_messaging(websocket, live_request_queue)`
 
 ```py
 
 async def client_to_agent_messaging(websocket, live_request_queue):
     """Client to agent communication"""
-    while True:
-        # Decode JSON message
-        message_json = await websocket.receive_text()
-        message = json.loads(message_json)
-        mime_type = message["mime_type"]
-        data = message["data"]
+    try:
+        while True:
+            message_json = await websocket.receive_text()
+            message = json.loads(message_json)
+            mime_type = message["mime_type"]
+            data = message["data"]
 
-        # Send the message to the agent
-        if mime_type == "text/plain":
-            # Send a text message
-            content = Content(role="user", parts=[Part.from_text(text=data)])
-            live_request_queue.send_content(content=content)
-            print(f"[CLIENT TO AGENT]: {data}")
-        elif mime_type == "audio/pcm":
-            # Send an audio data
-            decoded_data = base64.b64decode(data)
-            live_request_queue.send_realtime(Blob(data=decoded_data, mime_type=mime_type))
-        else:
-            raise ValueError(f"Mime type not supported: {mime_type}")
+            if mime_type == "text/plain":
+                # send_content() sends text in "turn-by-turn mode"
+                # This signals a complete turn to the model, triggering immediate response
+                content = Content(role="user", parts=[Part.from_text(text=data)])
+                live_request_queue.send_content(content=content)
+                print(f"[CLIENT TO AGENT]: {data}")
+            elif mime_type == "audio/pcm":
+                # send_realtime() sends audio in "realtime mode"
+                # Data flows continuously without turn boundaries, enabling natural conversation
+                # Audio is Base64-encoded for JSON transport, decode before sending
+                decoded_data = base64.b64decode(data)
+                live_request_queue.send_realtime(Blob(data=decoded_data, mime_type=mime_type))
+            else:
+                raise ValueError(f"Mime type not supported: {mime_type}")
+    except WebSocketDisconnect:
+        print("Client disconnected from client_to_agent_messaging")
+    except Exception as e:
+        print(f"Error in client_to_agent_messaging: {e}")
 ```
 
 This asynchronous function relays messages from the WebSocket client to the ADK agent.
@@ -17752,9 +18018,32 @@ This asynchronous function relays messages from the WebSocket client to the ADK 
 4.  Raises `ValueError` for unsupported MIME types.
 5.  Logs messages.
 
+**Error Handling:**
+
+Both `agent_to_client_messaging` and `client_to_agent_messaging` functions include try-except blocks to handle WebSocket disconnections gracefully:
+
+- **`WebSocketDisconnect`**: Catches when the client disconnects unexpectedly and logs the disconnection without raising an error
+- **Generic `Exception`**: Catches any other errors (JSON parsing, Base64 decoding, etc.) and logs them for debugging
+
+This error handling ensures:
+- Clean shutdown when clients disconnect
+- Proper logging for debugging connection issues
+- The WebSocket connection closes gracefully without propagating unhandled exceptions
+- The `FIRST_EXCEPTION` condition in `asyncio.wait()` can still trigger for cleanup
+
+For production environments, consider additional error handling:
+- Send error messages back to the client to inform them of invalid input (before the connection closes)
+- Implement retry logic for transient failures
+- Add monitoring and alerting for error patterns
+- Validate message structure before processing to provide better error messages
+
 ### FastAPI Web Application
 
 ```py
+
+#
+# FastAPI web app
+#
 
 app = FastAPI()
 
@@ -17770,17 +18059,20 @@ async def root():
 
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
-    """Client websocket endpoint"""
+    """Client websocket endpoint
 
-    # Wait for client connection
+    This async function creates the LiveRequestQueue in an async context,
+    which is the recommended best practice from the ADK documentation.
+    This ensures the queue uses the correct event loop.
+    """
+
     await websocket.accept()
     print(f"Client #{user_id} connected, audio mode: {is_audio}")
 
-    # Start agent session
     user_id_str = str(user_id)
     live_events, live_request_queue = await start_agent_session(user_id_str, is_audio == "true")
 
-    # Start tasks
+    # Run bidirectional messaging concurrently
     agent_to_client_task = asyncio.create_task(
         agent_to_client_messaging(websocket, live_events)
     )
@@ -17788,15 +18080,21 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
         client_to_agent_messaging(websocket, live_request_queue)
     )
 
-    # Wait until the websocket is disconnected or an error occurs
-    tasks = [agent_to_client_task, client_to_agent_task]
-    await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+    try:
+        # Wait for either task to complete (connection close or error)
+        tasks = [agent_to_client_task, client_to_agent_task]
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
 
-    # Close LiveRequestQueue
-    live_request_queue.close()
-
-    # Disconnected
-    print(f"Client #{user_id} disconnected")
+        # Check for errors in completed tasks
+        for task in done:
+            if task.exception() is not None:
+                print(f"Task error for client #{user_id}: {task.exception()}")
+                import traceback
+                traceback.print_exception(type(task.exception()), task.exception(), task.exception().__traceback__)
+    finally:
+        # Clean up resources (always runs, even if asyncio.wait fails)
+        live_request_queue.close()
+        print(f"Client #{user_id} disconnected")
 
 ```
 
@@ -17808,8 +18106,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
     *   **Connection Handling:**
         1.  Accepts WebSocket connection.
         2.  Calls `start_agent_session()` using `user_id` and `is_audio`.
-        3.  **Concurrent Messaging Tasks:** Creates and runs `agent_to_client_messaging` and `client_to_agent_messaging` concurrently using `asyncio.gather`. These tasks handle bidirectional message flow.
-        4.  Logs client connection and disconnection.
+        3.  **Concurrent Messaging Tasks:** Creates and runs `agent_to_client_messaging` and `client_to_agent_messaging` concurrently using `asyncio.wait`. These tasks handle bidirectional message flow.
+        4.  **Error Handling:** Uses a try-finally block to:
+            *   Check completed tasks for exceptions and log detailed error information with traceback
+            *   Ensure `live_request_queue.close()` is always called in the `finally` block for proper cleanup
+        5.  Logs client connection and disconnection.
 
 ### How It Works (Overall Flow)
 
@@ -17820,16 +18121,16 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int, is_audio: str):
     *   `agent_to_client_messaging`: ADK `live_events` -> Client WebSocket.
 4.  Bidirectional streaming continues until disconnection or error.
 
-## 5. Client code overview {#5.-client-side-code-overview}
+## 5. Client code overview {#5-client-side-code-overview}
 
-The JavaScript `app.js` (in `app/static/js`) manages client-side interaction with the ADK Streaming WebSocket backend. It handles sending text/audio and receiving/displaying streamed responses.
+The JavaScript `app.js` (in `app/static/js`) manages client-side interaction with the ADK Streaming WebSocket server. It handles sending text/audio and receiving/displaying streamed responses.
 
 Key functionalities:
 1.  Manage WebSocket connection.
 2.  Handle text input.
 3.  Capture microphone audio (Web Audio API, AudioWorklets).
-4.  Send text/audio to backend.
-5.  Receive and render text/audio agent responses.
+4.  Send text/audio to server.
+5.  Receive and render text/audio responses from the ADK agent.
 6.  Manage UI.
 
 ### Prerequisites
@@ -17840,7 +18141,7 @@ Key functionalities:
 
 ### WebSocket Handling
 
-```JavaScript
+```javascript
 
 // Connect the server with a WebSocket connection
 const sessionId = Math.random().toString().substring(10);
@@ -17884,6 +18185,18 @@ function connectWebsocket() {
       message_from_server.turn_complete == true
     ) {
       currentMessageId = null;
+      return;
+    }
+
+    // Check for interrupt message
+    if (
+      message_from_server.interrupted &&
+      message_from_server.interrupted === true
+    ) {
+      // Stop audio playback if it's playing
+      if (audioPlayerNode) {
+        audioPlayerNode.port.postMessage({ command: "endOfAudio" });
+      }
       return;
     }
 
@@ -17972,7 +18285,8 @@ function base64ToArray(base64) {
 *   **Connection Setup:** Generates `sessionId`, constructs `ws_url`. `is_audio` flag (initially `false`) appends `?is_audio=true` to URL when active. `connectWebsocket()` initializes the connection.
 *   **`websocket.onopen`**: Enables send button, updates UI, calls `addSubmitHandler()`.
 *   **`websocket.onmessage`**: Parses incoming JSON from server.
-    *   **Turn Completion:** Resets `currentMessageId` if agent turn is complete.
+    *   **Turn Completion:** Resets `currentMessageId` to `null` when agent turn is complete, preparing for the next response.
+    *   **Interruption:** Stops audio playback by sending `{ command: "endOfAudio" }` to `audioPlayerNode` when the agent is interrupted (e.g., user starts speaking).
     *   **Audio Data (`audio/pcm`):** Decodes Base64 audio (`base64ToArray()`) and sends to `audioPlayerNode` for playback.
     *   **Text Data (`text/plain`):** If new turn (`currentMessageId` is null), creates new `<p>`. Appends received text to the current message paragraph for streaming effect. Scrolls `messagesDiv`.
 *   **`websocket.onclose`**: Disables send button, updates UI, attempts auto-reconnection after 5s.
@@ -17987,7 +18301,7 @@ function base64ToArray(base64) {
 
 ### Audio Handling
 
-```JavaScript
+```javascript
 
 let audioPlayerNode;
 let audioPlayerContext;
@@ -18068,22 +18382,26 @@ function arrayBufferToBase64(buffer) {
 
 ## Summary
 
-This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and FastAPI, enabling real-time, bidirectional voice and text communication.
+This article overviews the server and client code for a custom asynchronous web application built with ADK Streaming and FastAPI, enabling real-time, bidirectional voice and text communication.
 
-The Python FastAPI server code initializes ADK agent sessions, configured for text or audio responses. It uses a WebSocket endpoint to handle client connections. Asynchronous tasks manage bidirectional messaging: forwarding client text or Base64-encoded PCM audio to the ADK agent, and streaming text or Base64-encoded PCM audio responses from the agent back to the client.
+The Python FastAPI server code initializes ADK agent sessions, configured for text or audio responses. It uses a WebSocket endpoint to handle client connections. Asynchronous tasks manage bidirectional messaging: forwarding client text or Base64-encoded PCM audio to the ADK agent, and streaming text or Base64-encoded PCM audio responses from the ADK agent back to the client.
 
 The client-side JavaScript code manages a WebSocket connection, which can be re-established to switch between text and audio modes. It sends user input (text or microphone audio captured via Web Audio API and AudioWorklets) to the server. Incoming messages from the server are processed: text is displayed (streamed), and Base64-encoded PCM audio is decoded and played using an AudioWorklet.
 
-### Next steps for production
+### Additional Resources
 
-When you will use the Streaming for ADK in production apps, you may want to consinder the following points:
+For comprehensive guidance on ADK Bidi-streaming best practices, architecture patterns, and advanced features, refer to:
 
-*   **Deploy Multiple Instances:** Run several instances of your FastAPI application instead of a single one.
-*   **Implement Load Balancing:** Place a load balancer in front of your application instances to distribute incoming WebSocket connections.
-    *   **Configure for WebSockets:** Ensure the load balancer supports long-lived WebSocket connections and consider "sticky sessions" (session affinity) to route a client to the same backend instance, *or* design for stateless instances (see next point).
-*   **Externalize Session State:** Replace the `InMemorySessionService` for ADK with a distributed, persistent session store. This allows any server instance to handle any user's session, enabling true statelessness at the application server level and improving fault tolerance.
-*   **Implement Health Checks:** Set up robust health checks for your WebSocket server instances so the load balancer can automatically remove unhealthy instances from rotation.
-*   **Utilize Orchestration:** Consider using an orchestration platform like Kubernetes for automated deployment, scaling, self-healing, and management of your WebSocket server instances.
+- **[ADK Documentation](https://google.github.io/adk-docs/)**: Complete ADK documentation including agents, tools, and session management
+- **[Gemini Live API Documentation](https://ai.google.dev/gemini-api/docs/live)**: Live API reference for Google AI Studio
+- **[Vertex AI Live API Documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)**: Live API reference for Google Cloud Vertex AI
+
+These resources provide detailed explanations of:
+
+- **Phase-based lifecycle patterns** for streaming applications (initialization, session management, active streaming, termination)
+- **Event handling patterns** including partial/complete text, interruptions, and turn completion signals
+- **Advanced features** like session resumption, voice activity detection, audio transcription, and context window compression
+- **Production deployment strategies** including load balancing, stateless session management, and health checks
 
 ================
 File: docs/streaming/custom-streaming.md
@@ -18872,9 +19190,8 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     ---
 
-    This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and FastAPI, enabling real-time, bidirectional audio and text communication with both Server Sent Events (SSE) and WebSockets.
+    This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and FastAPI, enabling real-time, bidirectional audio and text communication with WebSockets.
 
-    - [Custom Audio Streaming app sample (SSE)](custom-streaming.md)
     - [Custom Audio Streaming app sample (WebSockets)](custom-streaming-ws.md)
 
 -   :material-console-line: **Bidi-streaming development guide series**
@@ -19649,83 +19966,276 @@ To see what other features you can build into your UI with AG-UI, refer to the C
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
-File: docs/tools/third-party/crewai.md
+File: docs/tools/third-party/exa.md
 ================
-# Integrate with CrewAI Tools
+# Exa
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+The [Exa MCP Server](https://github.com/github/github-mcp-server) connects your
+ADK agent to [Exa's search engine](https://exa.ai), a platform built
+specifically for AI. This gives your agent the ability to search for relevant
+webpages, find similar content based on a link, retrieve clean, parsed content
+from URLs, get direct answers to questions, and automate in-depth research
+reports using natural language.
 
-ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** such as CrewAI. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
+## Use cases
 
-## Using CrewAI tools
+- **Find Code & Technical Examples**: Search across GitHub, documentation, and
+  technical forums to find up-to-date code snippets, API usage patterns, and
+  implementation examples.
 
-ADK provides the `CrewaiTool` wrapper to integrate tools from the CrewAI library.
+- **Perform In-Depth Research**: Launch comprehensive research reports on
+  complex topics, gather detailed information on companies, or find professional
+  profiles on LinkedIn.
 
-### Example: Web Search using CrewAI's Serper API
+- **Access Real-Time Web Content**: Perform general web searches to get
+  up-to-date information or extract the full content from specific articles,
+  blog posts, or web pages.
 
-[Serper API](https://serper.dev/) provides access to Google Search results programmatically. It allows applications, like AI agents, to perform real-time Google searches (including news, images, etc.) and get structured data back without needing to scrape web pages directly.
+## Prerequisites
 
-1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
+- Create an [API Key](https://dashboard.exa.ai/api-keys) in Exa. Refer to the
+  [documentation](https://docs.exa.ai/reference/quickstart) for more
+  information.
 
-2. **Install Dependencies:** Install the necessary CrewAI tools package. For example, to use the SerperDevTool:
+## Use with agent
 
-    ```bash
-    pip install crewai-tools
-    ```
+=== "Local MCP Server"
 
-3. Obtain a [Serper API KEY](https://serper.dev/) and export it as an environment variable.
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
 
-    ```bash
-    export SERPER_API_KEY=<REPLACE_WITH_API_KEY>
-    ```
+    EXA_API_KEY = "YOUR_EXA_API_KEY"
 
-4. **Import:** Import `CrewaiTool` from ADK and the desired CrewAI tool (e.g, `SerperDevTool`).
-
-    ```py
-    from google.adk.tools.crewai_tool import CrewaiTool
-    from crewai_tools import SerperDevTool
-    ```
-
-5. **Instantiate & Wrap:** Create an instance of the CrewAI tool. Pass it to the `CrewaiTool` constructor. **Crucially, you must provide a name and description** to the ADK wrapper, as these are used by ADK's underlying model to understand when to use the tool.
-
-    ```py
-    # Instantiate the CrewAI tool
-    serper_tool_instance = SerperDevTool(
-        n_results=10,
-        save_file=False,
-        search_type="news",
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="exa_agent",
+        instruction="Help users get information from Exa",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "exa-mcp-server",
+                            # (Optional) Specify which tools to enable
+                            # If you don't specify any tools, all tools enabled by default will be used.
+                            # "--tools=get_code_context_exa,web_search_exa",
+                        ],
+                        env={
+                            "EXA_API_KEY": EXA_API_KEY,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
     )
+    ```
 
-    # Wrap it with CrewaiTool for ADK, providing name and description
-    adk_serper_tool = CrewaiTool(
-        name="InternetNewsSearch",
-        description="Searches the internet specifically for recent news articles using Serper.",
-        tool=serper_tool_instance
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+    EXA_API_KEY = "YOUR_EXA_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="exa_agent",
+        instruction="""Help users get information from Exa""",
+        tools=[
+            MCPToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.exa.ai/mcp?exaApiKey=" + EXA_API_KEY,
+                    # (Optional) Specify which tools to enable
+                    # If you don't specify any tools, all tools enabled by default will be used.
+                    # url="https://mcp.exa.ai/mcp?exaApiKey=" + EXA_API_KEY + "&enabledTools=%5B%22crawling_exa%22%5D",
+                ),
+            )
+        ],
     )
     ```
 
-6. **Add to Agent:** Include the wrapped `CrewaiTool` instance in your agent's `tools` list.
+## Available tools
 
-    ```py
-    from google.adk import Agent
+Tool <img width="400px"/> | Description
+---- | -----------
+`get_code_context_exa` | Search and get relevant code snippets, examples, and documentation from open source libraries, GitHub repositories, and programming frameworks. Perfect for finding up-to-date code documentation, implementation examples, API usage patterns, and best practices from real codebases.
+`web_search_exa` | Performs real-time web searches with optimized results and content extraction.
+`company_research` | Comprehensive company research tool that crawls company websites to gather detailed information about businesses.
+`crawling` | Extracts content from specific URLs, useful for reading articles, PDFs, or any web page when you have the exact URL.
+`linkedin_search` | Search LinkedIn for companies and people using Exa AI. Simply include company names, person names, or specific LinkedIn URLs in your query.
+`deep_researcher_start` | Start a smart AI researcher for complex questions. The AI will search the web, read many sources, and think deeply about your question to create a detailed research report.
+`deep_researcher_check` | Check if your research is ready and get the results. Use this after starting a research task to see if it's done and get your comprehensive report.
 
-    # Define the ADK agent
-    my_agent = Agent(
-        name="crewai_search_agent",
-        model="gemini-2.0-flash",
-        description="Agent to find recent news using the Serper search tool.",
-        instruction="I can find the latest news for you. What topic are you interested in?",
-        tools=[adk_serper_tool] # Add the wrapped tool here
-    )
-    ```
+## Configuration
 
-### Full Example: Serper API
+To specify which tools to use in the Local Exa MCP server, you can use the
+`--tools` parameter:
 
-Here's the full code combining the steps above to create and run an agent using the CrewAI Serper API search tool.
-
-```py
---8<-- "examples/python/snippets/tools/third-party/crewai_serper_search.py"
 ```
+--tools=get_code_context_exa,web_search_exa,company_research,crawling,linkedin_search,deep_researcher_start,deep_researcher_check
+```
+
+To specify which tools to use in the Remote Exa MCP server, you can use the
+`enabledTools` URL parameter:
+
+```
+https://mcp.exa.ai/mcp?exaApiKey=YOUREXAKEY&enabledTools=%5B%22crawling_exa%22%5D
+```
+
+## Additional resources
+
+- [Exa MCP Server Documentation](https://docs.exa.ai/reference/exa-mcp)
+- [Exa MCP Server Repository](https://github.com/exa-labs/exa-mcp-server)
+
+================
+File: docs/tools/third-party/firecrawl.md
+================
+# Firecrawl
+
+The [Firecrawl MCP Server](https://github.com/firecrawl/firecrawl-mcp-server)
+connects your ADK agent to the [Firecrawl](https://www.firecrawl.dev/) API, a
+service that can crawl any website and convert its content into clean,
+structured markdown. This allows your agent to ingest, search, and reason over
+web data from any URL, including all its subpages.
+
+## Features
+
+- **Agent-based Web Research**: Deploy an agent that can take a topic, use the
+  search tool to find relevant URLs, and then use the scrape tool to extract the
+  full content of each page for analysis or summarization.
+
+- **Structured Data Extraction**: Use the extract tool to pull specific,
+  structured information (like product names, prices, or contact info) from a
+  list of URLs, powered by LLM extraction.
+
+- **Large-Scale Content Ingestion**: Automate the scraping of entire websites or
+  large batches of URLs using the batch scrape and crawl tools. This is ideal
+  for populating a vector database for a RAG (Retrieval-Augmented Generation)
+  pipeline.
+
+## Prerequisites
+
+- [Sign up on Firecrawl](https://www.firecrawl.dev/signin) and [get an API key](https://firecrawl.dev/app/api-keys)
+
+## Usage with ADK
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="firecrawl_agent",
+        description="A helpful assistant for scraping websites with Firecrawl",
+        instruction="Help the user search for website content",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "firecrawl-mcp",
+                        ],
+                        env={
+                            "FIRECRAWL_API_KEY": FIRECRAWL_API_KEY,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+    FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="firecrawl_agent",
+        description="A helpful assistant for scraping websites with Firecrawl",
+        instruction="Help the user search for website content",
+        tools=[
+            MCPToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url=f"https://mcp.firecrawl.dev/{FIRECRAWL_API_KEY}/v2/mcp",
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+This toolset provides a comprehensive suite of functions for web crawling,
+scraping, and searching:
+
+Tool | Name | Description
+---- | ---- | -----------
+Scrape Tool | `firecrawl_scrape` | Scrape content from a single URL with advanced options
+Batch Scrape Tool | `firecrawl_batch_scrape` | Scrape multiple URLs efficiently with built-in rate limiting and parallel processing
+Check Batch Status | `firecrawl_check_batch_status` | Check the status of a batch operation
+Map Tool | `firecrawl_map` | Map a website to discover all indexed URLs on the site
+Search Tool | `firecrawl_search` | Search the web and optionally extract content from search results
+Crawl Tool | `firecrawl_crawl` | Start an asynchronous crawl with advanced options
+Check Crawl Status | `firecrawl_check_crawl_status` | Check the status of a crawl job
+Extract Tool | `firecrawl_extract` | Extract structured information from web pages using LLM capabilities. Supports both cloud AI and self-hosted LLM extraction
+
+## Configuration
+
+The Firecrawl MCP server can be configured using environment variables:
+
+**Required**:
+
+- `FIRECRAWL_API_KEY`: Your Firecrawl API key
+    - Required when using cloud API (default)
+    - Optional when using self-hosted instance with `FIRECRAWL_API_URL`
+
+**Firecrawl API URL (optional)**:
+
+- `FIRECRAWL_API_URL` (Optional): Custom API endpoint for self-hosted instances
+    - Example: `https://firecrawl.your-domain.com`
+    - If not provided, the cloud API will be used (requires API key)
+
+**Retry configuration (optional)**:
+
+- `FIRECRAWL_RETRY_MAX_ATTEMPTS`: Maximum number of retry attempts (default: 3)
+- `FIRECRAWL_RETRY_INITIAL_DELAY`: Initial delay in milliseconds before first retry (default: 1000)
+- `FIRECRAWL_RETRY_MAX_DELAY`: Maximum delay in milliseconds between retries (default: 10000)
+- `FIRECRAWL_RETRY_BACKOFF_FACTOR`: Exponential backoff multiplier (default: 2)
+
+**Credit usage monitoring (optional)**:
+
+- `FIRECRAWL_CREDIT_WARNING_THRESHOLD`: Credit usage warning threshold (default: 1000)
+- `FIRECRAWL_CREDIT_CRITICAL_THRESHOLD`: Credit usage critical threshold (default: 100)
+
+## Additional resources
+
+- [Firecrawl MCP Server Documentation](https://docs.firecrawl.dev/mcp-server)
+- [Firecrawl MCP Server Repository](https://github.com/firecrawl/firecrawl-mcp-server)
+- [Firecrawl Use Cases](https://docs.firecrawl.dev/use-cases/overview)
+- [Firecrawl Advanced Scraping Guide](https://docs.firecrawl.dev/advanced-scraping-guide)
 
 ================
 File: docs/tools/third-party/github.md
@@ -19865,6 +20375,8 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
     from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
+    HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
+
     root_agent = Agent(
         model="gemini-2.5-pro",
         name="hugging_face_agent",
@@ -19879,7 +20391,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
                             "@llmindset/hf-mcp-server",
                         ],
                         env={
-                            "HF_TOKEN": "YOUR-HUGGING-FACE-TOKEN",
+                            "HF_TOKEN": HUGGING_FACE_TOKEN,
                         }
                     ),
                     timeout=30,
@@ -19969,6 +20481,26 @@ Check out the following third-party tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-exa.png" alt="Exa">
+    </div>
+    <div class="tool-card-content">
+      <h3>Exa</h3>
+      <p>Search and extract structured content from websites and live data</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/firecrawl/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-firecrawl.png" alt="Firecrawl">
+    </div>
+    <div class="tool-card-content">
+      <h3>Firecrawl</h4>
+      <p>Empower your AI apps with clean data from any website</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/github/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-github.png" alt="GitHub">
@@ -19990,95 +20522,6 @@ Check out the following third-party tools that you can use with ADK agents:
   </a>
 
 </div>
-
-## Integrate with existing tools
-
-ADK provides tool integrations and wrappers for existing tool ecosystems
-to help you extend the capabilities of your agents and workflows:
-
-*   **[LangChain Tools](/adk-docs/tools/third-party/langchain/)**:
-    Integrate tools from the LangChain ecosystem.
-*   **[CrewAI Tools](/adk-docs/tools/third-party/crewai/)**:
-    Integrate tools from the CrewAI library.
-*   **[Agentic UI](/adk-docs/tools/third-party/ag-ui/)**:
-    Use a rich, alternative web interface for ADK workflows.
-
-================
-File: docs/tools/third-party/langchain.md
-================
-# Integrate with LangChain Tools
-
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-ADK is designed to be **highly extensible, allowing you to seamlessly integrate tools from other AI Agent frameworks** such as LangChain. This interoperability is crucial because it allows for faster development time and allows you to reuse existing tools.
-
-## Using LangChain Tools
-
-ADK provides the `LangchainTool` wrapper to integrate tools from the LangChain ecosystem into your agents.
-
-### Example: Web Search using LangChain's Tavily tool
-
-[Tavily](https://tavily.com/) provides a search API that returns answers derived from real-time search results, intended for use by applications like AI agents.
-
-1. Follow [ADK installation and setup](/adk-docs/get-started/installation.md) guide.
-
-2. **Install Dependencies:** Ensure you have the necessary LangChain packages installed. For example, to use the Tavily search tool, install its specific dependencies:
-
-    ```bash
-    pip install langchain_community tavily-python
-    ```
-
-3. Obtain a [Tavily](https://tavily.com/) API KEY and export it as an environment variable.
-
-    ```bash
-    export TAVILY_API_KEY=<REPLACE_WITH_API_KEY>
-    ```
-
-4. **Import:** Import the `LangchainTool` wrapper from ADK and the specific `LangChain` tool you wish to use (e.g, `TavilySearchResults`).
-
-    ```py
-    from google.adk.tools.langchain_tool import LangchainTool
-    from langchain_community.tools import TavilySearchResults
-    ```
-
-5. **Instantiate & Wrap:** Create an instance of your LangChain tool and pass it to the `LangchainTool` constructor.
-
-    ```py
-    # Instantiate the LangChain tool
-    tavily_tool_instance = TavilySearchResults(
-        max_results=5,
-        search_depth="advanced",
-        include_answer=True,
-        include_raw_content=True,
-        include_images=True,
-    )
-
-    # Wrap it with LangchainTool for ADK
-    adk_tavily_tool = LangchainTool(tool=tavily_tool_instance)
-    ```
-
-6. **Add to Agent:** Include the wrapped `LangchainTool` instance in your agent's `tools` list during definition.
-
-    ```py
-    from google.adk import Agent
-
-    # Define the ADK agent, including the wrapped tool
-    my_agent = Agent(
-        name="langchain_tool_agent",
-        model="gemini-2.0-flash",
-        description="Agent to answer questions using TavilySearch.",
-        instruction="I can answer your questions by searching the internet. Just ask me anything!",
-        tools=[adk_tavily_tool] # Add the wrapped tool here
-    )
-    ```
-
-### Full Example: Tavily Search
-
-Here's the full code combining the steps above to create and run an agent using the LangChain Tavily search tool.
-
-```py
---8<-- "examples/python/snippets/tools/third-party/langchain_tavily_search.py"
-```
 
 ================
 File: docs/tools/authentication.md
@@ -22509,6 +22952,26 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-exa.png" alt="Exa">
+    </div>
+    <div class="tool-card-content">
+      <h3>Exa</h3>
+      <p>Search and extract structured content from websites and live data</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/firecrawl/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-firecrawl.png" alt="Firecrawl">
+    </div>
+    <div class="tool-card-content">
+      <h3>Firecrawl</h4>
+      <p>Empower your AI apps with clean data from any website</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/github/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-github.png" alt="GitHub">
@@ -22530,18 +22993,6 @@ Check out the following pre-built tools that you can use with ADK agents:
   </a>
 
 </div>
-
-## Integrate with existing tools
-
-ADK provides tool integrations and wrappers for existing tool ecosystems
-to help you extend the capabilities of your agents and workflows:
-
-*   **[LangChain Tools](/adk-docs/tools/third-party/langchain/)**:
-    Integrate tools from the LangChain ecosystem.
-*   **[CrewAI Tools](/adk-docs/tools/third-party/crewai/)**:
-    Integrate tools from the CrewAI library.
-*   **[Agentic UI](/adk-docs/tools/third-party/ag-ui/)**:
-    Use a rich, alternative web interface for ADK workflows.
 
 ## Build your tools
 
@@ -23354,7 +23805,6 @@ When working with MCP and ADK, keep these points in mind:
 
     * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.
     * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. MCPToolset makes these look like ADK tools to an LlmAgent.
-    * Langchain/CrewAI Tools are specific implementations within those libraries, often simple functions or classes, lacking the server/protocol structure of MCP. ADK offers wrappers (LangchainTool, CrewaiTool) for some interoperability.
 
 * **Asynchronous nature:** Both ADK and the MCP Python library are heavily based on the asyncio Python library. Tool implementations and server handlers should generally be async functions.
 
@@ -23538,9 +23988,9 @@ def create_mcp_server():
 def main(port: int = 8080, json_response: bool = False):
     """Main server function."""
     logging.basicConfig(level=logging.INFO)
-    
+
     app = create_mcp_server()
-    
+
     # Create session manager with stateless mode for scalability
     session_manager = StreamableHTTPSessionManager(
         app=app,
@@ -23611,7 +24061,7 @@ spec:
         env:
         - name: MCP_SERVER_URL
           value: "http://localhost:8081"
-      
+
       # MCP server sidecar
       - name: mcp-server
         image: your-mcp-server:latest
@@ -23626,7 +24076,7 @@ spec:
 - **Cons:** Process overhead, not suitable for high-scale deployments
 - **Best for:** Development, single-tenant deployments, simple MCP servers
 
-#### SSE/HTTP Connections  
+#### SSE/HTTP Connections
 - **Pros:** Network-based, scalable, can handle multiple clients
 - **Cons:** Requires network infrastructure, authentication complexity
 - **Best for:** Production deployments, multi-tenant systems, external MCP services
@@ -23735,7 +24185,7 @@ MCPToolset(
    ```python
    # Test remote MCP connectivity
    import aiohttp
-   
+
    async def test_mcp_connection():
        async with aiohttp.ClientSession() as session:
            async with session.get('https://your-mcp-server.com/health') as resp:
@@ -24009,7 +24459,6 @@ ADK offers flexibility by supporting several types of tools:
 2. **[Built-in Tools](../tools/built-in-tools.md):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
 3. **Third-Party Tools:** Integrate tools seamlessly from popular external libraries.
-        Examples: [LangChain Tools](/adk-docs/tools/third-party/langchain/), [CrewAI Tools](/adk-docs/tools/third-party/crewai/).
 
 Navigate to the respective documentation pages linked above for detailed information and examples for each tool type.
 
@@ -26454,14 +26903,6 @@ applications with ADK. Explore our collection below and happy building:
 
     [:octicons-arrow-right-24: Discover adk-samples](https://github.com/google/adk-samples){:target="_blank"}
 
--   :material-console-line: **Agentic UI with AG-UI**
-
-    ---
-
-    Build a rich user interface for your agent using the AG-UI protocol and CopilotKit.
-
-    [:octicons-arrow-right-24: Build an agentic UI](ag-ui.md)
-
 </div>
 
 ================
@@ -26507,7 +26948,7 @@ Development Kit community.
     <div class="card-content">
       <div class="type">Video</div>
       <h3>📺 Getting Started with ADK Tools</h3>
-      <p>A guide to building a software bug assistant using tools like MCP, Google Search, and LangChain.</p>
+      <p>A guide to building a software bug assistant using tools like MCP and Google Search.</p>
     </div>
   </a>
 </div>
@@ -26877,8 +27318,8 @@ from simple tasks to complex workflows.
     ---
 
     Equip agents with diverse capabilities: use pre-built tools (Search, Code
-    Exec), create custom functions, integrate 3rd-party libraries (LangChain,
-    CrewAI), or even use other agents as tools.
+    Exec), create custom functions, integrate 3rd-party libraries, or even use
+    other agents as tools.
 
     [**Browse tools**](tools/index.md)
 
