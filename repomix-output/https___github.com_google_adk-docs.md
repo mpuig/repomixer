@@ -7,6 +7,10 @@ File: docs/a2a/index.md
 ================
 # ADK with Agent2Agent (A2A) Protocol
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-preview">Experimental</span>
+</div>
+
 With Agent Development Kit (ADK), you can build complex multi-agent systems where different agents need to collaborate and interact using [Agent2Agent (A2A) Protocol](https://a2a-protocol.org/)! This section provides a comprehensive guide to building powerful multi-agent systems where agents can communicate and collaborate securely and efficiently.
 
 Navigate through the guides below to learn about ADK's A2A capabilities:
@@ -292,6 +296,10 @@ File: docs/a2a/quickstart-consuming.md
 ================
 # Quickstart: Consuming a remote agent via A2A
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-preview">Experimental</span>
+</div>
+
 This quickstart covers the most common starting point for any developer: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
 
 ## Overview
@@ -525,6 +533,10 @@ File: docs/a2a/quickstart-exposing.md
 ================
 # Quickstart: Exposing a remote agent via A2A
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-preview">Experimental</span>
+</div>
+
 This quickstart covers the most common starting point for any developer: **"I have an agent. How do I expose it so that other agents can use my agent via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
 
 ## Overview
@@ -745,6 +757,10 @@ File: docs/agents/workflow-agents/index.md
 ================
 # Workflow Agents
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
+
 This section introduces "*workflow agents*" - **specialized agents that control the execution flow of its sub-agents**.  
 
 Workflow agents are specialized components in ADK designed purely for **orchestrating the execution flow of sub-agents**. Their primary role is to manage *how* and *when* other agents run, defining the control flow of a process.
@@ -796,7 +812,9 @@ File: docs/agents/workflow-agents/loop-agents.md
 ================
 # Loop agents
 
-## The `LoopAgent`
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 The `LoopAgent` is a workflow agent that executes its sub-agents in a loop (i.e. iteratively). It **_repeatedly runs_ a sequence of agents** for a specified number of iterations or until a termination condition is met.
 
@@ -850,6 +868,10 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
 File: docs/agents/workflow-agents/parallel-agents.md
 ================
 # Parallel agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 The `ParallelAgent` is a [workflow agent](index.md) that executes its sub-agents *concurrently*. This dramatically speeds up workflows where tasks can be performed independently.
 
@@ -909,10 +931,11 @@ File: docs/agents/workflow-agents/sequential-agents.md
 ================
 # Sequential agents
 
-## The `SequentialAgent`
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 The `SequentialAgent` is a [workflow agent](index.md) that executes its sub-agents in the order they are specified in the list.
-
 Use the `SequentialAgent` when you want the execution to occur in a fixed, strict order.
 
 ### Example
@@ -965,6 +988,10 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
 File: docs/agents/config.md
 ================
 # Build agents with Agent Config
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 The ADK Agent Config feature lets you build an ADK workflow without writing
 code. An Agent Config uses a YAML format text file with a brief description of
@@ -1243,6 +1270,10 @@ File: docs/agents/custom-agents.md
 
 # Custom agents
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
 Custom agents provide the ultimate flexibility in ADK, allowing you to define **arbitrary orchestration logic** by inheriting directly from `BaseAgent` and implementing your own control flow. This goes beyond the predefined patterns of `SequentialAgent`, `LoopAgent`, and `ParallelAgent`, enabling you to build highly specific and complex agentic workflows.
 
 ## Introduction: Beyond Predefined Workflows
@@ -1496,6 +1527,10 @@ File: docs/agents/index.md
 ================
 # Agents
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
+
 In the Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
 
 The foundation for all agents in ADK is the `BaseAgent` class. It serves as the fundamental blueprint. To create functional agents, you typically extend `BaseAgent` in one of three main ways, catering to different needs – from intelligent reasoning to structured process control.
@@ -1549,6 +1584,10 @@ Now that you have an overview of the different agent types available in ADK, div
 File: docs/agents/llm-agents.md
 ================
 # LLM Agent
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK,
 acting as the "thinking" part of your application. It leverages the power of a
@@ -1892,7 +1931,9 @@ Control whether the agent receives the prior conversation history.
 
 ### Planner
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag" title="">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 **`planner` (Optional):** Assign a `BasePlanner` instance to enable multi-step reasoning and planning before execution. There are two main planners:
 
@@ -1949,7 +1990,9 @@ Control whether the agent receives the prior conversation history.
 
 ### Code Execution
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 * **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
 
@@ -2107,8 +2150,9 @@ File: docs/agents/models.md
 ================
 # Using Different Models with ADK
 
-!!! Note
-    Java ADK currently supports Gemini and Anthropic models. More model support coming soon.
+<div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 The Agent Development Kit (ADK) is designed for flexibility, allowing you to
 integrate various Large Language Models (LLMs) into your agents. While the setup
@@ -2295,7 +2339,9 @@ For deployed applications, a service account is the standard method.
 
 ## Using Anthropic models
 
-![java_only](https://img.shields.io/badge/Supported_in-Java-orange){ title="This feature is currently available for Java. Python support for direct Anthropic API (non-Vertex) is via LiteLLM."}
+<div class="language-support-tag" title="Available for Java. Python support for direct Anthropic API (non-Vertex) is via LiteLLM.">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 You can integrate Anthropic's Claude models directly using their API key or from a Vertex AI backend into your Java ADK applications by using the ADK's `Claude` wrapper class.
 
@@ -2360,7 +2406,9 @@ public class DirectAnthropicAgent {
 
 ## Using Cloud & Proprietary Models via LiteLLM
 
-![python_only](https://img.shields.io/badge/Supported_in-Python-blue)
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 To access a vast range of LLMs from providers like OpenAI, Anthropic (non-Vertex
 AI), Cohere, and many others, ADK offers integration through the LiteLLM
@@ -2440,7 +2488,9 @@ layer, providing a standardized, OpenAI-compatible interface to over 100+ LLMs.
 
 ## Using Open & Local Models via LiteLLM
 
-![python_only](https://img.shields.io/badge/Supported_in-Python-blue)
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 For maximum control, cost savings, privacy, or offline use cases, you can run
 open-source models locally or self-host them and integrate them using LiteLLM.
@@ -2606,7 +2656,9 @@ http://localhost:11434/api/chat \
 
 ### Self-Hosted Endpoint (e.g., vLLM)
 
-![python_only](https://img.shields.io/badge/Supported_in-Python-blue)
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
 Tools such as [vLLM](https://github.com/vllm-project/vllm) allow you to host
 models efficiently and often expose an OpenAI-compatible API endpoint.
@@ -2700,7 +2752,9 @@ Ensure your environment is configured for Vertex AI:
 
 ### Model Garden Deployments
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+</div>
 
 You can deploy various open and proprietary models from the
 [Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
@@ -2728,7 +2782,9 @@ agent_llama3_vertex = LlmAgent(
 
 ### Fine-tuned Model Endpoints
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+</div>
 
 Deploying your fine-tuned models (whether based on Gemini or other architectures
 supported by Vertex AI) results in an endpoint that can be used directly.
@@ -2892,6 +2948,10 @@ Vertex AI.
 File: docs/agents/multi-agents.md
 ================
 # Multi-Agent Systems in ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 As agentic applications grow in complexity, structuring them as a single, monolithic agent can become challenging to develop, maintain, and reason about. The Agent Development Kit (ADK) supports building sophisticated applications by composing multiple, distinct `BaseAgent` instances into a **Multi-Agent System (MAS)**.
 
@@ -4176,10 +4236,10 @@ File: docs/api-reference/rest/index.md
 
 This page provides a reference for the REST API provided by the ADK web server.
 For details on using the ADK REST API in practice, see
-[Testing](../../get-started/testing.md). 
+[Use the API Server](/adk-docs/runtime/api-server/).
 
 !!! tip
-    You can view an updated API reference on a running ADK web server by browsing 
+    You can view an updated API reference on a running ADK web server by browsing
     the `/docs` location, for example at: `http://localhost:8000/docs`
 
 ## Endpoints
@@ -4310,6 +4370,10 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 File: docs/artifacts/index.md
 ================
 # Artifacts
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 In ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
 
@@ -5261,7 +5325,9 @@ File: docs/callbacks/index.md
 ================
 # Callbacks: Observe, Customize, and Control Agent Behavior
 
-## Introduction: What are Callbacks and Why Use Them?
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to hook into an agent's execution process. They allow you to observe, customize, and even control the agent's behavior at specific, predefined points without modifying the core ADK framework code.
 
@@ -5540,6 +5606,10 @@ File: docs/context/compaction.md
 ================
 # Compress agent context for performance
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span>
+</div>
+
 As an ADK agent runs it collects *context* information, including user
 instructions, retrieved data, tool responses, and generated content. As the size
 of this context data grows, agent processing times typically also increase.
@@ -5647,7 +5717,9 @@ File: docs/context/index.md
 ================
 # Context
 
-## What are Context
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 In the Agent Development Kit (ADK), "context" refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
 
@@ -6392,7 +6464,9 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
 ### Handling Tool Authentication 
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 Securely manage API keys or other credentials needed by tools.
 
@@ -6449,7 +6523,9 @@ def call_secure_api(tool_context: ToolContext, request_data: str) -> dict:
 
 ### Leveraging Memory 
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 Access relevant information from the past or external sources.
 
@@ -6475,7 +6551,9 @@ def find_related_info(tool_context: ToolContext, topic: str) -> dict:
 
 ### Advanced: Direct `InvocationContext` Usage 
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 While most interactions happen via `CallbackContext` or `ToolContext`, sometimes the agent's core logic (`_run_async_impl`/`_run_live_impl`) needs direct access.
 
@@ -6521,7 +6599,9 @@ File: docs/deploy/agent-engine.md
 ================
 # Deploy to Vertex AI Agent Engine
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="Vertex AI Agent Engine currently supports only Python."}
+<div class="language-support-tag" title="Vertex AI Agent Engine currently supports only Python.">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
 [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 is a fully managed Google Cloud service enabling developers to deploy, manage,
@@ -7209,6 +7289,10 @@ File: docs/deploy/cloud-run.md
 ================
 # Deploy to Cloud Run
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
+
 [Cloud Run](https://cloud.google.com/run)
 is a fully managed platform that enables you to run your code directly on top of Google's scalable infrastructure.
 
@@ -7687,6 +7771,10 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
 File: docs/deploy/gke.md
 ================
 # Deploy to Google Kubernetes Engine (GKE)
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
 [GKE](https://cloud.google.com/gke) is the Google Cloud managed Kubernetes service. It allows you to deploy and manage containerized applications using Kubernetes.
 
@@ -8378,6 +8466,10 @@ File: docs/evaluate/criteria.md
 ================
 # Evaluation Criteria
 
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
 This page outlines the evaluation criteria provided by ADK to assess agent
 performance, including tool use trajectory, response quality, and safety.
 
@@ -8801,7 +8893,9 @@ File: docs/evaluate/index.md
 ================
 # Why Evaluate Agents
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
 In traditional software development, unit tests and integration tests provide confidence that code functions as expected and remains stable through changes. These tests provide a clear "pass/fail" signal, guiding further development. However, LLM agents introduce a level of variability that makes traditional testing approaches insufficient.
 
@@ -9305,6 +9399,10 @@ Here are the details for each command line argument:
 File: docs/events/index.md
 ================
 # Events
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
 
@@ -11588,12 +11686,12 @@ agent will be unable to function.
 
         !!! success "Authentication Setup for Vertex AI Users"
             If you selected **"Gemini - Google Cloud Vertex AI"** in the previous step, you must authenticate with Google Cloud before launching the dev UI.
-            
+
             Run this command and follow the prompts:
             ```bash
             gcloud auth application-default login
             ```
-            
+
             **Note:** Skip this step if you're using "Gemini - Google AI Studio".
 
         Run the following command to launch the **dev UI**.
@@ -11601,7 +11699,7 @@ agent will be unable to function.
         ```shell
         adk web
         ```
-        
+
         !!!info "Note for Windows users"
 
             When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
@@ -11664,7 +11762,7 @@ agent will be unable to function.
             ```shell
             echo "Please start by listing files" | adk run file_listing_agent
             ```
-            
+
         Run the following command, to chat with your Weather agent.
 
         ```
@@ -11684,7 +11782,7 @@ agent will be unable to function.
         ![adk-api-server.png](../assets/adk-api-server.png)
 
         To learn how to use `adk api_server` for testing, refer to the
-        [documentation on testing](testing.md).
+        [documentation on using the API server](/adk-docs/runtime/api-server/).
 
 === "Java"
 
@@ -11798,465 +11896,6 @@ You've successfully created and interacted with your first agent using ADK!
   interfaces.
 * **Understand Core Concepts:** Learn about
   [agents concepts](../agents/index.md).
-
-================
-File: docs/get-started/testing.md
-================
-# Testing your Agents
-
-Before you deploy your agent, you should test it to ensure that it is working as
-intended. The easiest way to test your agent in your development environment is
-to use the ADK API server.
-
-=== "Python"
-
-    ```py
-    adk api_server
-    ```
-
-=== "Java"
-
-    Make sure to update the port number.
-    === "Maven"
-        With Maven, compile and run the ADK web server:
-        ```console
-        mvn compile exec:java \
-         -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8080"
-        ```
-    === "Gradle"
-        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
-
-        ```groovy
-        plugins {
-            id('java')
-            // other plugins
-        }
-        ```
-        Then, elsewhere in the build file, at the top-level, create a new task:
-
-        ```groovy
-        tasks.register('runADKWebServer', JavaExec) {
-            dependsOn classes 
-            classpath = sourceSets.main.runtimeClasspath
-            mainClass = 'com.google.adk.web.AdkWebServer'
-            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8080'
-        }
-        ```
-
-        Finally, on the command-line, run the following command:
-        ```console
-        gradle runADKWebServer
-        ```
-
-    
-    In Java, both the Dev UI and the API server are bundled together.
-
-This command will launch a local web server, where you can run cURL commands or send API requests to test your agent.
-
-!!! tip "Advanced Usage and Debugging"
-
-    For a complete reference on all available endpoints, request/response formats, and tips for debugging (including how to use the interactive API documentation), see the **ADK API Server Guide** below.
-
-## Local testing
-
-Local testing involves launching a local web server, creating a session, and
-sending queries to your agent. First, ensure you are in the correct working
-directory:
-
-```console
-parent_folder/
-└── my_sample_agent/
-    └── agent.py (or Agent.java)
-```
-
-**Launch the Local Server**
-
-Next, launch the local server using the commands listed above.
-
-The output should appear similar to:
-
-=== "Python"
-
-    ```shell
-    INFO:     Started server process [12345]
-    INFO:     Waiting for application startup.
-    INFO:     Application startup complete.
-    INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
-    ```
-
-=== "Java"
-
-    ```shell
-    2025-05-13T23:32:08.972-06:00  INFO 37864 --- [ebServer.main()] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
-    2025-05-13T23:32:08.980-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : Started AdkWebServer in 1.15 seconds (process running for 2.877)
-    2025-05-13T23:32:08.981-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : AdkWebServer application started successfully.
-    ```
-
-Your server is now running locally. Ensure you use the correct **_port number_** in all the subsequent commands.
-
-**Create a new session**
-
-With the API server still running, open a new terminal window or tab and create
-a new session with the agent using:
-
-```shell
-curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_123 \
-  -H "Content-Type: application/json" \
-  -d '{"key1": "value1", "key2": 42}'
-```
-
-Let's break down what's happening:
-
-* `http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_123`: This
-  creates a new session for your agent `my_sample_agent`, which is the name of
-  the agent folder, for a user ID (`u_123`) and for a session ID (`s_123`). You
-  can replace `my_sample_agent` with the name of your agent folder. You can
-  replace `u_123` with a specific user ID, and `s_123` with a specific session
-  ID.
-* `{"key1": "value1", "key2": 42}`: This is optional. You can use
-  this to customize the agent's pre-existing state (dict) when creating the
-  session.
-
-This should return the session information if it was created successfully. The
-output should appear similar to:
-
-```json
-{"id":"s_123","appName":"my_sample_agent","userId":"u_123","state":{"key1":"value1","key2":42},"events":[],"lastUpdateTime":1743711430.022186}
-```
-
-!!! info
-
-    You cannot create multiple sessions with exactly the same user ID and
-    session ID. If you try to, you may see a response, like:
-    `{"detail":"Session already exists: s_123"}`. To fix this, you can either
-    delete that session (e.g., `s_123`), or choose a different session ID.
-
-**Send a query**
-
-There are two ways to send queries via POST to your agent, via the `/run` or
-`/run_sse` routes.
-
-* `POST http://localhost:8000/run`: collects all events as a list and returns the
-  list all at once. Suitable for most users (if you are unsure, we recommend
-  using this one).
-* `POST http://localhost:8000/run_sse`: returns as Server-Sent-Events, which is a
-  stream of event objects. Suitable for those who want to be notified as soon as
-  the event is available. With `/run_sse`, you can also set `streaming` to
-  `true` to enable token-level streaming.
-
-**Using `/run`**
-
-```shell
-curl -X POST http://localhost:8000/run \
--H "Content-Type: application/json" \
--d '{
-"app_name": "my_sample_agent",
-"user_id": "u_123",
-"session_id": "s_123",
-"new_message": {
-    "role": "user",
-    "parts": [{
-    "text": "Hey whats the weather in new york today"
-    }]
-}
-}'
-```
-
-If using `/run`, you will see the full output of events at the same time, as a
-list, which should appear similar to:
-
-```json
-[{"content":{"parts":[{"functionCall":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","args":{"city":"new york"},"name":"get_weather"}}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"longRunningToolIds":[],"id":"2Btee6zW","timestamp":1743712220.385936},{"content":{"parts":[{"functionResponse":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","name":"get_weather","response":{"status":"success","report":"The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}}}],"role":"user"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"PmWibL2m","timestamp":1743712221.895042},{"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"sYT42eVC","timestamp":1743712221.899018}]
-```
-
-**Using `/run_sse`**
-
-```shell
-curl -X POST http://localhost:8000/run_sse \
--H "Content-Type: application/json" \
--d '{
-"app_name": "my_sample_agent",
-"user_id": "u_123",
-"session_id": "s_123",
-"new_message": {
-    "role": "user",
-    "parts": [{
-    "text": "Hey whats the weather in new york today"
-    }]
-},
-"streaming": false
-}'
-```
-
-You can set `streaming` to `true` to enable token-level streaming, which means
-the response will be returned to you in multiple chunks and the output should
-appear similar to:
-
-
-```shell
-data: {"content":{"parts":[{"functionCall":{"id":"af-f83f8af9-f732-46b6-8cb5-7b5b73bbf13d","args":{"city":"new york"},"name":"get_weather"}}],"role":"model"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"longRunningToolIds":[],"id":"ptcjaZBa","timestamp":1743712255.313043}
-
-data: {"content":{"parts":[{"functionResponse":{"id":"af-f83f8af9-f732-46b6-8cb5-7b5b73bbf13d","name":"get_weather","response":{"status":"success","report":"The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}}}],"role":"user"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"5aocxjaq","timestamp":1743712257.387306}
-
-data: {"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"rAnWGSiV","timestamp":1743712257.391317}
-```
-**Send a query with a base64 encoded file using `/run` or `/run_sse`**
-
-```shell
-curl -X POST http://localhost:8000/run \
---H 'Content-Type: application/json' \
---d '{
-   "appName":"my_sample_agent",
-   "userId":"u_123",
-   "sessionId":"s_123",
-   "newMessage":{
-      "role":"user",
-      "parts":[
-         {
-            "text":"Describe this image"
-         },
-         {
-            "inlineData":{
-               "displayName":"my_image.png",
-               "data":"iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAAsTAAALEwEAmpw...",
-               "mimeType":"image/png"
-            }
-         }
-      ]
-   },
-   "streaming":false
-}'
-```
-
-!!! info
-
-    If you are using `/run_sse`, you should see each event as soon as it becomes
-    available.
-
-## Integrations
-
-ADK uses [Callbacks](../callbacks/index.md) to integrate with third-party
-observability tools. These integrations capture detailed traces of agent calls
-and interactions, which are crucial for understanding behavior, debugging
-issues, and evaluating performance.
-
-* [Comet Opik](https://github.com/comet-ml/opik) is an open-source LLM
-  observability and evaluation platform that
-  [natively supports ADK](https://www.comet.com/docs/opik/tracing/integrations/adk).
-
-## Deploying your agent
-
-Now that you've verified the local operation of your agent, you're ready to move
-on to deploying your agent! Here are some ways you can deploy your agent:
-
-* Deploy to [Agent Engine](../deploy/agent-engine.md), the easiest way to deploy
-  your ADK agents to a managed service in Vertex AI on Google Cloud.
-* Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
-  you scale and manage your agents using serverless architecture on Google
-  Cloud.
-
-
-## The ADK API Server
-
-The ADK API Server is a pre-packaged [FastAPI](https://fastapi.tiangolo.com/) web server that exposes your agents through a RESTful API. It is the primary tool for local testing and development, allowing you to interact with your agents programmatically before deploying them.
-
-## Running the Server
-
-To start the server, run the following command from your project's root directory:
-
-```shell
-adk api_server
-```
-
-By default, the server runs on `http://localhost:8000`. You will see output confirming that the server has started:
-
-```shell
-INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
-```
-
-## Debugging with Interactive API Docs
-
-The API server automatically generates interactive API documentation using Swagger UI. This is an invaluable tool for exploring endpoints, understanding request formats, and testing your agent directly from your browser.
-
-To access the interactive docs, start the API server and navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your web browser.
-
-You will see a complete, interactive list of all available API endpoints, which you can expand to see detailed information about parameters, request bodies, and response schemas. You can even click "Try it out" to send live requests to your running agents.
-
-## API Endpoints
-
-The following sections detail the primary endpoints for interacting with your agents.
-
-!!! note "JSON Naming Convention"
-    - **Request bodies** must use `snake_case` for field names (e.g., `"app_name"`).
-    - **Response bodies** will use `camelCase` for field names (e.g., `"appName"`).
-
-### Utility Endpoints
-
-#### List Available Agents
-
-Returns a list of all agent applications discovered by the server.
-
-*   **Method:** `GET`
-*   **Path:** `/list-apps`
-
-**Example Request**
-```shell
-curl -X GET http://localhost:8000/list-apps
-```
-
-**Example Response**
-```json
-["my_sample_agent", "another_agent"]
-```
-
----
-
-### Session Management
-
-Sessions store the state and event history for a specific user's interaction with an agent.
-
-#### Create or Update a Session
-
-Creates a new session or updates an existing one. If a session with the given IDs already exists, its state will be overwritten with the new state provided.
-
-*   **Method:** `POST`
-*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
-
-**Request Body**
-```json
-{
-  "key1": "value1",
-  "key2": 42
-}
-```
-
-**Example Request**
-```shell
-curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc \
-  -H "Content-Type: application/json" \
-  -d '{"visit_count": 5}'
-```
-
-**Example Response**
-```json
-{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[],"lastUpdateTime":1743711430.022186}
-```
-
-#### Get a Session
-
-Retrieves the details of a specific session, including its current state and all associated events.
-
-*   **Method:** `GET`
-*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
-
-**Example Request**
-```shell
-curl -X GET http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
-```
-
-**Example Response**
-```json
-{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[...],"lastUpdateTime":1743711430.022186}
-```
-
-#### Delete a Session
-
-Deletes a session and all of its associated data.
-
-*   **Method:** `DELETE`
-*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
-
-**Example Request**
-```shell
-curl -X DELETE http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
-```
-
-**Example Response**
-A successful deletion returns an empty response with a `204 No Content` status code.
-
----
-
-### Agent Execution
-
-These endpoints are used to send a new message to an agent and get a response.
-
-#### Run Agent (Single Response)
-
-Executes the agent and returns all generated events in a single JSON array after the run is complete.
-
-*   **Method:** `POST`
-*   **Path:** `/run`
-
-**Request Body**
-```json
-{
-  "app_name": "my_sample_agent",
-  "user_id": "u_123",
-  "session_id": "s_abc",
-  "new_message": {
-    "role": "user",
-    "parts": [
-      { "text": "What is the capital of France?" }
-    ]
-  }
-}
-```
-
-**Example Request**
-```shell
-curl -X POST http://localhost:8000/run \
-  -H "Content-Type: application/json" \
-  -d '{
-    "app_name": "my_sample_agent",
-    "user_id": "u_123",
-    "session_id": "s_abc",
-    "new_message": {
-      "role": "user",
-      "parts": [{"text": "What is the capital of France?"}]
-    }
-  }'
-```
-
-#### Run Agent (Streaming)
-
-Executes the agent and streams events back to the client as they are generated using [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
-
-*   **Method:** `POST`
-*   **Path:** `/run_sse`
-
-**Request Body**
-The request body is the same as for `/run`, with an additional optional `streaming` flag.
-```json
-{
-  "app_name": "my_sample_agent",
-  "user_id": "u_123",
-  "session_id": "s_abc",
-  "new_message": {
-    "role": "user",
-    "parts": [
-      { "text": "What is the weather in New York?" }
-    ]
-  },
-  "streaming": true
-}
-```
-- `streaming`: (Optional) Set to `true` to enable token-level streaming for model responses. Defaults to `false`.
-
-**Example Request**
-```shell
-curl -X POST http://localhost:8000/run_sse \
-  -H "Content-Type: application/json" \
-  -d '{
-    "app_name": "my_sample_agent",
-    "user_id": "u_123",
-    "session_id": "s_abc",
-    "new_message": {
-      "role": "user",
-      "parts": [{"text": "What is the weather in New York?"}]
-    },
-    "streaming": false
-  }'
-```
 
 ================
 File: docs/grounding/google_search_grounding.md
@@ -12890,7 +12529,9 @@ File: docs/mcp/index.md
 ================
 # Model Context Protocol (MCP)
 
-## What is Model Context Protocol (MCP)?
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
 
 The
 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
@@ -13555,6 +13196,10 @@ File: docs/observability/logging.md
 ================
 # Logging in the Agent Development Kit (ADK)
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
 The Agent Development Kit (ADK) uses Python's standard `logging` module to provide flexible and powerful logging capabilities. Understanding how to configure and interpret these logs is crucial for monitoring agent behavior and debugging issues effectively.
 
 ## Logging Philosophy
@@ -13993,6 +13638,10 @@ By following these steps, you can effectively integrate Google ADK with Weave, e
 File: docs/plugins/index.md
 ================
 # Plugins
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.7.0</span>
+</div>
 
 A Plugin in Agent Development Kit (ADK) is a custom code module that can be
 executed at various stages of an agent workflow lifecycle using callback hooks.
@@ -14512,11 +14161,476 @@ projects:
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
 ================
+File: docs/runtime/api-server.md
+================
+# Use the API Server
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+Before you deploy your agent, you should test it to ensure that it is working as
+intended. The easiest way to test your agent in your development environment is
+to use the ADK API server.
+
+=== "Python"
+
+    ```py
+    adk api_server
+    ```
+
+=== "Java"
+
+    Make sure to update the port number.
+    === "Maven"
+        With Maven, compile and run the ADK web server:
+        ```console
+        mvn compile exec:java \
+         -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8080"
+        ```
+    === "Gradle"
+        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
+
+        ```groovy
+        plugins {
+            id('java')
+            // other plugins
+        }
+        ```
+        Then, elsewhere in the build file, at the top-level, create a new task:
+
+        ```groovy
+        tasks.register('runADKWebServer', JavaExec) {
+            dependsOn classes
+            classpath = sourceSets.main.runtimeClasspath
+            mainClass = 'com.google.adk.web.AdkWebServer'
+            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8080'
+        }
+        ```
+
+        Finally, on the command-line, run the following command:
+        ```console
+        gradle runADKWebServer
+        ```
+
+
+    In Java, both the Dev UI and the API server are bundled together.
+
+This command will launch a local web server, where you can run cURL commands or send API requests to test your agent.
+
+!!! tip "Advanced Usage and Debugging"
+
+    For a complete reference on all available endpoints, request/response formats, and tips for debugging (including how to use the interactive API documentation), see the **ADK API Server Guide** below.
+
+## Local testing
+
+Local testing involves launching a local web server, creating a session, and
+sending queries to your agent. First, ensure you are in the correct working
+directory:
+
+```console
+parent_folder/
+└── my_sample_agent/
+    └── agent.py (or Agent.java)
+```
+
+**Launch the Local Server**
+
+Next, launch the local server using the commands listed above.
+
+The output should appear similar to:
+
+=== "Python"
+
+    ```shell
+    INFO:     Started server process [12345]
+    INFO:     Waiting for application startup.
+    INFO:     Application startup complete.
+    INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
+    ```
+
+=== "Java"
+
+    ```shell
+    2025-05-13T23:32:08.972-06:00  INFO 37864 --- [ebServer.main()] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+    2025-05-13T23:32:08.980-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : Started AdkWebServer in 1.15 seconds (process running for 2.877)
+    2025-05-13T23:32:08.981-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : AdkWebServer application started successfully.
+    ```
+
+Your server is now running locally. Ensure you use the correct **_port number_** in all the subsequent commands.
+
+**Create a new session**
+
+With the API server still running, open a new terminal window or tab and create
+a new session with the agent using:
+
+```shell
+curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_123 \
+  -H "Content-Type: application/json" \
+  -d '{"key1": "value1", "key2": 42}'
+```
+
+Let's break down what's happening:
+
+* `http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_123`: This
+  creates a new session for your agent `my_sample_agent`, which is the name of
+  the agent folder, for a user ID (`u_123`) and for a session ID (`s_123`). You
+  can replace `my_sample_agent` with the name of your agent folder. You can
+  replace `u_123` with a specific user ID, and `s_123` with a specific session
+  ID.
+* `{"key1": "value1", "key2": 42}`: This is optional. You can use
+  this to customize the agent's pre-existing state (dict) when creating the
+  session.
+
+This should return the session information if it was created successfully. The
+output should appear similar to:
+
+```json
+{"id":"s_123","appName":"my_sample_agent","userId":"u_123","state":{"key1":"value1","key2":42},"events":[],"lastUpdateTime":1743711430.022186}
+```
+
+!!! info
+
+    You cannot create multiple sessions with exactly the same user ID and
+    session ID. If you try to, you may see a response, like:
+    `{"detail":"Session already exists: s_123"}`. To fix this, you can either
+    delete that session (e.g., `s_123`), or choose a different session ID.
+
+**Send a query**
+
+There are two ways to send queries via POST to your agent, via the `/run` or
+`/run_sse` routes.
+
+* `POST http://localhost:8000/run`: collects all events as a list and returns the
+  list all at once. Suitable for most users (if you are unsure, we recommend
+  using this one).
+* `POST http://localhost:8000/run_sse`: returns as Server-Sent-Events, which is a
+  stream of event objects. Suitable for those who want to be notified as soon as
+  the event is available. With `/run_sse`, you can also set `streaming` to
+  `true` to enable token-level streaming.
+
+**Using `/run`**
+
+```shell
+curl -X POST http://localhost:8000/run \
+-H "Content-Type: application/json" \
+-d '{
+"app_name": "my_sample_agent",
+"user_id": "u_123",
+"session_id": "s_123",
+"new_message": {
+    "role": "user",
+    "parts": [{
+    "text": "Hey whats the weather in new york today"
+    }]
+}
+}'
+```
+
+If using `/run`, you will see the full output of events at the same time, as a
+list, which should appear similar to:
+
+```json
+[{"content":{"parts":[{"functionCall":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","args":{"city":"new york"},"name":"get_weather"}}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"longRunningToolIds":[],"id":"2Btee6zW","timestamp":1743712220.385936},{"content":{"parts":[{"functionResponse":{"id":"af-e75e946d-c02a-4aad-931e-49e4ab859838","name":"get_weather","response":{"status":"success","report":"The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}}}],"role":"user"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"PmWibL2m","timestamp":1743712221.895042},{"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-71353f1e-aea1-4821-aa4b-46874a766853","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"sYT42eVC","timestamp":1743712221.899018}]
+```
+
+**Using `/run_sse`**
+
+```shell
+curl -X POST http://localhost:8000/run_sse \
+-H "Content-Type: application/json" \
+-d '{
+"app_name": "my_sample_agent",
+"user_id": "u_123",
+"session_id": "s_123",
+"new_message": {
+    "role": "user",
+    "parts": [{
+    "text": "Hey whats the weather in new york today"
+    }]
+},
+"streaming": false
+}'
+```
+
+You can set `streaming` to `true` to enable token-level streaming, which means
+the response will be returned to you in multiple chunks and the output should
+appear similar to:
+
+
+```shell
+data: {"content":{"parts":[{"functionCall":{"id":"af-f83f8af9-f732-46b6-8cb5-7b5b73bbf13d","args":{"city":"new york"},"name":"get_weather"}}],"role":"model"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"longRunningToolIds":[],"id":"ptcjaZBa","timestamp":1743712255.313043}
+
+data: {"content":{"parts":[{"functionResponse":{"id":"af-f83f8af9-f732-46b6-8cb5-7b5b73bbf13d","name":"get_weather","response":{"status":"success","report":"The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit)."}}}],"role":"user"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"5aocxjaq","timestamp":1743712257.387306}
+
+data: {"content":{"parts":[{"text":"OK. The weather in New York is sunny with a temperature of 25 degrees Celsius (41 degrees Fahrenheit).\n"}],"role":"model"},"invocationId":"e-3f6d7765-5287-419e-9991-5fffa1a75565","author":"weather_time_agent","actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"id":"rAnWGSiV","timestamp":1743712257.391317}
+```
+**Send a query with a base64 encoded file using `/run` or `/run_sse`**
+
+```shell
+curl -X POST http://localhost:8000/run \
+--H 'Content-Type: application/json' \
+--d '{
+   "appName":"my_sample_agent",
+   "userId":"u_123",
+   "sessionId":"s_123",
+   "newMessage":{
+      "role":"user",
+      "parts":[
+         {
+            "text":"Describe this image"
+         },
+         {
+            "inlineData":{
+               "displayName":"my_image.png",
+               "data":"iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAACXBIWXMAAAsTAAALEwEAmpw...",
+               "mimeType":"image/png"
+            }
+         }
+      ]
+   },
+   "streaming":false
+}'
+```
+
+!!! info
+
+    If you are using `/run_sse`, you should see each event as soon as it becomes
+    available.
+
+## Integrations
+
+ADK uses [Callbacks](../callbacks/index.md) to integrate with third-party
+observability tools. These integrations capture detailed traces of agent calls
+and interactions, which are crucial for understanding behavior, debugging
+issues, and evaluating performance.
+
+* [Comet Opik](https://github.com/comet-ml/opik) is an open-source LLM
+  observability and evaluation platform that
+  [natively supports ADK](https://www.comet.com/docs/opik/tracing/integrations/adk).
+
+## Deploying your agent
+
+Now that you've verified the local operation of your agent, you're ready to move
+on to deploying your agent! Here are some ways you can deploy your agent:
+
+* Deploy to [Agent Engine](../deploy/agent-engine.md), the easiest way to deploy
+  your ADK agents to a managed service in Vertex AI on Google Cloud.
+* Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
+  you scale and manage your agents using serverless architecture on Google
+  Cloud.
+
+
+## The ADK API Server
+
+The ADK API Server is a pre-packaged [FastAPI](https://fastapi.tiangolo.com/) web server that exposes your agents through a RESTful API. It is the primary tool for local testing and development, allowing you to interact with your agents programmatically before deploying them.
+
+## Running the Server
+
+To start the server, run the following command from your project's root directory:
+
+```shell
+adk api_server
+```
+
+By default, the server runs on `http://localhost:8000`. You will see output confirming that the server has started:
+
+```shell
+INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
+```
+
+## Debugging with Interactive API Docs
+
+The API server automatically generates interactive API documentation using Swagger UI. This is an invaluable tool for exploring endpoints, understanding request formats, and testing your agent directly from your browser.
+
+To access the interactive docs, start the API server and navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your web browser.
+
+You will see a complete, interactive list of all available API endpoints, which you can expand to see detailed information about parameters, request bodies, and response schemas. You can even click "Try it out" to send live requests to your running agents.
+
+## API Endpoints
+
+The following sections detail the primary endpoints for interacting with your agents.
+
+!!! note "JSON Naming Convention"
+    - **Request bodies** must use `snake_case` for field names (e.g., `"app_name"`).
+    - **Response bodies** will use `camelCase` for field names (e.g., `"appName"`).
+
+### Utility Endpoints
+
+#### List Available Agents
+
+Returns a list of all agent applications discovered by the server.
+
+*   **Method:** `GET`
+*   **Path:** `/list-apps`
+
+**Example Request**
+```shell
+curl -X GET http://localhost:8000/list-apps
+```
+
+**Example Response**
+```json
+["my_sample_agent", "another_agent"]
+```
+
+---
+
+### Session Management
+
+Sessions store the state and event history for a specific user's interaction with an agent.
+
+#### Create or Update a Session
+
+Creates a new session or updates an existing one. If a session with the given IDs already exists, its state will be overwritten with the new state provided.
+
+*   **Method:** `POST`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Request Body**
+```json
+{
+  "key1": "value1",
+  "key2": 42
+}
+```
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc \
+  -H "Content-Type: application/json" \
+  -d '{"visit_count": 5}'
+```
+
+**Example Response**
+```json
+{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[],"lastUpdateTime":1743711430.022186}
+```
+
+#### Get a Session
+
+Retrieves the details of a specific session, including its current state and all associated events.
+
+*   **Method:** `GET`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Example Request**
+```shell
+curl -X GET http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
+```
+
+**Example Response**
+```json
+{"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[...],"lastUpdateTime":1743711430.022186}
+```
+
+#### Delete a Session
+
+Deletes a session and all of its associated data.
+
+*   **Method:** `DELETE`
+*   **Path:** `/apps/{app_name}/users/{user_id}/sessions/{session_id}`
+
+**Example Request**
+```shell
+curl -X DELETE http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_abc
+```
+
+**Example Response**
+A successful deletion returns an empty response with a `204 No Content` status code.
+
+---
+
+### Agent Execution
+
+These endpoints are used to send a new message to an agent and get a response.
+
+#### Run Agent (Single Response)
+
+Executes the agent and returns all generated events in a single JSON array after the run is complete.
+
+*   **Method:** `POST`
+*   **Path:** `/run`
+
+**Request Body**
+```json
+{
+  "app_name": "my_sample_agent",
+  "user_id": "u_123",
+  "session_id": "s_abc",
+  "new_message": {
+    "role": "user",
+    "parts": [
+      { "text": "What is the capital of France?" }
+    ]
+  }
+}
+```
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_name": "my_sample_agent",
+    "user_id": "u_123",
+    "session_id": "s_abc",
+    "new_message": {
+      "role": "user",
+      "parts": [{"text": "What is the capital of France?"}]
+    }
+  }'
+```
+
+#### Run Agent (Streaming)
+
+Executes the agent and streams events back to the client as they are generated using [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
+
+*   **Method:** `POST`
+*   **Path:** `/run_sse`
+
+**Request Body**
+The request body is the same as for `/run`, with an additional optional `streaming` flag.
+```json
+{
+  "app_name": "my_sample_agent",
+  "user_id": "u_123",
+  "session_id": "s_abc",
+  "new_message": {
+    "role": "user",
+    "parts": [
+      { "text": "What is the weather in New York?" }
+    ]
+  },
+  "streaming": true
+}
+```
+- `streaming`: (Optional) Set to `true` to enable token-level streaming for model responses. Defaults to `false`.
+
+**Example Request**
+```shell
+curl -X POST http://localhost:8000/run_sse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "app_name": "my_sample_agent",
+    "user_id": "u_123",
+    "session_id": "s_abc",
+    "new_message": {
+      "role": "user",
+      "parts": [{"text": "What is the weather in New York?"}]
+    },
+    "streaming": false
+  }'
+```
+
+================
 File: docs/runtime/index.md
 ================
 # Runtime
 
-## What is runtime?
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 The ADK Runtime is the underlying engine that powers your agent application during user interactions. It's the system that takes your defined agents, tools, and callbacks and orchestrates their execution in response to user input, managing the flow of information, state changes, and interactions with external services like LLMs or storage.
 
@@ -14951,6 +15065,10 @@ File: docs/runtime/resume.md
 ================
 # Resume stopped agents
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+</div>
+
 An ADK agent's execution can be interrupted by various factors including
 dropped network connections, power failure, or a required external system going
 offline. The Resume feature of ADK allows an agent workflow to pick up where it
@@ -15196,6 +15314,10 @@ File: docs/runtime/runconfig.md
 ================
 # Runtime Configuration
 
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
 `RunConfig` defines runtime behavior and options for agents in the ADK. It
 controls speech and streaming settings, function calling, artifact saving, and
 limits on LLM calls.
@@ -15342,7 +15464,7 @@ Enables Compositional Function Calling (CFC) support. Only applicable when using
 StreamingMode.SSE. When enabled, the LIVE API will be invoked as only it
 supports CFC functionality.
 
-!!! warning
+!!! example "Experimental release" 
 
     The `support_cfc` feature is experimental and its API or behavior might
     change in future releases.
@@ -15509,7 +15631,9 @@ This comprehensive example configures an agent with:
 
 ### Enabling Experimental CFC Support
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag" title="This feature is an experimental preview release.">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 ```python
 from google.genai.adk import RunConfig, StreamingMode
@@ -15847,10 +15971,14 @@ Care must be taken when agent output is visualized in a browser: if HTML or JS c
 ================
 File: docs/sessions/express-mode.md
 ================
-# Vertex AI Express Mode: Using Vertex AI Sessions and Memory for Free
+# Vertex AI Express Mode: Using Vertex AI Sessions and Memory
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 If you are interested in using either the `VertexAiSessionService` or `VertexAiMemoryBankService` but you don't have a Google Cloud Project, you can sign up for Vertex AI Express Mode and get access
-for free and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
+for without cost and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
 Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#api-keys) and you can get started using your local ADK agent with Vertex AI Session and Memory services!
 
 !!! info Vertex AI Express mode limitations
@@ -15965,7 +16093,9 @@ File: docs/sessions/index.md
 ================
 # Introduction to Conversational Context: Session, State, and Memory
 
-## Why Context Matters
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
 
 Meaningful, multi-turn conversations require agents to understand context. Just
 like humans, they need to recall the conversation history: what's been said and
@@ -16054,7 +16184,9 @@ File: docs/sessions/memory.md
 ================
 # Memory: Long-Term Knowledge with `MemoryService`
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
 
@@ -16353,6 +16485,10 @@ File: docs/sessions/session.md
 ================
 # Session: Tracking Individual Conversations
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
 Following our Introduction, let's dive into the `Session`. Think back to the
 idea of a "conversation thread." Just like you wouldn't start every text message
 from scratch, agents need context regarding the ongoing interaction.
@@ -16553,7 +16689,9 @@ the storage backend that best suits your needs:
 
 3.  **`DatabaseSessionService`**
 
-    ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+    <div class="language-support-tag">
+      <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    </div>
 
     *   **How it works:** Connects to a relational database (e.g., PostgreSQL,
         MySQL, SQLite) to store session data persistently in tables.
@@ -16610,6 +16748,10 @@ by managing the history and state associated with each `Session` object.
 File: docs/sessions/state.md
 ================
 # State: The Session's Scratchpad
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 Within each `Session` (our conversation thread), the **`state`** attribute acts like the agent's dedicated scratchpad for that specific interaction. While `session.events` holds the full history, `session.state` is where the agent stores and updates dynamic details needed *during* the conversation.
 
@@ -16988,6 +17130,10 @@ State modifications *within* callbacks or tools using `CallbackContext.state` or
 File: docs/streaming/dev-guide/part1.md
 ================
 # ADK Bidi-streaming development guide: Part 1 - Introduction
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 Welcome to the world of bidirectional streaming with [Agent Development Kit (ADK)](https://google.github.io/adk-docs/). This article will transform your understanding of AI agent communication from traditional request-response patterns to dynamic, real-time conversations that feel as natural as talking to another person.
 
@@ -17406,6 +17552,10 @@ File: docs/streaming/configuration.md
 ================
 # Configurating streaming behaviour
 
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
+
 There are some configurations you can set for live(streaming) agents. 
 
 It's set by [RunConfig](https://github.com/google/adk-python/blob/main/src/google/adk/agents/run_config.py). You should use RunConfig with your [Runner.run_live(...)](https://github.com/google/adk-python/blob/main/src/google/adk/runners.py). 
@@ -17431,6 +17581,10 @@ runner.run_live(
 File: docs/streaming/custom-streaming-ws.md
 ================
 # Custom Audio Streaming Application (WebSocket) {#custom-streaming-websocket}
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 This article overviews the server and client code for a custom Bidi-streaming web application built with ADK Bidi-streaming and [FastAPI](https://fastapi.tiangolo.com/), enabling real-time, bidirectional audio and text communication with WebSockets.
 
@@ -18408,6 +18562,10 @@ File: docs/streaming/custom-streaming.md
 ================
 # Custom Audio Streaming app (SSE) {#custom-streaming}
 
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
+
 This article overviews the server and client code for a custom asynchronous web app built with ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/), enabling real-time, bidirectional audio and text communication with Server-Sent Events (SSE). The key features are:
 
 **Server-Side (Python/FastAPI)**:
@@ -19141,22 +19299,21 @@ To deploy this system in a production environment, consider implementing the fol
 ================
 File: docs/streaming/index.md
 ================
-# Bidi-streaming(live) in ADK
+# Bidi-streaming (live) in ADK
 
-!!! warning
-
-    This is an experimental feature. Currrently available in Python.
-
-!!! info
-
-    This is different from server-side streaming or token-level streaming. 
-    Token-level streaming is a one-way process where a language model generates a response and sends it back to the user one token at a time. This creates a "typing" effect, giving the impression of an immediate response and reducing the time it takes to see the start of the answer. The user sends their full prompt, the model processes it, and then the model begins to generate and send back the response piece by piece. This section is for bidi-streaming (live).
-    
-Bidi-streaming (live) in ADK adds the low-latency bidirectional voice and video interaction
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
+  
+Bidirectional (Bidi) streaming (live) in ADK adds the low-latency bidirectional voice and video interaction
 capability of [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) to
 AI agents.
 
-With bidi-streaming (live) mode, you can provide end users with the experience of natural,
+!!! example "Experimental preview release"
+
+    The Bidirectional (Bidi) streaming feature is experimental.
+
+With bidi-streaming, or live, mode, you can provide end users with the experience of natural,
 human-like voice conversations, including the ability for the user to interrupt
 the agent's responses with voice commands. Agents with streaming can process
 text, audio, and video inputs, and they can provide text and audio output.
@@ -19174,6 +19331,11 @@ text, audio, and video inputs, and they can provide text and audio output.
     </div>
   </div>
 </div>
+
+!!! info
+
+    This is different from server-side streaming or token-level streaming. 
+    Token-level streaming is a one-way process where a language model generates a response and sends it back to the user one token at a time. This creates a "typing" effect, giving the impression of an immediate response and reducing the time it takes to see the start of the answer. The user sends their full prompt, the model processes it, and then the model begins to generate and send back the response piece by piece. This section is for bidi-streaming (live).
 
 <div class="grid cards" markdown>
 
@@ -19241,12 +19403,16 @@ File: docs/streaming/streaming-tools.md
 ================
 # Streaming Tools
 
-!!! info
-
-    This is only supported in streaming(live) agents/api.
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 Streaming tools allows tools(functions) to stream intermediate results back to agents and agents can respond to those intermediate results. 
 For example, we can use streaming tools to monitor the changes of the stock price and have the agent react to it. Another example is we can have the agent monitor the video stream, and when there is changes in video stream, the agent can report the changes.
+
+!!! info
+
+    This is only supported in streaming(live) agents/api.
 
 To define a streaming tool, you must adhere to the following:
 
@@ -19398,6 +19564,10 @@ File: docs/tools/gemini-api/computer-use.md
 ================
 # Computer Use Toolset with Gemini
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-preview">Preview</span>
+</div>
+
 The Computer Use Toolset allows an agent to operate a user interface
 of a computer, such as a browsers, to complete tasks. This tool uses
 a specific Gemini model and the [Playwright](https://playwright.dev/) 
@@ -19502,6 +19672,10 @@ agent sample project.
 File: docs/tools/google-cloud/code-exec-agent-engine.md
 ================
 # Code Execution Tool with Agent Engine
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-preview">Preview</span>
+</div>
 
 The Agent Engine Code Execution ADK Tool provides a low-latency, highly
 efficient method for running AI-generated code using the
@@ -19739,6 +19913,10 @@ For a complete version of an ADK agent using this example code, see the
 File: docs/tools/google-cloud/mcp-toolbox-for-databases.md
 ================
 # MCP Toolbox for Databases
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
 [MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
 open source MCP server for databases. It was designed with enterprise-grade and
@@ -20521,16 +20699,123 @@ Check out the following third-party tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-notion.png" alt="Notion">
+    </div>
+    <div class="tool-card-content">
+      <h3>Notion</h4>
+      <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
 </div>
+
+================
+File: docs/tools/third-party/notion.md
+================
+# Notion
+
+The [Notion MCP Server](https://github.com/makenotion/notion-mcp-server)
+connects your ADK agent to Notion, allowing it to search, create, and manage
+pages, databases, and more within a workspace. This gives your agent the ability
+to query, create, and organize content in your Notion workspace using natural
+language.
+
+## Use cases
+
+- **Search your workspace**: Find project pages, meeting notes, or documents
+  based on content.
+
+- **Create new content**: Generate new pages for meeting notes, project plans,
+  or tasks.
+
+- **Manage tasks and databases**: Update the status of a task, add items to a
+  database, or change properties.
+
+- **Organize your workspace**: Move pages, duplicate templates, or add comments
+  to documents.
+
+## Prerequisites
+
+- Obtain a Notion integration token by going to
+  [Notion Integrations](https://www.notion.so/profile/integrations) in your
+  profile. Refer to the
+  [authorization documentation](https://developers.notion.com/docs/authorization)
+  for more details.
+- Ensure relevant pages and databases can be accessed by your integration. Visit
+  the Access tab in your
+  [Notion Integration](https://www.notion.so/profile/integrations) settings,
+  then grant access by selecting the pages you'd like to use.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    NOTION_TOKEN = "YOUR_NOTION_TOKEN"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="notion_agent",
+        instruction="Help users get information from Notion",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@notionhq/notion-mcp-server",
+                        ],
+                        env={
+                            "NOTION_TOKEN": NOTION_TOKEN,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool <img width="200px"/> | Description
+---- | -----------
+`notion-search` | Search across your Notion workspace and connected tools like Slack, Google Drive, and Jira. Falls back to basic workspace search if AI features aren’t available.
+`notion-fetch` | Retrieves content from a Notion page or database by its URL
+`notion-create-pages` | Creates one or more Notion pages with specified properties and content.
+`notion-update-page` | Update a Notion page's properties or content.
+`notion-move-pages` | Move one or more Notion pages or databases to a new parent.
+`notion-duplicate-page` | Duplicate a Notion page within your workspace. This action is completed async.
+`notion-create-database` | Creates a new Notion database, initial data source, and initial view with the specified properties.
+`notion-update-database` | Update a Notion data source's properties, name, description, or other attributes.
+`notion-create-comment` | Add a comment to a page
+`notion-get-comments` | Lists all comments on a specific page, including threaded discussions.
+`notion-get-teams` | Retrieves a list of teams (teamspaces) in the current workspace.
+`notion-get-users` | Lists all users in the workspace with their details.
+`notion-get-user` | Retrieve your user information by ID
+`notion-get-self` | Retrieves information about your own bot user and the Notion workspace you’re connected to.
+
+## Additional resources
+
+- [Notion MCP Server Documentation](https://developers.notion.com/docs/mcp)
+- [Notion MCP Server Repository](https://github.com/makenotion/notion-mcp-server)
 
 ================
 File: docs/tools/authentication.md
 ================
 # Authenticating with Tools
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-## Core Concepts
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 Many tools need to access protected resources (like user data in Google Calendar, Salesforce records, etc.) and require authentication. ADK provides a system to handle various authentication methods securely.
 
@@ -21245,6 +21530,10 @@ Note: Java only supports Google Search and Code Execution tools currently.
 
 ### Google Search
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
 The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](../grounding/google_search_grounding.md).
 
 !!! warning "Additional requirements when using the `google_search` tool"
@@ -21265,6 +21554,10 @@ The `google_search` tool allows the agent to perform web searches using Google S
 
 ### Code Execution
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
 The `built_in_code_execution` tool enables the agent to execute code,
 specifically when using Gemini 2 models. This allows the model to perform tasks
 like calculations, data manipulation, or running small scripts.
@@ -21282,6 +21575,10 @@ like calculations, data manipulation, or running small scripts.
     ```
 
 ### GKE Code Executor
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+</div>
 
 The GKE Code Executor (`GkeCodeExecutor`) provides a secure and scalable method
 for running LLM-generated code by leveraging the GKE (Google Kubernetes Engine)
@@ -21367,6 +21664,10 @@ The `GkeCodeExecutor` can be configured with the following parameters:
 
 ### Vertex AI RAG Engine
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
 The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using Vertex
 AI RAG Engine.
 
@@ -21381,6 +21682,10 @@ Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples
 
 ### Vertex AI Search
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
 The `vertex_ai_search_tool` uses Google Cloud Vertex AI Search, enabling the
 agent to search across your private, configured data stores (e.g., internal
 documents, company policies, knowledge bases). This built-in tool requires you
@@ -21393,6 +21698,10 @@ to provide the specific data store ID during configuration. For further details 
 
 
 ### BigQuery
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.1.0</span>
+</div>
 
 These are a set of tools aimed to provide integration with BigQuery, namely:
 
@@ -21415,6 +21724,10 @@ They are packaged in the toolset `BigQueryToolset`.
 
 ### Spanner
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span>
+</div>
+
 These are a set of tools aimed to provide integration with Spanner, namely:
 
 * **`list_table_names`**: Fetches table names present in a GCP Spanner database.
@@ -21436,6 +21749,10 @@ They are packaged in the toolset `SpannerToolset`.
 
 ### Bigtable
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.12.0</span>
+</div>
+
 These are a set of tools aimed to provide integration with Bigtable, namely:
 
 * **`list_instances`**: Fetches Bigtable instances in a Google Cloud project.
@@ -21453,6 +21770,10 @@ They are packaged in the toolset `BigtableToolset`.
 ```
 
 ## Use Built-in tools with other tools
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
 
 The following code sample demonstrates how to use multiple built-in tools or how
 to use built-in tools with other tools by using multiple agents:
@@ -21659,6 +21980,10 @@ is **not** currently supported:
 File: docs/tools/confirmation.md
 ================
 # Get action confirmation for ADK Tools
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-preview">Experimental</span>
+</div>
 
 Some agent workflows require confirmation for decision making, verification,
 security, or general oversight. In these cases, you want to get a response from
@@ -21899,6 +22224,10 @@ tools](/adk-docs/tools/function-tools/).
 File: docs/tools/function-tools.md
 ================
 # Function tools
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 When pre-built ADK tools don't meet your requirements, you can create custom *function tools*. Building function tools allows you to create tailored functionality, such as connecting to proprietary databases or implementing unique algorithms.
 For example, a function tool, `myfinancetool`, might be a function that calculates a specific financial metric. ADK also supports long running functions, so if that calculation takes a while, the agent can continue working on other tasks.
@@ -22275,7 +22604,7 @@ File: docs/tools/google-cloud-tools.md
 ================
 # Google Cloud Tools
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+
 
 Google Cloud tools make it easier to connect your agents to Google Cloud’s
 products and services. With just a few lines of code you can use these tools to
@@ -22291,6 +22620,10 @@ connect your agents with:
 ![Google Cloud Tools](../assets/google_cloud_tools.svg)
 
 ## Apigee API Hub Tools
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 **ApiHubToolset** lets you turn any documented API from Apigee API hub into a
 tool with a few lines of code. This section shows you the step by step
@@ -22410,6 +22743,10 @@ you only need to follow a subset of these steps.
 ---
 
 ## Application Integration Tools
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.3.0</span>
+</div>
 
 With **ApplicationIntegrationToolset**, you can seamlessly give your agents
 secure and governed access to enterprise applications using Integration
@@ -22992,6 +23329,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-notion.png" alt="Notion">
+    </div>
+    <div class="tool-card-content">
+      <h3>Notion</h4>
+      <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
 </div>
 
 ## Build your tools
@@ -23011,7 +23358,11 @@ File: docs/tools/mcp-tools.md
 ================
 # Model Context Protocol Tools
 
- This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
 
 ## What is Model Context Protocol (MCP)?
 
@@ -24208,7 +24559,11 @@ File: docs/tools/performance.md
 ================
 # Increase tool performance with parallel execution
 
-Starting with Agent Development Kit (ADK) version 1.10.0, the framework
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.10.0</span>
+</div>
+
+Starting with Agent Development Kit (ADK) version 1.10.0 for Python, the framework
 attempts to run any agent-requested 
 [function tools](/adk-docs/tools/function-tools/) 
 in parallel. This behavior can significantly improve the performance and
@@ -24392,6 +24747,10 @@ repository.
 File: docs/tools-custom/index.md
 ================
 # Custom Tools for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 In an ADK agent workflow, Tools are programming functions with structured input
 and output that can be called by an ADK Agent to perform actions. ADK Tools
@@ -24594,7 +24953,9 @@ This example illustrates how a tool, through EventActions in its ToolContext, ca
 
 ### **Authentication**
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 ToolContext provides mechanisms for tools interacting with authenticated APIs. If your tool needs to handle authentication, you might use the following:
 
@@ -24616,9 +24977,8 @@ These methods provide convenient ways for your tool to interact with persistent 
 
 * **`save_artifact(filename: str, artifact: types.Part)`**: Saves a new version of an artifact to the artifact_service. Returns the new version number (starting from 0).
 
-* **`search_memory(query: str)`** ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-       Queries the user's long-term memory using the configured `memory_service`. This is useful for retrieving relevant information from past interactions or stored knowledge. The structure of the **SearchMemoryResponse** depends on the specific memory service implementation but typically contains relevant text snippets or conversation excerpts.
+* **`search_memory(query: str)`**: (Python only feature)
+    Queries the user's long-term memory using the configured `memory_service`. This is useful for retrieving relevant information from past interactions or stored knowledge. The structure of the **SearchMemoryResponse** depends on the specific memory service implementation but typically contains relevant text snippets or conversation excerpts.
 
 #### Example
 
@@ -24791,7 +25151,11 @@ Here are key guidelines for defining effective tool functions:
 
 By adhering to these guidelines, you provide the LLM with the clarity and structure it needs to effectively utilize your custom function tools, leading to more capable and reliable agent behavior.
 
-## Toolsets: Grouping and Dynamically Providing Tools ![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/coming soon."}
+## Toolsets: Grouping and Dynamically Providing Tools
+
+<div class="language-support-tag" title="This feature is currently available for Python.">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span>
+</div>
 
 Beyond individual tools, ADK introduces the concept of a **Toolset** via the `BaseToolset` interface (defined in `google.adk.tools.base_toolset`). A toolset allows you to manage and provide a collection of `BaseTool` instances, often dynamically, to an agent.
 
@@ -24843,11 +25207,11 @@ Toolsets offer a powerful way to organize, manage, and dynamically provide colle
 ================
 File: docs/tools-custom/openapi-tools.md
 ================
-# OpenAPI Integration
+# Integrate REST APIs with OpenAPI
 
-![python_only](https://img.shields.io/badge/Currently_supported_in-Python-blue){ title="This feature is currently available for Python. Java support is planned/ coming soon."}
-
-## Integrating REST APIs with OpenAPI
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 ADK simplifies interacting with external REST APIs by automatically generating callable tools directly from an [OpenAPI Specification (v3.x)](https://swagger.io/specification/). This eliminates the need to manually define individual function tools for each API endpoint.
 
@@ -27283,7 +27647,7 @@ from simple tasks to complex workflows.
 <p style="text-align:center;">
   <a href="/adk-docs/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
   <a href="/adk-docs/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
-  <a href="/adk-docs/get-started/about/" class="md-button" style="margin:3px">Technical overview</a>
+  <a href="/adk-docs/get-started/about/" class="md-button" style="margin:3px">Technical Overview</a>
 </p>
 
 ---
