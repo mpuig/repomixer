@@ -2171,8 +2171,8 @@ ADK primarily uses two mechanisms for model integration:
    `google-genai` library.
 2. **Wrapper Classes:** For broader compatibility, especially with models
    outside the Google ecosystem or those requiring specific client
-   configurations (like models accessed via LiteLLM). You instantiate a specific
-   wrapper class (e.g., `LiteLlm`) and pass this object as the `model` parameter
+   configurations (like models accessed via Apigee or LiteLLM). You instantiate a specific
+   wrapper class (e.g., `ApigeeLlm` or `LiteLlm`) and pass this object as the `model` parameter
    to your `LlmAgent`.
 
 The following sections guide you through using these methods based on your needs.
@@ -2402,7 +2402,56 @@ public class DirectAnthropicAgent {
 }
 ```
 
+## Using Apigee gateway for AI models
 
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span>
+</div>
+
+[Apigee](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee) acts as a powerful [AI Gateway](https://cloud.google.com/solutions/apigee-ai), transforming how you manage and govern your generative AI model traffic. By exposing your AI model endpoint (like Vertex AI or the Gemini API) through an Apigee proxy, you immediately gain enterprise-grade capabilities:
+
+- **Model Safety:** Implement security policies like Model Armor for threat protection.
+
+- **Traffic Governance:** Enforce Rate Limiting and Token Limiting to manage costs and prevent abuse.
+
+- **Performance:** Improve response times and efficiency using Semantic Caching and advanced model routing.
+
+- **Monitoring & Visibility:** Get granular monitoring, analysis, and auditing of all your AI requests.
+
+**NOTE:** The `ApigeeLLM` wrapper is currently designed for use with Vertex AI and the Gemini API (generateContent). We are continually expanding support for other models and interfaces.
+
+**Integration Method:**  To integrate Apigee's governance into your agent's workflow, simply instantiate the `ApigeeLlm` wrapper and pass it to an `LlmAgent` or other agent type.
+
+**Example:**
+
+```python
+
+from google.adk.agents import LlmAgent
+from google.adk.models.apigee_llm import ApigeeLlm
+
+# Instantiate the ApigeeLlm wrapper
+model = ApigeeLlm(
+    # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+    model="apigee/gemini-2.5-flash", 
+    # The proxy URL of your deployed Apigee proxy including the base path
+    proxy_url=f"https://{APIGEE_PROXY_URL}", 
+    # Pass necessary authentication/authorization headers (like an API key)
+    custom_headers={"foo": "bar"}
+)
+
+# Pass the configured model wrapper to your LlmAgent
+agent = LlmAgent(
+    model=model,
+    name="my_governed_agent",
+    instruction="You are a helpful assistant powered by Gemini and governed by Apigee.",
+    # ... other agent parameters
+)
+
+```
+
+With this configuration, every API call from your agent will be routed through Apigee first, where all necessary policies (security, rate limiting, logging) are executed before the request is securely forwarded to the underlying AI model endpoint.
+
+For a full code example using the Apigee proxy, see [Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm)
 
 ## Using Cloud & Proprietary Models via LiteLLM
 
@@ -8555,15 +8604,15 @@ File: docs/evaluate/criteria.md
 This page outlines the evaluation criteria provided by ADK to assess agent
 performance, including tool use trajectory, response quality, and safety.
 
-Criterion                                | Description                                               | Reference-Based | Requires Rubrics | LLM-as-a-Judge
-:--------------------------------------- | :-------------------------------------------------------- | :-------------- | :--------------- | :-------------
-`tool_trajectory_avg_score`              | Exact match of tool call trajectory                       | Yes             | No               | No
-`response_match_score`                   | ROUGE-1 similarity to reference response                  | Yes             | No               | No
-`final_response_match_v2`                | LLM-judged semantic match to reference response           | Yes             | No               | Yes
-`rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes
-`rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes
-`hallucinations_v1`                      | LLM-judged groundedness of agent response against context | No              | No               | Yes
-`safety_v1`                              | Safety/harmlessness of agent response                     | No              | No               | Yes
+Criterion                                | Description                                               | Reference-Based | Requires Rubrics | LLM-as-a-Judge | Supports [User Simulation](./user-sim.md)
+:--------------------------------------- | :-------------------------------------------------------- | :-------------- | :--------------- | :------------- | :----------------------------------------
+`tool_trajectory_avg_score`              | Exact match of tool call trajectory                       | Yes             | No               | No             | No
+`response_match_score`                   | ROUGE-1 similarity to reference response                  | Yes             | No               | No             | No
+`final_response_match_v2`                | LLM-judged semantic match to reference response           | Yes             | No               | Yes            | No
+`rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes            | No
+`rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes            | No
+`hallucinations_v1`                      | LLM-judged groundedness of agent response against context | No              | No               | Yes            | Yes
+`safety_v1`                              | Safety/harmlessness of agent response                     | No              | No               | Yes            | Yes
 
 ## tool_trajectory_avg_score
 
@@ -9127,7 +9176,7 @@ and initial session file can be ignored (or removed.)
 
 The evalset approach utilizes a dedicated dataset called an "evalset" for evaluating agent-model interactions. Similar to a test file, the evalset contains example interactions. However, an evalset can contain multiple, potentially lengthy sessions, making it ideal for simulating complex, multi-turn conversations. Due to its ability to represent complex sessions, the evalset is well-suited for integration tests. These tests are typically run less frequently than unit tests due to their more extensive nature.
 
-An evalset file contains multiple "evals," each representing a distinct session. Each eval consists of one or more "turns," which include the user query, expected tool use, expected intermediate agent responses, and a reference response. These fields have the same meaning as they do in the test file approach. Each eval is identified by a unique name. Furthermore, each eval includes an associated initial session state.
+An evalset file contains multiple "evals," each representing a distinct session. Each eval consists of one or more "turns," which include the user query, expected tool use, expected intermediate agent responses, and a reference response. These fields have the same meaning as they do in the test file approach. Alternatively, an eval can define a *conversation scenario* which is used to [dynamically simulate](./user-sim.md) a user interaction with the agent. Each eval is identified by a unique name. Furthermore, each eval includes an associated initial session state.
 
 Creating evalsets manually can be complex, therefore UI tools are provided to help capture relevant sessions and easily convert them into evals within your evalset. Learn more about using the web UI for evaluation below. Here is an example evalset containing two sessions. The eval set files are  backed by a formal Pydantic data model. The two key schema files are
 [Eval Set](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) and
@@ -9288,7 +9337,7 @@ Based on who is maintaining the eval set data, there are two routes:
 
 ### Evaluation Criteria
 
-ADK provides several built-in criterion for evaluating agent performance, ranging
+ADK provides several built-in criteria for evaluating agent performance, ranging
 from tool trajectory matching to LLM-based response quality assessment. For a
 detailed list of available criteria and guidance on when to use them, please see
 [Evaluation Criteria](./criteria.md).
@@ -9349,6 +9398,22 @@ Choose criteria based on your evaluation goals:
 *   **Check for harmful content:** Use `safety_v1` to ensure that agent
     responses are safe and do not violate safety policies.
 
+In addition, criteria which require information on expected agent tool use
+and/or responses are not supported in combination with
+[User Simulation](./user-sim.md).
+Currently, only the `hallucinations_v1` and `safety_v1` criteria support such evals.
+
+### User Simulation
+
+When evaluating conversational agents, it is not always practical to use a fixed
+set of user prompts, as the conversation can proceed in unexpected ways.
+For example, if the agent needs the user to supply two values to perform a task,
+it may ask for those values one at a time or both at once.
+To resolve this issue, ADK allows you test the behavior of the agent in a
+specific *conversation scenario* with user prompts that are dynamically
+generated by an AI model.
+For details on how to set up an eval with user simulation, see
+[User Simulation](./user-sim.md).
 
 ## How to run Evaluation with the ADK
 
@@ -9476,6 +9541,163 @@ Here are the details for each command line argument:
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`  
 * `CONFIG_FILE_PATH`: The path to the config file.  
 * `PRINT_DETAILED_RESULTS`: Prints detailed results on the console.
+
+================
+File: docs/evaluate/user-sim.md
+================
+# User Simulation
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span>
+</div>
+
+When evaluating conversational agents, it is not always practical to use a fixed
+set of user prompts, as the conversation can proceed in unexpected ways.
+For example, if the agent needs the user to supply two values to perform a task,
+it may ask for those values one at a time or both at once.
+To resolve this issue, ADK can dynamically generate user prompts using a
+generative AI model.
+
+To use this feature, you must specify a
+[`ConversationScenario`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/conversation_scenarios.py)
+which dictates the user's goals in their conversation with the agent.
+A sample conversation scenario for the
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+agent is shown below:
+
+```json
+{
+  "starting_prompt": "What can you do for me?",
+  "conversation_plan": "Ask the agent to roll a 20-sided die. After you get the result, ask the agent to check if it is prime."
+}
+```
+
+The `starting_prompt` in a conversation scenario specifies a fixed initial
+prompt that the user should use to start the conversation with the agent.
+Specifying such fixed prompts for subsequent interactions with the agent is not
+practical as the agent may respond in different ways.
+Instead, the `conversation_plan` provides a guideline for how the rest of the
+conversation with the agent should proceed.
+An LLM uses this conversation plan, along with the conversation history, to
+dynamically generate user prompts until it judges that the conversation is
+complete.
+
+## Example: Evaluating the [`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world) agent with conversation scenarios
+
+To add evaluation cases containing conversation scenarios to a new or existing
+[`EvalSet`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py),
+you need to first create a list of conversation scenarios to test the agent in.
+
+Try saving the following to
+`contributing/samples/hello_world/conversation_scenarios.json`:
+
+```json
+{
+  "scenarios": [
+    {
+      "starting_prompt": "What can you do for me?",
+      "conversation_plan": "Ask the agent to roll a 20-sided die. After you get the result, ask the agent to check if it is prime."
+    },
+    {
+      "starting_prompt": "Hi, I'm running a tabletop RPG in which prime numbers are bad!",
+      "conversation_plan": "Say that you don't care about the value; you just want the agent to tell you if a roll is good or bad. Once the agent agrees, ask it to roll a 6-sided die. Finally, ask the agent to do the same with 2 20-sided dice."
+    }
+  ]
+}
+```
+
+You will also need a session input file containing information used during
+evaluation.
+Try saving the following to
+`contributing/samples/hello_world/session_input.json`:
+
+```json
+{
+  "app_name": "hello_world",
+  "user_id": "user"
+}
+```
+
+Then, you can add the conversation scenarios to an `EvalSet`:
+
+```bash
+# (optional) create a new EvalSet
+adk eval_set create \
+  contributing/samples/hello_world \
+  eval_set_with_scenarios
+
+# add conversation scenarios to the EvalSet as new eval cases
+adk eval_set add_eval_case \
+  contributing/samples/hello_world \
+  eval_set_with_scenarios \
+  --scenarios_file contributing/samples/hello_world/conversation_scenarios.json \
+  --session_input_file contributing/samples/hello_world/session_input.json
+```
+
+By default, ADK runs evaluations with metrics that require the agent's expected
+response to be specified.
+Since that is not the case for a dynamic conversation scenario, we will use an
+[`EvalConfig`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_config.py)
+with some alternate supported metrics.
+
+Try saving the following to
+`contributing/samples/hello_world/eval_config.json`:
+
+```json
+{
+  "criteria": {
+    "hallucinations_v1": {
+      "threshold": 0.5,
+      "evaluate_intermediate_nl_responses": true
+    },
+    "safety_v1": {
+      "threshold": 0.8
+    }
+  }
+}
+```
+
+Finally, you can use the `adk eval` command to run the evaluation:
+
+```bash
+adk eval \
+    contributing/samples/hello_world \
+    --config_file_path contributing/samples/hello_world/eval_config.json \
+    eval_set_with_scenarios \
+    --print_detailed_results
+```
+
+## User simulator configuration
+
+You can override the default user simulator configuration to change the model,
+internal model behavior, and the maximum number of user-agent interactions.
+The below `EvalConfig` shows the default user simulator configuration:
+
+```json
+{
+  "criteria": {
+    # same as before
+  },
+  "user_simulator_config": {
+    "model": "gemini-2.5-flash",
+    "model_configuration": {
+      "thinking_config": {
+        "include_thoughts": true,
+        "thinking_budget": 10240
+      }
+    },
+    "max_allowed_invocations": 20
+  }
+}
+```
+
+* `model`: The model backing the user simulator.
+* `model_configuration`: A
+[`GenerateContentConfig`](https://github.com/googleapis/python-genai/blob/6196b1b4251007e33661bb5d7dc27bafee3feefe/google/genai/types.py#L4295)
+which controls the model behavior.
+* `max_allowed_invocations`: The maximum user-agent interactions allowed before
+the conversation is forcefully terminated. This should be set to be greater than
+the longest reasonable user-agent interaction in your `EvalSet`.
 
 ================
 File: docs/events/index.md
@@ -13776,6 +13998,24 @@ related callback functions together to be used across a workflow. This makes
 Plugins an ideal solution for implementing features that cut across your entire
 agent application.
 
+## Prebuilt Plugins
+
+ADK includes several plugins that you can add to your agent workflows
+immediately:
+
+*   [**Reflect and Retry Tools**](/adk-docs/plugins/reflect-and-retry/):
+    Tracks tool failures and intelligently retries tool requests.
+*   [**BigQuery Logging**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/bigquery_logging_plugin.py):
+    Enables agent logging and analysis with BigQuery.
+*   [**Context Filter**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/context_filter_plugin.py):
+    Filters the generative AI context to reduce its size.
+*   [**Global Instruction**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py):
+    Plugin that provides global instructions functionality at the App level.
+*   [**Save Files as Artifacts**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/save_files_as_artifacts_plugin.py):
+    Saves files included in user messages as Artifacts.
+*   [**Logging**](https://github.com/google/adk-python/blame/main/src/google/adk/plugins/logging_plugin.py):
+    Log important information at each agent workflow callback point.
+
 ## Define and register Plugins
 
 This section explains how to define Plugin classes and register them as part of
@@ -13912,7 +14152,7 @@ Hello world: query is [hello world]
 
 
 For more information on running ADK agents, see the
-[Quickstart](/get-started/quickstart/#run-your-agent)
+[Quickstart](/adk-docs/get-started/quickstart/#run-your-agent)
 guide.
 
 ## Build workflows with Plugins
@@ -14241,6 +14481,92 @@ projects:
     [ADK Python repository](https://github.com/google/adk-python/tree/main/src/google/adk/plugins).
 -   For information on applying Plugins for security purposes, see 
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
+
+================
+File: docs/plugins/reflect-and-retry.md
+================
+# Reflect and Retry Tool Plugin
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span>
+</div>
+
+The Reflect and Retry Tool plugin can help your agent recover from error
+responses from ADK [Tools](/adk-docs/tools-custom/) and automatically retry the
+tool request. This plugin intercepts tool failures, provides structured guidance
+to the AI model for reflection and correction, and retries the operation up to a
+configurable limit. This plugin can help you build more resilience into your
+agent workflows, including the following capabilities:
+
+*   **Concurrency safe**: Uses locking to safely handle parallel tool executions.
+*   **Configurable scope**: Tracks failures per-invocation (default) or globally.
+*   **Granular tracking**: Failure counts are tracked per-tool.
+*   **Custom error extraction**: Supports detecting errors in normal tool responses.
+
+## Add Reflect and Retry Plugin
+
+Add this plugin to your ADK workflow by adding it to the plugins setting of your
+ADK project's App object, as shown below:
+
+```python
+from google.adk.apps.app import App
+from google.adk.plugins import ReflectAndRetryToolPlugin
+
+app = App(
+    name="my_app",
+    root_agent=root_agent,
+    plugins=[
+        ReflectAndRetryToolPlugin(max_retries=3),
+    ],
+)
+```
+
+With this configuration, if any tool called by an agent returns an error, the
+request is updated and tried again, up to a maximum of 3 attempts, per tool.
+
+## Configuration settings
+
+The Reflect and Retry Plugin has the following configuration options:
+
+*   **`max_retries`**: (optional) Total number of additional attempts the system
+    makes to receive a non-error response. Default value is 3.
+*   **`throw_exception_if_retry_exceeded`**: (optional) If set to `False`, the
+    system does not raise an error if the final retry attempt fails. Default
+    value is `True`.
+*   **`tracking_scope`**: (optional)
+    *   **`TrackingScope.INVOCATION`**: Track tool failures across a single
+        invocation and user. This value is the default.
+    *   **`TrackingScope.GLOBAL`**: Track tool failures across all invocations
+        and all users.
+
+### Advanced configuration
+
+You can further modify the behavior of this plugin by extending the
+`ReflectAndRetryToolPlugin` class. The following code sample
+demonstrates a simple extension of the behavior by selecting
+responses with an error status:
+
+```python
+class CustomRetryPlugin(ReflectAndRetryToolPlugin):
+  async def extract_error_from_result(self, *, tool, tool_args,tool_context,
+  result):
+    # Detect error based on response content
+    if result.get('status') == 'error':
+        return result
+    return None  # No error detected
+
+# add this modified plugin to your App object:
+error_handling_plugin = CustomRetryPlugin(max_retries=5)
+```
+
+## Next steps
+
+For complete code samples using the Reflect and Retry plugin, see the following: 
+
+*   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/basic)
+    code sample
+*   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/hallucinating_func_name)
+    code sample
 
 ================
 File: docs/runtime/api-server.md
@@ -20226,6 +20552,119 @@ To see what other features you can build into your UI with AG-UI, refer to the C
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
+File: docs/tools/third-party/browserbase.md
+================
+# Browserbase
+
+The
+[Browserbase MCP Server](https://github.com/browserbase/mcp-server-browserbase)
+connects to cloud browser automation capabilities using
+[Browserbase](https://www.browserbase.com/) and
+[Stagehand](https://github.com/browserbase/stagehand). It enables your ADK agent
+to interact with web pages, take screenshots, extract information, and perform
+automated actions.
+
+## Use cases
+
+- **Automated Web Workflows**: Empower your agent to perform multi-step tasks
+  like logging into websites, filling out forms, submitting data, and navigating
+  complex user flows.
+
+- **Intelligent Data Extraction**: Automatically browse to specific pages and
+extract structured data, text content, or other information for use in your
+agent's tasks.
+
+- **Visual Monitoring & Interaction**: Capture full-page or element-specific
+screenshots to visually monitor websites, test UI elements, or feed visual
+context back to a vision-enabled model.
+
+## Prerequisites
+
+- Sign up for a [Browserbase account](https://www.browserbase.com/sign-up) to
+  obtain an API key and project ID. Refer to the
+  [documentation](https://docs.browserbase.com/introduction/getting-started) for
+  more information.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    BROWSERBASE_API_KEY = "YOUR_BROWSERBASE_API_KEY"
+    BROWSERBASE_PROJECT_ID = "YOUR_BROWSERBASE_PROJECT_ID"
+    GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="browserbase_agent",
+        instruction="Help users get information from Browserbase",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@browserbasehq/mcp-server-browserbase",
+                        ],
+                        env={
+                            "BROWSERBASE_API_KEY": BROWSERBASE_API_KEY,
+                            "BROWSERBASE_PROJECT_ID": BROWSERBASE_PROJECT_ID,
+                            "GEMINI_API_KEY": GEMINI_API_KEY,
+                        }
+                    ),
+                    timeout=300,
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool <img width="200px"/> | Description
+---- | -----------
+`browserbase_stagehand_navigate` | Navigate to any URL in the browser
+`browserbase_stagehand_act` | Perform an action on the web page using natural language
+`browserbase_stagehand_extract` | Extract all text content from the current page (filters out CSS and JavaScript)
+`browserbase_stagehand_observe` | Observe and find actionable elements on the web page
+`browserbase_screenshot` | Capture a PNG screenshot of the current page
+`browserbase_stagehand_get_url` | Get the current URL of the browser page
+`browserbase_session_create` | Create or reuse a cloud browser session using Browserbase with fully initialized Stagehand
+`browserbase_session_close` | Close the current Browserbase session, disconnect the browser, and cleanup Stagehand instance
+
+## Configuration
+
+The Browserbase MCP server accepts the following command-line flags:
+
+Flag | Description
+---- | -----------
+`--proxies` | Enable Browserbase proxies for the session
+`--advancedStealth` | Enable Browserbase Advanced Stealth (Only for Scale Plan Users)
+`--keepAlive` | Enable Browserbase Keep Alive Session
+`--contextId <contextId>` | Specify a Browserbase Context ID to use
+`--persist` | Whether to persist the Browserbase context (default: true)
+`--port <port>` | Port to listen on for HTTP/SHTTP transport
+`--host <host>` | Host to bind server to (default: localhost, use 0.0.0.0 for all interfaces)
+`--cookies [json]` | JSON array of cookies to inject into the browser
+`--browserWidth <width>` | Browser viewport width (default: 1024)
+`--browserHeight <height>` | Browser viewport height (default: 768)
+`--modelName <model>` | The model to use for Stagehand (default: gemini-2.0-flash)
+`--modelApiKey <key>` | API key for the custom model provider (required when using custom models)
+`--experimental` | Enable experimental features (default: false)
+
+## Additional resources
+
+- [Browserbase MCP Server Documentation](https://docs.browserbase.com/integrations/mcp/introduction)
+- [Browserbase MCP Server Configuration](https://docs.browserbase.com/integrations/mcp/configuration)
+- [Browserbase MCP Server Repository](https://github.com/browserbase/mcp-server-browserbase)
+
+================
 File: docs/tools/third-party/exa.md
 ================
 # Exa
@@ -20746,6 +21185,16 @@ Check out the following third-party tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/browserbase/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-browserbase.png" alt="Browserbase">
+    </div>
+    <div class="tool-card-content">
+      <h3>Browserbase</h3>
+      <p>Powers web browsing capabilities for AI agents</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-exa.png" alt="Exa">
@@ -20761,7 +21210,7 @@ Check out the following third-party tools that you can use with ADK agents:
       <img src="../../assets/tools-firecrawl.png" alt="Firecrawl">
     </div>
     <div class="tool-card-content">
-      <h3>Firecrawl</h4>
+      <h3>Firecrawl</h3>
       <p>Empower your AI apps with clean data from any website</p>
     </div>
   </a>
@@ -20791,8 +21240,18 @@ Check out the following third-party tools that you can use with ADK agents:
       <img src="../../assets/tools-notion.png" alt="Notion">
     </div>
     <div class="tool-card-content">
-      <h3>Notion</h4>
+      <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/tavily/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-tavily.png" alt="Tavily">
+    </div>
+    <div class="tool-card-content">
+      <h3>Tavily</h3>
+      <p>Provides real-time web search, extraction, and crawling tools</p>
     </div>
   </a>
 
@@ -20894,6 +21353,128 @@ Tool <img width="200px"/> | Description
 
 - [Notion MCP Server Documentation](https://developers.notion.com/docs/mcp)
 - [Notion MCP Server Repository](https://github.com/makenotion/notion-mcp-server)
+
+================
+File: docs/tools/third-party/tavily.md
+================
+# Tavily
+
+The [Tavily MCP Server](https://github.com/tavily-ai/tavily-mcp) connects your
+ADK agent to Tavily's AI-focused search, extraction, and crawling platform. This
+tool gives your agent the ability to perform real-time web searches,
+intelligently extract specific data from web pages, and crawl or create
+structured maps of websites.
+
+## Use cases
+
+- **Real-Time Web Search**: Perform optimized, real-time web searches to get
+  up-to-date information for your agent's tasks.
+
+- **Intelligent Data Extraction**: Extract specific, clean data and content from
+  any web page without needing to parse the full HTML.
+
+- **Website Exploration**: Automatically crawl websites to explore content or
+  create a structured map of a site's layout and pages.
+
+## Prerequisites
+
+- Sign up for a [Tavily account](https://app.tavily.com/) to obtain an API key.
+  Refer to the
+  [documentation](https://docs.tavily.com/documentation/quickstart) for more
+  information.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="tavily_agent",
+        instruction="Help users get information from Tavily",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "tavily-mcp@latest",
+                        ],
+                        env={
+                            "TAVILY_API_KEY": TAVILY_API_KEY,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+
+    TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="tavily_agent",
+        instruction="""Help users get information from Tavily""",
+        tools=[
+            MCPToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.tavily.com/mcp/",
+                    headers={
+                        "Authorization": f"Bearer {TAVILY_API_KEY}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+## Example usage
+
+Once your agent is set up and running, you can interact with it through the
+command-line interface or web interface. Here's a simple example:
+
+**Sample agent prompt:**
+
+> Find all documentation pages on tavily.com and provide instructions on how to get started with Tavily
+
+The agent automatically calls multiple Tavily tools to provide comprehensive
+answers, making it easy to explore websites and gather information without
+manual navigation:
+
+<img src="../../../assets/tools-tavily-screenshot.png">
+
+## Available tools
+
+Once connected, your agent gains access to Tavily's web intelligence tools:
+
+Tool <img width="100px"/> | Description
+---- | -----------
+`tavily-search` | Execute a search query to find relevant information across the web.
+​`tavily-extract` | Extract structured data from any web page. Extract text, links, and images from single pages or batch process multiple URLs efficiently.
+​`tavily-map` | Traverses websites like a graph and can explore hundreds of paths in parallel with intelligent discovery to generate comprehensive site maps.
+​`tavily-crawl` | Traversal tool that can explore hundreds of paths in parallel with built-in extraction and intelligent discovery.
+
+## Additional resources
+
+- [Tavily MCP Server Documentation](https://docs.tavily.com/documentation/mcp)
+- [Tavily MCP Server Repository](https://github.com/tavily-ai/tavily-mcp)
 
 ================
 File: docs/tools/authentication.md
@@ -23296,7 +23877,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
     <div class="tool-card-content">
       <h3>Application Integration</h3>
-      <p>Link your agents to enterprise applications using Integration Connectors</p>
+      <p>Link your agents to enterprise apps using Integration Connectors</p>
     </div>
   </a>
 
@@ -23326,7 +23907,7 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
     <div class="tool-card-content">
       <h3>GKE Code Executor</h3>
-      <p>Run AI-generated code in a secure and scalable GKE Sandbox environment</p>
+      <p>Run AI-generated code in a secure and scalable GKE environment</p>
     </div>
   </a>
 
@@ -23376,6 +23957,16 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/browserbase/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-browserbase.png" alt="Browserbase">
+    </div>
+    <div class="tool-card-content">
+      <h3>Browserbase</h3>
+      <p>Powers web browsing capabilities for AI agents</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-exa.png" alt="Exa">
@@ -23391,7 +23982,7 @@ Check out the following pre-built tools that you can use with ADK agents:
       <img src="../assets/tools-firecrawl.png" alt="Firecrawl">
     </div>
     <div class="tool-card-content">
-      <h3>Firecrawl</h4>
+      <h3>Firecrawl</h3>
       <p>Empower your AI apps with clean data from any website</p>
     </div>
   </a>
@@ -23421,8 +24012,18 @@ Check out the following pre-built tools that you can use with ADK agents:
       <img src="../assets/tools-notion.png" alt="Notion">
     </div>
     <div class="tool-card-content">
-      <h3>Notion</h4>
+      <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/tavily/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-tavily.png" alt="Tavily">
+    </div>
+    <div class="tool-card-content">
+      <h3>Tavily</h3>
+      <p>Provides real-time web search, extraction, and crawling tools</p>
     </div>
   </a>
 
