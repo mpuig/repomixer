@@ -465,7 +465,7 @@ This quickstart covers the most common starting point for any developer: **"Ther
 
 ## Overview
 
-This sample demonstrates the **Agent-to-Agent (A2A)** architecture in the Agent Development Kit (ADK), showcasing how multiple agents can work together to handle complex tasks. The sample implements an agent that can roll dice and check if numbers are prime.
+This sample demonstrates the **Agent2Agent (A2A)** architecture in the Agent Development Kit (ADK), showcasing how multiple agents can work together to handle complex tasks. The sample implements an agent that can roll dice and check if numbers are prime.
 
 ```text
 ┌─────────────────┐    ┌──────────────────┐    ┌────────────────────┐
@@ -1681,7 +1681,9 @@ The core of any custom agent is the method where you define its unique asynchron
                   return
               }
               // Yield the event up to the caller
-              yield(event, nil)
+              if !yield(event, nil) {
+                return
+              }
           }
           ```
 
@@ -2043,7 +2045,6 @@ First, you need to establish what the agent *is* and what it's *for*.
 === "Go"
 
     ```go
-    // Example: Defining the basic identity
     --8<-- "examples/go/snippets/agents/llm-agents/snippets/main.go:identity"
     ```
 
@@ -2109,7 +2110,6 @@ tells the agent:
 === "Go"
 
     ```go
-    // Example: Adding instructions
     --8<-- "examples/go/snippets/agents/llm-agents/snippets/main.go:instruction"
     ```
 
@@ -5010,6 +5010,15 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 
 <!-- This comment forces a block separation -->
 
+-   :fontawesome-brands-golang:{ .lg .middle } **Go API Reference**
+
+    ---
+    Explore the complete API documentation for the Go Agent Development Kit. Discover detailed information on all modules, classes, and functions to build sophisticated AI agents with Go.
+
+    [:octicons-arrow-right-24: View Go API Docs](https://pkg.go.dev/google.golang.org/adk) <br>
+
+<!-- This comment forces a block separation -->
+
 -   :fontawesome-brands-java:{ .lg .middle } **Java API Reference**
 
     ---
@@ -5052,12 +5061,139 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 </div>
 
 ================
+File: docs/apps/index.md
+================
+# Apps: workflow management class
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+</div>
+
+The ***App*** class is a top-level container for an entire Agent Development Kit
+(ADK) agent workflow. It is designed to manage the lifecycle, configuration, and
+state for a collection of agents grouped by a ***root agent***. The **App** class
+separates the concerns of an agent workflow's overall operational infrastructure
+from individual agents' task-oriented reasoning. 
+
+Defining an ***App*** object in your ADK workflow is optional and changes how you
+organize your agent code and run your agents. From a practical perspective, you
+use the ***App*** class to configure the following features for your agent workflow:
+
+*   [**Context caching**](/adk-docs/context/caching/)
+*   [**Context compression**](/adk-docs/context/compaction/)
+*   [**Agent resume**](/adk-docs/runtime/resume/)
+*   [**Plugins**](/adk-docs/plugins/)
+
+This guide explains how to use the App class for configuring and managing your
+ADK agent workflows.
+
+## Purpose of App Class
+
+The ***App*** class addresses several architectural issues that arise when
+building complex agentic systems:
+
+*   **Centralized configuration:** Provides a single, centralized location for
+    managing shared resources like API keys and database clients, avoiding the
+    need to pass configuration down through every agent.
+*   **Lifecycle management:** The ***App*** class includes ***on startup*** and
+    ***on shutdown*** hooks, which allow for reliable management of persistent
+    resources such as database connection pools or in-memory caches that need to
+    exist across multiple invocations.
+*   **State scope:** It defines an explicit boundary for application-level
+     state with an `app:*` prefix making the scope and lifetime of this state
+    clear to developers.
+*   **Unit of deployment:** The ***App*** concept establishes a formal *deployable
+    unit*, simplifying versioning, testing, and serving of agentic applications.
+
+## Define an App object
+
+The ***App*** class is used as the primary container of your agent workflow and
+contains the root agent of the project. The ***root agent*** is the container
+for the primary controller agent and any additonal sub-agents. 
+
+### Define app with root agent
+
+Create a ***root agent*** for your workflow by creating a subclass from the
+***Agent*** base class. Then define an ***App*** object and configure it with
+the ***root agent*** object and optional features, as shown in the following
+sample code:
+
+```python title="agent.py"
+from google.adk.agents.llm_agent import Agent
+from google.adk.apps import App
+
+root_agent = Agent(
+    model='gemini-2.5-flash',
+    name='greeter_agent',
+    description='An agent that provides a friendly greeting.',
+    instruction='Reply with Hello, World!',
+)
+
+app = App(
+    name="agents",
+    root_agent=root_agent,
+    # Optionally include App-level features:
+    # plugins, context_cache_config, resumability_config
+)
+```
+
+!!! tip "Recommended: Use `app` variable name"
+
+    In your agent project code, set your ***App*** object to the variable name
+    `app` so it is compatible with the ADK command line interface runner tools. 
+
+### Run your App agent
+
+You can use the ***Runner*** class to run your agent workflow using the
+`app` parameter, as shown in the following code sample:
+
+```python title="main.py"
+import asyncio
+from dotenv import load_dotenv
+from google.adk.runners import InMemoryRunner
+from agent import app # import code from agent.py
+
+load_dotenv() # load API keys and settings
+# Set a Runner using the imported application object
+runner = InMemoryRunner(app=app)
+
+async def main():
+    try:  # run_debug() requires ADK Python 1.18 or higher:
+        response = await runner.run_debug("Hello there!")
+        
+    except Exception as e:
+        print(f"An error occurred during agent execution: {e}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+```
+
+!!! note "Version requirement for `Runner.run_debug()` "
+
+    The `Runner.run_debug()` command requires ADK Python v1.18.0 or higher.
+    You can also use `Runner.run()`, which requires more setup code. For
+    more details, see the 
+
+Run your App agent with the `main.py` code using the following command:
+
+```console
+python main.py
+```
+
+## Next steps
+
+For a more complete sample code implementation, see the
+[Hello World App](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_app)
+code example.
+
+================
 File: docs/artifacts/index.md
 ================
 # Artifacts
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
@@ -5097,6 +5233,18 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
     print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
     ```
 
+=== "Go"
+
+    ```go
+	import (
+		"log"
+
+		"google.golang.org/genai"
+	)
+
+	--8<-- "examples/go/snippets/artifacts/main.go:representation"
+    ```
+
 === "Java"
 
     ```java
@@ -5118,18 +5266,6 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
                     + "...");
         }
     }
-    ```
-
-=== "Go"
-
-    ```go
-	import (
-		"log"
-
-		"google.golang.org/genai"
-	)
-
-	--8<-- "examples/go/snippets/artifacts/main.go:representation"
     ```
 
 *   **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts`. ADK provides various implementations, such as:
@@ -5217,6 +5353,24 @@ Understanding artifacts involves grasping a few key components: the service that
     # Now, contexts within runs managed by this runner can use artifact methods
     ```
 
+=== "Go"
+
+    ```go
+	import (
+		"context"
+		"log"
+
+		"google.golang.org/adk/agent/llmagent"
+		"google.golang.org/adk/artifactservice"
+		"google.golang.org/adk/llm/gemini"
+		"google.golang.org/adk/runner"
+		"google.golang.org/adk/sessionservice"
+		"google.golang.org/genai"
+	)
+
+	--8<-- "examples/go/snippets/artifacts/main.go:configure-runner"
+    ```
+
 === "Java"
     
     ```java
@@ -5235,24 +5389,6 @@ Understanding artifacts involves grasping a few key components: the service that
 
     Runner runner = new Runner(myAgent, "my_artifact_app", artifactService, sessionService); // Provide the service instance here
     // Now, contexts within runs managed by this runner can use artifact methods
-    ```
-
-=== "Go"
-
-    ```go
-	import (
-		"context"
-		"log"
-
-		"google.golang.org/adk/agent/llmagent"
-		"google.golang.org/adk/artifactservice"
-		"google.golang.org/adk/llm/gemini"
-		"google.golang.org/adk/runner"
-		"google.golang.org/adk/sessionservice"
-		"google.golang.org/genai"
-	)
-
-	--8<-- "examples/go/snippets/artifacts/main.go:configure-runner"
     ```
 
 ### Artifact Data
@@ -5284,12 +5420,6 @@ Understanding artifacts involves grasping a few key components: the service that
     print(f"Created Python artifact with MIME type: {pdf_artifact_py.inline_data.mime_type}")
     ```
     
-=== "Java"
-
-    ```java
-    --8<-- "examples/java/snippets/src/main/java/artifacts/ArtifactDataExample.java:full_code"
-    ```
-
 === "Go"
 
     ```go
@@ -5301,6 +5431,12 @@ Understanding artifacts involves grasping a few key components: the service that
 	)
 
 	--8<-- "examples/go/snippets/artifacts/main.go:artifact-data"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/artifacts/ArtifactDataExample.java:full_code"
     ```
 
 ### Filename
@@ -5347,6 +5483,16 @@ Understanding artifacts involves grasping a few key components: the service that
     # and scope it to app_name and user_id, making it accessible across sessions for that user.
     ```
 
+=== "Go"
+
+    ```go
+	import (
+		"log"
+	)
+
+	--8<-- "examples/go/snippets/artifacts/main.go:namespacing"
+    ```
+
 === "Java"
 
     ```java
@@ -5366,16 +5512,6 @@ Understanding artifacts involves grasping a few key components: the service that
     // the ArtifactService implementation should recognize the "user:" prefix
     // and scope it to app_name and user_id, making it accessible across sessions for that user.
     // artifactService.saveArtifact(appName, userId, sessionId1, userConfigFilename, someData);
-    ```
-
-=== "Go"
-
-    ```go
-	import (
-		"log"
-	)
-
-	--8<-- "examples/go/snippets/artifacts/main.go:namespacing"
     ```
 
 These core concepts work together to provide a flexible system for managing binary data within the ADK framework.
@@ -5414,6 +5550,24 @@ Before you can use any artifact methods via the context objects, you **must** pr
     ```
     If no `artifact_service` is configured in the `InvocationContext` (which happens if it's not passed to the `Runner`), calling `save_artifact`, `load_artifact`, or `list_artifacts` on the context objects will raise a `ValueError`.
 
+=== "Go"
+
+    ```go
+	import (
+		"context"
+		"log"
+
+		"google.golang.org/adk/agent/llmagent"
+		"google.golang.org/adk/artifactservice"
+		"google.golang.org/adk/llm/gemini"
+		"google.golang.org/adk/runner"
+		"google.golang.org/adk/sessionservice"
+		"google.golang.org/genai"
+	)
+
+	--8<-- "examples/go/snippets/artifacts/main.go:prerequisite"
+    ```
+
 === "Java"
 
     In Java, you would instantiate a `BaseArtifactService` implementation and then ensure it's accessible to the parts of your application that manage artifacts. This is often done through dependency injection or by explicitly passing the service instance.
@@ -5447,24 +5601,6 @@ Before you can use any artifact methods via the context objects, you **must** pr
     }
     ```
     In Java, if an `ArtifactService` instance is not available (e.g., `null`) when artifact operations are attempted, it would typically result in a `NullPointerException` or a custom error, depending on how your application is structured. Robust applications often use dependency injection frameworks to manage service lifecycles and ensure availability.
-
-=== "Go"
-
-    ```go
-	import (
-		"context"
-		"log"
-
-		"google.golang.org/adk/agent/llmagent"
-		"google.golang.org/adk/artifactservice"
-		"google.golang.org/adk/llm/gemini"
-		"google.golang.org/adk/runner"
-		"google.golang.org/adk/sessionservice"
-		"google.golang.org/genai"
-	)
-
-	--8<-- "examples/go/snippets/artifacts/main.go:prerequisite"
-    ```
 
 
 ### Accessing Methods
@@ -5507,6 +5643,20 @@ The artifact interaction methods are available directly on instances of `Callbac
         #   await save_generated_report_py(callback_context, report_data)
         ```
 
+    === "Go"
+
+        ```go
+		import (
+			"log"
+
+			"google.golang.org/adk/agent"
+			"google.golang.org/adk/llm"
+			"google.golang.org/genai"
+		)
+
+		--8<-- "examples/go/snippets/artifacts/main.go:saving-artifacts"
+        ```
+
     === "Java"
     
         ```java
@@ -5541,19 +5691,6 @@ The artifact interaction methods are available directly on instances of `Callbac
         }
         ```
 
-    === "Go"
-
-        ```go
-		import (
-			"log"
-
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-			"google.golang.org/genai"
-		)
-
-		--8<-- "examples/go/snippets/artifacts/main.go:saving-artifacts"
-        ```
 #### Loading Artifacts
 
 *   **Code Example:**
@@ -5596,6 +5733,19 @@ The artifact interaction methods are available directly on instances of `Callbac
         # async def main_py():
         #   callback_context: CallbackContext = ... # obtain context
         #   await process_latest_report_py(callback_context)
+        ```
+
+    === "Go"
+
+        ```go
+		import (
+			"log"
+
+			"google.golang.org/adk/agent"
+			"google.golang.org/adk/llm"
+		)
+
+		--8<-- "examples/go/snippets/artifacts/main.go:loading-artifacts"
         ```
 
     === "Java"
@@ -5684,19 +5834,6 @@ The artifact interaction methods are available directly on instances of `Callbac
         }
         ```
 
-    === "Go"
-
-        ```go
-		import (
-			"log"
-
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-		)
-
-		--8<-- "examples/go/snippets/artifacts/main.go:loading-artifacts"
-        ```
-
 #### Listing Artifact Filenames
 
 *   **Code Example:**
@@ -5726,6 +5863,22 @@ The artifact interaction methods are available directly on instances of `Callbac
         # This function would typically be wrapped in a FunctionTool
         # from google.adk.tools import FunctionTool
         # list_files_tool = FunctionTool(func=list_user_files_py)
+        ```
+
+    === "Go"
+
+        ```go
+		import (
+			"fmt"
+			"log"
+			"strings"
+
+			"google.golang.org/adk/agent"
+			"google.golang.org/adk/llm"
+			"google.golang.org/genai"
+		)
+
+		--8<-- "examples/go/snippets/artifacts/main.go:listing-artifacts"
         ```
 
     === "Java"
@@ -5807,22 +5960,6 @@ The artifact interaction methods are available directly on instances of `Callbac
         }
         ```
 
-    === "Go"
-
-        ```go
-		import (
-			"fmt"
-			"log"
-			"strings"
-
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-			"google.golang.org/genai"
-		)
-
-		--8<-- "examples/go/snippets/artifacts/main.go:listing-artifacts"
-        ```
-
 These methods for saving, loading, and listing provide a convenient and consistent way to manage binary data persistence within ADK, whether using Python's context objects or directly interacting with the `BaseArtifactService` in Java, regardless of the chosen backend storage implementation.
 
 ## Available Implementations
@@ -5855,6 +5992,16 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
         # runner = Runner(..., artifact_service=in_memory_service_py)
         ```
 
+    === "Go"
+
+        ```go
+		import (
+			"google.golang.org/adk/artifactservice"
+		)
+
+		--8<-- "examples/go/snippets/artifacts/main.go:in-memory-service"
+        ```
+
     === "Java"
 
         ```java
@@ -5875,16 +6022,6 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
                 // );
             }
         }
-        ```
-
-    === "Go"
-
-        ```go
-		import (
-			"google.golang.org/adk/artifactservice"
-		)
-
-		--8<-- "examples/go/snippets/artifacts/main.go:in-memory-service"
         ```
 
 ### GcsArtifactService
@@ -6136,7 +6273,7 @@ File: docs/callbacks/index.md
 # Callbacks: Observe, Customize, and Control Agent Behavior
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to hook into an agent's execution process. They allow you to observe, customize, and even control the agent's behavior at specific, predefined points without modifying the core ADK framework code.
@@ -6175,12 +6312,6 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
         --8<-- "examples/python/snippets/callbacks/callback_basic.py:callback_basic"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/AgentWithBeforeModelCallback.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6188,6 +6319,12 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
 
 
         --8<-- "examples/go/snippets/callbacks/main.go:callback_basic"
+        ```
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/AgentWithBeforeModelCallback.java:init"
         ```
 
 ## The Callback Mechanism: Interception and Control
@@ -6219,9 +6356,6 @@ When the ADK framework encounters a point where a callback can run (e.g., just b
 
 This example demonstrates the common pattern for a guardrail using `before_model_callback`.
 
-<!-- ```py
---8<-- "examples/python/snippets/callbacks/before_model_callback.py"
-``` -->
 ??? "Code"
     === "Python"
     
@@ -6229,11 +6363,6 @@ This example demonstrates the common pattern for a guardrail using `before_model
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
     
-    === "Java"
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelGuardrailExample.java:init"
-        ```
-        
     === "Go"
         ```go
         --8<-- "examples/go/snippets/callbacks/main.go:imports"
@@ -6242,12 +6371,21 @@ This example demonstrates the common pattern for a guardrail using `before_model
         --8<-- "examples/go/snippets/callbacks/main.go:guardrail_init"
         ```
 
+    === "Java"
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelGuardrailExample.java:init"
+        ```
+        
 By understanding this mechanism of returning `None` versus returning specific objects, you can precisely control the agent's execution path, making callbacks an essential tool for building sophisticated and reliable agents with ADK.
 
 ================
 File: docs/callbacks/types-of-callbacks.md
 ================
 # Types of Callbacks
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 The framework provides different types of callbacks that trigger at various stages of an agent's execution. Understanding when each callback fires and what context it receives is key to using them effectively.
 
@@ -6272,12 +6410,6 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         --8<-- "examples/python/snippets/callbacks/before_agent_callback.py"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeAgentCallbackExample.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6285,6 +6417,12 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:before_agent_example"
+        ```
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeAgentCallbackExample.java:init"
         ```
 
 
@@ -6313,12 +6451,6 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         --8<-- "examples/python/snippets/callbacks/after_agent_callback.py"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterAgentCallbackExample.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6326,6 +6458,12 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:after_agent_example"
+        ```
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterAgentCallbackExample.java:init"
         ```
 
 
@@ -6360,12 +6498,6 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelCallbackExample.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6373,6 +6505,12 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
 
         
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:before_model_example"
+        ```
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelCallbackExample.java:init"
         ```
 
 ### After Model Callback
@@ -6394,12 +6532,6 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
         --8<-- "examples/python/snippets/callbacks/after_model_callback.py"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterModelCallbackExample.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6407,6 +6539,12 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
 
 
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:after_model_example"
+        ```
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterModelCallbackExample.java:init"
         ```
 
 ## Tool Execution Callbacks
@@ -6432,12 +6570,6 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/python/snippets/callbacks/before_tool_callback.py"
         ```
     
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeToolCallbackExample.java:init"
-        ```
-
     === "Go"
 
         ```go
@@ -6446,6 +6578,11 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:before_tool_example"
         ```
 
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeToolCallbackExample.java:init"
+        ```
 
 
 ### After Tool Callback
@@ -6465,12 +6602,6 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         ```python
         --8<-- "examples/python/snippets/callbacks/after_tool_callback.py"
         ```
-    
-    === "Java"
-    
-        ```java
-        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterToolCallbackExample.java:init"
-        ```
 
     === "Go"
 
@@ -6478,6 +6609,12 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:imports"
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:tool_defs"
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:after_tool_example"
+        ```    
+
+    === "Java"
+    
+        ```java
+        --8<-- "examples/java/snippets/src/main/java/callbacks/AfterToolCallbackExample.java:init"
         ```
 
 ================
@@ -6679,7 +6816,7 @@ File: docs/context/index.md
 # Context
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In the Agent Development Kit (ADK), "context" refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
@@ -7697,6 +7834,11 @@ instruction set for when you want to deploy an ADK project quickly, and a
 standard, step-by-step set of instructions for when you want to carefully manage
 deploying an agent to Agent Engine.
 
+!!! example "Preview: Vertex AI in express mode"
+    If you don't have a Google Cloud project, you can try Agent Engine without cost using 
+    [Vertex AI in Express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
+    For details on using this feature, see the [Standard deployment](#standard-deployment) section. 
+
 ## Accelerated deployment
 
 This section describes how to perform a deployment using the
@@ -7723,7 +7865,6 @@ see the
 [CLI reference](https://googlecloudplatform.github.io/agent-starter-pack/cli/enhance.html)
 and
 [Development guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/development-guide.html).
-
 
 ### Prerequisites {#prerequisites-ad}
 
@@ -7913,30 +8054,52 @@ deployment settings, or are modifying an existing deployment with Agent Engine.
 
 ### Prerequisites
 
-These instructions assume you have already defined an ADK project. If you do not
+These instructions assume you have already defined an ADK project and GCP project. If you do not
 have an ADK project, see the instructions for creating a test project in
-[Define your agent](#define-your-agent).
+[Define your agent](#define-your-agent). 
 
-Before starting deployment procedure, ensure you have the following:
+!!! example "Preview: Vertex AI in express mode"
+    If you do not have an exising GCP project, you can try Agent Engine without cost using 
+    [Vertex AI in Express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
 
-1.  **Google Cloud Project**: A Google Cloud project with the [Vertex AI API enabled](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
+=== "Google Cloud Project"
 
-2.  **Authenticated gcloud CLI**: You need to be authenticated with Google Cloud. Run the following command in your terminal:
-    ```shell
-    gcloud auth application-default login
-    ```
+    Before starting deployment procedure, ensure you have the following:
+    
+    1.  **Google Cloud Project**: A Google Cloud project with the [Vertex AI API enabled](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
+    
+    2.  **Authenticated gcloud CLI**: You need to be authenticated with Google Cloud. Run the following command in your terminal:
+        ```shell
+        gcloud auth application-default login
+        ```
+    
+    3.  **Google Cloud Storage (GCS) Bucket**: Agent Engine requires a GCS bucket to stage your agent's code and dependencies for deployment. If you don't have a bucket, create one by following the instructions [here](https://cloud.google.com/storage/docs/creating-buckets).
+    
+    4.  **Python Environment**: A Python version between 3.9 and 3.13.
+    
+    5.  **Install Vertex AI SDK**
+    
+        Agent Engine is part of the Vertex AI SDK for Python. For more information, you can review the [Agent Engine quickstart documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/quickstart).
+    
+        ```shell
+        pip install google-cloud-aiplatform[adk,agent_engines]>=1.111
+        ```
 
-3.  **Google Cloud Storage (GCS) Bucket**: Agent Engine requires a GCS bucket to stage your agent's code and dependencies for deployment. If you don't have a bucket, create one by following the instructions [here](https://cloud.google.com/storage/docs/creating-buckets).
+=== "Vertex AI express mode"
 
-4.  **Python Environment**: A Python version between 3.9 and 3.13.
-
-5.  **Install Vertex AI SDK**
-
-    Agent Engine is part of the Vertex AI SDK for Python. For more information, you can review the [Agent Engine quickstart documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/quickstart).
-
-    ```shell
-    pip install google-cloud-aiplatform[adk,agent_engines]>=1.111
-    ```
+    Before starting deployment procedure, ensure you have the following:
+    
+    1.  **API Key from Express Mode project**: Sign up for an Express Mode project with your gmail account following the [Express mode sign up](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#eligibility). Get an API key from that project to use with Agent Engine!
+    
+    2.  **Python Environment**: A Python version between 3.9 and 3.13.
+    
+    3.  **Install Vertex AI SDK**
+    
+        Agent Engine is part of the Vertex AI SDK for Python. For more information, you can review the [Agent Engine quickstart documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/quickstart).
+    
+        ```shell
+        pip install google-cloud-aiplatform[adk,agent_engines]>=1.111
+        ```
 
 ### Define your agent {#define-your-agent}
 
@@ -7956,22 +8119,40 @@ Next, initialize the Vertex AI SDK. This tells the SDK which Google Cloud projec
 !!! tip "For IDE Users"
     You can place this initialization code in a separate `deploy.py` script along with the deployment logic for the following steps: 3 through 6.
 
-```python title="deploy.py"
-import vertexai
-from agent import root_agent # modify this if your agent is not in agent.py
+=== "Google Cloud Project"
 
-# TODO: Fill in these values for your project
-PROJECT_ID = "your-gcp-project-id"
-LOCATION = "us-central1"  # For other options, see https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview#supported-regions
-STAGING_BUCKET = "gs://your-gcs-bucket-name"
+    ```python title="deploy.py"
+    import vertexai
+    from agent import root_agent # modify this if your agent is not in agent.py
+    
+    # TODO: Fill in these values for your project
+    PROJECT_ID = "your-gcp-project-id"
+    LOCATION = "us-central1"  # For other options, see https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview#supported-regions
+    STAGING_BUCKET = "gs://your-gcs-bucket-name"
+    
+    # Initialize the Vertex AI SDK
+    vertexai.init(
+        project=PROJECT_ID,
+        location=LOCATION,
+        staging_bucket=STAGING_BUCKET,
+    )
+    ```
 
-# Initialize the Vertex AI SDK
-vertexai.init(
-    project=PROJECT_ID,
-    location=LOCATION,
-    staging_bucket=STAGING_BUCKET,
-)
-```
+=== "Vertex AI express mode"
+
+    ```python title="deploy.py"
+    import vertexai
+    from agent import root_agent # modify this if your agent is not in agent.py
+    
+    # TODO: Fill in these values for your api key
+    API_KEY = "your-express-mode-api-key"
+    
+    # Initialize the Vertex AI SDK
+    vertexai.init(
+        api_key=API_KEY,
+    )
+    ```
+
 
 ### Prepare the agent for deployment
 
@@ -8102,6 +8283,43 @@ This process packages your code, builds it into a container, and deploys it to t
     #       Note: The PROJECT_NUMBER is different than the PROJECT_ID.
     ```
 
+=== "Vertex AI express mode"
+
+    Vertex AI express mode supports both ADK CLI deployment and Python deployment.
+
+    The following example deploy command uses the `multi_tool_agent` sample
+    code as the project to be deployed with express mode:
+
+    ```shell
+    adk deploy agent_engine \
+        --display_name="My Agent Name" \
+        --api_key=your-api-key-here
+        /multi_tool_agent
+    ```
+
+    !!! tip
+        Make sure your main ADK agent definition (`root_agent`) is 
+        discoverable when deploying your ADK project.
+
+    This code block initiates the deployment from a Python script or notebook.
+
+    ```python title="deploy.py"
+    from vertexai import agent_engines
+
+    remote_app = agent_engines.create(
+        agent_engine=app,
+        requirements=[
+            "google-cloud-aiplatform[adk,agent_engines]"   
+        ]
+    )
+
+    print(f"Deployment finished!")
+    print(f"Resource Name: {remote_app.resource_name}")
+    # Resource Name: "projects/{PROJECT_NUMBER}/locations/{LOCATION}/reasoningEngines/{RESOURCE_ID}"
+    #       Note: The PROJECT_NUMBER is different than the PROJECT_ID.
+    ```
+
+
 #### Monitoring and verification
 
 *   You can monitor the deployment status in the [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines) in the Google Cloud Console.
@@ -8130,6 +8348,9 @@ selecting an exising Google Cloud project, see
 You need the address and resource identification for your project (`PROJECT_ID`,
 `LOCATION`, `RESOURCE_ID`) to be able to test your deployment. You can use Cloud
 Console or the `gcloud` command line tool to find this information. 
+
+!!! note "Vertex AI express mode API key"
+    If you are using Vertex AI express mode, you can skip this step and use your API key.
 
 To find your project information with Google Cloud Console:
 
@@ -8178,11 +8399,21 @@ To send a REST call get a response from deployed agent:
 -   In a terminal window of your development environment, build a request
     and execute it:
 
-    ```shell
-    curl -X GET \
-        -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-        "https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines"
-    ```
+    === "Google Cloud Project"
+
+        ```shell
+        curl -X GET \
+            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            "https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines"
+        ```
+
+    === "Vertex AI express mode"
+    
+        ```shell
+        curl -X GET \
+            -H "x-goog-api-key:YOUR-EXPRESS-MODE-API-KEY" \
+            "https://aiplatform.googleapis.com/v1/reasoningEngines"
+        ```
 
 If your deployment was successful, this request responds with a list of valid
 requests and expected data formats. 
@@ -8203,13 +8434,25 @@ To test interaction with the deployed agent via REST:
 1.  In a terminal window of your development environment, create a session
     by building a request using this template:
 
-    ```shell
-    curl \
-        -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-        -H "Content-Type: application/json" \
-        https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines/$(RESOURCE_ID):query \
-        -d '{"class_method": "async_create_session", "input": {"user_id": "u_123"},}'
-    ```
+    === "Google Cloud Project"
+
+        ```shell
+        curl \
+            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            -H "Content-Type: application/json" \
+            https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines/$(RESOURCE_ID):query \
+            -d '{"class_method": "async_create_session", "input": {"user_id": "u_123"},}'
+        ```
+
+    === "Vertex AI express mode"
+    
+        ```shell
+        curl \
+            -H "x-goog-api-key:YOUR-EXPRESS-MODE-API-KEY" \
+            -H "Content-Type: application/json" \
+            https://aiplatform.googleapis.com/v1/reasoningEngines/$(RESOURCE_ID):query \
+            -d '{"class_method": "async_create_session", "input": {"user_id": "u_123"},}'
+        ```
 
 1.  In the response to the previous command, extract the created **Session ID**
     from the **id** field:
@@ -8231,19 +8474,37 @@ To test interaction with the deployed agent via REST:
     your agent by building a request using this template and the Session ID
     created in the previous step:
 
-    ```shell
-    curl \
-    -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-    -H "Content-Type: application/json" \
-    https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines/$(RESOURCE_ID):streamQuery?alt=sse -d '{
-    "class_method": "async_stream_query",
-    "input": {
-        "user_id": "u_123",
-        "session_id": "4857885913439920384",
-        "message": "Hey whats the weather in new york today?",
-    }
-    }'
-    ```
+    === "Google Cloud Project"
+
+        ```shell
+        curl \
+        -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+        -H "Content-Type: application/json" \
+        https://$(LOCATION)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION)/reasoningEngines/$(RESOURCE_ID):streamQuery?alt=sse -d '{
+        "class_method": "async_stream_query",
+        "input": {
+            "user_id": "u_123",
+            "session_id": "4857885913439920384",
+            "message": "Hey whats the weather in new york today?",
+        }
+        }'
+        ```
+
+    === "Vertex AI express mode"
+
+        ```shell
+        curl \
+        -H "x-goog-api-key:YOUR-EXPRESS-MODE-API-KEY" \
+        -H "Content-Type: application/json" \
+        https://aiplatform.googleapis.com/v1/reasoningEngines/$(RESOURCE_ID):streamQuery?alt=sse -d '{
+        "class_method": "async_stream_query",
+        "input": {
+            "user_id": "u_123",
+            "session_id": "4857885913439920384",
+            "message": "Hey whats the weather in new york today?",
+        }
+        }'
+        ```
 
 This request should generate a response from your deployed agent code in JSON
 format. For more information about interacting with a deployed ADK agent in
@@ -8762,7 +9023,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     * `--proxy_port`: The local port for the authenticating proxy to listen on. Defaults to 8081.
     * `--server_port`: The port number the server will listen on within the Cloud Run container. Defaults to 8080.
-    * `--a2a`: If included, enables Agent-to-Agent communication. Enabled by default.
+    * `--a2a`: If included, enables Agent2Agent communication. Enabled by default.
     * `--a2a_agent_url`: A2A agent card URL as advertised in the public agent card. This flag is only valid when used with the --a2a flag.
     * `--api`: If included, deploys the ADK API server. Enabled by default.
     * `--webui`: If included, deploys the ADK dev UI alongside the agent API server. Enabled by default.
@@ -10787,7 +11048,7 @@ File: docs/events/index.md
 # Events
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
@@ -10820,29 +11081,6 @@ An `Event` in ADK is an immutable record representing a specific point in the ag
     #     # ...
     ```
 
-=== "Java"
-    In Java, this is an instance of the `com.google.adk.events.Event` class. It also builds upon a basic response structure by adding essential ADK-specific metadata and an `actions` payload.
-
-    ```java
-    // Conceptual Structure of an Event (Java - See com.google.adk.events.Event.java)
-    // Simplified view based on the provided com.google.adk.events.Event.java
-    // public class Event extends JsonBaseModel {
-    //     // --- Fields analogous to LlmResponse ---
-    //     private Optional<Content> content;
-    //     private Optional<Boolean> partial;
-    //     // ... other response fields like errorCode, errorMessage ...
-
-    //     // --- ADK specific additions ---
-    //     private String author;         // 'user' or agent name
-    //     private String invocationId;   // ID for the whole interaction run
-    //     private String id;             // Unique ID for this specific event
-    //     private long timestamp;        // Creation time (epoch milliseconds)
-    //     private EventActions actions;  // Important for side-effects & control
-    //     private Optional<String> branch; // Hierarchy path
-    //     // ... other fields like turnComplete, longRunningToolIds etc.
-    // }
-    ```
-
 === "Go"
     In Go, this is a struct of type `google.golang.org/adk/session.Event`.
 
@@ -10868,6 +11106,29 @@ An `Event` in ADK is an immutable record representing a specific point in the ag
         Content *genai.Content
         // ... other fields
     }
+    ```
+
+=== "Java"
+    In Java, this is an instance of the `com.google.adk.events.Event` class. It also builds upon a basic response structure by adding essential ADK-specific metadata and an `actions` payload.
+
+    ```java
+    // Conceptual Structure of an Event (Java - See com.google.adk.events.Event.java)
+    // Simplified view based on the provided com.google.adk.events.Event.java
+    // public class Event extends JsonBaseModel {
+    //     // --- Fields analogous to LlmResponse ---
+    //     private Optional<Content> content;
+    //     private Optional<Boolean> partial;
+    //     // ... other response fields like errorCode, errorMessage ...
+
+    //     // --- ADK specific additions ---
+    //     private String author;         // 'user' or agent name
+    //     private String invocationId;   // ID for the whole interaction run
+    //     private String id;             // Unique ID for this specific event
+    //     private long timestamp;        // Creation time (epoch milliseconds)
+    //     private EventActions actions;  // Important for side-effects & control
+    //     private Optional<String> branch; // Hierarchy path
+    //     // ... other fields like turnComplete, longRunningToolIds etc.
+    // }
     ```
 
 Events are central to ADK's operation for several key reasons:
@@ -10930,43 +11191,6 @@ Quickly determine what an event represents by checking:
     #         print("  Type: State/Artifact Update")
     #     else:
     #         print("  Type: Control Signal or Other")
-    ```
-
-=== "Java"
-
-    ```java
-    // Pseudocode: Basic event identification (Java)
-    // import com.google.genai.types.Content;
-    // import com.google.adk.events.Event;
-    // import com.google.adk.events.EventActions;
-
-    // runner.runAsync(...).forEach(event -> { // Assuming a synchronous stream or reactive stream
-    //     System.out.println("Event from: " + event.author());
-    //
-    //     if (event.content().isPresent()) {
-    //         Content content = event.content().get();
-    //         if (!event.functionCalls().isEmpty()) {
-    //             System.out.println("  Type: Tool Call Request");
-    //         } else if (!event.functionResponses().isEmpty()) {
-    //             System.out.println("  Type: Tool Result");
-    //         } else if (content.parts().isPresent() && !content.parts().get().isEmpty() &&
-    //                    content.parts().get().get(0).text().isPresent()) {
-    //             if (event.partial().orElse(false)) {
-    //                 System.out.println("  Type: Streaming Text Chunk");
-    //             } else {
-    //                 System.out.println("  Type: Complete Text Message");
-    //             }
-    //         } else {
-    //             System.out.println("  Type: Other Content (e.g., code result)");
-    //         }
-    //     } else if (event.actions() != null &&
-    //                ((event.actions().stateDelta() != null && !event.actions().stateDelta().isEmpty()) ||
-    //                 (event.actions().artifactDelta() != null && !event.actions().artifactDelta().isEmpty()))) {
-    //         System.out.println("  Type: State/Artifact Update");
-    //     } else {
-    //         System.out.println("  Type: Control Signal or Other");
-    //     }
-    // });
     ```
 
 === "Go"
@@ -11033,6 +11257,43 @@ Quickly determine what an event represents by checking:
 
     ```
 
+=== "Java"
+
+    ```java
+    // Pseudocode: Basic event identification (Java)
+    // import com.google.genai.types.Content;
+    // import com.google.adk.events.Event;
+    // import com.google.adk.events.EventActions;
+
+    // runner.runAsync(...).forEach(event -> { // Assuming a synchronous stream or reactive stream
+    //     System.out.println("Event from: " + event.author());
+    //
+    //     if (event.content().isPresent()) {
+    //         Content content = event.content().get();
+    //         if (!event.functionCalls().isEmpty()) {
+    //             System.out.println("  Type: Tool Call Request");
+    //         } else if (!event.functionResponses().isEmpty()) {
+    //             System.out.println("  Type: Tool Result");
+    //         } else if (content.parts().isPresent() && !content.parts().get().isEmpty() &&
+    //                    content.parts().get().get(0).text().isPresent()) {
+    //             if (event.partial().orElse(false)) {
+    //                 System.out.println("  Type: Streaming Text Chunk");
+    //             } else {
+    //                 System.out.println("  Type: Complete Text Message");
+    //             }
+    //         } else {
+    //             System.out.println("  Type: Other Content (e.g., code result)");
+    //         }
+    //     } else if (event.actions() != null &&
+    //                ((event.actions().stateDelta() != null && !event.actions().stateDelta().isEmpty()) ||
+    //                 (event.actions().artifactDelta() != null && !event.actions().artifactDelta().isEmpty()))) {
+    //         System.out.println("  Type: State/Artifact Update");
+    //     } else {
+    //         System.out.println("  Type: Control Signal or Other");
+    //     }
+    // });
+    ```
+
 ### Extracting Key Information
 
 Once you know the event type, access the relevant data:
@@ -11043,6 +11304,7 @@ Once you know the event type, access the relevant data:
 *   **Function Call Details:**
 
     === "Python"
+    
         ```python
         calls = event.get_function_calls()
         if calls:
@@ -11052,6 +11314,32 @@ Once you know the event type, access the relevant data:
                 print(f"  Tool: {tool_name}, Args: {arguments}")
                 # Application might dispatch execution based on this
         ```
+
+    === "Go"
+
+        ```go
+        import (
+            "fmt"
+            "google.golang.org/adk/session"
+            "google.golang.org/genai"
+        )
+
+        func handleFunctionCalls(event *session.Event) {
+            if event.LLMResponse == nil || event.LLMResponse.Content == nil {
+                return
+            }
+            calls := event.Content.FunctionCalls()
+            if len(calls) > 0 {
+                for _, call := range calls {
+                    toolName := call.Name
+                    arguments := call.Args
+                    fmt.Printf("  Tool: %s, Args: %v\n", toolName, arguments)
+                    // Application might dispatch execution based on this
+                }
+            }
+        }
+        ```
+
     === "Java"
 
         ```java
@@ -11071,31 +11359,6 @@ Once you know the event type, access the relevant data:
         }
         ```
 
-    === "Go"
-
-      ```go
-      import (
-          "fmt"
-          "google.golang.org/adk/session"
-          "google.golang.org/genai"
-      )
-
-      func handleFunctionCalls(event *session.Event) {
-          if event.LLMResponse == nil || event.LLMResponse.Content == nil {
-              return
-          }
-          calls := event.Content.FunctionCalls()
-          if len(calls) > 0 {
-              for _, call := range calls {
-                  toolName := call.Name
-                  arguments := call.Args
-                  fmt.Printf("  Tool: %s, Args: %v\n", toolName, arguments)
-                  // Application might dispatch execution based on this
-              }
-          }
-      }
-      ```
-
 *   **Function Response Details:**
 
     === "Python"
@@ -11107,22 +11370,6 @@ Once you know the event type, access the relevant data:
                 tool_name = response.name
                 result_dict = response.response # The dictionary returned by the tool
                 print(f"  Tool Result: {tool_name} -> {result_dict}")
-        ```
-    === "Java"
-
-        ```java
-        import com.google.genai.types.FunctionResponse;
-        import com.google.common.collect.ImmutableList;
-        import java.util.Map;
-
-        ImmutableList<FunctionResponse> responses = event.functionResponses(); // from Event.java
-        if (!responses.isEmpty()) {
-            for (FunctionResponse response : responses) {
-                String toolName = response.name().get();
-                Map<String, String> result= response.response().get(); // Check before getting the response
-                System.out.println("  Tool Result: " + toolName + " -> " + result);
-            }
-        }
         ```
 
     === "Go"
@@ -11149,6 +11396,23 @@ Once you know the event type, access the relevant data:
         }
         ```
 
+    === "Java"
+
+        ```java
+        import com.google.genai.types.FunctionResponse;
+        import com.google.common.collect.ImmutableList;
+        import java.util.Map;
+
+        ImmutableList<FunctionResponse> responses = event.functionResponses(); // from Event.java
+        if (!responses.isEmpty()) {
+            for (FunctionResponse response : responses) {
+                String toolName = response.name().get();
+                Map<String, String> result= response.response().get(); // Check before getting the response
+                System.out.println("  Tool Result: " + toolName + " -> " + result);
+            }
+        }
+        ```
+
 *   **Identifiers:**
     *   `event.id`: Unique ID for this specific event instance.
     *   `event.invocation_id`: ID for the entire user-request-to-final-response cycle this event belongs to. Useful for logging and tracing.
@@ -11166,21 +11430,6 @@ The `event.actions` object signals changes that occurred or should occur. Always
             print(f"  State changes: {event.actions.state_delta}")
             # Update local UI or application state if necessary
         ```
-    === "Java"
-        `ConcurrentMap<String, Object> delta = event.actions().stateDelta();`
-
-        ```java
-        import java.util.concurrent.ConcurrentMap;
-        import com.google.adk.events.EventActions;
-
-        EventActions actions = event.actions(); // Assuming event.actions() is not null
-        if (actions != null && actions.stateDelta() != null && !actions.stateDelta().isEmpty()) {
-            ConcurrentMap<String, Object> stateChanges = actions.stateDelta();
-            System.out.println("  State changes: " + stateChanges);
-            // Update local UI or application state if necessary
-        }
-        ```
-
     === "Go"
         `delta := event.Actions.StateDelta` (a `map[string]any`)
         ```go
@@ -11197,6 +11446,21 @@ The `event.actions` object signals changes that occurred or should occur. Always
         }
         ```
 
+    === "Java"
+        `ConcurrentMap<String, Object> delta = event.actions().stateDelta();`
+
+        ```java
+        import java.util.concurrent.ConcurrentMap;
+        import com.google.adk.events.EventActions;
+
+        EventActions actions = event.actions(); // Assuming event.actions() is not null
+        if (actions != null && actions.stateDelta() != null && !actions.stateDelta().isEmpty()) {
+            ConcurrentMap<String, Object> stateChanges = actions.stateDelta();
+            System.out.println("  State changes: " + stateChanges);
+            // Update local UI or application state if necessary
+        }
+        ```
+
 *   **Artifact Saves:** Gives you a collection indicating which artifacts were saved and their new version number (or relevant `Part` information).
 
     === "Python"
@@ -11205,22 +11469,6 @@ The `event.actions` object signals changes that occurred or should occur. Always
         if event.actions and event.actions.artifact_delta:
             print(f"  Artifacts saved: {event.actions.artifact_delta}")
             # UI might refresh an artifact list
-        ```
-    === "Java"
-        `ConcurrentMap<String, Part> artifactChanges = event.actions().artifactDelta();`
-
-        ```java
-        import java.util.concurrent.ConcurrentMap;
-        import com.google.genai.types.Part;
-        import com.google.adk.events.EventActions;
-
-        EventActions actions = event.actions(); // Assuming event.actions() is not null
-        if (actions != null && actions.artifactDelta() != null && !actions.artifactDelta().isEmpty()) {
-            ConcurrentMap<String, Part> artifactChanges = actions.artifactDelta();
-            System.out.println("  Artifacts saved: " + artifactChanges);
-            // UI might refresh an artifact list
-            // Iterate through artifactChanges.entrySet() to get filename and Part details
-        }
         ```
 
     === "Go"
@@ -11244,6 +11492,23 @@ The `event.actions` object signals changes that occurred or should occur. Always
         }
         ```
 
+    === "Java"
+        `ConcurrentMap<String, Part> artifactChanges = event.actions().artifactDelta();`
+
+        ```java
+        import java.util.concurrent.ConcurrentMap;
+        import com.google.genai.types.Part;
+        import com.google.adk.events.EventActions;
+
+        EventActions actions = event.actions(); // Assuming event.actions() is not null
+        if (actions != null && actions.artifactDelta() != null && !actions.artifactDelta().isEmpty()) {
+            ConcurrentMap<String, Part> artifactChanges = actions.artifactDelta();
+            System.out.println("  Artifacts saved: " + artifactChanges);
+            // UI might refresh an artifact list
+            // Iterate through artifactChanges.entrySet() to get filename and Part details
+        }
+        ```
+
 *   **Control Flow Signals:** Check boolean flags or string values:
 
     === "Python"
@@ -11259,6 +11524,30 @@ The `event.actions` object signals changes that occurred or should occur. Always
             if event.actions.skip_summarization:
                 print("  Signal: Skip summarization for tool result")
         ```
+
+    === "Go"
+        *   `event.Actions.TransferToAgent` (string): Control should pass to the named agent.
+        *   `event.Actions.Escalate` (bool): A loop should terminate.
+        *   `event.Actions.SkipSummarization` (bool): A tool result should not be summarized by the LLM.
+        ```go
+        import (
+            "fmt"
+            "google.golang.org/adk/session"
+        )
+
+        func handleControlFlow(event *session.Event) {
+            if event.Actions.TransferToAgent != "" {
+                fmt.Printf("  Signal: Transfer to %s\n", event.Actions.TransferToAgent)
+            }
+            if event.Actions.Escalate {
+                fmt.Println("  Signal: Escalate (terminate loop)")
+            }
+            if event.Actions.SkipSummarization {
+                fmt.Println("  Signal: Skip summarization for tool result")
+            }
+        }
+        ```
+
     === "Java"
         *   `event.actions().transferToAgent()` (returns `Optional<String>`): Control should pass to the named agent.
         *   `event.actions().escalate()` (returns `Optional<Boolean>`): A loop should terminate.
@@ -11283,28 +11572,6 @@ The `event.actions` object signals changes that occurred or should occur. Always
             Optional<Boolean> skipSummarization = actions.skipSummarization();
             if (skipSummarization.orElse(false)) { // or skipSummarization.isPresent() && skipSummarization.get()
                 System.out.println("  Signal: Skip summarization for tool result");
-            }
-        }
-        ```
-    === "Go"
-        *   `event.Actions.TransferToAgent` (string): Control should pass to the named agent.
-        *   `event.Actions.Escalate` (bool): A loop should terminate.
-        *   `event.Actions.SkipSummarization` (bool): A tool result should not be summarized by the LLM.
-        ```go
-        import (
-            "fmt"
-            "google.golang.org/adk/session"
-        )
-
-        func handleControlFlow(event *session.Event) {
-            if event.Actions.TransferToAgent != "" {
-                fmt.Printf("  Signal: Transfer to %s\n", event.Actions.TransferToAgent)
-            }
-            if event.Actions.Escalate {
-                fmt.Println("  Signal: Escalate (terminate loop)")
-            }
-            if event.Actions.SkipSummarization {
-                fmt.Println("  Signal: Skip summarization for tool result")
             }
         }
         ```
@@ -11351,52 +11618,6 @@ Use the built-in helper method `event.is_final_response()` to identify events su
         #         else:
         #              # Handle other types of final responses if applicable
         #              print("Display: Final non-textual response or signal.")
-        ```
-    === "Java"
-        ```java
-        // Pseudocode: Handling final responses in application (Java)
-        import com.google.adk.events.Event;
-        import com.google.genai.types.Content;
-        import com.google.genai.types.FunctionResponse;
-        import java.util.Map;
-
-        StringBuilder fullResponseText = new StringBuilder();
-        runner.run(...).forEach(event -> { // Assuming a stream of events
-             // Accumulate streaming text if needed...
-             if (event.partial().orElse(false) && event.content().isPresent()) {
-                 event.content().flatMap(Content::parts).ifPresent(parts -> {
-                     if (!parts.isEmpty() && parts.get(0).text().isPresent()) {
-                         fullResponseText.append(parts.get(0).text().get());
-                    }
-                 });
-             }
-
-             // Check if it's a final, displayable event
-             if (event.finalResponse()) { // Using the method from Event.java
-                 System.out.println("\n--- Final Output Detected ---");
-                 if (event.content().isPresent() &&
-                     event.content().flatMap(Content::parts).map(parts -> !parts.isEmpty() && parts.get(0).text().isPresent()).orElse(false)) {
-                     // If it's the final part of a stream, use accumulated text
-                     String eventText = event.content().get().parts().get().get(0).text().get();
-                     String finalText = fullResponseText.toString() + (event.partial().orElse(false) ? "" : eventText);
-                     System.out.println("Display to user: " + finalText.trim());
-                     fullResponseText.setLength(0); // Reset accumulator
-                 } else if (event.actions() != null && event.actions().skipSummarization().orElse(false)
-                            && !event.functionResponses().isEmpty()) {
-                     // Handle displaying the raw tool result if needed,
-                     // especially if finalResponse() was true due to other conditions
-                     // or if you want to display skipped summarization results regardless of finalResponse()
-                     Map<String, Object> responseData = event.functionResponses().get(0).response().get();
-                     System.out.println("Display raw tool result: " + responseData);
-                 } else if (event.longRunningToolIds().isPresent() && !event.longRunningToolIds().get().isEmpty()) {
-                     // This case is covered by event.finalResponse()
-                     System.out.println("Display message: Tool is running in background...");
-                 } else {
-                     // Handle other types of final responses if applicable
-                     System.out.println("Display: Final non-textual response or signal.");
-                 }
-             }
-         });
         ```
 
     === "Go"
@@ -11467,6 +11688,53 @@ Use the built-in helper method `event.is_final_response()` to identify events su
             // 	}
             // }
         }
+        ```
+
+    === "Java"
+        ```java
+        // Pseudocode: Handling final responses in application (Java)
+        import com.google.adk.events.Event;
+        import com.google.genai.types.Content;
+        import com.google.genai.types.FunctionResponse;
+        import java.util.Map;
+
+        StringBuilder fullResponseText = new StringBuilder();
+        runner.run(...).forEach(event -> { // Assuming a stream of events
+             // Accumulate streaming text if needed...
+             if (event.partial().orElse(false) && event.content().isPresent()) {
+                 event.content().flatMap(Content::parts).ifPresent(parts -> {
+                     if (!parts.isEmpty() && parts.get(0).text().isPresent()) {
+                         fullResponseText.append(parts.get(0).text().get());
+                    }
+                 });
+             }
+
+             // Check if it's a final, displayable event
+             if (event.finalResponse()) { // Using the method from Event.java
+                 System.out.println("\n--- Final Output Detected ---");
+                 if (event.content().isPresent() &&
+                     event.content().flatMap(Content::parts).map(parts -> !parts.isEmpty() && parts.get(0).text().isPresent()).orElse(false)) {
+                     // If it's the final part of a stream, use accumulated text
+                     String eventText = event.content().get().parts().get().get(0).text().get();
+                     String finalText = fullResponseText.toString() + (event.partial().orElse(false) ? "" : eventText);
+                     System.out.println("Display to user: " + finalText.trim());
+                     fullResponseText.setLength(0); // Reset accumulator
+                 } else if (event.actions() != null && event.actions().skipSummarization().orElse(false)
+                            && !event.functionResponses().isEmpty()) {
+                     // Handle displaying the raw tool result if needed,
+                     // especially if finalResponse() was true due to other conditions
+                     // or if you want to display skipped summarization results regardless of finalResponse()
+                     Map<String, Object> responseData = event.functionResponses().get(0).response().get();
+                     System.out.println("Display raw tool result: " + responseData);
+                 } else if (event.longRunningToolIds().isPresent() && !event.longRunningToolIds().get().isEmpty()) {
+                     // This case is covered by event.finalResponse()
+                     System.out.println("Display message: Tool is running in background...");
+                 } else {
+                     // Handle other types of final responses if applicable
+                     System.out.println("Display: Final non-textual response or signal.");
+                 }
+             }
+         });
         ```
 
 By carefully examining these aspects of an event, you can build robust applications that react appropriately to the rich information flowing through the ADK system.
@@ -11627,11 +11895,12 @@ To use events effectively in your ADK applications:
 
     === "Python"
         Use `yield Event(author=self.name, ...)` in `BaseAgent` subclasses.
-    === "Java"
-        When constructing an `Event` in your custom agent logic, set the author, for example: `Event.builder().author(this.getAgentName()) // ... .build();`
 
     === "Go"
         In custom agent `Run` methods, the framework typically handles authorship. If creating an event manually, set the author: `yield(&session.Event{Author: a.name, ...}, nil)`
+
+    === "Java"
+        When constructing an `Event` in your custom agent logic, set the author, for example: `Event.builder().author(this.getAgentName()) // ... .build();`
 
 *   **Semantic Content & Actions:** Use `event.content` for the core message/data (text, function call/response). Use `event.actions` specifically for signaling side effects (state/artifact deltas) or control flow (`transfer`, `escalate`, `skip_summarization`).
 *   **Idempotency Awareness:** Understand that the `SessionService` is responsible for applying the state/artifact changes signaled in `event.actions`. While ADK services aim for consistency, consider potential downstream effects if your application logic re-processes events.
@@ -12674,7 +12943,7 @@ your project to set environment variables:
 
 === "Windows"
 
-    ```console title="Update: my_agent/.env"
+    ```console title="Update: my_agent/env.bat"
     echo 'set GOOGLE_API_KEY="YOUR_API_KEY"' > env.bat
     ```
 
@@ -12766,39 +13035,61 @@ File: docs/get-started/installation.md
 === "Python"
 
     ## Create & activate virtual environment
-    
+
     We recommend creating a virtual Python environment using
     [venv](https://docs.python.org/3/library/venv.html):
-    
+
     ```shell
     python -m venv .venv
     ```
-    
+
     Now, you can activate the virtual environment using the appropriate command for
     your operating system and environment:
-    
+
     ```
     # Mac / Linux
     source .venv/bin/activate
-    
+
     # Windows CMD:
     .venv\Scripts\activate.bat
-    
+
     # Windows PowerShell:
     .venv\Scripts\Activate.ps1
     ```
 
     ### Install ADK
-    
+
     ```bash
     pip install google-adk
     ```
-    
+
     (Optional) Verify your installation:
-    
+
     ```bash
     pip show google-adk
     ```
+
+=== "Go"
+
+    ## Create a new Go module
+
+    If you are starting a new project, you can create a new Go module:
+
+    ```shell
+    go mod init example.com/my-agent
+    ```
+
+    ## Install ADK
+
+    To add the ADK to your project, run the following command:
+
+    ```shell
+    go get google.golang.org/adk
+    ```
+
+    This will add the ADK as a dependency to your `go.mod` file.
+
+    (Optional) Verify your installation by checking your `go.mod` file for the `google.golang.org/adk` entry.
 
 === "Java"
 
@@ -12806,7 +13097,7 @@ File: docs/get-started/installation.md
 
     `google-adk` is the core Java ADK library. Java ADK also comes with a pluggable example SpringBoot server to run your agents seamlessly. This optional
     package is present as part of `google-adk-dev`.
-    
+
     If you are using maven, add the following to your `pom.xml`:
 
     ```xml title="pom.xml"
@@ -14372,7 +14663,7 @@ File: docs/mcp/index.md
 # Model Context Protocol (MCP)
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span><span class="lst-go">Go</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 The
@@ -15032,6 +15323,200 @@ If you click on one of the traces, you will see the waterfall view of the detail
 ## Resources
 
 - [Google Cloud Trace Documentation](https://cloud.google.com/trace)
+
+================
+File: docs/observability/freeplay.md
+================
+# Agent Observability and Evaluation with Freeplay
+
+[Freeplay](https://freeplay.ai/) provides an end-to-end workflow for building
+and optimizing AI agents, and it can be integrated with ADK. With Freeplay your
+whole team can easily collaborate to iterate on agent instructions (prompts),
+experiment with and compare different models and agent changes, run evals both
+offline and online to measure quality, monitor production, and review data by
+hand.
+
+Key benefits of Freeplay:
+
+* **Simple observability** - focused on agents, LLM calls and tool calls for easy human review
+* **Online evals/automated scorers** - for error detection in production
+* **Offline evals and experiment comparison** - to test changes before deploying
+* **Prompt management** - supports pushing changes straight from the Freeplay playground to code
+* **Human review workflow** - for collaboration on error analysis and data annotation
+* **Powerful UI** - makes it possible for domain experts to collaborate closely with engineers
+
+Freeplay and ADK complement one another. ADK gives you a powerful and expressive
+agent orchestration framework while Freeplay plugs in for observability, prompt
+management, evaluation and testing. Once you integrate with Freeplay, you can
+update prompts and evals from the Freeplay UI or from code, so that anyone on
+your team can contribute.
+
+[Click here](https://www.loom.com/share/82f41ffde94949beb941cb191f53c3ec?sid=997aff3c-daa3-40ab-93a9-fdaf87ea2ea1) to see a demo.
+
+## Getting Started
+
+Below is a guide for getting started with Freeplay and ADK. You can also find a
+full sample ADK agent repo
+[here](https://github.com/228Labs/freeplay-google-demo).
+
+### Create a Freeplay Account
+
+Sign up for a free [Freeplay account](https://freeplay.ai/signup).
+
+After creating an account, you can define the following environment variables:
+
+```
+FREEPLAY_PROJECT_ID=
+FREEPLAY_API_KEY=
+FREEPLAY_API_URL=
+```
+
+### Use Freeplay ADK Library
+
+Install the Freeplay ADK library:
+
+```
+pip install freeplay-python-adk
+```
+
+Freeplay will automatically capture OTel logs from your ADK application when
+you initialize observability:
+
+```python
+from freeplay_python_adk.client import FreeplayADK
+FreeplayADK.initialize_observability()
+```
+
+You'll also want to pass in the Freeplay plugin to your App:
+
+```python
+from app.agent import root_agent
+from freeplay_python_adk.freeplay_observability_plugin import FreeplayObservabilityPlugin
+from google.adk.runners import App
+
+app = App(
+    name="app",
+    root_agent=root_agent,
+    plugins=[FreeplayObservabilityPlugin()],
+)
+
+__all__ = ["app"]
+```
+
+You can now use ADK as you normally would, and you will see logs flowing to
+Freeplay in the Observability section.
+
+## Observability
+
+Freeplay's Observability feature gives you a clear view into how your agent is
+behaving in production. You can dig into to individual agent traces to
+understand each step and diagnose issues:
+
+![Trace detail](https://228labs.com/freeplay-google-demo/images/trace_detail.png)
+
+You can also use Freeplay's filtering functionality to search and filter the
+data across any segment of interest:
+
+![Filter](https://228labs.com/freeplay-google-demo/images/filter.png)
+
+## Prompt Management (optional)
+
+Freeplay offers
+[native prompt management](https://docs.freeplay.ai/docs/managing-prompts),
+which simplifies the process of version and testing different prompt versions.
+It allows you to experiment with changes to ADK agent instructions in the
+Freeplay UI, test different models, and push updates straight to your code,
+similar to a feature flag.
+
+To leverage Freeplay's prompt management capabilities alongside ADK, you'll want
+to use the Freeplay ADK agent wrapper. `FreeplayLLMAgent` extends ADK's base
+`LlmAgent` class, so instead of having to hard code your prompts as agent
+instructions, you can version prompts in the Freeplay application.
+
+First define a prompt in Freeplay by going to Prompts -> Create prompt template:
+
+![Prompt](https://228labs.com/freeplay-google-demo/images/prompt.png)
+
+When creating your prompt template you'll need to add 3 elements, as described
+in the following sections:
+
+### System Message
+
+This corresponds to the "instructions" section in your code.
+
+### Agent Context Variable
+
+Adding the following to the bottom of your system message will create a variable
+for the ongoing agent context to be passed through:
+
+```python
+{{agent_context}}
+```
+
+### History Block
+
+Click new message and change the role to 'history'. This will ensure the past
+messages are passed through when present.
+
+![Prompt Editor](https://228labs.com/freeplay-google-demo/images/prompt_editor.png)
+
+Now in your code you can use the ```FreeplayLLMAgent```:
+
+```python
+from freeplay_python_adk.client import FreeplayADK
+from freeplay_python_adk.freeplay_llm_agent import (
+    FreeplayLLMAgent,
+)
+
+FreeplayADK.initialize_observability()
+
+root_agent = FreeplayLLMAgent(
+    name="social_product_researcher",
+    tools=[tavily_search],
+)
+```
+
+When the ```social_product_researcher``` is invoked, the prompt will be
+retrieved from Freeplay and formatted with the proper input variables.
+
+## Evaluation
+
+Freeplay enables you to define, version, and run
+[evaluations](https://docs.freeplay.ai/docs/evaluations) from the Freeplay web
+application. You can define evaluations for any of your prompts or agents by
+going to Evaluations -> "New evaluation".
+
+![Creating a new evaluation in Freeplay](https://228labs.com/freeplay-google-demo/images/eval_create.png)
+
+These evaluations can be configured to run for both online monitoring and
+offline evaluation. Datasets for offline evaluation can be uploaded to Freeplay
+or saved from log examples.
+
+## Dataset Management
+
+As you get data flowing into Freeplay, you can use these logs to start building
+up [datasets](https://docs.freeplay.ai/docs/datasets) to test against on a
+repeated basis. Use production logs to create golden datasets or collections of
+failure cases that you can use to test against as you make changes.
+
+![Save test case](https://228labs.com/freeplay-google-demo/images/save_test_case.png)
+
+## Batch Testing
+
+As you iterate on your agent, you can run batch tests (i.e., offline
+experiments) at both the
+[prompt](https://docs.freeplay.ai/docs/component-level-test-runs) and
+[end-to-end](https://docs.freeplay.ai/docs/end-to-end-test-runs) agent level.
+This allows you to compare multiple different models or prompt changes and
+quantify changes head to head across your full agent execution.
+
+[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py)
+is a code example for executing a batch test on Freeplay with ADK.
+[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py) is a code example for executing a batch test on Freeplay with the Google ADK. 
+
+## Sign up now
+
+Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/228Labs/freeplay-google-demo).
 
 ================
 File: docs/observability/logging.md
@@ -16581,8 +17066,8 @@ File: docs/runtime/index.md
 # Runtime
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span>
-</div><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
 
 The ADK Runtime is the underlying engine that powers your agent application during user interactions. It's the system that takes your defined agents, tools, and callbacks and orchestrates their execution in response to user input, managing the flow of information, state changes, and interactions with external services like LLMs or storage.
 
@@ -18314,41 +18799,42 @@ Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative
 `Session` objects are children of an `AgentEngine`. When using Vertex AI Express Mode, we can create an empty `AgentEngine` parent to manage all of our `Session` and `Memory` objects.
 First, ensure that your environment variables are set correctly. For example, in Python:
 
-```env title="weather_agent/.env"
+```env title="agent/.env"
 GOOGLE_GENAI_USE_VERTEXAI=TRUE
 GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
 ```
 
-Next, we can create our Agent Engine instance. You can use the Gen AI SDK.
+Next, we can create our Agent Engine instance. You can use the Vertex AI SDK.
 
-=== "Gen AI SDK"
+=== "Vertex AI SDK"
 
-    1. Import Gen AI SDK.
+    1. Import Vertex AI SDK.
 
         ```py
-        from google import genai
+        import vertexai
+        from vertexai import agent_engines
         ```
 
-    2. Set Vertex AI to be True, then use a `POST` request to create the Agent Engine
+    2. Initialize the Vertex AI Client with your API key and create an agent engine instance.
         
         ```py
         # Create Agent Engine with Gen AI SDK
-        client = genai.Client(vertexai=True)._api_client
-
-        response = client.request(
-            http_method='POST',
-            path=f'reasoningEngines',
-            request_dict={"displayName": "YOUR_AGENT_ENGINE_DISPLAY_NAME", "description": "YOUR_AGENT_ENGINE_DESCRIPTION"},
+        client = vertexai.Client(
+          api_key="YOUR_API_KEY",
         )
-        response
+
+        agent_engine = client.agent_engines.create(
+          config={
+            "display_name": "Demo Agent Engine",
+            "description": "Agent Engine for Session and Memory",
+          })
         ```
 
     3. Replace `YOUR_AGENT_ENGINE_DISPLAY_NAME` and `YOUR_AGENT_ENGINE_DESCRIPTION` with your use case.
-    4. Get the Agent Engine name and ID from the response
+    4. Get the Agent Engine name and ID from the response to use with Memories and Sessions.
 
         ```py
-        APP_NAME = "/".join(response['name'].split("/")[:6])
-        APP_ID = APP_NAME.split('/')[-1]
+        APP_ID = agent_engine.api_resource.name.split('/')[-1]
         ```
 
 ## Managing Sessions with a `VertexAiSessionService`
@@ -18369,15 +18855,15 @@ APP_ID = "your-reasoning-engine-id"
 # Project and location are not required when initializing with Vertex Express Mode
 session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
-# session = await session_service.create_session(app_name=REASONING_ENGINE_APP_ID, user_id= ...)
+# session = await session_service.create_session(app_name=APP_ID, user_id= ...)
 ```
 
 !!! info Session Service Quotas
 
     For Free Express Mode Projects, `VertexAiSessionService` has the following quota:
 
-    - 100 Session Entities
-    - 10,000 Event Entities
+    - 10 Create, delete, or update Vertex AI Agent Engine sessions per minute
+    - 30 Append event to Vertex AI Agent Engine sessions per minute
 
 ## Managing Memories with a `VertexAiMemoryBankService`
 
@@ -18389,7 +18875,7 @@ instead initialize the memory object without any project or location.
 # Plus environment variable setup:
 # GOOGLE_GENAI_USE_VERTEXAI=TRUE
 # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-from google.adk.sessions import VertexAiMemoryBankService
+from google.adk.memory import VertexAiMemoryBankService
 
 # The app_name used with this service should be the Reasoning Engine ID or name
 APP_ID = "your-reasoning-engine-id"
@@ -18404,7 +18890,8 @@ memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
 
     For Free Express Mode Projects, `VertexAiMemoryBankService` has the following quota:
 
-    - 200 Memory Entities
+    - 10 Create, delete, or update Vertex AI Agent Engine memory resources per minute
+    - 10 Get, list, or retrieve from Vertex AI Agent Engine Memory Bank per minute
 
 ## Code Sample: Weather Agent with Session and Memory using Vertex AI Express Mode
 
@@ -18418,7 +18905,7 @@ File: docs/sessions/index.md
 # Introduction to Conversational Context: Session, State, and Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span><span class="lst-go">Go</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 Meaningful, multi-turn conversations require agents to understand context. Just
@@ -18509,7 +18996,7 @@ File: docs/sessions/memory.md
 # Memory: Long-Term Knowledge with `MemoryService`
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-go">Go v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
@@ -18846,7 +19333,7 @@ File: docs/sessions/session.md
 # Session: Tracking Individual Conversations
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Following our Introduction, let's dive into the `Session`. Think back to the
@@ -18908,6 +19395,12 @@ are its key properties:
         print("The final status of temp_service - ", temp_service)
        ```
 
+=== "Go"
+
+       ```go
+       --8<-- "examples/go/snippets/sessions/session_management_example/session_management_example.go:examine_session"
+       ```
+
 === "Java"
 
        ```java
@@ -18937,12 +19430,6 @@ are its key properties:
 
         // Clean up (optional for this example)
         var unused = exampleSessionService.deleteSession(appName, userId, sessionId);
-       ```
-
-=== "Go"
-
-       ```go
-       --8<-- "examples/go/snippets/sessions/session_management_example/session_management_example.go:examine_session"
        ```
 
 *(**Note:** The state shown above is only the initial state. State updates
@@ -18989,19 +19476,19 @@ the storage backend that best suits your needs:
             from google.adk.sessions import InMemorySessionService
             session_service = InMemorySessionService()
            ```
-    === "Java"
-
-           ```java
-            import com.google.adk.sessions.InMemorySessionService;
-            InMemorySessionService exampleSessionService = new InMemorySessionService();
-           ```
-
     === "Go"
 
            ```go
             import "google.golang.org/adk/session"
 
             inMemoryService := session.InMemoryService()
+           ```
+
+    === "Java"
+
+           ```java
+            import com.google.adk.sessions.InMemorySessionService;
+            InMemorySessionService exampleSessionService = new InMemorySessionService();
            ```
 
 2.  **`VertexAiSessionService`**
@@ -19037,6 +19524,26 @@ the storage backend that best suits your needs:
            # session_service = await session_service.create_session(app_name=REASONING_ENGINE_APP_NAME, ...)
            ```
 
+    === "Go"
+
+          ```go
+          import "google.golang.org/adk/session"
+
+          // 2. VertexAIService
+          // Before running, ensure your environment is authenticated:
+          // gcloud auth application-default login
+          // export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+          // export GOOGLE_CLOUD_LOCATION="your-gcp-location"
+
+          modelName := "gemini-1.5-flash-001" // Replace with your desired model
+          vertexService, err := session.VertexAIService(ctx, modelName)
+          if err != nil {
+            log.Printf("Could not initialize VertexAIService (this is expected if the gcloud project is not set): %v", err)
+          } else {
+            fmt.Println("Successfully initialized VertexAIService.")
+          }
+          ```
+
     === "Java"
 
            ```java
@@ -19060,26 +19567,6 @@ the storage backend that best suits your needs:
                    .createSession(reasoningEngineAppName, userId, initialState, Optional.of(sessionId))
                    .blockingGet();
            ```
-
-    === "Go"
-
-          ```go
-          import "google.golang.org/adk/session"
-
-          // 2. VertexAIService
-          // Before running, ensure your environment is authenticated:
-          // gcloud auth application-default login
-          // export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
-          // export GOOGLE_CLOUD_LOCATION="your-gcp-location"
-
-          modelName := "gemini-1.5-flash-001" // Replace with your desired model
-          vertexService, err := session.VertexAIService(ctx, modelName)
-          if err != nil {
-            log.Printf("Could not initialize VertexAIService (this is expected if the gcloud project is not set): %v", err)
-          } else {
-            fmt.Println("Successfully initialized VertexAIService.")
-          }
-          ```
 
 3.  **`DatabaseSessionService`**
 
@@ -19144,7 +19631,7 @@ File: docs/sessions/state.md
 # State: The Session's Scratchpad
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Within each `Session` (our conversation thread), the **`state`** attribute acts like the agent's dedicated scratchpad for that specific interaction. While `session.events` holds the full history, `session.state` is where the agent stores and updates dynamic details needed *during* the conversation.
@@ -19179,7 +19666,7 @@ Conceptually, `session.state` is a collection (dictionary or Map) holding key-va
       * `DatabaseSessionService` / `VertexAiSessionService`: **Persistent.** State is saved reliably.
 
 !!! Note
-    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `session.state['current_intent'] = 'book_flight'` in Python, `session.state().put("current_intent", "book_flight)` in Java, `context.State().Set("current_intent", "book_flight")` in Go). Refer to the language-specific API documentation for details.
+    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `session.state['current_intent'] = 'book_flight'` in Python,`context.State().Set("current_intent", "book_flight")` in Go, `session.state().put("current_intent", "book_flight)` in Java). Refer to the language-specific API documentation for details.
 
 ### Organizing State with Prefixes: Scope Matters
 
@@ -19231,25 +19718,25 @@ To inject a value from the session state, enclose the key of the desired state v
 
 === "Python"
 
-  ```python
-  from google.adk.agents import LlmAgent
+    ```python
+    from google.adk.agents import LlmAgent
 
-  story_generator = LlmAgent(
-      name="StoryGenerator",
-      model="gemini-2.0-flash",
-      instruction="""Write a short story about a cat, focusing on the theme: {topic}."""
-  )
+    story_generator = LlmAgent(
+        name="StoryGenerator",
+        model="gemini-2.0-flash",
+        instruction="""Write a short story about a cat, focusing on the theme: {topic}."""
+    )
 
-  # Assuming session.state['topic'] is set to "friendship", the LLM
-  # will receive the following instruction:
-  # "Write a short story about a cat, focusing on the theme: friendship."
-  ```
+    # Assuming session.state['topic'] is set to "friendship", the LLM
+    # will receive the following instruction:
+    # "Write a short story about a cat, focusing on the theme: friendship."
+    ```
 
 === "Go"
 
-  ```go
-  --8<-- "examples/go/snippets/sessions/instruction_template/instruction_template_example.go:key_template"
-  ```
+    ```go
+    --8<-- "examples/go/snippets/sessions/instruction_template/instruction_template_example.go:key_template"
+    ```
 
 #### Important Considerations
 
@@ -19455,18 +19942,17 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
     # Note: 'temp:validation_needed' is NOT present.
     ```
 
-=== "Java"
-
-    ```java
-    --8<-- "examples/java/snippets/src/main/java/state/ManualStateUpdateExample.java:full_code"
-    ```
-
 === "Go"
 
     ```go
     --8<-- "examples/go/snippets/sessions/state_example/state_example.go:manual"
     ```
 
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/state/ManualStateUpdateExample.java:full_code"
+    ```
 
 **3. Via `CallbackContext` or `ToolContext` (Recommended for Callbacks and Tools)**
 
@@ -19501,6 +19987,12 @@ For more comprehensive details on context objects, refer to the [Context documen
         # ... rest of callback/tool logic ...
     ```
 
+=== "Go"
+
+    ```go
+    --8<-- "examples/go/snippets/sessions/state_example/state_example.go:context"
+    ```
+
 === "Java"
 
     ```java
@@ -19521,12 +20013,6 @@ For more comprehensive details on context objects, refer to the [Context documen
             // ... rest of callback logic ...
         }
     }
-    ```
-
-=== "Go"
-
-    ```go
-    --8<-- "examples/go/snippets/sessions/state_example/state_example.go:context"
     ```
 
 **What `append_event` Does:**
@@ -30433,6 +30919,7 @@ Repository | Description | Detailed Guide
 --- | --- | ---
 [`google/adk-python`](https://github.com/google/adk-python) | Contains the core Python library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-python/blob/main/CONTRIBUTING.md)
 [`google/adk-python-community`](https://github.com/google/adk-python-community) | Contains community-contributed tools, integrations, and scripts | [`CONTRIBUTING.md`](https://github.com/google/adk-python-community/blob/main/CONTRIBUTING.md)
+[`google/adk-go`](https://github.com/google/adk-go) | Contains the core Go library source code | 
 [`google/adk-java`](https://github.com/google/adk-java) | Contains the core Java library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-java/blob/main/CONTRIBUTING.md)
 [`google/adk-docs`](https://github.com/google/adk-docs) | Contains the source for the documentation site you are currently reading | [`CONTRIBUTING.md`](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md)
 [`google/adk-web`](https://github.com/google/adk-web) | Contains the source for the `adk web` dev UI |
@@ -30572,13 +31059,13 @@ from simple tasks to complex workflows.
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>0.2.0</version>
+        <version>0.3.0</version>
     </dependency>
     ```
 
     ```gradle title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:0.2.0'
+        implementation 'com.google.adk:google-adk:0.3.0'
     }
     ```
 
