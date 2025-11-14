@@ -5619,7 +5619,7 @@ The artifact interaction methods are available directly on instances of `Callbac
 
         async def save_generated_report_py(context: CallbackContext, report_bytes: bytes):
             """Saves generated PDF report bytes as an artifact."""
-            report_artifact = types.Part.from_data(
+            report_artifact = types.Part.from_bytes(
                 data=report_bytes,
                 mime_type="application/pdf"
             )
@@ -9953,15 +9953,16 @@ Criterion                                | Description                          
 ## tool_trajectory_avg_score
 
 This criterion compares the sequence of tools called by the agent against a list
-of expected calls and computes an average score based on exact match.
+of expected calls and computes an average score based on one of the match types:
+`EXACT`, `IN_ORDER`, or `ANY_ORDER`.
 
-### When To Use This Criterion?
+#### When To Use This Criterion?
 
-This criterion is ideal for scenarios where the correctness of an agent's
-behavior is strictly dependent on following a precise sequence of tool calls
-with exact arguments. Use it when you need to enforce a specific tool execution
-path and consider any deviation—whether in tool name, arguments, or order—as a
-failure. It is particularly valuable for:
+This criterion is ideal for scenarios where agent correctness depends on tool
+calls. Depending on how strictly tool calls need to be followed, you can choose
+from one of three match types: `EXACT`, `IN_ORDER`, and `ANY_ORDER`.
+
+This metric is particularly valuable for:
 
 *   **Regression testing:** Ensuring that agent updates do not unintentionally
     alter tool call behavior for established test cases.
@@ -9971,25 +9972,50 @@ failure. It is particularly valuable for:
     parameters or call order can lead to significantly different or incorrect
     outcomes.
 
-### Details
+Use `EXACT` match when you need to enforce a specific tool execution path and
+consider any deviation—whether in tool name, arguments, or order—as a failure.
 
-For each invocation that is being evaluated, this criterion compares the list
-and order of tool calls produced by the agent against the list of expected tool
-calls. The comparison is done by performing an exact match on the tool name and
-tool arguments for each tool call in the list. If all tool calls in an
-invocation match exactly in content and order, a score of 1.0 is awarded for
-that invocation, otherwise the score is 0.0. The final value is the average of
-these scores across all invocations in the eval case.
+Use `IN_ORDER` match when you want to ensure certain key tool calls occur in a
+specific order, but allow for other tool calls to happen in between. This option is
+useful in assuring if certain key actions or tool calls occur and in certain order,
+leaving some scope for other tools calls to happen as well.
 
-### How To Use This Criterion?
+Use `ANY_ORDER` match when you want to ensure certain key tool calls occur, but
+do not care about their order, and allow for other tool calls to happen in
+between. This criteria is helpful for cases where multiple tool calls about the
+same concept occur, like your agent issues 5 search queries. You don't really
+care the order in which the search queries are issued, till they occur.
 
-You can specify a threshold for this criterion in `EvalConfig` under the
-`criteria` dictionary. The value should be a float between 0.0 and 1.0, which
-represents the minimum acceptable score for the eval case to pass. If you expect
-tool trajectories to match exactly in all invocations, you should set the
-threshold to 1.0.
+#### Details
 
-Example `EvalConfig` entry:
+For each invocation that is being evaluated, this criterion compares the list of
+tool calls produced by the agent against the list of expected tool calls using
+one of three match types. If the tool calls match based on the selected match
+type, a score of 1.0 is awarded for that invocation, otherwise the score is 0.0.
+The final value is the average of these scores across all invocations in the
+eval case.
+
+The comparison can be done using one of following match types:
+
+*   **`EXACT`**: Requires a perfect match between the actual and expected tool
+    calls, with no extra or missing tool calls.
+*   **`IN_ORDER`**: Requires all tool calls from the expected list to be present
+    in the actual list, in the same order, but allows for other tool calls to
+    appear in between.
+*   **`ANY_ORDER`**: Requires all tool calls from the expected list to be
+    present in the actual list, in any order, and allows for other tool calls to
+    appear in between.
+
+#### How To Use This Criterion?
+
+By default, `tool_trajectory_avg_score` uses `EXACT` match type. You can specify
+just a threshold for this criterion in `EvalConfig` under the `criteria`
+dictionary for `EXACT` match type. The value should be a float between 0.0 and
+1.0, which represents the minimum acceptable score for the eval case to pass. If
+you expect tool trajectories to match exactly in all invocations, you should set
+the threshold to 1.0.
+
+Example `EvalConfig` entry for `EXACT` match:
 
 ```json
 {
@@ -9999,7 +10025,50 @@ Example `EvalConfig` entry:
 }
 ```
 
-### Output And How To Interpret
+Or you could specify the `match_type` explicitly:
+
+```json
+{
+  "criteria": {
+    "tool_trajectory_avg_score": {
+      "threshold": 1.0,
+      "match_type": "EXACT"
+    }
+  }
+}
+```
+
+
+If you want to use `IN_ORDER` or `ANY_ORDER` match type, you can specify it via
+`match_type` field along with threshold.
+
+Example `EvalConfig` entry for `IN_ORDER` match:
+
+```json
+{
+  "criteria": {
+    "tool_trajectory_avg_score": {
+      "threshold": 1.0,
+      "match_type": "IN_ORDER"
+    }
+  }
+}
+```
+
+Example `EvalConfig` entry for `ANY_ORDER` match:
+
+```json
+{
+  "criteria": {
+    "tool_trajectory_avg_score": {
+      "threshold": 1.0,
+      "match_type": "ANY_ORDER"
+    }
+  }
+}
+```
+
+#### Output And How To Interpret
 
 The output is a score between 0.0 and 1.0, where 1.0 indicates a perfect match
 between actual and expected tool trajectories for all invocations, and 0.0
@@ -10403,16 +10472,7 @@ expected_steps = ["determine_intent", "use_tool", "review_results", "report_gene
 actual_steps = ["determine_intent", "use_tool", "review_results", "report_generation"]
 ```
 
-Several ground-truth-based trajectory evaluations exist:
-
-1. **Exact match:** Requires a perfect match to the ideal trajectory.  
-2. **In-order match:** Requires the correct actions in the correct order, allows for extra actions.  
-3. **Any-order match:** Requires the correct actions in any order, allows for extra actions.  
-4. **Precision:** Measures the relevance/correctness of predicted actions.  
-5. **Recall:** Measures how many essential actions are captured in the prediction.  
-6. **Single-tool use:** Checks for the inclusion of a specific action.
-
-Choosing the right evaluation metric depends on the specific requirements and goals of your agent. For instance, in high-stakes scenarios, an exact match might be crucial, while in more flexible situations, an in-order or any-order match might suffice.
+ADK provides both groundtruth based and rubric based tool use evaluation metrics. To select the appropriate metric for your agent's specific requirements and goals, please refer to our [recommendations](#recommendations-on-criteria).
 
 ## How Evaluation works with the ADK
 
@@ -12867,52 +12927,51 @@ following code to the `my_agent/agent.go` file in your project directory:
 package main
 
 import (
-  "context"
-  "log"
-  "os"
+	"context"
+	"log"
+	"os"
 
-  "google.golang.org/adk/agent/llmagent"
-  "google.golang.org/adk/cmd/launcher/adk"
-  "google.golang.org/adk/cmd/launcher/full"
-  "google.golang.org/adk/model/gemini"
-  "google.golang.org/adk/server/restapi/services"
-  "google.golang.org/adk/tool"
-  "google.golang.org/adk/tool/geminitool"
-  "google.golang.org/genai"
+	"google.golang.org/adk/agent/llmagent"
+	"google.golang.org/adk/cmd/launcher"
+	"google.golang.org/adk/cmd/launcher/full"
+	"google.golang.org/adk/model/gemini"
+	"google.golang.org/adk/server/restapi/services"
+	"google.golang.org/adk/tool"
+	"google.golang.org/adk/tool/geminitool"
+	"google.golang.org/genai"
 )
 
 func main() {
-  ctx := context.Background()
+	ctx := context.Background()
 
-  model, err := gemini.NewModel(ctx, "gemini-2.5-flash", &genai.ClientConfig{
-    APIKey: os.Getenv("GOOGLE_API_KEY"),
-  })
-  if err != nil {
-    log.Fatalf("Failed to create model: %v", err)
-  }
+	model, err := gemini.NewModel(ctx, "gemini-2.5-flash", &genai.ClientConfig{
+		APIKey: os.Getenv("GOOGLE_API_KEY"),
+	})
+	if err != nil {
+		log.Fatalf("Failed to create model: %v", err)
+	}
 
-  agent, err := llmagent.New(llmagent.Config{
-    Name:        "hello_time_agent",
-    Model:       model,
-    Description: "Tells the current time in a specified city.",
-    Instruction: "You are a helpful assistant that tells the current time in a city.",
-    Tools: []tool.Tool{
-      geminitool.GoogleSearch{},
-    },
-  })
-  if err != nil {
-    log.Fatalf("Failed to create agent: %v", err)
-  }
+	agent, err := llmagent.New(llmagent.Config{
+		Name:        "hello_time_agent",
+		Model:       model,
+		Description: "Tells the current time in a specified city.",
+		Instruction: "You are a helpful assistant that tells the current time in a city.",
+		Tools: []tool.Tool{
+			geminitool.GoogleSearch{},
+		},
+	})
+	if err != nil {
+		log.Fatalf("Failed to create agent: %v", err)
+	}
 
-  config := &adk.Config{
-    AgentLoader: services.NewSingleAgentLoader(agent),
-  }
+	config := &launcher.Config{
+		AgentLoader: services.NewSingleAgentLoader(agent),
+	}
 
-  l := full.NewLauncher()
-  err = l.Execute(ctx, config, os.Args[1:])
-  if err != nil {
-    log.Fatalf("run failed: %v\n\n%s", err, l.CommandLineSyntax())
-  }
+	l := full.NewLauncher()
+	if err = l.Execute(ctx, config, os.Args[1:]); err != nil {
+		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+	}
 }
 ```
 
@@ -15982,8 +16041,8 @@ Some typical applications of Plugins are as follows:
     prevent its execution if they do not have permission.
 -   **Monitoring and metrics**: Collect and export metrics on token usage,
     execution times, and invocation counts to monitoring systems such as
-    Prometheus or 
-    [Google Cloud Observability](https://cloud.google.com/stackdriver/docs) 
+    Prometheus or
+    [Google Cloud Observability](https://cloud.google.com/stackdriver/docs)
     (formerly Stackdriver).
 -   **Response caching**: Check if a request has been made before, so you
     can return a cached response, skipping expensive or time consuming AI model
@@ -15993,13 +16052,13 @@ Some typical applications of Plugins are as follows:
 
 !!! tip
     When implementing security guardrails and policies, use ADK Plugins for
-    better modularity and flexibility than Callbacks. For more details, see 
+    better modularity and flexibility than Callbacks. For more details, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
 !!! warning "Caution"
-    Plugins are not supported by the 
-    [ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui). 
-    If your ADK workflow uses Plugins, you must run your workflow without the 
+    Plugins are not supported by the
+    [ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui).
+    If your ADK workflow uses Plugins, you must run your workflow without the
     web interface.
 
 ## How do Plugins work?
@@ -16028,7 +16087,7 @@ immediately:
 
 *   [**Reflect and Retry Tools**](/adk-docs/plugins/reflect-and-retry/):
     Tracks tool failures and intelligently retries tool requests.
-*   [**BigQuery Logging**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/bigquery_logging_plugin.py):
+*   [**BigQuery Analytics**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/bigquery_agent_analytics_plugin.py):
     Enables agent logging and analysis with BigQuery.
 *   [**Context Filter**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/context_filter_plugin.py):
     Filters the generative AI context to reduce its size.
@@ -16502,7 +16561,7 @@ projects:
 
 -   For more ADK Plugin code examples, see the
     [ADK Python repository](https://github.com/google/adk-python/tree/main/src/google/adk/plugins).
--   For information on applying Plugins for security purposes, see 
+-   For information on applying Plugins for security purposes, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
 ================
@@ -23129,6 +23188,97 @@ To see what other features you can build into your UI with AG-UI, refer to the C
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
+File: docs/tools/third-party/agentql.md
+================
+# AgentQL
+
+The [AgentQL MCP Server](https://github.com/tinyfish-io/agentql-mcp) connects
+your ADK agent to [AgentQL](https://www.agentql.com/). AgentQL is a semantic
+extraction engine that queries web elements based on their meaning rather than
+their CSS or XPath selectors. This functionality allows agents to retrieve
+specific data points from web pages, PDFs, and authenticated sessions using
+natural language definitions.
+
+## Use cases
+
+- **Resilient Web Extraction**: Extract data from dynamic websites using natural
+  language descriptions. This feature allows your agent to reliably gather
+  information from sites that frequently update their layout or CSS without
+  breaking.
+
+- **Data Normalization**: Convert unstructured web pages into clean, predictable
+  JSON formats. This capability enables your agent to instantly normalize data
+  from different sources (like multiple job boards or shopping sites) into a
+  single schema.
+
+## Prerequisites
+
+- Create an [API Key](https://dev.agentql.com/sign-in) in AgentQL. Refer to the
+  [documentation](https://docs.agentql.com/quick-start) for more information.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from mcp import StdioServerParameters
+
+    AGENTQL_API_KEY = "YOUR_AGENTQL_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="agentql_agent",
+        instruction="Help users get information from AgentQL",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "agentql-mcp",
+                        ],
+                        env={
+                            "AGENTQL_API_KEY": AGENTQL_API_KEY,
+                        }
+                    ),
+                    timeout=300,
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool <img width="100px"/> | Description
+---- | -----------
+`extract-web-data` | Extract structured data from a given 'url', using 'prompt' as a description of actual data and its fields to extract
+
+## Best practices
+
+To ensure accurate extraction, follow these guidelines when prompting the agent:
+
+- **Describe the data, not the element**: Avoid visual descriptions (e.g., "the
+  blue button"). Instead, describe the data entity (e.g., "the submit button" or
+  "the product price").
+
+- **Define the hierarchy**: If extracting a list, explicitly instruct the agent
+  to look for a collection of items and define the fields required for each
+  item.
+
+- **Filter semantically**: You can instruct the tool to ignore specific data
+  types (e.g., "exclude ads and navigation links") within the prompt itself.
+
+## Additional resources
+
+- [AgentQL MCP Server Documentation](https://docs.exa.ai/reference/exa-mcp)
+- [AgentQL MCP Server Repository](https://github.com/tinyfish-io/agentql-mcp)
+
+================
 File: docs/tools/third-party/bright-data.md
 ================
 # Bright Data
@@ -23948,6 +24098,16 @@ hide:
 Check out the following third-party tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-agentql.png" alt="AgentQL">
+    </div>
+    <div class="tool-card-content">
+      <h3>AgentQL</h3>
+      <p>Extract resilient, structured web data using natural language</p>
+    </div>
+  </a>
 
   <a href="/adk-docs/tools/third-party/bright-data/" class="tool-card">
     <div class="tool-card-image-wrapper">
@@ -25418,6 +25578,16 @@ Check out the following pre-built tools that you can use with ADK agents:
 ### Third-party tools
 
 <div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-agentql.png" alt="AgentQL">
+    </div>
+    <div class="tool-card-content">
+      <h3>AgentQL</h3>
+      <p>Extract resilient, structured web data using natural language</p>
+    </div>
+  </a>
 
   <a href="/adk-docs/tools/third-party/bright-data/" class="tool-card">
     <div class="tool-card-image-wrapper">
