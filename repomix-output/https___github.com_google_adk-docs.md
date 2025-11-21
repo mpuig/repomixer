@@ -22928,13 +22928,8 @@ File: docs/tools/google-cloud/bigquery-agent-analytics.md
 # BigQuery Agent Analytics Plugin
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span><span class="lst-preview">Preview</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.19.0</span><span class="lst-preview">Preview</span>
 </div>
-
-!!! note "Availability"
-
-    To try this plugin, it is recommended to build ADK from the Top of the tree or wait for the official 
-    release of version 1.19. This note will be removed once version 1.19 is out.
 
 The BigQuery Agent Analytics Plugin significantly enhances the Agent Development Kit (ADK) by providing a robust solution for in-depth agent behavior analysis. Using the ADK Plugin architecture and the BigQuery Storage Write API, it captures and logs critical operational events directly into a Google BigQuery table, empowering you with advanced capabilities for debugging, real-time monitoring, and comprehensive offline performance evaluation.
 
@@ -32065,6 +32060,16 @@ Development Kit community.
 ## Courses & Deep Dives
 
 <div class="resource-grid">
+  <a href="https://www.kaggle.com/learn-guide/5-day-agents" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://storage.googleapis.com/kaggle-media/Images/AI%20AGENT%20COURSE%20ILLUSTRATION.png" alt="ADK Masterclass Thumbnail">
+    </div>
+    <div class="card-content">
+      <div class="type">Online Course</div>
+      <h3>5-Day AI Agents Intensive Course with Google</h3>
+      <p>Build with core ADK agent components including, models, tools, memory, evaluation, and deployment.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=P4VFL9nIaIA" class="resource-card">
     <div class="card-image-wrapper">
       <img src="../assets/community-adk-masterclass.jpg" alt="ADK Masterclass Thumbnail">
