@@ -1561,7 +1561,7 @@ limitations:
     -   `AgentTool`
     -   `LongRunningFunctionTool`
     -   `VertexAiSearchTool`
-    -   `MCPToolset`
+    -   `McpToolset`
     -   `ExampleTool`
 
 ## Next steps
@@ -8719,7 +8719,7 @@ To proceed, confirm that your agent code is configured as follows:
     1. Your application's entry point (the main package and main() function) is in a
        single Go file. Using main.go is a strong convention.
     2. Your agent instance is passed to a launcher configuration, typically using
-       services.NewSingleAgentLoader(agent). The adkgo tool uses this launcher to start
+       agent.NewSingleLoader(yourAgent). The adkgo tool uses this launcher to start
        your agent with the correct services.
     3. Your go.mod and go.sum files are present in your project directory to manage
        dependencies.
@@ -12945,6 +12945,7 @@ This guide shows you how to get up and running with Agent Development Kit
 for Go. Before you start, make sure you have the following installed:
 
 *   Go 1.24.4 or later
+*   ADK Go v0.2.0 or later
 
 ## Create an agent project
 
@@ -12988,11 +12989,11 @@ import (
 	"log"
 	"os"
 
+	"google.golang.org/adk/agent"
 	"google.golang.org/adk/agent/llmagent"
-	"google.golang.org/adk/cmd/launcher/adk"
+	"google.golang.org/adk/cmd/launcher"
 	"google.golang.org/adk/cmd/launcher/full"
 	"google.golang.org/adk/model/gemini"
-	"google.golang.org/adk/server/restapi/services"
 	"google.golang.org/adk/tool"
 	"google.golang.org/adk/tool/geminitool"
 	"google.golang.org/genai"
@@ -13008,7 +13009,7 @@ func main() {
 		log.Fatalf("Failed to create model: %v", err)
 	}
 
-	agent, err := llmagent.New(llmagent.Config{
+	timeAgent, err := llmagent.New(llmagent.Config{
 		Name:        "hello_time_agent",
 		Model:       model,
 		Description: "Tells the current time in a specified city.",
@@ -13021,8 +13022,8 @@ func main() {
 		log.Fatalf("Failed to create agent: %v", err)
 	}
 
-	config := &adk.Config{
-		AgentLoader: services.NewSingleAgentLoader(agent),
+	config := &launcher.Config{
+		AgentLoader: agent.NewSingleLoader(timeAgent),
 	}
 
 	l := full.NewLauncher()
@@ -13558,7 +13559,7 @@ File: docs/get-started/python.md
 This guide shows you how to get up and running with Agent Development Kit
 (ADK) for Python. Before you start, make sure you have the following installed:
 
-*   Python 3.9 or later
+*   Python 3.10 or later
 *   `pip` for installing packages
 
 ## Installation
@@ -13714,7 +13715,7 @@ setting up a basic agent with multiple tools, and running it locally either in t
 <!-- <img src="../../assets/quickstart.png" alt="Quickstart setup"> -->
 
 This quickstart assumes a local IDE (VS Code, PyCharm, IntelliJ IDEA, etc.)
-with Python 3.9+ or Java 17+ and terminal access. This method runs the
+with Python 3.10+ or Java 17+ and terminal access. This method runs the
 application entirely on your machine and is recommended for internal development.
 
 ## 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
@@ -14177,7 +14178,7 @@ As an additional resource, [Gemini Fullstack Agent Development Kit (ADK) Quickst
 
 ## Google Search Grounding Quickstart
 
-This quickstart guides you through creating an ADK agent with Google Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.9+ and terminal access.
+This quickstart guides you through creating an ADK agent with Google Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.10+ and terminal access.
 
 ### 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
@@ -14477,7 +14478,7 @@ In this guide, you'll discover:
 
 ## Vertex AI Search Grounding Quickstart
 
-This quickstart guides you through creating an ADK agent with Vertex AI Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.9+ and terminal access.
+This quickstart guides you through creating an ADK agent with Vertex AI Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.10+ and terminal access.
 
 ### 1. Prepare Vertex AI Search { #prepare-vertex-ai-search }
 
@@ -24033,8 +24034,8 @@ natural language definitions.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     AGENTQL_API_KEY = "YOUR_AGENTQL_API_KEY"
@@ -24044,7 +24045,7 @@ natural language definitions.
         name="agentql_agent",
         instruction="Help users get information from AgentQL",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24133,8 +24134,8 @@ pre-built data feeds from popular platforms.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     BRIGHTDATA_API_TOKEN = "YOUR_BRIGHTDATA_API_TOKEN"
@@ -24144,7 +24145,7 @@ pre-built data feeds from popular platforms.
         name="brightdata_agent",
         instruction="Help users access web data using Bright Data",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24167,8 +24168,8 @@ pre-built data feeds from popular platforms.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     BRIGHTDATA_API_TOKEN = "YOUR_BRIGHTDATA_API_TOKEN"
 
@@ -24177,7 +24178,7 @@ pre-built data feeds from popular platforms.
         name="brightdata_agent",
         instruction="""Help users access web data using Bright Data""",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url=f"https://mcp.brightdata.com/mcp?token={BRIGHTDATA_API_TOKEN}",
                 ),
@@ -24316,8 +24317,8 @@ context back to a vision-enabled model.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     BROWSERBASE_API_KEY = "YOUR_BROWSERBASE_API_KEY"
@@ -24329,7 +24330,7 @@ context back to a vision-enabled model.
         name="browserbase_agent",
         instruction="Help users get information from Browserbase",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24427,8 +24428,8 @@ reports using natural language.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     EXA_API_KEY = "YOUR_EXA_API_KEY"
@@ -24438,7 +24439,7 @@ reports using natural language.
         name="exa_agent",
         instruction="Help users get information from Exa",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24464,8 +24465,8 @@ reports using natural language.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     EXA_API_KEY = "YOUR_EXA_API_KEY"
 
@@ -24474,7 +24475,7 @@ reports using natural language.
         name="exa_agent",
         instruction="""Help users get information from Exa""",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url="https://mcp.exa.ai/mcp?exaApiKey=" + EXA_API_KEY,
                     # (Optional) Specify which tools to enable
@@ -24555,8 +24556,8 @@ web data from any URL, including all its subpages.
 
     ```python
     from google.adk.agents.llm_agent import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
@@ -24567,7 +24568,7 @@ web data from any URL, including all its subpages.
         description="A helpful assistant for scraping websites with Firecrawl",
         instruction="Help the user search for website content",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24590,8 +24591,8 @@ web data from any URL, including all its subpages.
 
     ```python
     from google.adk.agents.llm_agent import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
 
@@ -24601,7 +24602,7 @@ web data from any URL, including all its subpages.
         description="A helpful assistant for scraping websites with Firecrawl",
         instruction="Help the user search for website content",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url=f"https://mcp.firecrawl.dev/{FIRECRAWL_API_KEY}/v2/mcp",
                 ),
@@ -24693,8 +24694,8 @@ automate workflows using natural language.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
 
@@ -24703,7 +24704,7 @@ automate workflows using natural language.
         name="github_agent",
         instruction="Help users get information from GitHub",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url="https://api.githubcopilot.com/mcp/",
                     headers={
@@ -24766,6 +24767,104 @@ available toolsets and read-only mode:
 - [Policies and Governance for the GitHub MCP Server](https://github.com/github/github-mcp-server/blob/main/docs/policies-and-governance.md)
 
 ================
+File: docs/tools/third-party/gitlab.md
+================
+# GitLab
+
+The
+[GitLab MCP Server](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/)
+connects your ADK agent directly to [GitLab.com](https://gitlab.com/) or your
+self-managed GitLab instance. This integration gives your agent the ability to
+manage issues and merge requests, inspect CI/CD pipelines, perform semantic code
+searches, and automate development workflows using natural language.
+
+## Use cases
+
+- **Semantic Code Exploration**: Navigate your codebase using natural language.
+  Unlike standard text search, you can query the logic and intent of your code
+  to quickly understand complex implementations.
+
+- **Accelerate Merge Request Reviews**: Get up to speed on code changes
+  instantly. Retrieve full merge request contexts, analyze specific diffs, and
+  review commit history to provide faster, more meaningful feedback to your
+  team.
+
+- **Troubleshoot CI/CD Pipelines**: Diagnose build failures without leaving your
+  chat. Inspect pipeline statuses and retrieve detailed job logs to pinpoint
+  exactly why a specific merge request or commit failed its checks.
+
+## Prerequisites
+
+- A GitLab account with a Premium or Ultimate subscription and
+  [GitLab Duo](https://docs.gitlab.com/user/gitlab_duo/) enabled
+- [Beta and experimental features](https://docs.gitlab.com/user/gitlab_duo/turn_on_off/#turn-on-beta-and-experimental-features)
+  enabled in your GitLab settings
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    # Replace with your instance URL if self-hosted (e.g., "gitlab.example.com")
+    GITLAB_INSTANCE_URL = "gitlab.com"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="gitlab_agent",
+        instruction="Help users get information from GitLab",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params = StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "mcp-remote",
+                            f"https://{GITLAB_INSTANCE_URL}/api/v4/mcp",
+                            "--static-oauth-client-metadata",
+                            "{\"scope\": \"mcp\"}",
+                        ],
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+!!! note
+
+    When you run this agent for the first time, a browser window will open
+    automatically (and an authorization URL will be printed) requesting OAuth
+    permissions. You must approve this request to allow the agent to access your
+    GitLab data.
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`get_mcp_server_version` | Returns the current version of the GitLab MCP server
+`create_issue` | Creates a new issue in a GitLab project
+`get_issue` | Retrieves detailed information about a specific GitLab issue
+`create_merge_request` | Creates a merge request in a project
+`get_merge_request` | Retrieves detailed information about a specific GitLab merge request
+`get_merge_request_commits` | Retrieves the list of commits in a specific merge request
+`get_merge_request_diffs` | Retrieves the diffs for a specific merge request
+`get_merge_request_pipelines` | Retrieves the pipelines for a specific merge request
+`get_pipeline_jobs` | Retrieves the jobs for a specific CI/CD pipeline
+`gitlab_search` | Searches for a term across the entire GitLab instance with the search API
+`semantic_code_search` | Searches for relevant code snippets in a project
+
+## Additional resources
+
+- [GitLab MCP Server Documentation](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/)
+
+================
 File: docs/tools/third-party/hugging-face.md
 ================
 # Hugging Face
@@ -24795,8 +24894,8 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
@@ -24806,7 +24905,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         name="hugging_face_agent",
         instruction="Help users get information from Hugging Face",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -24829,8 +24928,8 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
 
@@ -24839,7 +24938,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         name="hugging_face_agent",
         instruction="""Help users get information from Hugging Face""",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url="https://huggingface.co/mcp",
                     headers={
@@ -24970,6 +25069,16 @@ Check out the following third-party tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-gitlab.png" alt="GitLab">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitLab</h3>
+      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-hugging-face.png" alt="Hugging Face">
@@ -24987,6 +25096,16 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/scrapegraphai/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-scrapegraphai.png" alt="ScrapeGraphAI">
+    </div>
+    <div class="tool-card-content">
+      <h3>ScrapeGraphAI</h3>
+      <p>AI-powered web scraping, crawling, and data extraction</p>
     </div>
   </a>
 
@@ -25045,8 +25164,8 @@ language.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     NOTION_TOKEN = "YOUR_NOTION_TOKEN"
@@ -25056,7 +25175,7 @@ language.
         name="notion_agent",
         instruction="Help users get information from Notion",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -25100,6 +25219,101 @@ Tool <img width="200px"/> | Description
 - [Notion MCP Server Repository](https://github.com/makenotion/notion-mcp-server)
 
 ================
+File: docs/tools/third-party/scrapegraphai.md
+================
+# ScrapeGraphAI
+
+The
+[ScrapeGraphAI MCP Server](https://github.com/ScrapeGraphAI/scrapegraph-mcp)
+connects your ADK agent to [ScrapeGraphAI](https://scrapegraphai.com/). This
+integration enables your agent to extract structured data using natural language
+prompts, handle dynamic content like infinite scrolling, and convert complex
+webpages into clean, usable JSON or Markdown.
+
+## Use cases
+
+- **Scalable Extraction & Crawling**: Extract structured data from single pages
+  or crawl entire websites, leveraging AI to handle dynamic content, infinite
+  scrolling, and large-scale asynchronous operations.
+
+- **Research and Summarization**: Execute AI-powered web searches to research
+  topics, aggregate data from multiple sources, and summarize findings.
+
+- **Agentic Workflows**: Run advanced agentic scraping workflows with
+  customizable steps, complex navigation (like authentication), and structured
+  output schemas.
+
+## Prerequisites
+
+- Create an [API Key](https://dashboard.scrapegraphai.com/register/) in
+  ScrapeGraphAI. Refer to the
+  [documentation](https://docs.scrapegraphai.com/api-reference/introduction) for more information.
+- Install the [ScrapeGraphAI MCP server
+  package](https://pypi.org/project/scrapegraph-mcp/) (requires Python 3.13 or
+  higher):
+
+    ```console
+    pip install scrapegraph-mcp
+    ```
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    SGAI_API_KEY = "YOUR_SCRAPEGRAPHAI_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="scrapegraph_assistant_agent",
+        instruction="""Help the user with web scraping and data extraction using
+                      ScrapeGraph AI. You can convert webpages to markdown, extract
+                      structured data using AI, perform web searches, crawl
+                      multiple pages, and automate complex scraping workflows.""",
+        tools=[
+            MCPToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        # The following CLI command is available
+                        # from `pip install scrapegraph-mcp`
+                        command="scrapegraph-mcp",
+                        env={
+                            "SGAI_API_KEY": SGAI_API_KEY,
+                        },
+                    ),
+                    timeout=300,
+                ),
+            # Optional: Filter which tools from the MCP server are exposed
+            # tool_filter=["markdownify", "smartscraper", "searchscraper"]
+            ),
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool <img width="200px"/> | Description
+---- | -----------
+`markdownify` | Transform any webpage into clean, structured markdown format
+`smartscraper` | Leverage AI to extract structured data from any webpage with support for infinite scrolling
+`searchscraper` | Execute AI-powered web searches with structured, actionable results
+`scrape` | Basic scraping endpoint to fetch page content with optional heavy JavaScript rendering
+`sitemap` | Extract sitemap URLs and structure for any website
+`smartcrawler_initiate` | Initiate intelligent multi-page web crawling (asynchronous operation)
+`smartcrawler_fetch_results` | Retrieve results from asynchronous crawling operations
+`agentic_scrapper` | Run advanced agentic scraping workflows with customizable steps and structured output schemas
+
+## Additional resources
+
+- [ScrapeGraphAI MCP Server Documentation](https://docs.scrapegraphai.com/services/mcp-server)
+- [ScrapeGraphAI MCP Server Repository](https://github.com/ScrapeGraphAI/scrapegraph-mcp)
+
+================
 File: docs/tools/third-party/tavily.md
 ================
 # Tavily
@@ -25134,8 +25348,8 @@ structured maps of websites.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
     from mcp import StdioServerParameters
 
     TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
@@ -25145,7 +25359,7 @@ structured maps of websites.
         name="tavily_agent",
         instruction="Help users get information from Tavily",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params = StdioServerParameters(
                         command="npx",
@@ -25168,8 +25382,8 @@ structured maps of websites.
 
     ```python
     from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 
     TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
 
@@ -25178,7 +25392,7 @@ structured maps of websites.
         name="tavily_agent",
         instruction="""Help users get information from Tavily""",
         tools=[
-            MCPToolset(
+            McpToolset(
                 connection_params=StreamableHTTPServerParams(
                     url="https://mcp.tavily.com/mcp/",
                     headers={
@@ -26460,6 +26674,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-gitlab.png" alt="GitLab">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitLab</h3>
+      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-hugging-face.png" alt="Hugging Face">
@@ -26477,6 +26701,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/scrapegraphai/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-scrapegraphai.png" alt="ScrapeGraphAI">
+    </div>
+    <div class="tool-card-content">
+      <h3>ScrapeGraphAI</h3>
+      <p>AI-powered web scraping, crawling, and data extraction</p>
     </div>
   </a>
 
@@ -28462,27 +28696,27 @@ which npx
 
 ## 1. Using MCP servers with ADK agents (ADK as an MCP client) in `adk web`
 
-This section demonstrates how to integrate tools from external MCP (Model Context Protocol) servers into your ADK agents. This is the **most common** integration pattern when your ADK agent needs to use capabilities provided by an existing service that exposes an MCP interface. You will see how the `MCPToolset` class can be directly added to your agent's `tools` list, enabling seamless connection to an MCP server, discovery of its tools, and making them available for your agent to use. These examples primarily focus on interactions within the `adk web` development environment.
+This section demonstrates how to integrate tools from external MCP (Model Context Protocol) servers into your ADK agents. This is the **most common** integration pattern when your ADK agent needs to use capabilities provided by an existing service that exposes an MCP interface. You will see how the `McpToolset` class can be directly added to your agent's `tools` list, enabling seamless connection to an MCP server, discovery of its tools, and making them available for your agent to use. These examples primarily focus on interactions within the `adk web` development environment.
 
-### `MCPToolset` class
+### `McpToolset` class
 
-The `MCPToolset` class is ADK's primary mechanism for integrating tools from an MCP server. When you include an `MCPToolset` instance in your agent's `tools` list, it automatically handles the interaction with the specified MCP server. Here's how it works:
+The `McpToolset` class is ADK's primary mechanism for integrating tools from an MCP server. When you include an `McpToolset` instance in your agent's `tools` list, it automatically handles the interaction with the specified MCP server. Here's how it works:
 
-1.  **Connection Management:** On initialization, `MCPToolset` establishes and manages the connection to the MCP server. This can be a local server process (using `StdioConnectionParams` for communication over standard input/output) or a remote server (using `SseConnectionParams` for Server-Sent Events). The toolset also handles the graceful shutdown of this connection when the agent or application terminates.
-2.  **Tool Discovery & Adaptation:** Once connected, `MCPToolset` queries the MCP server for its available tools (via the `list_tools` MCP method). It then converts the schemas of these discovered MCP tools into ADK-compatible `BaseTool` instances.
+1.  **Connection Management:** On initialization, `McpToolset` establishes and manages the connection to the MCP server. This can be a local server process (using `StdioConnectionParams` for communication over standard input/output) or a remote server (using `SseConnectionParams` for Server-Sent Events). The toolset also handles the graceful shutdown of this connection when the agent or application terminates.
+2.  **Tool Discovery & Adaptation:** Once connected, `McpToolset` queries the MCP server for its available tools (via the `list_tools` MCP method). It then converts the schemas of these discovered MCP tools into ADK-compatible `BaseTool` instances.
 3.  **Exposure to Agent:** These adapted tools are then made available to your `LlmAgent` as if they were native ADK tools.
-4.  **Proxying Tool Calls:** When your `LlmAgent` decides to use one of these tools, `MCPToolset` transparently proxies the call (using the `call_tool` MCP method) to the MCP server, sends the necessary arguments, and returns the server's response back to the agent.
-5.  **Filtering (Optional):** You can use the `tool_filter` parameter when creating an `MCPToolset` to select a specific subset of tools from the MCP server, rather than exposing all of them to your agent.
+4.  **Proxying Tool Calls:** When your `LlmAgent` decides to use one of these tools, `McpToolset` transparently proxies the call (using the `call_tool` MCP method) to the MCP server, sends the necessary arguments, and returns the server's response back to the agent.
+5.  **Filtering (Optional):** You can use the `tool_filter` parameter when creating an `McpToolset` to select a specific subset of tools from the MCP server, rather than exposing all of them to your agent.
 
-The following examples demonstrate how to use `MCPToolset` within the `adk web` development environment. For scenarios where you need more fine-grained control over the MCP connection lifecycle or are not using `adk web`, refer to the "Using MCP Tools in your own Agent out of `adk web`" section later in this page.
+The following examples demonstrate how to use `McpToolset` within the `adk web` development environment. For scenarios where you need more fine-grained control over the MCP connection lifecycle or are not using `adk web`, refer to the "Using MCP Tools in your own Agent out of `adk web`" section later in this page.
 
 ### Example 1: File System MCP Server
 
 This Python example demonstrates connecting to a local MCP server that provides file system operations.
 
-#### Step 1: Define your Agent with `MCPToolset`
+#### Step 1: Define your Agent with `McpToolset`
 
-Create an `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). The `MCPToolset` is instantiated directly within the `tools` list of your `LlmAgent`.
+Create an `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). The `McpToolset` is instantiated directly within the `tools` list of your `LlmAgent`.
 
 *   **Important:** Replace `"/path/to/your/folder"` in the `args` list with the **absolute path** to an actual folder on your local system that the MCP server can access.
 *   **Important:** Place the `.env` file in the parent directory of the `./adk_agent_samples` directory.
@@ -28491,7 +28725,7 @@ Create an `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). T
 # ./adk_agent_samples/mcp_agent/agent.py
 import os # Required for path operations
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
@@ -28509,7 +28743,7 @@ root_agent = LlmAgent(
     name='filesystem_assistant_agent',
     instruction='Help the user manage their files. You can list files, read files, etc.',
     tools=[
-        MCPToolset(
+        McpToolset(
             connection_params=StdioConnectionParams(
                 server_params = StdioServerParameters(
                     command='npx',
@@ -28570,7 +28804,7 @@ You should see the agent interacting with the MCP file system server, and the se
 
 
 
-For Java, refer to the following sample to define an agent that initializes the `MCPToolset`:
+For Java, refer to the following sample to define an agent that initializes the `McpToolset`:
 
 ```java
 package agents;
@@ -28687,7 +28921,7 @@ This example demonstrates connecting to the Google Maps MCP server.
     *   Routes API
     For instructions, see the [Getting started with Google Maps Platform](https://developers.google.com/maps/get-started#enable-api-sdk) documentation.
 
-#### Step 2: Define your Agent with `MCPToolset` for Google Maps
+#### Step 2: Define your Agent with `McpToolset` for Google Maps
 
 Modify your `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). Replace `YOUR_GOOGLE_MAPS_API_KEY` with the actual API key you obtained.
 
@@ -28695,7 +28929,7 @@ Modify your `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`).
 # ./adk_agent_samples/mcp_agent/agent.py
 import os
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
@@ -28717,7 +28951,7 @@ root_agent = LlmAgent(
     name='maps_assistant_agent',
     instruction='Help the user with mapping, directions, and finding places using Google Maps tools.',
     tools=[
-        MCPToolset(
+        McpToolset(
             connection_params=StdioConnectionParams(
                 server_params = StdioServerParameters(
                     command='npx',
@@ -28776,7 +29010,7 @@ You should see the agent use the Google Maps MCP tools to provide directions or 
 <img src="../../assets/adk-tool-mcp-maps-adk-web-demo.png" alt="MCP with ADK Web - Google Maps Example">
 
 
-For Java, refer to the following sample to define an agent that initializes the `MCPToolset`:
+For Java, refer to the following sample to define an agent that initializes the `McpToolset`:
 
 ```java
 package agents;
@@ -29033,7 +29267,7 @@ if __name__ == "__main__":
 
 ### Step 3: Test your Custom MCP Server with an ADK Agent
 
-Now, create an ADK agent that will act as a client to the MCP server you just built. This ADK agent will use `MCPToolset` to connect to your `my_adk_mcp_server.py` script.
+Now, create an ADK agent that will act as a client to the MCP server you just built. This ADK agent will use `McpToolset` to connect to your `my_adk_mcp_server.py` script.
 
 Create an `agent.py` (e.g., in `./adk_agent_samples/mcp_client_agent/agent.py`):
 
@@ -29041,7 +29275,7 @@ Create an `agent.py` (e.g., in `./adk_agent_samples/mcp_client_agent/agent.py`):
 # ./adk_agent_samples/mcp_client_agent/agent.py
 import os
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
@@ -29057,7 +29291,7 @@ root_agent = LlmAgent(
     name='web_reader_mcp_client_agent',
     instruction="Use the 'load_web_page' tool to fetch content from a URL provided by the user.",
     tools=[
-        MCPToolset(
+        McpToolset(
             connection_params=StdioConnectionParams(
                 server_params = StdioServerParameters(
                     command='python3', # Command to run your MCP server script
@@ -29084,7 +29318,7 @@ from . import agent
     python3 /path/to/your/my_adk_mcp_server.py
     ```
     It will print "Launching MCP Server..." and wait. The ADK agent (run via `adk web`) will then connect to this process if the `command` in `StdioConnectionParams` is set up to execute it.
-    *(Alternatively, `MCPToolset` will start this server script as a subprocess automatically when the agent initializes).*
+    *(Alternatively, `McpToolset` will start this server script as a subprocess automatically when the agent initializes).*
 
 2.  **Run `adk web` for the client agent:**
     Navigate to the parent directory of `mcp_client_agent` (e.g., `adk_agent_samples`) and run:
@@ -29097,7 +29331,7 @@ from . import agent
     *   Select the `web_reader_mcp_client_agent`.
     *   Try a prompt like: "Load the content from https://example.com"
 
-The ADK agent (`web_reader_mcp_client_agent`) will use `MCPToolset` to start and connect to your `my_adk_mcp_server.py`. Your MCP server will receive the `call_tool` request, execute the ADK `load_web_page` tool, and return the result. The ADK agent will then relay this information. You should see logs from both the ADK Web UI (and its terminal) and potentially from your `my_adk_mcp_server.py` terminal if you ran it separately.
+The ADK agent (`web_reader_mcp_client_agent`) will use `McpToolset` to start and connect to your `my_adk_mcp_server.py`. Your MCP server will receive the `call_tool` request, execute the ADK `load_web_page` tool, and return the result. The ADK agent will then relay this information. You should see logs from both the ADK Web UI (and its terminal) and potentially from your `my_adk_mcp_server.py` terminal if you ran it separately.
 
 This example demonstrates how ADK tools can be encapsulated within an MCP server, making them accessible to a broader range of MCP-compliant clients, not just ADK agents.
 
@@ -29131,7 +29365,7 @@ from google.adk.agents.llm_agent import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
@@ -29145,7 +29379,7 @@ TARGET_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "/
 # --- Step 1: Agent Definition ---
 async def get_agent_async():
   """Creates an ADK Agent equipped with tools from the MCP Server."""
-  toolset = MCPToolset(
+  toolset = McpToolset(
       # Use StdioConnectionParams for local process communication
       connection_params=StdioConnectionParams(
           server_params = StdioServerParameters(
@@ -29220,19 +29454,19 @@ if __name__ == '__main__':
 
 When working with MCP and ADK, keep these points in mind:
 
-* **Protocol vs. Library:** MCP is a protocol specification, defining communication rules. ADK is a Python library/framework for building agents. MCPToolset bridges these by implementing the client side of the MCP protocol within the ADK framework. Conversely, building an MCP server in Python requires using the model-context-protocol library.
+* **Protocol vs. Library:** MCP is a protocol specification, defining communication rules. ADK is a Python library/framework for building agents. McpToolset bridges these by implementing the client side of the MCP protocol within the ADK framework. Conversely, building an MCP server in Python requires using the model-context-protocol library.
 
 * **ADK Tools vs. MCP Tools:**
 
     * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.
-    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. MCPToolset makes these look like ADK tools to an LlmAgent.
+    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. McpToolset makes these look like ADK tools to an LlmAgent.
 
 * **Asynchronous nature:** Both ADK and the MCP Python library are heavily based on the asyncio Python library. Tool implementations and server handlers should generally be async functions.
 
 * **Stateful sessions (MCP):** MCP establishes stateful, persistent connections between a client and server instance. This differs from typical stateless REST APIs.
 
     * **Deployment:** This statefulness can pose challenges for scaling and deployment, especially for remote servers handling many users. The original MCP design often assumed client and server were co-located. Managing these persistent connections requires careful infrastructure considerations (e.g., load balancing, session affinity).
-    * **ADK MCPToolset:** Manages this connection lifecycle. The exit\_stack pattern shown in the examples is crucial for ensuring the connection (and potentially the server process) is properly terminated when the ADK agent finishes.
+    * **ADK McpToolset:** Manages this connection lifecycle. The exit\_stack pattern shown in the examples is crucial for ensuring the connection (and potentially the server process) is properly terminated when the ADK agent finishes.
 
 ## Deploying Agents with MCP Tools
 
@@ -29240,14 +29474,14 @@ When deploying ADK agents that use MCP tools to production environments like Clo
 
 ### Critical Deployment Requirement: Synchronous Agent Definition
 
-**⚠️ Important:** When deploying agents with MCP tools, the agent and its MCPToolset must be defined **synchronously** in your `agent.py` file. While `adk web` allows for asynchronous agent creation, deployment environments require synchronous instantiation.
+**⚠️ Important:** When deploying agents with MCP tools, the agent and its McpToolset must be defined **synchronously** in your `agent.py` file. While `adk web` allows for asynchronous agent creation, deployment environments require synchronous instantiation.
 
 ```python
 # ✅ CORRECT: Synchronous agent definition for deployment
 import os
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.tools.mcp_tool import StdioConnectionParams
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 
 _allowed_path = os.path.dirname(os.path.abspath(__file__))
@@ -29257,7 +29491,7 @@ root_agent = LlmAgent(
     name='enterprise_assistant',
     instruction=f'Help user accessing their file systems. Allowed directory: {_allowed_path}',
     tools=[
-        MCPToolset(
+        McpToolset(
             connection_params=StdioConnectionParams(
                 server_params=StdioServerParameters(
                     command='npx',
@@ -29332,7 +29566,7 @@ CMD ["python", "main.py"]
 **Agent Configuration:**
 ```python
 # This works in containers because npx and the MCP server run in the same environment
-MCPToolset(
+McpToolset(
     connection_params=StdioConnectionParams(
         server_params=StdioServerParameters(
             command='npx',
@@ -29452,7 +29686,7 @@ if __name__ == "__main__":
 **Agent Configuration for Remote MCP:**
 ```python
 # Your ADK agent connects to the remote MCP service via Streamable HTTP
-MCPToolset(
+McpToolset(
     connection_params=StreamableHTTPConnectionParams(
         url="https://your-mcp-server-url.run.app/mcp",
         headers={"Authorization": "Bearer your-auth-token"}
@@ -29557,14 +29791,14 @@ else:
         )
     )
 
-MCPToolset(connection_params=mcp_connection)
+McpToolset(connection_params=mcp_connection)
 ```
 
 #### GKE
 ```python
 # GKE-specific MCP configuration
 # Use service discovery for MCP servers within the cluster
-MCPToolset(
+McpToolset(
     connection_params=SseConnectionParams(
         url="http://mcp-service.default.svc.cluster.local:8080/sse"
     ),
@@ -29575,7 +29809,7 @@ MCPToolset(
 ```python
 # Agent Engine managed deployment
 # Prefer lightweight, self-contained MCP servers or external services
-MCPToolset(
+McpToolset(
     connection_params=SseConnectionParams(
         url="https://your-managed-mcp-service.googleapis.com/sse",
         headers={'Authorization': 'Bearer $(gcloud auth print-access-token)'}
@@ -29590,7 +29824,7 @@ MCPToolset(
 1. **Stdio Process Startup Failures**
    ```python
    # Debug stdio connection issues
-   MCPToolset(
+   McpToolset(
        connection_params=StdioConnectionParams(
            server_params=StdioServerParameters(
                command='npx',
@@ -30208,6 +30442,21 @@ session = await session_service.create_session(
     session_id=SESSION_ID
 )
 print(f"Session created: App='{APP_NAME}', User='{USER_ID}', Session='{SESSION_ID}'")
+
+# --- OR ---
+
+# Uncomment the following lines if running as a standard Python script (.py file):
+
+# async def init_session(app_name:str,user_id:str,session_id:str) -> InMemorySessionService:
+#     session = await session_service.create_session(
+#         app_name=app_name,
+#         user_id=user_id,
+#         session_id=session_id
+#     )
+#     print(f"Session created: App='{app_name}', User='{user_id}', Session='{session_id}'")
+#     return session
+# 
+# session = asyncio.run(init_session(APP_NAME,USER_ID,SESSION_ID))
 
 # --- Runner ---
 # Key Concept: Runner orchestrates the agent execution loop.
@@ -32378,6 +32627,20 @@ development feel more like software development, to make it easier for
 developers to create, deploy, and orchestrate agentic architectures that range
 from simple tasks to complex workflows.
 
+??? warning "ALERT: ADK Python v1.19.0 requires Python 3.10 or higher"
+
+    ADK Python release v1.19.0 requires Python 3.10 or higher. This change
+    is breaking for anyone attempting to use the v1.19.0 release with Python
+    3.9. For more release details, check out the
+    [release notes](https://github.com/google/adk-python/releases/tag/v1.19.0).
+
+??? tip "News: ADK Go v0.2.0 released!"
+
+    ADK Go release v0.2.0 is live with a variety of improvements, including new
+    features, bug fixes, documentation updates, and significant code refactoring.
+    For release details, check out the
+    [release notes](https://github.com/google/adk-go/releases/tag/v0.2.0).
+
 <div id="centered-install-tabs" class="install-command-container" markdown="1">
 
 <p class="get-started-text" style="text-align: center;">Get started:</p>
@@ -32485,6 +32748,18 @@ from simple tasks to complex workflows.
     [**Safety and Security**](safety/index.md)
 
 </div>
+
+================
+File: docs/release-notes.md
+================
+# ADK release notes
+
+You can find the release notes in the code repositories for each supported
+language. For detailed information on ADK releases, see these locations:
+
+*   [ADK Python release notes](https://github.com/google/adk-python/releases)
+*   [ADK Go release notes](https://github.com/google/adk-go/releases)
+*   [ADK Java release notes](https://github.com/google/adk-java/releases)
 
 
 
