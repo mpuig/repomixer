@@ -6769,7 +6769,7 @@ of this context data grows, agent processing times typically also increase.
 More and more data is sent to the generative AI model used by the agent,
 increasing processing time and slowing down responses. The ADK Context
 Compaction feature is designed to reduce the size of context as an agent
-is running by summarizing older parts of the agent workflow event history. 
+is running by summarizing older parts of the agent workflow event history.
 
 The Context Compaction feature uses a *sliding window* approach for collecting
 and summarizing agent workflow event data within a
@@ -6806,7 +6806,7 @@ background each time the session reaches the interval.
 If you set `compaction_interval` to 3 and `overlap_size` to 1, the event data is
 compressed upon completion of events 3, 6, 9, and so on. The overlap setting
 increases size of the second summary compression, and each summary afterwards,
-as shown in Figure 1. 
+as shown in Figure 1.
 
 ![Context compaction example illustration](/adk-docs/assets/context-compaction.svg)
 **Figure 1.** Ilustration of event compaction configuration with a interval of 3
@@ -6824,19 +6824,19 @@ With this example configuration, the context compression tasks happen as follows
 
 The configuration settings for this feature control how frequently event data is compressed
 and how much data is retained as the agent workflow runs. Optionally, you can configure
-a compactor object 
+a compactor object
 
 *   **`compaction_interval`**: Set the number of completed events that triggers compaction
-    of the prior event data. 
+    of the prior event data.
 *   **`overlap_size`**: Set how many of the previously compacted events are included in a
     newly compacted context set.
-*   **`compactor`**: (Optional) Define a compactor object including a specific AI model
-    to use for summarization. For more information, see 
-    [Define a compactor](#define-compactor).    
+*   **`summarizer`**: (Optional) Define a summarizer object including a specific AI model
+    to use for summarization. For more information, see
+    [Define a Summarizer](#define-summarizer).
 
 ### Define a Summarizer {#define-summarizer}
-You can customize the process of context compression by defining a summarizer. 
-The LlmEventSummarizer class allows you to specify a particular model for summarization. 
+You can customize the process of context compression by defining a summarizer.
+The LlmEventSummarizer class allows you to specify a particular model for summarization.
 The following code example demonstrates how to define and configure a custom summarizer:
 
 ```python
@@ -6855,12 +6855,12 @@ app = App(
     name='my-agent',
     root_agent=root_agent,
     events_compaction_config=EventsCompactionConfig(
-        summarizer=my_summarizer,
         compaction_interval=3,
-        overlap_size=1
+        overlap_size=1,
+        summarizer=my_summarizer,
     ),
 )
-``` 
+```
 
 You can further refine the operation of the `SlidingWindowCompactor` by
 by modifying its summarizer class `LlmEventSummarizer` including changing
@@ -12200,6 +12200,11 @@ the dropdown. Select "science-app".
     If you do not see "science-app" in the dropdown menu, make sure you
     are running the `mvn` command from the root of your maven project.
 
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
+
 ## Try Dev UI with text
 
 With your favorite browser, navigate to: [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
@@ -12535,7 +12540,7 @@ public final class LiveAudioRun {
 
         AtomicBoolean audioReceived = new AtomicBoolean(false);
         processEvent(event, audioReceived);
-        
+
         event.content().ifPresent(content -> content.parts().ifPresent(parts -> parts.forEach(part -> playAudioData(part, finalSpeakerLine))));
       }
 
@@ -12792,6 +12797,10 @@ adk web
 
     When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
 
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
 
 Open the URL provided (usually `http://localhost:8000` or
 `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
@@ -13102,6 +13111,11 @@ access the web interface at (http://localhost:8080). Select your agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
 
 ## Next: Build your agent
 
@@ -13544,6 +13558,11 @@ upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
 
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
+
 ## Next: Build your agent
 
 Now that you have ADK installed and your first agent running, try building
@@ -13696,6 +13715,11 @@ access the web interface at (http://localhost:8000). Select the agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
 
 ## Next: Build your agent
 
@@ -13957,6 +13981,11 @@ agent will be unable to function.
         adk web
         ```
 
+        !!! warning "Caution: ADK Web for development only"
+
+            ADK Web is ***not meant for use in production deployments***. You should
+            use ADK Web for development and debugging purposes only.
+
         !!!info "Note for Windows users"
 
             When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
@@ -14091,6 +14120,11 @@ agent will be unable to function.
         model responses by clicking on the actions:
 
         ![adk-web-dev-ui-function-call.png](../assets/adk-web-dev-ui-function-call.png)
+
+        !!! warning "Caution: ADK Web for development only"
+
+            ADK Web is ***not meant for use in production deployments***. You should
+            use ADK Web for development and debugging purposes only.
 
     === "Maven"
 
@@ -37591,6 +37625,14 @@ from simple tasks to complex workflows.
     is breaking for anyone attempting to use the v1.19.0 release with Python
     3.9. For more release details, check out the
     [release notes](https://github.com/google/adk-python/releases/tag/v1.19.0).
+
+??? tip "News: ADK Java v0.4.0 released!"
+
+    ADK Java release v0.4.0 is live with significant new features including a
+    Firestore-backed session service, human-in-the-loop tool confirmations,
+    integrations with Spring AI and Apigee, and many other improvements.
+    For release details, check out the
+    [release notes](https://github.com/google/adk-java/releases/tag/v0.4.0).
 
 ??? tip "News: ADK Go v0.2.0 released!"
 
