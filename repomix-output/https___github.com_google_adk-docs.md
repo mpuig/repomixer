@@ -2434,15 +2434,8 @@ Control whether the agent receives the prior conversation history.
     ....
     ```
 
-### Code Execution
-
-<div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-* **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
-
 Example for using built-in-planner:
+
 ```python
 from dotenv import load_dotenv
 
@@ -2560,6 +2553,26 @@ def call_agent(query):
 call_agent("If it's raining in New York right now, what is the current temperature?")
 
 ```
+
+### Code Execution
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+- **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
+
+== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/code_execution.py"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/tools/CodeExecutionAgentApp.java:full_code"
+    ```
 
 ## Putting It Together: Example
 
@@ -2920,7 +2933,7 @@ public class DirectAnthropicAgent {
 ## Using Apigee gateway for AI models
 
 <div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span>
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span><span class="lst-java">Java v0.4.0</span>
 </div>
 
 [Apigee](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee) acts as a powerful [AI Gateway](https://cloud.google.com/solutions/apigee-ai), transforming how you manage and govern your generative AI model traffic. By exposing your AI model endpoint (like Vertex AI or the Gemini API) through an Apigee proxy, you immediately gain enterprise-grade capabilities:
@@ -2939,30 +2952,55 @@ public class DirectAnthropicAgent {
 
 **Example:**
 
-```python
+=== "Python"
 
-from google.adk.agents import LlmAgent
-from google.adk.models.apigee_llm import ApigeeLlm
+    ```python
 
-# Instantiate the ApigeeLlm wrapper
-model = ApigeeLlm(
-    # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
-    model="apigee/gemini-2.5-flash",
-    # The proxy URL of your deployed Apigee proxy including the base path
-    proxy_url=f"https://{APIGEE_PROXY_URL}",
-    # Pass necessary authentication/authorization headers (like an API key)
-    custom_headers={"foo": "bar"}
-)
+    from google.adk.agents import LlmAgent
+    from google.adk.models.apigee_llm import ApigeeLlm
 
-# Pass the configured model wrapper to your LlmAgent
-agent = LlmAgent(
-    model=model,
-    name="my_governed_agent",
-    instruction="You are a helpful assistant powered by Gemini and governed by Apigee.",
-    # ... other agent parameters
-)
+    # Instantiate the ApigeeLlm wrapper
+    model = ApigeeLlm(
+        # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+        model="apigee/gemini-2.5-flash",
+        # The proxy URL of your deployed Apigee proxy including the base path
+        proxy_url=f"https://{APIGEE_PROXY_URL}",
+        # Pass necessary authentication/authorization headers (like an API key)
+        custom_headers={"foo": "bar"}
+    )
 
-```
+    # Pass the configured model wrapper to your LlmAgent
+    agent = LlmAgent(
+        model=model,
+        name="my_governed_agent",
+        instruction="You are a helpful assistant powered by Gemini and governed by Apigee.",
+        # ... other agent parameters
+    )
+
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.ApigeeLlm;
+    import com.google.common.collect.ImmutableMap;
+
+    ApigeeLlm apigeeLlm =
+            ApigeeLlm.builder()
+                .modelName("apigee/gemini-2.5-flash") // Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation
+                .proxyUrl(APIGEE_PROXY_URL) //The proxy URL of your deployed Apigee proxy including the base path
+                .customHeaders(ImmutableMap.of("foo", "bar")) //Pass necessary authentication/authorization headers (like an API key)
+                .build();
+    LlmAgent agent =
+        LlmAgent.builder()
+            .model(apigeeLlm)
+            .name("my_governed_agent")
+            .description("my_governed_agent")
+            .instruction("You are a helpful assistant powered by Gemini and governed by Apigee.")
+            // tools will be added next
+            .build();
+    ```
 
 With this configuration, every API call from your agent will be routed through Apigee first, where all necessary policies (security, rate limiting, logging) are executed before the request is securely forwarded to the underlying AI model endpoint.
 
@@ -8703,7 +8741,7 @@ To deploy your agent, you can use either the `adk deploy cloud_run` command _(re
 
 ## Agent sample
 
-For each of the commands, we will reference a the `Capital Agent` sample defined on the [LLM agent](../agents/llm-agents.md) page. We will assume it's in a directory (eg: `capital_agent`).
+For each of the commands, we will reference the `Capital Agent` sample defined on the [LLM agent](../agents/llm-agents.md) page. We will assume it's in a directory (eg: `capital_agent`).
 
 To proceed, confirm that your agent code is configured as follows:
 
@@ -29083,6 +29121,238 @@ To ensure accurate extraction, follow these guidelines when prompting the agent:
 - [AgentQL MCP Server Repository](https://github.com/tinyfish-io/agentql-mcp)
 
 ================
+File: docs/tools/third-party/apify.md
+================
+# Apify
+
+The [Apify MCP Server](https://github.com/apify/actors-mcp-server) allows AI
+applications and agents to interact with the Apify platform. This functionality
+enables your ADK agents to discover and run Actors from the [Apify
+Store](https://apify.com/store), access storage and results, and read Apify
+documentation.
+
+## Use cases
+
+- **Actor Discovery**: Search and discover relevant Actors in the Apify Store to
+  solve specific tasks.
+- **Web Scraping & Automation**: Run Actors to scrape websites, extract data,
+  and automate web workflows.
+- **RAG & Knowledge Retrieval**: Use the RAG Web Browser Actor to retrieve and
+  process information from the web for your agent.
+
+## Prerequisites
+
+- [Sign up](https://console.apify.com/sign-up) for an Apify account.
+- Get your API token from the [Apify Console](https://console.apify.com). Refer
+  to the [documentation](https://docs.apify.com/platform/integrations/api) for
+  more information.
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    APIFY_TOKEN = "YOUR_APIFY_TOKEN"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="apify_agent",
+        instruction="Help users scrape data and run Apify Actors",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@apify/actors-mcp-server",
+                            # (Optional) Customize which tools to enable
+                            # "--tools=actors,docs,apify/rag-web-browser",
+                        ],
+                        env={
+                            "APIFY_TOKEN": APIFY_TOKEN,
+                        }
+                    ),
+                    timeout=300,
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+    APIFY_TOKEN = "YOUR_APIFY_TOKEN"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="apify_agent",
+        instruction="Help users scrape data and run Apify Actors",
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.apify.com",
+                    # (Optional) Customize which tools to enable
+                    # url="https://mcp.apify.com?tools=actors,docs,apify/rag-web-browser",
+                    headers={
+                        "Authorization": f"Bearer {APIFY_TOKEN}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`search-actors` | Search for Actors in the Apify Store
+`fetch-actor-details` | Get detailed information about a specific Actor
+`call-actor` | Run an Actor and wait for it to finish
+`get-actor-run` | Get information about a specific Actor run
+`get-actor-run-list` | List Actor runs
+`get-actor-log` | Get logs from an Actor run
+`get-dataset` | Get information about a dataset
+`get-dataset-items` | Get items from a dataset
+`get-key-value-store` | Get information about a key-value store
+`get-key-value-store-record` | Get a record from a key-value store
+`add-actor` | Add an Actor as a tool to the agent (Dynamic tool discovery)
+`search-apify-docs` | Search Apify documentation
+`fetch-apify-docs` | Read Apify documentation pages
+
+## Configuration
+
+You can customize which tools are available by adding parameters to the server
+URL.
+
+- **Default tools**: Tools related to `actors`, `docs`, and
+  `apify/rag-web-browser` are loaded by default.
+- **Specific tools**: You can specify additional tools using the `tools` CLI
+  parameter (local MCP server) or the `tools` query parameter (remote MCP
+  server).
+
+## Additional resources
+
+- [Apify MCP Server Documentation](https://docs.apify.com/platform/integrations/mcp)
+- [Apify MCP Server Repository](https://github.com/apify/apify-mcp-server)
+
+================
+File: docs/tools/third-party/atlassian.md
+================
+# Atlassian
+
+The [Atlassian MCP Server](https://github.com/atlassian/atlassian-mcp-server)
+connects your ADK agent to the [Atlassian](https://www.atlassian.com/)
+ecosystem, bridging the gap between project tracking in Jira and knowledge
+management in Confluence. This integration gives your agent the ability to
+manage issues, search and update documentation pages, and streamline
+collaboration workflows using natural language.
+
+## Use cases
+
+- **Unified Knowledge Search**: Search across both Jira issues and Confluence
+  pages simultaneously to find project specs, decisions, or historical context.
+
+- **Automate Issue Management**: Create, edit, and transition Jira issues, or
+  add comments to existing tickets.
+
+- **Documentation Assistant**: Retrieve page content, generate drafts, or add
+  inline comments to Confluence documents directly from your agent.
+
+## Prerequisites
+
+- Sign up for an [Atlassian account](https://id.atlassian.com/signup)
+- An Atlassian Cloud site with Jira and/or Confluence
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="atlassian_agent",
+        instruction="Help users work with data in Atlassian products",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "mcp-remote",
+                            "https://mcp.atlassian.com/v1/sse",
+                        ]
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+!!! note
+
+    When you run this agent for the first time, a browser window opens
+    automatically to request access via OAuth. Alternatively, you can use the
+    authorization URL printed in the console. You must approve this request to
+    allow the agent to access your Atlassian data.
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`atlassianUserInfo` | Get information about the user
+`getAccessibleAtlassianResources` | Get information about accessible Atlassian resources
+`getJiraIssue` | Get information about a Jira issue
+`editJiraIssue` | Edit a Jira issue
+`createJiraIssue` | Create a new Jira issue
+`getTransitionsForJiraIssue` | Get transitions for a Jira issue
+`transitionJiraIssue` | Transition a Jira issue
+`lookupJiraAccountId` | Lookup a Jira account ID
+`searchJiraIssuesUsingJql` | Search Jira issues using JQL
+`addCommentToJiraIssue` | Add a comment to a Jira issue
+`getJiraIssueRemoteIssueLinks` | Get remote issue links for a Jira issue
+`getVisibleJiraProjects` | Get visible Jira projects
+`getJiraProjectIssueTypesMetadata` | Get issue types metadata for a Jira project
+`getJiraIssueTypeMetaWithFields` | Get issue type metadata with fields for a Jira issue
+`getConfluenceSpaces` | Get information about Confluence spaces
+`getConfluencePage` | Get information about a Confluence page
+`getPagesInConfluenceSpace` | Get information about pages in a Confluence space
+`getConfluencePageFooterComments` | Get information about footer comments in a Confluence page
+`getConfluencePageInlineComments` | Get information about inline comments in a Confluence page
+`getConfluencePageDescendants` | Get information about descendants of a Confluence page
+`createConfluencePage` | Create a new Confluence page
+`updateConfluencePage` | Update an existing Confluence page
+`createConfluenceFooterComment` | Create a footer comment in a Confluence page
+`createConfluenceInlineComment` | Create an inline comment in a Confluence page
+`searchConfluenceUsingCql` | Search Confluence using CQL
+`search` | Search for information
+`fetch` | Fetch information
+
+## Additional resources
+
+- [Atlassian MCP Server Repository](https://github.com/atlassian/atlassian-mcp-server)
+- [Atlassian MCP Server Documentation](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/)
+
+================
 File: docs/tools/third-party/bright-data.md
 ================
 # Bright Data
@@ -29168,7 +29438,7 @@ pre-built data feeds from popular platforms.
     root_agent = Agent(
         model="gemini-2.5-pro",
         name="brightdata_agent",
-        instruction="""Help users access web data using Bright Data""",
+        instruction="Help users access web data using Bright Data",
         tools=[
             McpToolset(
                 connection_params=StreamableHTTPServerParams(
@@ -29465,7 +29735,7 @@ reports using natural language.
     root_agent = Agent(
         model="gemini-2.5-pro",
         name="exa_agent",
-        instruction="""Help users get information from Exa""",
+        instruction="Help users get information from Exa",
         tools=[
             McpToolset(
                 connection_params=StreamableHTTPServerParams(
@@ -29928,7 +30198,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
     root_agent = Agent(
         model="gemini-2.5-pro",
         name="hugging_face_agent",
-        instruction="""Help users get information from Hugging Face""",
+        instruction="Help users get information from Hugging Face",
         tools=[
             McpToolset(
                 connection_params=StreamableHTTPServerParams(
@@ -30001,6 +30271,16 @@ Check out the following third-party tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-atlassian.png" alt="Atlassian">
+    </div>
+    <div class="tool-card-content">
+      <h3>Atlassian</h3>
+      <p>Manage issues, search pages, and update team content</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-agentql.png" alt="AgentQL">
@@ -30008,6 +30288,16 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>AgentQL</h3>
       <p>Extract resilient, structured web data using natural language</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/apify/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-apify.png" alt="Apify">
+    </div>
+    <div class="tool-card-content">
+      <h3>Apify</h3>
+      <p>Use Actors to scrape websites and automate web workflows</p>
     </div>
   </a>
 
@@ -30081,6 +30371,16 @@ Check out the following third-party tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../../assets/tools-linear.png" alt="Linear">
+    </div>
+    <div class="tool-card-content">
+      <h3>Linear</h3>
+      <p>Manage issues, track projects, and streamline development</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-notion.png" alt="Notion">
@@ -30112,6 +30412,141 @@ Check out the following third-party tools that you can use with ADK agents:
   </a>
 
 </div>
+
+================
+File: docs/tools/third-party/linear.md
+================
+# Linear
+
+The [Linear MCP Server](https://linear.app/docs/mcp) connects your ADK agent to
+[Linear](https://linear.app/), a purpose-built tool for planning and building
+products. This integration gives your agent the ability to manage issues, track
+project cycles, and automate development workflows using natural language.
+
+## Use cases
+
+- **Streamline Issue Management**: Create, update, and organize issues using
+  natural language. Let your agent handle logging bugs, assigning tasks, and
+  updating statuses.
+
+- **Track Projects and Cycles**: Get instant visibility into your team's
+  momentum. Query the status of active cycles, check project milestones, and
+  retrieve deadlines.
+
+- **Contextual Search & Summarization**: Quickly catch up on long discussion
+  threads or find specific project specifications. Your agent can search
+  documentation and summarize complex issues.
+
+## Prerequisites
+
+- [Sign up](https://linear.app/signup) for a Linear account
+- Generate an API key in
+  [Linear Settings > Security & access](https://linear.app/docs/security-and-access)
+  (if using API authentication)
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="linear_agent",
+        instruction="Help users manage issues, projects, and cycles in Linear",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "mcp-remote",
+                            "https://mcp.linear.app/mcp",
+                        ]
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+    !!! note
+
+        When you run this agent for the first time, a browser window will open
+        automatically to request access via OAuth. Alternatively, you can use
+        the authorization URL printed in the console. You must approve this
+        request to allow the agent to access your Linear data.
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+    LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="linear_agent",
+        instruction="Help users manage issues, projects, and cycles in Linear",
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.linear.app/mcp",
+                    headers={
+                        "Authorization": f"Bearer {LINEAR_API_KEY}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+    !!! note
+
+        This code example uses an API key for authentication. To use a
+        browser-based OAuth authentication flow instead, remove the `headers`
+        parameter and run the agent.
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`list_comments` | List comments on an issue
+`create_comment` | Create a comment on an issue
+`list_cycles` | List cycles in a project
+`get_document` | Get a document
+`list_documents` | List documents
+`get_issue` | Get an issue
+`list_issues` | List issues
+`create_issue` | Create an issue
+`update_issue` | Update an issue
+`list_issue_statuses` | List issue statuses
+`get_issue_status` | Get an issue status
+`list_issue_labels` | List issue labels
+`create_issue_label` | Create an issue label
+`list_projects` | List projects
+`get_project` | Get a project
+`create_project` | Create a project
+`update_project` | Update a project
+`list_project_labels` | List project labels
+`list_teams` | List teams
+`get_team` | Get a team
+`list_users` | List users
+`get_user` | Get a user
+`search_documentation` | Search documentation
+
+## Additional resources
+
+- [Linear MCP Server Documentation](https://linear.app/docs/mcp)
+- [Linear Getting Started Guide](https://linear.app/docs/start-guide)
 
 ================
 File: docs/tools/third-party/notion.md
@@ -30382,7 +30817,7 @@ structured maps of websites.
     root_agent = Agent(
         model="gemini-2.5-pro",
         name="tavily_agent",
-        instruction="""Help users get information from Tavily""",
+        instruction="Help users get information from Tavily",
         tools=[
             McpToolset(
                 connection_params=StreamableHTTPServerParams(
@@ -31606,6 +32041,16 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-atlassian.png" alt="Atlassian">
+    </div>
+    <div class="tool-card-content">
+      <h3>Atlassian</h3>
+      <p>Manage issues, search pages, and update team content</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-agentql.png" alt="AgentQL">
@@ -31613,6 +32058,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>AgentQL</h3>
       <p>Extract resilient, structured web data using natural language</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/apify/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-apify.png" alt="Apify">
+    </div>
+    <div class="tool-card-content">
+      <h3>Apify</h3>
+      <p>Use Actors to scrape websites and automate web workflows</p>
     </div>
   </a>
 
@@ -31683,6 +32138,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Hugging Face</h3>
       <p>Access models, datasets, research papers, and AI tools</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="../assets/tools-linear.png" alt="Linear">
+    </div>
+    <div class="tool-card-content">
+      <h3>Linear</h3>
+      <p>Manage issues, track projects, and streamline development</p>
     </div>
   </a>
 
