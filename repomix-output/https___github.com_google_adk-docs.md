@@ -1352,7 +1352,7 @@ To setup ADK for use with Agent Config:
 1.  Install the ADK Python libraries by following the
     [Installation](/adk-docs/get-started/installation/#python)
     instructions. *Python is currently required.* For more information, see the
-    [Known limitations](?tab=t.0#heading=h.xefmlyt7zh0i).
+    [Known limitations](#known-limitations).
 1.  Verify that ADK is installed by running the following command in your
     terminal:
 
@@ -2562,9 +2562,9 @@ call_agent("If it's raining in New York right now, what is the current temperatu
 
 - **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
 
-== "Python"
+=== "Python"
 
-    ```py
+    ```python
     --8<-- "examples/python/snippets/tools/built-in-tools/code_execution.py"
     ```
 
@@ -3580,18 +3580,18 @@ The foundation for structuring multi-agent systems is the parent-child relations
 
 * **Establishing Hierarchy:** You create a tree structure by passing a list of agent instances to the `sub_agents` argument when initializing a parent agent. ADK automatically sets the `parent_agent` attribute on each child agent during initialization.
 * **Single Parent Rule:** An agent instance can only be added as a sub-agent once. Attempting to assign a second parent will result in a `ValueError`.
-* **Importance:** This hierarchy defines the scope for [Workflow Agents](#12-workflow-agents-as-orchestrators) and influences the potential targets for LLM-Driven Delegation. You can navigate the hierarchy using `agent.parent_agent` or find descendants using `agent.find_agent(name)`.
+* **Importance:** This hierarchy defines the scope for [Workflow Agents](#workflow-agents-as-orchestrators) and influences the potential targets for LLM-Driven Delegation. You can navigate the hierarchy using `agent.parent_agent` or find descendants using `agent.find_agent(name)`.
 
 === "Python"
 
     ```python
     # Conceptual Example: Defining Hierarchy
     from google.adk.agents import LlmAgent, BaseAgent
-    
+
     # Define individual agents
     greeter = LlmAgent(name="Greeter", model="gemini-2.0-flash")
     task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
-    
+
     # Create parent agent and assign children via sub_agents
     coordinator = LlmAgent(
         name="Coordinator",
@@ -3602,7 +3602,7 @@ The foundation for structuring multi-agent systems is the parent-child relations
             task_doer
         ]
     )
-    
+
     # Framework automatically sets:
     # assert greeter.parent_agent == coordinator
     # assert task_doer.parent_agent == coordinator
@@ -3614,11 +3614,11 @@ The foundation for structuring multi-agent systems is the parent-child relations
     // Conceptual Example: Defining Hierarchy
     import com.google.adk.agents.SequentialAgent;
     import com.google.adk.agents.LlmAgent;
-    
+
     // Define individual agents
     LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-2.0-flash").build();
     SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
-    
+
     // Create parent agent and assign sub_agents
     LlmAgent coordinator = LlmAgent.builder()
         .name("Coordinator")
@@ -3626,7 +3626,7 @@ The foundation for structuring multi-agent systems is the parent-child relations
         .description("I coordinate greetings and tasks")
         .subAgents(greeter, taskDoer) // Assign sub_agents here
         .build();
-    
+
     // Framework automatically sets:
     // assert greeter.parentAgent().equals(coordinator);
     // assert taskDoer.parentAgent().equals(coordinator);
@@ -3706,29 +3706,29 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     # When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
     # A subsequent agent could read state['weather'] and state['news'].
     ```
-  
+
 === "Java"
 
     ```java
     // Conceptual Example: Parallel Execution
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.agents.ParallelAgent;
-   
+
     LlmAgent fetchWeather = LlmAgent.builder()
         .name("WeatherFetcher")
         .outputKey("weather")
         .build();
-    
+
     LlmAgent fetchNews = LlmAgent.builder()
         .name("NewsFetcher")
         .instruction("news")
         .build();
-    
+
     ParallelAgent gatherer = ParallelAgent.builder()
         .name("InfoGatherer")
         .subAgents(fetchWeather, fetchNews)
         .build();
-    
+
     // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
     // A subsequent agent could read state['weather'] and state['news'].
     ```
@@ -3774,7 +3774,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       # When poller runs, it executes process_step then Checker repeatedly
       # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
       ```
-    
+
 === "Java"
 
     ```java
@@ -3784,7 +3784,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       public CheckConditionAgent(String name, String description) {
         super(name, description, List.of(), null, null);
       }
-  
+
       @Override
       protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
         String status = (String) ctx.session().state().getOrDefault("status", "pending");
@@ -3800,7 +3800,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
         return Flowable.just(checkEvent);
       }
     }
-  
+
     // Agent that might update state.put("status")
     LlmAgent processingStepAgent = LlmAgent.builder().name("ProcessingStep").build();
     // Custom agent instance for checking the condition
@@ -3848,10 +3848,10 @@ The most fundamental way for agents operating within the same invocation (and th
     ```python
     # Conceptual Example: Using output_key and reading state
     from google.adk.agents import LlmAgent, SequentialAgent
-    
+
     agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
     agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in {capital_city}.")
-    
+
     pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
     # AgentA runs, saves "Paris" to state['capital_city'].
     # AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
@@ -3863,19 +3863,19 @@ The most fundamental way for agents operating within the same invocation (and th
     // Conceptual Example: Using outputKey and reading state
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.agents.SequentialAgent;
-    
+
     LlmAgent agentA = LlmAgent.builder()
         .name("AgentA")
         .instruction("Find the capital of France.")
         .outputKey("capital_city")
         .build();
-    
+
     LlmAgent agentB = LlmAgent.builder()
         .name("AgentB")
         .instruction("Tell me about the city stored in {capital_city}.")
         .outputKey("capital_city")
         .build();
-    
+
     SequentialAgent pipeline = SequentialAgent.builder().name("CityInfo").subAgents(agentA, agentB).build();
     // AgentA runs, saves "Paris" to state('capital_city').
     // AgentB runs, its instruction processor reads state.get("capital_city") to get "Paris".
@@ -3907,10 +3907,10 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     ```python
     # Conceptual Setup: LLM Transfer
     from google.adk.agents import LlmAgent
-    
+
     booking_agent = LlmAgent(name="Booker", description="Handles flight and hotel bookings.")
     info_agent = LlmAgent(name="Info", description="Provides general information and answers questions.")
-    
+
     coordinator = LlmAgent(
         name="Coordinator",
         model="gemini-2.0-flash",
@@ -3929,17 +3929,17 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     ```java
     // Conceptual Setup: LLM Transfer
     import com.google.adk.agents.LlmAgent;
-    
+
     LlmAgent bookingAgent = LlmAgent.builder()
         .name("Booker")
         .description("Handles flight and hotel bookings.")
         .build();
-    
+
     LlmAgent infoAgent = LlmAgent.builder()
         .name("Info")
         .description("Provides general information and answers questions.")
         .build();
-    
+
     // Define the coordinator agent
     LlmAgent coordinator = LlmAgent.builder()
         .name("Coordinator")
@@ -3982,7 +3982,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     from google.adk.agents import LlmAgent, BaseAgent
     from google.adk.tools import agent_tool
     from pydantic import BaseModel
-    
+
     # Define a target agent (could be LlmAgent or custom BaseAgent)
     class ImageGeneratorAgent(BaseAgent): # Example custom agent
         name: str = "ImageGen"
@@ -3993,10 +3993,10 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
             # ... generate image bytes ...
             image_bytes = b"..."
             yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
-    
+
     image_agent = ImageGeneratorAgent()
     image_tool = agent_tool.AgentTool(agent=image_agent) # Wrap the agent
-    
+
     # Parent agent uses the AgentTool
     artist_agent = LlmAgent(
         name="Artist",
@@ -4020,26 +4020,26 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
 
     // Example custom agent (could be LlmAgent or custom BaseAgent)
     public class ImageGeneratorAgent extends BaseAgent  {
-    
+
       public ImageGeneratorAgent(String name, String description) {
         super(name, description, List.of(), null, null);
       }
-    
+
       // ... internal logic ...
       @Override
       protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) { // Simplified run logic
         invocationContext.session().state().get("image_prompt");
         // Generate image bytes
         // ...
-    
+
         Event responseEvent = Event.builder()
             .author(this.name())
             .content(Content.fromParts(Part.fromText("\b...")))
             .build();
-    
+
         return Flowable.just(responseEvent);
       }
-    
+
       @Override
       protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {
         return null;
@@ -4049,7 +4049,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     // Wrap the agent using AgentTool
     ImageGeneratorAgent imageAgent = new ImageGeneratorAgent("image_agent", "generates images");
     AgentTool imageTool = AgentTool.create(imageAgent);
-    
+
     // Parent agent uses the AgentTool
     LlmAgent artistAgent = LlmAgent.builder()
             .name("Artist")
@@ -4064,7 +4064,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
             .description("An agent that can create images using a generation tool.")
             .tools(imageTool) // Include the AgentTool
             .build();
-    
+
     // Artist LLM generates a prompt, then calls:
     // FunctionCall(name='ImageGen', args={'imagePrompt': 'a cat wearing a hat'})
     // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
@@ -4108,10 +4108,10 @@ By combining ADK's composition primitives, you can implement various established
     ```python
     # Conceptual Code: Coordinator using LLM Transfer
     from google.adk.agents import LlmAgent
-    
+
     billing_agent = LlmAgent(name="Billing", description="Handles billing inquiries.")
     support_agent = LlmAgent(name="Support", description="Handles technical support requests.")
-    
+
     coordinator = LlmAgent(
         name="HelpDeskCoordinator",
         model="gemini-2.0-flash",
@@ -4180,11 +4180,11 @@ By combining ADK's composition primitives, you can implement various established
     ```python
     # Conceptual Code: Sequential Data Pipeline
     from google.adk.agents import SequentialAgent, LlmAgent
-    
+
     validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
     processor = LlmAgent(name="ProcessData", instruction="Process data if {validation_status} is 'valid'.", output_key="result")
     reporter = LlmAgent(name="ReportResult", instruction="Report the result from {result}.")
-    
+
     data_pipeline = SequentialAgent(
         name="DataPipeline",
         sub_agents=[validator, processor, reporter]
@@ -4199,29 +4199,29 @@ By combining ADK's composition primitives, you can implement various established
     ```java
     // Conceptual Code: Sequential Data Pipeline
     import com.google.adk.agents.SequentialAgent;
-    
+
     LlmAgent validator = LlmAgent.builder()
         .name("ValidateInput")
         .instruction("Validate the input")
         .outputKey("validation_status") // Saves its main text output to session.state["validation_status"]
         .build();
-    
+
     LlmAgent processor = LlmAgent.builder()
         .name("ProcessData")
         .instruction("Process data if {validation_status} is 'valid'")
         .outputKey("result") // Saves its main text output to session.state["result"]
         .build();
-    
+
     LlmAgent reporter = LlmAgent.builder()
         .name("ReportResult")
         .instruction("Report the result from {result}")
         .build();
-    
+
     SequentialAgent dataPipeline = SequentialAgent.builder()
         .name("DataPipeline")
         .subAgents(validator, processor, reporter)
         .build();
-    
+
     // validator runs -> saves to state['validation_status']
     // processor runs -> reads state['validation_status'], saves to state['result']
     // reporter runs -> reads state['result']
@@ -4252,20 +4252,20 @@ By combining ADK's composition primitives, you can implement various established
     ```python
     # Conceptual Code: Parallel Information Gathering
     from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
-    
+
     fetch_api1 = LlmAgent(name="API1Fetcher", instruction="Fetch data from API 1.", output_key="api1_data")
     fetch_api2 = LlmAgent(name="API2Fetcher", instruction="Fetch data from API 2.", output_key="api2_data")
-    
+
     gather_concurrently = ParallelAgent(
         name="ConcurrentFetch",
         sub_agents=[fetch_api1, fetch_api2]
     )
-    
+
     synthesizer = LlmAgent(
         name="Synthesizer",
         instruction="Combine results from {api1_data} and {api2_data}."
     )
-    
+
     overall_workflow = SequentialAgent(
         name="FetchAndSynthesize",
         sub_agents=[gather_concurrently, synthesizer] # Run parallel fetch, then synthesize
@@ -4340,11 +4340,11 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Hierarchical Research Task
     from google.adk.agents import LlmAgent
     from google.adk.tools import agent_tool
-    
+
     # Low-level tool-like agents
     web_searcher = LlmAgent(name="WebSearch", description="Performs web searches for facts.")
     summarizer = LlmAgent(name="Summarizer", description="Summarizes text.")
-    
+
     # Mid-level agent combining tools
     research_assistant = LlmAgent(
         name="ResearchAssistant",
@@ -4352,7 +4352,7 @@ By combining ADK's composition primitives, you can implement various established
         description="Finds and summarizes information on a topic.",
         tools=[agent_tool.AgentTool(agent=web_searcher), agent_tool.AgentTool(agent=summarizer)]
     )
-    
+
     # High-level agent delegating research
     report_writer = LlmAgent(
         name="ReportWriter",
@@ -4373,18 +4373,18 @@ By combining ADK's composition primitives, you can implement various established
     // Conceptual Code: Hierarchical Research Task
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.tools.AgentTool;
-    
+
     // Low-level tool-like agents
     LlmAgent webSearcher = LlmAgent.builder()
         .name("WebSearch")
         .description("Performs web searches for facts.")
         .build();
-    
+
     LlmAgent summarizer = LlmAgent.builder()
         .name("Summarizer")
         .description("Summarizes text.")
         .build();
-    
+
     // Mid-level agent combining tools
     LlmAgent researchAssistant = LlmAgent.builder()
         .name("ResearchAssistant")
@@ -4392,7 +4392,7 @@ By combining ADK's composition primitives, you can implement various established
         .description("Finds and summarizes information on a topic.")
         .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
         .build();
-    
+
     // High-level agent delegating research
     LlmAgent reportWriter = LlmAgent.builder()
         .name("ReportWriter")
@@ -4401,7 +4401,7 @@ By combining ADK's composition primitives, you can implement various established
         .tools(AgentTool.create(researchAssistant))
         // Alternatively, could use LLM Transfer if research_assistant is a subAgent
         .build();
-    
+
     // User interacts with ReportWriter.
     // ReportWriter calls ResearchAssistant tool.
     // ResearchAssistant calls WebSearch and Summarizer tools.
@@ -4433,21 +4433,21 @@ By combining ADK's composition primitives, you can implement various established
     ```python
     # Conceptual Code: Generator-Critic
     from google.adk.agents import SequentialAgent, LlmAgent
-    
+
     generator = LlmAgent(
         name="DraftWriter",
         instruction="Write a short paragraph about subject X.",
         output_key="draft_text"
     )
-    
+
     reviewer = LlmAgent(
         name="FactChecker",
         instruction="Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.",
         output_key="review_status"
     )
-    
+
     # Optional: Further steps based on review_status
-    
+
     review_pipeline = SequentialAgent(
         name="WriteAndReview",
         sub_agents=[generator, reviewer]
@@ -4462,26 +4462,26 @@ By combining ADK's composition primitives, you can implement various established
     // Conceptual Code: Generator-Critic
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.agents.SequentialAgent;
-    
+
     LlmAgent generator = LlmAgent.builder()
         .name("DraftWriter")
         .instruction("Write a short paragraph about subject X.")
         .outputKey("draft_text")
         .build();
-    
+
     LlmAgent reviewer = LlmAgent.builder()
         .name("FactChecker")
         .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
         .outputKey("review_status")
         .build();
-    
+
     // Optional: Further steps based on review_status
-    
+
     SequentialAgent reviewPipeline = SequentialAgent.builder()
         .name("WriteAndReview")
         .subAgents(generator, reviewer)
         .build();
-    
+
     // generator runs -> saves draft to state['draft_text']
     // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
     ```
@@ -4515,28 +4515,28 @@ By combining ADK's composition primitives, you can implement various established
     from google.adk.events import Event, EventActions
     from google.adk.agents.invocation_context import InvocationContext
     from typing import AsyncGenerator
-    
+
     # Agent to generate/refine code based on state['current_code'] and state['requirements']
     code_refiner = LlmAgent(
         name="CodeRefiner",
         instruction="Read state['current_code'] (if exists) and state['requirements']. Generate/refine Python code to meet requirements. Save to state['current_code'].",
         output_key="current_code" # Overwrites previous code in state
     )
-    
+
     # Agent to check if the code meets quality standards
     quality_checker = LlmAgent(
         name="QualityChecker",
         instruction="Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.",
         output_key="quality_status"
     )
-    
+
     # Custom agent to check the status and escalate if 'pass'
     class CheckStatusAndEscalate(BaseAgent):
         async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
             status = ctx.session.state.get("quality_status", "fail")
             should_stop = (status == "pass")
             yield Event(author=self.name, actions=EventActions(escalate=should_stop))
-    
+
     refinement_loop = LoopAgent(
         name="CodeRefinementLoop",
         max_iterations=5,
@@ -4559,29 +4559,29 @@ By combining ADK's composition primitives, you can implement various established
     import com.google.adk.agents.InvocationContext;
     import io.reactivex.rxjava3.core.Flowable;
     import java.util.List;
-    
+
     // Agent to generate/refine code based on state['current_code'] and state['requirements']
     LlmAgent codeRefiner = LlmAgent.builder()
         .name("CodeRefiner")
         .instruction("Read state['current_code'] (if exists) and state['requirements']. Generate/refine Java code to meet requirements. Save to state['current_code'].")
         .outputKey("current_code") // Overwrites previous code in state
         .build();
-    
+
     // Agent to check if the code meets quality standards
     LlmAgent qualityChecker = LlmAgent.builder()
         .name("QualityChecker")
         .instruction("Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.")
         .outputKey("quality_status")
         .build();
-    
+
     BaseAgent checkStatusAndEscalate = new BaseAgent(
         "StopChecker","Checks quality_status and escalates if 'pass'.", List.of(), null, null) {
-    
+
       @Override
       protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
         String status = (String) invocationContext.session().state().getOrDefault("quality_status", "fail");
         boolean shouldStop = "pass".equals(status);
-    
+
         EventActions actions = EventActions.builder().escalate(shouldStop).build();
         Event event = Event.builder()
             .author(this.name())
@@ -4590,13 +4590,13 @@ By combining ADK's composition primitives, you can implement various established
         return Flowable.just(event);
       }
     };
-    
+
     LoopAgent refinementLoop = LoopAgent.builder()
         .name("CodeRefinementLoop")
         .maxIterations(5)
         .subAgents(codeRefiner, qualityChecker, checkStatusAndEscalate)
         .build();
-    
+
     // Loop runs: Refiner -> Checker -> StopChecker
     // State['current_code'] is updated each iteration.
     // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5
@@ -4633,7 +4633,7 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Using a Tool for Human Approval
     from google.adk.agents import LlmAgent, SequentialAgent
     from google.adk.tools import FunctionTool
-    
+
     # --- Assume external_approval_tool exists ---
     # This tool would:
     # 1. Take details (e.g., request_id, amount, reason).
@@ -4642,14 +4642,14 @@ By combining ADK's composition primitives, you can implement various established
     # 4. Return the human's decision.
     # async def external_approval_tool(amount: float, reason: str) -> str: ...
     approval_tool = FunctionTool(func=external_approval_tool)
-    
+
     # Agent that prepares the request
     prepare_request = LlmAgent(
         name="PrepareApproval",
         instruction="Prepare the approval request details based on user input. Store amount and reason in state.",
         # ... likely sets state['approval_amount'] and state['approval_reason'] ...
     )
-    
+
     # Agent that calls the human approval tool
     request_approval = LlmAgent(
         name="RequestHumanApproval",
@@ -4657,13 +4657,13 @@ By combining ADK's composition primitives, you can implement various established
         tools=[approval_tool],
         output_key="human_decision"
     )
-    
+
     # Agent that proceeds based on human decision
     process_decision = LlmAgent(
         name="ProcessDecision",
         instruction="Check {human_decision}. If 'approved', proceed. If 'rejected', inform user."
     )
-    
+
     approval_workflow = SequentialAgent(
         name="HumanApprovalWorkflow",
         sub_agents=[prepare_request, request_approval, process_decision]
@@ -4677,7 +4677,7 @@ By combining ADK's composition primitives, you can implement various established
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.agents.SequentialAgent;
     import com.google.adk.tools.FunctionTool;
-    
+
     // --- Assume external_approval_tool exists ---
     // This tool would:
     // 1. Take details (e.g., request_id, amount, reason).
@@ -4686,14 +4686,14 @@ By combining ADK's composition primitives, you can implement various established
     // 4. Return the human's decision.
     // public boolean externalApprovalTool(float amount, String reason) { ... }
     FunctionTool approvalTool = FunctionTool.create(externalApprovalTool);
-    
+
     // Agent that prepares the request
     LlmAgent prepareRequest = LlmAgent.builder()
         .name("PrepareApproval")
         .instruction("Prepare the approval request details based on user input. Store amount and reason in state.")
         // ... likely sets state['approval_amount'] and state['approval_reason'] ...
         .build();
-    
+
     // Agent that calls the human approval tool
     LlmAgent requestApproval = LlmAgent.builder()
         .name("RequestHumanApproval")
@@ -4701,13 +4701,13 @@ By combining ADK's composition primitives, you can implement various established
         .tools(approvalTool)
         .outputKey("human_decision")
         .build();
-    
+
     // Agent that proceeds based on human decision
     LlmAgent processDecision = LlmAgent.builder()
         .name("ProcessDecision")
         .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
         .build();
-    
+
     SequentialAgent approvalWorkflow = SequentialAgent.builder()
         .name("HumanApprovalWorkflow")
         .subAgents(prepareRequest, requestApproval, processDecision)
@@ -4723,7 +4723,7 @@ By combining ADK's composition primitives, you can implement various established
         "google.golang.org/adk/agent/workflowagents/sequentialagent"
         "google.golang.org/adk/tool"
     )
-    
+
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:human-in-loop-pattern"
     ```
 
@@ -12875,7 +12875,7 @@ Congratulations\! You've successfully created and interacted with your first Str
 
 ## Next steps: build custom streaming app
 
-In [Custom Audio Streaming app](../../streaming/custom-streaming.md) tutorial, it overviews the server and client code for a custom asynchronous web app built with ADK Streaming and [FastAPI](https://fastapi.tiangolo.com/), enabling real-time, bidirectional audio and text communication.
+The [Bidi-streaming development guide series](../../streaming/dev-guide/part1.md) gives an overview of the server and client code for a custom asynchronous web app built with ADK Streaming, enabling real-time, bidirectional audio and text communication.
 
 ================
 File: docs/get-started/about.md
@@ -15547,7 +15547,7 @@ management, evaluation and testing. Once you integrate with Freeplay, you can
 update prompts and evals from the Freeplay UI or from code, so that anyone on
 your team can contribute.
 
-[Click here](https://www.loom.com/share/82f41ffde94949beb941cb191f53c3ec?sid=997aff3c-daa3-40ab-93a9-fdaf87ea2ea1) to see a demo.
+<iframe width="672" height="378" src="https://www.youtube.com/embed/AV2zCkp4aYM?si=HVuOJFLMEkkpocF7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Getting Started
 
@@ -15708,7 +15708,7 @@ quantify changes head to head across your full agent execution.
 
 [Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py)
 is a code example for executing a batch test on Freeplay with ADK.
-[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py) is a code example for executing a batch test on Freeplay with the Google ADK. 
+[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py) is a code example for executing a batch test on Freeplay with the Google ADK.
 
 ## Sign up now
 
@@ -16539,7 +16539,7 @@ Some typical applications of Plugins are as follows:
 
 !!! warning "Caution"
     Plugins are not supported by the
-    [ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui).
+    [ADK web interface](../evaluate/index.md#1-adk-web-run-evaluations-via-the-web-ui).
     If your ADK workflow uses Plugins, you must run your workflow without the
     web interface.
 
@@ -16553,7 +16553,7 @@ Plugins in your agent application, see
 [Plugin callback hooks](#plugin-callback-hooks).
 
 Plugin functionality builds on
-[Callbacks](../callbacks/), which is a key design
+[Callbacks](../callbacks/index.md), which is a key design
 element of the ADK's extensible architecture. While a typical Agent Callback is
 configured on a *single agent, a single tool* for a *specific task*, a Plugin is
 registered *once* on the `Runner` and its callbacks apply *globally* to every
@@ -16697,7 +16697,7 @@ python3 -m path.to.main
 ```
 
 Plugins are not supported by the
-[ADK web interface](../evaluate/#1-adk-web-run-evaluations-via-the-web-ui).
+[ADK web interface](../evaluate/index.md#1-adk-web-run-evaluations-via-the-web-ui).
 If your ADK workflow uses Plugins, you must run your workflow without the web
 interface.
 
@@ -16896,7 +16896,7 @@ callback is *not executed* (skipped).
 
 For more information about Agent callbacks defined as part of an Agent object,
 see
-[Types of Callbacks](../callbacks/types-of-callbacks/#agent-lifecycle-callbacks).
+[Types of Callbacks](../callbacks/types-of-callbacks.md#agent-lifecycle-callbacks).
 
 ### Model callbacks
 
@@ -18927,7 +18927,7 @@ Tools can be designed with security in mind: we can create tools that expose the
 
 In-tool guardrails is an approach to create common and re-usable tools that expose deterministic controls that can be used by developers to set limits on each tool instantiation.
 
-This approach relies on the fact that tools receive two types of input: arguments,  which are set by the model, and [**`Tool Context`**](../tools/index.md#tool-context), which can be set deterministically by the agent developer. We can rely on the deterministically set information to validate that the model is behaving as-expected.
+This approach relies on the fact that tools receive two types of input: arguments,  which are set by the model, and [**`Tool Context`**](../tools-custom/index.md#tool-context), which can be set deterministically by the agent developer. We can rely on the deterministically set information to validate that the model is behaving as-expected.
 
 For example, a query tool can be designed to expect a policy to be read from the Tool Context.
 
@@ -18997,7 +18997,7 @@ For example, a query tool can be designed to expect a policy to be read from the
     // For this example, we'll assume it gets stored somewhere accessible.
     ```
 
-During the tool execution, [**`Tool Context`**](../tools/index.md#tool-context) will be passed to the tool:
+During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-context) will be passed to the tool:
 
 === "Python"
 
@@ -19358,7 +19358,7 @@ Next, we can create our Agent Engine instance. You can use the Vertex AI SDK.
         ```
 
     2. Initialize the Vertex AI Client with your API key and create an agent engine instance.
-        
+
         ```py
         # Create Agent Engine with Gen AI SDK
         client = vertexai.Client(
@@ -19381,7 +19381,7 @@ Next, we can create our Agent Engine instance. You can use the Vertex AI SDK.
 
 ## Managing Sessions with a `VertexAiSessionService`
 
-[`VertexAiSessionService`](session.md###sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+[`VertexAiSessionService`](session.md#sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can
 instead initialize the session object without any project or location.
 
 ```py
@@ -19409,7 +19409,7 @@ session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 
 ## Managing Memories with a `VertexAiMemoryBankService`
 
-[`VertexAiMemoryBankService`](memory.md###memoryservice-implementations) is compatible with Vertex AI Express mode API Keys. We can 
+[`VertexAiMemoryBankService`](memory.md#vertex-ai-memory-bank) is compatible with Vertex AI Express mode API Keys. We can
 instead initialize the memory object without any project or location.
 
 ```py
@@ -19868,6 +19868,98 @@ class MultiMemoryAgent(Agent):
 
         return await self.llm.generate_content_async(prompt)
 ```
+
+================
+File: docs/sessions/rewind.md
+================
+# Rewind sessions for agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span>
+</div>
+
+The ADK session Rewind feature allows you to revert a session to a previous
+request state, enabling you to undo mistakes, explore alternative paths, or
+restart a process from a known good point. This document provides an overview of
+the feature, how to use it, and its limitations.
+
+## Rewind a session
+
+When you rewind a session, you specify a user request, or ***invocation***, that
+you want to undo, and the system undoes that request and the requests after it.
+So if you have three requests (A, B, C) and you want to return to the state at
+request A, you specify B, which undoes the changes from requests B and C. You
+rewind a session by using the rewind method on a ***Runner*** instance,
+specifying the user, session, and invocation id, as shown in the following code
+snippet:
+
+```python
+# Create runner
+runner = InMemoryRunner(
+    agent=agent.root_agent,
+    app_name=APP_NAME,
+)
+
+# Create a session
+session = await runner.session_service.create_session(
+    app_name=APP_NAME, user_id=USER_ID
+)
+# call agent with wrapper function "call_agent_async()"
+await call_agent_async(
+    runner, USER_ID, session.id, "set state color to red"
+)
+# ... more agent calls ...
+events_list = await call_agent_async(
+    runner, USER_ID, session.id, "update state color to blue"
+)
+
+# get invocation id
+rewind_invocation_id=events_list[1].invocation_id
+
+# rewind invocations (state color: red)
+await runner.rewind_async(
+    user_id=USER_ID,
+    session_id=session.id,
+    rewind_before_invocation_id=rewind_invocation_id,
+)
+```
+
+When you call the ***rewind*** method, all ADK managed session-level resources
+are restored to the state they were in *before* the request you specified with
+the ***invocation id***. However, global resources, such as app-level or
+user-level state and artifacts, are not restored. For a complete example of an
+agent session rewind, see the
+[rewind_session](https://github.com/google/adk-python/tree/main/contributing/samples/rewind_session)
+sample code. For more information on the limitations of the Rewind feature,
+see [Limitations](#limitations).
+
+## How it works
+
+The Rewind feature creates a special ***rewind*** request that restores the
+session's state and artifacts to their condition *before* the rewind point
+specified by an invocation id. This approach means that all requests, including
+rewound requests, are preserved in the log for later debugging, analysis, or
+auditing. After the rewind, the system ignores the rewound requests when
+it prepares the next requests for the AI model. This behavior means the AI model
+used by the agent effectively forgets any interactions from the rewind point up
+to the next request.
+
+## Limitations {#limitations}
+
+The Rewind feature has some limitations that you should be aware of when using
+it with your agent workflow:
+
+*   **Global agent resources:** App-level and user-level state and artifacts are
+    *not* restored by the rewind feature. Only session-level state and artifacts
+    are restored.
+*   **External dependencies:** The rewind feature does not manage external
+    dependencies. If a tool in your agent interacts with external systems,
+    it is your responsibility to handle the restoration of those systems to
+    their prior state.
+*   **Atomicity:** State updates, artifact updates, and event persistence are
+    not performed in a single atomic transaction. Therefore, you should avoid
+    rewinding active sessions or concurrently manipulating session artifacts
+    during a rewind to prevent inconsistencies.
 
 ================
 File: docs/sessions/session.md
@@ -30534,17 +30626,17 @@ Many tools need to access protected resources (like user data in Google Calendar
 
 The key components involved are:
 
-1. **`AuthScheme`**: Defines *how* an API expects authentication credentials (e.g., as an API Key in a header, an OAuth 2.0 Bearer token). ADK supports the same types of authentication schemes as OpenAPI 3.0. To know more about what each type of credential is, refer to [OpenAPI doc: Authentication](https://swagger.io/docs/specification/v3_0/authentication/). ADK uses specific classes like `APIKey`, `HTTPBearer`, `OAuth2`, `OpenIdConnectWithConfig`.  
+1. **`AuthScheme`**: Defines *how* an API expects authentication credentials (e.g., as an API Key in a header, an OAuth 2.0 Bearer token). ADK supports the same types of authentication schemes as OpenAPI 3.0. To know more about what each type of credential is, refer to [OpenAPI doc: Authentication](https://swagger.io/docs/specification/v3_0/authentication/). ADK uses specific classes like `APIKey`, `HTTPBearer`, `OAuth2`, `OpenIdConnectWithConfig`.
 2. **`AuthCredential`**: Holds the *initial* information needed to *start* the authentication process (e.g., your application's OAuth Client ID/Secret, an API key value). It includes an `auth_type` (like `API_KEY`, `OAUTH2`, `SERVICE_ACCOUNT`) specifying the credential type.
 
 The general flow involves providing these details when configuring a tool. ADK then attempts to automatically exchange the initial credential for a usable one (like an access token) before the tool makes an API call. For flows requiring user interaction (like OAuth consent), a specific interactive process involving the Agent Client application is triggered.
 
 ## Supported Initial Credential Types
 
-* **API\_KEY:** For simple key/value authentication. Usually requires no exchange.  
-* **HTTP:** Can represent Basic Auth (not recommended/supported for exchange) or already obtained Bearer tokens. If it's a Bearer token, no exchange is needed.  
-* **OAUTH2:** For standard OAuth 2.0 flows. Requires configuration (client ID, secret, scopes) and often triggers the interactive flow for user consent.  
-* **OPEN\_ID\_CONNECT:** For authentication based on OpenID Connect. Similar to OAuth2, often requires configuration and user interaction.  
+* **API\_KEY:** For simple key/value authentication. Usually requires no exchange.
+* **HTTP:** Can represent Basic Auth (not recommended/supported for exchange) or already obtained Bearer tokens. If it's a Bearer token, no exchange is needed.
+* **OAUTH2:** For standard OAuth 2.0 flows. Requires configuration (client ID, secret, scopes) and often triggers the interactive flow for user consent.
+* **OPEN\_ID\_CONNECT:** For authentication based on OpenID Connect. Similar to OAuth2, often requires configuration and user interaction.
 * **SERVICE\_ACCOUNT:** For Google Cloud Service Account credentials (JSON key or Application Default Credentials). Typically exchanged for a Bearer token.
 
 ## Configuring Authentication on Tools
@@ -30557,7 +30649,7 @@ You set up authentication when defining your tool:
 
 * **APIHubToolset / ApplicationIntegrationToolset**: Pass `auth_scheme` and `auth_credential`during initialization, if the API managed in API Hub / provided by Application Integration requires authentication.
 
-!!! tip "WARNING" 
+!!! tip "WARNING"
     Storing sensitive credentials like access tokens and especially refresh tokens directly in the session state might pose security risks depending on your session storage backend (`SessionService`) and overall application security posture.
 
     *   **`InMemorySessionService`:** Suitable for testing and development, but data is lost when the process ends. Less risk as it's transient.
@@ -30624,7 +30716,7 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       auth_credential = AuthCredential(
           auth_type=AuthCredentialTypes.OAUTH2,
           oauth2=OAuth2Auth(
-              client_id=YOUR_OAUTH_CLIENT_ID, 
+              client_id=YOUR_OAUTH_CLIENT_ID,
               client_secret=YOUR_OAUTH_CLIENT_SECRET
           ),
       )
@@ -30711,7 +30803,7 @@ calendar_tool_set.configure_auth(
 
 The sequence diagram of auth request flow (where tools are requesting auth credentials) looks like below:
 
-![Authentication](../assets/auth_part1.svg) 
+![Authentication](../assets/auth_part1.svg)
 
 
 ### 2. Handling the Interactive OAuth/OIDC Flow (Client-Side)
@@ -30732,8 +30824,8 @@ Here's the step-by-step process for your client application:
 
 **Step 1: Run Agent & Detect Auth Request**
 
-* Initiate the agent interaction using `runner.run_async`.  
-* Iterate through the yielded events.  
+* Initiate the agent interaction using `runner.run_async`.
+* Iterate through the yielded events.
 * Look for a specific function call event whose function call has a special name: `adk_request_credential`. This event signals that user interaction is needed. You can use helper functions to identify this event and extract necessary information. (For the second case, the logic is similar. You deserialize the event from the http response).
 
 ```py
@@ -30779,10 +30871,10 @@ def get_auth_request_function_call(event: Event) -> types.FunctionCall:
         return
     for part in event.content.parts:
         if (
-            part 
-            and part.function_call 
+            part
+            and part.function_call
             and part.function_call.name == 'adk_request_credential'
-            and event.long_running_tool_ids 
+            and event.long_running_tool_ids
             and part.function_call.id in event.long_running_tool_ids
         ):
 
@@ -30801,8 +30893,8 @@ def get_auth_config(auth_request_function_call: types.FunctionCall) -> AuthConfi
 
 **Step 2: Redirect User for Authorization**
 
-* Get the authorization URL (`auth_uri`) from the `auth_config` extracted in the previous step.  
-* **Crucially, append your application's**  redirect\_uri as a query parameter to this `auth_uri`. This `redirect_uri` must be pre-registered with your OAuth provider (e.g., [Google Cloud Console](https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred), [Okta admin panel](https://developer.okta.com/docs/guides/sign-into-web-app-redirect/spring-boot/main/#create-an-app-integration-in-the-admin-console)).  
+* Get the authorization URL (`auth_uri`) from the `auth_config` extracted in the previous step.
+* **Crucially, append your application's**  redirect\_uri as a query parameter to this `auth_uri`. This `redirect_uri` must be pre-registered with your OAuth provider (e.g., [Google Cloud Console](https://developers.google.com/identity/protocols/oauth2/web-server#creatingcred), [Okta admin panel](https://developer.okta.com/docs/guides/sign-into-web-app-redirect/spring-boot/main/#create-an-app-integration-in-the-admin-console)).
 * Direct the user to this complete URL (e.g., open it in their browser).
 
 ```py
@@ -30828,19 +30920,19 @@ if auth_request_function_call_id and auth_config:
 
 **Step 3. Handle the Redirect Callback (Client):**
 
-* Your application must have a mechanism (e.g., a web server route at the `redirect_uri`) to receive the user after they authorize the application with the provider.  
-* The provider redirects the user to your `redirect_uri` and appends an `authorization_code` (and potentially `state`, `scope`) as query parameters to the URL.  
-* Capture the **full callback URL** from this incoming request.  
+* Your application must have a mechanism (e.g., a web server route at the `redirect_uri`) to receive the user after they authorize the application with the provider.
+* The provider redirects the user to your `redirect_uri` and appends an `authorization_code` (and potentially `state`, `scope`) as query parameters to the URL.
+* Capture the **full callback URL** from this incoming request.
 * (This step happens outside the main agent execution loop, in your web server or equivalent callback handler.)
 
 **Step 4. Send Authentication Result Back to ADK (Client):**
 
-* Once you have the full callback URL (containing the authorization code), retrieve the `auth_request_function_call_id` and the `auth_config` object saved in Client Step 1\.  
-* Set the captured callback URL into the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.  
-* Create a `types.Content` object containing a `types.Part` with a `types.FunctionResponse`.  
-      * Set `name` to `"adk_request_credential"`. (Note: This is a special name for ADK to proceed with authentication. Do not use other names.)  
-      * Set `id` to the `auth_request_function_call_id` you saved.  
-      * Set `response` to the *serialized* (e.g., `.model_dump()`) updated `AuthConfig` object.  
+* Once you have the full callback URL (containing the authorization code), retrieve the `auth_request_function_call_id` and the `auth_config` object saved in Client Step 1\.
+* Set the captured callback URL into the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.
+* Create a `types.Content` object containing a `types.Part` with a `types.FunctionResponse`.
+      * Set `name` to `"adk_request_credential"`. (Note: This is a special name for ADK to proceed with authentication. Do not use other names.)
+      * Set `id` to the `auth_request_function_call_id` you saved.
+      * Set `response` to the *serialized* (e.g., `.model_dump()`) updated `AuthConfig` object.
 * Call `runner.run_async` **again** for the same session, passing this `FunctionResponse` content as the `new_message`.
 
 ```py
@@ -30893,7 +30985,7 @@ if auth_request_function_call_id and auth_config:
 
 !!! note "Note: Authorization response with Resume feature"
 
-    If your ADK agent workflow is configured with the 
+    If your ADK agent workflow is configured with the
     [Resume](/adk-docs/runtime/resume/) feature, you also must include
     the Invocation ID (`invocation_id`) parameter with the authorization
     response. The Invocation ID you provide must be the same invocation
@@ -30901,17 +30993,17 @@ if auth_request_function_call_id and auth_config:
     starts a new invocation with the authorization response. If your
     agent uses the Resume feature, consider including the Invocation ID
     as a parameter with your authorization request, so it can be included
-    with the authorization response. For more details on using the Resume 
+    with the authorization response. For more details on using the Resume
     feature, see
     [Resume stopped agents](/adk-docs/runtime/resume/).
 
 **Step 5: ADK Handles Token Exchange & Tool Retry and gets Tool result**
 
-* ADK receives the `FunctionResponse` for `adk_request_credential`.  
-* It uses the information in the updated `AuthConfig` (including the callback URL containing the code) to perform the OAuth **token exchange** with the provider's token endpoint, obtaining the access token (and possibly refresh token).  
-* ADK internally makes these tokens available by setting them in the session state).  
-* ADK **automatically retries** the original tool call (the one that initially failed due to missing auth).  
-* This time, the tool finds the valid tokens (via `tool_context.get_auth_response()`) and successfully executes the authenticated API call.  
+* ADK receives the `FunctionResponse` for `adk_request_credential`.
+* It uses the information in the updated `AuthConfig` (including the callback URL containing the code) to perform the OAuth **token exchange** with the provider's token endpoint, obtaining the access token (and possibly refresh token).
+* ADK internally makes these tokens available by setting them in the session state).
+* ADK **automatically retries** the original tool call (the one that initially failed due to missing auth).
+* This time, the tool finds the valid tokens (via `tool_context.get_auth_response()`) and successfully executes the authenticated API call.
 * The agent receives the actual result from the tool and generates its final response to the user.
 
 ---
@@ -30926,7 +31018,7 @@ This section focuses on implementing the authentication logic *inside* your cust
 
 ### Prerequisites
 
-Your function signature *must* include [`tool_context: ToolContext`](../tools/index.md#tool-context). ADK automatically injects this object, providing access to state and auth mechanisms.
+Your function signature *must* include [`tool_context: ToolContext`](../tools-custom/index.md#tool-context). ADK automatically injects this object, providing access to state and auth mechanisms.
 
 ```py
 from google.adk.tools import FunctionTool, ToolContext
@@ -30983,7 +31075,7 @@ else:
 
 **Step 2: Check for Auth Response from Client**
 
-* If Step 1 didn't yield valid credentials, check if the client just completed the interactive flow by calling `exchanged_credential = tool_context.get_auth_response()`.  
+* If Step 1 didn't yield valid credentials, check if the client just completed the interactive flow by calling `exchanged_credential = tool_context.get_auth_response()`.
 * This returns the updated `exchanged_credential` object sent back by the client (containing the callback URL in `auth_response_uri`).
 
 ```py
@@ -30994,7 +31086,7 @@ exchanged_credential = tool_context.get_auth_response(AuthConfig(
   auth_scheme=auth_scheme,
   raw_auth_credential=auth_credential,
 ))
-# If exchanged_credential is not None, then there is already an exchanged credetial from the auth response. 
+# If exchanged_credential is not None, then there is already an exchanged credetial from the auth response.
 if exchanged_credential:
    # ADK exchanged the access token already for us
         access_token = exchanged_credential.oauth2.access_token
@@ -31045,7 +31137,7 @@ print(f"DEBUG: Cached/updated tokens under key: {TOKEN_CACHE_KEY}")
 
 **Step 6: Make Authenticated API Call**
 
-* Once you have a valid `Credentials` object (`creds` from Step 1 or Step 4), use it to make the actual call to the protected API using the appropriate client library (e.g., `googleapiclient`, `requests`). Pass the `credentials=creds` argument.  
+* Once you have a valid `Credentials` object (`creds` from Step 1 or Step 4), use it to make the actual call to the protected API using the appropriate client library (e.g., `googleapiclient`, `requests`). Pass the `credentials=creds` argument.
 * Include error handling, especially for `HttpError` 401/403, which might mean the token expired or was revoked between calls. If you get such an error, consider clearing the cached token (`tool_context.state.pop(...)`) and potentially returning the `auth_required` status again to force re-authentication.
 
 ```py
@@ -31066,7 +31158,7 @@ except Exception as e:
 
 **Step 7: Return Tool Result**
 
-* After a successful API call, process the result into a dictionary format that is useful for the LLM.  
+* After a successful API call, process the result into a dictionary format that is useful for the LLM.
 * **Crucially, include a**  along with the data.
 
 ```py
@@ -32466,7 +32558,7 @@ This guide covers two primary integration patterns:
 
 Before you begin, ensure you have the following set up:
 
-* **Set up ADK:** Follow the standard ADK [setup instructions](../get-started/quickstart.md/#venv-install) in the quickstart.
+* **Set up ADK:** Follow the standard ADK [setup instructions](../get-started/index.md) in the quickstart.
 * **Install/update Python/Java:** MCP requires Python version of 3.9 or higher for Python or Java 17 or higher.
 * **Setup Node.js and npx:** **(Python only)** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).
 * **Verify Installations:** **(Python only)** Confirm `adk` and `npx` are in your PATH within the activated virtual environment:
@@ -35856,6 +35948,124 @@ Your Weather Bot team is a great starting point. Here are some ideas to further 
 The Agent Development Kit provides a robust foundation for building sophisticated LLM-powered applications. By mastering the concepts covered in this tutorial – tools, state, delegation, and callbacks – you are well-equipped to tackle increasingly complex agentic systems.
 
 Happy building!
+
+================
+File: docs/tutorials/coding-with-ai.md
+================
+# Coding with AI
+
+The Agent Development Kit (ADK) documentation supports the
+[`/llms.txt`](https://llmstxt.org/) standard, providing a machine-readable index
+of the documentation optimized for Large Language Models (LLMs). This allows you
+to easily use the ADK documentation as context in your AI-powered development
+environment.
+
+## What is llms.txt?
+
+`llms.txt` is a standardized text file that acts as a map for LLMs, listing the
+most important documentation pages and their descriptions. This helps AI tools
+understand the structure of the ADK documentation and retrieve relevant
+information to answer your questions.
+
+The ADK documentation provides two files:
+
+File | Best For... | URL
+---- | ----------- | ---
+**`llms.txt`** | Tools that can fetch links dynamically | `https://google.github.io/adk-docs/llms.txt`
+**`llms-full.txt`** | Tools that need a single, static text dump of the entire site | `https://google.github.io/adk-docs/llms-full.txt`
+
+## Usage in Development Tools
+
+You can use these files to power your AI coding assistants with ADK knowledge.
+This functionality allows your agents to autonomously search and read the ADK
+documentation while planning tasks and generating code.
+
+### Gemini CLI
+
+The [Gemini CLI](https://geminicli.com/) can be configured to query the ADK
+documentation using the
+[ADK Docs Extension](https://github.com/derailed-dash/adk-docs-ext).
+
+**Installation:**
+
+To install the extension, run the following command:
+
+```bash
+gemini extensions install https://github.com/derailed-dash/adk-docs-ext
+```
+
+**Usage:**
+
+Once installed, the extension is automatically enabled. You can ask questions
+about ADK directly in the Gemini CLI, and it will use the `llms.txt` file and
+ADK documentation to provide accurate answers and generate code.
+
+For example, you can ask the following question from within Gemini CLI:
+
+```
+How do I create a function tool using Agent Development Kit?
+```
+
+### Antigravity
+
+The [Antigravity](https://antigravity.google/) IDE can be configured to access
+the ADK documentation by running a custom MCP server that points to the
+`llms.txt` file for ADK.
+
+**Prerequisites:**
+
+Ensure you have the [`uv`](https://docs.astral.sh/uv/) tool installed, as this
+configuration uses `uvx` to run the documentation server without manual
+installation.
+
+**Configuration:**
+
+1. Open the MCP store via the **...** (more) menu at the top of the editor's
+   agent panel.
+2. Click on **Manage MCP Servers**
+3. Click on **View raw config**
+4. Add the following entry to `mcp_config.json` with your custom MCP server
+   configuration. If this is your first MCP server, you can paste the entire
+   code block:
+
+```json
+{
+  "mcpServers": {
+    "adk-docs-mcp": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcpdoc",
+        "mcpdoc",
+        "--urls",
+        "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
+        "--transport",
+        "stdio"
+      ]
+    }
+  }
+}
+```
+
+Refer to the [Antigravity MCP](https://antigravity.google/docs/mcp)
+documentation for more information on managing MCP servers.
+
+**Usage:**
+
+Once configured, you can prompt the coding agent with instructions like:
+
+```
+Use the ADK docs to build a multi-tool agent that uses Gemini 2.5 Pro and
+includes a mock weather lookup tool and a custom calculator tool. Verify the
+agent using `adk run`.
+```
+
+### Other Tools
+
+Any tool that supports the `llms.txt` standard or can ingest documentation from
+a URL can benefit from these files. You can provide the URL
+`https://google.github.io/adk-docs/llms.txt` (or `llms-full.txt`) to your tool's
+knowledge base configuration or MCP server configuration.
 
 ================
 File: docs/tutorials/index.md
