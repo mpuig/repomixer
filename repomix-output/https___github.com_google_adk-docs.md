@@ -1053,10 +1053,10 @@ File: docs/agents/workflow-agents/index.md
 # Workflow Agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
-This section introduces "*workflow agents*" - **specialized agents that control the execution flow of its sub-agents**.  
+This section introduces "*workflow agents*" - **specialized agents that control the execution flow of its sub-agents**.
 
 Workflow agents are specialized components in ADK designed purely for **orchestrating the execution flow of sub-agents**. Their primary role is to manage *how* and *when* other agents run, defining the control flow of a process.
 
@@ -1108,7 +1108,7 @@ File: docs/agents/workflow-agents/loop-agents.md
 # Loop agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The `LoopAgent` is a workflow agent that executes its sub-agents in a loop (i.e. iteratively). It **_repeatedly runs_ a sequence of agents** for a specified number of iterations or until a termination condition is met.
@@ -1155,6 +1155,11 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
         --8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py:init"
         ```
 
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.ts:init"
+        ```
+
     === "Go"
         ```go
         --8<-- "examples/go/snippets/agents/workflow-agents/loop/main.go:init"
@@ -1171,7 +1176,7 @@ File: docs/agents/workflow-agents/parallel-agents.md
 # Parallel agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The `ParallelAgent` is a [workflow agent](index.md) that executes its sub-agents *concurrently*. This dramatically speeds up workflows where tasks can be performed independently.
@@ -1223,6 +1228,11 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
          --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py:init"
         ```
 
+    === "Typescript"
+        ```typescript
+         --8<-- "examples/typescript/snippets/agents/workflow-agents/parallel_agent_web_research.ts:init"
+        ```
+
     === "Go"
         ```go
          --8<-- "examples/go/snippets/agents/workflow-agents/parallel/main.go:init"
@@ -1239,7 +1249,7 @@ File: docs/agents/workflow-agents/sequential-agents.md
 # Sequential agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The `SequentialAgent` is a [workflow agent](index.md) that executes its sub-agents in the order they are specified in the list.
@@ -1284,6 +1294,11 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
     === "Python"
         ```py
         --8<-- "examples/python/snippets/agents/workflow-agents/sequential_agent_code_development_agent.py:init"
+        ```
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/agents/workflow-agents/sequential_agent_code_development_agent.ts:init"
         ```
 
     === "Go"
@@ -1579,7 +1594,7 @@ File: docs/agents/custom-agents.md
 # Custom agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Custom agents provide the ultimate flexibility in ADK, allowing you to define **arbitrary orchestration logic** by inheriting directly from `BaseAgent` and implementing your own control flow. This goes beyond the predefined patterns of `SequentialAgent`, `LoopAgent`, and `ParallelAgent`, enabling you to build highly specific and complex agentic workflows.
@@ -1592,10 +1607,10 @@ Custom agents provide the ultimate flexibility in ADK, allowing you to define **
 
 ### What is a Custom Agent?
 
-A Custom Agent is essentially any class you create that inherits from `google.adk.agents.BaseAgent` and implements its core execution logic within the `_run_async_impl` asynchronous method. You have complete control over how this method calls other agents (sub-agents), manages state, and handles events. 
+A Custom Agent is essentially any class you create that inherits from `google.adk.agents.BaseAgent` and implements its core execution logic within the `_run_async_impl` asynchronous method. You have complete control over how this method calls other agents (sub-agents), manages state, and handles events.
 
 !!! Note
-    The specific method name for implementing an agent's core asynchronous logic may vary slightly by SDK language (e.g., `runAsyncImpl` in Java, `_run_async_impl` in Python). Refer to the language-specific API documentation for details.
+    The specific method name for implementing an agent's core asynchronous logic may vary slightly by SDK language (e.g., `runAsyncImpl` in Java, `_run_async_impl` in Python, or `runAsyncImpl` in TypeScript). Refer to the language-specific API documentation for details.
 
 ### Why Use Them?
 
@@ -1618,10 +1633,18 @@ The core of any custom agent is the method where you define its unique asynchron
 === "Python"
 
       The heart of any custom agent is the `_run_async_impl` method. This is where you define its unique behavior.
-      
+
       * **Signature:** `async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:`
       * **Asynchronous Generator:** It must be an `async def` function and return an `AsyncGenerator`. This allows it to `yield` events produced by sub-agents or its own logic back to the runner.
       * **`ctx` (InvocationContext):** Provides access to crucial runtime information, most importantly `ctx.session.state`, which is the primary way to share data between steps orchestrated by your custom agent.
+
+=== "TypeScript"
+
+    The heart of any custom agent is the `runAsyncImpl` method. This is where you define its unique behavior.
+
+    *   **Signature:** `async* runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event, void, undefined>`
+    *   **Asynchronous Generator:** It must be an `async` generator function (`async*`).
+    *   **`ctx` (InvocationContext):** Provides access to crucial runtime information, most importantly `ctx.session.state`, which is the primary way to share data between steps orchestrated by your custom agent.
 
 === "Go"
 
@@ -1653,21 +1676,52 @@ The core of any custom agent is the method where you define its unique asynchron
           ```
 
     2. **Managing State:** Read from and write to the session state dictionary (`ctx.session.state`) to pass data between sub-agent calls or make decisions:
+
           ```python
           # Read data set by a previous agent
           previous_result = ctx.session.state.get("some_key")
-      
+
           # Make a decision based on state
           if previous_result == "some_value":
               # ... call a specific sub-agent ...
           else:
               # ... call another sub-agent ...
-      
+
           # Store a result for a later step (often done via a sub-agent's output_key)
           # ctx.session.state["my_custom_result"] = "calculated_value"
           ```
 
     3. **Implementing Control Flow:** Use standard Python constructs (`if`/`elif`/`else`, `for`/`while` loops, `try`/`except`) to create sophisticated, conditional, or iterative workflows involving your sub-agents.
+
+=== "TypeScript"
+
+    1.  **Calling Sub-Agents:** You invoke sub-agents (which are typically stored as instance properties like `this.myLlmAgent`) using their `run` method and yield their events:
+
+        ```typescript
+        for await (const event of this.someSubAgent.runAsync(ctx)) {
+            // Optionally inspect or log the event
+            yield event; // Pass the event up to the runner
+        }
+        ```
+
+    2.  **Managing State:** Read from and write to the session state object (`ctx.session.state`) to pass data between sub-agent calls or make decisions:
+
+        ```typescript
+        // Read data set by a previous agent
+        const previousResult = ctx.session.state['some_key'];
+
+        // Make a decision based on state
+        if (previousResult === 'some_value') {
+          // ... call a specific sub-agent ...
+        } else {
+          // ... call another sub-agent ...
+        }
+
+        // Store a result for a later step (often done via a sub-agent's outputKey)
+        // ctx.session.state['my_custom_result'] = 'calculated_value';
+        ```
+
+    3. **Implementing Control Flow:** Use standard TypeScript/JavaScript constructs (`if`/`else`, `for`/`while` loops, `try`/`catch`) to create sophisticated, conditional, or iterative workflows involving your sub-agents.
 
 === "Go"
 
@@ -1720,22 +1774,22 @@ The core of any custom agent is the method where you define its unique asynchron
            ```java
            // Example: Running one sub-agent
            // return someSubAgent.runAsync(ctx);
-      
+
            // Example: Running sub-agents sequentially
            Flowable<Event> firstAgentEvents = someSubAgent1.runAsync(ctx)
                .doOnNext(event -> System.out.println("Event from agent 1: " + event.id()));
-      
+
            Flowable<Event> secondAgentEvents = Flowable.defer(() ->
                someSubAgent2.runAsync(ctx)
                    .doOnNext(event -> System.out.println("Event from agent 2: " + event.id()))
            );
-      
+
            return firstAgentEvents.concatWith(secondAgentEvents);
            ```
            The `Flowable.defer()` is often used for subsequent stages if their execution depends on the completion or state after prior stages.
 
     2. **Managing State:** Read from and write to the session state to pass data between sub-agent calls or make decisions. The session state is a `java.util.concurrent.ConcurrentMap<String, Object>` obtained via `ctx.session().state()`.
-        
+
         ```java
         // Read data set by a previous agent
         Object previousResult = ctx.session().state().get("some_key");
@@ -1779,9 +1833,20 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 === "Python"
 
     We define the `StoryFlowAgent` inheriting from `BaseAgent`. In `__init__`, we store the necessary sub-agents (passed in) as instance attributes and tell the `BaseAgent` framework about the top-level agents this custom agent will directly orchestrate.
-    
+
     ```python
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py:init"
+    ```
+
+=== "TypeScript"
+
+    We define the `StoryFlowAgent` by extending `BaseAgent`. In its constructor, we:
+    1.  Create any internal composite agents (like `LoopAgent` or `SequentialAgent`).
+    2.  Pass the list of all top-level sub-agents to the `super()` constructor.
+    3.  Store the sub-agents (passed in or created internally) as instance properties (e.g., `this.storyGenerator`) so they can be accessed in the custom `runImpl` logic.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/custom-agent/storyflow_agent.ts:init"
     ```
 
 === "Go"
@@ -1807,7 +1872,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 === "Python"
 
     This method orchestrates the sub-agents using standard Python async/await and control flow.
-    
+
     ```python
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py:executionlogic"
     ```
@@ -1817,6 +1882,20 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
     2. The `loop_agent` runs, which internally calls the `critic` and `reviser` sequentially for `max_iterations` times. They read/write `current_story` and `criticism` from/to the state.
     3. The `sequential_agent` runs, calling `grammar_check` then `tone_check`, reading `current_story` and writing `grammar_suggestions` and `tone_check_result` to the state.
     4. **Custom Part:** The `if` statement checks the `tone_check_result` from the state. If it's "negative", the `story_generator` is called *again*, overwriting the `current_story` in the state. Otherwise, the flow ends.
+
+=== "TypeScript"
+
+    The `runImpl` method orchestrates the sub-agents using standard TypeScript `async`/`await` and control flow. The `runLiveImpl` is also added to handle live streaming scenarios.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/custom-agent/storyflow_agent.ts:executionlogic"
+    ```
+    **Explanation of Logic:**
+
+    1.  The initial `storyGenerator` runs. Its output is expected to be in `ctx.session.state['current_story']`.
+    2.  The `loopAgent` runs, which internally calls the `critic` and `reviser` sequentially for `maxIterations` times. They read/write `current_story` and `criticism` from/to the state.
+    3.  The `sequentialAgent` runs, calling `grammarCheck` then `toneCheck`, reading `current_story` and writing `grammar_suggestions` and `tone_check_result` to the state.
+    4.  **Custom Part:** The `if` statement checks the `tone_check_result` from the state. If it's "negative", the `storyGenerator` is called *again*, overwriting the `current_story` in the state. Otherwise, the flow ends.
 
 === "Go"
 
@@ -1833,7 +1912,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
     4. **Custom Part:** The code checks the `tone_check_result` from the state. If it's "negative", the `story_generator` is called *again*, overwriting the `current_story` in the state. Otherwise, the flow ends.
 
 === "Java"
-    
+
     The `runAsyncImpl` method orchestrates the sub-agents using RxJava's Flowable streams and operators for asynchronous control flow.
 
     ```java
@@ -1861,16 +1940,23 @@ These are standard `LlmAgent` definitions, responsible for specific tasks. Their
     GEMINI_2_FLASH = "gemini-2.0-flash" # Define model constant
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py:llmagents"
     ```
-=== "Java"
 
-    ```java
-    --8<-- "examples/java/snippets/src/main/java/agents/StoryFlowAgentExample.java:llmagents"
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/custom-agent/storyflow_agent.ts:llmagents"
     ```
 
 === "Go"
 
     ```go
     --8<-- "examples/go/snippets/agents/custom-agent/storyflow_agent.go:llmagents"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/agents/StoryFlowAgentExample.java:llmagents"
     ```
 
 ---
@@ -1883,6 +1969,12 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
 
     ```python
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py:story_flow_agent"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/custom-agent/storyflow_agent.ts:story_flow_agent"
     ```
 
 === "Go"
@@ -1906,12 +1998,20 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
 ???+ "Storyflow Agent"
 
     === "Python"
-    
+
         ```python
         # Full runnable code for the StoryFlowAgent example
         --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py"
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Full runnable code for the StoryFlowAgent example
+
+        --8<-- "examples/typescript/snippets/agents/custom-agent/storyflow_agent.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -1920,7 +2020,7 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
         ```
 
     === "Java"
-    
+
         ```java
         # Full runnable code for the StoryFlowAgent example
         --8<-- "examples/java/snippets/src/main/java/agents/StoryFlowAgentExample.java:full_code"
@@ -1932,7 +2032,7 @@ File: docs/agents/index.md
 # Agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 In the Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
@@ -1990,7 +2090,7 @@ File: docs/agents/llm-agents.md
 # LLM Agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK,
@@ -2040,6 +2140,18 @@ First, you need to establish what the agent *is* and what it's *for*.
         description="Answers user questions about the capital city of a given country."
         # instruction and tools will be added next
     )
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Example: Defining the basic identity
+    const capitalAgent = new LlmAgent({
+        model: 'gemini-2.5-flash',
+        name: 'capital_agent',
+        description: 'Answers user questions about the capital city of a given country.',
+        // instruction and tools will be added next
+    });
     ```
 
 === "Go"
@@ -2107,6 +2219,26 @@ tells the agent:
     )
     ```
 
+=== "Typescript"
+
+    ```typescript
+    // Example: Adding instructions
+    const capitalAgent = new LlmAgent({
+        model: 'gemini-2.5-flash',
+        name: 'capital_agent',
+        description: 'Answers user questions about the capital city of a given country.',
+        instruction: `You are an agent that provides the capital city of a country.
+            When a user asks for the capital of a country:
+            1. Identify the country name from the user's query.
+            2. Use the \`getCapitalCity\` tool to find the capital.
+            3. Respond clearly to the user, stating the capital city.
+            Example Query: "What's the capital of {country}?"
+            Example Response: "The capital of France is Paris."
+            `,
+        // tools will be added next
+    });
+    ```
+
 === "Go"
 
     ```go
@@ -2164,7 +2296,7 @@ on the conversation and its instructions.
       # Replace with actual logic (e.g., API call, database lookup)
       capitals = {"france": "Paris", "japan": "Tokyo", "canada": "Ottawa"}
       return capitals.get(country.lower(), f"Sorry, I don't know the capital of {country}.")
-    
+
     # Add the tool to the agent
     capital_agent = LlmAgent(
         model="gemini-2.0-flash",
@@ -2173,6 +2305,47 @@ on the conversation and its instructions.
         instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
         tools=[get_capital_city] # Provide the function directly
     )
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    import {z} from 'zod';
+    import { LlmAgent, FunctionTool } from '@google/adk';
+
+    // Define the schema for the tool's input parameters
+    const getCapitalCityParamsSchema = z.object({
+        country: z.string().describe('The country to get capital for.'),
+    });
+
+    // Define the tool function itself
+    async function getCapitalCity(params: z.infer<typeof getCapitalCityParamsSchema>): Promise<{ capitalCity: string }> {
+    const capitals: Record<string, string> = {
+        'france': 'Paris',
+        'japan': 'Tokyo',
+        'canada': 'Ottawa',
+    };
+    const result = capitals[params.country.toLowerCase()] ??
+        `Sorry, I don't know the capital of ${params.country}.`;
+    return {capitalCity: result}; // Tools must return an object
+    }
+
+    // Create an instance of the FunctionTool
+    const getCapitalCityTool = new FunctionTool({
+        name: 'getCapitalCity',
+        description: 'Retrieves the capital city for a given country.',
+        parameters: getCapitalCityParamsSchema,
+        execute: getCapitalCity,
+    });
+
+    // Add the tool to the agent
+    const capitalAgent = new LlmAgent({
+        model: 'gemini-2.5-flash',
+        name: 'capitalAgent',
+        description: 'Answers user questions about the capital city of a given country.',
+        instruction: 'You are an agent that provides the capital city of a country...', // Note: the full instruction is omitted for brevity
+        tools: [getCapitalCityTool], // Provide the FunctionTool instance in an array
+    });
     ```
 
 === "Go"
@@ -2184,7 +2357,7 @@ on the conversation and its instructions.
 === "Java"
 
     ```java
-    
+
     // Define a tool function
     // Retrieves the capital city of a given country.
     public static Map<String, Object> getCapitalCity(
@@ -2195,13 +2368,13 @@ on the conversation and its instructions.
       countryCapitals.put("canada", "Ottawa");
       countryCapitals.put("france", "Paris");
       countryCapitals.put("japan", "Tokyo");
-    
+
       String result =
               countryCapitals.getOrDefault(
                       country.toLowerCase(), "Sorry, I couldn't find the capital for " + country + ".");
       return Map.of("result", result); // Tools must return a Map
     }
-    
+
     // Add the tool to the agent
     FunctionTool capitalTool = FunctionTool.create(experiment.getClass(), "getCapitalCity");
     LlmAgent capitalAgent =
@@ -2220,7 +2393,7 @@ Learn more about Tools in the [Tools](../tools/index.md) section.
 
 Beyond the core parameters, `LlmAgent` offers several options for finer control:
 
-### Configuring LLM Generation (`generate_content_config`) {#fine-tuning-llm-generation-generate_content_config}
+### Fine-Tuning LLM Generation (`generate_content_config`)
 
 You can adjust how the underlying LLM generates responses using `generate_content_config`.
 
@@ -2244,6 +2417,22 @@ You can adjust how the underlying LLM generates responses using `generate_conten
             ]
         )
     )
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    import { GenerateContentConfig } from '@google/genai';
+
+    const generateContentConfig: GenerateContentConfig = {
+        temperature: 0.2, // More deterministic output
+        maxOutputTokens: 250,
+    };
+
+    const agent = new LlmAgent({
+        // ... other params
+        generateContentConfig,
+    });
     ```
 
 === "Go"
@@ -2288,10 +2477,10 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
 
     ```python
     from pydantic import BaseModel, Field
-    
+
     class CapitalOutput(BaseModel):
         capital: str = Field(description="The capital of the country.")
-    
+
     structured_capital_agent = LlmAgent(
         # ... name, model, description
         instruction="""You are a Capital Information Agent. Given a country, respond ONLY with a JSON object containing the capital. Format: {"capital": "capital_name"}""",
@@ -2299,6 +2488,34 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
         output_key="found_capital"  # Store result in state['found_capital']
         # Cannot use tools=[get_capital_city] effectively here
     )
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    import {z} from 'zod';
+    import { Schema, Type } from '@google/genai';
+
+    // Define the schema for the output
+    const CapitalOutputSchema: Schema = {
+        type: Type.OBJECT,
+        properties: {
+            capital: {
+                type: Type.STRING,
+                description: 'The capital of the country.',
+            },
+        },
+        required: ['capital'],
+    };
+
+    // Create the LlmAgent instance
+    const structuredCapitalAgent = new LlmAgent({
+        // ... name, model, description
+        instruction: `You are a Capital Information Agent. Given a country, respond ONLY with a JSON object containing the capital. Format: {"capital": "capital_name"}`,
+        outputSchema: CapitalOutputSchema, // Enforce JSON output
+        outputKey: 'found_capital', // Store result in state['found_capital']
+        // Cannot use tools effectively here
+    });
     ```
 
 === "Go"
@@ -2326,7 +2543,7 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
                         .description("The capital city of the country.")
                         .build()))
             .build();
-    
+
     LlmAgent structuredCapitalAgent =
         LlmAgent.builder()
             // ... name, model, description
@@ -2355,6 +2572,15 @@ Control whether the agent receives the prior conversation history.
     )
     ```
 
+=== "Typescript"
+
+    ```typescript
+    const statelessAgent = new LlmAgent({
+        // ... other params
+        includeContents: 'none',
+    });
+    ```
+
 === "Go"
 
     ```go
@@ -2367,7 +2593,7 @@ Control whether the agent receives the prior conversation history.
 
     ```java
     import com.google.adk.agents.LlmAgent.IncludeContents;
-    
+
     LlmAgent statelessAgent =
         LlmAgent.builder()
             // ... other params
@@ -2403,7 +2629,7 @@ Control whether the agent receives the prior conversation history.
         # ... your tools here
     )
     ```
-    
+
 * **`PlanReActPlanner`:** This planner instructs the model to follow a specific structure in its output: first create a plan, then execute actions (like calling tools), and provide reasoning for its steps. *It's particularly useful for models that don't have a built-in "thinking" feature*.
 
     ```python
@@ -2580,11 +2806,17 @@ call_agent("If it's raining in New York right now, what is the current temperatu
     Here's the complete basic `capital_agent`:
 
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/agents/llm-agent/capital_agent.py"
         ```
-    
+
+    === "Typescript"
+
+        ```javascript
+        --8<-- "examples/typescript/snippets/agents/llm-agent/capital_agent.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -2592,7 +2824,7 @@ call_agent("If it's raining in New York right now, what is the current temperatu
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/agents/LlmAgentExample.java:full_code"
         ```
@@ -2612,7 +2844,7 @@ File: docs/agents/models.md
 # Using Different Models with ADK
 
 <div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The Agent Development Kit (ADK) is designed for flexibility, allowing you to
@@ -3618,7 +3850,7 @@ File: docs/agents/multi-agents.md
 # Multi-Agent Systems in ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 As agentic applications grow in complexity, structuring them as a single, monolithic agent can become challenging to develop, maintain, and reason about. The Agent Development Kit (ADK) supports building sophisticated applications by composing multiple, distinct `BaseAgent` instances into a **Multi-Agent System (MAS)**.
@@ -3654,9 +3886,11 @@ The foundation for structuring multi-agent systems is the parent-child relations
     # Conceptual Example: Defining Hierarchy
     from google.adk.agents import LlmAgent, BaseAgent
 
+
     # Define individual agents
     greeter = LlmAgent(name="Greeter", model="gemini-2.0-flash")
     task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
+
 
     # Create parent agent and assign children via sub_agents
     coordinator = LlmAgent(
@@ -3669,33 +3903,53 @@ The foundation for structuring multi-agent systems is the parent-child relations
         ]
     )
 
+
     # Framework automatically sets:
     # assert greeter.parent_agent == coordinator
     # assert task_doer.parent_agent == coordinator
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Example: Defining Hierarchy
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.agents.LlmAgent;
+    import { LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEventActions } from '@google/adk';
+
+    class TaskExecutorAgent extends BaseAgent {
+      async *runAsyncImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+        yield {
+          id: 'event-1',
+          invocationId: context.invocationId,
+          author: this.name,
+          content: { parts: [{ text: 'Task completed!' }] },
+          actions: createEventActions(),
+          timestamp: Date.now(),
+        };
+      }
+      async *runLiveImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+        this.runAsyncImpl(context);
+      }
+    }
 
     // Define individual agents
-    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-2.0-flash").build();
-    SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
+    const greeter = new LlmAgent({name: 'Greeter', model: 'gemini-2.5-flash'});
+    const taskDoer = new TaskExecutorAgent({name: 'TaskExecutor'}); // Custom non-LLM agent
 
-    // Create parent agent and assign sub_agents
-    LlmAgent coordinator = LlmAgent.builder()
-        .name("Coordinator")
-        .model("gemini-2.0-flash")
-        .description("I coordinate greetings and tasks")
-        .subAgents(greeter, taskDoer) // Assign sub_agents here
-        .build();
+    // Create parent agent and assign children via subAgents
+    const coordinator = new LlmAgent({
+        name: 'Coordinator',
+        model: 'gemini-2.5-flash',
+        description: 'I coordinate greetings and tasks.',
+        subAgents: [ // Assign subAgents here
+            greeter,
+            taskDoer
+        ],
+    });
 
     // Framework automatically sets:
-    // assert greeter.parentAgent().equals(coordinator);
-    // assert taskDoer.parentAgent().equals(coordinator);
+    // console.assert(greeter.parentAgent === coordinator);
+    // console.assert(taskDoer.parentAgent === coordinator);
     ```
 
 === "Go"
@@ -3707,6 +3961,33 @@ The foundation for structuring multi-agent systems is the parent-child relations
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchy"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Defining Hierarchy
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.agents.LlmAgent;
+
+
+    // Define individual agents
+    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-2.0-flash").build();
+    SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
+
+
+    // Create parent agent and assign sub_agents
+    LlmAgent coordinator = LlmAgent.builder()
+        .name("Coordinator")
+        .model("gemini-2.0-flash")
+        .description("I coordinate greetings and tasks")
+        .subAgents(greeter, taskDoer) // Assign sub_agents here
+        .build();
+
+
+    // Framework automatically sets:
+    // assert greeter.parentAgent().equals(coordinator);
+    // assert taskDoer.parentAgent().equals(coordinator);
     ```
 
 ### 1.2. Workflow Agents as Orchestrators { #workflow-agents-as-orchestrators }
@@ -3729,18 +4010,17 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     # When pipeline runs, Step2 can access the state['data'] set by Step1.
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Example: Sequential Pipeline
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.agents.LlmAgent;
+    import { SequentialAgent, LlmAgent } from '@google/adk';
 
-    LlmAgent step1 = LlmAgent.builder().name("Step1_Fetch").outputKey("data").build(); // Saves output to state.get("data")
-    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from {data}.").build();
+    const step1 = new LlmAgent({name: 'Step1_Fetch', outputKey: 'data'}); // Saves output to state['data']
+    const step2 = new LlmAgent({name: 'Step2_Process', instruction: 'Process data from {data}.'});
 
-    SequentialAgent pipeline = SequentialAgent.builder().name("MyPipeline").subAgents(step1, step2).build();
-    // When pipeline runs, Step2 can access the state.get("data") set by Step1.
+    const pipeline = new SequentialAgent({name: 'MyPipeline', subAgents: [step1, step2]});
+    // When pipeline runs, Step2 can access the state['data'] set by Step1.
     ```
 
 === "Go"
@@ -3753,6 +4033,20 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Sequential Pipeline
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.agents.LlmAgent;
+
+    LlmAgent step1 = LlmAgent.builder().name("Step1_Fetch").outputKey("data").build(); // Saves output to state.get("data")
+    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from {data}.").build();
+
+    SequentialAgent pipeline = SequentialAgent.builder().name("MyPipeline").subAgents(step1, step2).build();
+    // When pipeline runs, Step2 can access the state.get("data") set by Step1.
     ```
 
 * **[`ParallelAgent`](workflow-agents/parallel-agents.md):** Executes its `sub_agents` in parallel. Events from sub-agents may be interleaved.
@@ -3773,28 +4067,16 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     # A subsequent agent could read state['weather'] and state['news'].
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Example: Parallel Execution
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.ParallelAgent;
+    import { ParallelAgent, LlmAgent } from '@google/adk';
 
-    LlmAgent fetchWeather = LlmAgent.builder()
-        .name("WeatherFetcher")
-        .outputKey("weather")
-        .build();
+    const fetchWeather = new LlmAgent({name: 'WeatherFetcher', outputKey: 'weather'});
+    const fetchNews = new LlmAgent({name: 'NewsFetcher', outputKey: 'news'});
 
-    LlmAgent fetchNews = LlmAgent.builder()
-        .name("NewsFetcher")
-        .instruction("news")
-        .build();
-
-    ParallelAgent gatherer = ParallelAgent.builder()
-        .name("InfoGatherer")
-        .subAgents(fetchWeather, fetchNews)
-        .build();
-
+    const gatherer = new ParallelAgent({name: 'InfoGatherer', subAgents: [fetchWeather, fetchNews]});
     // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
     // A subsequent agent could read state['weather'] and state['news'].
     ```
@@ -3809,6 +4091,36 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-execution"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Parallel Execution
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.ParallelAgent;
+
+
+    LlmAgent fetchWeather = LlmAgent.builder()
+        .name("WeatherFetcher")
+        .outputKey("weather")
+        .build();
+
+
+    LlmAgent fetchNews = LlmAgent.builder()
+        .name("NewsFetcher")
+        .instruction("news")
+        .build();
+
+
+    ParallelAgent gatherer = ParallelAgent.builder()
+        .name("InfoGatherer")
+        .subAgents(fetchWeather, fetchNews)
+        .build();
+
+
+    // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
+    // A subsequent agent could read state['weather'] and state['news'].
     ```
 
   * **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
@@ -3841,6 +4153,53 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
       ```
 
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Loop with Condition
+    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEventActions, EventActions } from '@google/adk';
+
+    class CheckConditionAgent extends BaseAgent { // Custom agent to check state
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            const status = ctx.session.state['status'] || 'pending';
+            const isDone = status === 'completed';
+            yield createEvent({ author: 'check_condition', actions: createEventActions({ escalate: isDone }) });
+        }
+
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            // This is not implemented.
+        }
+    };
+
+    const processStep = new LlmAgent({name: 'ProcessingStep'}); // Agent that might update state['status']
+
+    const poller = new LoopAgent({
+        name: 'StatusPoller',
+        maxIterations: 10,
+        // Executes its sub_agents sequentially in a loop
+        subAgents: [processStep, new CheckConditionAgent ({name: 'Checker'})]
+    });
+    // When poller runs, it executes processStep then Checker repeatedly
+    // until Checker escalates (state['status'] === 'completed') or 10 iterations pass.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "iter"
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/loopagent"
+        "google.golang.org/adk/session"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:loop-with-condition"
+    ```
+
+      ```
+
 === "Java"
 
     ```java
@@ -3850,6 +4209,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       public CheckConditionAgent(String name, String description) {
         super(name, description, List.of(), null, null);
       }
+
 
       @Override
       protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
@@ -3867,6 +4227,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       }
     }
 
+
     // Agent that might update state.put("status")
     LlmAgent processingStepAgent = LlmAgent.builder().name("ProcessingStep").build();
     // Custom agent instance for checking the condition
@@ -3877,20 +4238,6 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     LoopAgent poller = LoopAgent.builder().name("StatusPoller").maxIterations(10).subAgents(processingStepAgent, conditionCheckerAgent).build();
     // When poller runs, it executes processingStepAgent then conditionCheckerAgent repeatedly
     // until Checker escalates (state.get("status") == "completed") or 10 iterations pass.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:loop-with-condition"
     ```
 
 ### 1.3. Interaction & Communication Mechanisms { #interaction-communication-mechanisms }
@@ -3915,36 +4262,28 @@ The most fundamental way for agents operating within the same invocation (and th
     # Conceptual Example: Using output_key and reading state
     from google.adk.agents import LlmAgent, SequentialAgent
 
+
     agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
     agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in {capital_city}.")
+
 
     pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
     # AgentA runs, saves "Paris" to state['capital_city'].
     # AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Example: Using outputKey and reading state
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
+    import { LlmAgent, SequentialAgent } from '@google/adk';
 
-    LlmAgent agentA = LlmAgent.builder()
-        .name("AgentA")
-        .instruction("Find the capital of France.")
-        .outputKey("capital_city")
-        .build();
+    const agentA = new LlmAgent({name: 'AgentA', instruction: 'Find the capital of France.', outputKey: 'capital_city'});
+    const agentB = new LlmAgent({name: 'AgentB', instruction: 'Tell me about the city stored in {capital_city}.'});
 
-    LlmAgent agentB = LlmAgent.builder()
-        .name("AgentB")
-        .instruction("Tell me about the city stored in {capital_city}.")
-        .outputKey("capital_city")
-        .build();
-
-    SequentialAgent pipeline = SequentialAgent.builder().name("CityInfo").subAgents(agentA, agentB).build();
-    // AgentA runs, saves "Paris" to state('capital_city').
-    // AgentB runs, its instruction processor reads state.get("capital_city") to get "Paris".
+    const pipeline = new SequentialAgent({name: 'CityInfo', subAgents: [agentA, agentB]});
+    // AgentA runs, saves "Paris" to state['capital_city'].
+    // AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
     ```
 
 === "Go"
@@ -3957,6 +4296,33 @@ The most fundamental way for agents operating within the same invocation (and th
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:output-key-state"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Using outputKey and reading state
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent agentA = LlmAgent.builder()
+        .name("AgentA")
+        .instruction("Find the capital of France.")
+        .outputKey("capital_city")
+        .build();
+
+
+    LlmAgent agentB = LlmAgent.builder()
+        .name("AgentB")
+        .instruction("Tell me about the city stored in {capital_city}.")
+        .outputKey("capital_city")
+        .build();
+
+
+    SequentialAgent pipeline = SequentialAgent.builder().name("CityInfo").subAgents(agentA, agentB).build();
+    // AgentA runs, saves "Paris" to state('capital_city').
+    // AgentB runs, its instruction processor reads state.get("capital_city") to get "Paris".
     ```
 
 #### b) LLM-Driven Delegation (Agent Transfer)
@@ -3974,8 +4340,10 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     # Conceptual Setup: LLM Transfer
     from google.adk.agents import LlmAgent
 
+
     booking_agent = LlmAgent(name="Booker", description="Handles flight and hotel bookings.")
     info_agent = LlmAgent(name="Info", description="Provides general information and answers questions.")
+
 
     coordinator = LlmAgent(
         name="Coordinator",
@@ -3990,21 +4358,56 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     # ADK framework then routes execution to booking_agent.
     ```
 
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Setup: LLM Transfer
+    import { LlmAgent } from '@google/adk';
+
+    const bookingAgent = new LlmAgent({name: 'Booker', description: 'Handles flight and hotel bookings.'});
+    const infoAgent = new LlmAgent({name: 'Info', description: 'Provides general information and answers questions.'});
+
+    const coordinator = new LlmAgent({
+        name: 'Coordinator',
+        model: 'gemini-2.5-flash',
+        instruction: 'You are an assistant. Delegate booking tasks to Booker and info requests to Info.',
+        description: 'Main coordinator.',
+        // AutoFlow is typically used implicitly here
+        subAgents: [bookingAgent, infoAgent]
+    });
+    // If coordinator receives "Book a flight", its LLM should generate:
+    // {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Booker'}}}
+    // ADK framework then routes execution to bookingAgent.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent/llmagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:llm-transfer"
+    ```
+
 === "Java"
 
     ```java
     // Conceptual Setup: LLM Transfer
     import com.google.adk.agents.LlmAgent;
 
+
     LlmAgent bookingAgent = LlmAgent.builder()
         .name("Booker")
         .description("Handles flight and hotel bookings.")
         .build();
 
+
     LlmAgent infoAgent = LlmAgent.builder()
         .name("Info")
         .description("Provides general information and answers questions.")
         .build();
+
 
     // Define the coordinator agent
     LlmAgent coordinator = LlmAgent.builder()
@@ -4020,16 +4423,6 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     // If coordinator receives "Book a flight", its LLM should generate:
     // FunctionCall.builder.name("transferToAgent").args(ImmutableMap.of("agent_name", "Booker")).build()
     // ADK framework then routes execution to bookingAgent.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent/llmagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:llm-transfer"
     ```
 
 #### c) Explicit Invocation (`AgentTool`)
@@ -4049,6 +4442,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     from google.adk.tools import agent_tool
     from pydantic import BaseModel
 
+
     # Define a target agent (could be LlmAgent or custom BaseAgent)
     class ImageGeneratorAgent(BaseAgent): # Example custom agent
         name: str = "ImageGen"
@@ -4060,8 +4454,10 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
             image_bytes = b"..."
             yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
 
+
     image_agent = ImageGeneratorAgent()
     image_tool = agent_tool.AgentTool(agent=image_agent) # Wrap the agent
+
 
     # Parent agent uses the AgentTool
     artist_agent = LlmAgent(
@@ -4076,63 +4472,44 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     # The resulting image Part is returned to the Artist agent as the tool result.
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Setup: Agent as a Tool
-    import com.google.adk.agents.BaseAgent;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.tools.AgentTool;
+    import { LlmAgent, BaseAgent, AgentTool, InvocationContext } from '@google/adk';
+    import type { Part, createEvent, Event } from '@google/genai';
 
-    // Example custom agent (could be LlmAgent or custom BaseAgent)
-    public class ImageGeneratorAgent extends BaseAgent  {
+    // Define a target agent (could be LlmAgent or custom BaseAgent)
+    class ImageGeneratorAgent extends BaseAgent { // Example custom agent
+        constructor() {
+            super({name: 'ImageGen', description: 'Generates an image based on a prompt.'});
+        }
+        // ... internal logic ...
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> { // Simplified run logic
+            const prompt = ctx.session.state['image_prompt'] || 'default prompt';
+            // ... generate image bytes ...
+            const imageBytes = new Uint8Array(); // placeholder
+            const imagePart: Part = {inlineData: {data: Buffer.from(imageBytes).toString('base64'), mimeType: 'image/png'}};
+            yield createEvent({content: {parts: [imagePart]}});
+        }
 
-      public ImageGeneratorAgent(String name, String description) {
-        super(name, description, List.of(), null, null);
-      }
-
-      // ... internal logic ...
-      @Override
-      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) { // Simplified run logic
-        invocationContext.session().state().get("image_prompt");
-        // Generate image bytes
-        // ...
-
-        Event responseEvent = Event.builder()
-            .author(this.name())
-            .content(Content.fromParts(Part.fromText("\b...")))
-            .build();
-
-        return Flowable.just(responseEvent);
-      }
-
-      @Override
-      protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {
-        return null;
-      }
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event, void, void> {
+            // Not implemented for this agent.
+        }
     }
 
-    // Wrap the agent using AgentTool
-    ImageGeneratorAgent imageAgent = new ImageGeneratorAgent("image_agent", "generates images");
-    AgentTool imageTool = AgentTool.create(imageAgent);
+    const imageAgent = new ImageGeneratorAgent();
+    const imageTool = new AgentTool({agent: imageAgent}); // Wrap the agent
 
     // Parent agent uses the AgentTool
-    LlmAgent artistAgent = LlmAgent.builder()
-            .name("Artist")
-            .model("gemini-2.0-flash")
-            .instruction(
-                    "You are an artist. Create a detailed prompt for an image and then " +
-                            "use the 'ImageGen' tool to generate the image. " +
-                            "The 'ImageGen' tool expects a single string argument named 'request' " +
-                            "containing the image prompt. The tool will return a JSON string in its " +
-                            "'result' field, containing 'image_base64', 'mime_type', and 'status'."
-            )
-            .description("An agent that can create images using a generation tool.")
-            .tools(imageTool) // Include the AgentTool
-            .build();
-
+    const artistAgent = new LlmAgent({
+        name: 'Artist',
+        model: 'gemini-2.5-flash',
+        instruction: 'Create a prompt and use the ImageGen tool to generate the image.',
+        tools: [imageTool] // Include the AgentTool
+    });
     // Artist LLM generates a prompt, then calls:
-    // FunctionCall(name='ImageGen', args={'imagePrompt': 'a cat wearing a hat'})
+    // {functionCall: {name: 'ImageGen', args: {image_prompt: 'a cat wearing a hat'}}}
     // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
     // The resulting image Part is returned to the Artist agent as the tool result.
     ```
@@ -4155,6 +4532,74 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:agent-as-tool"
     ```
 
+=== "Java"
+
+    ```java
+    // Conceptual Setup: Agent as a Tool
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.AgentTool;
+
+    // Example custom agent (could be LlmAgent or custom BaseAgent)
+    public class ImageGeneratorAgent extends BaseAgent  {
+
+
+      public ImageGeneratorAgent(String name, String description) {
+        super(name, description, List.of(), null, null);
+      }
+
+
+      // ... internal logic ...
+      @Override
+      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) { // Simplified run logic
+        invocationContext.session().state().get("image_prompt");
+        // Generate image bytes
+        // ...
+
+
+        Event responseEvent = Event.builder()
+            .author(this.name())
+            .content(Content.fromParts(Part.fromText("...")))
+            .build();
+
+
+        return Flowable.just(responseEvent);
+      }
+
+
+      @Override
+      protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {
+        return null;
+      }
+    }
+
+    // Wrap the agent using AgentTool
+    ImageGeneratorAgent imageAgent = new ImageGeneratorAgent("image_agent", "generates images");
+    AgentTool imageTool = AgentTool.create(imageAgent);
+
+
+    // Parent agent uses the AgentTool
+    LlmAgent artistAgent = LlmAgent.builder()
+            .name("Artist")
+            .model("gemini-2.0-flash")
+            .instruction(
+                    "You are an artist. Create a detailed prompt for an image and then " +
+                            "use the 'ImageGen' tool to generate the image. " +
+                            "The 'ImageGen' tool expects a single string argument named 'request' " +
+                            "containing the image prompt. The tool will return a JSON string in its " +
+                            "'result' field, containing 'image_base64', 'mime_type', and 'status'."
+            )
+            .description("An agent that can create images using a generation tool.")
+            .tools(imageTool) // Include the AgentTool
+            .build();
+
+
+    // Artist LLM generates a prompt, then calls:
+    // FunctionCall(name='ImageGen', args={'imagePrompt': 'a cat wearing a hat'})
+    // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
+    // The resulting image Part is returned to the Artist agent as the tool result.
+    ```
+
 These primitives provide the flexibility to design multi-agent interactions ranging from tightly coupled sequential workflows to dynamic, LLM-driven delegation networks.
 
 ## 2. Common Multi-Agent Patterns using ADK Primitives { #common-multi-agent-patterns-using-adk-primitives }
@@ -4175,8 +4620,10 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Coordinator using LLM Transfer
     from google.adk.agents import LlmAgent
 
+
     billing_agent = LlmAgent(name="Billing", description="Handles billing inquiries.")
     support_agent = LlmAgent(name="Support", description="Handles technical support requests.")
+
 
     coordinator = LlmAgent(
         name="HelpDeskCoordinator",
@@ -4188,6 +4635,38 @@ By combining ADK's composition primitives, you can implement various established
     )
     # User asks "My payment failed" -> Coordinator's LLM should call transfer_to_agent(agent_name='Billing')
     # User asks "I can't log in" -> Coordinator's LLM should call transfer_to_agent(agent_name='Support')
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Coordinator using LLM Transfer
+    import { LlmAgent } from '@google/adk';
+
+    const billingAgent = new LlmAgent({name: 'Billing', description: 'Handles billing inquiries.'});
+    const supportAgent = new LlmAgent({name: 'Support', description: 'Handles technical support requests.'});
+
+    const coordinator = new LlmAgent({
+        name: 'HelpDeskCoordinator',
+        model: 'gemini-2.5-flash',
+        instruction: 'Route user requests: Use Billing agent for payment issues, Support agent for technical problems.',
+        description: 'Main help desk router.',
+        // allowTransfer=true is often implicit with subAgents in AutoFlow
+        subAgents: [billingAgent, supportAgent]
+    });
+    // User asks "My payment failed" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Billing'}}}
+    // User asks "I can't log in" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Support'}}}
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:coordinator-pattern"
     ```
 
 === "Java"
@@ -4222,17 +4701,6 @@ By combining ADK's composition primitives, you can implement various established
     // transferToAgent(agentName='Support')
     ```
 
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:coordinator-pattern"
-    ```
-
 ### Sequential Pipeline Pattern
 
 * **Structure:** A [`SequentialAgent`](workflow-agents/sequential-agents.md) contains `sub_agents` executed in a fixed order.
@@ -4247,9 +4715,11 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Sequential Data Pipeline
     from google.adk.agents import SequentialAgent, LlmAgent
 
+
     validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
     processor = LlmAgent(name="ProcessData", instruction="Process data if {validation_status} is 'valid'.", output_key="result")
     reporter = LlmAgent(name="ReportResult", instruction="Report the result from {result}.")
+
 
     data_pipeline = SequentialAgent(
         name="DataPipeline",
@@ -4260,34 +4730,20 @@ By combining ADK's composition primitives, you can implement various established
     # reporter runs -> reads state['result']
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Code: Sequential Data Pipeline
-    import com.google.adk.agents.SequentialAgent;
+    import { SequentialAgent, LlmAgent } from '@google/adk';
 
-    LlmAgent validator = LlmAgent.builder()
-        .name("ValidateInput")
-        .instruction("Validate the input")
-        .outputKey("validation_status") // Saves its main text output to session.state["validation_status"]
-        .build();
+    const validator = new LlmAgent({name: 'ValidateInput', instruction: 'Validate the input.', outputKey: 'validation_status'});
+    const processor = new LlmAgent({name: 'ProcessData', instruction: 'Process data if {validation_status} is "valid".', outputKey: 'result'});
+    const reporter = new LlmAgent({name: 'ReportResult', instruction: 'Report the result from {result}.'});
 
-    LlmAgent processor = LlmAgent.builder()
-        .name("ProcessData")
-        .instruction("Process data if {validation_status} is 'valid'")
-        .outputKey("result") // Saves its main text output to session.state["result"]
-        .build();
-
-    LlmAgent reporter = LlmAgent.builder()
-        .name("ReportResult")
-        .instruction("Report the result from {result}")
-        .build();
-
-    SequentialAgent dataPipeline = SequentialAgent.builder()
-        .name("DataPipeline")
-        .subAgents(validator, processor, reporter)
-        .build();
-
+    const dataPipeline = new SequentialAgent({
+        name: 'DataPipeline',
+        subAgents: [validator, processor, reporter]
+    });
     // validator runs -> saves to state['validation_status']
     // processor runs -> reads state['validation_status'], saves to state['result']
     // reporter runs -> reads state['result']
@@ -4305,6 +4761,44 @@ By combining ADK's composition primitives, you can implement various established
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline-pattern"
     ```
 
+=== "Java"
+
+    ```java
+    // Conceptual Code: Sequential Data Pipeline
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent validator = LlmAgent.builder()
+        .name("ValidateInput")
+        .instruction("Validate the input")
+        .outputKey("validation_status") // Saves its main text output to session.state["validation_status"]
+        .build();
+
+
+    LlmAgent processor = LlmAgent.builder()
+        .name("ProcessData")
+        .instruction("Process data if {validation_status} is 'valid'")
+        .outputKey("result") // Saves its main text output to session.state["result"]
+        .build();
+
+
+    LlmAgent reporter = LlmAgent.builder()
+        .name("ReportResult")
+        .instruction("Report the result from {result}")
+        .build();
+
+
+    SequentialAgent dataPipeline = SequentialAgent.builder()
+        .name("DataPipeline")
+        .subAgents(validator, processor, reporter)
+        .build();
+
+
+    // validator runs -> saves to state['validation_status']
+    // processor runs -> reads state['validation_status'], saves to state['result']
+    // reporter runs -> reads state['result']
+    ```
+
 ### Parallel Fan-Out/Gather Pattern
 
 * **Structure:** A [`ParallelAgent`](workflow-agents/parallel-agents.md) runs multiple `sub_agents` concurrently, often followed by a later agent (in a `SequentialAgent`) that aggregates results.
@@ -4319,18 +4813,22 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Parallel Information Gathering
     from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
 
+
     fetch_api1 = LlmAgent(name="API1Fetcher", instruction="Fetch data from API 1.", output_key="api1_data")
     fetch_api2 = LlmAgent(name="API2Fetcher", instruction="Fetch data from API 2.", output_key="api2_data")
+
 
     gather_concurrently = ParallelAgent(
         name="ConcurrentFetch",
         sub_agents=[fetch_api1, fetch_api2]
     )
 
+
     synthesizer = LlmAgent(
         name="Synthesizer",
         instruction="Combine results from {api1_data} and {api2_data}."
     )
+
 
     overall_workflow = SequentialAgent(
         name="FetchAndSynthesize",
@@ -4339,6 +4837,47 @@ By combining ADK's composition primitives, you can implement various established
     # fetch_api1 and fetch_api2 run concurrently, saving to state.
     # synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
     ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Parallel Information Gathering
+    import { SequentialAgent, ParallelAgent, LlmAgent } from '@google/adk';
+
+    const fetchApi1 = new LlmAgent({name: 'API1Fetcher', instruction: 'Fetch data from API 1.', outputKey: 'api1_data'});
+    const fetchApi2 = new LlmAgent({name: 'API2Fetcher', instruction: 'Fetch data from API 2.', outputKey: 'api2_data'});
+
+    const gatherConcurrently = new ParallelAgent({
+        name: 'ConcurrentFetch',
+        subAgents: [fetchApi1, fetchApi2]
+    });
+
+    const synthesizer = new LlmAgent({
+        name: 'Synthesizer',
+        instruction: 'Combine results from {api1_data} and {api2_data}.'
+    });
+
+    const overallWorkflow = new SequentialAgent({
+        name: 'FetchAndSynthesize',
+        subAgents: [gatherConcurrently, synthesizer] // Run parallel fetch, then synthesize
+    });
+    // fetchApi1 and fetchApi2 run concurrently, saving to state.
+    // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/parallelagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-gather-pattern"
+    ```
+
 === "Java"
 
     ```java
@@ -4378,20 +4917,6 @@ By combining ADK's composition primitives, you can implement various established
     // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
     ```
 
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/parallelagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-gather-pattern"
-    ```
-
-
 ### Hierarchical Task Decomposition
 
 * **Structure:** A multi-level tree of agents where higher-level agents break down complex goals and delegate sub-tasks to lower-level agents.
@@ -4407,9 +4932,11 @@ By combining ADK's composition primitives, you can implement various established
     from google.adk.agents import LlmAgent
     from google.adk.tools import agent_tool
 
+
     # Low-level tool-like agents
     web_searcher = LlmAgent(name="WebSearch", description="Performs web searches for facts.")
     summarizer = LlmAgent(name="Summarizer", description="Summarizes text.")
+
 
     # Mid-level agent combining tools
     research_assistant = LlmAgent(
@@ -4418,6 +4945,7 @@ By combining ADK's composition primitives, you can implement various established
         description="Finds and summarizes information on a topic.",
         tools=[agent_tool.AgentTool(agent=web_searcher), agent_tool.AgentTool(agent=summarizer)]
     )
+
 
     # High-level agent delegating research
     report_writer = LlmAgent(
@@ -4433,41 +4961,32 @@ By combining ADK's composition primitives, you can implement various established
     # Results flow back up.
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Code: Hierarchical Research Task
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.tools.AgentTool;
+    import { LlmAgent, AgentTool } from '@google/adk';
 
     // Low-level tool-like agents
-    LlmAgent webSearcher = LlmAgent.builder()
-        .name("WebSearch")
-        .description("Performs web searches for facts.")
-        .build();
-
-    LlmAgent summarizer = LlmAgent.builder()
-        .name("Summarizer")
-        .description("Summarizes text.")
-        .build();
+    const webSearcher = new LlmAgent({name: 'WebSearch', description: 'Performs web searches for facts.'});
+    const summarizer = new LlmAgent({name: 'Summarizer', description: 'Summarizes text.'});
 
     // Mid-level agent combining tools
-    LlmAgent researchAssistant = LlmAgent.builder()
-        .name("ResearchAssistant")
-        .model("gemini-2.0-flash")
-        .description("Finds and summarizes information on a topic.")
-        .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
-        .build();
+    const researchAssistant = new LlmAgent({
+        name: 'ResearchAssistant',
+        model: 'gemini-2.5-flash',
+        description: 'Finds and summarizes information on a topic.',
+        tools: [new AgentTool({agent: webSearcher}), new AgentTool({agent: summarizer})]
+    });
 
     // High-level agent delegating research
-    LlmAgent reportWriter = LlmAgent.builder()
-        .name("ReportWriter")
-        .model("gemini-2.0-flash")
-        .instruction("Write a report on topic X. Use the ResearchAssistant to gather information.")
-        .tools(AgentTool.create(researchAssistant))
-        // Alternatively, could use LLM Transfer if research_assistant is a subAgent
-        .build();
-
+    const reportWriter = new LlmAgent({
+        name: 'ReportWriter',
+        model: 'gemini-2.5-flash',
+        instruction: 'Write a report on topic X. Use the ResearchAssistant to gather information.',
+        tools: [new AgentTool({agent: researchAssistant})]
+        // Alternatively, could use LLM Transfer if researchAssistant is a subAgent
+    });
     // User interacts with ReportWriter.
     // ReportWriter calls ResearchAssistant tool.
     // ResearchAssistant calls WebSearch and Summarizer tools.
@@ -4486,6 +5005,52 @@ By combining ADK's composition primitives, you can implement various established
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchical-pattern"
     ```
 
+=== "Java"
+
+    ```java
+    // Conceptual Code: Hierarchical Research Task
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.AgentTool;
+
+
+    // Low-level tool-like agents
+    LlmAgent webSearcher = LlmAgent.builder()
+        .name("WebSearch")
+        .description("Performs web searches for facts.")
+        .build();
+
+
+    LlmAgent summarizer = LlmAgent.builder()
+        .name("Summarizer")
+        .description("Summarizes text.")
+        .build();
+
+
+    // Mid-level agent combining tools
+    LlmAgent researchAssistant = LlmAgent.builder()
+        .name("ResearchAssistant")
+        .model("gemini-2.0-flash")
+        .description("Finds and summarizes information on a topic.")
+        .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
+        .build();
+
+
+    // High-level agent delegating research
+    LlmAgent reportWriter = LlmAgent.builder()
+        .name("ReportWriter")
+        .model("gemini-2.0-flash")
+        .instruction("Write a report on topic X. Use the ResearchAssistant to gather information.")
+        .tools(AgentTool.create(researchAssistant))
+        // Alternatively, could use LLM Transfer if research_assistant is a subAgent
+        .build();
+
+
+    // User interacts with ReportWriter.
+    // ReportWriter calls ResearchAssistant tool.
+    // ResearchAssistant calls WebSearch and Summarizer tools.
+    // Results flow back up.
+    ```
+
 ### Review/Critique Pattern (Generator-Critic)
 
 * **Structure:** Typically involves two agents within a [`SequentialAgent`](workflow-agents/sequential-agents.md): a Generator and a Critic/Reviewer.
@@ -4500,11 +5065,13 @@ By combining ADK's composition primitives, you can implement various established
     # Conceptual Code: Generator-Critic
     from google.adk.agents import SequentialAgent, LlmAgent
 
+
     generator = LlmAgent(
         name="DraftWriter",
         instruction="Write a short paragraph about subject X.",
         output_key="draft_text"
     )
+
 
     reviewer = LlmAgent(
         name="FactChecker",
@@ -4512,7 +5079,9 @@ By combining ADK's composition primitives, you can implement various established
         output_key="review_status"
     )
 
+
     # Optional: Further steps based on review_status
+
 
     review_pipeline = SequentialAgent(
         name="WriteAndReview",
@@ -4522,32 +5091,30 @@ By combining ADK's composition primitives, you can implement various established
     # reviewer runs -> reads state['draft_text'], saves status to state['review_status']
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Code: Generator-Critic
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
+    import { SequentialAgent, LlmAgent } from '@google/adk';
 
-    LlmAgent generator = LlmAgent.builder()
-        .name("DraftWriter")
-        .instruction("Write a short paragraph about subject X.")
-        .outputKey("draft_text")
-        .build();
+    const generator = new LlmAgent({
+        name: 'DraftWriter',
+        instruction: 'Write a short paragraph about subject X.',
+        outputKey: 'draft_text'
+    });
 
-    LlmAgent reviewer = LlmAgent.builder()
-        .name("FactChecker")
-        .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
-        .outputKey("review_status")
-        .build();
+    const reviewer = new LlmAgent({
+        name: 'FactChecker',
+        instruction: 'Review the text in {draft_text} for factual accuracy. Output "valid" or "invalid" with reasons.',
+        outputKey: 'review_status'
+    });
 
     // Optional: Further steps based on review_status
 
-    SequentialAgent reviewPipeline = SequentialAgent.builder()
-        .name("WriteAndReview")
-        .subAgents(generator, reviewer)
-        .build();
-
+    const reviewPipeline = new SequentialAgent({
+        name: 'WriteAndReview',
+        subAgents: [generator, reviewer]
+    });
     // generator runs -> saves draft to state['draft_text']
     // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
     ```
@@ -4562,6 +5129,41 @@ By combining ADK's composition primitives, you can implement various established
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:generator-critic-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Generator-Critic
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent generator = LlmAgent.builder()
+        .name("DraftWriter")
+        .instruction("Write a short paragraph about subject X.")
+        .outputKey("draft_text")
+        .build();
+
+
+    LlmAgent reviewer = LlmAgent.builder()
+        .name("FactChecker")
+        .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
+        .outputKey("review_status")
+        .build();
+
+
+    // Optional: Further steps based on review_status
+
+
+    SequentialAgent reviewPipeline = SequentialAgent.builder()
+        .name("WriteAndReview")
+        .subAgents(generator, reviewer)
+        .build();
+
+
+    // generator runs -> saves draft to state['draft_text']
+    // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
     ```
 
 ### Iterative Refinement Pattern
@@ -4582,12 +5184,14 @@ By combining ADK's composition primitives, you can implement various established
     from google.adk.agents.invocation_context import InvocationContext
     from typing import AsyncGenerator
 
+
     # Agent to generate/refine code based on state['current_code'] and state['requirements']
     code_refiner = LlmAgent(
         name="CodeRefiner",
         instruction="Read state['current_code'] (if exists) and state['requirements']. Generate/refine Python code to meet requirements. Save to state['current_code'].",
         output_key="current_code" # Overwrites previous code in state
     )
+
 
     # Agent to check if the code meets quality standards
     quality_checker = LlmAgent(
@@ -4596,12 +5200,14 @@ By combining ADK's composition primitives, you can implement various established
         output_key="quality_status"
     )
 
+
     # Custom agent to check the status and escalate if 'pass'
     class CheckStatusAndEscalate(BaseAgent):
         async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
             status = ctx.session.state.get("quality_status", "fail")
             should_stop = (status == "pass")
             yield Event(author=self.name, actions=EventActions(escalate=should_stop))
+
 
     refinement_loop = LoopAgent(
         name="CodeRefinementLoop",
@@ -4611,6 +5217,70 @@ By combining ADK's composition primitives, you can implement various established
     # Loop runs: Refiner -> Checker -> StopChecker
     # State['current_code'] is updated each iteration.
     # Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Iterative Code Refinement
+    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEvent, createEventActions } from '@google/genai';
+
+    // Agent to generate/refine code based on state['current_code'] and state['requirements']
+    const codeRefiner = new LlmAgent({
+        name: 'CodeRefiner',
+        instruction: 'Read state["current_code"] (if exists) and state["requirements"]. Generate/refine Typescript code to meet requirements. Save to state["current_code"].',
+        outputKey: 'current_code' // Overwrites previous code in state
+    });
+
+    // Agent to check if the code meets quality standards
+    const qualityChecker = new LlmAgent({
+        name: 'QualityChecker',
+        instruction: 'Evaluate the code in state["current_code"] against state["requirements"]. Output "pass" or "fail".',
+        outputKey: 'quality_status'
+    });
+
+    // Custom agent to check the status and escalate if 'pass'
+    class CheckStatusAndEscalate extends BaseAgent {
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            const status = ctx.session.state.quality_status;
+            const shouldStop = status === 'pass';
+            if (shouldStop) {
+                yield createEvent({
+                    author: 'StopChecker',
+                    actions: createEventActions(),
+                });
+            }
+        }
+
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            // This agent doesn't have a live implementation
+            yield createEvent({ author: 'StopChecker' });
+        }
+    }
+
+    // Loop runs: Refiner -> Checker -> StopChecker
+    // State['current_code'] is updated each iteration.
+    // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
+    const refinementLoop = new LoopAgent({
+        name: 'CodeRefinementLoop',
+        maxIterations: 5,
+        subAgents: [codeRefiner, qualityChecker, new CheckStatusAndEscalate({name: 'StopChecker'})]
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "iter"
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/loopagent"
+        "google.golang.org/adk/session"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:iterative-refinement-pattern"
     ```
 
 === "Java"
@@ -4626,12 +5296,14 @@ By combining ADK's composition primitives, you can implement various established
     import io.reactivex.rxjava3.core.Flowable;
     import java.util.List;
 
+
     // Agent to generate/refine code based on state['current_code'] and state['requirements']
     LlmAgent codeRefiner = LlmAgent.builder()
         .name("CodeRefiner")
         .instruction("Read state['current_code'] (if exists) and state['requirements']. Generate/refine Java code to meet requirements. Save to state['current_code'].")
         .outputKey("current_code") // Overwrites previous code in state
         .build();
+
 
     // Agent to check if the code meets quality standards
     LlmAgent qualityChecker = LlmAgent.builder()
@@ -4640,13 +5312,16 @@ By combining ADK's composition primitives, you can implement various established
         .outputKey("quality_status")
         .build();
 
+
     BaseAgent checkStatusAndEscalate = new BaseAgent(
         "StopChecker","Checks quality_status and escalates if 'pass'.", List.of(), null, null) {
+
 
       @Override
       protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
         String status = (String) invocationContext.session().state().getOrDefault("quality_status", "fail");
         boolean shouldStop = "pass".equals(status);
+
 
         EventActions actions = EventActions.builder().escalate(shouldStop).build();
         Event event = Event.builder()
@@ -4657,30 +5332,18 @@ By combining ADK's composition primitives, you can implement various established
       }
     };
 
+
     LoopAgent refinementLoop = LoopAgent.builder()
         .name("CodeRefinementLoop")
         .maxIterations(5)
         .subAgents(codeRefiner, qualityChecker, checkStatusAndEscalate)
         .build();
 
+
     // Loop runs: Refiner -> Checker -> StopChecker
     // State['current_code'] is updated each iteration.
     // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5
     // iterations.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:iterative-refinement-pattern"
     ```
 
 ### Human-in-the-Loop Pattern
@@ -4700,6 +5363,7 @@ By combining ADK's composition primitives, you can implement various established
     from google.adk.agents import LlmAgent, SequentialAgent
     from google.adk.tools import FunctionTool
 
+
     # --- Assume external_approval_tool exists ---
     # This tool would:
     # 1. Take details (e.g., request_id, amount, reason).
@@ -4709,12 +5373,14 @@ By combining ADK's composition primitives, you can implement various established
     # async def external_approval_tool(amount: float, reason: str) -> str: ...
     approval_tool = FunctionTool(func=external_approval_tool)
 
+
     # Agent that prepares the request
     prepare_request = LlmAgent(
         name="PrepareApproval",
         instruction="Prepare the approval request details based on user input. Store amount and reason in state.",
         # ... likely sets state['approval_amount'] and state['approval_reason'] ...
     )
+
 
     # Agent that calls the human approval tool
     request_approval = LlmAgent(
@@ -4724,11 +5390,13 @@ By combining ADK's composition primitives, you can implement various established
         output_key="human_decision"
     )
 
+
     # Agent that proceeds based on human decision
     process_decision = LlmAgent(
         name="ProcessDecision",
         instruction="Check {human_decision}. If 'approved', proceed. If 'rejected', inform user."
     )
+
 
     approval_workflow = SequentialAgent(
         name="HumanApprovalWorkflow",
@@ -4736,48 +5404,60 @@ By combining ADK's composition primitives, you can implement various established
     )
     ```
 
-=== "Java"
+=== "Typescript"
 
-    ```java
+    ```typescript
     // Conceptual Code: Using a Tool for Human Approval
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.tools.FunctionTool;
+    import { LlmAgent, SequentialAgent, FunctionTool } from '@google/adk';
+    import { z } from 'zod';
 
-    // --- Assume external_approval_tool exists ---
+    // --- Assume externalApprovalTool exists ---
     // This tool would:
     // 1. Take details (e.g., request_id, amount, reason).
     // 2. Send these details to a human review system (e.g., via API).
     // 3. Poll or wait for the human response (approved/rejected).
     // 4. Return the human's decision.
-    // public boolean externalApprovalTool(float amount, String reason) { ... }
-    FunctionTool approvalTool = FunctionTool.create(externalApprovalTool);
+    async function externalApprovalTool(params: {amount: number, reason: string}): Promise<{decision: string}> {
+      // ... implementation to call external system
+      return {decision: 'approved'}; // or 'rejected'
+    }
+
+    const approvalTool = new FunctionTool({
+      name: 'external_approval_tool',
+      description: 'Sends a request for human approval.',
+      parameters: z.object({
+        amount: z.number(),
+        reason: z.string(),
+      }),
+      execute: externalApprovalTool,
+    });
+
 
     // Agent that prepares the request
-    LlmAgent prepareRequest = LlmAgent.builder()
-        .name("PrepareApproval")
-        .instruction("Prepare the approval request details based on user input. Store amount and reason in state.")
+    const prepareRequest = new LlmAgent({
+        name: 'PrepareApproval',
+        instruction: 'Prepare the approval request details based on user input. Store amount and reason in state.',
         // ... likely sets state['approval_amount'] and state['approval_reason'] ...
-        .build();
+    });
 
     // Agent that calls the human approval tool
-    LlmAgent requestApproval = LlmAgent.builder()
-        .name("RequestHumanApproval")
-        .instruction("Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].")
-        .tools(approvalTool)
-        .outputKey("human_decision")
-        .build();
+    const requestApproval = new LlmAgent({
+        name: 'RequestHumanApproval',
+        instruction: 'Use the external_approval_tool with amount from state["approval_amount"] and reason from state["approval_reason"].',
+        tools: [approvalTool],
+        outputKey: 'human_decision'
+    });
 
     // Agent that proceeds based on human decision
-    LlmAgent processDecision = LlmAgent.builder()
-        .name("ProcessDecision")
-        .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
-        .build();
+    const processDecision = new LlmAgent({
+        name: 'ProcessDecision',
+        instruction: 'Check {human_decision}. If "approved", proceed. If "rejected", inform user.'
+    });
 
-    SequentialAgent approvalWorkflow = SequentialAgent.builder()
-        .name("HumanApprovalWorkflow")
-        .subAgents(prepareRequest, requestApproval, processDecision)
-        .build();
+    const approvalWorkflow = new SequentialAgent({
+        name: 'HumanApprovalWorkflow',
+        subAgents: [prepareRequest, requestApproval, processDecision]
+    });
     ```
 
 === "Go"
@@ -4792,6 +5472,106 @@ By combining ADK's composition primitives, you can implement various established
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:human-in-loop-pattern"
     ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Using a Tool for Human Approval
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.tools.FunctionTool;
+
+
+    // --- Assume external_approval_tool exists ---
+    // This tool would:
+    // 1. Take details (e.g., request_id, amount, reason).
+    // 2. Send these details to a human review system (e.g., via API).
+    // 3. Poll or wait for the human response (approved/rejected).
+    // 4. Return the human's decision.
+    // public boolean externalApprovalTool(float amount, String reason) { ... }
+    FunctionTool approvalTool = FunctionTool.create(externalApprovalTool);
+
+
+    // Agent that prepares the request
+    LlmAgent prepareRequest = LlmAgent.builder()
+        .name("PrepareApproval")
+        .instruction("Prepare the approval request details based on user input. Store amount and reason in state.")
+        // ... likely sets state['approval_amount'] and state['approval_reason'] ...
+        .build();
+
+
+    // Agent that calls the human approval tool
+    LlmAgent requestApproval = LlmAgent.builder()
+        .name("RequestHumanApproval")
+        .instruction("Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].")
+        .tools(approvalTool)
+        .outputKey("human_decision")
+        .build();
+
+
+    // Agent that proceeds based on human decision
+    LlmAgent processDecision = LlmAgent.builder()
+        .name("ProcessDecision")
+        .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
+        .build();
+
+
+    SequentialAgent approvalWorkflow = SequentialAgent.builder()
+        .name("HumanApprovalWorkflow")
+        .subAgents(prepareRequest, requestApproval, processDecision)
+        .build();
+    ```
+
+#### Human in the Loop with Policy
+
+A more advanced and structured way to implement Human-in-the-Loop is by using a `PolicyEngine`. This approach allows you to define policies that can trigger a confirmation step from a user before a tool is executed. The `SecurityPlugin` intercepts a tool call, consults the `PolicyEngine`, and if the policy dictates, it will automatically request user confirmation. This pattern is more robust for enforcing governance and security rules.
+
+Here's how it works:
+
+1.  **`SecurityPlugin`**: You add this plugin to your `Runner`. It acts as an interceptor for all tool calls.
+2.  **`BasePolicyEngine`**: You create a custom class that implements this interface. Its `evaluate()` method contains your logic to decide if a tool call needs confirmation.
+3.  **`PolicyOutcome.CONFIRM`**: When your `evaluate()` method returns this outcome, the `SecurityPlugin` pauses the tool execution and generates a special `FunctionCall` using `getAskUserConfirmationFunctionCalls`.
+4.  **Application Handling**: Your application code receives this special function call and presents the confirmation request to the user.
+5.  **User Confirmation**: Once the user confirms, your application sends a `FunctionResponse` back to the agent, which allows the `SecurityPlugin` to proceed with the original tool execution.
+
+!!! Note "TypeScript Recommended Pattern"
+    The Policy-based pattern is the recommended approach for implementing Human-in-the-Loop workflows in TypeScript. Support in other ADK languages is planned for future releases.
+
+A conceptual example of using a `CustomPolicyEngine` to require user confirmation before executing any tool is shown below.
+
+=== "TypeScript"
+
+    ```typescript
+    const rootAgent = new LlmAgent({
+      name: 'weather_time_agent',
+      model: 'gemini-2.5-flash',
+      description:
+          'Agent to answer questions about the time and weather in a city.',
+      instruction:
+          'You are a helpful agent who can answer user questions about the time and weather in a city.',
+      tools: [getWeatherTool],
+    });
+
+    class CustomPolicyEngine implements BasePolicyEngine {
+      async evaluate(_context: ToolCallPolicyContext): Promise<PolicyCheckResult> {
+        // Default permissive implementation
+        return Promise.resolve({
+          outcome: PolicyOutcome.CONFIRM,
+          reason: 'Needs confirmation for tool call',
+        });
+      }
+    }
+
+    const runner = new InMemoryRunner({
+        agent: rootAgent,
+        appName,
+        plugins: [new SecurityPlugin({policyEngine: new CustomPolicyEngine()})]
+    });
+    ```
+
+    You can find the full code sample [here](https://github.com/google/adk-docs/blob/main/examples/typescript/snippets/agents/workflow-agents/hitl_confirmation_agent.ts).
+
+### Combining Patterns
 
 These patterns provide starting points for structuring your multi-agent systems. You can mix and match them as needed to create the most effective architecture for your specific application.
 
@@ -5190,6 +5970,17 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 
 <!-- This comment forces a block separation -->
 
+-   :fontawesome-brands-js:{ .lg .middle } **Typescript API Reference**
+
+    ---
+    Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
+
+    [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) <br>
+    <!-- Assuming your Typescript API docs are in a 'typescript' subdirectory -->
+    <!-- [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) -->
+
+<!-- This comment forces a block separation -->
+
 -   :material-console:{ .lg .middle } **CLI Reference**
 
     ---
@@ -5352,7 +6143,7 @@ File: docs/artifacts/index.md
 # Artifacts
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
@@ -5392,16 +6183,31 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
     print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
     ```
 
+=== "Typescript"
+
+    ```typescript
+    import type { Part } from '@google/genai';
+    import { createPartFromBase64 } from '@google/genai';
+
+    // Assume 'imageBytes' contains the binary data of a PNG image
+    const imageBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]); // Placeholder
+
+    const imageArtifact: Part = createPartFromBase64(imageBytes.toString('base64'), "image/png");
+
+    console.log(`Artifact MIME Type: ${imageArtifact.inlineData?.mimeType}`);
+    // Note: Accessing raw bytes would require decoding from base64.
+    ```
+
 === "Go"
 
     ```go
-	import (
-		"log"
+    import (
+      "log"
 
-		"google.golang.org/genai"
-	)
+      "google.golang.org/genai"
+    )
 
-	--8<-- "examples/go/snippets/artifacts/main.go:representation"
+    --8<-- "examples/go/snippets/artifacts/main.go:representation"
     ```
 
 === "Java"
@@ -5436,10 +6242,10 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
 
 While session `state` is suitable for storing small pieces of configuration or conversational context (like strings, numbers, booleans, or small dictionaries/lists), Artifacts are designed for scenarios involving binary or large data:
 
-1. **Handling Non-Textual Data:** Easily store and retrieve images, audio clips, video snippets, PDFs, spreadsheets, or any other file format relevant to your agent's function.  
-2. **Persisting Large Data:** Session state is generally not optimized for storing large amounts of data. Artifacts provide a dedicated mechanism for persisting larger blobs without cluttering the session state.  
-3. **User File Management:** Provide capabilities for users to upload files (which can be saved as artifacts) and retrieve or download files generated by the agent (loaded from artifacts).  
-4. **Sharing Outputs:** Enable tools or agents to generate binary outputs (like a PDF report or a generated image) that can be saved via `save_artifact` and later accessed by other parts of the application or even in subsequent sessions (if using user namespacing).  
+1. **Handling Non-Textual Data:** Easily store and retrieve images, audio clips, video snippets, PDFs, spreadsheets, or any other file format relevant to your agent's function.
+2. **Persisting Large Data:** Session state is generally not optimized for storing large amounts of data. Artifacts provide a dedicated mechanism for persisting larger blobs without cluttering the session state.
+3. **User File Management:** Provide capabilities for users to upload files (which can be saved as artifacts) and retrieve or download files generated by the agent (loaded from artifacts).
+4. **Sharing Outputs:** Enable tools or agents to generate binary outputs (like a PDF report or a generated image) that can be saved via `save_artifact` and later accessed by other parts of the application or even in subsequent sessions (if using user namespacing).
 5. **Caching Binary Data:** Store the results of computationally expensive operations that produce binary data (e.g., rendering a complex chart image) as artifacts to avoid regenerating them on subsequent requests.
 
 In essence, whenever your agent needs to work with file-like binary data that needs to be persisted, versioned, or shared, Artifacts managed by an `ArtifactService` are the appropriate mechanism within ADK.
@@ -5478,14 +6284,14 @@ Understanding artifacts involves grasping a few key components: the service that
 
 ### Artifact Service (`BaseArtifactService`)
 
-* **Role:** The central component responsible for the actual storage and retrieval logic for artifacts. It defines *how* and *where* artifacts are persisted.  
+* **Role:** The central component responsible for the actual storage and retrieval logic for artifacts. It defines *how* and *where* artifacts are persisted.
 
-* **Interface:** Defined by the abstract base class `BaseArtifactService`. Any concrete implementation must provide methods for:  
+* **Interface:** Defined by the abstract base class `BaseArtifactService`. Any concrete implementation must provide methods for:
 
-    * `Save Artifact`: Stores the artifact data and returns its assigned version number.  
-    * `Load Artifact`: Retrieves a specific version (or the latest) of an artifact.  
-    * `List Artifact keys`: Lists the unique filenames of artifacts within a given scope.  
-    * `Delete Artifact`: Removes an artifact (and potentially all its versions, depending on implementation).  
+    * `Save Artifact`: Stores the artifact data and returns its assigned version number.
+    * `Load Artifact`: Retrieves a specific version (or the latest) of an artifact.
+    * `List Artifact keys`: Lists the unique filenames of artifacts within a given scope.
+    * `Delete Artifact`: Removes an artifact (and potentially all its versions, depending on implementation).
     * `List versions`: Lists all available version numbers for a specific artifact filename.
 
 * **Configuration:** You provide an instance of an artifact service (e.g., `InMemoryArtifactService`, `GcsArtifactService`) when initializing the `Runner`. The `Runner` then makes this service available to agents and tools via the `InvocationContext`.
@@ -5512,32 +6318,53 @@ Understanding artifacts involves grasping a few key components: the service that
     # Now, contexts within runs managed by this runner can use artifact methods
     ```
 
+=== "Typescript"
+
+    ```typescript
+    import { InMemoryRunner } from '@google/adk';
+    import { LlmAgent } from '@google/adk';
+    import { InMemoryArtifactService } from '@google/adk';
+
+    // Example: Configuring the Runner with an Artifact Service
+    const myAgent = new LlmAgent({name: "artifact_user_agent", model: "gemini-2.5-flash"});
+    const artifactService = new InMemoryArtifactService(); // Choose an implementation
+    const sessionService = new InMemoryArtifactService();
+
+    const runner = new InMemoryRunner({
+        agent: myAgent,
+        appName: "my_artifact_app",
+        sessionService: sessionService,
+        artifactService: artifactService, // Provide the service instance here
+    });
+    // Now, contexts within runs managed by this runner can use artifact methods
+    ```
+
 === "Go"
 
     ```go
-	import (
-		"context"
-		"log"
+    import (
+      "context"
+      "log"
 
-		"google.golang.org/adk/agent/llmagent"
-		"google.golang.org/adk/artifactservice"
-		"google.golang.org/adk/llm/gemini"
-		"google.golang.org/adk/runner"
-		"google.golang.org/adk/sessionservice"
-		"google.golang.org/genai"
+      "google.golang.org/adk/agent/llmagent"
+      "google.golang.org/adk/artifactservice"
+      "google.golang.org/adk/llm/gemini"
+      "google.golang.org/adk/runner"
+      "google.golang.org/adk/sessionservice"
+      "google.golang.org/genai"
 	)
 
 	--8<-- "examples/go/snippets/artifacts/main.go:configure-runner"
     ```
 
 === "Java"
-    
+
     ```java
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.runner.Runner;
     import com.google.adk.sessions.InMemorySessionService;
     import com.google.adk.artifacts.InMemoryArtifactService;
-    
+
     // Example: Configuring the Runner with an Artifact Service
     LlmAgent myAgent =  LlmAgent.builder()
       .name("artifact_user_agent")
@@ -5552,11 +6379,11 @@ Understanding artifacts involves grasping a few key components: the service that
 
 ### Artifact Data
 
-* **Standard Representation:** Artifact content is universally represented using the `google.genai.types.Part` object, the same structure used for parts of LLM messages.  
+* **Standard Representation:** Artifact content is universally represented using the `google.genai.types.Part` object, the same structure used for parts of LLM messages.
 
-* **Key Attribute (`inline_data`):** For artifacts, the most relevant attribute is `inline_data`, which is a `google.genai.types.Blob` object containing:  
+* **Key Attribute (`inline_data`):** For artifacts, the most relevant attribute is `inline_data`, which is a `google.genai.types.Blob` object containing:
 
-    * `data` (`bytes`): The raw binary content of the artifact.  
+    * `data` (`bytes`): The raw binary content of the artifact.
     * `mime_type` (`str`): A standard MIME type string (e.g., `'application/pdf'`, `'image/png'`, `'audio/mpeg'`) describing the nature of the binary data. **This is crucial for correct interpretation when loading the artifact.**
 
 === "Python"
@@ -5578,18 +6405,32 @@ Understanding artifacts involves grasping a few key components: the service that
 
     print(f"Created Python artifact with MIME type: {pdf_artifact_py.inline_data.mime_type}")
     ```
-    
+
+=== "Typescript"
+
+    ```typescript
+    import type { Part } from '@google/genai';
+    import { createPartFromBase64 } from '@google/genai';
+
+    // Example: Creating an artifact Part from raw bytes
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34]); // Your raw PDF data
+    const pdfMimeType = "application/pdf";
+
+    const pdfArtifact: Part = createPartFromBase64(pdfBytes.toString('base64'), pdfMimeType);
+    console.log(`Created TypeScript artifact with MIME Type: ${pdfArtifact.inlineData?.mimeType}`);
+    ```
+
 === "Go"
 
     ```go
-	import (
-		"log"
-		"os"
+    import (
+      "log"
+      "os"
 
-		"google.golang.org/genai"
-	)
+      "google.golang.org/genai"
+    )
 
-	--8<-- "examples/go/snippets/artifacts/main.go:artifact-data"
+    --8<-- "examples/go/snippets/artifacts/main.go:artifact-data"
     ```
 
 === "Java"
@@ -5600,27 +6441,27 @@ Understanding artifacts involves grasping a few key components: the service that
 
 ### Filename
 
-* **Identifier:** A simple string used to name and retrieve an artifact within its specific namespace.  
-* **Uniqueness:** Filenames must be unique within their scope (either the session or the user namespace).  
+* **Identifier:** A simple string used to name and retrieve an artifact within its specific namespace.
+* **Uniqueness:** Filenames must be unique within their scope (either the session or the user namespace).
 * **Best Practice:** Use descriptive names, potentially including file extensions (e.g., `"monthly_report.pdf"`, `"user_avatar.jpg"`), although the extension itself doesn't dictate behavior – the `mime_type` does.
 
 ### Versioning
 
-* **Automatic Versioning:** The artifact service automatically handles versioning. When you call `save_artifact`, the service determines the next available version number (typically starting from 0 and incrementing) for that specific filename and scope.  
-* **Returned by `save_artifact`:** The `save_artifact` method returns the integer version number that was assigned to the newly saved artifact.  
-* **Retrieval:**  
-  * `load_artifact(..., version=None)` (default): Retrieves the *latest* available version of the artifact.  
-  * `load_artifact(..., version=N)`: Retrieves the specific version `N`.  
+* **Automatic Versioning:** The artifact service automatically handles versioning. When you call `save_artifact`, the service determines the next available version number (typically starting from 0 and incrementing) for that specific filename and scope.
+* **Returned by `save_artifact`:** The `save_artifact` method returns the integer version number that was assigned to the newly saved artifact.
+* **Retrieval:**
+  * `load_artifact(..., version=None)` (default): Retrieves the *latest* available version of the artifact.
+  * `load_artifact(..., version=N)`: Retrieves the specific version `N`.
 * **Listing Versions:** The `list_versions` method (on the service, not context) can be used to find all existing version numbers for an artifact.
 
 ### Namespacing (Session vs. User)
 
-* **Concept:** Artifacts can be scoped either to a specific session or more broadly to a user across all their sessions within the application. This scoping is determined by the `filename` format and handled internally by the `ArtifactService`.  
+* **Concept:** Artifacts can be scoped either to a specific session or more broadly to a user across all their sessions within the application. This scoping is determined by the `filename` format and handled internally by the `ArtifactService`.
 
-* **Default (Session Scope):** If you use a plain filename like `"report.pdf"`, the artifact is associated with the specific `app_name`, `user_id`, *and* `session_id`. It's only accessible within that exact session context.  
+* **Default (Session Scope):** If you use a plain filename like `"report.pdf"`, the artifact is associated with the specific `app_name`, `user_id`, *and* `session_id`. It's only accessible within that exact session context.
 
 
-* **User Scope (`"user:"` prefix):** If you prefix the filename with `"user:"`, like `"user:profile.png"`, the artifact is associated only with the `app_name` and `user_id`. It can be accessed or updated from *any* session belonging to that user within the app.  
+* **User Scope (`"user:"` prefix):** If you prefix the filename with `"user:"`, like `"user:profile.png"`, the artifact is associated only with the `app_name` and `user_id`. It can be accessed or updated from *any* session belonging to that user within the app.
 
 
 === "Python"
@@ -5642,31 +6483,46 @@ Understanding artifacts involves grasping a few key components: the service that
     # and scope it to app_name and user_id, making it accessible across sessions for that user.
     ```
 
+=== "Typescript"
+
+    ```typescript
+    // Example illustrating namespace difference (conceptual)
+
+    // Session-specific artifact filename
+    const sessionReportFilename = "summary.txt";
+
+    // User-specific artifact filename
+    const userConfigFilename = "user:settings.json";
+
+    // When saving 'summary.txt' via context.saveArtifact, it's tied to the current appName, userId, and sessionId.
+    // When saving 'user:settings.json' via context.saveArtifact, the ArtifactService implementation recognizes the "user:" prefix and scopes it to appName and userId, making it accessible across sessions for that user.
+    ```
+
 === "Go"
 
     ```go
-	import (
-		"log"
-	)
+    import (
+      "log"
+    )
 
-	--8<-- "examples/go/snippets/artifacts/main.go:namespacing"
+    --8<-- "examples/go/snippets/artifacts/main.go:namespacing"
     ```
 
 === "Java"
 
     ```java
     // Example illustrating namespace difference (conceptual)
-    
+
     // Session-specific artifact filename
     String sessionReportFilename = "summary.txt";
-    
+
     // User-specific artifact filename
     String userConfigFilename = "user:settings.json"; // The "user:" prefix is key
-    
+
     // When saving 'summary.txt' via context.save_artifact,
     // it's tied to the current app_name, user_id, and session_id.
     // artifactService.saveArtifact(appName, userId, sessionId1, sessionReportFilename, someData);
-    
+
     // When saving 'user:settings.json' via context.save_artifact,
     // the ArtifactService implementation should recognize the "user:" prefix
     // and scope it to app_name and user_id, making it accessible across sessions for that user.
@@ -5709,22 +6565,44 @@ Before you can use any artifact methods via the context objects, you **must** pr
     ```
     If no `artifact_service` is configured in the `InvocationContext` (which happens if it's not passed to the `Runner`), calling `save_artifact`, `load_artifact`, or `list_artifacts` on the context objects will raise a `ValueError`.
 
+=== "Typescript"
+
+    ```typescript
+    import { LlmAgent, InMemoryRunner, InMemoryArtifactService } from '@google/adk';
+
+    // Your agent definition
+    const agent = new LlmAgent({name: "my_agent", model: "gemini-2.5-flash"});
+
+    // Instantiate the desired artifact service
+    const artifactService = new InMemoryArtifactService();
+
+    // Provide it to the Runner
+    const runner = new InMemoryRunner({
+        agent: agent,
+        appName: "artifact_app",
+        sessionService: new InMemoryArtifactService(),
+        artifactService: artifactService, // Service must be provided here
+    });
+    // If no artifactService is configured, calling artifact methods on context objects will throw an error.
+    ```
+    In Java, if an `ArtifactService` instance is not available (e.g., `null`) when artifact operations are attempted, it would typically result in a `NullPointerException` or a custom error, depending on how your application is structured. Robust applications often use dependency injection frameworks to manage service lifecycles and ensure availability.
+
 === "Go"
 
     ```go
-	import (
-		"context"
-		"log"
+    import (
+      "context"
+      "log"
 
-		"google.golang.org/adk/agent/llmagent"
-		"google.golang.org/adk/artifactservice"
-		"google.golang.org/adk/llm/gemini"
-		"google.golang.org/adk/runner"
-		"google.golang.org/adk/sessionservice"
-		"google.golang.org/genai"
-	)
+      "google.golang.org/adk/agent/llmagent"
+      "google.golang.org/adk/artifactservice"
+      "google.golang.org/adk/llm/gemini"
+      "google.golang.org/adk/runner"
+      "google.golang.org/adk/sessionservice"
+      "google.golang.org/genai"
+    )
 
-	--8<-- "examples/go/snippets/artifacts/main.go:prerequisite"
+    --8<-- "examples/go/snippets/artifacts/main.go:prerequisite"
     ```
 
 === "Java"
@@ -5736,31 +6614,29 @@ Before you can use any artifact methods via the context objects, you **must** pr
     import com.google.adk.artifacts.InMemoryArtifactService; // Or GcsArtifactService
     import com.google.adk.runner.Runner;
     import com.google.adk.sessions.InMemorySessionService;
-    
+
     public class SampleArtifactAgent {
-    
+
       public static void main(String[] args) {
-    
+
         // Your agent definition
         LlmAgent agent = LlmAgent.builder()
             .name("my_agent")
             .model("gemini-2.0-flash")
             .build();
-    
+
         // Instantiate the desired artifact service
         InMemoryArtifactService artifactService = new InMemoryArtifactService();
-    
+
         // Provide it to the Runner
         Runner runner = new Runner(agent,
             "APP_NAME",
             artifactService, // Service must be provided here
             new InMemorySessionService());
-    
+
       }
     }
     ```
-    In Java, if an `ArtifactService` instance is not available (e.g., `null`) when artifact operations are attempted, it would typically result in a `NullPointerException` or a custom error, depending on how your application is structured. Robust applications often use dependency injection frameworks to manage service lifecycles and ensure availability.
-
 
 ### Accessing Methods
 
@@ -5802,22 +6678,43 @@ The artifact interaction methods are available directly on instances of `Callbac
         #   await save_generated_report_py(callback_context, report_data)
         ```
 
+    === "Typescript"
+
+        ```typescript
+        import type { Part } from '@google/genai';
+        import { createPartFromBase64 } from '@google/genai';
+        import { CallbackContext } from '@google/adk';
+
+        async function saveGeneratedReport(context: CallbackContext, reportBytes: Uint8Array): Promise<void> {
+            /**Saves generated PDF report bytes as an artifact.*/
+            const reportArtifact: Part = createPartFromBase64(reportBytes.toString('base64'), "application/pdf");
+
+            const filename = "generated_report.pdf";
+
+            try {
+                const version = await context.saveArtifact(filename, reportArtifact);
+                console.log(`Successfully saved TypeScript artifact '${filename}' as version ${version}.`);
+            } catch (e: any) {
+                console.error(`Error saving TypeScript artifact: ${e.message}. Is ArtifactService configured in Runner?`);
+            }
+        }
+        ```
     === "Go"
 
         ```go
-		import (
-			"log"
+        import (
+          "log"
 
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-			"google.golang.org/genai"
-		)
+          "google.golang.org/adk/agent"
+          "google.golang.org/adk/llm"
+          "google.golang.org/genai"
+        )
 
-		--8<-- "examples/go/snippets/artifacts/main.go:saving-artifacts"
+        --8<-- "examples/go/snippets/artifacts/main.go:saving-artifacts"
         ```
 
     === "Java"
-    
+
         ```java
         import com.google.adk.agents.CallbackContext;
         import com.google.adk.artifacts.BaseArtifactService;
@@ -5894,17 +6791,46 @@ The artifact interaction methods are available directly on instances of `Callbac
         #   await process_latest_report_py(callback_context)
         ```
 
+    === "Typescript"
+
+        ```typescript
+        import { CallbackContext } from '@google/adk';
+
+        async function processLatestReport(context: CallbackContext): Promise<void> {
+            /**Loads the latest report artifact and processes its data.*/
+            const filename = "generated_report.pdf";
+            try {
+                // Load the latest version
+                const reportArtifact = await context.loadArtifact(filename);
+
+                if (reportArtifact?.inlineData) {
+                    console.log(`Successfully loaded latest TypeScript artifact '${filename}'.`);
+                    console.log(`MIME Type: ${reportArtifact.inlineData.mimeType}`);
+                    // Process the reportArtifact.inlineData.data (base64 string)
+                    const pdfData = Buffer.from(reportArtifact.inlineData.data, 'base64');
+                    console.log(`Report size: ${pdfData.length} bytes.`);
+                    // ... further processing ...
+                } else {
+                    console.log(`TypeScript artifact '${filename}' not found.`);
+                }
+
+            } catch (e: any) {
+                console.error(`Error loading TypeScript artifact: ${e.message}. Is ArtifactService configured?`);
+            }
+        }
+        ```
+
     === "Go"
 
         ```go
-		import (
-			"log"
+        import (
+          "log"
 
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-		)
+          "google.golang.org/adk/agent"
+          "google.golang.org/adk/llm"
+        )
 
-		--8<-- "examples/go/snippets/artifacts/main.go:loading-artifacts"
+        --8<-- "examples/go/snippets/artifacts/main.go:loading-artifacts"
         ```
 
     === "Java"
@@ -6024,20 +6950,43 @@ The artifact interaction methods are available directly on instances of `Callbac
         # list_files_tool = FunctionTool(func=list_user_files_py)
         ```
 
+    === "Typescript"
+
+        ```typescript
+        import { ToolContext } from '@google/adk';
+
+        async function listUserFiles(toolContext: ToolContext): Promise<string> {
+            /**Tool to list available artifacts for the user.*/
+            try {
+                const availableFiles = await toolContext.listArtifacts();
+                if (!availableFiles || availableFiles.length === 0) {
+                    return "You have no saved artifacts.";
+                } else {
+                    // Format the list for the user/LLM
+                    const fileListStr = availableFiles.map(fname => `- ${fname}`).join("\n");
+                    return `Here are your available TypeScript artifacts:\n${fileListStr}`;
+                }
+            } catch (e: any) {
+                console.error(`Error listing TypeScript artifacts: ${e.message}. Is ArtifactService configured?`);
+                return "Error: Could not list TypeScript artifacts.";
+            }
+        }
+        ```
+
     === "Go"
 
         ```go
-		import (
-			"fmt"
-			"log"
-			"strings"
+        import (
+          "fmt"
+          "log"
+          "strings"
 
-			"google.golang.org/adk/agent"
-			"google.golang.org/adk/llm"
-			"google.golang.org/genai"
-		)
+          "google.golang.org/adk/agent"
+          "google.golang.org/adk/llm"
+          "google.golang.org/genai"
+        )
 
-		--8<-- "examples/go/snippets/artifacts/main.go:listing-artifacts"
+        --8<-- "examples/go/snippets/artifacts/main.go:listing-artifacts"
         ```
 
     === "Java"
@@ -6151,14 +7100,29 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
         # runner = Runner(..., artifact_service=in_memory_service_py)
         ```
 
+    === "Typescript"
+
+        ```typescript
+        import { InMemoryArtifactService } from '@google/adk';
+
+        // Simply instantiate the class
+        const inMemoryService = new InMemoryArtifactService();
+
+        // This instance would then be provided to your Runner.
+        // const runner = new InMemoryRunner({
+        //     /* other services */,
+        //     artifactService: inMemoryService
+        // });
+        ```
+
     === "Go"
 
         ```go
-		import (
-			"google.golang.org/adk/artifactservice"
-		)
+        import (
+          "google.golang.org/adk/artifactservice"
+        )
 
-		--8<-- "examples/go/snippets/artifacts/main.go:in-memory-service"
+        --8<-- "examples/go/snippets/artifacts/main.go:in-memory-service"
         ```
 
     === "Java"
@@ -6234,19 +7198,19 @@ Choosing the appropriate `ArtifactService` implementation depends on your applic
 
 To use artifacts effectively and maintainably:
 
-* **Choose the Right Service:** Use `InMemoryArtifactService` for rapid prototyping, testing, and scenarios where persistence isn't needed. Use `GcsArtifactService` (or implement your own `BaseArtifactService` for other backends) for production environments requiring data persistence and scalability.  
-* **Meaningful Filenames:** Use clear, descriptive filenames. Including relevant extensions (`.pdf`, `.png`, `.wav`) helps humans understand the content, even though the `mime_type` dictates programmatic handling. Establish conventions for temporary vs. persistent artifact names.  
-* **Specify Correct MIME Types:** Always provide an accurate `mime_type` when creating the `types.Part` for `save_artifact`. This is critical for applications or tools that later `load_artifact` to interpret the `bytes` data correctly. Use standard IANA MIME types where possible.  
-* **Understand Versioning:** Remember that `load_artifact()` without a specific `version` argument retrieves the *latest* version. If your logic depends on a specific historical version of an artifact, be sure to provide the integer version number when loading.  
-* **Use Namespacing (`user:`) Deliberately:** Only use the `"user:"` prefix for filenames when the data truly belongs to the user and should be accessible across all their sessions. For data specific to a single conversation or session, use regular filenames without the prefix.  
-* **Error Handling:**  
-    * Always check if an `artifact_service` is actually configured before calling context methods (`save_artifact`, `load_artifact`, `list_artifacts`) – they will raise a `ValueError` if the service is `None`. 
-    * Check the return value of `load_artifact`, as it will be `None` if the artifact or version doesn't exist. Don't assume it always returns a `Part`.  
-    * Be prepared to handle exceptions from the underlying storage service, especially with `GcsArtifactService` (e.g., `google.api_core.exceptions.Forbidden` for permission issues, `NotFound` if the bucket doesn't exist, network errors).  
-* **Size Considerations:** Artifacts are suitable for typical file sizes, but be mindful of potential costs and performance impacts with extremely large files, especially with cloud storage. `InMemoryArtifactService` can consume significant memory if storing many large artifacts. Evaluate if very large data might be better handled through direct GCS links or other specialized storage solutions rather than passing entire byte arrays in-memory.  
-* **Cleanup Strategy:** For persistent storage like `GcsArtifactService`, artifacts remain until explicitly deleted. If artifacts represent temporary data or have a limited lifespan, implement a strategy for cleanup. This might involve:  
-    * Using GCS lifecycle policies on the bucket.  
-    * Building specific tools or administrative functions that utilize the `artifact_service.delete_artifact` method (note: delete is *not* exposed via context objects for safety).  
+* **Choose the Right Service:** Use `InMemoryArtifactService` for rapid prototyping, testing, and scenarios where persistence isn't needed. Use `GcsArtifactService` (or implement your own `BaseArtifactService` for other backends) for production environments requiring data persistence and scalability.
+* **Meaningful Filenames:** Use clear, descriptive filenames. Including relevant extensions (`.pdf`, `.png`, `.wav`) helps humans understand the content, even though the `mime_type` dictates programmatic handling. Establish conventions for temporary vs. persistent artifact names.
+* **Specify Correct MIME Types:** Always provide an accurate `mime_type` when creating the `types.Part` for `save_artifact`. This is critical for applications or tools that later `load_artifact` to interpret the `bytes` data correctly. Use standard IANA MIME types where possible.
+* **Understand Versioning:** Remember that `load_artifact()` without a specific `version` argument retrieves the *latest* version. If your logic depends on a specific historical version of an artifact, be sure to provide the integer version number when loading.
+* **Use Namespacing (`user:`) Deliberately:** Only use the `"user:"` prefix for filenames when the data truly belongs to the user and should be accessible across all their sessions. For data specific to a single conversation or session, use regular filenames without the prefix.
+* **Error Handling:**
+    * Always check if an `artifact_service` is actually configured before calling context methods (`save_artifact`, `load_artifact`, `list_artifacts`) – they will raise a `ValueError` if the service is `None`.
+    * Check the return value of `load_artifact`, as it will be `None` if the artifact or version doesn't exist. Don't assume it always returns a `Part`.
+    * Be prepared to handle exceptions from the underlying storage service, especially with `GcsArtifactService` (e.g., `google.api_core.exceptions.Forbidden` for permission issues, `NotFound` if the bucket doesn't exist, network errors).
+* **Size Considerations:** Artifacts are suitable for typical file sizes, but be mindful of potential costs and performance impacts with extremely large files, especially with cloud storage. `InMemoryArtifactService` can consume significant memory if storing many large artifacts. Evaluate if very large data might be better handled through direct GCS links or other specialized storage solutions rather than passing entire byte arrays in-memory.
+* **Cleanup Strategy:** For persistent storage like `GcsArtifactService`, artifacts remain until explicitly deleted. If artifacts represent temporary data or have a limited lifespan, implement a strategy for cleanup. This might involve:
+    * Using GCS lifecycle policies on the bucket.
+    * Building specific tools or administrative functions that utilize the `artifact_service.delete_artifact` method (note: delete is *not* exposed via context objects for safety).
     * Carefully managing filenames to allow pattern-based deletion if needed.
 
 ================
@@ -6432,7 +7396,7 @@ File: docs/callbacks/index.md
 # Callbacks: Observe, Customize, and Control Agent Behavior
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to hook into an agent's execution process. They allow you to observe, customize, and even control the agent's behavior at specific, predefined points without modifying the core ADK framework code.
@@ -6451,24 +7415,30 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
 
 **Why use them?** Callbacks unlock significant flexibility and enable advanced agent capabilities:
 
-* **Observe & Debug:** Log detailed information at critical steps for monitoring and troubleshooting.  
-* **Customize & Control:** Modify data flowing through the agent (like LLM requests or tool results) or even bypass certain steps entirely based on your logic.  
-* **Implement Guardrails:** Enforce safety rules, validate inputs/outputs, or prevent disallowed operations.  
-* **Manage State:** Read or dynamically update the agent's session state during execution.  
+* **Observe & Debug:** Log detailed information at critical steps for monitoring and troubleshooting.
+* **Customize & Control:** Modify data flowing through the agent (like LLM requests or tool results) or even bypass certain steps entirely based on your logic.
+* **Implement Guardrails:** Enforce safety rules, validate inputs/outputs, or prevent disallowed operations.
+* **Manage State:** Read or dynamically update the agent's session state during execution.
 * **Integrate & Enhance:** Trigger external actions (API calls, notifications) or add features like caching.
 
 !!! tip
     When implementing security guardrails and policies, use ADK Plugins for
-    better modularity and flexibility than Callbacks. For more details, see 
+    better modularity and flexibility than Callbacks. For more details, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
-**How are they added:** 
+**How are they added:**
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/callback_basic.py:callback_basic"
+        ```
+
+    === "Typescript"
+
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/callback_basic.ts:callback_basic"
         ```
     
     === "Go"
@@ -6481,7 +7451,7 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/AgentWithBeforeModelCallback.java:init"
         ```
@@ -6494,21 +7464,21 @@ When the ADK framework encounters a point where a callback can run (e.g., just b
 
 **Controlling the Flow (The Core Mechanism):** The most powerful aspect of callbacks lies in how their **return value** influences the agent's subsequent actions. This is how you intercept and control the execution flow:
 
-1. **`return None` (Allow Default Behavior):**  
+1. **`return None` (Allow Default Behavior):**
 
     * The specific return type can vary depending on the language. In Java, the equivalent return type is `Optional.empty()`. Refer to the API documentation for language specific guidance.
-    * This is the standard way to signal that your callback has finished its work (e.g., logging, inspection, minor modifications to *mutable* input arguments like `llm_request`) and that the ADK agent should **proceed with its normal operation**.  
-    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `None` means the next step in the sequence (running the agent logic, calling the LLM, executing the tool) will occur.  
+    * This is the standard way to signal that your callback has finished its work (e.g., logging, inspection, minor modifications to *mutable* input arguments like `llm_request`) and that the ADK agent should **proceed with its normal operation**.
+    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `None` means the next step in the sequence (running the agent logic, calling the LLM, executing the tool) will occur.
     * For `after_*` callbacks (`after_agent`, `after_model`, `after_tool`), returning `None` means the result just produced by the preceding step (the agent's output, the LLM's response, the tool's result) will be used as is.
 
-2. **`return <Specific Object>` (Override Default Behavior):**  
+2. **`return <Specific Object>` (Override Default Behavior):**
 
-    * Returning a *specific type of object* (instead of `None`) is how you **override** the ADK agent's default behavior. The framework will use the object you return and *skip* the step that would normally follow or *replace* the result that was just generated.  
-    * **`before_agent_callback` → `types.Content`**: Skips the agent's main execution logic (`_run_async_impl` / `_run_live_impl`). The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.  
-    * **`before_model_callback` → `LlmResponse`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.  
-    * **`before_tool_callback` → `dict` or `Map`**: Skips the execution of the actual tool function (or sub-agent). The returned `dict` is used as the result of the tool call, which is then typically passed back to the LLM. Perfect for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.  
-    * **`after_agent_callback` → `types.Content`**: *Replaces* the `Content` that the agent's run logic just produced.  
-    * **`after_model_callback` → `LlmResponse`**: *Replaces* the `LlmResponse` received from the LLM. Useful for sanitizing outputs, adding standard disclaimers, or modifying the LLM's response structure.  
+    * Returning a *specific type of object* (instead of `None`) is how you **override** the ADK agent's default behavior. The framework will use the object you return and *skip* the step that would normally follow or *replace* the result that was just generated.
+    * **`before_agent_callback` → `types.Content`**: Skips the agent's main execution logic (`_run_async_impl` / `_run_live_impl`). The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.
+    * **`before_model_callback` → `LlmResponse`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.
+    * **`before_tool_callback` → `dict` or `Map`**: Skips the execution of the actual tool function (or sub-agent). The returned `dict` is used as the result of the tool call, which is then typically passed back to the LLM. Perfect for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.
+    * **`after_agent_callback` → `types.Content`**: *Replaces* the `Content` that the agent's run logic just produced.
+    * **`after_model_callback` → `LlmResponse`**: *Replaces* the `LlmResponse` received from the LLM. Useful for sanitizing outputs, adding standard disclaimers, or modifying the LLM's response structure.
     * **`after_tool_callback` → `dict` or `Map`**: *Replaces* the `dict` result returned by the tool. Allows for post-processing or standardization of tool outputs before they are sent back to the LLM.
 
 **Conceptual Code Example (Guardrail):**
@@ -6517,16 +7487,21 @@ This example demonstrates the common pattern for a guardrail using `before_model
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/before_model_callback.ts"
+        ```
+
     === "Go"
         ```go
         --8<-- "examples/go/snippets/callbacks/main.go:imports"
 
-        
+
         --8<-- "examples/go/snippets/callbacks/main.go:guardrail_init"
         ```
 
@@ -6534,7 +7509,7 @@ This example demonstrates the common pattern for a guardrail using `before_model
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelGuardrailExample.java:init"
         ```
-        
+
 By understanding this mechanism of returning `None` versus returning specific objects, you can precisely control the agent's execution path, making callbacks an essential tool for building sophisticated and reliable agents with ADK.
 
 ================
@@ -6543,7 +7518,7 @@ File: docs/callbacks/types-of-callbacks.md
 # Types of Callbacks
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The framework provides different types of callbacks that trigger at various stages of an agent's execution. Understanding when each callback fires and what context it receives is key to using them effectively.
@@ -6564,11 +7539,16 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/before_agent_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/before_agent_callback.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -6579,7 +7559,7 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeAgentCallbackExample.java:init"
         ```
@@ -6605,11 +7585,16 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/after_agent_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/after_agent_callback.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -6620,7 +7605,7 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/AfterAgentCallbackExample.java:init"
         ```
@@ -6647,27 +7632,32 @@ These callbacks are specific to `LlmAgent` and provide hooks around the interact
 
 **Purpose:** Allows inspection and modification of the request going to the LLM. Use cases include adding dynamic instructions, injecting few-shot examples based on state, modifying model config, implementing guardrails (like profanity filters), or implementing request-level caching.
 
-**Return Value Effect:**  
+**Return Value Effect:**
 If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM continues its normal workflow. If the callback returns an `LlmResponse` object, then the call to the LLM is **skipped**. The returned `LlmResponse` is used directly as if it came from the model. This is powerful for implementing guardrails or caching.
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/before_model_callback.ts"
+        ```
+
     === "Go"
 
         ```go
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:imports"
 
-        
+
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:before_model_example"
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelCallbackExample.java:init"
         ```
@@ -6686,11 +7676,16 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/after_model_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/after_model_callback.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -6701,7 +7696,7 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/AfterModelCallbackExample.java:init"
         ```
@@ -6718,17 +7713,22 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
 
 **Return Value Effect:**
 
-1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the tool's `run_async` method is executed with the (potentially modified) `args`.  
-2. If a dictionary (or `Map` in Java) is returned, the tool's `run_async` method is **skipped**. The returned dictionary is used directly as the result of the tool call. This is useful for caching or overriding tool behavior.  
+1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the tool's `run_async` method is executed with the (potentially modified) `args`.
+2. If a dictionary (or `Map` in Java) is returned, the tool's `run_async` method is **skipped**. The returned dictionary is used directly as the result of the tool call. This is useful for caching or overriding tool behavior.
 
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/before_tool_callback.py"
         ```
-    
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/before_tool_callback.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -6738,7 +7738,7 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeToolCallbackExample.java:init"
         ```
@@ -6752,14 +7752,19 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
 
 **Return Value Effect:**
 
-1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the original `tool_response` is used.  
+1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the original `tool_response` is used.
 2. If a new dictionary is returned, it **replaces** the original `tool_response`. This allows modifying or filtering the result seen by the LLM.
 
 ??? "Code"
     === "Python"
-    
+
         ```python
         --8<-- "examples/python/snippets/callbacks/after_tool_callback.py"
+        ```
+
+    === "Typescript"
+        ```typescript
+        --8<-- "examples/typescript/snippets/callbacks/after_tool_callback.ts"
         ```
 
     === "Go"
@@ -6768,10 +7773,10 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:imports"
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:tool_defs"
         --8<-- "examples/go/snippets/callbacks/types_of_callbacks/main.go:after_tool_example"
-        ```    
+        ```
 
     === "Java"
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/AfterToolCallbackExample.java:init"
         ```
@@ -6977,7 +7982,7 @@ File: docs/context/index.md
 # Context
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In the Agent Development Kit (ADK), "context" refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
@@ -7000,11 +8005,11 @@ The central piece holding all this information together for a single, complete u
 
     ```python
     # Conceptual Pseudocode: How the framework provides context (Internal Logic)
-    
+
     # runner = Runner(agent=my_root_agent, session_service=..., artifact_service=...)
     # user_message = types.Content(...)
     # session = session_service.get_session(...) # Or create new
-    
+
     # --- Inside runner.run_async(...) ---
     # 1. Framework creates the main context for this specific run
     # invocation_context = InvocationContext(
@@ -7024,6 +8029,34 @@ The central piece holding all this information together for a single, complete u
     #   --- End Internal Logic ---
     #
     # As a developer, you work with the context objects provided in method arguments.
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    /* Conceptual Pseudocode: How the framework provides context (Internal Logic) */
+
+    const runner = new InMemoryRunner({ agent: myRootAgent });
+    const session = await runner.sessionService.createSession({ ... });
+    const userMessage = createUserContent(...);
+
+    // --- Inside runner.runAsync(...) ---
+    // 1. Framework creates the main context for this specific run
+    const invocationContext = new InvocationContext({
+      invocationId: "unique-id-for-this-run",
+      session: session,
+      userContent: userMessage,
+      agent: myRootAgent, // The starting agent
+      sessionService: runner.sessionService,
+      pluginManager: runner.pluginManager,
+      // ... other necessary fields ...
+    });
+    //
+    // 2. Framework calls the agent's run method, passing the context implicitly
+    await myRootAgent.runAsync(invocationContext);
+    //   --- End Internal Logic ---
+
+    // As a developer, you work with the context objects provided in method arguments.
     ```
 
 === "Go"
@@ -7069,14 +8102,14 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     *   **Use Case:** Primarily used when the agent's core logic needs direct access to the overall session or services, though often state and artifact interactions are delegated to callbacks/tools which use their own contexts. Also used to control the invocation itself (e.g., setting `ctx.end_invocation = True`).
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Agent implementation receiving InvocationContext
         from google.adk.agents import BaseAgent
         from google.adk.agents.invocation_context import InvocationContext
         from google.adk.events import Event
         from typing import AsyncGenerator
-    
+
         class MyAgent(BaseAgent):
             async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
                 # Direct access example
@@ -7086,7 +8119,25 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
                 # ... agent logic using ctx ...
                 yield # ... event ...
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Agent implementation receiving InvocationContext
+        import { BaseAgent, InvocationContext, Event } from '@google/adk';
+
+        class MyAgent extends BaseAgent {
+          async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event, void, undefined> {
+            // Direct access example
+            const agentName = ctx.agent.name;
+            const sessionId = ctx.session.id;
+            console.log(`Agent ${agentName} running in session ${sessionId} for invocation ${ctx.invocationId}`);
+            // ... agent logic using ctx ...
+            yield; // ... event ...
+          }
+        }
+        ```
+
     === "Go"
 
         ```go
@@ -7094,17 +8145,17 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
         	"google.golang.org/adk/agent"
         	"google.golang.org/adk/session"
         )
-        
+
         --8<-- "examples/go/snippets/context/main.go:invocation_context_agent"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: Agent implementation receiving InvocationContext
         import com.google.adk.agents.BaseAgent;
         import com.google.adk.agents.InvocationContext;
-        
+
             LlmAgent root_agent =
                 LlmAgent.builder()
                     .model("gemini-***")
@@ -7118,35 +8169,35 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
                     .tools(sampleTool)
                     .outputKey("YOUR_KEY")
                     .build();
-    
+
             ConcurrentMap<String, Object> initialState = new ConcurrentHashMap<>();
             initialState.put("YOUR_KEY", "");
-          
+
             InMemoryRunner runner = new InMemoryRunner(agent);
             Session session =
                   runner
                       .sessionService()
                       .createSession(runner.appName(), USER_ID, initialState, SESSION_ID )
                       .blockingGet();
-    
+
            try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
                 while (true) {
                   System.out.print("\nYou > ");
                   String userInput = scanner.nextLine();
-        
+
                   if ("quit".equalsIgnoreCase(userInput)) {
                     break;
                   }
-                  
+
                   Content userMsg = Content.fromParts(Part.fromText(userInput));
-                  Flowable<Event> events = 
+                  Flowable<Event> events =
                           runner.runAsync(session.userId(), session.id(), userMsg);
-        
+
                   System.out.print("\nAgent > ");
-                  events.blockingForEach(event -> 
+                  events.blockingForEach(event ->
                           System.out.print(event.stringifyContent()));
               }
-        
+
             protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
                 // Direct access example
                 String agentName = invocationContext.agent.name
@@ -7163,11 +8214,11 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     *   **Key Contents:** `invocation_id`, `agent_name`, and a read-only *view* of the current `state`.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Instruction provider receiving ReadonlyContext
         from google.adk.agents.readonly_context import ReadonlyContext
-    
+
         def my_instruction_provider(context: ReadonlyContext) -> str:
             # Read-only access example
             user_tier = context.state().get("user_tier", "standard") # Can read state
@@ -7175,20 +8226,35 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
             return f"Process the request for a {user_tier} user."
         ```
 
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Instruction provider receiving ReadonlyContext
+        import { ReadonlyContext } from '@google/adk';
+
+        function myInstructionProvider(context: ReadonlyContext): string {
+          // Read-only access example
+          // The state object is read-only
+          const userTier = context.state.get('user_tier') ?? 'standard';
+          // context.state.set('new_key', 'value'); // This would fail or throw an error
+          return `Process the request for a ${userTier} user.`;
+        }
+        ```
+
     === "Go"
 
         ```go
         import "google.golang.org/adk/agent"
-        
+
         --8<-- "examples/go/snippets/context/main.go:readonly_context_instruction"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: Instruction provider receiving ReadonlyContext
         import com.google.adk.agents.ReadonlyContext;
-    
+
         public String myInstructionProvider(ReadonlyContext context){
             // Read-only access example
             String userTier = context.state().get("user_tier", "standard");
@@ -7196,7 +8262,7 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
             return "Process the request for a " + userTier + " user."
         }
         ```
-    
+
 3.  **`CallbackContext`**
     *   **Where Used:** Passed as `callback_context` to agent lifecycle callbacks (`before_agent_callback`, `after_agent_callback`) and model interaction callbacks (`before_model_callback`, `after_model_callback`).
     *   **Purpose:** Facilitates inspecting and modifying state, interacting with artifacts, and accessing invocation details *specifically within callbacks*.
@@ -7206,25 +8272,44 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
         *   Direct `user_content` access.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Callback receiving CallbackContext
         from google.adk.agents.callback_context import CallbackContext
         from google.adk.models import LlmRequest
         from google.genai import types
         from typing import Optional
-    
+
         def my_before_model_cb(callback_context: CallbackContext, request: LlmRequest) -> Optional[types.Content]:
             # Read/Write state example
             call_count = callback_context.state.get("model_calls", 0)
             callback_context.state["model_calls"] = call_count + 1 # Modify state
-    
+
             # Optionally load an artifact
             # config_part = callback_context.load_artifact("model_config.json")
             print(f"Preparing model call #{call_count + 1} for invocation {callback_context.invocation_id}")
             return None # Allow model call to proceed
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Callback receiving CallbackContext
+        import { CallbackContext, LlmRequest } from '@google/adk';
+        import { Content } from '@google/genai';
+
+        function myBeforeModelCb(callbackContext: CallbackContext, request: LlmRequest): Content | undefined {
+          // Read/Write state example
+          const callCount = (callbackContext.state.get('model_calls') as number) || 0;
+          callbackContext.state.set('model_calls', callCount + 1); // Modify state
+
+          // Optionally load an artifact
+          // const configPart = await callbackContext.loadArtifact('model_config.json');
+          console.log(`Preparing model call #${callCount + 1} for invocation ${callbackContext.invocationId}`);
+          return undefined; // Allow model call to proceed
+        }
+        ```
+
     === "Go"
 
         ```go
@@ -7232,24 +8317,24 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
         	"google.golang.org/adk/agent"
         	"google.golang.org/adk/model"
         )
-        
+
         --8<-- "examples/go/snippets/context/main.go:callback_context_callback"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: Callback receiving CallbackContext
         import com.google.adk.agents.CallbackContext;
         import com.google.adk.models.LlmRequest;
         import com.google.genai.types.Content;
         import java.util.Optional;
-    
+
         public Maybe<LlmResponse> myBeforeModelCb(CallbackContext callbackContext, LlmRequest request){
             // Read/Write state example
             callCount = callbackContext.state().get("model_calls", 0)
             callbackContext.state().put("model_calls") = callCount + 1 # Modify state
-    
+
             // Optionally load an artifact
             // Maybe<Part> configPart = callbackContext.loadArtifact("model_config.json");
             System.out.println("Preparing model call " + callCount + 1);
@@ -7268,12 +8353,12 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
         *   **`actions` Property:** Direct access to the `EventActions` object for this step, allowing the tool to signal state changes, auth requests, etc.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Tool function receiving ToolContext
         from google.adk.tools import ToolContext
         from typing import Dict, Any
-    
+
         # Assume this function is wrapped by a FunctionTool
         def search_external_api(query: str, tool_context: ToolContext) -> Dict[str, Any]:
             api_key = tool_context.state.get("api_key")
@@ -7284,33 +8369,63 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
                 # Use the 'actions' property to signal the auth request has been made
                 # tool_context.actions.requested_auth_configs[tool_context.function_call_id] = auth_config
                 return {"status": "Auth Required"}
-    
+
             # Use the API key...
             print(f"Tool executing for query '{query}' using API key. Invocation: {tool_context.invocation_id}")
-    
+
             # Optionally search memory or list artifacts
             # relevant_docs = tool_context.search_memory(f"info related to {query}")
             # available_files = tool_context.list_artifacts()
-    
+
             return {"result": f"Data for {query} fetched."}
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Tool function receiving ToolContext
+        import { ToolContext } from '@google/adk';
+
+        // __Assume this function is wrapped by a FunctionTool__
+        function searchExternalApi(query: string, toolContext: ToolContext): { [key: string]: string } {
+          const apiKey = toolContext.state.get('api_key') as string;
+          if (!apiKey) {
+             // Define required auth config
+             // const authConfig = new AuthConfig(...);
+             // toolContext.requestCredential(authConfig); // Request credentials
+             // The 'actions' property is now automatically updated by requestCredential
+             return { status: 'Auth Required' };
+          }
+
+          // Use the API key...
+          console.log(`Tool executing for query '${query}' using API key. Invocation: ${toolContext.invocationId}`);
+
+          // Optionally search memory or list artifacts
+          // Note: accessing services like memory/artifacts is typically async in TS,
+          // so you would need to mark this function 'async' if you reused them.
+          // toolContext.searchMemory(`info related to ${query}`).then(...)
+          // toolContext.listArtifacts().then(...)
+
+          return { result: `Data for ${query} fetched.` };
+        }
+        ```
+
     === "Go"
 
         ```go
         import "google.golang.org/adk/tool"
-        
+
         --8<-- "examples/go/snippets/context/main.go:tool_context_tool"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: Tool function receiving ToolContext
         import com.google.adk.tools.ToolContext;
         import java.util.HashMap;
         import java.util.Map;
-    
+
         // Assume this function is wrapped by a FunctionTool
         public Map<String, Object> searchExternalApi(String query, ToolContext toolContext){
             String apiKey = toolContext.state.get("api_key");
@@ -7321,13 +8436,13 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
                 // Use the 'actions' property to signal the auth request has been made
                 ...
                 return Map.of("status", "Auth Required");
-    
+
             // Use the API key...
             System.out.println("Tool executing for query " + query + " using API key. ");
-    
+
             // Optionally list artifacts
             // Single<List<String>> availableFiles = toolContext.listArtifacts();
-    
+
             return Map.of("result", "Data for " + query + " fetched");
         }
         ```
@@ -7346,31 +8461,60 @@ You'll frequently need to read information stored within the context.
 *   **Reading Session State:** Access data saved in previous steps or user/app-level settings. Use dictionary-like access on the `state` property.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: In a Tool function
         from google.adk.tools import ToolContext
-    
+
         def my_tool(tool_context: ToolContext, **kwargs):
             user_pref = tool_context.state.get("user_display_preference", "default_mode")
             api_endpoint = tool_context.state.get("app:api_endpoint") # Read app-level state
-    
+
             if user_pref == "dark_mode":
                 # ... apply dark mode logic ...
                 pass
             print(f"Using API endpoint: {api_endpoint}")
             # ... rest of tool logic ...
-    
+
         # Pseudocode: In a Callback function
         from google.adk.agents.callback_context import CallbackContext
-    
+
         def my_callback(callback_context: CallbackContext, **kwargs):
             last_tool_result = callback_context.state.get("temp:last_api_result") # Read temporary state
             if last_tool_result:
                 print(f"Found temporary result from last tool: {last_tool_result}")
             # ... callback logic ...
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: In a Tool function
+        import { ToolContext } from '@google/adk';
+
+        async function myTool(toolContext: ToolContext) {
+          const userPref = toolContext.state.get('user_display_preference', 'default_mode');
+          const apiEndpoint = toolContext.state.get('app:api_endpoint'); // Read app-level state
+
+          if (userPref === 'dark_mode') {
+            // ... apply dark mode logic ...
+          }
+          console.log(`Using API endpoint: ${apiEndpoint}`);
+          // ... rest of tool logic ...
+        }
+
+        // Pseudocode: In a Callback function
+        import { CallbackContext } from '@google/adk';
+
+        function myCallback(callbackContext: CallbackContext) {
+          const lastToolResult = callbackContext.state.get('temp:last_api_result'); // Read temporary state
+          if (lastToolResult) {
+            console.log(`Found temporary result from last tool: ${lastToolResult}`);
+          }
+          // ... callback logic ...
+        }
+        ```
+
     === "Go"
 
         ```go
@@ -7380,18 +8524,18 @@ You'll frequently need to read information stored within the context.
             "google.golang.org/adk/tool"
         	"google.golang.org/genai"
         )
-        
+
         --8<-- "examples/go/snippets/context/main.go:accessing_state_tool"
 
         --8<-- "examples/go/snippets/context/main.go:accessing_state_callback"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: In a Tool function
         import com.google.adk.tools.ToolContext;
-    
+
         public void myTool(ToolContext toolContext){
            String userPref = toolContext.state().get("user_display_preference");
            String apiEndpoint = toolContext.state().get("app:api_endpoint"); // Read app-level state
@@ -7402,11 +8546,11 @@ You'll frequently need to read information stored within the context.
            System.out.println("Using API endpoint: " + api_endpoint);
            // ... rest of tool logic ...
         }
-    
-    
+
+
         // Pseudocode: In a Callback function
         import com.google.adk.agents.CallbackContext;
-    
+
             public void myCallback(CallbackContext callbackContext){
                 String lastToolResult = (String) callbackContext.state().get("temp:last_api_result"); // Read temporary state
             }
@@ -7419,33 +8563,48 @@ You'll frequently need to read information stored within the context.
 *   **Getting Current Identifiers:** Useful for logging or custom logic based on the current operation.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: In any context (ToolContext shown)
         from google.adk.tools import ToolContext
-    
+
         def log_tool_usage(tool_context: ToolContext, **kwargs):
             agent_name = tool_context.agent_name
             inv_id = tool_context.invocation_id
             func_call_id = getattr(tool_context, 'function_call_id', 'N/A') # Specific to ToolContext
-    
+
             print(f"Log: Invocation={inv_id}, Agent={agent_name}, FunctionCallID={func_call_id} - Tool Executed.")
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: In any context (ToolContext shown)
+        import { ToolContext } from '@google/adk';
+
+        function logToolUsage(toolContext: ToolContext) {
+          const agentName = toolContext.agentName;
+          const invId = toolContext.invocationId;
+          const functionCallId = toolContext.functionCallId ?? 'N/A'; // Specific to ToolContext
+
+          console.log(`Log: Invocation=${invId}, Agent=${agentName}, FunctionCallID=${functionCallId} - Tool Executed.`);
+        }
+        ```
+
     === "Go"
 
         ```go
         import "google.golang.org/adk/tool"
-        
+
         --8<-- "examples/go/snippets/context/main.go:accessing_ids"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: In any context (ToolContext shown)
          import com.google.adk.tools.ToolContext;
-    
+
          public void logToolUsage(ToolContext toolContext){
                     String agentName = toolContext.agentName;
                     String invId = toolContext.invocationId;
@@ -7457,18 +8616,18 @@ You'll frequently need to read information stored within the context.
 *   **Accessing the Initial User Input:** Refer back to the message that started the current invocation.
 
     === "Python"
-    
+
         ```python
         # Pseudocode: In a Callback
         from google.adk.agents.callback_context import CallbackContext
-    
+
         def check_initial_intent(callback_context: CallbackContext, **kwargs):
             initial_text = "N/A"
             if callback_context.user_content and callback_context.user_content.parts:
                 initial_text = callback_context.user_content.parts[0].text or "Non-text input"
-    
+
             print(f"This invocation started with user input: '{initial_text}'")
-    
+
         # Pseudocode: In an Agent's _run_async_impl
         # async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         #     if ctx.user_content and ctx.user_content.parts:
@@ -7476,7 +8635,24 @@ You'll frequently need to read information stored within the context.
         #         print(f"Agent logic remembering initial query: {initial_text}")
         #     ...
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: In a Callback
+        import { CallbackContext } from '@google/adk';
+
+        function checkInitialIntent(callbackContext: CallbackContext) {
+          let initialText = 'N/A';
+          const userContent = callbackContext.userContent;
+          if (userContent?.parts?.length) {
+            initialText = userContent.parts[0].text ?? 'Non-text input';
+          }
+
+          console.log(`This invocation started with user input: '${initialText}'`);
+        }
+        ```
+
     === "Go"
 
         ```go
@@ -7484,16 +8660,16 @@ You'll frequently need to read information stored within the context.
         	"google.golang.org/adk/agent"
         	"google.golang.org/genai"
         )
-        
+
         --8<-- "examples/go/snippets/context/main.go:accessing_initial_user_input"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: In a Callback
         import com.google.adk.agents.CallbackContext;
-    
+
         public void checkInitialIntent(CallbackContext callbackContext){
             String initialText = "N/A";
             if((!(callbackContext.userContent().isEmpty())) && (!(callbackContext.userContent().parts.isEmpty()))){
@@ -7503,7 +8679,7 @@ You'll frequently need to read information stored within the context.
             }
         }
         ```
-    
+
 ### Managing State
 
 State is crucial for memory and data flow. When you modify state using `CallbackContext` or `ToolContext`, the changes are automatically tracked and persisted by the framework.
@@ -7518,31 +8694,58 @@ State is crucial for memory and data flow. When you modify state using `Callback
         # Pseudocode: Tool 1 - Fetches user ID
         from google.adk.tools import ToolContext
         import uuid
-    
+
         def get_user_profile(tool_context: ToolContext) -> dict:
             user_id = str(uuid.uuid4()) # Simulate fetching ID
             # Save the ID to state for the next tool
             tool_context.state["temp:current_user_id"] = user_id
             return {"profile_status": "ID generated"}
-    
+
         # Pseudocode: Tool 2 - Uses user ID from state
         def get_user_orders(tool_context: ToolContext) -> dict:
             user_id = tool_context.state.get("temp:current_user_id")
             if not user_id:
                 return {"error": "User ID not found in state"}
-    
+
             print(f"Fetching orders for user ID: {user_id}")
             # ... logic to fetch orders using user_id ...
             return {"orders": ["order123", "order456"]}
+        ```
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Tool 1 - Fetches user ID
+        import { ToolContext } from '@google/adk';
+        import { v4 as uuidv4 } from 'uuid';
+
+        function getUserProfile(toolContext: ToolContext): Record<string, string> {
+          const userId = uuidv4(); // Simulate fetching ID
+          // Save the ID to state for the next tool
+          toolContext.state.set('temp:current_user_id', userId);
+          return { profile_status: 'ID generated' };
+        }
+
+        // Pseudocode: Tool 2 - Uses user ID from state
+        function getUserOrders(toolContext: ToolContext): Record<string, string | string[]> {
+          const userId = toolContext.state.get('temp:current_user_id');
+          if (!userId) {
+            return { error: 'User ID not found in state' };
+          }
+
+          console.log(`Fetching orders for user ID: ${userId}`);
+          // ... logic to fetch orders using user_id ...
+          return { orders: ['order123', 'order456'] };
+        }
         ```
 
     === "Go"
 
         ```go
         import "google.golang.org/adk/tool"
-        
+
         --8<-- "examples/go/snippets/context/main.go:passing_data_tool1"
-        
+
         --8<-- "examples/go/snippets/context/main.go:passing_data_tool2"
         ```
 
@@ -7552,14 +8755,14 @@ State is crucial for memory and data flow. When you modify state using `Callback
         // Pseudocode: Tool 1 - Fetches user ID
         import com.google.adk.tools.ToolContext;
         import java.util.UUID;
-    
+
         public Map<String, String> getUserProfile(ToolContext toolContext){
             String userId = UUID.randomUUID().toString();
             // Save the ID to state for the next tool
             toolContext.state().put("temp:current_user_id", user_id);
             return Map.of("profile_status", "ID generated");
         }
-    
+
         // Pseudocode: Tool 2 - Uses user ID from state
         public  Map<String, String> getUserOrders(ToolContext toolContext){
             String userId = toolContext.state().get("temp:current_user_id");
@@ -7575,11 +8778,11 @@ State is crucial for memory and data flow. When you modify state using `Callback
 *   **Updating User Preferences:**
 
     === "Python"
-    
+
         ```python
         # Pseudocode: Tool or Callback identifies a preference
         from google.adk.tools import ToolContext # Or CallbackContext
-    
+
         def set_user_preference(tool_context: ToolContext, preference: str, value: str) -> dict:
             # Use 'user:' prefix for user-level state (if using a persistent SessionService)
             state_key = f"user:{preference}"
@@ -7587,21 +8790,36 @@ State is crucial for memory and data flow. When you modify state using `Callback
             print(f"Set user preference '{preference}' to '{value}'")
             return {"status": "Preference updated"}
         ```
-    
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Tool or Callback identifies a preference
+        import { ToolContext } from '@google/adk'; // Or CallbackContext
+
+        function setUserPreference(toolContext: ToolContext, preference: string, value: string): Record<string, string> {
+          // Use 'user:' prefix for user-level state (if using a persistent SessionService)
+          const stateKey = `user:${preference}`;
+          toolContext.state.set(stateKey, value);
+          console.log(`Set user preference '${preference}' to '${value}'`);
+          return { status: 'Preference updated' };
+        }
+        ```
+
     === "Go"
 
         ```go
         import "google.golang.org/adk/tool"
-        
+
         --8<-- "examples/go/snippets/context/main.go:updating_preferences"
         ```
 
     === "Java"
-    
+
         ```java
         // Pseudocode: Tool or Callback identifies a preference
         import com.google.adk.tools.ToolContext; // Or CallbackContext
-    
+
         public Map<String, String> setUserPreference(ToolContext toolContext, String preference, String value){
             // Use 'user:' prefix for user-level state (if using a persistent SessionService)
             String stateKey = "user:" + preference;
@@ -7622,12 +8840,12 @@ Use artifacts to handle files or large data blobs associated with the session. C
     1.  **Ingest Reference (e.g., in a Setup Tool or Callback):** Save the *path or URI* of the document, not the entire content, as an artifact.
 
         === "Python"
-    
+
                ```python
                # Pseudocode: In a callback or initial tool
                from google.adk.agents.callback_context import CallbackContext # Or ToolContext
                from google.genai import types
-                
+
                def save_document_reference(context: CallbackContext, file_path: str) -> None:
                    # Assume file_path is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
                    try:
@@ -7641,11 +8859,36 @@ Use artifacts to handle files or large data blobs associated with the session. C
                        print(f"Error saving artifact: {e}") # E.g., Artifact service not configured
                    except Exception as e:
                        print(f"Unexpected error saving artifact reference: {e}")
-                
+
                # Example usage:
                # save_document_reference(callback_context, "gs://my-bucket/docs/report.pdf")
                ```
-    
+
+        === "TypeScript"
+
+               ```typescript
+               // Pseudocode: In a callback or initial tool
+               import { CallbackContext } from '@google/adk'; // Or ToolContext
+               import type { Part } from '@google/genai';
+
+               async function saveDocumentReference(context: CallbackContext, filePath: string) {
+                 // Assume filePath is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
+                 try {
+                   // Create a Part containing the path/URI text
+                   const artifactPart: Part = { text: filePath };
+                   const version = await context.saveArtifact('document_to_summarize.txt', artifactPart);
+                   console.log(`Saved document reference '${filePath}' as artifact version ${version}`);
+                   // Store the filename in state if needed by other tools
+                   context.state.set('temp:doc_artifact_name', 'document_to_summarize.txt');
+                 } catch (e) {
+                   console.error(`Unexpected error saving artifact reference: ${e}`);
+                 }
+               }
+
+               // Example usage:
+               // saveDocumentReference(callbackContext, "gs://my-bucket/docs/report.pdf");
+               ```
+
         === "Go"
 
             ```go
@@ -7653,19 +8896,19 @@ Use artifacts to handle files or large data blobs associated with the session. C
             	"google.golang.org/adk/tool"
             	"google.golang.org/genai"
             )
-            
+
             --8<-- "examples/go/snippets/context/main.go:artifacts_save_ref"
             ```
 
         === "Java"
-    
+
                ```java
                // Pseudocode: In a callback or initial tool
                import com.google.adk.agents.CallbackContext;
                import com.google.genai.types.Content;
                import com.google.genai.types.Part;
-                
-                
+
+
                pubic void saveDocumentReference(CallbackContext context, String filePath){
                    // Assume file_path is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
                    try{
@@ -7679,7 +8922,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
                        System.out.println("Unexpected error saving artifact reference: " + e);
                    }
                }
-                    
+
                // Example usage:
                // saveDocumentReference(context, "gs://my-bucket/docs/report.pdf")
                ```
@@ -7743,11 +8986,66 @@ Use artifacts to handle files or large data blobs associated with the session. C
                 #      return {"error": f"Error reading document {file_path}: {e}"}
             ```
 
+        === "TypeScript"
+
+            ```typescript
+            // Pseudocode: In the Summarizer tool function
+            import { ToolContext } from '@google/adk';
+
+            async function summarizeDocumentTool(toolContext: ToolContext): Promise<Record<string, string>> {
+              const artifactName = toolContext.state.get('temp:doc_artifact_name') as string;
+              if (!artifactName) {
+                return { error: 'Document artifact name not found in state.' };
+              }
+
+              try {
+                // 1. Load the artifact part containing the path/URI
+                const artifactPart = await toolContext.loadArtifact(artifactName);
+                if (!artifactPart?.text) {
+                  return { error: `Could not load artifact or artifact has no text path: ${artifactName}` };
+                }
+
+                const filePath = artifactPart.text;
+                console.log(`Loaded document reference: ${filePath}`);
+
+                // 2. Read the actual document content (outside ADK context)
+                let documentContent = '';
+                if (filePath.startsWith('gs://')) {
+                  // Example: Use GCS client library to download/read
+                  // const storage = new Storage();
+                  // const bucket = storage.bucket('my-bucket');
+                  // const file = bucket.file(filePath.replace('gs://my-bucket/', ''));
+                  // const [contents] = await file.download();
+                  // documentContent = contents.toString();
+                } else if (filePath.startsWith('/')) {
+                  // Example: Use local file system
+                  // import { readFile } from 'fs/promises';
+                  // documentContent = await readFile(filePath, 'utf8');
+                } else {
+                  return { error: `Unsupported file path scheme: ${filePath}` };
+                }
+
+                // 3. Summarize the content
+                if (!documentContent) {
+                   return { error: 'Failed to read document content.' };
+                }
+
+                // const summary = summarizeText(documentContent); // Call your summarization logic
+                const summary = `Summary of content from ${filePath}`; // Placeholder
+
+                return { summary };
+
+              } catch (e) {
+                 return { error: `Error processing artifact: ${e}` };
+              }
+            }
+            ```
+
         === "Go"
 
             ```go
             import "google.golang.org/adk/tool"
-            
+
             --8<-- "examples/go/snippets/context/main.go:artifacts_summarize"
             ```
 
@@ -7781,12 +9079,12 @@ Use artifacts to handle files or large data blobs associated with the session. C
                     } else if(){
                         // Example: Use local file system to download/read into documentContent
                     } else{
-                        return Map.of("error", "Unsupported file path scheme: " + filePath); 
+                        return Map.of("error", "Unsupported file path scheme: " + filePath);
                     }
 
                     // 3. Summarize the content
                     if(documentContent.isEmpty()){
-                        return Map.of("error", "Failed to read document content."); 
+                        return Map.of("error", "Failed to read document content.");
                     }
 
                     // summary = summarizeText(documentContent) // Call your summarization logic
@@ -7802,15 +9100,15 @@ Use artifacts to handle files or large data blobs associated with the session. C
                 }
             }
             ```
-        
+
 *   **Listing Artifacts:** Discover what files are available.
-    
+
     === "Python"
-        
+
         ```python
         # Pseudocode: In a tool function
         from google.adk.tools import ToolContext
-        
+
         def check_available_docs(tool_context: ToolContext) -> dict:
             try:
                 artifact_keys = tool_context.list_artifacts()
@@ -7819,21 +9117,38 @@ Use artifacts to handle files or large data blobs associated with the session. C
             except ValueError as e:
                 return {"error": f"Artifact service error: {e}"}
         ```
-        
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: In a tool function
+        import { ToolContext } from '@google/adk';
+
+        async function checkAvailableDocs(toolContext: ToolContext): Promise<Record<string, string[] | string>> {
+          try {
+            const artifactKeys = await toolContext.listArtifacts();
+            console.log(`Available artifacts: ${artifactKeys}`);
+            return { available_docs: artifactKeys };
+          } catch (e) {
+            return { error: `Artifact service error: ${e}` };
+          }
+        }
+        ```
+
     === "Go"
 
         ```go
         import "google.golang.org/adk/tool"
-        
+
         --8<-- "examples/go/snippets/context/main.go:artifacts_list"
         ```
 
     === "Java"
-        
+
         ```java
         // Pseudocode: In a tool function
         import com.google.adk.tools.ToolContext;
-        
+
         public Map<String, String> checkAvailableDocs(ToolContext toolContext){
             try{
                 Single<List<String>> artifactKeys = toolContext.listArtifacts();
@@ -7845,125 +9160,251 @@ Use artifacts to handle files or large data blobs associated with the session. C
         }
         ```
 
-### Handling Tool Authentication 
+### Handling Tool Authentication
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
 Securely manage API keys or other credentials needed by tools.
 
-```python
-# Pseudocode: Tool requiring auth
-from google.adk.tools import ToolContext
-from google.adk.auth import AuthConfig # Assume appropriate AuthConfig is defined
+=== "Python"
 
-# Define your required auth configuration (e.g., OAuth, API Key)
-MY_API_AUTH_CONFIG = AuthConfig(...)
-AUTH_STATE_KEY = "user:my_api_credential" # Key to store retrieved credential
+    ```python
+    # Pseudocode: Tool requiring auth
+    from google.adk.tools import ToolContext
+    from google.adk.auth import AuthConfig # Assume appropriate AuthConfig is defined
 
-def call_secure_api(tool_context: ToolContext, request_data: str) -> dict:
-    # 1. Check if credential already exists in state
-    credential = tool_context.state.get(AUTH_STATE_KEY)
+    # Define your required auth configuration (e.g., OAuth, API Key)
+    MY_API_AUTH_CONFIG = AuthConfig(...)
+    AUTH_STATE_KEY = "user:my_api_credential" # Key to store retrieved credential
 
-    if not credential:
-        # 2. If not, request it
-        print("Credential not found, requesting...")
+    def call_secure_api(tool_context: ToolContext, request_data: str) -> dict:
+        # 1. Check if credential already exists in state
+        credential = tool_context.state.get(AUTH_STATE_KEY)
+
+        if not credential:
+            # 2. If not, request it
+            print("Credential not found, requesting...")
+            try:
+                tool_context.request_credential(MY_API_AUTH_CONFIG)
+                # The framework handles yielding the event. The tool execution stops here for this turn.
+                return {"status": "Authentication required. Please provide credentials."}
+            except ValueError as e:
+                return {"error": f"Auth error: {e}"} # e.g., function_call_id missing
+            except Exception as e:
+                return {"error": f"Failed to request credential: {e}"}
+
+        # 3. If credential exists (might be from a previous turn after request)
+        #    or if this is a subsequent call after auth flow completed externally
         try:
-            tool_context.request_credential(MY_API_AUTH_CONFIG)
-            # The framework handles yielding the event. The tool execution stops here for this turn.
-            return {"status": "Authentication required. Please provide credentials."}
-        except ValueError as e:
-            return {"error": f"Auth error: {e}"} # e.g., function_call_id missing
+            # Optionally, re-validate/retrieve if needed, or use directly
+            # This might retrieve the credential if the external flow just completed
+            auth_credential_obj = tool_context.get_auth_response(MY_API_AUTH_CONFIG)
+            api_key = auth_credential_obj.api_key # Or access_token, etc.
+
+            # Store it back in state for future calls within the session
+            tool_context.state[AUTH_STATE_KEY] = auth_credential_obj.model_dump() # Persist retrieved credential
+
+            print(f"Using retrieved credential to call API with data: {request_data}")
+            # ... Make the actual API call using api_key ...
+            api_result = f"API result for {request_data}"
+
+            return {"result": api_result}
         except Exception as e:
-            return {"error": f"Failed to request credential: {e}"}
+            # Handle errors retrieving/using the credential
+            print(f"Error using credential: {e}")
+            # Maybe clear the state key if credential is invalid?
+            # tool_context.state[AUTH_STATE_KEY] = None
+            return {"error": "Failed to use credential"}
+    ```
 
-    # 3. If credential exists (might be from a previous turn after request)
-    #    or if this is a subsequent call after auth flow completed externally
-    try:
-        # Optionally, re-validate/retrieve if needed, or use directly
-        # This might retrieve the credential if the external flow just completed
-        auth_credential_obj = tool_context.get_auth_response(MY_API_AUTH_CONFIG)
-        api_key = auth_credential_obj.api_key # Or access_token, etc.
+=== "TypeScript"
 
-        # Store it back in state for future calls within the session
-        tool_context.state[AUTH_STATE_KEY] = auth_credential_obj.model_dump() # Persist retrieved credential
+    ```typescript
+    // Pseudocode: Tool requiring auth
+    import { ToolContext } from '@google/adk'; // AuthConfig from ADK or custom
 
-        print(f"Using retrieved credential to call API with data: {request_data}")
-        # ... Make the actual API call using api_key ...
-        api_result = f"API result for {request_data}"
+    // Define a local AuthConfig interface as it's not publicly exported by ADK
+    interface AuthConfig {
+      credentialKey: string;
+      authScheme: { type: string }; // Minimal representation for the example
+      // Add other properties if they become relevant for the example
+    }
 
-        return {"result": api_result}
-    except Exception as e:
-        # Handle errors retrieving/using the credential
-        print(f"Error using credential: {e}")
-        # Maybe clear the state key if credential is invalid?
-        # tool_context.state[AUTH_STATE_KEY] = None
-        return {"error": "Failed to use credential"}
+    // Define your required auth configuration (e.g., OAuth, API Key)
+    const MY_API_AUTH_CONFIG: AuthConfig = {
+      credentialKey: 'my-api-key', // Example key
+      authScheme: { type: 'api-key' }, // Example scheme type
+    };
+    const AUTH_STATE_KEY = 'user:my_api_credential'; // Key to store retrieved credential
 
-```
+    async function callSecureApi(toolContext: ToolContext, requestData: string): Promise<Record<string, string>> {
+      // 1. Check if credential already exists in state
+      const credential = toolContext.state.get(AUTH_STATE_KEY);
+
+      if (!credential) {
+        // 2. If not, request it
+        console.log('Credential not found, requesting...');
+        try {
+          toolContext.requestCredential(MY_API_AUTH_CONFIG);
+          // The framework handles yielding the event. The tool execution stops here for this turn.
+          return { status: 'Authentication required. Please provide credentials.' };
+        } catch (e) {
+          return { error: `Auth or credential request error: ${e}` };
+        }
+      }
+
+      // 3. If credential exists (might be from a previous turn after request)
+      //    or if this is a subsequent call after auth flow completed externally
+      try {
+        // Optionally, re-validate/retrieve if needed, or use directly
+        // This might retrieve the credential if the external flow just completed
+        const authCredentialObj = toolContext.getAuthResponse(MY_API_AUTH_CONFIG);
+        const apiKey = authCredentialObj?.apiKey; // Or accessToken, etc.
+
+        // Store it back in state for future calls within the session
+        // Note: In strict TS, might need to cast or serialize authCredentialObj
+        toolContext.state.set(AUTH_STATE_KEY, JSON.stringify(authCredentialObj));
+
+        console.log(`Using retrieved credential to call API with data: ${requestData}`);
+        // ... Make the actual API call using apiKey ...
+        const apiResult = `API result for ${requestData}`;
+
+        return { result: apiResult };
+      } catch (e) {
+        // Handle errors retrieving/using the credential
+        console.error(`Error using credential: ${e}`);
+        // Maybe clear the state key if credential is invalid?
+        // toolContext.state.set(AUTH_STATE_KEY, null);
+        return { error: 'Failed to use credential' };
+      }
+    }
+    ```
+
 *Remember: `request_credential` pauses the tool and signals the need for authentication. The user/system provides credentials, and on a subsequent call, `get_auth_response` (or checking state again) allows the tool to proceed.* The `tool_context.function_call_id` is used implicitly by the framework to link the request and response.
 
-### Leveraging Memory 
+### Leveraging Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
 Access relevant information from the past or external sources.
 
-```python
-# Pseudocode: Tool using memory search
-from google.adk.tools import ToolContext
+=== "Python"
 
-def find_related_info(tool_context: ToolContext, topic: str) -> dict:
-    try:
-        search_results = tool_context.search_memory(f"Information about {topic}")
-        if search_results.results:
-            print(f"Found {len(search_results.results)} memory results for '{topic}'")
-            # Process search_results.results (which are SearchMemoryResponseEntry)
-            top_result_text = search_results.results[0].text
-            return {"memory_snippet": top_result_text}
-        else:
-            return {"message": "No relevant memories found."}
-    except ValueError as e:
-        return {"error": f"Memory service error: {e}"} # e.g., Service not configured
-    except Exception as e:
-        return {"error": f"Unexpected error searching memory: {e}"}
-```
+    ```python
+    # Pseudocode: Tool using memory search
+    from google.adk.tools import ToolContext
 
-### Advanced: Direct `InvocationContext` Usage 
+    def find_related_info(tool_context: ToolContext, topic: str) -> dict:
+        try:
+            search_results = tool_context.search_memory(f"Information about {topic}")
+            if search_results.results:
+                print(f"Found {len(search_results.results)} memory results for '{topic}'")
+                # Process search_results.results (which are SearchMemoryResponseEntry)
+                top_result_text = search_results.results[0].text
+                return {"memory_snippet": top_result_text}
+            else:
+                return {"message": "No relevant memories found."}
+        except ValueError as e:
+            return {"error": f"Memory service error: {e}"} # e.g., Service not configured
+        except Exception as e:
+            return {"error": f"Unexpected error searching memory: {e}"}
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Pseudocode: Tool using memory search
+    import { ToolContext } from '@google/adk';
+
+    async function findRelatedInfo(toolContext: ToolContext, topic: string): Promise<Record<string, string>> {
+      try {
+        const searchResults = await toolContext.searchMemory(`Information about ${topic}`);
+        if (searchResults.results?.length) {
+          console.log(`Found ${searchResults.results.length} memory results for '${topic}'`);
+          // Process searchResults.results
+          const topResultText = searchResults.results[0].text;
+          return { memory_snippet: topResultText };
+        } else {
+          return { message: 'No relevant memories found.' };
+        }
+      } catch (e) {
+         return { error: `Memory service error: ${e}` }; // e.g., Service not configured
+      }
+    }
+    ```
+
+### Advanced: Direct `InvocationContext` Usage
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
 While most interactions happen via `CallbackContext` or `ToolContext`, sometimes the agent's core logic (`_run_async_impl`/`_run_live_impl`) needs direct access.
 
-```python
-# Pseudocode: Inside agent's _run_async_impl
-from google.adk.agents import BaseAgent
-from google.adk.agents.invocation_context import InvocationContext
-from google.adk.events import Event
-from typing import AsyncGenerator
+=== "Python"
 
-class MyControllingAgent(BaseAgent):
-    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-        # Example: Check if a specific service is available
-        if not ctx.memory_service:
-            print("Memory service is not available for this invocation.")
-            # Potentially change agent behavior
+    ```python
+    # Pseudocode: Inside agent's _run_async_impl
+    from google.adk.agents import BaseAgent
+    from google.adk.agents.invocation_context import InvocationContext
+    from google.adk.events import Event
+    from typing import AsyncGenerator
 
-        # Example: Early termination based on some condition
-        if ctx.session.state.get("critical_error_flag"):
-            print("Critical error detected, ending invocation.")
-            ctx.end_invocation = True # Signal framework to stop processing
-            yield Event(author=self.name, invocation_id=ctx.invocation_id, content="Stopping due to critical error.")
-            return # Stop this agent's execution
+    class MyControllingAgent(BaseAgent):
+        async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+            # Example: Check if a specific service is available
+            if not ctx.memory_service:
+                print("Memory service is not available for this invocation.")
+                # Potentially change agent behavior
 
-        # ... Normal agent processing ...
-        yield # ... event ...
-```
+            # Example: Early termination based on some condition
+            if ctx.session.state.get("critical_error_flag"):
+                print("Critical error detected, ending invocation.")
+                ctx.end_invocation = True # Signal framework to stop processing
+                yield Event(author=self.name, invocation_id=ctx.invocation_id, content="Stopping due to critical error.")
+                return # Stop this agent's execution
+
+            # ... Normal agent processing ...
+            yield # ... event ...
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Pseudocode: Inside agent's runAsyncImpl
+    import { BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event } from '@google/adk';
+
+    class MyControllingAgent extends BaseAgent {
+      async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event, void, undefined> {
+        // Example: Check if a specific service is available
+        if (!ctx.memoryService) {
+          console.log('Memory service is not available for this invocation.');
+          // Potentially change agent behavior
+        }
+
+        // Example: Early termination based on some condition
+        // Direct access to state via ctx.session.state or through ctx.session.state property if wrapped
+        if ((ctx.session.state as { 'critical_error_flag': boolean })['critical_error_flag']) {
+          console.log('Critical error detected, ending invocation.');
+          ctx.endInvocation = true; // Signal framework to stop processing
+          yield {
+            author: this.name,
+            invocationId: ctx.invocationId,
+            content: { parts: [{ text: 'Stopping due to critical error.' }] }
+          } as Event;
+          return; // Stop this agent's execution
+        }
+
+        // ... Normal agent processing ...
+        yield; // ... event ...
+      }
+    }
+    ```
 
 Setting `ctx.end_invocation = True` is a way to gracefully stop the entire request-response cycle from within the agent or its callbacks/tools (via their respective context objects which also have access to modify the underlying `InvocationContext`'s flag).
 
@@ -11269,7 +12710,7 @@ File: docs/events/index.md
 # Events
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
@@ -11525,7 +12966,7 @@ Once you know the event type, access the relevant data:
 *   **Function Call Details:**
 
     === "Python"
-    
+
         ```python
         calls = event.get_function_calls()
         if calls:
@@ -13260,6 +14701,12 @@ set up and running a simple agent in less than 20 minutes.
 
     [:octicons-arrow-right-24: Start with Java](java.md) <br>
 
+-   :fontawesome-brands-js:{ .lg .middle } **TypeScript Quickstart**
+
+    ---
+    Create your first TypeScript ADK agent in minutes.
+
+    [:octicons-arrow-right-24: Start with TypeScript](typescript.md) <br>
 </div>
 
 ================
@@ -13302,6 +14749,14 @@ File: docs/get-started/installation.md
 
     ```bash
     pip show google-adk
+    ```
+
+=== "TypeScript"
+
+    ### Install ADK and ADK DevTools
+
+    ```bash
+    npm install @google/adk @google/adk-devtools
     ```
 
 === "Go"
@@ -13383,7 +14838,6 @@ File: docs/get-started/installation.md
     ```
 
     You should also configure Gradle to pass `-parameters` to `javac`. (Alternatively, use `@Schema(name = "...")`).
-
 
 ## Next steps
 
@@ -13867,6 +15321,35 @@ application entirely on your machine and is recommended for internal development
     pip install google-adk
     ```
 
+=== "TypeScript"
+
+    Create a new project directory, initialize it, and install dependencies:
+
+    ```bash
+    mkdir my-adk-agent
+    cd my-adk-agent
+    npm init -y
+    npm install @google/adk @google/adk-devtools
+    npm install -D typescript
+    ```
+
+    Create a `tsconfig.json` file with the following content. This configuration ensures your project correctly handles modern Node.js modules.
+
+    ```json title="tsconfig.json"
+    {
+      "compilerOptions": {
+        "target": "es2020",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "esModuleInterop": true,
+        "strict": true,
+        "skipLibCheck": true,
+        // set to false to allow CommonJS module syntax:
+        "verbatimModuleSyntax": false
+      }
+    }
+    ```
+
 === "Java"
 
     To install ADK and setup the environment, proceed to the following steps.
@@ -13950,6 +15433,54 @@ application entirely on your machine and is recommended for internal development
 
     More instructions about this file are described in the next section on [Set up the model](#set-up-the-model).
 
+=== "TypeScript"
+
+    You will need to create the following project structure in your `my-adk-agent` directory:
+
+    ```console
+    my-adk-agent/
+        agent.ts
+        .env
+        package.json
+        tsconfig.json
+    ```
+
+    ### `agent.ts`
+
+    Create an `agent.ts` file in your project folder:
+
+    === "OS X &amp; Linux"
+        ```shell
+        touch agent.ts
+        ```
+
+    === "Windows"
+        ```shell
+        type nul > agent.ts
+        ```
+
+    Copy and paste the following code into `agent.ts`:
+
+    ```typescript title="agent.ts"
+    --8<-- "examples/typescript/snippets/get-started/multi_tool_agent/agent.ts"
+    ```
+
+    ### `.env`
+
+    Create a `.env` file in the same folder:
+
+    === "OS X &amp; Linux"
+        ```shell
+        touch .env
+        ```
+
+    === "Windows"
+        ```shell
+        type nul > .env
+        ```
+
+    More instructions about this file are described in the next section on [Set up the model](#set-up-the-model).
+
 === "Java"
 
     Java projects generally feature the following project structure:
@@ -14007,6 +15538,13 @@ agent will be unable to function.
         export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
         ```
 
+        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
+
+        ```env title=""multi_tool_agent/.env"
+        GOOGLE_GENAI_USE_VERTEXAI=FALSE
+        GOOGLE_GENAI_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
+        ```
+
     3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
 
 === "Gemini - Google Cloud Vertex AI"
@@ -14030,6 +15568,14 @@ agent will be unable to function.
         export GOOGLE_CLOUD_LOCATION=LOCATION
         ```
 
+        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
+
+        ```env title=".env"
+        GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
+        GOOGLE_CLOUD_LOCATION=LOCATION
+        ```
+
 === "Gemini - Google Cloud Vertex AI with Express Mode"
     1. You can sign up for a free Google Cloud project and use Gemini for free with an eligible account!
         * Set up a
@@ -14048,6 +15594,13 @@ agent will be unable to function.
         ```console title="terminal"
         export GOOGLE_GENAI_USE_VERTEXAI=TRUE
         export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+        ```
+
+        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
+
+        ```env title=".env"
+        GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        GOOGLE_GENAI_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
         ```
 
 ## 4. Run Your Agent { #run-your-agent }
@@ -14174,6 +15727,76 @@ agent will be unable to function.
         To learn how to use `adk api_server` for testing, refer to the
         [documentation on using the API server](/adk-docs/runtime/api-server/).
 
+=== "TypeScript"
+
+    Using the terminal, navigate to your agent project directory:
+
+    ```console
+    my-adk-agent/      <-- navigate to this directory
+        agent.ts
+        .env
+        package.json
+        tsconfig.json
+    ```
+
+    There are multiple ways to interact with your agent:
+
+    === "Dev UI (adk web)"
+
+        Run the following command to launch the **dev UI**.
+
+        ```shell
+        npx adk web
+        ```
+
+        **Step 1:** Open the URL provided (usually `http://localhost:8000` or
+        `http://127.0.0.1:8000`) directly in your browser.
+
+        **Step 2.** In the top-left corner of the UI, select your agent from the dropdown. The agents are listed by their filenames, so you should select "agent".
+
+        !!!note "Troubleshooting"
+
+            If you do not see "agent" in the dropdown menu, make sure you
+            are running `npx adk web` in the directory containing your `agent.ts` file.
+
+        **Step 3.** Now you can chat with your agent using the textbox:
+
+        ![adk-web-dev-ui-chat.png](../assets/adk-web-dev-ui-chat.png)
+
+
+        **Step 4.** By using the `Events` tab at the left, you can inspect
+        individual function calls, responses and model responses by clicking on the
+        actions:
+
+        ![adk-web-dev-ui-function-call.png](../assets/adk-web-dev-ui-function-call.png)
+
+        On the `Events` tab, you can also click the `Trace` button to see the trace logs for each event that shows the latency of each function calls:
+
+        ![adk-web-dev-ui-trace.png](../assets/adk-web-dev-ui-trace.png)
+
+    === "Terminal (adk run)"
+
+        Run the following command to chat with your agent.
+
+        ```
+        npx adk run agent.ts
+        ```
+
+        ![adk-run.png](../assets/adk-run.png)
+
+        To exit, use Cmd/Ctrl+C.
+
+    === "API Server (adk api_server)"
+
+        `npx adk api_server` enables you to create a local Express.js server in a single
+        command, enabling you to test local cURL requests before you deploy your
+        agent.
+
+        ![adk-api-server.png](../assets/adk-api-server.png)
+
+        To learn how to use `api_server` for testing, refer to the
+        [documentation on testing](/adk-docs/runtime/api-server/).
+
 === "Java"
 
     Using the terminal, navigate to the parent directory of your agent project
@@ -14267,8 +15890,6 @@ agent will be unable to function.
         gradle runAgent
         ```
 
-
-
 ### 📝 Example prompts to try
 
 * What is the weather in New York?
@@ -14293,9 +15914,213 @@ You've successfully created and interacted with your first agent using ADK!
   [agents concepts](../agents/index.md).
 
 ================
+File: docs/get-started/typescript.md
+================
+# TypeScript Quickstart for ADK
+
+This guide shows you how to get up and running with Agent Development Kit
+for TypeScript. Before you start, make sure you have the following installed:
+
+*   Node.js 20.12.7 or later
+*   Node Package Manager (npm) 9.2.0 or later
+
+## Create an agent project
+
+Create an agent project with the following files and directory structure:
+
+```none
+my-agent/
+    agent.ts        # main agent code
+    package.json    # project configuration
+    tsconfig.json   # TypeScript configuration
+    .env            # API keys or project IDs
+```
+
+??? tip "Create this project structure using the command line"
+
+    === "MacOS / Linux"
+
+        ```bash
+        mkdir -p my-agent/ && \
+            touch my-agent/agent.ts \
+            touch my-agent/package.json \
+            touch my-agent/.env
+        ```
+
+    === "Windows"
+
+        ```console
+        mkdir my-agent\
+        type nul > my-agent\agent.ts
+        type nul > my-agent\package.json
+        type nul > my-agent\.env
+        ```
+
+    **Note:** Do not create `tsconfig.json`, you generate that
+    file in a later step.
+
+### Define the agent code
+
+Create the code for a basic agent, including a simple implementation of an ADK
+[Function Tool](/adk-docs/tools/function-tools/), called `getCurrentTime`.
+Add the following code to the `agent.ts` file in your project
+directory:
+
+```typescript title="my-agent/agent.ts"
+import {FunctionTool, LlmAgent} from '@google/adk';
+import {z} from 'zod';
+
+/* Mock tool implementation */
+const getCurrentTime = new FunctionTool({
+  name: 'get_current_time',
+  description: 'Returns the current time in a specified city.',
+  parameters: z.object({
+    city: z.string().describe("The name of the city for which to retrieve the current time."),
+  }),
+  execute: ({city}) => {
+    return {status: 'success', report: `The current time in ${city} is 10:30 AM`};
+  },
+});
+
+export const rootAgent = new LlmAgent({
+  name: 'hello_time_agent',
+  model: 'gemini-2.5-flash',
+  description: 'Tells the current time in a specified city.',
+  instruction: `You are a helpful assistant that tells the current time in a city.
+                Use the 'getCurrentTime' tool for this purpose.`,
+  tools: [getCurrentTime],
+});
+```
+
+### Configure project and dependencies
+
+Use the `npm` tool to install and configure dependencies for your project,
+including the package file, TypeScript configuration, ADK TypeScript main
+library and developer tools:
+
+```console
+# initialize the project
+npm init
+# configure TypeScript
+npm install -D typescript
+npx tsc --init
+# install ADK libraries
+npm install @google/adk
+npm install @google/adk-devtools
+```
+
+After completing these installation and configuration steps, open
+the `package.json` project file and verify that the `main:` value
+is set to `agent.ts`, that the TypeScript dependency is set, as
+well as the ADK library dependencies, as shown in this example:
+
+```json title="my-agent/package.json"
+{
+  "name": "my-agent",
+  "version": "1.0.0",
+  "description": "My ADK Agent",
+  "main": "agent.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@google/adk": "^0.2.0",
+    "@google/adk-devtools": "^0.2.0"
+  }
+}
+```
+
+For development convenience, in the `tsconfig.json` file, update the
+setting for `verbatimModuleSyntax` to `false` to allow simpler syntax
+when adding modules:
+
+```json title="my-agent/tsconfig.json"
+    // set to false to allow CommonJS module syntax:
+    "verbatimModuleSyntax": false,
+```
+
+### Compile the project
+
+After completing the project setup, compile the project to prepare for
+running your ADK agent:
+
+```console
+npx tsc
+```
+
+### Set your API key
+
+This project uses the Gemini API, which requires an API key. If you
+don't already have Gemini API key, create a key in Google AI Studio on the
+[API Keys](https://aistudio.google.com/app/apikey) page.
+
+In a terminal window, write your API key into your `.env` file of your project
+to set environment variables:
+
+```bash title="Update: my-agent/.env"
+echo 'GEMINI_API_KEY="YOUR_API_KEY"' > .env
+```
+
+??? tip "Using other AI models with ADK"
+    ADK supports the use of many generative AI models. For more
+    information on configuring other models in ADK agents, see
+    [Models & Authentication](/adk-docs/agents/models).
+
+## Run your agent
+
+You can run your ADK agent with the `@google/adk-devtools` library as an
+interactive command-line interface using the `run` command or the ADK web user
+interface using the `web` command. Both these options allow you to test and
+interact with your agent.
+
+### Run with command-line interface
+
+Run your agent with the ADK TypeScript command-line interface tool
+using the following command:
+
+```console
+npx @google/adk-devtools run agent.ts
+```
+
+![adk-run.png](/adk-docs/assets/adk-run.png)
+
+### Run with web interface
+
+Run your agent with the ADK web interface using the following command:
+
+```console
+npx @google/adk-devtools web
+```
+
+This command starts a web server with a chat interface for your agent. You can
+access the web interface at (http://localhost:8000). Select your agent at the
+upper right corner and type a request.
+
+![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
+
+## Next: Build your agent
+
+Now that you have ADK installed and your first agent running, try building
+your own agent with our build guides:
+
+*  [Build your agent](/adk-docs/tutorials/)
+
+================
 File: docs/grounding/google_search_grounding.md
 ================
 # Understanding Google Search Grounding
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
 
 [Google Search Grounding tool](../tools/built-in-tools.md#google-search) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access real-time, authoritative information from the web. By connecting your agents to Google Search, you can provide users with up-to-date answers backed by reliable sources.
 
@@ -14320,23 +16145,39 @@ This quickstart guides you through creating an ADK agent with Google Search grou
 
 ### 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
-Create & Activate Virtual Environment:
+Below are the steps for setting up your environment and installing the ADK for both Python and TypeScript projects.
 
-```bash
-# Create
-python -m venv .venv
+=== "Python"
 
-# Activate (each new terminal)
-# macOS/Linux: source .venv/bin/activate
-# Windows CMD: .venv\Scripts\activate.bat
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-```
+    Create & Activate Virtual Environment:
 
-Install ADK:
+    ```bash
+    # Create
+    python -m venv .venv
 
-```bash
-pip install google-adk==1.4.2
-```
+    # Activate (each new terminal)
+    # macOS/Linux: source .venv/bin/activate
+    # Windows CMD: .venv\Scripts\activate.bat
+    # Windows PowerShell: .venv\Scripts\Activate.ps1
+    ```
+
+    Install ADK:
+
+    ```bash
+    pip install google-adk
+    ```
+
+=== "TypeScript"
+
+    Create a new Node.js project:
+    ```bash
+    npm init -y
+    ```
+
+    Install ADK:
+    ```bash
+    npm install @google/adk
+    ```
 
 ### 2. Create Agent Project { #create-agent-project }
 
@@ -14363,38 +16204,67 @@ Under a project directory, run the following commands:
     echo "from . import agent" > google_search_agent/__init__.py
 
     # Step 3: Create an agent.py (the agent definition) and .env (Gemini authentication config)
-    type nul > google_search_agent\agent.py 
+    type nul > google_search_agent\agent.py
     type nul > google_search_agent\.env
     ```
 
 
 
-#### Edit `agent.py`
+#### Edit `agent.py` or `agent.ts`
 
-Copy and paste the following code into `agent.py`:
+Copy and paste the following code into `agent.py` or `agent.ts`:
 
-```python title="google_search_agent/agent.py"
-from google.adk.agents import Agent
-from google.adk.tools import google_search
+=== "Python"
 
-root_agent = Agent(
-    name="google_search_agent",
-    model="gemini-2.5-flash",
-    instruction="Answer questions using Google Search when needed. Always cite sources.",
-    description="Professional search assistant with Google Search capabilities",
-    tools=[google_search]
-)
-```
+    ```python title="google_search_agent/agent.py"
+    from google.adk.agents import Agent
+    from google.adk.tools import google_search
+
+    root_agent = Agent(
+        name="google_search_agent",
+        model="gemini-2.5-flash",
+        instruction="Answer questions using Google Search when needed. Always cite sources.",
+        description="Professional search assistant with Google Search capabilities",
+        tools=[google_search]
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript title="google_search_agent/agent.ts"
+    import { LlmAgent, GOOGLE_SEARCH } from '@google/adk';
+
+    const rootAgent = new LlmAgent({
+        name: "google_search_agent",
+        model: "gemini-2.5-flash",
+        instruction: "Answer questions using Google Search when needed. Always cite sources.",
+        description: "Professional search assistant with Google Search capabilities",
+        tools: [GOOGLE_SEARCH],
+    });
+    ```
 
 Now you would have the following directory structure:
 
-```console
-my_project/
-    google_search_agent/
-        __init__.py
-        agent.py
-    .env
-```
+=== "Python"
+
+    ```console
+    my_project/
+        google_search_agent/
+            __init__.py
+            agent.py
+        .env
+    ```
+
+=== "TypeScript"
+
+    ```console
+    my_project/
+        google_search_agent/
+            agent.ts
+        package.json
+        tsconfig.json
+        .env
+    ```
 
 ### 3. Choose a platform { #choose-a-platform }
 
@@ -14440,7 +16310,7 @@ There are multiple ways to interact with your agent:
     ```shell
     adk web
     ```
-    
+
     !!!info "Note for Windows users"
 
         When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
@@ -14469,7 +16339,7 @@ There are multiple ways to interact with your agent:
     ```
     To exit, use Cmd/Ctrl+C.
 
-### 📝 Example prompts to try
+### Example prompts to try
 
 With those questions, you can confirm that the agent is actually calling Google Search
 to get the latest weather and time.
@@ -14497,18 +16367,18 @@ This diagram illustrates the step-by-step process of how a user query results in
 
 The grounding agent uses the data flow described in the diagram to retrieve, process, and incorporate external information into the final answer presented to the user.
 
-1. **User Query**: An end-user interacts with your agent by asking a question or giving a command.  
-2. **ADK Orchestration** : The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.  
-3. **LLM Analysis and Tool-Calling** : The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that external, up-to-date information is required, it triggers the grounding mechanism by calling the  
-    google\_search tool. This is ideal for answering queries about recent news, weather, or facts not present in the model's training data.  
-4. **Grounding Service Interaction** : The google\_search tool interacts with an internal grounding service that formulates and sends one or more queries to the Google Search Index.  
-5. **Context Injection**: The grounding service retrieves the relevant web pages and snippets. It then integrates these search results into the model's context  
-    before the final response is generated. This crucial step allows the model to "reason" over factual, real-time data.  
-6. **Grounded Response Generation**: The LLM, now informed by the fresh search results, generates a response that incorporates the retrieved information.  
-7. **Response Presentation with Sources** : The ADK receives the final grounded response, which includes the necessary source URLs and   
+1. **User Query**: An end-user interacts with your agent by asking a question or giving a command.
+2. **ADK Orchestration** : The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.
+3. **LLM Analysis and Tool-Calling** : The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that external, up-to-date information is required, it triggers the grounding mechanism by calling the
+    google\_search tool. This is ideal for answering queries about recent news, weather, or facts not present in the model's training data.
+4. **Grounding Service Interaction** : The google\_search tool interacts with an internal grounding service that formulates and sends one or more queries to the Google Search Index.
+5. **Context Injection**: The grounding service retrieves the relevant web pages and snippets. It then integrates these search results into the model's context
+    before the final response is generated. This crucial step allows the model to "reason" over factual, real-time data.
+6. **Grounded Response Generation**: The LLM, now informed by the fresh search results, generates a response that incorporates the retrieved information.
+7. **Response Presentation with Sources** : The ADK receives the final grounded response, which includes the necessary source URLs and
    groundingMetadata, and presents it to the user with attribution. This allows end-users to verify the information and builds trust in the agent's answers.
 
-### Understanding grounding with Google Search response 
+### Understanding grounding with Google Search response
 
 When the agent uses Google Search to ground a response, it returns a detailed set of information that includes not only the final text answer but also the sources it used to generate that answer. This metadata is crucial for verifying the response and for providing attribution to the original sources.
 
@@ -14566,9 +16436,9 @@ The following is an example of the content object returned by the model after a 
 
 The metadata provides a link between the text generated by the model and the sources that support it. Here is a step-by-step breakdown:
 
-1. **groundingChunks**: This is a list of the web pages the model consulted. Each chunk contains the title of the webpage and a uri that links to the source.  
-2. **groundingSupports**: This list connects specific sentences in the final answer back to the groundingChunks.  
-   * **segment**: This object identifies a specific portion of the final text answer, defined by its startIndex, endIndex, and the text itself.  
+1. **groundingChunks**: This is a list of the web pages the model consulted. Each chunk contains the title of the webpage and a uri that links to the source.
+2. **groundingSupports**: This list connects specific sentences in the final answer back to the groundingChunks.
+   * **segment**: This object identifies a specific portion of the final text answer, defined by its startIndex, endIndex, and the text itself.
    * **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the groundingChunks. For example, the sentence "They defeated FC Porto 2-1..." is supported by information from groundingChunks at index 0 and 1 (both from mlssoccer.com and intermiamicf.com).
 
 ### How to display grounding responses with Google Search
@@ -14601,6 +16471,10 @@ File: docs/grounding/vertex_ai_search_grounding.md
 ================
 # Understanding Vertex AI Search Grounding
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 [Vertex AI Search Grounding tool](../tools/built-in-tools.md#vertex-ai-search) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
 This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
@@ -14630,23 +16504,39 @@ Note this `Data store ID` as we will use this later.
 
 ### 2. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
-Create & Activate Virtual Environment:
+Below are the steps for setting up your environment and installing the ADK for both Python and TypeScript projects.
 
-```bash
-# Create
-python -m venv .venv
+=== "Python"
 
-# Activate (each new terminal)
-# macOS/Linux: source .venv/bin/activate
-# Windows CMD: .venv\Scripts\activate.bat
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-```
+    Create & Activate Virtual Environment:
 
-Install ADK:
+    ```bash
+    # Create
+    python -m venv .venv
 
-```bash
-pip install google-adk==1.5.0
-```
+    # Activate (each new terminal)
+    # macOS/Linux: source .venv/bin/activate
+    # Windows CMD: .venv\\Scripts\\activate.bat
+    # Windows PowerShell: .venv\\Scripts\\Activate.ps1
+    ```
+
+    Install ADK:
+
+    ```bash
+    pip install google-adk
+    ```
+
+=== "TypeScript"
+
+    Create a new Node.js project:
+    ```bash
+    npm init -y
+    ```
+
+    Install ADK:
+    ```bash
+    npm install @google/adk
+    ```
 
 ### 3. Create Agent Project { #create-agent-project }
 
@@ -14673,7 +16563,7 @@ Under a project directory, run the following commands:
     echo "from . import agent" > vertex_search_agent/__init__.py
 
     # Step 3: Create an agent.py (the agent definition) and .env (authentication config)
-    type nul > vertex_search_agent\agent.py 
+    type nul > vertex_search_agent\agent.py
     type nul > google_search_agent\.env
     ```
 
@@ -14732,7 +16622,7 @@ There are multiple ways to interact with your agent:
     ```shell
     adk web
     ```
-    
+
     !!!info "Note for Windows users"
 
         When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
@@ -14761,7 +16651,7 @@ There are multiple ways to interact with your agent:
     ```
     To exit, use Cmd/Ctrl+C.
 
-### 📝 Example prompts to try
+### Example prompts to try
 
 With those questions, you can confirm that the agent is actually calling Vertex AI Search
 to get information from the Alphabet reports:
@@ -14890,7 +16780,7 @@ Since grounding metadata is provided, you can choose to implement citation displ
 for event in events:
     if event.is_final_response():
         print(event.content.parts[0].text)
-        
+
         # Optional: Show source count
         if event.grounding_metadata:
             print(f"\nBased on {len(event.grounding_metadata.grounding_chunks)} documents")
@@ -14925,7 +16815,7 @@ File: docs/mcp/index.md
 # Model Context Protocol (MCP)
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 The
@@ -16361,7 +18251,7 @@ File: docs/observability/logging.md
 # Logging in the Agent Development Kit (ADK)
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The Agent Development Kit (ADK) uses Python's standard `logging` module to provide flexible and powerful logging capabilities. Understanding how to configure and interpret these logs is crucial for monitoring agent behavior and debugging issues effectively.
@@ -16440,7 +18330,7 @@ ADK uses standard log levels to categorize messages. The configured level determ
 
 ## Reading and Understanding the Logs
 
-The `format` string in the `basicConfig` example determines the structure of each log message.  
+The `format` string in the `basicConfig` example determines the structure of each log message.
 
 Here’s a sample log entry:
 
@@ -16479,7 +18369,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     ```log
     ...
     2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.GEMINI_API, stream: False
-    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - 
+    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm -
     LLM Request:
     -----------------------------------------------------------
     System Instruction:
@@ -16499,7 +18389,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
           3. When you respond, you must include the roll_die result from step 1.
           You should always perform the previous 3 steps when asking for a roll and checking prime numbers.
           You should not rely on the previous history on prime results.
-        
+
 
     You are an agent. Your internal name is "hello_world_agent".
 
@@ -16511,12 +18401,12 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     {"parts":[{"function_response":{"name":"roll_die","response":{"result":2}}}],"role":"user"}
     -----------------------------------------------------------
     Functions:
-    roll_die: {'sides': {'type': <Type.INTEGER: 'INTEGER'>}} 
-    check_prime: {'nums': {'items': {'type': <Type.INTEGER: 'INTEGER'>}, 'type': <Type.ARRAY: 'ARRAY'>}} 
+    roll_die: {'sides': {'type': <Type.INTEGER: 'INTEGER'>}}
+    check_prime: {'nums': {'items': {'type': <Type.INTEGER: 'INTEGER'>}, 'type': <Type.ARRAY: 'ARRAY'>}}
     -----------------------------------------------------------
 
     2025-07-10 15:26:13,779 - INFO - google_genai.models - AFC is enabled with max remote calls: 10.
-    2025-07-10 15:26:14,309 - INFO - google_adk.google.adk.models.google_llm - 
+    2025-07-10 15:26:14,309 - INFO - google_adk.google.adk.models.google_llm -
     LLM Response:
     -----------------------------------------------------------
     Text:
@@ -17233,36 +19123,84 @@ in the repository.
 Start by extending the `BasePlugin` class and add one or more `callback`
 methods, as shown in the following code example:
 
-```py title="count_plugin.py"
-from google.adk.agents.base_agent import BaseAgent
-from google.adk.agents.callback_context import CallbackContext
-from google.adk.models.llm_request import LlmRequest
-from google.adk.plugins.base_plugin import BasePlugin
+=== "Python"
 
-class CountInvocationPlugin(BasePlugin):
-  """A custom plugin that counts agent and tool invocations."""
+    ```py title="count_plugin.py"
+    from google.adk.agents.base_agent import BaseAgent
+    from google.adk.agents.callback_context import CallbackContext
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.plugins.base_plugin import BasePlugin
 
-  def __init__(self) -> None:
-    """Initialize the plugin with counters."""
-    super().__init__(name="count_invocation")
-    self.agent_count: int = 0
-    self.tool_count: int = 0
-    self.llm_request_count: int = 0
+    class CountInvocationPlugin(BasePlugin):
+    """A custom plugin that counts agent and tool invocations."""
 
-  async def before_agent_callback(
-      self, *, agent: BaseAgent, callback_context: CallbackContext
-  ) -> None:
-    """Count agent runs."""
-    self.agent_count += 1
-    print(f"[Plugin] Agent run count: {self.agent_count}")
+    def __init__(self) -> None:
+        """Initialize the plugin with counters."""
+        super().__init__(name="count_invocation")
+        self.agent_count: int = 0
+        self.tool_count: int = 0
+        self.llm_request_count: int = 0
 
-  async def before_model_callback(
-      self, *, callback_context: CallbackContext, llm_request: LlmRequest
-  ) -> None:
-    """Count LLM requests."""
-    self.llm_request_count += 1
-    print(f"[Plugin] LLM request count: {self.llm_request_count}")
-```
+    async def before_agent_callback(
+        self, *, agent: BaseAgent, callback_context: CallbackContext
+    ) -> None:
+        """Count agent runs."""
+        self.agent_count += 1
+        print(f"[Plugin] Agent run count: {self.agent_count}")
+
+    async def before_model_callback(
+        self, *, callback_context: CallbackContext, llm_request: LlmRequest
+    ) -> None:
+        """Count LLM requests."""
+        self.llm_request_count += 1
+        print(f"[Plugin] LLM request count: {self.llm_request_count}")
+    ```
+
+=== "Typescript"
+
+    ```typescript title="count_plugin.ts"
+    import { BaseAgent, BasePlugin, CallbackContext } from "@google/adk";
+    import type { LlmRequest, LlmResponse } from "@google/adk";
+    import type { Content } from "@google/genai";
+
+
+    /**
+     * A custom plugin that counts agent and tool invocations.
+     */
+    export class CountInvocationPlugin extends BasePlugin {
+        public agentCount = 0;
+        public toolCount = 0;
+        public llmRequestCount = 0;
+
+        constructor() {
+            super("count_invocation");
+        }
+
+        /**
+         * Count agent runs.
+         */
+        async beforeAgentCallback(
+            agent: BaseAgent,
+            callbackContext: CallbackContext
+        ): Promise<Content | undefined> {
+            this.agentCount++;
+            console.log(`[Plugin] Agent run count: ${this.agentCount}`);
+            return undefined;
+        }
+
+        /**
+         * Count LLM requests.
+         */
+        async beforeModelCallback(
+            callbackContext: CallbackContext,
+            llmRequest: LlmRequest
+        ): Promise<LlmResponse | undefined> {
+            this.llmRequestCount++;
+            console.log(`[Plugin] LLM request count: ${this.llmRequestCount}`);
+            return undefined;
+        }
+    }    
+    ```
 
 This example code implements callbacks for `before_agent_callback` and
 `before_model_callback` to count execution of these tasks during the lifecycle
@@ -17276,66 +19214,150 @@ multiple Plugins with this parameter. The following code example shows how to
 register the `CountInvocationPlugin` plugin defined in the previous section with
 a simple ADK agent.
 
-```py
-from google.adk.runners import InMemoryRunner
-from google.adk import Agent
-from google.adk.tools.tool_context import ToolContext
-from google.genai import types
-import asyncio
+=== "Python"
 
-# Import the plugin.
-from .count_plugin import CountInvocationPlugin
+    ```py
+    from google.adk.runners import InMemoryRunner
+    from google.adk import Agent
+    from google.adk.tools.tool_context import ToolContext
+    from google.genai import types
+    import asyncio
 
-async def hello_world(tool_context: ToolContext, query: str):
-  print(f'Hello world: query is [{query}]')
+    # Import the plugin.
+    from .count_plugin import CountInvocationPlugin
 
-root_agent = Agent(
-    model='gemini-2.0-flash',
-    name='hello_world',
-    description='Prints hello world with user query.',
-    instruction="""Use hello_world tool to print hello world and user query.
-    """,
-    tools=[hello_world],
-)
+    async def hello_world(tool_context: ToolContext, query: str):
+    print(f'Hello world: query is [{query}]')
 
-async def main():
-  """Main entry point for the agent."""
-  prompt = 'hello world'
-  runner = InMemoryRunner(
-      agent=root_agent,
-      app_name='test_app_with_plugin',
+    root_agent = Agent(
+        model='gemini-2.0-flash',
+        name='hello_world',
+        description='Prints hello world with user query.',
+        instruction="""Use hello_world tool to print hello world and user query.
+        """,
+        tools=[hello_world],
+    )
 
-      # Add your plugin here. You can add multiple plugins.
-      plugins=[CountInvocationPlugin()],
-  )
+    async def main():
+    """Main entry point for the agent."""
+    prompt = 'hello world'
+    runner = InMemoryRunner(
+        agent=root_agent,
+        app_name='test_app_with_plugin',
 
-  # The rest is the same as starting a regular ADK runner.
-  session = await runner.session_service.create_session(
-      user_id='user',
-      app_name='test_app_with_plugin',
-  )
+        # Add your plugin here. You can add multiple plugins.
+        plugins=[CountInvocationPlugin()],
+    )
 
-  async for event in runner.run_async(
-      user_id='user',
-      session_id=session.id,
-      new_message=types.Content(
-        role='user', parts=[types.Part.from_text(text=prompt)]
-      )
-  ):
-    print(f'** Got event from {event.author}')
+    # The rest is the same as starting a regular ADK runner.
+    session = await runner.session_service.create_session(
+        user_id='user',
+        app_name='test_app_with_plugin',
+    )
 
-if __name__ == "__main__":
-  asyncio.run(main())
-```
+    async for event in runner.run_async(
+        user_id='user',
+        session_id=session.id,
+        new_message=types.Content(
+            role='user', parts=[types.Part.from_text(text=prompt)]
+        )
+    ):
+        print(f'** Got event from {event.author}')
+
+    if __name__ == "__main__":
+    asyncio.run(main())
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    import { InMemoryRunner, LlmAgent, FunctionTool } from "@google/adk";
+    import type { Content } from "@google/genai";
+    import { z } from "zod";
+
+    // Import the plugin.
+    import { CountInvocationPlugin } from "./count_plugin.ts";
+
+    const HelloWorldInput = z.object({
+        query: z.string().describe("The query string to print."),
+    });
+
+    async function helloWorld({ query }: z.infer<typeof HelloWorldInput>): Promise<{ result: string }> {
+        const output = `Hello world: query is [${query}]`;
+        console.log(output);
+        // Tools should return a string or JSON-compatible object
+        return { result: output };
+    }
+
+    const helloWorldTool = new FunctionTool({
+        name: "hello_world",
+        description: "Prints hello world with user query.",
+        parameters: HelloWorldInput,
+        execute: helloWorld,
+    });
+
+    const rootAgent = new LlmAgent({
+        model: "gemini-2.5-flash", // Preserved from your Python code
+        name: "hello_world",
+        description: "Prints hello world with user query.",
+        instruction: `Use hello_world tool to print hello world and user query.`,
+        tools: [helloWorldTool],
+    });
+
+    /**
+    * Main entry point for the agent.
+    */
+    async function main(): Promise<void> {
+        const prompt = "hello world";
+        const runner = new InMemoryRunner({
+            agent: rootAgent,
+            appName: "test_app_with_plugin",
+
+            // Add your plugin here. You can add multiple plugins.
+            plugins: [new CountInvocationPlugin()],
+        });
+
+        // The rest is the same as starting a regular ADK runner.
+        const session = await runner.sessionService.createSession({
+            userId: "user",
+            appName: "test_app_with_plugin",
+        });
+
+        // runAsync returns an async iterable stream in TypeScript
+        const runStream = runner.runAsync({
+            userId: "user",
+            sessionId: session.id,
+            newMessage: {
+            role: "user",
+            parts: [{ text: prompt }],
+            },
+        });
+
+        // Use 'for await...of' to loop through the async stream
+        for await (const event of runStream) {
+            console.log(`** Got event from ${event.author}`);
+        }
+    }
+
+    main();
+    ```
 
 ### Run the agent with the Plugin
 
 Run the plugin as you typically would. The following shows how to run the
 command line:
 
-```sh
-python3 -m path.to.main
-```
+=== "Python"
+
+    ```sh
+    python3 -m path.to.main.py
+    ```
+
+=== "Typescript"
+
+    ```sh
+    npx ts-node path.to.main.ts
+    ```
 
 Plugins are not supported by the
 [ADK web interface](../evaluate/index.md#1-adk-web-run-evaluations-via-the-web-ui).
@@ -17490,14 +19512,27 @@ giving you a chance to inspect or modify the initial input.\
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def on_user_message_callback(
-    self,
-    *,
-    invocation_context: InvocationContext,
-    user_message: types.Content,
-) -> Optional[types.Content]:
-```
+=== "Python"
+
+    ```py
+    async def on_user_message_callback(
+        self,
+        *,
+        invocation_context: InvocationContext,
+        user_message: types.Content,
+    ) -> Optional[types.Content]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async onUserMessageCallback(
+        invocationContext: InvocationContext,
+        user_message: Content
+    ): Promise<Content | undefined> {
+      // Your implementation here
+    }
+    ```
 
 ### Runner start callbacks
 
@@ -17515,11 +19550,21 @@ logic begins.
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def before_run_callback(
-    self, *, invocation_context: InvocationContext
-) -> Optional[types.Content]:
-```
+=== "Python"
+
+    ```py
+    async def before_run_callback(
+        self, *, invocation_context: InvocationContext
+    ) -> Optional[types.Content]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async beforeRunCallback(invocationContext: InvocationContext): Promise<Content | undefined> {
+      // Your implementation here
+    }
+    ```
 
 ### Agent execution callbacks
 
@@ -17575,15 +19620,29 @@ normally.****
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def on_model_error_callback(
-    self,
-    *,
-    callback_context: CallbackContext,
-    llm_request: LlmRequest,
-    error: Exception,
-) -> Optional[LlmResponse]:
-```
+=== "Python"
+
+    ```py
+    async def on_model_error_callback(
+        self,
+        *,
+        callback_context: CallbackContext,
+        llm_request: LlmRequest,
+        error: Exception,
+    ) -> Optional[LlmResponse]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async onModelErrorCallback(
+        callbackContext: CallbackContext,
+        llmRequest: LlmRequest,
+        error: Error
+    ): Promise<LlmResponse | undefined> {
+        // Your implementation here
+    }  
+    ```
 
 ### Tool callbacks
 
@@ -17622,16 +19681,30 @@ works as follows:
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def on_tool_error_callback(
-    self,
-    *,
-    tool: BaseTool,
-    tool_args: dict[str, Any],
-    tool_context: ToolContext,
-    error: Exception,
-) -> Optional[dict]:
-```
+=== "Python"
+    ```py
+    async def on_tool_error_callback(
+        self,
+        *,
+        tool: BaseTool,
+        tool_args: dict[str, Any],
+        tool_context: ToolContext,
+        error: Exception,
+    ) -> Optional[dict]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async onToolErrorCallback(
+        tool: BaseTool,
+        toolArgs: { [key: string]: any },
+        toolContext: ToolContext,
+        error: Error
+    ): Promise<{ [key:string]: any } | undefined> {
+        // Your implementation here
+    }    
+    ```
 
 ### Event callbacks
 
@@ -17649,11 +19722,24 @@ before it's streamed to the client.
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def on_event_callback(
-    self, *, invocation_context: InvocationContext, event: Event
-) -> Optional[Event]:
-```
+=== "Python"
+
+    ```py
+    async def on_event_callback(
+        self, *, invocation_context: InvocationContext, event: Event
+    ) -> Optional[Event]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async onEventCallback(
+        invocationContext: InvocationContext,
+        event: Event
+    ): Promise<Event | undefined> {
+        // Your implementation here
+    }    
+    ```
 
 ### Runner end callbacks
 
@@ -17671,11 +19757,21 @@ cleanup and final reporting.
 
 The following code example shows the basic syntax of this callback:
 
-```py
-async def after_run_callback(
-    self, *, invocation_context: InvocationContext
-) -> Optional[None]:
-```
+=== "Python"
+
+    ```py
+    async def after_run_callback(
+        self, *, invocation_context: InvocationContext
+    ) -> Optional[None]:
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    async afterRunCallback(invocationContext: InvocationContext): Promise<void> {
+        // Your implementation here
+    }    
+    ```
 
 ## Next steps
 
@@ -17684,7 +19780,7 @@ projects:
 
 -   For more ADK Plugin code examples, see the
     [ADK Python repository](https://github.com/google/adk-python/tree/main/src/google/adk/plugins).
--   For information on applying Plugins for security purposes, see
+-   For information on applying Plugins for security purposes, see 
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
 ================
@@ -17779,7 +19875,7 @@ File: docs/runtime/api-server.md
 # Use the API Server
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Before you deploy your agent, you should test it to ensure that it is working as
@@ -17790,6 +19886,12 @@ to use the ADK API server.
 
     ```py
     adk api_server
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    npx adk api_server
     ```
 
 === "Go"
@@ -17845,12 +19947,14 @@ This command will launch a local web server, where you can run cURL commands or 
 
 Local testing involves launching a local web server, creating a session, and
 sending queries to your agent. First, ensure you are in the correct working
-directory:
+directory.
+
+For TypeScript, you should be inside the agent project directory itself.
 
 ```console
 parent_folder/
-└── my_sample_agent/
-    └── agent.py (or Agent.java)
+└── my_sample_agent/  <-- For TypeScript, run commands from here
+    └── agent.py (or Agent.java or agent.ts)
 ```
 
 **Launch the Local Server**
@@ -17868,12 +19972,23 @@ The output should appear similar to:
     INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
     ```
 
+=== "TypeScript"
+
+    ```shell
+    +-----------------------------------------------------------------------------+
+    | ADK Web Server started                                                      |
+    |                                                                             |
+    | For local testing, access at http://localhost:8000.                         |
+    +-----------------------------------------------------------------------------+
+    ```
+
 === "Java"
 
     ```shell
     2025-05-13T23:32:08.972-06:00  INFO 37864 --- [ebServer.main()] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
     2025-05-13T23:32:08.980-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : Started AdkWebServer in 1.15 seconds (process running for 2.877)
     2025-05-13T23:32:08.981-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : AdkWebServer application started successfully.
+    ```
     ```
 
 Your server is now running locally. Ensure you use the correct **_port number_** in all the subsequent commands.
@@ -17945,6 +20060,8 @@ curl -X POST http://localhost:8000/run \
 }
 }'
 ```
+
+In TypeScript, currently only `cameCase` field names are supported (e.g. `appName`, `userId`, `sessionId`, etc.), with `snake_case` support coming soon.
 
 If using `/run`, you will see the full output of events at the same time, as a
 list, which should appear similar to:
@@ -18065,6 +20182,8 @@ The API server automatically generates interactive API documentation using Swagg
 To access the interactive docs, start the API server and navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your web browser.
 
 You will see a complete, interactive list of all available API endpoints, which you can expand to see detailed information about parameters, request bodies, and response schemas. You can even click "Try it out" to send live requests to your running agents.
+
+In TypeScript, interactive API documentation support is coming soon.
 
 ## API Endpoints
 
@@ -18187,6 +20306,8 @@ Executes the agent and returns all generated events in a single JSON array after
 }
 ```
 
+In TypeScript, currently only `cameCase` field names are supported (e.g. `appName`, `userId`, `sessionId`, etc.), with `snake_case` support coming soon.
+
 **Example Request**
 ```shell
 curl -X POST http://localhost:8000/run \
@@ -18249,7 +20370,7 @@ File: docs/runtime/index.md
 # Runtime
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The ADK Runtime is the underlying engine that powers your agent application during user interactions. It's the system that takes your defined agents, tools, and callbacks and orchestrates their execution in response to user input, managing the flow of information, state changes, and interactions with external services like LLMs or storage.
@@ -18277,7 +20398,7 @@ This event-driven loop is the fundamental pattern governing how ADK executes you
 The Event Loop is the core operational pattern defining the interaction between the `Runner` and your custom code (Agents, Tools, Callbacks, collectively referred to as "Execution Logic" or "Logic Components" in the design document). It establishes a clear division of responsibilities:
 
 !!! Note
-    The specific method names and parameter names may vary slightly by SDK language (e.g., `agent_to_run.run_async(...)` in Python, `agent.Run(...)` in Go, `agent_to_run.runAsync(...)` in Java ). Refer to the language-specific API documentation for details.
+    The specific method names and parameter names may vary slightly by SDK language (e.g., `agent.run_async(...)` in Python, `agent.Run(...)` in Go, `agent.runAsync(...)` in Java and TypeScript). Refer to the language-specific API documentation for details.
 
 ### Runner's Role (Orchestrator)
 
@@ -18313,6 +20434,34 @@ The `Runner` acts as the central coordinator for a single user invocation. Its r
             # 4. Yield event for upstream processing (e.g., UI rendering)
             yield event
             # Runner implicitly signals agent generator can continue after yielding
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Simplified view of Runner's main loop logic
+    async * runAsync(newQuery: Content, ...): AsyncGenerator<Event, void, void> {
+        // 1. Append newQuery to session event history (via SessionService)
+        await sessionService.appendEvent({
+            session,
+            event: createEvent({author: 'user', content: newQuery})
+        });
+
+        // 2. Kick off event loop by calling the agent
+        const agentEventGenerator = agentToRun.runAsync(context);
+
+        for await (const event of agentEventGenerator) {
+            // 3. Process the generated event and commit changes
+            // Commits state/artifact deltas etc.
+            await sessionService.appendEvent({session, event});
+            // memoryService.updateMemory(...) // If applicable
+            // artifactService might have already been called via context during agent run
+
+            // 4. Yield event for upstream processing (e.g., UI rendering)
+            yield event;
+            // Runner implicitly signals agent generator can continue after yielding
+        }
+    }
     ```
 
 === "Go"
@@ -18443,6 +20592,40 @@ Your code within agents, tools, and callbacks is responsible for the actual comp
 
     # ... subsequent code continues ...
     # Maybe yield another event later...
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Simplified view of logic inside Agent.runAsync, callbacks, or tools
+
+    // ... previous code runs based on current state ...
+
+    // 1. Determine a change or output is needed, construct the event
+    // Example: Updating state
+    const updateData = {'field_1': 'value_2'};
+    const eventWithStateChange = createEvent({
+        author: this.name,
+        actions: createEventActions({stateDelta: updateData}),
+        content: {parts: [{text: "State updated."}]}
+        // ... other event fields ...
+    });
+
+    // 2. Yield the event to the Runner for processing & commit
+    yield eventWithStateChange;
+    // <<<<<<<<<<<< EXECUTION PAUSES HERE >>>>>>>>>>>>
+
+    // <<<<<<<<<<<< RUNNER PROCESSES & COMMITS THE EVENT >>>>>>>>>>>>
+
+    // 3. Resume execution ONLY after Runner is done processing the above event.
+    // Now, the state committed by the Runner is reliably reflected.
+    // Subsequent code can safely assume the change from the yielded event happened.
+    const val = ctx.session.state['field_1'];
+    // here `val` is guaranteed to be "value_2" (assuming Runner committed successfully)
+    console.log(`Resumed execution. Value of field_1 is now: ${val}`);
+
+    // ... subsequent code continues ...
+    // Maybe yield another event later...
     ```
 
 === "Go"
@@ -18664,6 +20847,31 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
     print(f"Status after resuming: {current_status}")
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    // Inside agent logic (conceptual)
+
+    // 1. Modify state
+    // In TypeScript, you modify state via the context, which tracks the change.
+    ctx.state.set('status', 'processing');
+    // The framework will automatically populate actions with the state
+    // delta from the context. For illustration, it's shown here.
+    const event1 = createEvent({
+        actions: createEventActions({stateDelta: {'status': 'processing'}}),
+        // ... other event fields
+    });
+
+    // 2. Yield event with the delta
+    yield event1;
+    // --- PAUSE --- Runner processes event1, SessionService commits 'status' = 'processing' ---
+
+    // 3. Resume execution
+    // Now it's safe to rely on the committed state in the session object.
+    const currentStatus = ctx.session.state['status']; // Guaranteed to be 'processing'
+    console.log(`Status after resuming: ${currentStatus}`);
+    ```
+
 === "Go"
 
     ```go
@@ -18772,6 +20980,24 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
     # is yielded *after* this tool runs and is processed by the Runner.
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    // Code in beforeAgentCallback
+    callbackContext.state.set('field_1', 'value_1');
+    // State is locally set to 'value_1', but not yet committed by Runner
+
+    // --- agent runs ... ---
+
+    // --- Code in a tool called later *within the same invocation* ---
+    // Readable (dirty read), but 'value_1' isn't guaranteed persistent yet.
+    const val = toolContext.state.get('field_1'); // 'val' will likely be 'value_1' here
+    console.log(`Dirty read value in tool: ${val}`);
+
+    // Assume the event carrying the state_delta={'field_1': 'value_1'}
+    // is yielded *after* this tool runs and is processed by the Runner.
+    ```
+
 === "Go"
 
     ```go
@@ -18827,12 +21053,12 @@ This primarily relates to how responses from the LLM are handled, especially whe
 
 ## Async is Primary (`run_async`)
 
-* **Core Design:** The ADK Runtime is fundamentally built on asynchronous libraries (like Python's `asyncio` and Java's `RxJava`) to handle concurrent operations (like waiting for LLM responses or tool executions) efficiently without blocking.
+* **Core Design:** The ADK Runtime is fundamentally built on asynchronous patterns and libraries (like Python's `asyncio`, Java's `RxJava`, and native `Promise`s and `AsyncGenerator`s in TypeScript) to handle concurrent operations (like waiting for LLM responses or tool executions) efficiently without blocking.
 * **Main Entry Point:** `Runner.run_async` is the primary method for executing agent invocations. All core runnable components (Agents, specific flows) use `asynchronous` methods internally.
 * **Synchronous Convenience (`run`):** A synchronous `Runner.run` method exists mainly for convenience (e.g., in simple scripts or testing environments). However, internally, `Runner.run` typically just calls `Runner.run_async` and manages the async event loop execution for you.
-* **Developer Experience:** We recommend designing your applications (e.g., web servers using ADK) to be asynchronous for best performance. In Python, this means using `asyncio`; in Java, leverage `RxJava`'s reactive programming model.
+* **Developer Experience:** We recommend designing your applications (e.g., web servers using ADK) to be asynchronous for best performance. In Python, this means using `asyncio`; in Java, leverage `RxJava`'s reactive programming model; and in TypeScript, this means building using native `Promise`s and `AsyncGenerator`s.
 * **Sync Callbacks/Tools:** The ADK framework supports both asynchronous and synchronous functions for tools and callbacks.
-    * **Blocking I/O:** For long-running synchronous I/O operations, the framework attempts to prevent stalls. Python ADK may use asyncio.to_thread, while Java ADK often relies on appropriate RxJava schedulers or wrappers for blocking calls.
+    * **Blocking I/O:** For long-running synchronous I/O operations, the framework attempts to prevent stalls. Python ADK may use asyncio.to_thread, while Java ADK often relies on appropriate RxJava schedulers or wrappers for blocking calls. In TypeScript, the framework simply awaits the function; if a synchronous function performs blocking I/O, it will stall the event loop. Developers should use asynchronous I/O APIs (which return a Promise) whenever possible.
     * **CPU-Bound Work:** Purely CPU-intensive synchronous tasks will still block their execution thread in both environments.
 
 Understanding these behaviors helps you write more robust ADK applications and debug issues related to state consistency, streaming updates, and asynchronous execution.
@@ -19092,7 +21318,7 @@ File: docs/runtime/runconfig.md
 # Runtime Configuration
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 `RunConfig` defines runtime behavior and options for agents in the ADK. It
@@ -19113,6 +21339,8 @@ The `RunConfig` class holds configuration parameters for an agent's runtime beha
 -   Java ADK typically uses immutable data classes.
 
 
+- TypeScript ADK uses a standard interface, with type safety provided by the TypeScript compiler.
+
 === "Python"
 
     ```python
@@ -19130,6 +21358,27 @@ The `RunConfig` class holds configuration parameters for an agent's runtime beha
         streaming_mode: StreamingMode = StreamingMode.NONE
         output_audio_transcription: Optional[types.AudioTranscriptionConfig] = None
         max_llm_calls: int = 500
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    export interface RunConfig {
+      speechConfig?: SpeechConfig;
+      responseModalities?: Modality[];
+      saveInputBlobsAsArtifacts: boolean;
+      supportCfc: boolean;
+      streamingMode: StreamingMode;
+      outputAudioTranscription?: AudioTranscriptionConfig;
+      maxLlmCalls: number;
+      // ... and other properties
+    }
+
+    export enum StreamingMode {
+      NONE = 'none',
+      SSE = 'sse',
+      BIDI = 'bidi',
+    }
     ```
 
 === "Go"
@@ -19178,15 +21427,16 @@ The `RunConfig` class holds configuration parameters for an agent's runtime beha
 
 ## Runtime Parameters
 
-| Parameter                       | Python Type                                  | Go Type         | Java Type                                             | Default (Py / Go / Java )               | Description                                                                                                                  |
-| :------------------------------ | :------------------------------------------- |:----------------|:------------------------------------------------------|:----------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------|
-| `speech_config`                 | `Optional[types.SpeechConfig]`               | N/A             | `SpeechConfig` (nullable via `@Nullable`)             | `None` / N/A / `null`                   | Configures speech synthesis (voice, language) using the `SpeechConfig` type.                                                 |
-| `response_modalities`           | `Optional[list[str]]`                        | N/A             | `ImmutableList<Modality>`                             | `None` / N/A / Empty `ImmutableList`    | List of desired output modalities (e.g., Python: `["TEXT", "AUDIO"]`; Java: uses structured `Modality` objects).             |
-| `save_input_blobs_as_artifacts` | `bool`                                       | `bool`          | `boolean`                                             | `False` / `false` / `false`             | If `true`, saves input blobs (e.g., uploaded files) as run artifacts for debugging/auditing.                                 |
-| `streaming_mode`                | `StreamingMode`                              | `StreamingMode` | `StreamingMode`                                       | `StreamingMode.NONE` / `agent.StreamingModeNone` / `StreamingMode.NONE` | Sets the streaming behavior: `NONE` (default), `SSE` (server-sent events), or `BIDI` (bidirectional) (**Python/Java**).                        |
-| `output_audio_transcription`    | `Optional[types.AudioTranscriptionConfig]`   | N/A             | `AudioTranscriptionConfig` (nullable via `@Nullable`) | `None` / N/A / `null`                   | Configures transcription of generated audio output using the `AudioTranscriptionConfig` type.                                |
-| `max_llm_calls`                 | `int`                                        | N/A             | `int`                                                 | `500` / N/A / `500`                     | Limits total LLM calls per run. `0` or negative means unlimited (warned); `sys.maxsize` raises `ValueError`.                 |
-| `support_cfc`                   | `bool`                                       | N/A             | `bool`                                                | `False` / N/A / `false`                 | **Python:** Enables Compositional Function Calling. Requires `streaming_mode=SSE` and uses the LIVE API. **Experimental.**   |
+| Parameter                       | Python Type                                  | TypeScript Type                       | Go Type         | Java Type                                             | Default (Py / TS / Go / Java)                                                                  | Description                                                                                                                                                 |
+| :------------------------------ | :------------------------------------------- | :------------------------------------ |:----------------|:------------------------------------------------------| :--------------------------------------------------------------------------------------------- |:------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `speech_config`                 | `Optional[types.SpeechConfig]`               | `SpeechConfig` (optional)             | N/A             | `SpeechConfig` (nullable via `@Nullable`)             | `None` / `undefined`/ N/A / `null`                                                             | Configures speech synthesis (voice, language) using the `SpeechConfig` type.                                                                                |
+| `response_modalities`           | `Optional[list[str]]`                        | `Modality[]` (optional)               | N/A             | `ImmutableList<Modality>`                             | `None` / `undefined` / N/A / Empty `ImmutableList`                                             | List of desired output modalities (e.g., Python: `["TEXT", "AUDIO"]`; Java/TS: uses structured `Modality` objects).                                         |
+| `save_input_blobs_as_artifacts` | `bool`                                       | `boolean`                             | `bool`          | `boolean`                                             | `False` / `false` / `false` / `false`                                                          | If `true`, saves input blobs (e.g., uploaded files) as run artifacts for debugging/auditing.                                                                |
+| `streaming_mode`                | `StreamingMode`                              | `StreamingMode`                       | `StreamingMode` | `StreamingMode`                                       | `StreamingMode.NONE` / `StreamingMode.NONE` / `agent.StreamingModeNone` / `StreamingMode.NONE` | Sets the streaming behavior: `NONE` (default), `SSE` (server-sent events), or `BIDI` (bidirectional).                                                       |
+| `output_audio_transcription`    | `Optional[types.AudioTranscriptionConfig]`   | `AudioTranscriptionConfig` (optional) | N/A             | `AudioTranscriptionConfig` (nullable via `@Nullable`) | `None` / `undefined` / N/A / `null`                                                            | Configures transcription of generated audio output using the `AudioTranscriptionConfig` type.                                                               |
+| `max_llm_calls`                 | `int`                                        | `number`                              | N/A             | `int`                                                 | `500` / `500` / N/A / `500`                                                                    | Limits total LLM calls per run. `0` or negative means unlimited. Exceeding language limits (e.g. `sys.maxsize`, `Number.MAX_SAFE_INTEGER`) raises an error. |
+| `support_cfc`                   | `bool`                                       | `boolean`                             | N/A             | `bool`                                                | `False` / `false` / N/A / `false`                                                              | **Python/TypeScript:** Enables Compositional Function Calling. Requires `streaming_mode=SSE` and uses the LIVE API. **Experimental.**                       |
+
 
 ### `speech_config`
 
@@ -19323,14 +21573,16 @@ limits is crucial.
 
 ## Validation Rules
 
-The `RunConfig` class validates its parameters to ensure proper agent operation. While Python ADK uses `Pydantic` for automatic type validation, Java ADK relies on its static typing and may include explicit checks in the RunConfig's construction.
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+The `RunConfig` class validates its parameters to ensure proper agent operation. While Python ADK uses `Pydantic` for automatic type validation, Java and TypeScript ADK rely on their static type systems and may include explicit checks in the `RunConfig`'s constructor.
 For the `max_llm_calls` parameter specifically:
 
-1. Extremely large values (like `sys.maxsize` in Python or `Integer.MAX_VALUE` in Java) are typically disallowed to prevent issues.
+1. Extremely large values (like `sys.maxsize` in Python, `Integer.MAX_VALUE` in Java, or `Number.MAX_SAFE_INTEGER` in TypeScript) are typically disallowed to prevent issues.
 
 2. Values of zero or less will usually trigger a warning about unlimited LLM interactions.
-
-## Examples
 
 ### Basic runtime configuration
 
@@ -19343,6 +21595,17 @@ For the `max_llm_calls` parameter specifically:
         streaming_mode=StreamingMode.NONE,
         max_llm_calls=100
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { RunConfig, StreamingMode } from '@google/adk';
+
+    const config: RunConfig = {
+      streamingMode: StreamingMode.NONE,
+      maxLlmCalls: 100,
+    };
     ```
 
 === "Go"
@@ -19382,6 +21645,17 @@ preferable.
         streaming_mode=StreamingMode.SSE,
         max_llm_calls=200
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { RunConfig, StreamingMode } from '@google/adk';
+
+    const config: RunConfig = {
+      streamingMode: StreamingMode.SSE,
+      maxLlmCalls: 200,
+    };
     ```
 
 === "Go"
@@ -19434,6 +21708,31 @@ providing a more responsive feel for chatbots and assistants.
     )
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import { RunConfig, StreamingMode } from '@google/adk';
+
+    const config: RunConfig = {
+        speechConfig: {
+            languageCode: "en-US",
+            voiceConfig: {
+                prebuiltVoiceConfig: {
+                    voiceName: "Kore"
+                }
+            },
+        },
+        responseModalities: [
+          { modality: "AUDIO" },
+          { modality: "TEXT" }
+        ],
+        saveInputBlobsAsArtifacts: true,
+        supportCfc: true,
+        streamingMode: StreamingMode.SSE,
+        maxLlmCalls: 1000,
+    };
+    ```
+
 === "Java"
 
     ```java
@@ -19470,28 +21769,48 @@ This comprehensive example configures an agent with:
 * Speech capabilities using the "Kore" voice (US English)
 * Both audio and text output modalities
 * Artifact saving for input blobs (useful for debugging)
+* Experimental CFC support enabled **(Python and TypeScript)**
 * SSE streaming for responsive interaction
 * A limit of 1000 LLM calls
 
-### Enabling Experimental CFC Support
+### Enabling CFC Support
 
-<div class="language-support-tag" title="This feature is an experimental preview release.">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-preview">Experimental</span>
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-preview">Experimental</span>
 </div>
 
-    ```python
-        from google.genai.adk import RunConfig, StreamingMode
+=== "Python"
 
-        config = RunConfig(
-            streaming_mode=StreamingMode.SSE,
-            support_cfc=True,
-            max_llm_calls=150
-        )
+    ```python
+    from google.genai.adk import RunConfig, StreamingMode
+
+    config = RunConfig(
+        streaming_mode=StreamingMode.SSE,
+        support_cfc=True,
+        max_llm_calls=150
+    )
     ```
 
-Enabling Compositional Function Calling creates an agent that can dynamically
-execute functions based on model outputs, powerful for applications requiring
-complex workflows.
+=== "TypeScript"
+
+    ```typescript
+    import { RunConfig, StreamingMode } from '@google/adk';
+
+    const config: RunConfig = {
+        streamingMode: StreamingMode.SSE,
+        supportCfc: true,
+        maxLlmCalls: 150,
+    };
+    ```
+
+Enabling Compositional Function Calling (CFC) creates an agent that can
+dynamically execute functions based on model outputs, powerful for applications
+requiring complex workflows.
+
+!!! example "Experimental release"
+
+    The Compositional Function Calling (CFC) streaming feature is an
+    experimental release.
 
 ================
 File: docs/safety/index.md
@@ -19499,7 +21818,7 @@ File: docs/safety/index.md
 # Safety and Security for AI Agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 As AI agents grow in capability, ensuring they operate safely, securely, and align with your brand values is paramount. Uncontrolled agents can pose risks, including executing misaligned or harmful actions, such as data exfiltration, and generating inappropriate content that can impact your brand’s reputation. **Sources of risk include vague instructions, model hallucination, jailbreaks and prompt injections from adversarial users, and indirect prompt injections via tool use.**
@@ -19593,6 +21912,27 @@ For example, a query tool can be designed to expect a policy to be read from the
     # For this example, we'll assume it gets stored somewhere accessible.
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    // Conceptual example: Setting policy data intended for tool context
+    // In a real ADK app, this might be set in InvocationContext.session.state
+    // or passed during tool initialization, then retrieved via ToolContext.
+
+    const policy: {[key: string]: any} = {}; // Assuming policy is an object
+    policy['select_only'] = true;
+    policy['tables'] = ['mytable1', 'mytable2'];
+
+    // Conceptual: Storing policy where the tool can access it via ToolContext later.
+    // This specific line might look different in practice.
+    // For example, storing in session state:
+    invocationContext.session.state["query_tool_policy"] = policy;
+
+    // Or maybe passing during tool init:
+    const queryTool = new QueryTool({policy: policy});
+    // For this example, we'll assume it gets stored somewhere accessible.
+    ```
+
 === "Go"
 
     ```go
@@ -19663,6 +22003,37 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
 
       print(f"Executing validated query (hypothetical): {query}")
       return {"status": "success", "results": [...]} # Example successful return
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    function query(query: string, toolContext: ToolContext): string | object {
+        // Assume 'policy' is retrieved from context, e.g., via session state:
+        const policy = toolContext.state.get('query_tool_policy', {}) as {[key: string]: any};
+
+        // --- Placeholder Policy Enforcement ---
+        const actual_tables = explainQuery(query); // Hypothetical function call
+
+        const policyTables = new Set(policy['tables'] || []);
+        const isSubset = actual_tables.every(table => policyTables.has(table));
+
+        if (!isSubset) {
+            // Return an error message for the model
+            const allowed = (policy['tables'] || ['(None defined)']).join(', ');
+            return `Error: Query targets unauthorized tables. Allowed: ${allowed}`;
+        }
+
+        if (policy['select_only']) {
+            if (!query.trim().toUpperCase().startsWith("SELECT")) {
+                return "Error: Policy restricts queries to SELECT statements only.";
+            }
+        }
+        // --- End Policy Enforcement ---
+
+        console.log(`Executing validated query (hypothetical): ${query}`);
+        return { "status": "success", "results": [] }; // Example successful return
+    }
     ```
 
 === "Go"
@@ -19819,6 +22190,47 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
           # e.g., query_tool_instance
         ]
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Hypothetical callback function
+    function validateToolParams(
+        {tool, args, context}: {
+            tool: BaseTool,
+            args: {[key: string]: any},
+            context: ToolContext
+        }
+    ): {[key: string]: any} | undefined {
+        console.log(`Callback triggered for tool: ${tool.name}, args: ${JSON.stringify(args)}`);
+
+        // Example validation: Check if a required user ID from state matches an arg
+        const expectedUserId = context.state.get("session_user_id");
+        const actualUserIdInArgs = args["user_id_param"]; // Assuming tool takes 'user_id_param'
+
+        if (actualUserIdInArgs !== expectedUserId) {
+            console.log("Validation Failed: User ID mismatch!");
+            // Return a dictionary to prevent tool execution and provide feedback
+            return {"error": `Tool call blocked: User ID mismatch.`};
+        }
+
+        // Return undefined to allow the tool call to proceed if validation passes
+        console.log("Callback validation passed.");
+        return undefined;
+    }
+
+    // Hypothetical Agent setup
+    const rootAgent = new LlmAgent({
+        model: 'gemini-2.5-flash',
+        name: 'root_agent',
+        instruction: "...",
+        beforeToolCallback: validateToolParams, // Assign the callback
+        tools: [
+          // ... list of tool functions or Tool instances ...
+          // e.g., queryToolInstance
+        ]
+    });
     ```
 
 === "Go"
@@ -20088,7 +22500,7 @@ File: docs/sessions/index.md
 # Introduction to Conversational Context: Session, State, and Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 Meaningful, multi-turn conversations require agents to understand context. Just
@@ -20179,7 +22591,7 @@ File: docs/sessions/memory.md
 # Memory: Long-Term Knowledge with `MemoryService`
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
@@ -20608,7 +23020,7 @@ File: docs/sessions/session.md
 # Session: Tracking Individual Conversations
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Following our Introduction, let's dive into the `Session`. Think back to the
@@ -20668,6 +23080,37 @@ are its key properties:
         temp_service = await temp_service.delete_session(app_name=example_session.app_name,
                                     user_id=example_session.user_id, session_id=example_session.id)
         print("The final status of temp_service - ", temp_service)
+       ```
+
+=== "TypeScript"
+
+       ```typescript
+        import { InMemorySessionService } from "@google/adk";
+
+        // Create a simple session to examine its properties
+        const tempService = new InMemorySessionService();
+        const exampleSession = await tempService.createSession({
+            appName: "my_app",
+            userId: "example_user",
+            state: {"initial_key": "initial_value"} // State can be initialized
+        });
+
+        console.log("--- Examining Session Properties ---");
+        console.log(`ID ('id'):                ${exampleSession.id}`);
+        console.log(`Application Name ('appName'): ${exampleSession.appName}`);
+        console.log(`User ID ('userId'):         ${exampleSession.userId}`);
+        console.log(`State ('state'):           ${JSON.stringify(exampleSession.state)}`); // Note: Only shows initial state here
+        console.log(`Events ('events'):         ${JSON.stringify(exampleSession.events)}`); // Initially empty
+        console.log(`Last Update ('lastUpdateTime'): ${exampleSession.lastUpdateTime}`);
+        console.log("---------------------------------");
+
+        // Clean up (optional for this example)
+        const finalStatus = await tempService.deleteSession({
+            appName: exampleSession.appName,
+            userId: exampleSession.userId,
+            sessionId: exampleSession.id
+        });
+        console.log("The final status of temp_service - ", finalStatus);
        ```
 
 === "Go"
@@ -20751,6 +23194,13 @@ the storage backend that best suits your needs:
             from google.adk.sessions import InMemorySessionService
             session_service = InMemorySessionService()
            ```
+    === "TypeScript"
+
+           ```typescript
+            import { InMemorySessionService } from "@google/adk";
+            const sessionService = new InMemorySessionService();
+           ```
+
     === "Go"
 
            ```go
@@ -20767,6 +23217,10 @@ the storage backend that best suits your needs:
            ```
 
 2.  **`VertexAiSessionService`**
+
+    <div class="language-support-tag">
+      <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+    </div>
 
     *   **How it works:** Uses Google Cloud Vertex AI infrastructure via API
         calls for session management.
@@ -20906,7 +23360,7 @@ File: docs/sessions/state.md
 # State: The Session's Scratchpad
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Within each `Session` (our conversation thread), the **`state`** attribute acts like the agent's dedicated scratchpad for that specific interaction. While `session.events` holds the full history, `session.state` is where the agent stores and updates dynamic details needed *during* the conversation.
@@ -20926,7 +23380,7 @@ Conceptually, `session.state` is a collection (dictionary or Map) holding key-va
 
     * Data is stored as `key: value`.
     * **Keys:** Always strings (`str`). Use clear names (e.g., `'departure_city'`, `'user:language_preference'`).
-    * **Values:** Must be **serializable**. This means they can be easily saved and loaded by the `SessionService`. Stick to basic types in the specific languages (Python/Go/Java) like strings, numbers, booleans, and simple lists or dictionaries containing *only* these basic types. (See API documentation for precise details).
+    * **Values:** Must be **serializable**. This means they can be easily saved and loaded by the `SessionService`. Stick to basic types in the specific languages (Python/Go/Java/TypeScript) like strings, numbers, booleans, and simple lists or dictionaries containing *only* these basic types. (See API documentation for precise details).
     * **⚠️ Avoid Complex Objects:** **Do not store non-serializable objects** (custom class instances, functions, connections, etc.) directly in the state. Store simple identifiers if needed, and retrieve the complex object elsewhere.
 
 2. **Mutability: It Changes**
@@ -20941,7 +23395,7 @@ Conceptually, `session.state` is a collection (dictionary or Map) holding key-va
       * `DatabaseSessionService` / `VertexAiSessionService`: **Persistent.** State is saved reliably.
 
 !!! Note
-    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `session.state['current_intent'] = 'book_flight'` in Python,`context.State().Set("current_intent", "book_flight")` in Go, `session.state().put("current_intent", "book_flight)` in Java). Refer to the language-specific API documentation for details.
+    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `session.state['current_intent'] = 'book_flight'` in Python,`context.State().Set("current_intent", "book_flight")` in Go, `session.state().put("current_intent", "book_flight)` in Java, or `context.state.set("current_intent", "book_flight")` in TypeScript). Refer to the language-specific API documentation for details.
 
 ### Organizing State with Prefixes: Scope Matters
 
@@ -21007,6 +23461,22 @@ To inject a value from the session state, enclose the key of the desired state v
     # "Write a short story about a cat, focusing on the theme: friendship."
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import { LlmAgent } from "@google/adk";
+
+    const storyGenerator = new LlmAgent({
+        name: "StoryGenerator",
+        model: "gemini-2.5-flash",
+        instruction: "Write a short story about a cat, focusing on the theme: {topic}."
+    });
+
+    // Assuming session.state['topic'] is set to "friendship", the LLM
+    // will receive the following instruction:
+    // "Write a short story about a cat, focusing on the theme: friendship."
+    ```
+
 === "Go"
 
     ```go
@@ -21044,6 +23514,25 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
         name="template_helper_agent",
         instruction=my_instruction_provider
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { LlmAgent, ReadonlyContext } from "@google/adk";
+
+    // This is an InstructionProvider
+    function myInstructionProvider(context: ReadonlyContext): string {
+        // You can optionally use the context to build the instruction
+        // For this example, we'll return a static string with literal braces.
+        return "This is an instruction with {{literal_braces}} that will not be replaced.";
+    }
+
+    const agent = new LlmAgent({
+        model: "gemini-2.5-flash",
+        name: "template_helper_agent",
+        instruction: myInstructionProvider
+    });
     ```
 
 === "Go"
@@ -21147,16 +23636,67 @@ This is the simplest method for saving an agent's final text response directly i
     # Expected output might include: {'last_greeting': 'Hello there! How can I help you today?'}
     ```
 
-=== "Java"
+=== "TypeScript"
 
-    ```java
-    --8<-- "examples/java/snippets/src/main/java/state/GreetingAgentExample.java:full_code"
+    ```typescript
+    import { LlmAgent, Runner, InMemorySessionService, isFinalResponse } from "@google/adk";
+    import { Content } from "@google/genai";
+
+    // Define agent with outputKey
+    const greetingAgent = new LlmAgent({
+        name: "Greeter",
+        model: "gemini-2.5-flash",
+        instruction: "Generate a short, friendly greeting.",
+        outputKey: "last_greeting" // Save response to state['last_greeting']
+    });
+
+    // --- Setup Runner and Session ---
+    const appName = "state_app";
+    const userId = "user1";
+    const sessionId = "session1";
+    const sessionService = new InMemorySessionService();
+    const runner = new Runner({
+        agent: greetingAgent,
+        appName: appName,
+        sessionService: sessionService
+    });
+    const session = await sessionService.createSession({
+        appName,
+        userId,
+        sessionId
+    });
+    console.log(`Initial state: ${JSON.stringify(session.state)}`);
+
+    // --- Run the Agent ---
+    // Runner handles calling appendEvent, which uses the outputKey
+    // to automatically create the stateDelta.
+    const userMessage: Content = { parts: [{ text: "Hello" }] };
+    for await (const event of runner.runAsync({
+        userId,
+        sessionId,
+        newMessage: userMessage
+    })) {
+        if (isFinalResponse(event)) {
+          console.log("Agent responded."); // Response text is also in event.content
+        }
+    }
+
+    // --- Check Updated State ---
+    const updatedSession = await sessionService.getSession({ appName, userId, sessionId });
+    console.log(`State after agent run: ${JSON.stringify(updatedSession?.state)}`);
+    // Expected output might include: {"last_greeting":"Hello there! How can I help you today?"}
     ```
 
 === "Go"
 
     ```go
     --8<-- "examples/go/snippets/sessions/state_example/state_example.go:greeting"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/state/GreetingAgentExample.java:full_code"
     ```
 
 Behind the scenes, the `Runner` uses the `output_key` to create the necessary `EventActions` with a `state_delta` and calls `append_event`.
@@ -21217,6 +23757,61 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
     # Note: 'temp:validation_needed' is NOT present.
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import { InMemorySessionService, createEvent, createEventActions } from "@google/adk";
+
+    // --- Setup ---
+    const sessionService = new InMemorySessionService();
+    const appName = "state_app_manual";
+    const userId = "user2";
+    const sessionId = "session2";
+    const session = await sessionService.createSession({
+        appName,
+        userId,
+        sessionId,
+        state: { "user:login_count": 0, "task_status": "idle" }
+    });
+    console.log(`Initial state: ${JSON.stringify(session.state)}`);
+
+    // --- Define State Changes ---
+    const currentTime = Date.now();
+    const stateChanges = {
+        "task_status": "active",              // Update session state
+        "user:login_count": (session.state["user:login_count"] as number || 0) + 1, // Update user state
+        "user:last_login_ts": currentTime,   // Add user state
+        "temp:validation_needed": true        // Add temporary state (will be discarded)
+    };
+
+    // --- Create Event with Actions ---
+    const actionsWithUpdate = createEventActions({
+        stateDelta: stateChanges,
+    });
+    // This event might represent an internal system action, not just an agent response
+    const systemEvent = createEvent({
+        invocationId: "inv_login_update",
+        author: "system", // Or 'agent', 'tool' etc.
+        actions: actionsWithUpdate,
+        timestamp: currentTime
+        // content might be null or represent the action taken
+    });
+
+    // --- Append the Event (This updates the state) ---
+    await sessionService.appendEvent({ session, event: systemEvent });
+    console.log("`appendEvent` called with explicit state delta.");
+
+    // --- Check Updated State ---
+    const updatedSession = await sessionService.getSession({
+        appName,
+        userId,
+        sessionId
+    });
+    console.log(`State after event: ${JSON.stringify(updatedSession?.state)}`);
+    // Expected: {"user:login_count":1,"task_status":"active","user:last_login_ts":<timestamp>}
+    // Note: 'temp:validation_needed' is NOT present.
+    ```
+
 === "Go"
 
     ```go
@@ -21260,6 +23855,28 @@ For more comprehensive details on context objects, refer to the [Context documen
 
         # State changes are automatically part of the event's state_delta
         # ... rest of callback/tool logic ...
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // In an agent callback or tool function
+    import { CallbackContext } from "@google/adk"; // or ToolContext
+
+    function myCallbackOrToolFunction(
+        context: CallbackContext, // Or ToolContext
+        // ... other parameters ...
+    ) {
+        // Update existing state
+        const count = context.state.get("user_action_count", 0);
+        context.state.set("user_action_count", count + 1);
+
+        // Add new state
+        context.state.set("temp:last_operation_status", "success");
+
+        // State changes are automatically part of the event's stateDelta
+        // ... rest of callback/tool logic ...
+    }
     ```
 
 === "Go"
@@ -27264,7 +29881,7 @@ File: docs/tools/google-cloud/mcp-toolbox-for-databases.md
 # MCP Toolbox for Databases
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">Typescript</span><span class="lst-go">Go</span>
 </div>
 
 [MCP Toolbox for Databases](https://github.com/googleapis/genai-toolbox) is an
@@ -27374,6 +29991,67 @@ documentation:
         tools=tools # Provide the list of tools to the Agent
 
     )
+    ```
+
+=== "Typescript"
+
+    ADK relies on the `@toolbox-sdk/adk` TS package to use Toolbox. Install the
+    package before getting started:
+
+    ```shell
+    npm install @toolbox-sdk/adk
+    ```
+
+    ### Loading Toolbox Tools
+
+    Once you’re Toolbox server is configured and up and running, you can load tools
+    from your server using ADK:
+
+    ```typescript
+    import {InMemoryRunner, LlmAgent} from '@google/adk';
+    import {Content} from '@google/genai';
+    import {ToolboxClient} from '@toolbox-sdk/adk'
+
+    const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
+    const loadedTools = await toolboxClient.loadToolset();
+
+    export const rootAgent = new LlmAgent({
+      name: 'weather_time_agent',
+      model: 'gemini-2.5-flash',
+      description:
+        'Agent to answer questions about the time and weather in a city.',
+      instruction:
+        'You are a helpful agent who can answer user questions about the time and weather in a city.',
+      tools: loadedTools,
+    });
+
+    async function main() {
+      const userId = 'test_user';
+      const appName = rootAgent.name;
+      const runner = new InMemoryRunner({agent: rootAgent, appName});
+      const session = await runner.sessionService.createSession({
+        appName,
+        userId,
+      });
+
+      const prompt = 'What is the weather in New York? And the time?';
+      const content: Content = {
+        role: 'user',
+        parts: [{text: prompt}],
+      };
+      console.log(content);
+      for await (const e of runner.runAsync({
+        userId,
+        sessionId: session.id,
+        newMessage: content,
+      })) {
+        if (e.content?.parts?.[0]?.text) {
+          console.log(`${e.author}: ${JSON.stringify(e.content, null, 2)}`);
+        }
+      }
+    }
+
+    main().catch(console.error);
     ```
 
 === "Go"
@@ -32185,7 +34863,7 @@ File: docs/tools-custom/function-tools.md
 # Function tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 When pre-built ADK tools don't meet your requirements, you can create custom *function tools*. Building function tools allows you to create tailored functionality, such as connecting to proprietary databases or implementing unique algorithms.
@@ -32321,7 +34999,7 @@ While you can include `*args` (variable positional arguments) and `**kwargs` (va
 
 #### Return Type
 
-The preferred return type for a Function Tool is a **dictionary** in Python or **Map** in Java. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary, the framework automatically wraps it into a dictionary with a single key named **"result"**.
+The preferred return type for a Function Tool is a **dictionary** in Python, a **Map** in Java, or an **object** in TypeScript. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary, the framework automatically wraps it into a dictionary with a single key named **"result"**.
 
 Strive to make your return values as descriptive as possible. *For example,* instead of returning a numeric error code, return a dictionary with an "error_message" key containing a human-readable explanation. **Remember that the LLM**, not a piece of code, needs to understand the result. As a best practice, include a "status" key in your return dictionary to indicate the overall outcome (e.g., "success", "error", "pending"), providing the LLM with a clear signal about the operation's state.
 
@@ -32343,21 +35021,35 @@ A tool can write data to a `temp:` variable, and a subsequent tool can read it. 
 ??? "Example"
 
     === "Python"
-    
+
         This tool is a python function which obtains the Stock price of a given Stock ticker/ symbol.
-    
+
         <u>Note</u>: You need to `pip install yfinance` library before using this tool.
-    
-        ```py
+
+        ```python
         --8<-- "examples/python/snippets/tools/function-tools/func_tool.py"
         ```
-    
+
         The return value from this tool will be wrapped into a dictionary.
-    
+
         ```json
         {"result": "$123"}
         ```
-    
+
+    === "Typescript"
+
+        This tool retrieves the mocked value of a stock price.
+
+        ```typescript
+        --8<-- "examples/typescript/snippets/tools/function-tools/function-tools-example.ts"
+        ```
+
+        The return value from this tool will be an object.
+
+        ```json
+        For input `GOOG`: {"price": 2800.0, "currency": "USD"}
+        ```
+
     === "Go"
 
         This tool retrieves the mocked value of a stock price.
@@ -32384,15 +35076,15 @@ A tool can write data to a `temp:` variable, and a subsequent tool can read it. 
         ```
 
     === "Java"
-    
+
         This tool retrieves the mocked value of a stock price.
-    
+
         ```java
         --8<-- "examples/java/snippets/src/main/java/tools/StockPriceAgent.java:full_code"
         ```
-    
+
         The return value from this tool will be wrapped into a Map<String, Object>.
-    
+
         ```json
         For input `GOOG`: {"symbol": "GOOG", "price": "1.0"}
         ```
@@ -32401,8 +35093,8 @@ A tool can write data to a `temp:` variable, and a subsequent tool can read it. 
 
 While you have considerable flexibility in defining your function, remember that simplicity enhances usability for the LLM. Consider these guidelines:
 
-* **Fewer Parameters are Better:** Minimize the number of parameters to reduce complexity.  
-* **Simple Data Types:** Favor primitive data types like `str` and `int` over custom classes whenever possible.  
+* **Fewer Parameters are Better:** Minimize the number of parameters to reduce complexity.
+* **Simple Data Types:** Favor primitive data types like `str` and `int` over custom classes whenever possible.
 * **Meaningful Names:** The function's name and parameter names significantly influence how the LLM interprets and utilizes the tool. Choose names that clearly reflect the function's purpose and the meaning of its inputs. Avoid generic names like `do_stuff()` or `beAgent()`.
 * **Build for Parallel Execution:** Improve function calling performance when multiple tools are run by building for asynchronous operation. For information on enabling parallel execution for tools, see
 [Increase tool performance with parallel execution](/adk-docs/tools-custom/performance/).
@@ -32427,7 +35119,7 @@ When using a `LongRunningFunctionTool`, your function can initiate the long-runn
 
 ### How it Works
 
-In Python, you wrap a function with `LongRunningFunctionTool`.  In Java, you pass a Method name to `LongRunningFunctionTool.create()`.
+In Python, you wrap a function with `LongRunningFunctionTool`. In Java, you pass a Method name to `LongRunningFunctionTool.create()`. In TypeScript, you instantiate the `LongRunningFunctionTool` class.
 
 
 1. **Initiation:** When the LLM calls the tool, your function starts the long-running operation.
@@ -32444,8 +35136,14 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
 
 === "Python"
 
-    ```py
+    ```python
     --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py:define_long_running_function"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/function-tools/long-running-function-tool-example.ts:define_long_running_function"
     ```
 
 === "Go"
@@ -32470,16 +35168,16 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
     import com.google.adk.tools.LongRunningFunctionTool;
     import java.util.HashMap;
     import java.util.Map;
-    
+
     public class ExampleLongRunningFunction {
-    
+
       // Define your Long Running function.
       // Ask for approval for the reimbursement.
       public static Map<String, Object> askForApproval(String purpose, double amount) {
         // Simulate creating a ticket and sending a notification
         System.out.println(
             "Simulating ticket creation for purpose: " + purpose + ", amount: " + amount);
-    
+
         // Send a notification to the approver with the link of the ticket
         Map<String, Object> result = new HashMap<>();
         result.put("status", "pending");
@@ -32489,12 +35187,12 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
         result.put("ticket-id", "approval-ticket-1");
         return result;
       }
-    
+
       public static void main(String[] args) throws NoSuchMethodException {
         // Pass the method to LongRunningFunctionTool.create
         LongRunningFunctionTool approveTool =
             LongRunningFunctionTool.create(ExampleLongRunningFunction.class, "askForApproval");
-    
+
         // Include the tool in the agent
         LlmAgent approverAgent =
             LlmAgent.builder()
@@ -32511,15 +35209,15 @@ Agent client received an event with long running function calls and check the st
 
 !!! note "Note: Long running function response with Resume feature"
 
-    If your ADK agent workflow is configured with the 
+    If your ADK agent workflow is configured with the
     [Resume](/adk-docs/runtime/resume/) feature, you also must include
-    the Invocation ID (`invocation_id`) parameter with the long running 
-    function response. The Invocation ID you provide must be the same 
-    invocation that generated the long running function request, otherwise 
+    the Invocation ID (`invocation_id`) parameter with the long running
+    function response. The Invocation ID you provide must be the same
+    invocation that generated the long running function request, otherwise
     the system starts a new invocation with the response. If your
     agent uses the Resume feature, consider including the Invocation ID
     as a parameter with your long running function request, so it can be
-    included with the response. For more details on using the Resume 
+    included with the response. For more details on using the Resume
     feature, see
     [Resume stopped agents](/adk-docs/runtime/resume/).
 
@@ -32556,8 +35254,14 @@ Agent client received an event with long running function calls and check the st
 
 === "Python"
 
-    ```py
+    ```python
     --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py:call_reimbursement_tool"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/function-tools/long-running-function-tool-example.ts"
     ```
 
 === "Go"
@@ -32574,9 +35278,10 @@ Agent client received an event with long running function calls and check the st
     --8<-- "examples/java/snippets/src/main/java/tools/LongRunningFunctionExample.java:full_code"
     ```
 
+
 ??? "Python complete example: File Processing Simulation"
 
-    ```py
+    ```python
     --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py"
     ```
 
@@ -32596,7 +35301,7 @@ This powerful feature allows you to leverage the capabilities of other agents wi
 
 It's important to distinguish an Agent-as-a-Tool from a Sub-Agent.
 
-* **Agent-as-a-Tool:** When Agent A calls Agent B as a tool (using Agent-as-a-Tool), Agent B's answer is **passed back** to Agent A, which then summarizes the answer and generates a response to the user. Agent A retains control and continues to handle future user input.  
+* **Agent-as-a-Tool:** When Agent A calls Agent B as a tool (using Agent-as-a-Tool), Agent B's answer is **passed back** to Agent A, which then summarizes the answer and generates a response to the user. Agent A retains control and continues to handle future user input.
 
 * **Sub-agent:** When Agent A calls Agent B as a sub-agent, the responsibility of answering the user is completely **transferred to Agent B**. Agent A is effectively out of the loop. All subsequent user input will be answered by Agent B.
 
@@ -32606,8 +35311,14 @@ To use an agent as a tool, wrap the agent with the AgentTool class.
 
 === "Python"
 
-    ```py
+    ```python
     tools=[AgentTool(agent=agent_b)]
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    tools: [new AgentTool({agent: agentB})]
     ```
 
 === "Go"
@@ -32622,7 +35333,6 @@ To use an agent as a tool, wrap the agent with the AgentTool class.
     AgentTool.create(agent)
     ```
 
-
 ### Customization
 
 The `AgentTool` class provides the following attributes for customizing its behavior:
@@ -32633,10 +35343,16 @@ The `AgentTool` class provides the following attributes for customizing its beha
 
     === "Python"
 
-        ```py
+        ```python
         --8<-- "examples/python/snippets/tools/function-tools/summarizer.py"
         ```
-  
+
+    === "TypeScript"
+
+        ```typescript
+        --8<-- "examples/typescript/snippets/tools/function-tools/agent-as-a-tool-example.ts"
+        ```
+
     === "Go"
 
         ```go
@@ -32660,11 +35376,11 @@ The `AgentTool` class provides the following attributes for customizing its beha
 
 ### How it works
 
-1. When the `main_agent` receives the long text, its instruction tells it to use the 'summarize' tool for long texts.  
-2. The framework recognizes 'summarize' as an `AgentTool` that wraps the `summary_agent`.  
-3. Behind the scenes, the `main_agent` will call the `summary_agent` with the long text as input.  
-4. The `summary_agent` will process the text according to its instruction and generate a summary.  
-5. **The response from the `summary_agent` is then passed back to the `main_agent`.**  
+1. When the `main_agent` receives the long text, its instruction tells it to use the 'summarize' tool for long texts.
+2. The framework recognizes 'summarize' as an `AgentTool` that wraps the `summary_agent`.
+3. Behind the scenes, the `main_agent` will call the `summary_agent` with the long text as input.
+4. The `summary_agent` will process the text according to its instruction and generate a summary.
+5. **The response from the `summary_agent` is then passed back to the `main_agent`.**
 6. The `main_agent` can then take the summary and formulate its final response to the user (e.g., "Here's a summary of the text: ...")
 
 ================
@@ -32673,7 +35389,7 @@ File: docs/tools-custom/index.md
 # Custom Tools for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In an ADK agent workflow, Tools are programming functions with structured input
@@ -32703,7 +35419,7 @@ with the world beyond its core text generation and reasoning abilities. What
 distinguishes capable agents from basic language models is often their effective
 use of tools.
 
-Technically, a tool is typically a modular code component—**like a Python/ Java
+Technically, a tool is typically a modular code component—**like a Python, Java, or TypeScript
 function**, a class method, or even another specialized agent—designed to
 execute a distinct, predefined task. These tasks often involve interacting with
 external systems or data.
@@ -32763,6 +35479,12 @@ The following example showcases how an agent can use tools by **referencing thei
     --8<-- "examples/python/snippets/tools/overview/weather_sentiment.py"
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/overview/weather_sentiment.ts"
+    ```
+
 === "Go"
 
     ```go
@@ -32819,6 +35541,12 @@ The `tool_context.state` attribute provides direct read and write access to the 
     --8<-- "examples/python/snippets/tools/overview/user_preference.py"
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/overview/user_preference.ts"
+    ```
+
 === "Go"
 
     ```go
@@ -32854,7 +35582,7 @@ The `tool_context.state` attribute provides direct read and write access to the 
 
 ### **Controlling Agent Flow**
 
-The `tool_context.actions` attribute (`ToolContext.actions()` in Java and `tool.Context.Actions()` in Go) holds an **EventActions** object. Modifying attributes on this object allows your tool to influence what the agent or framework does after the tool finishes execution.
+The `tool_context.actions` attribute in Python and TypeScript, `ToolContext.actions()` in Java, and `tool.Context.Actions()` in Go, holds an **EventActions** object. Modifying attributes on this object allows your tool to influence what the agent or framework does after the tool finishes execution.
 
 * **`skip_summarization: bool`**: (Default: False) If set to True, instructs the ADK to bypass the LLM call that typically summarizes the tool's output. This is useful if your tool's return value is already a user-ready message.
 
@@ -32868,6 +35596,12 @@ The `tool_context.actions` attribute (`ToolContext.actions()` in Java and `tool.
 
     ```py
     --8<-- "examples/python/snippets/tools/overview/customer_support_agent.py"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/overview/customer_support_agent.ts"
     ```
 
 === "Go"
@@ -32895,17 +35629,13 @@ This example illustrates how a tool, through EventActions in its ToolContext, ca
 
 ### **Authentication**
 
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
 ToolContext provides mechanisms for tools interacting with authenticated APIs. If your tool needs to handle authentication, you might use the following:
 
-* **`auth_response`**: Contains credentials (e.g., a token) if authentication was already handled by the framework before your tool was called (common with RestApiTool and OpenAPI security schemes).
+* **`auth_response`** (in Python): Contains credentials (e.g., a token) if authentication was already handled by the framework before your tool was called (common with RestApiTool and OpenAPI security schemes). In TypeScript, this is retrieved via the getAuthResponse() method.
 
-* **`request_credential(auth_config: dict)`**: Call this method if your tool determines authentication is needed but credentials aren't available. This signals the framework to start an authentication flow based on the provided auth_config.
+* **`request_credential(auth_config: dict)`** (in Python) or **`requestCredential(authConfig: AuthConfig)`** (in TypeScript): Call this method if your tool determines authentication is needed but credentials aren't available. This signals the framework to start an authentication flow based on the provided auth_config.
 
-* **`get_auth_response()`**: Call this in a subsequent invocation (after request_credential was successfully handled) to retrieve the credentials the user provided.
+* **`get_auth_response()`** (in Python) or **`getAuthResponse(authConfig: AuthConfig)`** (in TypeScript): Call this in a subsequent invocation (after request_credential was successfully handled) to retrieve the credentials the user provided.
 
 For detailed explanations of authentication flows, configuration, and examples, please refer to the dedicated Tool Authentication documentation page.
 
@@ -32913,14 +35643,15 @@ For detailed explanations of authentication flows, configuration, and examples, 
 
 These methods provide convenient ways for your tool to interact with persistent data associated with the session or user, managed by configured services.
 
-* **`list_artifacts()`** (or **`listArtifacts()`** in Java): Returns a list of filenames (or keys) for all artifacts currently stored for the session via the artifact_service. Artifacts are typically files (images, documents, etc.) uploaded by the user or generated by tools/agents.
+* **`list_artifacts()`** (in Python) or **`listArtifacts()`** (in Java and TypeScript): Returns a list of filenames (or keys) for all artifacts currently stored for the session via the artifact_service. Artifacts are typically files (images, documents, etc.) uploaded by the user or generated by tools/agents.
 
 * **`load_artifact(filename: str)`**: Retrieves a specific artifact by its filename from the **artifact_service**. You can optionally specify a version; if omitted, the latest version is returned. Returns a `google.genai.types.Part` object containing the artifact data and mime type, or None if not found.
 
 * **`save_artifact(filename: str, artifact: types.Part)`**: Saves a new version of an artifact to the artifact_service. Returns the new version number (starting from 0).
 
-* **`search_memory(query: str)`**: (Support in ADK Python and Go)
+* **`search_memory(query: str)`**: (Support in ADK Python, Go and TypeScript)
     Queries the user's long-term memory using the configured `memory_service`. This is useful for retrieving relevant information from past interactions or stored knowledge. The structure of the **SearchMemoryResponse** depends on the specific memory service implementation but typically contains relevant text snippets or conversation excerpts.
+
 
 #### Example
 
@@ -32928,6 +35659,12 @@ These methods provide convenient ways for your tool to interact with persistent 
 
     ```py
     --8<-- "examples/python/snippets/tools/overview/doc_analysis.py"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/overview/doc_analysis.ts"
     ```
 
 === "Go"
@@ -33012,7 +35749,7 @@ Here are key guidelines for defining effective tool functions:
     * **`self` / `cls` Handled Automatically:** Implicit parameters like `self` (for instance methods) or `cls` (for class methods) are automatically handled by ADK and excluded from the schema shown to the LLM. You only need to define type hints and descriptions for the logical parameters your tool requires the LLM to provide.
 
 * **Return Type:**
-    * The function's return value **must be a dictionary (`dict`)** in Python or a **Map** in Java.
+    * The function's return value **must be a dictionary (`dict`)** in Python, a **Map** in Java, or a plain **object** in TypeScript.
     * If your function returns a non-dictionary type (e.g., a string, number, list), the ADK framework will automatically wrap it into a dictionary/Map like `{'result': your_original_return_value}` before passing the result back to the model.
     * Design the dictionary/Map keys and values to be **descriptive and easily understood *by the LLM***. Remember, the model reads this output to decide its next step.
     * Include meaningful keys. For example, instead of returning just an error code like `500`, return `{'status': 'error', 'error_message': 'Database connection failed'}`.
@@ -33062,6 +35799,49 @@ Here are key guidelines for defining effective tool functions:
 
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    /**
+     * Fetches the current status of a customer's order using its ID.
+     *
+     * Use this tool ONLY when a user explicitly asks for the status of
+     * a specific order and provides the order ID. Do not use it for
+     * general inquiries.
+     *
+     * @param params The parameters for the function.
+     * @param params.order_id The unique identifier of the order to look up.
+     * @returns A dictionary indicating the outcome.
+     *          On success, status is 'success' and includes an 'order' dictionary.
+     *          On failure, status is 'error' and includes an 'error_message'.
+     *          Example success: {'status': 'success', 'order': {'state': 'shipped', 'tracking_number': '1Z9...'}}
+     *          Example error: {'status': 'error', 'error_message': 'Order ID not found.'}
+     */
+    async function lookupOrderStatus(params: { order_id: string }): Promise<Record<string, any>> {
+      // ... function implementation to fetch status from a backend ...
+      const status_details = await fetchStatusFromBackend(params.order_id);
+      if (status_details) {
+        return {
+          "status": "success",
+          "order": {
+            "state": status_details.state,
+            "tracking_number": status_details.tracking,
+          },
+        };
+      } else {
+        return { "status": "error", "error_message": `Order ID ${params.order_id} not found.` };
+      }
+    }
+
+    // Placeholder for a backend call
+    async function fetchStatusFromBackend(order_id: string): Promise<{state: string, tracking: string} | null> {
+        if (order_id === "12345") {
+            return { state: "shipped", tracking: "1Z9..." };
+        }
+        return null;
+    }
+    ```
+
 === "Go"
 
     ```go
@@ -33100,16 +35880,17 @@ Here are key guidelines for defining effective tool functions:
 * **Simplicity and Focus:**
     * **Keep Tools Focused:** Each tool should ideally perform one well-defined task.
     * **Fewer Parameters are Better:** Models generally handle tools with fewer, clearly defined parameters more reliably than those with many optional or complex ones.
-    * **Use Simple Data Types:** Prefer basic types (`str`, `int`, `bool`, `float`, `List[str]`, in **Python**, or `int`, `byte`, `short`, `long`, `float`, `double`, `boolean` and `char` in **Java**) over complex custom classes or deeply nested structures as parameters when possible.
+    * **Use Simple Data Types:** Prefer basic types (`str`, `int`, `bool`, `float`, `List[str]`, in **Python**; `int`, `byte`, `short`, `long`, `float`, `double`, `boolean` and `char` in **Java**; or `string`, `number`, `boolean`, and arrays like `string[]` in **TypeScript**) over complex custom classes or deeply nested structures as parameters when possible.
     * **Decompose Complex Tasks:** Break down functions that perform multiple distinct logical steps into smaller, more focused tools. For instance, instead of a single `update_user_profile(profile: ProfileObject)` tool, consider separate tools like `update_user_name(name: str)`, `update_user_address(address: str)`, `update_user_preferences(preferences: list[str])`, etc. This makes it easier for the LLM to select and use the correct capability.
 
 By adhering to these guidelines, you provide the LLM with the clarity and structure it needs to effectively utilize your custom function tools, leading to more capable and reliable agent behavior.
 
 ## Toolsets: Grouping and Dynamically Providing Tools
 
-<div class="language-support-tag" title="This feature is currently available for Python.">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span>
+<div class="language-support-tag" title="This feature is currently available for Python and Typescript.">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-typescript">Typescript v0.2.0</span>
 </div>
+
 
 Beyond individual tools, ADK introduces the concept of a **Toolset** via the `BaseToolset` interface (defined in `google.adk.tools.base_toolset`). A toolset allows you to manage and provide a collection of `BaseTool` instances, often dynamically, to an agent.
 
@@ -33144,9 +35925,17 @@ When the agent initializes or needs to determine its available capabilities, the
 
 Let's create a basic example of a toolset that provides simple arithmetic operations.
 
-```py
---8<-- "examples/python/snippets/tools/overview/toolset_example.py:init"
-```
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/overview/toolset_example.py:init"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/overview/toolset_example.ts"
+    ```
 
 In this example:
 
@@ -33164,7 +35953,7 @@ File: docs/tools-custom/mcp-tools.md
 # Model Context Protocol Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
@@ -33408,6 +36197,44 @@ Event received: {"id":"8728380b-bfad-4d14-8421-fa98d09364f1","invocationId":"e-c
 Event received: {"id":"8fe7e594-3e47-4254-8b57-9106ad8463cb","invocationId":"e-c2458c56-e57a-45b2-97de-ae7292e505ef","author":"enterprise_assistant","content":{"parts":[{"text":"There are three files in the directory: first, second, and third."}],"role":"model"},"actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"timestamp":1747377544689}
 ```
 
+For Typescript, you can define an agent that initializes the `MCPToolset` as follows:
+
+```typescript
+import 'dotenv/config';
+import {LlmAgent, MCPToolset} from "@google/adk";
+
+// REPLACE THIS with an actual absolute path for your setup.
+const TARGET_FOLDER_PATH = "/path/to/your/folder";
+
+export const rootAgent = new LlmAgent({
+    model: "gemini-2.5-flash",
+    name: "filesystem_assistant_agent",
+    instruction: "Help the user manage their files. You can list files, read files, etc.",
+    tools: [
+        // To filter tools, pass a list of tool names as the second argument
+        // to the MCPToolset constructor.
+        // e.g., new MCPToolset(connectionParams, ['list_directory', 'read_file'])
+        new MCPToolset(
+            {
+                type: "StdioConnectionParams",
+                serverParams: {
+                    command: "npx",
+                    args: [
+                        "-y",
+                        "@modelcontextprotocol/server-filesystem",
+                        // IMPORTANT: This MUST be an ABSOLUTE path to a folder the
+                        // npx process can access.
+                        // Replace with a valid absolute path on your system.
+                        // For example: "/Users/youruser/accessible_mcp_files"
+                        TARGET_FOLDER_PATH,
+                    ],
+                },
+            }
+        )
+    ],
+});
+```
+
 
 
 ### Example 2: Google Maps MCP Server
@@ -33608,6 +36435,53 @@ public class MapsAgentCreator {
         }
     }
 }
+```
+
+A successful response will look like this:
+```shell
+Event received: {"id":"1a4deb46-c496-4158-bd41-72702c773368","invocationId":"e-48994aa0-531c-47be-8c57-65215c3e0319","author":"maps_assistant","content":{"parts":[{"text":"OK. I see a few options. The closest one is CVS Pharmacy at 5 Pennsylvania Plaza, New York, NY 10001, United States. Would you like directions?\n"}],"role":"model"},"actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"timestamp":1747380026642}
+```
+
+For TypeScript, refer to the following sample to define an agent that initializes the `MCPToolset`:
+
+```typescript
+import 'dotenv/config';
+import {LlmAgent, MCPToolset} from "@google/adk";
+
+// Retrieve the API key from an environment variable.
+// Ensure this environment variable is set in the terminal where you run 'adk web'.
+// Example: export GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_KEY"
+const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
+if (!googleMapsApiKey) {
+    throw new Error('GOOGLE_MAPS_API_KEY is not provided, please run "export GOOGLE_MAPS_API_KEY=YOUR_ACTUAL_KEY" to add that.');
+}
+
+export const rootAgent = new LlmAgent({
+    model: "gemini-2.5-flash",
+    name: "maps_assistant_agent",
+    instruction: "Help the user with mapping, directions, and finding places using Google Maps tools.",
+    tools: [
+        new MCPToolset(
+            {
+                type: "StdioConnectionParams",
+                serverParams: {
+                    command: "npx",
+                    args: [
+                        "-y",
+                        "@modelcontextprotocol/server-google-maps",
+                    ],
+                    // Pass the API key as an environment variable to the npx process
+                    // This is how the MCP server for Google Maps expects the key.
+                    env: {
+                        "GOOGLE_MAPS_API_KEY": googleMapsApiKey
+                    }
+                },
+            },
+            // You can filter for specific Maps tools if needed:
+            // ['get_directions', 'find_place_by_id']
+        )
+    ],
+});
 ```
 
 A successful response will look like this:
@@ -37128,9 +40002,11 @@ Repository | Description | Detailed Guide
 --- | --- | ---
 [`google/adk-python`](https://github.com/google/adk-python) | Contains the core Python library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-python/blob/main/CONTRIBUTING.md)
 [`google/adk-python-community`](https://github.com/google/adk-python-community) | Contains community-contributed tools, integrations, and scripts | [`CONTRIBUTING.md`](https://github.com/google/adk-python-community/blob/main/CONTRIBUTING.md)
-[`google/adk-go`](https://github.com/google/adk-go) | Contains the core Go library source code | 
+[`google/adk-js`](https://github.com/google/adk-js) | Contains the core JavaScript library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-js/blob/main/CONTRIBUTING.md)
+[`google/adk-go`](https://github.com/google/adk-go) | Contains the core Go library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-go/blob/main/CONTRIBUTING.md)
 [`google/adk-java`](https://github.com/google/adk-java) | Contains the core Java library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-java/blob/main/CONTRIBUTING.md)
 [`google/adk-docs`](https://github.com/google/adk-docs) | Contains the source for the documentation site you are currently reading | [`CONTRIBUTING.md`](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md)
+[`google/adk-samples`](https://github.com/google/adk-samples) | Contains sample agents for ADK | [`CONTRIBUTING.md`](https://github.com/google/adk-samples/blob/main/CONTRIBUTING.md)
 [`google/adk-web`](https://github.com/google/adk-web) | Contains the source for the `adk web` dev UI |
 
 These repositories typically include a `CONTRIBUTING.md` file in the root of
@@ -37159,7 +40035,9 @@ This project follows
 ## Join the discussion
 
 Have questions, want to share ideas, or discuss how you're using ADK? Head over
-to our **[Python](https://github.com/google/adk-python/discussions)** or
+to our **[Python](https://github.com/google/adk-python/discussions)**,
+**[TypeScript](https://github.com/google/adk-js/discussions)**,
+**[Go](https://github.com/google/adk-go/discussions)**, or
 **[Java](https://github.com/google/adk-java/discussions)** Discussions!
 
 This is the primary place for:
@@ -37177,14 +40055,20 @@ There are several ways you can contribute to ADK:
 
 If you find a bug in the framework or an error in the documentation:
 
-* **Framework Bugs:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new) or in [`google/adk-java`](https://github.com/google/adk-java/issues/new)
+* **Framework Bugs:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
+[`google/adk-js`](https://github.com/google/adk-js/issues/new),
+[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
+[`google/adk-java`](https://github.com/google/adk-java/issues/new)
 * **Documentation Errors:** [Open an issue in `google/adk-docs` (use bug template)](https://github.com/google/adk-docs/issues/new?template=bug_report.md)
 
 ### Suggesting enhancements { #suggesting-enhancements }
 
 Have an idea for a new feature or an improvement to an existing one?
 
-* **Framework Enhancements:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new) or in [`google/adk-java`](https://github.com/google/adk-java/issues/new)
+* **Framework Enhancements:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
+[`google/adk-js`](https://github.com/google/adk-js/issues/new),
+[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
+[`google/adk-java`](https://github.com/google/adk-java/issues/new)
 * **Documentation Enhancements:** [Open an issue in `google/adk-docs`](https://github.com/google/adk-docs/issues/new)
 
 ### Improving documentation { #improving-documentation }
@@ -37201,6 +40085,8 @@ Help fix bugs, implement new features or contribute code samples for the documen
 **How:** Submit a Pull Request (PR) with your code changes.
 
 * **Python Framework:** [Create a Pull Request in `google/adk-python`](https://github.com/google/adk-python/pulls)
+* **TypeScript Framework:** [Create a Pull Request in `google/adk-js`](https://github.com/google/adk-js/pulls)
+* **Go Framework:** [Create a Pull Request in `google/adk-go`](https://github.com/google/adk-go/pulls)
 * **Java Framework:** [Create a Pull Request in `google/adk-java`](https://github.com/google/adk-java/pulls)
 * **Documentation:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
 
@@ -37278,6 +40164,12 @@ from simple tasks to complex workflows.
     <code>pip install google-adk</code>
     </p>
 
+=== "TypeScript"
+    <br>
+    <p style="text-align: center;">
+    <code>npm install @google/adk</code>
+    </p>
+
 === "Go"
     <br>
     <p style="text-align: center;">
@@ -37304,6 +40196,7 @@ from simple tasks to complex workflows.
 
 <p style="text-align:center;">
   <a href="/adk-docs/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
+  <a href="/adk-docs/get-started/typescript/" class="md-button" style="margin:3px">Start with TypeScript</a>
   <a href="/adk-docs/get-started/go/" class="md-button" style="margin:3px">Start with Go</a>
   <a href="/adk-docs/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
 </p>
@@ -37385,6 +40278,7 @@ You can find the release notes in the code repositories for each supported
 language. For detailed information on ADK releases, see these locations:
 
 *   [ADK Python release notes](https://github.com/google/adk-python/releases)
+*   [ADK TypeScript release notes](https://github.com/google/adk-js/releases)
 *   [ADK Go release notes](https://github.com/google/adk-go/releases)
 *   [ADK Java release notes](https://github.com/google/adk-java/releases)
 
