@@ -10460,7 +10460,8 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
         # Get the directory where main.py is located
         AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
         # Example session service URI (e.g., SQLite)
-        SESSION_SERVICE_URI = "sqlite:///./sessions.db"
+        # Note: Use 'sqlite+aiosqlite' instead of 'sqlite' because DatabaseSessionService requires an async driver
+        SESSION_SERVICE_URI = "sqlite+aiosqlite:///./sessions.db"
         # Example allowed origins for CORS
         ALLOWED_ORIGINS = ["http://localhost", "http://localhost:8080", "*"]
         # Set web=True if you intend to serve a web interface, False otherwise
@@ -11019,7 +11020,8 @@ Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capita
     # Get the directory where main.py is located
     AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
     # Example session service URI (e.g., SQLite)
-    SESSION_SERVICE_URI = "sqlite:///./sessions.db"
+    # Note: Use 'sqlite+aiosqlite' instead of 'sqlite' because DatabaseSessionService requires an async driver
+    SESSION_SERVICE_URI = "sqlite+aiosqlite:///./sessions.db"
     # Example allowed origins for CORS
     ALLOWED_ORIGINS = ["http://localhost", "http://localhost:8080", "*"]
     # Set web=True if you intend to serve a web interface, False otherwise
@@ -15215,7 +15217,7 @@ def get_current_time(city: str) -> dict:
     return {"status": "success", "city": city, "time": "10:30 AM"}
 
 root_agent = Agent(
-    model='gemini-3-pro-preview',
+    model='gemini-3-flash-preview',
     name='root_agent',
     description="Tells the current time in a specified city.",
     instruction="You are a helpful assistant that tells the current time in cities. Use the 'get_current_time' tool for this purpose.",
@@ -23319,9 +23321,16 @@ the storage backend that best suits your needs:
     ```py
     from google.adk.sessions import DatabaseSessionService
     # Example using a local SQLite file:
-    db_url = "sqlite:///./my_agent_data.db"
+    # Note: The implementation requires an async database driver.
+    # For SQLite, use 'sqlite+aiosqlite' instead of 'sqlite' to ensure async compatibility.
+    db_url = "sqlite+aiosqlite:///./my_agent_data.db"
     session_service = DatabaseSessionService(db_url=db_url)
     ```
+
+    <div class="admonition warning">
+    <p class="admonition-title">Async Driver Requirement</p>
+    <p><code>DatabaseSessionService</code> requires an async database driver. When using SQLite, you must use <code>sqlite+aiosqlite</code> instead of <code>sqlite</code> in your connection string. For other databases (PostgreSQL, MySQL), ensure you're using an async-compatible driver (e.g., <code>asyncpg</code> for PostgreSQL, <code>aiomysql</code> for MySQL).</p>
+    </div>
 
 Choosing the right `SessionService` is key to defining how your agent's
 conversation history and temporary data are stored and persist.
@@ -24412,8 +24421,13 @@ For production applications, choose a persistent session service based on your i
 - You're building single-server apps (SQLite) or multi-server deployments (PostgreSQL/MySQL)
 - You want full control over data storage and backups
 - Examples:
-    - SQLite: `DatabaseSessionService(db_url="sqlite:///./sessions.db")`
+    - SQLite: `DatabaseSessionService(db_url="sqlite+aiosqlite:///./sessions.db")`
     - PostgreSQL: `DatabaseSessionService(db_url="postgresql://user:pass@host/db")`
+
+    <div class="admonition note">
+    <p class="admonition-title">Note</p>
+    <p>For SQLite, use <code>sqlite+aiosqlite</code> instead of <code>sqlite</code> because <code>DatabaseSessionService</code> requires an async database driver.</p>
+    </div>
 
 **Use `VertexAiSessionService` if:**
 
@@ -30421,224 +30435,6 @@ To see what other features you can build into your UI with AG-UI, refer to the C
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
-File: docs/tools/third-party/agentql.md
-================
-# AgentQL
-
-The [AgentQL MCP Server](https://github.com/tinyfish-io/agentql-mcp) connects
-your ADK agent to [AgentQL](https://www.agentql.com/). AgentQL is a semantic
-extraction engine that queries web elements based on their meaning rather than
-their CSS or XPath selectors. This functionality allows agents to retrieve
-specific data points from web pages, PDFs, and authenticated sessions using
-natural language definitions.
-
-## Use cases
-
-- **Resilient Web Extraction**: Extract data from dynamic websites using natural
-  language descriptions. This feature allows your agent to reliably gather
-  information from sites that frequently update their layout or CSS without
-  breaking.
-
-- **Data Normalization**: Convert unstructured web pages into clean, predictable
-  JSON formats. This capability enables your agent to instantly normalize data
-  from different sources (like multiple job boards or shopping sites) into a
-  single schema.
-
-## Prerequisites
-
-- Create an [API Key](https://dev.agentql.com/sign-in) in AgentQL. Refer to the
-  [documentation](https://docs.agentql.com/quick-start) for more information.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    AGENTQL_API_KEY = "YOUR_AGENTQL_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="agentql_agent",
-        instruction="Help users get information from AgentQL",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "agentql-mcp",
-                        ],
-                        env={
-                            "AGENTQL_API_KEY": AGENTQL_API_KEY,
-                        }
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-## Available tools
-
-Tool <img width="100px"/> | Description
----- | -----------
-`extract-web-data` | Extract structured data from a given 'url', using 'prompt' as a description of actual data and its fields to extract
-
-## Best practices
-
-To ensure accurate extraction, follow these guidelines when prompting the agent:
-
-- **Describe the data, not the element**: Avoid visual descriptions (e.g., "the
-  blue button"). Instead, describe the data entity (e.g., "the submit button" or
-  "the product price").
-
-- **Define the hierarchy**: If extracting a list, explicitly instruct the agent
-  to look for a collection of items and define the fields required for each
-  item.
-
-- **Filter semantically**: You can instruct the tool to ignore specific data
-  types (e.g., "exclude ads and navigation links") within the prompt itself.
-
-## Additional resources
-
-- [AgentQL MCP Server Documentation](https://docs.exa.ai/reference/exa-mcp)
-- [AgentQL MCP Server Repository](https://github.com/tinyfish-io/agentql-mcp)
-
-================
-File: docs/tools/third-party/apify.md
-================
-# Apify
-
-The [Apify MCP Server](https://github.com/apify/actors-mcp-server) allows AI
-applications and agents to interact with the Apify platform. This functionality
-enables your ADK agents to discover and run Actors from the [Apify
-Store](https://apify.com/store), access storage and results, and read Apify
-documentation.
-
-## Use cases
-
-- **Actor Discovery**: Search and discover relevant Actors in the Apify Store to
-  solve specific tasks.
-- **Web Scraping & Automation**: Run Actors to scrape websites, extract data,
-  and automate web workflows.
-- **RAG & Knowledge Retrieval**: Use the RAG Web Browser Actor to retrieve and
-  process information from the web for your agent.
-
-## Prerequisites
-
-- [Sign up](https://console.apify.com/sign-up) for an Apify account.
-- Get your API token from the [Apify Console](https://console.apify.com). Refer
-  to the [documentation](https://docs.apify.com/platform/integrations/api) for
-  more information.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    APIFY_TOKEN = "YOUR_APIFY_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="apify_agent",
-        instruction="Help users scrape data and run Apify Actors",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "@apify/actors-mcp-server",
-                            # (Optional) Customize which tools to enable
-                            # "--tools=actors,docs,apify/rag-web-browser",
-                        ],
-                        env={
-                            "APIFY_TOKEN": APIFY_TOKEN,
-                        }
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    APIFY_TOKEN = "YOUR_APIFY_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="apify_agent",
-        instruction="Help users scrape data and run Apify Actors",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.apify.com",
-                    # (Optional) Customize which tools to enable
-                    # url="https://mcp.apify.com?tools=actors,docs,apify/rag-web-browser",
-                    headers={
-                        "Authorization": f"Bearer {APIFY_TOKEN}",
-                    },
-                ),
-            )
-        ],
-    )
-    ```
-
-## Available tools
-
-Tool | Description
----- | -----------
-`search-actors` | Search for Actors in the Apify Store
-`fetch-actor-details` | Get detailed information about a specific Actor
-`call-actor` | Run an Actor and wait for it to finish
-`get-actor-run` | Get information about a specific Actor run
-`get-actor-run-list` | List Actor runs
-`get-actor-log` | Get logs from an Actor run
-`get-dataset` | Get information about a dataset
-`get-dataset-items` | Get items from a dataset
-`get-key-value-store` | Get information about a key-value store
-`get-key-value-store-record` | Get a record from a key-value store
-`add-actor` | Add an Actor as a tool to the agent (Dynamic tool discovery)
-`search-apify-docs` | Search Apify documentation
-`fetch-apify-docs` | Read Apify documentation pages
-
-## Configuration
-
-You can customize which tools are available by adding parameters to the server
-URL.
-
-- **Default tools**: Tools related to `actors`, `docs`, and
-  `apify/rag-web-browser` are loaded by default.
-- **Specific tools**: You can specify additional tools using the `tools` CLI
-  parameter (local MCP server) or the `tools` query parameter (remote MCP
-  server).
-
-## Additional resources
-
-- [Apify MCP Server Documentation](https://docs.apify.com/platform/integrations/mcp)
-- [Apify MCP Server Repository](https://github.com/apify/apify-mcp-server)
-
-================
 File: docs/tools/third-party/atlassian.md
 ================
 # Atlassian
@@ -30742,578 +30538,6 @@ Tool | Description
 
 - [Atlassian MCP Server Repository](https://github.com/atlassian/atlassian-mcp-server)
 - [Atlassian MCP Server Documentation](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/)
-
-================
-File: docs/tools/third-party/bright-data.md
-================
-# Bright Data
-
-The [Bright Data MCP Server](https://github.com/brightdata/brightdata-mcp)
-connects your ADK agent to Bright Data's web data platform. This
-tool gives your agent the ability to perform real-time web searches, scrape
-webpages, extract structured data, control browsers remotely, and access
-pre-built data feeds from popular platforms.
-
-## Use cases
-
-- **Real-Time Web Search**: Perform optimized web searches to get up-to-date
-  information in AI-friendly formats (JSON/Markdown).
-
-- **Structured Data Extraction**: Use AI-powered extraction to convert any
-  webpage into clean, structured JSON data with optional custom prompts.
-
-- **Browser Automation**: Control real browsers remotely for complex
-  interactions, JavaScript rendering, and dynamic content extraction.
-
-- **Pre-Built Data APIs**: Access 60+ structured datasets from popular platforms
-  including Amazon, LinkedIn, Instagram, TikTok, Google Maps, and more.
-
-- **Advertisement Analysis**: Extract and analyze advertisements from webpages
-  using industry-standard ad blocking filter lists.
-
-## Prerequisites
-
-- Sign up for a [Bright Data account](https://brightdata.com/) to obtain an API
-  token.
-- Refer to the
-  [documentation](https://docs.brightdata.com/mcp-server/overview) for more
-  information.
-- The server offers a **free tier with 5,000 requests/month**, which is useful for
-  prototyping and everyday workflows.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    BRIGHTDATA_API_TOKEN = "YOUR_BRIGHTDATA_API_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="brightdata_agent",
-        instruction="Help users access web data using Bright Data",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "@brightdata/mcp",
-                        ],
-                        env={
-                            "API_TOKEN": BRIGHTDATA_API_TOKEN,
-                            "PRO_MODE": "true",  # Optional: Enable all 60+ tools
-                        }
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    BRIGHTDATA_API_TOKEN = "YOUR_BRIGHTDATA_API_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="brightdata_agent",
-        instruction="Help users access web data using Bright Data",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url=f"https://mcp.brightdata.com/mcp?token={BRIGHTDATA_API_TOKEN}",
-                ),
-            )
-        ],
-    )
-    ```
-
-## Example usage
-
-Once your agent is set up and running, you can interact with it through the
-command-line interface or web interface. Here are some examples:
-
-**Sample agent prompts:**
-
-> Get me the current price and details of the iPhone 15 Pro on Amazon
-
-> Search for "climate change news 2025" on Google and summarize the top 5
-> results
-
-> Scrape the homepage of techcrunch.com and extract all article headlines and
-> links
-
-The agent automatically calls the appropriate Bright Data tools to provide
-comprehensive answers, making it easy to access real-time web data without
-manual navigation or worrying about getting blocked.
-
-## Available tools
-
-The Bright Data MCP server operates in two modes:
-
-### Rapid Mode (Free Tier - Default)
-
-Tool <img width="100px"/> | Description
----- | -----------
-`search_engine` | Scrape Google, Bing, or Yandex SERPs as JSON or Markdown.
-`scrape_as_markdown` | Convert webpages into clean Markdown with built-in unblocking.
-`scrape_as_html` | Return raw HTML from webpages while bypassing blockers.
-`extract` | Transform Markdown output into structured JSON with custom prompts.
-`session_stats` | View session usage statistics and tool call counts.
-
-### Pro Mode (60+ Additional Tools)
-
-Enable Pro Mode by setting `PRO_MODE=true` in environment variables to access:
-
-**Batch Operations:**
-- `search_engine_batch`: Run up to 10 search queries simultaneously.
-- `scrape_batch`: Scrape up to 10 URLs simultaneously.
-
-**Browser Automation:**
-- `scraping_browser.*`: Full browser control for complex interactions.
-- Navigate, click, type, scroll, take screenshots, and more.
-
-**Web Data APIs (60+ Structured Datasets):**
-
-- **E-commerce**: `web_data_amazon_product`, `web_data_walmart_product`,
-  `web_data_ebay_product`, `web_data_etsy_products`, `web_data_bestbuy_products`,
-  `web_data_zara_products`
-- **Social Media**: `web_data_linkedin_person_profile`,
-  `web_data_instagram_profiles`, `web_data_facebook_posts`,
-  `web_data_tiktok_profiles`, `web_data_x_posts`, `web_data_reddit_posts`
-- **Business Intelligence**: `web_data_linkedin_company_profile`,
-  `web_data_crunchbase_company`, `web_data_zoominfo_company_profile`
-- **Search & Reviews**: `web_data_amazon_product_search`,
-  `web_data_amazon_product_reviews`, `web_data_google_maps_reviews`,
-  `web_data_facebook_company_reviews`
-- **Maps & Local**: `web_data_google_maps_reviews`,
-  `web_data_zillow_properties_listing`, `web_data_booking_hotel_listings`
-- **App Stores**: `web_data_google_play_store`, `web_data_apple_app_store`
-- **Media & News**: `web_data_youtube_videos`, `web_data_youtube_comments`,
-  `web_data_reuter_news`
-- **Developer Tools**: `web_data_github_repository_file`
-- **Finance**: `web_data_yahoo_finance_business`
-
-All Web Data API tools return cached or fresh structured data in JSON format,
-often more reliable than real-time scraping.
-
-## Configuration options
-
-The Bright Data MCP server supports several environment variables for
-customization:
-
-Variable | Description | Default
----- | ---- | ----
-`API_TOKEN` | Your Bright Data API token (required) | -
-`PRO_MODE` | Enable all 60+ advanced tools | `false`
-`RATE_LIMIT` | Custom rate limiting (e.g., "100/1h", "50/30m") | No limit
-`WEB_UNLOCKER_ZONE` | Custom Web Unlocker zone name | `mcp_unlocker`
-`BROWSER_ZONE` | Custom Browser API zone name | `mcp_browser`
-
-## Additional resources
-
-- [Bright Data MCP Server Documentation](https://docs.brightdata.com/mcp-server/overview)
-- [Bright Data MCP Server Repository](https://github.com/brightdata/brightdata-mcp)
-- [Complete Tool Documentation](https://github.com/brightdata-com/brightdata-mcp/blob/main/assets/Tools.md)
-- [Example Use Cases](https://github.com/brightdata-com/brightdata-mcp/blob/main/examples)
-- [Interactive Playground](https://brightdata.com/ai/playground-chat)
-
-================
-File: docs/tools/third-party/browserbase.md
-================
-# Browserbase
-
-The
-[Browserbase MCP Server](https://github.com/browserbase/mcp-server-browserbase)
-connects to cloud browser automation capabilities using
-[Browserbase](https://www.browserbase.com/) and
-[Stagehand](https://github.com/browserbase/stagehand). It enables your ADK agent
-to interact with web pages, take screenshots, extract information, and perform
-automated actions.
-
-## Use cases
-
-- **Automated Web Workflows**: Empower your agent to perform multi-step tasks
-  like logging into websites, filling out forms, submitting data, and navigating
-  complex user flows.
-
-- **Intelligent Data Extraction**: Automatically browse to specific pages and
-extract structured data, text content, or other information for use in your
-agent's tasks.
-
-- **Visual Monitoring & Interaction**: Capture full-page or element-specific
-screenshots to visually monitor websites, test UI elements, or feed visual
-context back to a vision-enabled model.
-
-## Prerequisites
-
-- Sign up for a [Browserbase account](https://www.browserbase.com/sign-up) to
-  obtain an API key and project ID. Refer to the
-  [documentation](https://docs.browserbase.com/introduction/getting-started) for
-  more information.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    BROWSERBASE_API_KEY = "YOUR_BROWSERBASE_API_KEY"
-    BROWSERBASE_PROJECT_ID = "YOUR_BROWSERBASE_PROJECT_ID"
-    GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="browserbase_agent",
-        instruction="Help users get information from Browserbase",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "@browserbasehq/mcp-server-browserbase",
-                        ],
-                        env={
-                            "BROWSERBASE_API_KEY": BROWSERBASE_API_KEY,
-                            "BROWSERBASE_PROJECT_ID": BROWSERBASE_PROJECT_ID,
-                            "GEMINI_API_KEY": GEMINI_API_KEY,
-                        }
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-## Available tools
-
-Tool <img width="200px"/> | Description
----- | -----------
-`browserbase_stagehand_navigate` | Navigate to any URL in the browser
-`browserbase_stagehand_act` | Perform an action on the web page using natural language
-`browserbase_stagehand_extract` | Extract all text content from the current page (filters out CSS and JavaScript)
-`browserbase_stagehand_observe` | Observe and find actionable elements on the web page
-`browserbase_screenshot` | Capture a PNG screenshot of the current page
-`browserbase_stagehand_get_url` | Get the current URL of the browser page
-`browserbase_session_create` | Create or reuse a cloud browser session using Browserbase with fully initialized Stagehand
-`browserbase_session_close` | Close the current Browserbase session, disconnect the browser, and cleanup Stagehand instance
-
-## Configuration
-
-The Browserbase MCP server accepts the following command-line flags:
-
-Flag | Description
----- | -----------
-`--proxies` | Enable Browserbase proxies for the session
-`--advancedStealth` | Enable Browserbase Advanced Stealth (Only for Scale Plan Users)
-`--keepAlive` | Enable Browserbase Keep Alive Session
-`--contextId <contextId>` | Specify a Browserbase Context ID to use
-`--persist` | Whether to persist the Browserbase context (default: true)
-`--port <port>` | Port to listen on for HTTP/SHTTP transport
-`--host <host>` | Host to bind server to (default: localhost, use 0.0.0.0 for all interfaces)
-`--cookies [json]` | JSON array of cookies to inject into the browser
-`--browserWidth <width>` | Browser viewport width (default: 1024)
-`--browserHeight <height>` | Browser viewport height (default: 768)
-`--modelName <model>` | The model to use for Stagehand (default: gemini-2.0-flash)
-`--modelApiKey <key>` | API key for the custom model provider (required when using custom models)
-`--experimental` | Enable experimental features (default: false)
-
-## Additional resources
-
-- [Browserbase MCP Server Documentation](https://docs.browserbase.com/integrations/mcp/introduction)
-- [Browserbase MCP Server Configuration](https://docs.browserbase.com/integrations/mcp/configuration)
-- [Browserbase MCP Server Repository](https://github.com/browserbase/mcp-server-browserbase)
-
-================
-File: docs/tools/third-party/exa.md
-================
-# Exa
-
-The [Exa MCP Server](https://github.com/github/github-mcp-server) connects your
-ADK agent to [Exa's search engine](https://exa.ai), a platform built
-specifically for AI. This gives your agent the ability to search for relevant
-webpages, find similar content based on a link, retrieve clean, parsed content
-from URLs, get direct answers to questions, and automate in-depth research
-reports using natural language.
-
-## Use cases
-
-- **Find Code & Technical Examples**: Search across GitHub, documentation, and
-  technical forums to find up-to-date code snippets, API usage patterns, and
-  implementation examples.
-
-- **Perform In-Depth Research**: Launch comprehensive research reports on
-  complex topics, gather detailed information on companies, or find professional
-  profiles on LinkedIn.
-
-- **Access Real-Time Web Content**: Perform general web searches to get
-  up-to-date information or extract the full content from specific articles,
-  blog posts, or web pages.
-
-## Prerequisites
-
-- Create an [API Key](https://dashboard.exa.ai/api-keys) in Exa. Refer to the
-  [documentation](https://docs.exa.ai/reference/quickstart) for more
-  information.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    EXA_API_KEY = "YOUR_EXA_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="exa_agent",
-        instruction="Help users get information from Exa",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "exa-mcp-server",
-                            # (Optional) Specify which tools to enable
-                            # If you don't specify any tools, all tools enabled by default will be used.
-                            # "--tools=get_code_context_exa,web_search_exa",
-                        ],
-                        env={
-                            "EXA_API_KEY": EXA_API_KEY,
-                        }
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    EXA_API_KEY = "YOUR_EXA_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="exa_agent",
-        instruction="Help users get information from Exa",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.exa.ai/mcp?exaApiKey=" + EXA_API_KEY,
-                    # (Optional) Specify which tools to enable
-                    # If you don't specify any tools, all tools enabled by default will be used.
-                    # url="https://mcp.exa.ai/mcp?exaApiKey=" + EXA_API_KEY + "&enabledTools=%5B%22crawling_exa%22%5D",
-                ),
-            )
-        ],
-    )
-    ```
-
-## Available tools
-
-Tool <img width="400px"/> | Description
----- | -----------
-`get_code_context_exa` | Search and get relevant code snippets, examples, and documentation from open source libraries, GitHub repositories, and programming frameworks. Perfect for finding up-to-date code documentation, implementation examples, API usage patterns, and best practices from real codebases.
-`web_search_exa` | Performs real-time web searches with optimized results and content extraction.
-`company_research` | Comprehensive company research tool that crawls company websites to gather detailed information about businesses.
-`crawling` | Extracts content from specific URLs, useful for reading articles, PDFs, or any web page when you have the exact URL.
-`linkedin_search` | Search LinkedIn for companies and people using Exa AI. Simply include company names, person names, or specific LinkedIn URLs in your query.
-`deep_researcher_start` | Start a smart AI researcher for complex questions. The AI will search the web, read many sources, and think deeply about your question to create a detailed research report.
-`deep_researcher_check` | Check if your research is ready and get the results. Use this after starting a research task to see if it's done and get your comprehensive report.
-
-## Configuration
-
-To specify which tools to use in the Local Exa MCP server, you can use the
-`--tools` parameter:
-
-```
---tools=get_code_context_exa,web_search_exa,company_research,crawling,linkedin_search,deep_researcher_start,deep_researcher_check
-```
-
-To specify which tools to use in the Remote Exa MCP server, you can use the
-`enabledTools` URL parameter:
-
-```
-https://mcp.exa.ai/mcp?exaApiKey=YOUREXAKEY&enabledTools=%5B%22crawling_exa%22%5D
-```
-
-## Additional resources
-
-- [Exa MCP Server Documentation](https://docs.exa.ai/reference/exa-mcp)
-- [Exa MCP Server Repository](https://github.com/exa-labs/exa-mcp-server)
-
-================
-File: docs/tools/third-party/firecrawl.md
-================
-# Firecrawl
-
-The [Firecrawl MCP Server](https://github.com/firecrawl/firecrawl-mcp-server)
-connects your ADK agent to the [Firecrawl](https://www.firecrawl.dev/) API, a
-service that can crawl any website and convert its content into clean,
-structured markdown. This allows your agent to ingest, search, and reason over
-web data from any URL, including all its subpages.
-
-## Features
-
-- **Agent-based Web Research**: Deploy an agent that can take a topic, use the
-  search tool to find relevant URLs, and then use the scrape tool to extract the
-  full content of each page for analysis or summarization.
-
-- **Structured Data Extraction**: Use the extract tool to pull specific,
-  structured information (like product names, prices, or contact info) from a
-  list of URLs, powered by LLM extraction.
-
-- **Large-Scale Content Ingestion**: Automate the scraping of entire websites or
-  large batches of URLs using the batch scrape and crawl tools. This is ideal
-  for populating a vector database for a RAG (Retrieval-Augmented Generation)
-  pipeline.
-
-## Prerequisites
-
-- [Sign up on Firecrawl](https://www.firecrawl.dev/signin) and [get an API key](https://firecrawl.dev/app/api-keys)
-
-## Usage with ADK
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents.llm_agent import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="firecrawl_agent",
-        description="A helpful assistant for scraping websites with Firecrawl",
-        instruction="Help the user search for website content",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "firecrawl-mcp",
-                        ],
-                        env={
-                            "FIRECRAWL_API_KEY": FIRECRAWL_API_KEY,
-                        }
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents.llm_agent import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    FIRECRAWL_API_KEY = "YOUR_FIRECRAWL_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="firecrawl_agent",
-        description="A helpful assistant for scraping websites with Firecrawl",
-        instruction="Help the user search for website content",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url=f"https://mcp.firecrawl.dev/{FIRECRAWL_API_KEY}/v2/mcp",
-                ),
-            )
-        ],
-    )
-    ```
-
-## Available tools
-
-This toolset provides a comprehensive suite of functions for web crawling,
-scraping, and searching:
-
-Tool | Name | Description
----- | ---- | -----------
-Scrape Tool | `firecrawl_scrape` | Scrape content from a single URL with advanced options
-Batch Scrape Tool | `firecrawl_batch_scrape` | Scrape multiple URLs efficiently with built-in rate limiting and parallel processing
-Check Batch Status | `firecrawl_check_batch_status` | Check the status of a batch operation
-Map Tool | `firecrawl_map` | Map a website to discover all indexed URLs on the site
-Search Tool | `firecrawl_search` | Search the web and optionally extract content from search results
-Crawl Tool | `firecrawl_crawl` | Start an asynchronous crawl with advanced options
-Check Crawl Status | `firecrawl_check_crawl_status` | Check the status of a crawl job
-Extract Tool | `firecrawl_extract` | Extract structured information from web pages using LLM capabilities. Supports both cloud AI and self-hosted LLM extraction
-
-## Configuration
-
-The Firecrawl MCP server can be configured using environment variables:
-
-**Required**:
-
-- `FIRECRAWL_API_KEY`: Your Firecrawl API key
-    - Required when using cloud API (default)
-    - Optional when using self-hosted instance with `FIRECRAWL_API_URL`
-
-**Firecrawl API URL (optional)**:
-
-- `FIRECRAWL_API_URL` (Optional): Custom API endpoint for self-hosted instances
-    - Example: `https://firecrawl.your-domain.com`
-    - If not provided, the cloud API will be used (requires API key)
-
-**Retry configuration (optional)**:
-
-- `FIRECRAWL_RETRY_MAX_ATTEMPTS`: Maximum number of retry attempts (default: 3)
-- `FIRECRAWL_RETRY_INITIAL_DELAY`: Initial delay in milliseconds before first retry (default: 1000)
-- `FIRECRAWL_RETRY_MAX_DELAY`: Maximum delay in milliseconds between retries (default: 10000)
-- `FIRECRAWL_RETRY_BACKOFF_FACTOR`: Exponential backoff multiplier (default: 2)
-
-**Credit usage monitoring (optional)**:
-
-- `FIRECRAWL_CREDIT_WARNING_THRESHOLD`: Credit usage warning threshold (default: 1000)
-- `FIRECRAWL_CREDIT_CRITICAL_THRESHOLD`: Credit usage critical threshold (default: 100)
-
-## Additional resources
-
-- [Firecrawl MCP Server Documentation](https://docs.firecrawl.dev/mcp-server)
-- [Firecrawl MCP Server Repository](https://github.com/firecrawl/firecrawl-mcp-server)
-- [Firecrawl Use Cases](https://docs.firecrawl.dev/use-cases/overview)
-- [Firecrawl Advanced Scraping Guide](https://docs.firecrawl.dev/advanced-scraping-guide)
 
 ================
 File: docs/tools/third-party/github.md
@@ -31672,66 +30896,6 @@ Check out the following third-party tools that you can use with ADK agents:
     </div>
   </a>
 
-  <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-agentql.png" alt="AgentQL">
-    </div>
-    <div class="tool-card-content">
-      <h3>AgentQL</h3>
-      <p>Extract resilient, structured web data using natural language</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/apify/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-apify.png" alt="Apify">
-    </div>
-    <div class="tool-card-content">
-      <h3>Apify</h3>
-      <p>Use Actors to scrape websites and automate web workflows</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/bright-data/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-bright-data.png" alt="Bright Data">
-    </div>
-    <div class="tool-card-content">
-      <h3>Bright Data</h3>
-      <p>One MCP for the web - connect your AI to real web data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/browserbase/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-browserbase.png" alt="Browserbase">
-    </div>
-    <div class="tool-card-content">
-      <h3>Browserbase</h3>
-      <p>Powers web browsing capabilities for AI agents</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-exa.png" alt="Exa">
-    </div>
-    <div class="tool-card-content">
-      <h3>Exa</h3>
-      <p>Search and extract structured content from websites and live data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/firecrawl/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-firecrawl.png" alt="Firecrawl">
-    </div>
-    <div class="tool-card-content">
-      <h3>Firecrawl</h3>
-      <p>Empower your AI apps with clean data from any website</p>
-    </div>
-  </a>
-
   <a href="/adk-docs/tools/third-party/github/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../../assets/tools-github.png" alt="GitHub">
@@ -31809,26 +30973,6 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Qdrant</h3>
       <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/scrapegraphai/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-scrapegraphai.png" alt="ScrapeGraphAI">
-    </div>
-    <div class="tool-card-content">
-      <h3>ScrapeGraphAI</h3>
-      <p>AI-powered web scraping, crawling, and data extraction</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/tavily/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-tavily.png" alt="Tavily">
-    </div>
-    <div class="tool-card-content">
-      <h3>Tavily</h3>
-      <p>Provides real-time web search, extraction, and crawling tools</p>
     </div>
   </a>
 
@@ -32523,223 +31667,6 @@ env={
 - [Qdrant MCP Server Repository](https://github.com/qdrant/mcp-server-qdrant)
 - [Qdrant Documentation](https://qdrant.tech/documentation/)
 - [Qdrant Cloud](https://cloud.qdrant.io/)
-
-================
-File: docs/tools/third-party/scrapegraphai.md
-================
-# ScrapeGraphAI
-
-The
-[ScrapeGraphAI MCP Server](https://github.com/ScrapeGraphAI/scrapegraph-mcp)
-connects your ADK agent to [ScrapeGraphAI](https://scrapegraphai.com/). This
-integration enables your agent to extract structured data using natural language
-prompts, handle dynamic content like infinite scrolling, and convert complex
-webpages into clean, usable JSON or Markdown.
-
-## Use cases
-
-- **Scalable Extraction & Crawling**: Extract structured data from single pages
-  or crawl entire websites, leveraging AI to handle dynamic content, infinite
-  scrolling, and large-scale asynchronous operations.
-
-- **Research and Summarization**: Execute AI-powered web searches to research
-  topics, aggregate data from multiple sources, and summarize findings.
-
-- **Agentic Workflows**: Run advanced agentic scraping workflows with
-  customizable steps, complex navigation (like authentication), and structured
-  output schemas.
-
-## Prerequisites
-
-- Create an [API Key](https://dashboard.scrapegraphai.com/register/) in
-  ScrapeGraphAI. Refer to the
-  [documentation](https://docs.scrapegraphai.com/api-reference/introduction) for more information.
-- Install the [ScrapeGraphAI MCP server
-  package](https://pypi.org/project/scrapegraph-mcp/) (requires Python 3.13 or
-  higher):
-
-    ```console
-    pip install scrapegraph-mcp
-    ```
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    SGAI_API_KEY = "YOUR_SCRAPEGRAPHAI_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="scrapegraph_assistant_agent",
-        instruction="""Help the user with web scraping and data extraction using
-                      ScrapeGraph AI. You can convert webpages to markdown, extract
-                      structured data using AI, perform web searches, crawl
-                      multiple pages, and automate complex scraping workflows.""",
-        tools=[
-            MCPToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        # The following CLI command is available
-                        # from `pip install scrapegraph-mcp`
-                        command="scrapegraph-mcp",
-                        env={
-                            "SGAI_API_KEY": SGAI_API_KEY,
-                        },
-                    ),
-                    timeout=300,
-                ),
-            # Optional: Filter which tools from the MCP server are exposed
-            # tool_filter=["markdownify", "smartscraper", "searchscraper"]
-            ),
-        ],
-    )
-    ```
-
-## Available tools
-
-Tool <img width="200px"/> | Description
----- | -----------
-`markdownify` | Transform any webpage into clean, structured markdown format
-`smartscraper` | Leverage AI to extract structured data from any webpage with support for infinite scrolling
-`searchscraper` | Execute AI-powered web searches with structured, actionable results
-`scrape` | Basic scraping endpoint to fetch page content with optional heavy JavaScript rendering
-`sitemap` | Extract sitemap URLs and structure for any website
-`smartcrawler_initiate` | Initiate intelligent multi-page web crawling (asynchronous operation)
-`smartcrawler_fetch_results` | Retrieve results from asynchronous crawling operations
-`agentic_scrapper` | Run advanced agentic scraping workflows with customizable steps and structured output schemas
-
-## Additional resources
-
-- [ScrapeGraphAI MCP Server Documentation](https://docs.scrapegraphai.com/services/mcp-server)
-- [ScrapeGraphAI MCP Server Repository](https://github.com/ScrapeGraphAI/scrapegraph-mcp)
-
-================
-File: docs/tools/third-party/tavily.md
-================
-# Tavily
-
-The [Tavily MCP Server](https://github.com/tavily-ai/tavily-mcp) connects your
-ADK agent to Tavily's AI-focused search, extraction, and crawling platform. This
-tool gives your agent the ability to perform real-time web searches,
-intelligently extract specific data from web pages, and crawl or create
-structured maps of websites.
-
-## Use cases
-
-- **Real-Time Web Search**: Perform optimized, real-time web searches to get
-  up-to-date information for your agent's tasks.
-
-- **Intelligent Data Extraction**: Extract specific, clean data and content from
-  any web page without needing to parse the full HTML.
-
-- **Website Exploration**: Automatically crawl websites to explore content or
-  create a structured map of a site's layout and pages.
-
-## Prerequisites
-
-- Sign up for a [Tavily account](https://app.tavily.com/) to obtain an API key.
-  Refer to the
-  [documentation](https://docs.tavily.com/documentation/quickstart) for more
-  information.
-
-## Use with agent
-
-=== "Local MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
-
-    TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="tavily_agent",
-        instruction="Help users get information from Tavily",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "tavily-mcp@latest",
-                        ],
-                        env={
-                            "TAVILY_API_KEY": TAVILY_API_KEY,
-                        }
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    TAVILY_API_KEY = "YOUR_TAVILY_API_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="tavily_agent",
-        instruction="Help users get information from Tavily",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.tavily.com/mcp/",
-                    headers={
-                        "Authorization": f"Bearer {TAVILY_API_KEY}",
-                    },
-                ),
-            )
-        ],
-    )
-    ```
-
-## Example usage
-
-Once your agent is set up and running, you can interact with it through the
-command-line interface or web interface. Here's a simple example:
-
-**Sample agent prompt:**
-
-> Find all documentation pages on tavily.com and provide instructions on how to get started with Tavily
-
-The agent automatically calls multiple Tavily tools to provide comprehensive
-answers, making it easy to explore websites and gather information without
-manual navigation:
-
-<img src="../../../assets/tools-tavily-screenshot.png">
-
-## Available tools
-
-Once connected, your agent gains access to Tavily's web intelligence tools:
-
-Tool <img width="100px"/> | Description
----- | -----------
-`tavily-search` | Execute a search query to find relevant information across the web.
-​`tavily-extract` | Extract structured data from any web page. Extract text, links, and images from single pages or batch process multiple URLs efficiently.
-​`tavily-map` | Traverses websites like a graph and can explore hundreds of paths in parallel with intelligent discovery to generate comprehensive site maps.
-​`tavily-crawl` | Traversal tool that can explore hundreds of paths in parallel with built-in extraction and intelligent discovery.
-
-## Additional resources
-
-- [Tavily MCP Server Documentation](https://docs.tavily.com/documentation/mcp)
-- [Tavily MCP Server Repository](https://github.com/tavily-ai/tavily-mcp)
 
 ================
 File: docs/tools/built-in-tools.md
@@ -33940,66 +32867,6 @@ Check out the following pre-built tools that you can use with ADK agents:
     </div>
   </a>
 
-  <a href="/adk-docs/tools/third-party/agentql/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-agentql.png" alt="AgentQL">
-    </div>
-    <div class="tool-card-content">
-      <h3>AgentQL</h3>
-      <p>Extract resilient, structured web data using natural language</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/apify/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-apify.png" alt="Apify">
-    </div>
-    <div class="tool-card-content">
-      <h3>Apify</h3>
-      <p>Use Actors to scrape websites and automate web workflows</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/bright-data/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-bright-data.png" alt="Bright Data">
-    </div>
-    <div class="tool-card-content">
-      <h3>Bright Data</h3>
-      <p>One MCP for the web - connect your AI to real web data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/browserbase/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-browserbase.png" alt="Browserbase">
-    </div>
-    <div class="tool-card-content">
-      <h3>Browserbase</h3>
-      <p>Powers web browsing capabilities for AI agents</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/exa/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-exa.png" alt="Exa">
-    </div>
-    <div class="tool-card-content">
-      <h3>Exa</h3>
-      <p>Search and extract structured content from websites and live data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/firecrawl/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-firecrawl.png" alt="Firecrawl">
-    </div>
-    <div class="tool-card-content">
-      <h3>Firecrawl</h3>
-      <p>Empower your AI apps with clean data from any website</p>
-    </div>
-  </a>
-
   <a href="/adk-docs/tools/third-party/github/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="../assets/tools-github.png" alt="GitHub">
@@ -34077,26 +32944,6 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Qdrant</h3>
       <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/scrapegraphai/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-scrapegraphai.png" alt="ScrapeGraphAI">
-    </div>
-    <div class="tool-card-content">
-      <h3>ScrapeGraphAI</h3>
-      <p>AI-powered web scraping, crawling, and data extraction</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/tavily/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-tavily.png" alt="Tavily">
-    </div>
-    <div class="tool-card-content">
-      <h3>Tavily</h3>
-      <p>Provides real-time web search, extraction, and crawling tools</p>
     </div>
   </a>
 
@@ -39652,7 +38499,7 @@ File: docs/tutorials/coding-with-ai.md
 # Coding with AI
 
 The Agent Development Kit (ADK) documentation supports the
-[`/llms.txt`](https://llmstxt.org/) standard, providing a machine-readable index
+[`/llms.txt` standard](https://llmstxt.org/), providing a machine-readable index
 of the documentation optimized for Large Language Models (LLMs). This allows you
 to easily use the ADK documentation as context in your AI-powered development
 environment.
@@ -39664,12 +38511,13 @@ most important documentation pages and their descriptions. This helps AI tools
 understand the structure of the ADK documentation and retrieve relevant
 information to answer your questions.
 
-The ADK documentation provides two files:
+The ADK documentation provides the following files that are automatically
+generated with every update:
 
 File | Best For... | URL
 ---- | ----------- | ---
-**`llms.txt`** | Tools that can fetch links dynamically | `https://google.github.io/adk-docs/llms.txt`
-**`llms-full.txt`** | Tools that need a single, static text dump of the entire site | `https://google.github.io/adk-docs/llms-full.txt`
+**`llms.txt`** | Tools that can fetch links dynamically | [`https://google.github.io/adk-docs/llms.txt`](https://google.github.io/adk-docs/llms.txt)
+**`llms-full.txt`** | Tools that need a single, static text dump of the entire site | [`https://google.github.io/adk-docs/llms-full.txt`](https://google.github.io/adk-docs/llms-full.txt)
 
 ## Usage in Development Tools
 
@@ -39699,9 +38547,9 @@ ADK documentation to provide accurate answers and generate code.
 
 For example, you can ask the following question from within Gemini CLI:
 
-```
-How do I create a function tool using Agent Development Kit?
-```
+> How do I create a function tool using Agent Development Kit?
+
+---
 
 ### Antigravity
 
@@ -39719,43 +38567,122 @@ installation.
 
 1. Open the MCP store via the **...** (more) menu at the top of the editor's
    agent panel.
-2. Click on **Manage MCP Servers**
-3. Click on **View raw config**
+2. Click on **Manage MCP Servers**.
+3. Click on **View raw config**.
 4. Add the following entry to `mcp_config.json` with your custom MCP server
    configuration. If this is your first MCP server, you can paste the entire
    code block:
 
-```json
-{
-  "mcpServers": {
-    "adk-docs-mcp": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "mcpdoc",
-        "mcpdoc",
-        "--urls",
-        "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
-        "--transport",
-        "stdio"
-      ]
+    ```json
+    {
+      "mcpServers": {
+        "adk-docs-mcp": {
+          "command": "uvx",
+          "args": [
+            "--from",
+            "mcpdoc",
+            "mcpdoc",
+            "--urls",
+            "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
+            "--transport",
+            "stdio"
+          ]
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Refer to the [Antigravity MCP](https://antigravity.google/docs/mcp)
-documentation for more information on managing MCP servers.
+Refer to the
+[Antigravity MCP documentation](https://antigravity.google/docs/mcp) for more
+information on managing MCP servers.
 
 **Usage:**
 
 Once configured, you can prompt the coding agent with instructions like:
 
+> Use the ADK docs to build a multi-tool agent that uses Gemini 2.5 Pro and
+> includes a mock weather lookup tool and a custom calculator tool. Verify the
+> agent using `adk run`.
+
+---
+
+### Claude Code
+
+[Claude Code](https://code.claude.com/docs/en/overview) can be configured to
+query the ADK documentation by adding an
+[MCP server](https://code.claude.com/docs/en/mcp).
+
+**Installation:**
+
+To add an MCP server for the ADK docs to Claude Code, run the following command:
+
+```bash
+claude mcp add adk-docs --transport stdio -- uvx --from mcpdoc mcpdoc --urls AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt --transport stdio
 ```
-Use the ADK docs to build a multi-tool agent that uses Gemini 2.5 Pro and
-includes a mock weather lookup tool and a custom calculator tool. Verify the
-agent using `adk run`.
-```
+
+**Usage:**
+
+Once installed, the MCP server is automatically enabled. You can ask questions
+about ADK directly in Claude Code, and it will use the `llms.txt` file and ADK
+documentation to provide accurate answers and generate code.
+
+For example, you can ask the following question from within Claude Code:
+
+> How do I create a function tool using Agent Development Kit?
+
+---
+
+### Cursor
+
+The [Cursor](https://cursor.com/) IDE can be configured to access the ADK
+documentation by running a custom MCP server that points to the `llms.txt` file
+for ADK.
+
+**Prerequisites:**
+
+Ensure you have the [`uv`](https://docs.astral.sh/uv/) tool installed, as this
+configuration uses `uvx` to run the documentation server without manual
+installation.
+
+**Configuration:**
+
+1. Open **Cursor Settings** and navigate to the **Tools & MCP** tab.
+2. Click on **New MCP Server**, which will open `mcp.json` for editing.
+3. Add the following entry to `mcp.json` with your custom MCP server
+   configuration. If this is your first MCP server, you can paste the entire
+   code block:
+
+    ```json
+    {
+      "mcpServers": {
+        "adk-docs-mcp": {
+          "command": "uvx",
+          "args": [
+            "--from",
+            "mcpdoc",
+            "mcpdoc",
+            "--urls",
+            "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
+            "--transport",
+            "stdio"
+          ]
+        }
+      }
+    }
+    ```
+
+Refer to the [Cursor MCP documentation](https://cursor.com/docs/context/mcp) for
+more information on managing MCP servers.
+
+**Usage:**
+
+Once configured, you can prompt the coding agent with instructions like:
+
+> Use the ADK docs to build a multi-tool agent that uses Gemini 2.5 Pro and
+> includes a mock weather lookup tool and a custom calculator tool. Verify the
+> agent using `adk run`.
+
+---
 
 ### Other Tools
 
@@ -40343,6 +39270,14 @@ from simple tasks to complex workflows.
     dependencies like the GenAI SDK and the ADK Web UI.
     For release details, check out the
     [release notes](https://github.com/google/adk-go/releases/tag/v0.3.0).
+
+??? tip "News: ADK Java v0.5.0 released!"
+
+    The ADK Go v0.5.0 release adds new features for tool execution mode
+    configuration and model versioning, along with numerous bug fixes,
+    dependency updates, and significant refactoring to improve the agent
+    and runner architecture. For release details, check out the
+    [release notes](https://github.com/google/adk-java/releases/tag/v0.5.0).
 
 <div id="centered-install-tabs" class="install-command-container" markdown="1">
 
