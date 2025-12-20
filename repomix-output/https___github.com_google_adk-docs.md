@@ -2790,7 +2790,9 @@ call_agent("If it's raining in New York right now, what is the current temperatu
    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-- **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow the agent to execute code blocks found in the LLM's response. ([See Tools/Built-in tools](../tools/built-in-tools.md)).
+- **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow
+  the agent to execute code blocks found in the LLM's response. For more
+  information, see [Code Execution with Gemini API](/adk-docs/tools/gemini-api/code-execution/).
 
 === "Python"
 
@@ -16130,7 +16132,7 @@ File: docs/grounding/google_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
-[Google Search Grounding tool](../tools/built-in-tools.md#google-search) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access real-time, authoritative information from the web. By connecting your agents to Google Search, you can provide users with up-to-date answers backed by reliable sources.
+[Google Search Grounding tool](/adk-docs/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access real-time, authoritative information from the web. By connecting your agents to Google Search, you can provide users with up-to-date answers backed by reliable sources.
 
 This feature is particularly valuable for queries requiring current information like weather updates, news events, stock prices, or any facts that may have changed since the model's training data cutoff. When your agent determines that external information is needed, it automatically performs web searches and incorporates the results into its response with proper attribution.
 
@@ -16145,7 +16147,7 @@ In this guide, you'll discover:
 
 ### Additional resource
 
-As an additional resource, [Gemini Fullstack Agent Development Kit (ADK) Quickstart](https://github.com/google/adk-samples/tree/main/python/agents/gemini-fullstack) has [a great practical use of the Google Search grounding](https://github.com/google/adk-samples/blob/main/python/agents/gemini-fullstack/app/agent.py) as a full stack application example.
+As an additional resource, the [Deep Search Agent Development Kit (ADK) Quickstart](https://github.com/google/adk-samples/tree/main/python/agents/deep-search) has a practical use of the Google Search grounding as a full stack application example.
 
 ## Google Search Grounding Quickstart
 
@@ -16483,7 +16485,7 @@ File: docs/grounding/vertex_ai_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
-[Vertex AI Search Grounding tool](../tools/built-in-tools.md#vertex-ai-search) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
+[Vertex AI Search](/adk-docs/tools/google-cloud/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
 This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
 
@@ -22360,7 +22362,7 @@ Some examples include:
 
 Code execution is a special tool that has extra security implications: sandboxing must be used to prevent model-generated code to compromise the local environment, potentially creating security issues.
 
-Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [built-in Code Executor](../tools/built-in-tools.md#code-execution) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
+Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/adk-docs/tools/gemini-api/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
 
 If none of these options satisfy your requirements, you can build your own code executor using the building blocks provided by the ADK. We recommend creating execution environments that are hermetic: no network connections and API calls permitted to avoid uncontrolled data exfiltration; and full clean up of data across execution to not create cross-user exfiltration concerns.
 
@@ -29546,23 +29548,54 @@ Here are some sample queries to test:
 - Help me monitor how many people are there in the video stream.
 
 ================
+File: docs/tools/gemini-api/code-execution.md
+================
+# Code Execution with Gemini API
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+The `built_in_code_execution` tool enables the agent to execute code,
+specifically when using Gemini 2 and higher models. This allows the model to
+perform tasks like calculations, data manipulation, or running small scripts.
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/code_execution.py"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/tools/CodeExecutionAgentApp.java:full_code"
+    ```
+
+================
 File: docs/tools/gemini-api/computer-use.md
 ================
-# Computer Use Toolset with Gemini
+# Computer Use Toolset with Gemini API
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-preview">Preview</span>
 </div>
 
 The Computer Use Toolset allows an agent to operate a user interface
-of a computer, such as a browsers, to complete tasks. This tool uses
-a specific Gemini model and the [Playwright](https://playwright.dev/) 
+of a computer, such as browsers, to complete tasks. This tool uses
+a specific Gemini model and the [Playwright](https://playwright.dev/)
 testing tool to control a Chromium browser and can interact with
 web pages by taking screenshots, clicking, typing, and navigating.
 
-For more information about the computer use model, see 
+For more information about the computer use model, see
 Gemini API [Computer use](https://ai.google.dev/gemini-api/docs/computer-use)
-or the Google Cloud Vertex AI API 
+or the Google Cloud Vertex AI API
 [Computer use](https://cloud.google.com/vertex-ai/generative-ai/docs/computer-use).
 
 !!! example "Preview release"
@@ -29653,6 +29686,107 @@ root_agent = Agent(
 For a complete code example, see the
 [computer_use](https://github.com/google/adk-python/tree/main/contributing/samples/computer_use)
 agent sample project.
+
+================
+File: docs/tools/gemini-api/google-search.md
+================
+# Google Search tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](/adk-docs/grounding/google_search_grounding/).
+
+!!! warning "Additional requirements when using the `google_search` tool"
+    When you use grounding with Google Search, and you receive Search suggestions in your response, you must display the Search suggestions in production and in your applications.
+    For more information on grounding with Google Search, see Grounding with Google Search documentation for [Google AI Studio](https://ai.google.dev/gemini-api/docs/grounding/search-suggestions) or [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions). The UI code (HTML) is returned in the Gemini response as `renderedContent`, and you will need to show the HTML in your app, in accordance with the policy.
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/google_search.py"
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {GOOGLE_SEARCH, LlmAgent} from '@google/adk';
+
+    export const rootAgent = new LlmAgent({
+      model: 'gemini-2.5-flash',
+      name: 'root_agent',
+      description:
+          'an agent whose job it is to perform Google search queries and answer questions about the results.',
+      instruction:
+          'You are an agent whose job is to perform Google search queries and answer questions about the results.',
+      tools: [GOOGLE_SEARCH],
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    --8<-- "examples/go/snippets/tools/built-in-tools/google_search.go"
+    ```
+
+=== "Java"
+
+    ```java
+    --8<-- "examples/java/snippets/src/main/java/tools/GoogleSearchAgentApp.java:full_code"
+    ```
+
+================
+File: docs/tools/gemini-api/index.md
+================
+---
+hide:
+  - toc
+---
+
+# Gemini API tools
+
+Check out the following Gemini tools that you can use with ADK agents:
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/gemini-api/google-search/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-google-search.png" alt="Google Search">
+    </div>
+    <div class="tool-card-content">
+      <h3>Google Search</h3>
+      <p>Perform web searches using Google Search with Gemini</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/gemini-api/code-execution/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
+    </div>
+    <div class="tool-card-content">
+      <h3>Code Execution</h3>
+      <p>Execute code and debug using Gemini models</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/gemini-api/computer-use/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
+    </div>
+    <div class="tool-card-content">
+      <h3>Computer Use</h3>
+      <p>Operate computer user interfaces using Gemini models</p>
+    </div>
+  </a>
+
+</div>
 
 ================
 File: docs/tools/google-cloud/api-registry.md
@@ -29834,6 +29968,590 @@ The `get_toolset()` function has the following configuration options:
     ADK code sample
 -   [Google Cloud API Registry](https://docs.cloud.google.com/api-registry/docs/overview)
     documentation
+
+================
+File: docs/tools/google-cloud/apigee-api-hub.md
+================
+# Apigee API Hub tools for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+**ApiHubToolset** lets you turn any documented API from Apigee API hub into a
+tool with a few lines of code. This section shows you the step by step
+instructions including setting up authentication for a secure connection to your
+APIs.
+
+**Prerequisites**
+
+1. [Install ADK](/adk-docs/get-started/installation/)
+2. Install the
+   [Google Cloud CLI](https://cloud.google.com/sdk/docs/install?db=bigtable-docs#installation_instructions).
+3. [Apigee API hub](https://cloud.google.com/apigee/docs/apihub/what-is-api-hub)
+    instance with documented (i.e. OpenAPI spec) APIs
+4. Set up your project structure and create required files
+
+```console
+project_root_folder
+ |
+ `-- my_agent
+     |-- .env
+     |-- __init__.py
+     |-- agent.py
+     `__ tool.py
+```
+
+## Create an API Hub Toolset
+
+Note: This tutorial includes an agent creation. If you already have an agent,
+you only need to follow a subset of these steps.
+
+1. Get your access token, so that APIHubToolset can fetch spec from API Hub API.
+   In your terminal run the following command
+
+    ```shell
+    gcloud auth print-access-token
+    # Prints your access token like 'ya29....'
+    ```
+
+2. Ensure that the account used has the required permissions. You can use the
+   pre-defined role `roles/apihub.viewer` or assign the following permissions:
+
+    1. **apihub.specs.get (required)**
+    2. apihub.apis.get (optional)
+    3. apihub.apis.list (optional)
+    4. apihub.versions.get (optional)
+    5. apihub.versions.list (optional)
+    6. apihub.specs.list (optional)
+
+3. Create a tool with `APIHubToolset`. Add the below to `tools.py`
+
+    If your API requires authentication, you must configure authentication for
+    the tool. The following code sample demonstrates how to configure an API
+    key. ADK supports token based auth (API Key, Bearer token), service account,
+    and OpenID Connect. We will soon add support for various OAuth2 flows.
+
+    ```py
+    from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
+    from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
+
+    # Provide authentication for your APIs. Not required if your APIs don't required authentication.
+    auth_scheme, auth_credential = token_to_scheme_credential(
+        "apikey", "query", "apikey", apikey_credential_str
+    )
+
+    sample_toolset = APIHubToolset(
+        name="apihub-sample-tool",
+        description="Sample Tool",
+        access_token="...",  # Copy your access token generated in step 1
+        apihub_resource_name="...", # API Hub resource name
+        auth_scheme=auth_scheme,
+        auth_credential=auth_credential,
+    )
+    ```
+
+    For production deployment we recommend using a service account instead of an
+    access token. In the code snippet above, use
+    `service_account_json=service_account_cred_json_str` and provide your
+    security account credentials instead of the token.
+
+    For apihub\_resource\_name, if you know the specific ID of the OpenAPI Spec
+    being used for your API, use
+    `` `projects/my-project-id/locations/us-west1/apis/my-api-id/versions/version-id/specs/spec-id` ``.
+    If you would like the Toolset to automatically pull the first available spec
+    from the API, use
+    `` `projects/my-project-id/locations/us-west1/apis/my-api-id` ``
+
+4. Create your agent file Agent.py and add the created tools to your agent
+   definition:
+
+    ```py
+    from google.adk.agents.llm_agent import LlmAgent
+    from .tools import sample_toolset
+
+    root_agent = LlmAgent(
+        model='gemini-2.0-flash',
+        name='enterprise_assistant',
+        instruction='Help user, leverage the tools you have access to',
+        tools=sample_toolset.get_tools(),
+    )
+    ```
+
+5. Configure your `__init__.py` to expose your agent
+
+    ```py
+    from . import agent
+    ```
+
+6. Start the Google ADK Web UI and try your agent:
+
+    ```shell
+    # make sure to run `adk web` from your project_root_folder
+    adk web
+    ```
+
+   Then go to [http://localhost:8000](http://localhost:8000) to try your agent from the Web UI.
+
+================
+File: docs/tools/google-cloud/application-integration.md
+================
+# Application Integration Tools for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.3.0</span>
+</div>
+
+With **ApplicationIntegrationToolset**, you can seamlessly give your agents
+secure and governed access to enterprise applications using Integration
+Connectors' 100+ pre-built connectors for systems like Salesforce, ServiceNow,
+JIRA, SAP, and more.
+
+It supports both on-premise and SaaS applications. In addition, you can turn
+your existing Application Integration process automations into agentic workflows
+by providing application integration workflows as tools to your ADK agents.
+
+Federated search within Application Integration lets you use ADK agents to query
+multiple enterprise applications and data sources simultaneously.
+
+[:fontawesome-brands-youtube:{.youtube-red-icon} See how ADK Federated Search in Application Integration works in this video walkthrough](https://www.youtube.com/watch?v=JdlWOQe5RgU){: target="_blank" rel="noopener noreferrer"}
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JdlWOQe5RgU?si=bFY_-jJ6Oliy5UMG" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Prerequisites
+
+### 1. Install ADK
+
+Install Agent Development Kit following the steps in the
+[installation guide](/adk-docs/get-started/installation/).
+
+### 2. Install CLI
+
+Install the
+[Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions).
+To use the tool with default credentials, run the following commands:
+
+```shell
+gcloud config set project <project-id>
+gcloud auth application-default login
+gcloud auth application-default set-quota-project <project-id>
+```
+
+Replace `<project-id>` with the unique ID of your Google Cloud project.
+
+### 3. Provision Application Integration workflow and publish Connection Tool
+
+Use an existing
+[Application Integration](https://cloud.google.com/application-integration/docs/overview)
+workflow or
+[Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview)
+connection you want to use with your agent. You can also create a new
+[Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration)
+or a
+[connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
+
+Import and publish the
+[Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global)
+from the template library.
+
+**Note**: To use a connector from Integration Connectors, you need to provision
+the Application Integration in the same region as your connection.
+
+### 4. Create project structure
+
+=== "Python"
+
+    Set up your project structure and create the required files:
+
+      ```console
+      project_root_folder
+      ├── .env
+      └── my_agent
+          ├── __init__.py
+          ├── agent.py
+          └── tools.py
+      ```
+
+    When running the agent, make sure to run `adk web` from the `project_root_folder`.
+
+=== "Java"
+
+    Set up your project structure and create the required files:
+
+      ```console
+        project_root_folder
+        └── my_agent
+            ├── agent.java
+            └── pom.xml
+      ```
+
+     When running the agent, make sure to run the commands from the `project_root_folder`.
+
+### 5. Set roles and permissions
+
+To get the permissions that you need to set up
+**ApplicationIntegrationToolset**, you must have the following IAM roles on the
+project (common to both Integration Connectors and Application Integration
+Workflows):
+
+    - roles/integrations.integrationEditor
+    - roles/connectors.invoker
+    - roles/secretmanager.secretAccessor
+
+**Note:** When using Agent Engine (AE) for deployment, don't use
+`roles/integrations.integrationInvoker`, as it can result in 403 errors. Use
+`roles/integrations.integrationEditor` instead.
+
+## Use Integration Connectors
+
+Connect your agent to enterprise applications using
+[Integration Connectors](https://cloud.google.com/integration-connectors/docs/overview).
+
+### Before you begin
+
+**Note:** The *ExecuteConnection* integration is typically created automatically when you provision Application Integration in a given region. If the *ExecuteConnection* doesn't exist in the [list of integrations](https://console.cloud.google.com/integrations/list), you must follow these steps to create it:
+
+1. To use a connector from Integration Connectors, click **QUICK SETUP** and [provision](https://console.cloud.google.com/integrations)
+   Application Integration in the same region as your connection.
+
+   ![Google Cloud Tools](/adk-docs/assets/application-integration-overview.png)
+
+
+
+2. Go to the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
+   template in the template library and click **USE TEMPLATE**.
+
+
+    ![Google Cloud Tools](/adk-docs/assets/use-connection-tool-template.png)
+
+3. Enter the Integration Name as *ExecuteConnection* (it is mandatory to use this exact integration name only).
+   Then, select the region to match your connection region and click **CREATE**.
+
+4. Click **PUBLISH** to publish the integration in the <i>Application Integration</i> editor.
+
+
+    ![Google Cloud Tools](/adk-docs/assets/publish-integration.png)
+
+
+### Create an Application Integration Toolset
+
+To create an Application Integration Toolset for Integration Connectors, follow these steps:
+
+1.  Create a tool with `ApplicationIntegrationToolset` in the `tools.py` file:
+
+    ```py
+    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+
+    connector_tool = ApplicationIntegrationToolset(
+        project="test-project", # TODO: replace with GCP project of the connection
+        location="us-central1", #TODO: replace with location of the connection
+        connection="test-connection", #TODO: replace with connection name
+        entity_operations={"Entity_One": ["LIST","CREATE"], "Entity_Two": []},#empty list for actions means all operations on the entity are supported.
+        actions=["action1"], #TODO: replace with actions
+        service_account_json='{...}', # optional. Stringified json for service account key
+        tool_name_prefix="tool_prefix2",
+        tool_instructions="..."
+    )
+    ```
+
+    **Note:**
+
+    * You can provide a service account to be used instead of default credentials by generating a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating), and providing the right [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account.
+    * To find the list of supported entities and actions for a connection, use the Connectors APIs: [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions) or [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes).
+
+
+    `ApplicationIntegrationToolset` supports `auth_scheme` and `auth_credential` for **dynamic OAuth2 authentication** for Integration Connectors. To use it, create a tool similar to this in the `tools.py` file:
+
+    ```py
+    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+    from google.adk.tools.openapi_tool.auth.auth_helpers import dict_to_auth_scheme
+    from google.adk.auth import AuthCredential
+    from google.adk.auth import AuthCredentialTypes
+    from google.adk.auth import OAuth2Auth
+
+    oauth2_data_google_cloud = {
+      "type": "oauth2",
+      "flows": {
+          "authorizationCode": {
+              "authorizationUrl": "https://accounts.google.com/o/oauth2/auth",
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "scopes": {
+                  "https://www.googleapis.com/auth/cloud-platform": (
+                      "View and manage your data across Google Cloud Platform"
+                      " services"
+                  ),
+                  "https://www.googleapis.com/auth/calendar.readonly": "View your calendars"
+              },
+          }
+      },
+    }
+
+    oauth_scheme = dict_to_auth_scheme(oauth2_data_google_cloud)
+
+    auth_credential = AuthCredential(
+      auth_type=AuthCredentialTypes.OAUTH2,
+      oauth2=OAuth2Auth(
+          client_id="...", #TODO: replace with client_id
+          client_secret="...", #TODO: replace with client_secret
+      ),
+    )
+
+    connector_tool = ApplicationIntegrationToolset(
+        project="test-project", # TODO: replace with GCP project of the connection
+        location="us-central1", #TODO: replace with location of the connection
+        connection="test-connection", #TODO: replace with connection name
+        entity_operations={"Entity_One": ["LIST","CREATE"], "Entity_Two": []},#empty list for actions means all operations on the entity are supported.
+        actions=["GET_calendars/%7BcalendarId%7D/events"], #TODO: replace with actions. this one is for list events
+        service_account_json='{...}', # optional. Stringified json for service account key
+        tool_name_prefix="tool_prefix2",
+        tool_instructions="...",
+        auth_scheme=oauth_scheme,
+        auth_credential=auth_credential
+    )
+    ```
+
+
+2. Update the `agent.py` file and add tool to your agent:
+
+    ```py
+    from google.adk.agents.llm_agent import LlmAgent
+    from .tools import connector_tool
+
+    root_agent = LlmAgent(
+        model='gemini-2.0-flash',
+        name='connector_agent',
+        instruction="Help user, leverage the tools you have access to",
+        tools=[connector_tool],
+    )
+    ```
+
+3. Configure  `__init__.py` to expose your agent:
+
+    ```py
+    from . import agent
+    ```
+
+4. Start the Google ADK Web UI and use your agent:
+
+    ```shell
+    # make sure to run `adk web` from your project_root_folder
+    adk web
+    ```
+
+After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose
+   `my\_agent` agent (which is the same as the agent folder name).
+
+
+## Use Application Integration Workflows
+
+Use an existing
+[Application Integration](https://cloud.google.com/application-integration/docs/overview)
+workflow as a tool for your agent or create a new one.
+
+
+### 1. Create a tool
+
+=== "Python"
+
+    To create a tool with `ApplicationIntegrationToolset` in the `tools.py` file, use the following code:
+
+      ```py
+          integration_tool = ApplicationIntegrationToolset(
+              project="test-project", # TODO: replace with GCP project of the connection
+              location="us-central1", #TODO: replace with location of the connection
+              integration="test-integration", #TODO: replace with integration name
+              triggers=["api_trigger/test_trigger"],#TODO: replace with trigger id(s). Empty list would mean all api triggers in the integration to be considered.
+              service_account_json='{...}', #optional. Stringified json for service account key
+              tool_name_prefix="tool_prefix1",
+              tool_instructions="..."
+          )
+      ```
+
+      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct
+         [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
+
+=== "Java"
+
+    To create a tool with `ApplicationIntegrationToolset` in the `tools.java` file, use the following code:
+
+      ```java
+          import com.google.adk.tools.applicationintegrationtoolset.ApplicationIntegrationToolset;
+          import com.google.common.collect.ImmutableList;
+          import com.google.common.collect.ImmutableMap;
+
+          public class Tools {
+              private static ApplicationIntegrationToolset integrationTool;
+              private static ApplicationIntegrationToolset connectionsTool;
+
+              static {
+                  integrationTool = new ApplicationIntegrationToolset(
+                          "test-project",
+                          "us-central1",
+                          "test-integration",
+                          ImmutableList.of("api_trigger/test-api"),
+                          null,
+                          null,
+                          null,
+                          "{...}",
+                          "tool_prefix1",
+                          "...");
+
+                  connectionsTool = new ApplicationIntegrationToolset(
+                          "test-project",
+                          "us-central1",
+                          null,
+                          null,
+                          "test-connection",
+                          ImmutableMap.of("Issue", ImmutableList.of("GET")),
+                          ImmutableList.of("ExecuteCustomQuery"),
+                          "{...}",
+                          "tool_prefix",
+                          "...");
+              }
+          }
+      ```
+
+      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
+
+### 2. Add the tool to your agent
+
+=== "Python"
+
+    To update the `agent.py` file and add the tool to your agent, use the following code:
+
+      ```py
+          from google.adk.agents.llm_agent import LlmAgent
+          from .tools import integration_tool, connector_tool
+
+          root_agent = LlmAgent(
+              model='gemini-2.0-flash',
+              name='integration_agent',
+              instruction="Help user, leverage the tools you have access to",
+              tools=[integration_tool],
+          )
+      ```
+
+=== "Java"
+
+    To update the `agent.java` file and add the tool to your agent, use the following code:
+
+      ```java
+          import com.google.adk.agent.LlmAgent;
+          import com.google.adk.tools.BaseTool;
+          import com.google.common.collect.ImmutableList;
+
+            public class MyAgent {
+                public static void main(String[] args) {
+                    // Assuming Tools class is defined as in the previous step
+                    ImmutableList<BaseTool> tools = ImmutableList.<BaseTool>builder()
+                            .add(Tools.integrationTool)
+                            .add(Tools.connectionsTool)
+                            .build();
+
+                    // Finally, create your agent with the tools generated automatically.
+                    LlmAgent rootAgent = LlmAgent.builder()
+                            .name("science-teacher")
+                            .description("Science teacher agent")
+                            .model("gemini-2.0-flash")
+                            .instruction(
+                                    "Help user, leverage the tools you have access to."
+                            )
+                            .tools(tools)
+                            .build();
+
+                    // You can now use rootAgent to interact with the LLM
+                    // For example, you can start a conversation with the agent.
+                }
+            }
+        ```
+
+**Note:** To find the list of supported entities and actions for a
+        connection, use these Connector APIs: `listActions`, `listEntityTypes`.
+
+### 3. Expose your agent
+
+=== "Python"
+
+    To configure `__init__.py` to expose your agent, use the following code:
+
+      ```py
+          from . import agent
+      ```
+
+### 4. Use your agent
+
+=== "Python"
+
+    To start the Google ADK Web UI and use your agent, use the following commands:
+
+      ```shell
+          # make sure to run `adk web` from your project_root_folder
+          adk web
+      ```
+    After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
+
+=== "Java"
+
+    To start the Google ADK Web UI and use your agent, use the following commands:
+
+      ```bash
+          mvn install
+
+          mvn exec:java \
+              -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
+              -Dexec.args="--adk.agents.source-dir=src/main/java" \
+              -Dexec.classpathScope="compile"
+      ```
+
+    After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
+
+================
+File: docs/tools/google-cloud/bigquery.md
+================
+# BigQuery database tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.1.0</span>
+</div>
+
+These are a set of tools aimed to provide integration with BigQuery, namely:
+
+* **`list_dataset_ids`**: Fetches BigQuery dataset ids present in a GCP project.
+* **`get_dataset_info`**: Fetches metadata about a BigQuery dataset.
+* **`list_table_ids`**: Fetches table ids present in a BigQuery dataset.
+* **`get_table_info`**: Fetches metadata about a BigQuery table.
+* **`execute_sql`**: Runs a SQL query in BigQuery and fetch the result.
+* **`forecast`**: Runs a BigQuery AI time series forecast using the `AI.FORECAST` function.
+* **`ask_data_insights`**: Answers questions about data in BigQuery tables using natural language.
+
+They are packaged in the toolset `BigQueryToolset`.
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/bigquery.py"
+```
+
+================
+File: docs/tools/google-cloud/bigtable.md
+================
+# Bigtable database tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.12.0</span>
+</div>
+
+These are a set of tools aimed to provide integration with Bigtable, namely:
+
+* **`list_instances`**: Fetches Bigtable instances in a Google Cloud project.
+* **`get_instance_info`**: Fetches metadata instance information in a Google Cloud project.
+* **`list_tables`**: Fetches tables in a GCP Bigtable instance.
+* **`get_table_info`**: Fetches metadata table information in a GCP Bigtable.
+* **`execute_sql`**: Runs a SQL query in Bigtable table and fetch the result.
+
+They are packaged in the toolset `BigtableToolset`.
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/bigtable.py"
+```
 
 ================
 File: docs/tools/google-cloud/code-exec-agent-engine.md
@@ -30075,6 +30793,232 @@ When plotting trends, you should make sure to sort and order the data by the x-a
 
 For a complete version of an ADK agent using this example code, see the
 [agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
+
+================
+File: docs/tools/google-cloud/gke-code-executor.md
+================
+# GKE Code Executor tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+</div>
+
+The GKE Code Executor (`GkeCodeExecutor`) provides a secure and scalable method
+for running LLM-generated code by leveraging the GKE (Google Kubernetes Engine)
+Sandbox environment, which uses gVisor for workload isolation. For each code
+execution request, it dynamically creates an ephemeral, sandboxed Kubernetes Job
+with a hardened Pod configuration. You should use this executor for production
+environments on GKE where security and isolation are critical.
+
+## How it Works
+
+When a request to execute code is made, the `GkeCodeExecutor` performs the following steps:
+
+1.  **Creates a ConfigMap:** A Kubernetes ConfigMap is created to store the Python code that needs to be executed.
+2.  **Creates a Sandboxed Pod:** A new Kubernetes Job is created, which in turn creates a Pod with a hardened security context and the gVisor runtime enabled. The code from the ConfigMap is mounted into this Pod.
+3.  **Executes the Code:** The code is executed within the sandboxed Pod, isolated from the underlying node and other workloads.
+4.  **Retrieves the Result:** The standard output and error streams from the execution are captured from the Pod's logs.
+5.  **Cleans Up Resources:** Once the execution is complete, the Job and the associated ConfigMap are automatically deleted, ensuring that no artifacts are left behind.
+
+## Key Benefits
+
+*   **Enhanced Security:** Code is executed in a gVisor-sandboxed environment with kernel-level isolation.
+*   **Ephemeral Environments:** Each code execution runs in its own ephemeral Pod, to prevent state transfer between executions.
+*   **Resource Control:** You can configure CPU and memory limits for the execution Pods to prevent resource abuse.
+*   **Scalability:** Allows you to run a large number of code executions in parallel, with GKE handling the scheduling and scaling of the underlying nodes.
+
+## System requirements
+
+The following requirements must be met to successfully deploy your ADK project
+with the GKE Code Executor tool:
+
+- GKE cluster with a **gVisor-enabled node pool**.
+- Agent's service account requires specific **RBAC permissions**, which allow it to:
+    - Create, watch, and delete **Jobs** for each execution request.
+    - Manage **ConfigMaps** to inject code into the Job's pod.
+    - List **Pods** and read their **logs** to retrieve the execution result
+- Install the client library with GKE extras: `pip install google-adk[gke]`
+
+For a complete, ready-to-use configuration, see the
+[deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/gke_agent_sandbox/deployment_rbac.yaml)
+sample. For more information on deploying ADK workflows to GKE, see
+[Deploy to Google Kubernetes Engine (GKE)](/adk-docs/deploy/gke/).
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.code_executors import GkeCodeExecutor
+
+    # Initialize the executor, targeting the namespace where its ServiceAccount
+    # has the required RBAC permissions.
+    # This example also sets a custom timeout and resource limits.
+    gke_executor = GkeCodeExecutor(
+        namespace="agent-sandbox",
+        timeout_seconds=600,
+        cpu_limit="1000m",  # 1 CPU core
+        mem_limit="1Gi",
+    )
+
+    # The agent now uses this executor for any code it generates.
+    gke_agent = LlmAgent(
+        name="gke_coding_agent",
+        model="gemini-2.0-flash",
+        instruction="You are a helpful AI agent that writes and executes Python code.",
+        code_executor=gke_executor,
+    )
+    ```
+
+## Configuration parameters
+
+The `GkeCodeExecutor` can be configured with the following parameters:
+
+| Parameter            | Type   | Description                                                                             |
+| -------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `namespace`          | `str`  | Kubernetes namespace where the execution Jobs will be created. Defaults to `"default"`. |
+| `image`              | `str`  | Container image to use for the execution Pod. Defaults to `"python:3.11-slim"`.         |
+| `timeout_seconds`    | `int`  | Timeout in seconds for the code execution. Defaults to `300`.                           |
+| `cpu_requested`      | `str`  | Amount of CPU to request for the execution Pod. Defaults to `"200m"`.                   |
+| `mem_requested`      | `str`  | Amount of memory to request for the execution Pod. Defaults to `"256Mi"`.               |
+| `cpu_limit`          | `str`  | Maximum amount of CPU the execution Pod can use. Defaults to `"500m"`.                  |
+| `mem_limit`          | `str`  | Maximum amount of memory the execution Pod can use. Defaults to `"512Mi"`.              |
+| `kubeconfig_path`    | `str`  | Path to a kubeconfig file to use for authentication. Falls back to in-cluster config or the default local kubeconfig. |
+| `kubeconfig_context` | `str`  | The `kubeconfig` context to use.  |
+
+================
+File: docs/tools/google-cloud/index.md
+================
+---
+hide:
+  - toc
+---
+
+# Google Cloud Tools
+
+Google Cloud tools make it easier to connect your agents to Google Cloud’s
+products and services. With just a few lines of code you can use these tools to
+connect your agents with:
+
+* **Any custom APIs** that developers host in Apigee.
+* **100s** of **prebuilt connectors** to enterprise systems such as Salesforce,
+  Workday, and SAP.
+* **Automation workflows** built using application integration.
+* **Databases** such as Spanner, AlloyDB, Postgres and more using the MCP
+  Toolbox for databases.
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/google-cloud/apigee-api-hub/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-apigee.png" alt="Apigee">
+    </div>
+    <div class="tool-card-content">
+      <h3>Apigee API Hub</h3>
+      <p>Turn any documented API from Apigee API hub into a tool</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/api-registry/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/developer-tools-color.svg" alt="Cloud API Registry">
+    </div>
+    <div class="tool-card-content">
+      <h3>API Registry</h3>
+      <p>Dynamically connect with Google Cloud services as MCP tools</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/application-integration/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-apigee-integration.png" alt="Apigee Integration">
+    </div>
+    <div class="tool-card-content">
+      <h3>Application Integration</h3>
+      <p>Link your agents to enterprise apps using Integration Connectors</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/observability/bigquery-agent-analytics/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
+    </div>
+    <div class="tool-card-content">
+      <h3>BigQuery Agent Analytics</h3>
+      <p>Analyze and debug agent behavior at scale</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/bigquery/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
+    </div>
+    <div class="tool-card-content">
+      <h3>BigQuery Tools</h3>
+      <p>Connect with BigQuery to retrieve data and perform analysis</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/bigtable/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigtable.png" alt="Bigtable">
+    </div>
+    <div class="tool-card-content">
+      <h3>Bigtable Tools</h3>
+      <p>Interact with Bigtable to retrieve data and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/gke-code-executor/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gke.png" alt="Google Kubernetes Engine">
+    </div>
+    <div class="tool-card-content">
+      <h3>GKE Code Executor</h3>
+      <p>Run AI-generated code in a secure and scalable GKE environment</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/spanner/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-spanner.png" alt="Spanner">
+    </div>
+    <div class="tool-card-content">
+      <h3>Spanner Tools</h3>
+      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
+    </div>
+    <div class="tool-card-content">
+      <h3>MCP Toolbox for Databases</h3>
+      <p>Connect over 30 different data sources to your agents</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/vertex-ai-rag-engine/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI RAG Engine</h3>
+      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/vertex-ai-search/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI Search</h3>
+      <p>Search across your private, configured data stores in Vertex AI Search</p>
+    </div>
+  </a>
+
+</div>
 
 ================
 File: docs/tools/google-cloud/mcp-toolbox-for-databases.md
@@ -30324,6 +31268,84 @@ For more information, read more about the following features:
 * [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
 * [Authorized Invocations:](https://googleapis.github.io/genai-toolbox/resources/tools/#authorized-invocations)  restrict access to use a tool based on the users Auth token
 * [OpenTelemetry](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/): get metrics and tracing from Toolbox with OpenTelemetry
+
+================
+File: docs/tools/google-cloud/spanner.md
+================
+# Spanner database tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span>
+</div>
+
+These are a set of tools aimed to provide integration with Spanner, namely:
+
+* **`list_table_names`**: Fetches table names present in a GCP Spanner database.
+* **`list_table_indexes`**: Fetches table indexes present in a GCP Spanner database.
+* **`list_table_index_columns`**: Fetches table index columns present in a GCP Spanner database.
+* **`list_named_schemas`**: Fetches named schema for a Spanner database.
+* **`get_table_schema`**: Fetches Spanner database table schema and metadata information.
+* **`execute_sql`**: Runs a SQL query in Spanner database and fetch the result.
+* **`similarity_search`**: Similarity search in Spanner using a text query.
+
+They are packaged in the toolset `SpannerToolset`.
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/spanner.py"
+```
+
+================
+File: docs/tools/google-cloud/vertex-ai-rag-engine.md
+================
+# Vertex AI RAG Engine tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using Vertex
+AI RAG Engine.
+
+When you use grounding with Vertex AI RAG Engine, you need to prepare a RAG corpus before hand.
+Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [Vertex AI RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/adk-docs/tools/limitations/).
+
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/vertexai_rag_engine.py"
+    ```
+
+================
+File: docs/tools/google-cloud/vertex-ai-search.md
+================
+# Vertex AI Search tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+The `vertex_ai_search_tool` uses Google Cloud Vertex AI Search, enabling the
+agent to search across your private, configured data stores (e.g., internal
+documents, company policies, knowledge bases). This built-in tool requires you
+to provide the specific data store ID during configuration. For further details
+of the tool, see
+[Understanding Vertex AI Search grounding](/adk-docs/grounding/vertex_ai_search_grounding/).
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/vertexai_search.py"
+```
 
 ================
 File: docs/tools/third-party/ag-ui.md
@@ -30888,7 +31910,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-atlassian.png" alt="Atlassian">
+      <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
     </div>
     <div class="tool-card-content">
       <h3>Atlassian</h3>
@@ -30898,7 +31920,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/github/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-github.png" alt="GitHub">
+      <img src="/adk-docs/assets/tools-github.png" alt="GitHub">
     </div>
     <div class="tool-card-content">
       <h3>GitHub</h3>
@@ -30908,7 +31930,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-gitlab.png" alt="GitLab">
+      <img src="/adk-docs/assets/tools-gitlab.png" alt="GitLab">
     </div>
     <div class="tool-card-content">
       <h3>GitLab</h3>
@@ -30918,7 +31940,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-hugging-face.png" alt="Hugging Face">
+      <img src="/adk-docs/assets/tools-hugging-face.png" alt="Hugging Face">
     </div>
     <div class="tool-card-content">
       <h3>Hugging Face</h3>
@@ -30928,7 +31950,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-linear.png" alt="Linear">
+      <img src="/adk-docs/assets/tools-linear.png" alt="Linear">
     </div>
     <div class="tool-card-content">
       <h3>Linear</h3>
@@ -30938,7 +31960,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/n8n/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-n8n.png" alt="n8n">
+      <img src="/adk-docs/assets/tools-n8n.png" alt="n8n">
     </div>
     <div class="tool-card-content">
       <h3>n8n</h3>
@@ -30948,7 +31970,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-notion.png" alt="Notion">
+      <img src="/adk-docs/assets/tools-notion.png" alt="Notion">
     </div>
     <div class="tool-card-content">
       <h3>Notion</h3>
@@ -30958,7 +31980,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/paypal/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-paypal.png" alt="Paypal">
+      <img src="/adk-docs/assets/tools-paypal.png" alt="Paypal">
     </div>
     <div class="tool-card-content">
       <h3>Paypal</h3>
@@ -30968,7 +31990,7 @@ Check out the following third-party tools that you can use with ADK agents:
 
   <a href="/adk-docs/tools/third-party/qdrant/" class="tool-card">
     <div class="tool-card-image-wrapper">
-      <img src="../../assets/tools-qdrant.png" alt="Qdrant">
+      <img src="/adk-docs/assets/tools-qdrant.png" alt="Qdrant">
     </div>
     <div class="tool-card-content">
       <h3>Qdrant</h3>
@@ -31669,278 +32691,343 @@ env={
 - [Qdrant Cloud](https://cloud.qdrant.io/)
 
 ================
-File: docs/tools/built-in-tools.md
+File: docs/tools/index.md
 ================
-# Built-in tools
+---
+hide:
+  - toc
+---
 
-These built-in tools provide ready-to-use functionality such as Google Search or
-code executors that provide agents with common capabilities. For instance, an
-agent that needs to retrieve information from the web can directly use the
-**google\_search** tool without any additional setup.
+# Tools for Agents
 
-## How to Use
+Check out the following pre-built tools that you can use with ADK agents:
 
-1. **Import:** Import the desired tool from the tools module. This is `agents.tools` in Python, `google.golang.org/adk/tool/geminitool` in Go, or `com.google.adk.tools` in Java.
+### Gemini tools
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/gemini-api/google-search/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-google-search.png" alt="Google Search">
+    </div>
+    <div class="tool-card-content">
+      <h3>Google Search</h3>
+      <p>Perform web searches using Google Search with Gemini</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/gemini-api/code-execution/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
+    </div>
+    <div class="tool-card-content">
+      <h3>Code Execution</h3>
+      <p>Execute code and debug using Gemini models</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/gemini-api/computer-use/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
+    </div>
+    <div class="tool-card-content">
+      <h3>Computer Use</h3>
+      <p>Operate computer user interfaces using Gemini models</p>
+    </div>
+  </a>
+
+</div>
+
+### Google Cloud tools
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/google-cloud/apigee-api-hub/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-apigee.png" alt="Apigee">
+    </div>
+    <div class="tool-card-content">
+      <h3>Apigee API Hub</h3>
+      <p>Turn any documented API from Apigee API hub into a tool</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/api-registry/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/developer-tools-color.svg" alt="Cloud API Registry">
+    </div>
+    <div class="tool-card-content">
+      <h3>API Registry</h3>
+      <p>Dynamically connect with Google Cloud services as MCP tools</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/application-integration/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-apigee-integration.png" alt="Apigee Integration">
+    </div>
+    <div class="tool-card-content">
+      <h3>Application Integration</h3>
+      <p>Link your agents to enterprise apps using Integration Connectors</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/observability/bigquery-agent-analytics/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
+    </div>
+    <div class="tool-card-content">
+      <h3>BigQuery Agent Analytics</h3>
+      <p>Analyze and debug agent behavior at scale</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/bigquery/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
+    </div>
+    <div class="tool-card-content">
+      <h3>BigQuery Tools</h3>
+      <p>Connect with BigQuery to retrieve data and perform analysis</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/bigtable/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-bigtable.png" alt="Bigtable">
+    </div>
+    <div class="tool-card-content">
+      <h3>Bigtable Tools</h3>
+      <p>Interact with Bigtable to retrieve data and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/gke-code-executor/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gke.png" alt="Google Kubernetes Engine">
+    </div>
+    <div class="tool-card-content">
+      <h3>GKE Code Executor</h3>
+      <p>Run AI-generated code in a secure and scalable GKE environment</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/spanner/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-spanner.png" alt="Spanner">
+    </div>
+    <div class="tool-card-content">
+      <h3>Spanner Tools</h3>
+      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
+    </div>
+    <div class="tool-card-content">
+      <h3>MCP Toolbox for Databases</h3>
+      <p>Connect over 30 different data sources to your agents</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/vertex-ai-rag-engine/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI RAG Engine</h3>
+      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/google-cloud/vertex-ai-search/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
+    </div>
+    <div class="tool-card-content">
+      <h3>Vertex AI Search</h3>
+      <p>Search across your private, configured data stores in Vertex AI Search</p>
+    </div>
+  </a>
+
+</div>
+
+### Third-party tools
+
+<div class="tool-card-grid">
+
+  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
+    </div>
+    <div class="tool-card-content">
+      <h3>Atlassian</h3>
+      <p>Manage issues, search pages, and update team content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-github.png" alt="GitHub">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitHub</h3>
+      <p>Analyze code, manage issues and PRs, and automate workflows</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-gitlab.png" alt="GitLab">
+    </div>
+    <div class="tool-card-content">
+      <h3>GitLab</h3>
+      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-hugging-face.png" alt="Hugging Face">
+    </div>
+    <div class="tool-card-content">
+      <h3>Hugging Face</h3>
+      <p>Access models, datasets, research papers, and AI tools</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-linear.png" alt="Linear">
+    </div>
+    <div class="tool-card-content">
+      <h3>Linear</h3>
+      <p>Manage issues, track projects, and streamline development</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/n8n/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-n8n.png" alt="n8n">
+    </div>
+    <div class="tool-card-content">
+      <h3>n8n</h3>
+      <p>Trigger automated workflows, connect apps, and process data</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-notion.png" alt="Notion">
+    </div>
+    <div class="tool-card-content">
+      <h3>Notion</h3>
+      <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/paypal/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-paypal.png" alt="Paypal">
+    </div>
+    <div class="tool-card-content">
+      <h3>Paypal</h3>
+      <p>Manage payments, send invoices, and handle subscriptions</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/qdrant/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-qdrant.png" alt="Qdrant">
+    </div>
+    <div class="tool-card-content">
+      <h3>Qdrant</h3>
+      <p>Store and retrieve information using semantic vector search</p>
+    </div>
+  </a>
+
+</div>
+
+## Use pre-built tools with ADK agents
+
+Follow these general steps to include tools in your ADK agents:
+
+1. **Import:** Import the desired tool from the tools module. This is
+   `agents.tools` in Python, `@google/adk` in TypeScript,
+   `google.golang.org/adk/tool` in Go, or `com.google.adk.tools` in Java.
 2. **Configure:** Initialize the tool, providing required parameters if any.
-3. **Register:** Add the initialized tool to the **tools** list of your Agent.
+3. **Register:** Add the initialized tool to the ***tools*** list of your Agent.
 
-Once added to an agent, the agent can decide to use the tool based on the **user
-prompt** and its **instructions**. The framework handles the execution of the
-tool when the agent calls it. Important: check the ***Limitations*** section of this page.
+Once added to an agent, the agent can decide to use the tool based on the user
+prompt and its instructions. The framework handles the execution of the
+tool when the agent calls it.
 
-## Available Built-in tools
+!!! note "Note: Limitations on using multiple tools"
+    Some ADK tools ***cannot be used with other tools in the same agent***.
+    For more information on tools with these limitations, see
+    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
 
-Note: Go supports the Google Search tool and other built-in tools via the `geminitool` package.
-Note: Java only supports Google Search and Code Execution tools currently.
+## Build tools for agents
 
-### Google Search
+If the above tools don't meet your needs, you can build tools for your ADK
+workflows using the following guides:
 
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
-</div>
+*   **[Function Tools](/adk-docs/tools-custom/function-tools/)**: Build custom tools for
+    your specific ADK agent needs.
+*   **[MCP Tools](/adk-docs/tools-custom/mcp-tools/)**: Connect MCP servers as tools
+    for your ADK agents.
+*   **[OpenAPI Integration](/adk-docs/tools-custom/openapi-tools/)**:
+    Generate callable tools directly from an OpenAPI Specification.
 
-The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](../grounding/google_search_grounding.md).
+================
+File: docs/tools/limitations.md
+================
+# Limitations for ADK tools
 
-!!! warning "Additional requirements when using the `google_search` tool"
-    When you use grounding with Google Search, and you receive Search suggestions in your response, you must display the Search suggestions in production and in your applications.
-    For more information on grounding with Google Search, see Grounding with Google Search documentation for [Google AI Studio](https://ai.google.dev/gemini-api/docs/grounding/search-suggestions) or [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions). The UI code (HTML) is returned in the Gemini response as `renderedContent`, and you will need to show the HTML in your app, in accordance with the policy.
+Some ADK tools have limitations that can impact how you implement them within an
+agent workflow. This page lists these tool limitations and workarounds, if available.
+
+## One tool per agent limitation {#one-tool-one-agent}
+
+In general, you can use more than one tool in an agent, but use of specific
+tools within an agent excludes the use of any other tools in that agent. The
+following ADK Tools can only be used by themselves, without any other tools, in
+a single agent object:
+
+*   [Code Execution](/adk-docs/tools/gemini-api/code-execution/) with Gemini API
+*   [Google Search](/adk-docs/tools/gemini-api/google-search/) with Gemini API
+*   [Vertex AI Search](/adk-docs/tools/google-cloud/vertex-ai-search/)
+
+For example, the following approach that uses one of these tools along with
+other tools, within a single agent, is ***not supported***:
 
 === "Python"
 
     ```py
-    --8<-- "examples/python/snippets/tools/built-in-tools/google_search.py"
-    ```
-
-=== "Go"
-
-    ```go
-    --8<-- "examples/go/snippets/tools/built-in-tools/google_search.go"
+    root_agent = Agent(
+        name="RootAgent",
+        model="gemini-2.5-flash",
+        description="Code Agent",
+        tools=[custom_function],
+        code_executor=BuiltInCodeExecutor() # <-- NOT supported when used with tools
+    )
     ```
 
 === "Java"
 
     ```java
-    --8<-- "examples/java/snippets/src/main/java/tools/GoogleSearchAgentApp.java:full_code"
+     LlmAgent searchAgent =
+            LlmAgent.builder()
+                .model(MODEL_ID)
+                .name("SearchAgent")
+                .instruction("You're a specialist in Google Search")
+                .tools(new GoogleSearchTool(), new YourCustomTool()) // <-- NOT supported
+                .build();
     ```
 
-### Code Execution
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
-</div>
-
-The `built_in_code_execution` tool enables the agent to execute code,
-specifically when using Gemini 2 models. This allows the model to perform tasks
-like calculations, data manipulation, or running small scripts.
-
-=== "Python"
-
-    ```py
-    --8<-- "examples/python/snippets/tools/built-in-tools/code_execution.py"
-    ```
-
-=== "Java"
-
-    ```java
-    --8<-- "examples/java/snippets/src/main/java/tools/CodeExecutionAgentApp.java:full_code"
-    ```
-
-### GKE Code Executor
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
-</div>
-
-The GKE Code Executor (`GkeCodeExecutor`) provides a secure and scalable method
-for running LLM-generated code by leveraging the GKE (Google Kubernetes Engine)
-Sandbox environment, which uses gVisor for workload isolation. For each code
-execution request, it dynamically creates an ephemeral, sandboxed Kubernetes Job
-with a hardened Pod configuration. You should use this executor for production
-environments on GKE where security and isolation are critical.
-
-#### How it Works
-
-When a request to execute code is made, the `GkeCodeExecutor` performs the following steps:
-
-1.  **Creates a ConfigMap:** A Kubernetes ConfigMap is created to store the Python code that needs to be executed.
-2.  **Creates a Sandboxed Pod:** A new Kubernetes Job is created, which in turn creates a Pod with a hardened security context and the gVisor runtime enabled. The code from the ConfigMap is mounted into this Pod.
-3.  **Executes the Code:** The code is executed within the sandboxed Pod, isolated from the underlying node and other workloads.
-4.  **Retrieves the Result:** The standard output and error streams from the execution are captured from the Pod's logs.
-5.  **Cleans Up Resources:** Once the execution is complete, the Job and the associated ConfigMap are automatically deleted, ensuring that no artifacts are left behind.
-
-#### Key Benefits
-
-*   **Enhanced Security:** Code is executed in a gVisor-sandboxed environment with kernel-level isolation.
-*   **Ephemeral Environments:** Each code execution runs in its own ephemeral Pod, to prevent state transfer between executions.
-*   **Resource Control:** You can configure CPU and memory limits for the execution Pods to prevent resource abuse.
-*   **Scalability:** Allows you to run a large number of code executions in parallel, with GKE handling the scheduling and scaling of the underlying nodes.
-
-#### System requirements
-
-The following requirements must be met to successfully deploy your ADK project
-with the GKE Code Executor tool:
-
-- GKE cluster with a **gVisor-enabled node pool**.
-- Agent's service account requires specific **RBAC permissions**, which allow it to:
-    - Create, watch, and delete **Jobs** for each execution request.
-    - Manage **ConfigMaps** to inject code into the Job's pod.
-    - List **Pods** and read their **logs** to retrieve the execution result
-- Install the client library with GKE extras: `pip install google-adk[gke]`
-
-For a complete, ready-to-use configuration, see the 
-[deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/gke_agent_sandbox/deployment_rbac.yaml)
-sample. For more information on deploying ADK workflows to GKE, see
-[Deploy to Google Kubernetes Engine (GKE)](/adk-docs/deploy/gke/).
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-    from google.adk.code_executors import GkeCodeExecutor
-
-    # Initialize the executor, targeting the namespace where its ServiceAccount
-    # has the required RBAC permissions.
-    # This example also sets a custom timeout and resource limits.
-    gke_executor = GkeCodeExecutor(
-        namespace="agent-sandbox",
-        timeout_seconds=600,
-        cpu_limit="1000m",  # 1 CPU core
-        mem_limit="1Gi",
-    )
-
-    # The agent now uses this executor for any code it generates.
-    gke_agent = LlmAgent(
-        name="gke_coding_agent",
-        model="gemini-2.0-flash",
-        instruction="You are a helpful AI agent that writes and executes Python code.",
-        code_executor=gke_executor,
-    )
-    ```
-
-#### Configuration parameters
-
-The `GkeCodeExecutor` can be configured with the following parameters:
-
-| Parameter            | Type   | Description                                                                             |
-| -------------------- | ------ | --------------------------------------------------------------------------------------- |
-| `namespace`          | `str`  | Kubernetes namespace where the execution Jobs will be created. Defaults to `"default"`. |
-| `image`              | `str`  | Container image to use for the execution Pod. Defaults to `"python:3.11-slim"`.         |
-| `timeout_seconds`    | `int`  | Timeout in seconds for the code execution. Defaults to `300`.                           |
-| `cpu_requested`      | `str`  | Amount of CPU to request for the execution Pod. Defaults to `"200m"`.                   |
-| `mem_requested`      | `str`  | Amount of memory to request for the execution Pod. Defaults to `"256Mi"`.               |
-| `cpu_limit`          | `str`  | Maximum amount of CPU the execution Pod can use. Defaults to `"500m"`.                  |
-| `mem_limit`          | `str`  | Maximum amount of memory the execution Pod can use. Defaults to `"512Mi"`.              |
-| `kubeconfig_path`    | `str`  | Path to a kubeconfig file to use for authentication. Falls back to in-cluster config or the default local kubeconfig. |
-| `kubeconfig_context` | `str`  | The `kubeconfig` context to use.  |
-
-### Vertex AI RAG Engine
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
-</div>
-
-The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using Vertex
-AI RAG Engine.
-
-When you use grounding with Vertex AI RAG Engine, you need to prepare a RAG corpus before hand.
-Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [Vertex AI RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
-
-=== "Python"
-
-    ```py
-    --8<-- "examples/python/snippets/tools/built-in-tools/vertexai_rag_engine.py"
-    ```
-
-### Vertex AI Search
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-The `vertex_ai_search_tool` uses Google Cloud Vertex AI Search, enabling the
-agent to search across your private, configured data stores (e.g., internal
-documents, company policies, knowledge bases). This built-in tool requires you
-to provide the specific data store ID during configuration. For further details of the tool, see [Understanding Vertex AI Search grounding](../grounding/vertex_ai_search_grounding.md).
-
-
-```py
---8<-- "examples/python/snippets/tools/built-in-tools/vertexai_search.py"
-```
-
-
-### BigQuery
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.1.0</span>
-</div>
-
-These are a set of tools aimed to provide integration with BigQuery, namely:
-
-* **`list_dataset_ids`**: Fetches BigQuery dataset ids present in a GCP project.
-* **`get_dataset_info`**: Fetches metadata about a BigQuery dataset.
-* **`list_table_ids`**: Fetches table ids present in a BigQuery dataset.
-* **`get_table_info`**: Fetches metadata about a BigQuery table.
-* **`execute_sql`**: Runs a SQL query in BigQuery and fetch the result.
-* **`forecast`**: Runs a BigQuery AI time series forecast using the `AI.FORECAST` function.
-* **`ask_data_insights`**: Answers questions about data in BigQuery tables using natural language.
-
-They are packaged in the toolset `BigQueryToolset`.
-
-
-
-```py
---8<-- "examples/python/snippets/tools/built-in-tools/bigquery.py"
-```
-
-
-### Spanner
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span>
-</div>
-
-These are a set of tools aimed to provide integration with Spanner, namely:
-
-* **`list_table_names`**: Fetches table names present in a GCP Spanner database.
-* **`list_table_indexes`**: Fetches table indexes present in a GCP Spanner database.
-* **`list_table_index_columns`**: Fetches table index columns present in a GCP Spanner database.
-* **`list_named_schemas`**: Fetches named schema for a Spanner database.
-* **`get_table_schema`**: Fetches Spanner database table schema and metadata information.
-* **`execute_sql`**: Runs a SQL query in Spanner database and fetch the result.
-* **`similarity_search`**: Similarity search in Spanner using a text query.
-
-They are packaged in the toolset `SpannerToolset`.
-
-
-
-```py
---8<-- "examples/python/snippets/tools/built-in-tools/spanner.py"
-```
-
-
-### Bigtable
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.12.0</span>
-</div>
-
-These are a set of tools aimed to provide integration with Bigtable, namely:
-
-* **`list_instances`**: Fetches Bigtable instances in a Google Cloud project.
-* **`get_instance_info`**: Fetches metadata instance information in a Google Cloud project.
-* **`list_tables`**: Fetches tables in a GCP Bigtable instance.
-* **`get_table_info`**: Fetches metadata table information in a GCP Bigtable.
-* **`execute_sql`**: Runs a SQL query in Bigtable table and fetch the result.
-
-They are packaged in the toolset `BigtableToolset`.
-
-
-
-```py
---8<-- "examples/python/snippets/tools/built-in-tools/bigtable.py"
-```
-
-## Use Built-in tools with other tools
+### Workaround #1: AgentTool.create() method
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
@@ -31956,7 +33043,6 @@ to use built-in tools with other tools by using multiple agents:
     from google.adk.agents import Agent
     from google.adk.tools import google_search
     from google.adk.code_executors import BuiltInCodeExecutor
-    
 
     search_agent = Agent(
         model='gemini-2.0-flash',
@@ -31991,11 +33077,11 @@ to use built-in tools with other tools by using multiple agents:
     import com.google.adk.tools.BuiltInCodeExecutionTool;
     import com.google.adk.tools.GoogleSearchTool;
     import com.google.common.collect.ImmutableList;
-    
+
     public class NestedAgentApp {
-    
+
       private static final String MODEL_ID = "gemini-2.0-flash";
-    
+
       public static void main(String[] args) {
 
         // Define the SearchAgent
@@ -32006,7 +33092,7 @@ to use built-in tools with other tools by using multiple agents:
                 .instruction("You're a specialist in Google Search")
                 .tools(new GoogleSearchTool()) // Instantiate GoogleSearchTool
                 .build();
-    
+
 
         // Define the CodingAgent
         LlmAgent codingAgent =
@@ -32040,44 +33126,17 @@ to use built-in tools with other tools by using multiple agents:
     }
     ```
 
+### Workaround #2: bypass_multi_tools_limit
 
-### Limitations
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+</div>
 
-!!! warning
-
-    Currently, for each root agent or single agent, only one built-in tool is
-    supported. No other tools of any type can be used in the same agent.
-
- For example, the following approach that uses ***a built-in tool along with
- other tools*** within a single agent is **not** currently supported:
-
-=== "Python"
-
-    ```py
-    root_agent = Agent(
-        name="RootAgent",
-        model="gemini-2.0-flash",
-        description="Root Agent",
-        tools=[custom_function], 
-        code_executor=BuiltInCodeExecutor() # <-- not supported when used with tools
-    )
-    ```
-
-=== "Java"
-
-    ```java
-     LlmAgent searchAgent =
-            LlmAgent.builder()
-                .model(MODEL_ID)
-                .name("SearchAgent")
-                .instruction("You're a specialist in Google Search")
-                .tools(new GoogleSearchTool(), new YourCustomTool()) // <-- not supported
-                .build();
-    ```
-
-ADK Python has a built-in workaroud which bypasses this limitation for 
-`GoogleSearchTool` and `VertexAiSearchTool` (use `bypass_multi_tools_limit=True` to enable it), e.g.
-[sample agent](https://github.com/google/adk-python/tree/main/contributing/samples/built_in_multi_tools).
+ADK Python has a built-in workaround which bypasses this limitation for
+`GoogleSearchTool` and `VertexAiSearchTool` (use `bypass_multi_tools_limit=True` to enable it),
+as shown in the
+[built_in_multi_tools](https://github.com/google/adk-python/tree/main/contributing/samples/built_in_multi_tools).
+sample agent.
 
 !!! warning
 
@@ -32086,13 +33145,13 @@ ADK Python has a built-in workaroud which bypasses this limitation for
     workaround mentioned above.
 
 For example, the following approach that uses built-in tools within sub-agents
-is **not** currently supported:
+is **not supported**:
 
 === "Python"
 
     ```py
     url_context_agent = Agent(
-        model='gemini-2.0-flash',
+        model='gemini-2.5-flash',
         name='UrlContextAgent',
         instruction="""
         You're a specialist in URL Context
@@ -32100,7 +33159,7 @@ is **not** currently supported:
         tools=[url_context],
     )
     coding_agent = Agent(
-        model='gemini-2.0-flash',
+        model='gemini-2.5-flash',
         name='CodeAgent',
         instruction="""
         You're a specialist in Code Execution
@@ -32109,7 +33168,7 @@ is **not** currently supported:
     )
     root_agent = Agent(
         name="RootAgent",
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         description="Root Agent",
         sub_agents=[
             url_context_agent,
@@ -32123,7 +33182,7 @@ is **not** currently supported:
     ```java
     LlmAgent searchAgent =
         LlmAgent.builder()
-            .model("gemini-2.0-flash")
+            .model("gemini-2.5-flash")
             .name("SearchAgent")
             .instruction("You're a specialist in Google Search")
             .tools(new GoogleSearchTool())
@@ -32131,835 +33190,21 @@ is **not** currently supported:
 
     LlmAgent codingAgent =
         LlmAgent.builder()
-            .model("gemini-2.0-flash")
+            .model("gemini-2.5-flash")
             .name("CodeAgent")
             .instruction("You're a specialist in Code Execution")
             .tools(new BuiltInCodeExecutionTool())
             .build();
-    
+
 
     LlmAgent rootAgent =
         LlmAgent.builder()
             .name("RootAgent")
-            .model("gemini-2.0-flash")
+            .model("gemini-2.5-flash")
             .description("Root Agent")
             .subAgents(searchAgent, codingAgent) // Not supported, as the sub agents use built in tools.
             .build();
     ```
-
-================
-File: docs/tools/google-cloud-tools.md
-================
-# Google Cloud Tools
-
-
-
-Google Cloud tools make it easier to connect your agents to Google Cloud’s
-products and services. With just a few lines of code you can use these tools to
-connect your agents with:
-
-* **Any custom APIs** that developers host in Apigee.
-* **100s** of **prebuilt connectors** to enterprise systems such as Salesforce,
-  Workday, and SAP.
-* **Automation workflows** built using application integration.
-* **Databases** such as Spanner, AlloyDB, Postgres and more using the MCP Toolbox for
-  databases.
-
-![Google Cloud Tools](../assets/google_cloud_tools.svg)
-
-## Apigee API Hub Tools
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-**ApiHubToolset** lets you turn any documented API from Apigee API hub into a
-tool with a few lines of code. This section shows you the step by step
-instructions including setting up authentication for a secure connection to your
-APIs.
-
-**Prerequisites**
-
-1. [Install ADK](../get-started/installation.md)
-2. Install the
-   [Google Cloud CLI](https://cloud.google.com/sdk/docs/install?db=bigtable-docs#installation_instructions).
-3. [Apigee API hub](https://cloud.google.com/apigee/docs/apihub/what-is-api-hub)
-    instance with documented (i.e. OpenAPI spec) APIs
-4. Set up your project structure and create required files
-
-```console
-project_root_folder
- |
- `-- my_agent
-     |-- .env
-     |-- __init__.py
-     |-- agent.py
-     `__ tool.py
-```
-
-### Create an API Hub Toolset
-
-Note: This tutorial includes an agent creation. If you already have an agent,
-you only need to follow a subset of these steps.
-
-1. Get your access token, so that APIHubToolset can fetch spec from API Hub API.
-   In your terminal run the following command
-
-    ```shell
-    gcloud auth print-access-token
-    # Prints your access token like 'ya29....'
-    ```
-
-2. Ensure that the account used has the required permissions. You can use the
-   pre-defined role `roles/apihub.viewer` or assign the following permissions:
-
-    1. **apihub.specs.get (required)**
-    2. apihub.apis.get (optional)
-    3. apihub.apis.list (optional)
-    4. apihub.versions.get (optional)
-    5. apihub.versions.list (optional)
-    6. apihub.specs.list (optional)
-
-3. Create a tool with `APIHubToolset`. Add the below to `tools.py`
-
-    If your API requires authentication, you must configure authentication for
-    the tool. The following code sample demonstrates how to configure an API
-    key. ADK supports token based auth (API Key, Bearer token), service account,
-    and OpenID Connect. We will soon add support for various OAuth2 flows.
-
-    ```py
-    from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
-    from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
-
-    # Provide authentication for your APIs. Not required if your APIs don't required authentication.
-    auth_scheme, auth_credential = token_to_scheme_credential(
-        "apikey", "query", "apikey", apikey_credential_str
-    )
-
-    sample_toolset = APIHubToolset(
-        name="apihub-sample-tool",
-        description="Sample Tool",
-        access_token="...",  # Copy your access token generated in step 1
-        apihub_resource_name="...", # API Hub resource name
-        auth_scheme=auth_scheme,
-        auth_credential=auth_credential,
-    )
-    ```
-
-    For production deployment we recommend using a service account instead of an
-    access token. In the code snippet above, use
-    `service_account_json=service_account_cred_json_str` and provide your
-    security account credentials instead of the token.
-
-    For apihub\_resource\_name, if you know the specific ID of the OpenAPI Spec
-    being used for your API, use
-    `` `projects/my-project-id/locations/us-west1/apis/my-api-id/versions/version-id/specs/spec-id` ``.
-    If you would like the Toolset to automatically pull the first available spec
-    from the API, use
-    `` `projects/my-project-id/locations/us-west1/apis/my-api-id` ``
-
-4. Create your agent file Agent.py and add the created tools to your agent
-   definition:
-
-    ```py
-    from google.adk.agents.llm_agent import LlmAgent
-    from .tools import sample_toolset
-
-    root_agent = LlmAgent(
-        model='gemini-2.0-flash',
-        name='enterprise_assistant',
-        instruction='Help user, leverage the tools you have access to',
-        tools=sample_toolset.get_tools(),
-    )
-    ```
-
-5. Configure your `__init__.py` to expose your agent
-
-    ```py
-    from . import agent
-    ```
-
-6. Start the Google ADK Web UI and try your agent:
-
-    ```shell
-    # make sure to run `adk web` from your project_root_folder
-    adk web
-    ```
-
-   Then go to [http://localhost:8000](http://localhost:8000) to try your agent from the Web UI.
-
----
-
-## Application Integration Tools
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.3.0</span>
-</div>
-
-With **ApplicationIntegrationToolset**, you can seamlessly give your agents
-secure and governed access to enterprise applications using Integration
-Connectors' 100+ pre-built connectors for systems like Salesforce, ServiceNow,
-JIRA, SAP, and more.
-
-It supports both on-premise and SaaS applications. In addition, you can turn
-your existing Application Integration process automations into agentic workflows
-by providing application integration workflows as tools to your ADK agents.
-
-Federated search within Application Integration lets you use ADK agents to query
-multiple enterprise applications and data sources simultaneously.
-
-[:fontawesome-brands-youtube:{.youtube-red-icon} See how ADK Federated Search in Application Integration works in this video walkthrough](https://www.youtube.com/watch?v=JdlWOQe5RgU){: target="_blank" rel="noopener noreferrer"}
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/JdlWOQe5RgU?si=bFY_-jJ6Oliy5UMG" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-### Prerequisites
-
-#### 1. Install ADK
-
-Install Agent Development Kit following the steps in the
-[installation guide](../get-started/installation.md).
-
-#### 2. Install CLI
-
-Install the
-[Google Cloud CLI](https://cloud.google.com/sdk/docs/install#installation_instructions).
-To use the tool with default credentials, run the following commands:
-
-```shell
-gcloud config set project <project-id>
-gcloud auth application-default login
-gcloud auth application-default set-quota-project <project-id>
-```
-
-Replace `<project-id>` with the unique ID of your Google Cloud project.
-
-#### 3. Provision Application Integration workflow and publish Connection Tool
-
-Use an existing
-[Application Integration](https://cloud.google.com/application-integration/docs/overview)
-workflow or
-[Integrations Connector](https://cloud.google.com/integration-connectors/docs/overview)
-connection you want to use with your agent. You can also create a new
-[Application Integration workflow](https://cloud.google.com/application-integration/docs/setup-application-integration)
-or a
-[connection](https://cloud.google.com/integration-connectors/docs/connectors/neo4j/configure#configure-the-connector).
-
-Import and publish the
-[Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/global)
-from the template library.
-
-**Note**: To use a connector from Integration Connectors, you need to provision
-the Application Integration in the same region as your connection.
-
-#### 4. Create project structure
-
-=== "Python"
-
-    Set up your project structure and create the required files:
-
-      ```console
-      project_root_folder
-      ├── .env
-      └── my_agent
-          ├── __init__.py
-          ├── agent.py
-          └── tools.py
-      ```
-
-    When running the agent, make sure to run `adk web` from the `project_root_folder`.
-
-=== "Java"
-
-    Set up your project structure and create the required files:
-
-      ```console
-        project_root_folder
-        └── my_agent
-            ├── agent.java
-            └── pom.xml
-      ```
-
-     When running the agent, make sure to run the commands from the `project_root_folder`.
-
-#### 5. Set roles and permissions
-
-To get the permissions that you need to set up
-**ApplicationIntegrationToolset**, you must have the following IAM roles on the
-project (common to both Integration Connectors and Application Integration
-Workflows):
-
-    - roles/integrations.integrationEditor
-    - roles/connectors.invoker
-    - roles/secretmanager.secretAccessor
-
-**Note:** When using Agent Engine (AE) for deployment, don't use
-`roles/integrations.integrationInvoker`, as it can result in 403 errors. Use
-`roles/integrations.integrationEditor` instead.
-
-### Use Integration Connectors
-
-Connect your agent to enterprise applications using
-[Integration Connectors](https://cloud.google.com/integration-connectors/docs/overview).
-
-#### Before you begin
-
-**Note:** The *ExecuteConnection* integration is typically created automatically when you provision Application Integration in a given region. If the *ExecuteConnection* doesn't exist in the [list of integrations](https://console.cloud.google.com/integrations/list), you must follow these steps to create it:
-
-1. To use a connector from Integration Connectors, click **QUICK SETUP** and [provision](https://console.cloud.google.com/integrations)
-   Application Integration in the same region as your connection.
-
-   ![Google Cloud Tools](../assets/application-integration-overview.png)
-
-
-
-2. Go to the [Connection Tool](https://console.cloud.google.com/integrations/templates/connection-tool/locations/us-central1)
-   template in the template library and click **USE TEMPLATE**.
-
-
-    ![Google Cloud Tools](../assets/use-connection-tool-template.png)
-
-3. Enter the Integration Name as *ExecuteConnection* (it is mandatory to use this exact integration name only).
-   Then, select the region to match your connection region and click **CREATE**.
-
-4. Click **PUBLISH** to publish the integration in the <i>Application Integration</i> editor.
-
-
-    ![Google Cloud Tools](../assets/publish-integration.png)
-
-
-#### Create an Application Integration Toolset
-
-To create an Application Integration Toolset for Integration Connectors, follow these steps:
-
-1.  Create a tool with `ApplicationIntegrationToolset` in the `tools.py` file:
-
-    ```py
-    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
-
-    connector_tool = ApplicationIntegrationToolset(
-        project="test-project", # TODO: replace with GCP project of the connection
-        location="us-central1", #TODO: replace with location of the connection
-        connection="test-connection", #TODO: replace with connection name
-        entity_operations={"Entity_One": ["LIST","CREATE"], "Entity_Two": []},#empty list for actions means all operations on the entity are supported.
-        actions=["action1"], #TODO: replace with actions
-        service_account_json='{...}', # optional. Stringified json for service account key
-        tool_name_prefix="tool_prefix2",
-        tool_instructions="..."
-    )
-    ```
-
-    **Note:**
-
-    * You can provide a service account to be used instead of default credentials by generating a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating), and providing the right [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account.
-    * To find the list of supported entities and actions for a connection, use the Connectors APIs: [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions) or [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes).
-
-
-    `ApplicationIntegrationToolset` supports `auth_scheme` and `auth_credential` for **dynamic OAuth2 authentication** for Integration Connectors. To use it, create a tool similar to this in the `tools.py` file:
-
-    ```py
-    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
-    from google.adk.tools.openapi_tool.auth.auth_helpers import dict_to_auth_scheme
-    from google.adk.auth import AuthCredential
-    from google.adk.auth import AuthCredentialTypes
-    from google.adk.auth import OAuth2Auth
-
-    oauth2_data_google_cloud = {
-      "type": "oauth2",
-      "flows": {
-          "authorizationCode": {
-              "authorizationUrl": "https://accounts.google.com/o/oauth2/auth",
-              "tokenUrl": "https://oauth2.googleapis.com/token",
-              "scopes": {
-                  "https://www.googleapis.com/auth/cloud-platform": (
-                      "View and manage your data across Google Cloud Platform"
-                      " services"
-                  ),
-                  "https://www.googleapis.com/auth/calendar.readonly": "View your calendars"
-              },
-          }
-      },
-    }
-
-    oauth_scheme = dict_to_auth_scheme(oauth2_data_google_cloud)
-
-    auth_credential = AuthCredential(
-      auth_type=AuthCredentialTypes.OAUTH2,
-      oauth2=OAuth2Auth(
-          client_id="...", #TODO: replace with client_id
-          client_secret="...", #TODO: replace with client_secret
-      ),
-    )
-
-    connector_tool = ApplicationIntegrationToolset(
-        project="test-project", # TODO: replace with GCP project of the connection
-        location="us-central1", #TODO: replace with location of the connection
-        connection="test-connection", #TODO: replace with connection name
-        entity_operations={"Entity_One": ["LIST","CREATE"], "Entity_Two": []},#empty list for actions means all operations on the entity are supported.
-        actions=["GET_calendars/%7BcalendarId%7D/events"], #TODO: replace with actions. this one is for list events
-        service_account_json='{...}', # optional. Stringified json for service account key
-        tool_name_prefix="tool_prefix2",
-        tool_instructions="...",
-        auth_scheme=oauth_scheme,
-        auth_credential=auth_credential
-    )
-    ```
-
-
-2. Update the `agent.py` file and add tool to your agent:
-
-    ```py
-    from google.adk.agents.llm_agent import LlmAgent
-    from .tools import connector_tool
-
-    root_agent = LlmAgent(
-        model='gemini-2.0-flash',
-        name='connector_agent',
-        instruction="Help user, leverage the tools you have access to",
-        tools=[connector_tool],
-    )
-    ```
-
-3. Configure  `__init__.py` to expose your agent:
-
-    ```py
-    from . import agent
-    ```
-
-4. Start the Google ADK Web UI and use your agent:
-
-    ```shell
-    # make sure to run `adk web` from your project_root_folder
-    adk web
-    ```
-
-After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose
-   `my\_agent` agent (which is the same as the agent folder name).
-
-
-### Use Application Integration Workflows
-
-Use an existing
-[Application Integration](https://cloud.google.com/application-integration/docs/overview)
-workflow as a tool for your agent or create a new one.
-
-
-#### 1. Create a tool
-
-=== "Python"
-
-    To create a tool with `ApplicationIntegrationToolset` in the `tools.py` file, use the following code:
-
-      ```py
-          integration_tool = ApplicationIntegrationToolset(
-              project="test-project", # TODO: replace with GCP project of the connection
-              location="us-central1", #TODO: replace with location of the connection
-              integration="test-integration", #TODO: replace with integration name
-              triggers=["api_trigger/test_trigger"],#TODO: replace with trigger id(s). Empty list would mean all api triggers in the integration to be considered.
-              service_account_json='{...}', #optional. Stringified json for service account key
-              tool_name_prefix="tool_prefix1",
-              tool_instructions="..."
-          )
-      ```
-
-      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct
-         [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
-
-=== "Java"
-
-    To create a tool with `ApplicationIntegrationToolset` in the `tools.java` file, use the following code:
-
-      ```java
-          import com.google.adk.tools.applicationintegrationtoolset.ApplicationIntegrationToolset;
-          import com.google.common.collect.ImmutableList;
-          import com.google.common.collect.ImmutableMap;
-
-          public class Tools {
-              private static ApplicationIntegrationToolset integrationTool;
-              private static ApplicationIntegrationToolset connectionsTool;
-
-              static {
-                  integrationTool = new ApplicationIntegrationToolset(
-                          "test-project",
-                          "us-central1",
-                          "test-integration",
-                          ImmutableList.of("api_trigger/test-api"),
-                          null,
-                          null,
-                          null,
-                          "{...}",
-                          "tool_prefix1",
-                          "...");
-
-                  connectionsTool = new ApplicationIntegrationToolset(
-                          "test-project",
-                          "us-central1",
-                          null,
-                          null,
-                          "test-connection",
-                          ImmutableMap.of("Issue", ImmutableList.of("GET")),
-                          ImmutableList.of("ExecuteCustomQuery"),
-                          "{...}",
-                          "tool_prefix",
-                          "...");
-              }
-          }
-      ```
-
-      **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
-
-#### 2. Add the tool to your agent
-
-=== "Python"
-
-    To update the `agent.py` file and add the tool to your agent, use the following code:
-
-      ```py
-          from google.adk.agents.llm_agent import LlmAgent
-          from .tools import integration_tool, connector_tool
-
-          root_agent = LlmAgent(
-              model='gemini-2.0-flash',
-              name='integration_agent',
-              instruction="Help user, leverage the tools you have access to",
-              tools=[integration_tool],
-          )
-      ```
-
-=== "Java"
-
-    To update the `agent.java` file and add the tool to your agent, use the following code:
-
-      ```java
-          import com.google.adk.agent.LlmAgent;
-          import com.google.adk.tools.BaseTool;
-          import com.google.common.collect.ImmutableList;
-
-            public class MyAgent {
-                public static void main(String[] args) {
-                    // Assuming Tools class is defined as in the previous step
-                    ImmutableList<BaseTool> tools = ImmutableList.<BaseTool>builder()
-                            .add(Tools.integrationTool)
-                            .add(Tools.connectionsTool)
-                            .build();
-
-                    // Finally, create your agent with the tools generated automatically.
-                    LlmAgent rootAgent = LlmAgent.builder()
-                            .name("science-teacher")
-                            .description("Science teacher agent")
-                            .model("gemini-2.0-flash")
-                            .instruction(
-                                    "Help user, leverage the tools you have access to."
-                            )
-                            .tools(tools)
-                            .build();
-
-                    // You can now use rootAgent to interact with the LLM
-                    // For example, you can start a conversation with the agent.
-                }
-            }
-        ```
-
-**Note:** To find the list of supported entities and actions for a
-        connection, use these Connector APIs: `listActions`, `listEntityTypes`.
-
-#### 3. Expose your agent
-
-=== "Python"
-
-    To configure `__init__.py` to expose your agent, use the following code:
-
-      ```py
-          from . import agent
-      ```
-
-#### 4. Use your agent
-
-=== "Python"
-
-    To start the Google ADK Web UI and use your agent, use the following commands:
-
-      ```shell
-          # make sure to run `adk web` from your project_root_folder
-          adk web
-      ```
-    After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
-
-=== "Java"
-
-    To start the Google ADK Web UI and use your agent, use the following commands:
-
-      ```bash
-          mvn install
-
-          mvn exec:java \
-              -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
-              -Dexec.args="--adk.agents.source-dir=src/main/java" \
-              -Dexec.classpathScope="compile"
-      ```
-
-    After completing the above steps, go to [http://localhost:8000](http://localhost:8000), and choose the `my_agent` agent (which is the same as the agent folder name).
-
-================
-File: docs/tools/index.md
-================
----
-hide:
-  - toc
----
-
-# Tools for Agents
-
-Check out the following pre-built tools that you can use with ADK agents:
-
-### Gemini tools
-
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/built-in-tools/#google-search" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-google-search.png" alt="Google Search">
-    </div>
-    <div class="tool-card-content">
-      <h3>Google Search</h3>
-      <p>Perform web searches using Google Search with Gemini</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#code-execution" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-gemini.png" alt="Gemini">
-    </div>
-    <div class="tool-card-content">
-      <h3>Code Execution</h3>
-      <p>Execute code using Gemini models</p>
-    </div>
-  </a>
-
-</div>
-
-### Google Cloud tools
-
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/google-cloud-tools/#apigee-api-hub-tools" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-apigee.png" alt="Apigee">
-    </div>
-    <div class="tool-card-content">
-      <h3>Apigee API Hub</h3>
-      <p>Turn any documented API from Apigee API hub into a tool</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/api-registry/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/developer-tools-color.svg" alt="Cloud API Registry">
-    </div>
-    <div class="tool-card-content">
-      <h3>API Registry</h3>
-      <p>Dynamically connect with Google Cloud services as MCP tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud-tools/#application-integration-tools" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-apigee-integration.png" alt="Apigee Integration">
-    </div>
-    <div class="tool-card-content">
-      <h3>Application Integration</h3>
-      <p>Link your agents to enterprise apps using Integration Connectors</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/bigquery-agent-analytics/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Agent Analytics</h3>
-      <p>Analyze and debug agent behavior at scale.</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#bigquery" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Tools</h3>
-      <p>Connect with BigQuery to retrieve data and perform analysis</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#bigtable" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-bigtable.png" alt="Bigtable">
-    </div>
-    <div class="tool-card-content">
-      <h3>Bigtable Tools</h3>
-      <p>Interact with Bigtable to retrieve data and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#gke-code-executor" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-gke.png" alt="Google Kubernetes Engine">
-    </div>
-    <div class="tool-card-content">
-      <h3>GKE Code Executor</h3>
-      <p>Run AI-generated code in a secure and scalable GKE environment</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#spanner" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-spanner.png" alt="Spanner">
-    </div>
-    <div class="tool-card-content">
-      <h3>Spanner Tools</h3>
-      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
-    </div>
-    <div class="tool-card-content">
-      <h3>MCP Toolbox for Databases</h3>
-      <p>Connect over 30 different data sources to your agents</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#vertex-ai-rag-engine" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI RAG Engine</h3>
-      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/built-in-tools/#vertex-ai-search" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI Search</h3>
-      <p>Search across your private, configured data stores in Vertex AI Search</p>
-    </div>
-  </a>
-
-</div>
-
-### Third-party tools
-
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-atlassian.png" alt="Atlassian">
-    </div>
-    <div class="tool-card-content">
-      <h3>Atlassian</h3>
-      <p>Manage issues, search pages, and update team content</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-github.png" alt="GitHub">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitHub</h3>
-      <p>Analyze code, manage issues and PRs, and automate workflows</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-gitlab.png" alt="GitLab">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitLab</h3>
-      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-hugging-face.png" alt="Hugging Face">
-    </div>
-    <div class="tool-card-content">
-      <h3>Hugging Face</h3>
-      <p>Access models, datasets, research papers, and AI tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-linear.png" alt="Linear">
-    </div>
-    <div class="tool-card-content">
-      <h3>Linear</h3>
-      <p>Manage issues, track projects, and streamline development</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/n8n/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-n8n.png" alt="n8n">
-    </div>
-    <div class="tool-card-content">
-      <h3>n8n</h3>
-      <p>Trigger automated workflows, connect apps, and process data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-notion.png" alt="Notion">
-    </div>
-    <div class="tool-card-content">
-      <h3>Notion</h3>
-      <p>Search workspaces, create pages, and manage tasks and databases</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/paypal/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-paypal.png" alt="Paypal">
-    </div>
-    <div class="tool-card-content">
-      <h3>Paypal</h3>
-      <p>Manage payments, send invoices, and handle subscriptions</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/qdrant/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="../assets/tools-qdrant.png" alt="Qdrant">
-    </div>
-    <div class="tool-card-content">
-      <h3>Qdrant</h3>
-      <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-</div>
-
-## Build your tools
-
-If the above tools don't meet your needs, you can build tools for your ADK
-workflows using the following guides:
-
-*   **[Function Tools](/adk-docs/tools-custom/function-tools/)**: Build custom tools for
-    your specific ADK agent needs.
-*   **[MCP Tools](/adk-docs/tools/mcp-tools/)**: Connect MCP servers as tools
-    for your ADK agents.
-*   **[OpenAPI Integration](/adk-docs/tools-custom/openapi-tools/)**:
-    Generate callable tools directly from an OpenAPI Specification.
 
 ================
 File: docs/tools-custom/authentication.md
