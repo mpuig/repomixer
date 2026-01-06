@@ -904,15 +904,15 @@ from a2a.types import AgentCard
 
 # Define A2A agent card
 my_agent_card = AgentCard(
-    "name": "file_agent",
-    "url": "http://example.com",
-    "description": "Test agent from file",
-    "version": "1.0.0",
-    "capabilities": {},
-    "skills": [],
-    "defaultInputModes": ["text/plain"],
-    "defaultOutputModes": ["text/plain"],
-    "supportsAuthenticatedExtendedCard": False,
+    name="file_agent",
+    url="http://example.com",
+    description="Test agent from file",
+    version="1.0.0",
+    capabilities={},
+    skills=[],
+    defaultInputModes=["text/plain"],
+    defaultOutputModes=["text/plain"],
+    supportsAuthenticatedExtendedCard=False,
 )
 a2a_app = to_a2a(root_agent, port=8001, agent_card=my_agent_card)
 ```
@@ -4130,7 +4130,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     ```
 
   * **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
-      * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent returns an [`Event`](../events/index.md) with `escalate=True` in it's Event Actions.
+      * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent returns an [`Event`](../events/index.md) with `escalate=True` in its Event Actions.
       * **Context & State:** Passes the *same* `InvocationContext` in each iteration, allowing state changes (e.g., counters, flags) to persist across loops.
 
 === "Python"
@@ -4710,7 +4710,7 @@ By combining ADK's composition primitives, you can implement various established
 ### Sequential Pipeline Pattern
 
 * **Structure:** A [`SequentialAgent`](workflow-agents/sequential-agents.md) contains `sub_agents` executed in a fixed order.
-* **Goal:** Implement a multi-step process where the output of one step feeds into the next.
+* **Goal:** Implement a multistep process where the output of one-step feeds into the next.
 * **ADK Primitives Used:**
     * **Workflow:** `SequentialAgent` defines the order.
     * **Communication:** Primarily uses **Shared Session State**. Earlier agents write results (often via `output_key`), later agents read those results from `context.state`.
@@ -10336,7 +10336,7 @@ echo "<<put your GOOGLE_API_KEY here>>" | gcloud secrets create GOOGLE_API_KEY -
 ```
 
 ### Permissions to read
-You should give appropiate permissision for you service account to read this secret.
+You should give appropriate permission for you service account to read this secret.
 ```bash
 gcloud secrets add-iam-policy-binding GOOGLE_API_KEY --member="serviceAccount:1234567890-compute@developer.gserviceaccount.com" --role="roles/secretmanager.secretAccessor" --project=my-project
 ```
@@ -11454,7 +11454,7 @@ sessions.db
 
 Build the container image abd deploy the application again.
 
-### Insufficent Permission to Stream Logs `ERROR: (gcloud.builds.submit)`
+### Insufficient Permission to Stream Logs `ERROR: (gcloud.builds.submit)`
 
 This error can occur when you don't have sufficient permissions to stream build logs, or your VPC-SC security policy restricts access to the default logs bucket.
 
@@ -18157,12 +18157,12 @@ Freeplay's Observability feature gives you a clear view into how your agent is
 behaving in production. You can dig into individual agent traces to
 understand each step and diagnose issues:
 
-![Trace detail](https://228labs.com/freeplay-google-demo/images/trace_detail.png)
+![Trace detail](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/trace_detail.png)
 
 You can also use Freeplay's filtering functionality to search and filter the
 data across any segment of interest:
 
-![Filter](https://228labs.com/freeplay-google-demo/images/filter.png)
+![Filter](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/filter.png)
 
 ## Prompt Management (optional)
 
@@ -18180,7 +18180,7 @@ instructions, you can version prompts in the Freeplay application.
 
 First define a prompt in Freeplay by going to Prompts -> Create prompt template:
 
-![Prompt](https://228labs.com/freeplay-google-demo/images/prompt.png)
+![Prompt](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/prompt.png)
 
 When creating your prompt template you'll need to add 3 elements, as described
 in the following sections:
@@ -18203,7 +18203,7 @@ for the ongoing agent context to be passed through:
 Click new message and change the role to 'history'. This will ensure the past
 messages are passed through when present.
 
-![Prompt Editor](https://228labs.com/freeplay-google-demo/images/prompt_editor.png)
+![Prompt Editor](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/prompt_editor.png)
 
 Now in your code you can use the ```FreeplayLLMAgent```:
 
@@ -18231,7 +18231,7 @@ Freeplay enables you to define, version, and run
 application. You can define evaluations for any of your prompts or agents by
 going to Evaluations -> "New evaluation".
 
-![Creating a new evaluation in Freeplay](https://228labs.com/freeplay-google-demo/images/eval_create.png)
+![Creating a new evaluation in Freeplay](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/eval_create.png)
 
 These evaluations can be configured to run for both online monitoring and
 offline evaluation. Datasets for offline evaluation can be uploaded to Freeplay
@@ -18244,7 +18244,7 @@ up [datasets](https://docs.freeplay.ai/docs/datasets) to test against on a
 repeated basis. Use production logs to create golden datasets or collections of
 failure cases that you can use to test against as you make changes.
 
-![Save test case](https://228labs.com/freeplay-google-demo/images/save_test_case.png)
+![Save test case](https://github.com/freeplayai/freeplay-google-demo/blob/main/docs/images/save_test_case.png)
 
 ## Batch Testing
 
@@ -18255,13 +18255,12 @@ experiments) at both the
 This allows you to compare multiple different models or prompt changes and
 quantify changes head to head across your full agent execution.
 
-[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py)
+[Here](https://github.com/freeplayai/freeplay-google-demo/blob/main/examples/example_test_run.py)
 is a code example for executing a batch test on Freeplay with ADK.
-[Here](https://github.com/228Labs/freeplay-google-demo/blob/main/examples/example_test_run.py) is a code example for executing a batch test on Freeplay with the Google ADK.
 
 ## Sign up now
 
-Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/228Labs/freeplay-google-demo).
+Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
 
 ================
 File: docs/observability/logging.md
@@ -21105,7 +21104,7 @@ information, see
 
 ## Add resumable configuration
 
-Enable the Resume function for an agent workflow by applying a Resumabiltiy
+Enable the Resume function for an agent workflow by applying a Resumability
 configuration to the App object of your ADK workflow, as shown in the following
 code example:
 
@@ -39526,7 +39525,7 @@ from simple tasks to complex workflows.
 
 ??? tip "News: ADK Java v0.5.0 released!"
 
-    The ADK Go v0.5.0 release adds new features for tool execution mode
+    The ADK Java v0.5.0 release adds new features for tool execution mode
     configuration and model versioning, along with numerous bug fixes,
     dependency updates, and significant refactoring to improve the agent
     and runner architecture. For release details, check out the
