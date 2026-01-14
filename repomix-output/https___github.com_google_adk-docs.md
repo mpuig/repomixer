@@ -1048,6 +1048,1095 @@ Now that you have created an agent that's exposing a remote agent via an A2A ser
 - [**A2A Quickstart (Consuming)**](./quickstart-consuming.md): Learn how your agent can use other agents using the A2A Protocol.
 
 ================
+File: docs/agents/models/anthropic.md
+================
+# Claude models for ADK agents
+
+<div class="language-support-tag" title="Available for Java. Python support for direct Anthropic API (non-Vertex) is via LiteLLM.">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+You can integrate Anthropic's Claude models directly using an Anthropic API key
+or from a Vertex AI backend into your Java ADK applications by using the ADK's
+`Claude` wrapper class. You can also access Anthropic models through
+Google Cloud Vertex AI services. For more information, see the
+[Third-Party Models on Vertex AI](/adk-docs/agents/models/vertex/#third-party-models-on-vertex-ai-eg-anthropic-claude)
+section. You can also use Anthropic models through the
+[LiteLLM](/adk-docs/agents/models/litellm/) library for Python.
+
+## Get started
+
+The following code examples show a basic implementation for using Gemini models
+in your agents:
+
+```java
+public static LlmAgent createAgent() {
+
+  AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+      .apiKey("ANTHROPIC_API_KEY")
+      .build();
+
+  Claude claudeModel = new Claude(
+      "claude-3-7-sonnet-latest", anthropicClient
+  );
+
+  return LlmAgent.builder()
+      .name("claude_direct_agent")
+      .model(claudeModel)
+      .instruction("You are a helpful AI assistant powered by Anthropic Claude.")
+      .build();
+}
+```
+
+## Prerequisites
+
+1.  **Dependencies:**
+    *   **Anthropic SDK Classes (Transitive):** The Java ADK's `com.google.adk.models.Claude`
+    wrapper relies on classes from Anthropic's official Java SDK. These are typically included
+    as *transitive dependencies*. For more information, see the
+    [Anthropic Java SDK](https://github.com/anthropics/anthropic-sdk-java).
+
+2.  **Anthropic API Key:**
+    *   Obtain an API key from Anthropic. Securely manage this key using a secret manager.
+
+## Example implementation
+
+Instantiate `com.google.adk.models.Claude`, providing the desired Claude model name and
+an `AnthropicOkHttpClient` configured with your API key. Then, pass the `Claude` instance
+to your `LlmAgent`, as shown in the following example:
+
+```java
+import com.anthropic.client.AnthropicClient;
+import com.google.adk.agents.LlmAgent;
+import com.google.adk.models.Claude;
+import com.anthropic.client.okhttp.AnthropicOkHttpClient; // From Anthropic's SDK
+
+public class DirectAnthropicAgent {
+
+  private static final String CLAUDE_MODEL_ID = "claude-3-7-sonnet-latest"; // Or your preferred Claude model
+
+  public static LlmAgent createAgent() {
+
+    // It's recommended to load sensitive keys from a secure config
+    AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+        .apiKey("ANTHROPIC_API_KEY")
+        .build();
+
+    Claude claudeModel = new Claude(
+        CLAUDE_MODEL_ID,
+        anthropicClient
+    );
+
+    return LlmAgent.builder()
+        .name("claude_direct_agent")
+        .model(claudeModel)
+        .instruction("You are a helpful AI assistant powered by Anthropic Claude.")
+        // ... other LlmAgent configurations
+        .build();
+  }
+
+  public static void main(String[] args) {
+    try {
+      LlmAgent agent = createAgent();
+      System.out.println("Successfully created direct Anthropic agent: " + agent.name());
+    } catch (IllegalStateException e) {
+      System.err.println("Error creating agent: " + e.getMessage());
+    }
+  }
+}
+```
+
+================
+File: docs/agents/models/apigee.md
+================
+# Apigee AI Gateway for ADK agents
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span><span class="lst-java">Java v0.4.0</span>
+</div>
+
+[Apigee](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee)
+provides a powerful [AI Gateway](https://cloud.google.com/solutions/apigee-ai),
+transforming how you manage and govern your generative AI model traffic. By
+exposing your AI model endpoint (like Vertex AI or the Gemini API) through an
+Apigee proxy, you immediately gain enterprise-grade capabilities:
+
+- **Model Safety:** Implement security policies like Model Armor for threat protection.
+
+- **Traffic Governance:** Enforce Rate Limiting and Token Limiting to manage costs and prevent abuse.
+
+- **Performance:** Improve response times and efficiency using Semantic Caching and advanced model routing.
+
+- **Monitoring & Visibility:** Get granular monitoring, analysis, and auditing of all your AI requests.
+
+!!! note
+
+    The `ApigeeLLM` wrapper is currently designed for use with Vertex AI
+    and the Gemini API (generateContent). We are continually expanding support for
+    other models and interfaces.
+
+## Example implementation
+
+Integrate Apigee's governance into your agent's workflow by instantiating the
+`ApigeeLlm` wrapper object and pass it to an `LlmAgent` or other agent type.
+
+=== "Python"
+
+    ```python
+
+    from google.adk.agents import LlmAgent
+    from google.adk.models.apigee_llm import ApigeeLlm
+
+    # Instantiate the ApigeeLlm wrapper
+    model = ApigeeLlm(
+        # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+        model="apigee/gemini-2.5-flash",
+        # The proxy URL of your deployed Apigee proxy including the base path
+        proxy_url=f"https://{APIGEE_PROXY_URL}",
+        # Pass necessary authentication/authorization headers (like an API key)
+        custom_headers={"foo": "bar"}
+    )
+
+    # Pass the configured model wrapper to your LlmAgent
+    agent = LlmAgent(
+        model=model,
+        name="my_governed_agent",
+        instruction="You are a helpful assistant powered by Gemini and governed by Apigee.",
+        # ... other agent parameters
+    )
+
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.ApigeeLlm;
+    import com.google.common.collect.ImmutableMap;
+
+    ApigeeLlm apigeeLlm =
+            ApigeeLlm.builder()
+                .modelName("apigee/gemini-2.5-flash") // Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation
+                .proxyUrl(APIGEE_PROXY_URL) //The proxy URL of your deployed Apigee proxy including the base path
+                .customHeaders(ImmutableMap.of("foo", "bar")) //Pass necessary authentication/authorization headers (like an API key)
+                .build();
+    LlmAgent agent =
+        LlmAgent.builder()
+            .model(apigeeLlm)
+            .name("my_governed_agent")
+            .description("my_governed_agent")
+            .instruction("You are a helpful assistant powered by Gemini and governed by Apigee.")
+            // tools will be added next
+            .build();
+    ```
+
+With this configuration, every API call from your agent will be routed through
+Apigee first, where all necessary policies (security, rate limiting, logging)
+are executed before the request is securely forwarded to the underlying AI model
+endpoint. For a full code example using the Apigee proxy, see
+[Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+
+================
+File: docs/agents/models/google-gemini.md
+================
+# Google Gemini models for ADK agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+ADK supports the Google Gemini family of generative AI models that provide a
+powerful set of models with a wide range of features. ADK provides support for many
+Gemini features, including
+[Code Execution](/adk-docs/tools/gemini-api/code-execution/),
+[Google Search](/adk-docs/tools/gemini-api/google-search/),
+[Context caching](/adk-docs/context/caching/),
+[Computer use](/adk-docs/tools/gemini-api/computer-use/)
+and the [Interactions API](#interactions-api).
+
+## Get started
+
+The following code examples show a basic implementation for using Gemini models
+in your agents:
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    # --- Example using a stable Gemini Flash model ---
+    agent_gemini_flash = LlmAgent(
+        # Use the latest stable Flash model identifier
+        model="gemini-2.5-flash",
+        name="gemini_flash_agent",
+        instruction="You are a fast and helpful Gemini assistant.",
+        # ... other agent parameters
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {LlmAgent} from '@google/adk';
+
+    // --- Example #2: using a powerful Gemini Pro model with API Key in model ---
+    export const rootAgent = new LlmAgent({
+      name: 'hello_time_agent',
+      model: 'gemini-2.5-flash',
+      description: 'Gemini flash agent',
+      instruction: `You are a fast and helpful Gemini assistant.`,
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/adk/model/gemini"
+    	"google.golang.org/genai"
+    )
+
+    --8<-- "examples/go/snippets/agents/models/models.go:gemini-example"
+    ```
+
+=== "Java"
+
+    ```java
+    // --- Example #1: using a stable Gemini Flash model with ENV variables---
+    LlmAgent agentGeminiFlash =
+        LlmAgent.builder()
+            // Use the latest stable Flash model identifier
+            .model("gemini-2.5-flash") // Set ENV variables to use this model
+            .name("gemini_flash_agent")
+            .instruction("You are a fast and helpful Gemini assistant.")
+            // ... other agent parameters
+            .build();
+    ```
+
+
+## Gemini model authentication
+
+This section covers authenticating with Google's Gemini models, either through Google AI Studio for rapid development or Google Cloud Vertex AI for enterprise applications. This is the most direct way to use Google's flagship models within ADK.
+
+**Integration Method:** Once you are authenticated using one of the below methods, you can pass the model's identifier string directly to the
+`model` parameter of `LlmAgent`.
+
+
+!!! tip
+
+    The `google-genai` library, used internally by ADK for Gemini models, can connect
+    through either Google AI Studio or Vertex AI.
+
+    **Model support for voice/video streaming**
+
+    In order to use voice/video streaming in ADK, you will need to use Gemini
+    models that support the Live API. You can find the **model ID(s)** that
+    support the Gemini Live API in the documentation:
+
+    - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
+    - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+
+### Google AI Studio
+
+This is the simplest method and is recommended for getting started quickly.
+
+*   **Authentication Method:** API Key
+*   **Setup:**
+    1.  **Get an API key:** Obtain your key from [Google AI Studio](https://aistudio.google.com/apikey).
+    2.  **Set environment variables:** Create a `.env` file (Python) or `.properties` (Java) in your project's root directory and add the following lines. ADK will automatically load this file.
+
+        ```shell
+        export GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
+        export GOOGLE_GENAI_USE_VERTEXAI=FALSE
+        ```
+
+        (or)
+
+        Pass these variables during the model initialization via the `Client` (see example below).
+
+* **Models:** Find all available models on the
+  [Google AI for Developers site](https://ai.google.dev/gemini-api/docs/models).
+
+### Google Cloud Vertex AI
+
+For scalable and production-oriented use cases, Vertex AI is the recommended platform. Gemini on Vertex AI supports enterprise-grade features, security, and compliance controls. Based on your development environment and usecase, *choose one of the below methods to authenticate*.
+
+**Pre-requisites:** A Google Cloud Project with [Vertex AI enabled](https://console.cloud.google.com/apis/enableflow;apiid=aiplatform.googleapis.com).
+
+### **Method A: User Credentials (for Local Development)**
+
+1.  **Install the gcloud CLI:** Follow the official [installation instructions](https://cloud.google.com/sdk/docs/install).
+2.  **Log in using ADC:** This command opens a browser to authenticate your user account for local development.
+    ```bash
+    gcloud auth application-default login
+    ```
+3.  **Set environment variables:**
+    ```shell
+    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
+    ```
+
+    Explicitly tell the library to use Vertex AI:
+
+    ```shell
+    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    ```
+
+4. **Models:** Find available model IDs in the
+  [Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
+
+### **Method B: Vertex AI Express Mode**
+[Vertex AI Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) offers a simplified, API-key-based setup for rapid prototyping.
+
+1.  **Sign up for Express Mode** to get your API key.
+2.  **Set environment variables:**
+    ```shell
+    export GOOGLE_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
+    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    ```
+
+### **Method C: Service Account (for Production & Automation)**
+
+For deployed applications, a service account is the standard method.
+
+1.  [**Create a Service Account**](https://cloud.google.com/iam/docs/service-accounts-create#console) and grant it the `Vertex AI User` role.
+2.  **Provide credentials to your application:**
+    *   **On Google Cloud:** If you are running the agent in Cloud Run, GKE, VM or other Google Cloud services, the environment can automatically provide the service account credentials. You don't have to create a key file.
+    *   **Elsewhere:** Create a [service account key file](https://cloud.google.com/iam/docs/keys-create-delete#console) and point to it with an environment variable:
+        ```bash
+        export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/keyfile.json"
+        ```
+    Instead of the key file, you can also authenticate the service account using Workload Identity. But this is outside the scope of this guide.
+
+!!! warning "Secure Your Credentials"
+
+    Service account credentials or API keys are powerful credentials. Never
+    expose them publicly. Use a secret manager such as [Google Cloud Secret
+    Manager](https://cloud.google.com/security/products/secret-manager) to store
+    and access them securely in production.
+
+!!! note "Gemini model versions"
+
+    Always check the official Gemini documentation for the latest model names,
+    including specific preview versions if needed. Preview models might have
+    different availability or quota limitations.
+
+## Troubleshooting
+
+### Error Code 429 - RESOURCE_EXHAUSTED
+
+This error usually happens if the number of your requests exceeds the capacity allocated to process requests.
+
+To mitigate this, you can do one of the following:
+
+1.  Request higher quota limits for the model you are trying to use.
+
+2.  Enable client-side retries. Retries allow the client to automatically retry the request after a delay, which can help if the quota issue is temporary.
+
+    There are two ways you can set retry options:
+
+    **Option 1:** Set retry options on the Agent as a part of generate_content_config.
+
+    You would use this option if you are instantiating this model adapter by
+    yourself.
+
+    ```python
+    root_agent = Agent(
+        model='gemini-2.5-flash',
+        ...
+        generate_content_config=types.GenerateContentConfig(
+            ...
+            http_options=types.HttpOptions(
+                ...
+                retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+                ...
+            ),
+            ...
+        )
+    ```
+
+    **Option 2:** Retry options on this model adapter.
+
+    You would use this option if you were instantiating the instance of adapter
+    by yourself.
+
+    ```python
+    from google.genai import types
+
+    # ...
+
+    agent = Agent(
+        model=Gemini(
+        retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+        )
+    )
+    ```
+
+## Gemini Interactions API {#interactions-api}
+
+<div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
+</div>
+
+The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
+is an alternative to the ***generateContent*** inference API, which provides
+stateful conversation capabilities, allowing you to chain interactions using a
+`previous_interaction_id` instead of sending the full conversation history with
+each request. Using this feature can be more efficient for long conversations.
+
+You can enable the Interactions API by setting the `use_interactions_api=True`
+parameter in the Gemini model configuration, as shown in the following code
+snippet:
+
+```python
+from google.adk.agents.llm_agent import Agent
+from google.adk.models.google_llm import Gemini
+from google.adk.tools.google_search_tool import GoogleSearchTool
+
+root_agent = Agent(
+    model=Gemini(
+        model="gemini-2.5-flash",
+        use_interactions_api=True,  # Enable Interactions API
+    ),
+    name="interactions_test_agent",
+    tools=[
+        GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
+        get_current_weather,  # Custom function tool
+    ],
+)
+```
+
+For a complete code sample, see the
+[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/interactions_api).
+
+### Known limitations
+
+The Interactions API **does not** support mixing custom function calling tools with
+built-in tools, such as the
+[Google Search](/adk-docs/tools/built-in-tools/#google-search),
+tool, within the same agent. You can work around this limitation by configuring the
+the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
+parameter:
+
+```python
+# Use bypass_multi_tools_limit=True to convert google_search to a function tool
+GoogleSearchTool(bypass_multi_tools_limit=True)
+```
+
+In this example, this option converts the built-in google_search to a function
+calling tool (via GoogleSearchAgentTool), which allows it to work alongside
+custom function tools.
+
+================
+File: docs/agents/models/index.md
+================
+# AI Models for ADK agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">Typescript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+</div>
+
+Agent Development Kit (ADK) is designed for flexibility, allowing you to
+integrate various Large Language Models (LLMs) into your agents. This section
+details how to leverage Gemini and integrate other popular models effectively,
+including those hosted externally or running locally.
+
+ADK primarily uses two mechanisms for model integration:
+
+1. **Direct String / Registry:** For models tightly integrated with Google Cloud,
+   such as Gemini models accessed via Google AI Studio or Vertex AI, or models
+   hosted on Vertex AI endpoints. You access these models by providing the model name or endpoint resource string and ADK's internal registry
+   resolves this string to the appropriate backend client.
+
+      *  [Gemini models](/adk-docs/agents/models/gemini/)
+      *  [Claude models](/adk-docs/agents/models/anthropic/)
+      *  [Vertex AI hosted models](/adk-docs/agents/models/vertex/)
+
+2. **Model connectors:** For broader compatibility, especially models
+   outside the Google ecosystem or those requiring specific client
+   configurations, such as models accessed via Apigee or LiteLLM. You instantiate a specific wrapper class, such as `ApigeeLlm` or
+   `LiteLlm`, and pass this object as the `model` parameter
+   to your `LlmAgent`.
+
+      *  [Apigee models](/adk-docs/agents/models/apigee/)
+      *  [LiteLLM models](/adk-docs/agents/models/litellm/)
+      *  [Ollama model hosting](/adk-docs/agents/models/ollama/)
+      *  [vLLM model hosting](/adk-docs/agents/models/vllm/)
+
+================
+File: docs/agents/models/litellm.md
+================
+# LiteLLM model connector for ADK agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+[LiteLLM](https://docs.litellm.ai/) is a Python library that acts as a
+translation layer for models and model hosting services, providing a
+standardized, OpenAI-compatible interface to over 100+ LLMs. ADK provides
+integration through the LiteLLM library, allowing you to access a vast range of
+LLMs from providers like OpenAI, Anthropic (non-Vertex AI), Cohere, and many
+others. You can run open-source models locally or self-host them and integrate
+them using LiteLLM for operational control, cost savings, privacy, or offline
+use cases.
+
+You can use the LiteLLM library to access remote or locally hosted AI models:
+
+*   **Remote model host:** Use the `LiteLlm` wrapper class and set it
+    as the `model` parameter of `LlmAgent`.
+*   **Local model host:** Use the `LiteLlm` wrapper class configured to
+    point to your local model server. For examples of local model hosting
+    solutions, see the [Ollama](/adk-docs/agents/models/ollama/)
+    or [vLLM](/adk-docs/agents/models/vllm/) documentation.
+
+??? warning "Windows Encoding with LiteLLM"
+
+    When using ADK agents with LiteLLM on Windows, you might encounter a
+    `UnicodeDecodeError`. This error occurs because LiteLLM may attempt to read
+    cached files using the default Windows encoding (`cp1252`) instead of UTF-8.
+    Prevent this error by setting the `PYTHONUTF8` environment variable to
+    `1`. This forces Python to use UTF-8 for all file I/O.
+
+    **Example (PowerShell):**
+    ```powershell
+    # Set for the current session
+    $env:PYTHONUTF8 = "1"
+
+    # Set persistently for the user
+    [System.Environment]::SetEnvironmentVariable('PYTHONUTF8', '1', [System.EnvironmentVariableTarget]::User)
+    ```
+
+## Setup
+
+1. **Install LiteLLM:**
+        ```shell
+        pip install litellm
+        ```
+2. **Set Provider API Keys:** Configure API keys as environment variables for
+   the specific providers you intend to use.
+
+    * *Example for OpenAI:*
+
+        ```shell
+        export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+        ```
+
+    * *Example for Anthropic (non-Vertex AI):*
+
+        ```shell
+        export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
+        ```
+
+    * *Consult the
+      [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers)
+      for the correct environment variable names for other providers.*
+
+## Example implementation
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+
+# --- Example Agent using OpenAI's GPT-4o ---
+# (Requires OPENAI_API_KEY)
+agent_openai = LlmAgent(
+    model=LiteLlm(model="openai/gpt-4o"), # LiteLLM model string format
+    name="openai_agent",
+    instruction="You are a helpful assistant powered by GPT-4o.",
+    # ... other agent parameters
+)
+
+# --- Example Agent using Anthropic's Claude Haiku (non-Vertex) ---
+# (Requires ANTHROPIC_API_KEY)
+agent_claude_direct = LlmAgent(
+    model=LiteLlm(model="anthropic/claude-3-haiku-20240307"),
+    name="claude_direct_agent",
+    instruction="You are an assistant powered by Claude Haiku.",
+    # ... other agent parameters
+)
+```
+
+================
+File: docs/agents/models/ollama.md
+================
+# Ollama model host for ADK agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+[Ollama](https://ollama.com/) is a tool that allows you to host and run
+open-source models locally. ADK integrates with Ollama-hosted models through the
+[LiteLLM](/adk-docs/agents/models/litellm/) model connector library.
+
+## Get started
+
+Use the LiteLLM wrapper to create agents with Ollama-hosted models. The
+following code example shows a basic implementation for using Gemma open
+models with your agents:
+
+```py
+root_agent = Agent(
+    model=LiteLlm(model="ollama_chat/gemma3:latest"),
+    name="dice_agent",
+    description=(
+        "hello world agent that can roll a dice of 8 sides and check prime"
+        " numbers."
+    ),
+    instruction="""
+      You roll dice and answer questions about the outcome of the dice rolls.
+    """,
+    tools=[
+        roll_die,
+        check_prime,
+    ],
+)
+```
+
+!!! warning "Warning: Use `ollama_chat`interface"
+
+    Make sure you set the provider `ollama_chat` instead of `ollama`. Using
+    `ollama` can result in unexpected behaviors such as infinite tool call loops
+    and ignoring previous context.
+
+!!! tip "Use `OLLAMA_API_BASE` environment variable"
+
+    Although you can specify the `api_base` parameter in LiteLLM for generation,
+    as of v1.65.5, the library relies on the environment variable for other API calls.
+    Therefore, you should set the `OLLAMA_API_BASE` environment variable for your
+    Ollama server URL to ensure all requests are routed correctly.
+
+```bash
+export OLLAMA_API_BASE="http://localhost:11434"
+adk web
+```
+
+## Model choice
+
+If your agent is relying on tools, make sure that you select a model with
+tool support from [Ollama website](https://ollama.com/search?c=tools).
+For reliable results, use a model with tool support.
+You can check tool support for the model using the following command:
+
+```bash
+ollama show mistral-small3.1
+  Model
+    architecture        mistral3
+    parameters          24.0B
+    context length      131072
+    embedding length    5120
+    quantization        Q4_K_M
+
+  Capabilities
+    completion
+    vision
+    tools
+```
+
+You should see **tools** listed under capabilities.
+You can also look at the template the model is using and tweak it based on your
+needs.
+
+```bash
+ollama show --modelfile llama3.2 > model_file_to_modify
+```
+
+For instance, the default template for the above model inherently suggests that
+the model shall call a function all the time. This may result in an infinite
+loop of function calls.
+
+```
+Given the following functions, please respond with a JSON for a function call
+with its proper arguments that best answers the given prompt.
+
+Respond in the format {"name": function name, "parameters": dictionary of
+argument name and its value}. Do not use variables.
+```
+
+You can swap such prompts with a more descriptive one to prevent infinite tool
+call loops, for instance:
+
+```
+Review the user's prompt and the available functions listed below.
+
+First, determine if calling one of these functions is the most appropriate way
+to respond. A function call is likely needed if the prompt asks for a specific
+action, requires external data lookup, or involves calculations handled by the
+functions. If the prompt is a general question or can be answered directly, a
+function call is likely NOT needed.
+
+If you determine a function call IS required: Respond ONLY with a JSON object in
+the format {"name": "function_name", "parameters": {"argument_name": "value"}}.
+Ensure parameter values are concrete, not variables.
+
+If you determine a function call IS NOT required: Respond directly to the user's
+prompt in plain text, providing the answer or information requested. Do not
+output any JSON.
+```
+
+Then you can create a new model with the following command:
+
+```bash
+ollama create llama3.2-modified -f model_file_to_modify
+```
+
+## Use OpenAI provider
+
+Alternatively, you can use `openai` as the provider name. This approach
+requires setting the `OPENAI_API_BASE=http://localhost:11434/v1` and
+`OPENAI_API_KEY=anything` env variables instead of `OLLAMA_API_BASE`.
+Note that the `API_BASE` value has *`/v1`* at the end.
+
+```py
+root_agent = Agent(
+    model=LiteLlm(model="openai/mistral-small3.1"),
+    name="dice_agent",
+    description=(
+        "hello world agent that can roll a dice of 8 sides and check prime"
+        " numbers."
+    ),
+    instruction="""
+      You roll dice and answer questions about the outcome of the dice rolls.
+    """,
+    tools=[
+        roll_die,
+        check_prime,
+    ],
+)
+```
+
+```bash
+export OPENAI_API_BASE=http://localhost:11434/v1
+export OPENAI_API_KEY=anything
+adk web
+```
+
+### Debugging
+
+You can see the request sent to the Ollama server by adding the following in
+your agent code just after imports.
+
+```py
+import litellm
+litellm._turn_on_debug()
+```
+
+Look for a line like the following:
+
+```bash
+Request Sent from LiteLLM:
+curl -X POST \
+http://localhost:11434/api/chat \
+-d '{'model': 'mistral-small3.1', 'messages': [{'role': 'system', 'content': ...
+```
+
+================
+File: docs/agents/models/vertex.md
+================
+# Vertex AI hosted models for ADK agents
+
+For enterprise-grade scalability, reliability, and integration with Google
+Cloud's MLOps ecosystem, you can use models deployed to Vertex AI Endpoints.
+This includes models from Model Garden or your own fine-tuned models.
+
+**Integration Method:** Pass the full Vertex AI Endpoint resource string
+(`projects/PROJECT_ID/locations/LOCATION/endpoints/ENDPOINT_ID`) directly to the
+`model` parameter of `LlmAgent`.
+
+## Vertex AI Setup
+
+Ensure your environment is configured for Vertex AI:
+
+1. **Authentication:** Use Application Default Credentials (ADC):
+
+    ```shell
+    gcloud auth application-default login
+    ```
+
+2. **Environment Variables:** Set your project and location:
+
+    ```shell
+    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
+    ```
+
+3. **Enable Vertex Backend:** Crucially, ensure the `google-genai` library
+   targets Vertex AI:
+
+    ```shell
+    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    ```
+
+## Model Garden Deployments
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+</div>
+
+You can deploy various open and proprietary models from the
+[Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
+to an endpoint.
+
+**Example:**
+
+```python
+from google.adk.agents import LlmAgent
+from google.genai import types # For config objects
+
+# --- Example Agent using a Llama 3 model deployed from Model Garden ---
+
+# Replace with your actual Vertex AI Endpoint resource name
+llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
+
+agent_llama3_vertex = LlmAgent(
+    model=llama3_endpoint,
+    name="llama3_vertex_agent",
+    instruction="You are a helpful assistant based on Llama 3, hosted on Vertex AI.",
+    generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
+    # ... other agent parameters
+)
+```
+
+## Fine-tuned Model Endpoints
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+</div>
+
+Deploying your fine-tuned models (whether based on Gemini or other architectures
+supported by Vertex AI) results in an endpoint that can be used directly.
+
+**Example:**
+
+```python
+from google.adk.agents import LlmAgent
+
+# --- Example Agent using a fine-tuned Gemini model endpoint ---
+
+# Replace with your fine-tuned model's endpoint resource name
+finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
+
+agent_finetuned_gemini = LlmAgent(
+    model=finetuned_gemini_endpoint,
+    name="finetuned_gemini_agent",
+    instruction="You are a specialized assistant trained on specific data.",
+    # ... other agent parameters
+)
+```
+
+## Anthropic Claude on Vertex AI {#third-party-models-on-vertex-ai-eg-anthropic-claude}
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+Some providers, like Anthropic, make their models available directly through
+Vertex AI.
+
+=== "Python"
+
+    **Integration Method:** Uses the direct model string (e.g.,
+    `"claude-3-sonnet@20240229"`), *but requires manual registration* within ADK.
+
+    **Why Registration?** ADK's registry automatically recognizes `gemini-*` strings
+    and standard Vertex AI endpoint strings (`projects/.../endpoints/...`) and
+    routes them via the `google-genai` library. For other model types used directly
+    via Vertex AI (like Claude), you must explicitly tell the ADK registry which
+    specific wrapper class (`Claude` in this case) knows how to handle that model
+    identifier string with the Vertex AI backend.
+
+    **Setup:**
+
+    1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env
+       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+
+    2. **Install Provider Library:** Install the necessary client library configured
+       for Vertex AI.
+
+        ```shell
+        pip install "anthropic[vertex]"
+        ```
+
+    3. **Register Model Class:** Add this code near the start of your application,
+       *before* creating an agent using the Claude model string:
+
+        ```python
+        # Required for using Claude model strings directly via Vertex AI with LlmAgent
+        from google.adk.models.anthropic_llm import Claude
+        from google.adk.models.registry import LLMRegistry
+
+        LLMRegistry.register(Claude)
+        ```
+
+       **Example:**
+
+       ```python
+       from google.adk.agents import LlmAgent
+       from google.adk.models.anthropic_llm import Claude # Import needed for registration
+       from google.adk.models.registry import LLMRegistry # Import needed for registration
+       from google.genai import types
+
+       # --- Register Claude class (do this once at startup) ---
+       LLMRegistry.register(Claude)
+
+       # --- Example Agent using Claude 3 Sonnet on Vertex AI ---
+
+       # Standard model name for Claude 3 Sonnet on Vertex AI
+       claude_model_vertexai = "claude-3-sonnet@20240229"
+
+       agent_claude_vertexai = LlmAgent(
+           model=claude_model_vertexai, # Pass the direct string after registration
+           name="claude_vertexai_agent",
+           instruction="You are an assistant powered by Claude 3 Sonnet on Vertex AI.",
+           generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
+           # ... other agent parameters
+       )
+       ```
+
+=== "Java"
+
+    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with a Vertex AI backend.
+
+    **Why Direct Instantiation?** The Java ADK's `LlmRegistry` primarily handles Gemini models by default. For third-party models like Claude on Vertex AI, you directly provide an instance of the ADK's wrapper class (e.g., `Claude`) to the `LlmAgent`. This wrapper class is responsible for interacting with the model via its specific client library, configured for Vertex AI.
+
+    **Setup:**
+
+    1.  **Vertex AI Environment:**
+        *   Ensure your Google Cloud project and region are correctly set up.
+        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries will use these credentials to authenticate with Vertex AI. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
+
+    2.  **Provider Library Dependencies:**
+        *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Vertex AI (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
+
+    3.  **Instantiate and Configure the Model:**
+        When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
+
+    **Example:**
+
+    ```java
+    import com.anthropic.client.AnthropicClient;
+    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+    import com.anthropic.vertex.backends.VertexBackend;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Claude; // ADK's wrapper for Claude
+    import com.google.auth.oauth2.GoogleCredentials;
+    import java.io.IOException;
+
+    // ... other imports
+
+    public class ClaudeVertexAiAgent {
+
+        public static LlmAgent createAgent() throws IOException {
+            // Model name for Claude 3 Sonnet on Vertex AI (or other versions)
+            String claudeModelVertexAi = "claude-3-7-sonnet"; // Or any other Claude model
+
+            // Configure the AnthropicOkHttpClient with the VertexBackend
+            AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+                .backend(
+                    VertexBackend.builder()
+                        .region("us-east5") // Specify your Vertex AI region
+                        .project("your-gcp-project-id") // Specify your GCP Project ID
+                        .googleCredentials(GoogleCredentials.getApplicationDefault())
+                        .build())
+                .build();
+
+            // Instantiate LlmAgent with the ADK Claude wrapper
+            LlmAgent agentClaudeVertexAi = LlmAgent.builder()
+                .model(new Claude(claudeModelVertexAi, anthropicClient)) // Pass the Claude instance
+                .name("claude_vertexai_agent")
+                .instruction("You are an assistant powered by Claude 3 Sonnet on Vertex AI.")
+                // .generateContentConfig(...) // Optional: Add generation config if needed
+                // ... other agent parameters
+                .build();
+
+            return agentClaudeVertexAi;
+        }
+
+        public static void main(String[] args) {
+            try {
+                LlmAgent agent = createAgent();
+                System.out.println("Successfully created agent: " + agent.name());
+                // Here you would typically set up a Runner and Session to interact with the agent
+            } catch (IOException e) {
+                System.err.println("Failed to create agent: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    ```
+
+================
+File: docs/agents/models/vllm.md
+================
+# vLLM model host for ADK agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+Tools such as [vLLM](https://github.com/vllm-project/vllm) allow you to host
+models efficiently and serve them as an OpenAI-compatible API endpoint. You can
+use vLLM models through the [LiteLLM](/adk-docs/agents/models/litellm/) library
+for Python.
+
+## Setup
+
+1. **Deploy Model:** Deploy your chosen model using vLLM (or a similar tool).
+   Note the API base URL (e.g., `https://your-vllm-endpoint.run.app/v1`).
+    * *Important for ADK Tools:* When deploying, ensure the serving tool
+      supports and enables OpenAI-compatible tool/function calling. For vLLM,
+      this might involve flags like `--enable-auto-tool-choice` and potentially
+      a specific `--tool-call-parser`, depending on the model. Refer to the vLLM
+      documentation on Tool Use.
+2. **Authentication:** Determine how your endpoint handles authentication (e.g.,
+   API key, bearer token).
+
+## Integration Example
+
+The following example shows how to use a vLLM endpoint with ADK agents.
+
+```python
+import subprocess
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+
+# --- Example Agent using a model hosted on a vLLM endpoint ---
+
+# Endpoint URL provided by your vLLM deployment
+api_base_url = "https://your-vllm-endpoint.run.app/v1"
+
+# Model name as recognized by *your* vLLM endpoint configuration
+model_name_at_endpoint = "hosted_vllm/google/gemma-3-4b-it" # Example from vllm_test.py
+
+# Authentication (Example: using gcloud identity token for a Cloud Run deployment)
+# Adapt this based on your endpoint's security
+try:
+    gcloud_token = subprocess.check_output(
+        ["gcloud", "auth", "print-identity-token", "-q"]
+    ).decode().strip()
+    auth_headers = {"Authorization": f"Bearer {gcloud_token}"}
+except Exception as e:
+    print(f"Warning: Could not get gcloud token - {e}. Endpoint might be unsecured or require different auth.")
+    auth_headers = None # Or handle error appropriately
+
+agent_vllm = LlmAgent(
+    model=LiteLlm(
+        model=model_name_at_endpoint,
+        api_base=api_base_url,
+        # Pass authentication headers if needed
+        extra_headers=auth_headers
+        # Alternatively, if endpoint uses an API key:
+        # api_key="YOUR_ENDPOINT_API_KEY"
+    ),
+    name="vllm_agent",
+    instruction="You are a helpful assistant running on a self-hosted vLLM endpoint.",
+    # ... other agent parameters
+)
+```
+
+================
 File: docs/agents/workflow-agents/index.md
 ================
 # Workflow Agents
@@ -1117,9 +2206,9 @@ Use the `LoopAgent` when your workflow involves repetition or iterative refineme
 
 ### Example
 
-* You want to build an agent that can generate images of food, but sometimes when you want to generate a specific number of items (e.g. 5 bananas), it generates a different number of those items in the image (e.g. an image of 7 bananas). You have two tools: `Generate Image`, `Count Food Items`. Because you want to keep generating images until it either correctly generates the specified number of items, or after a certain number of iterations, you should build your agent using a `LoopAgent`.
+* You want to build an agent that can generate images of food, but sometimes when you want to generate a specific number of items (e.g. 5 bananas), it generates a different number of those items in the image, such as an image of 7 bananas. You have two tools: `Generate Image`, `Count Food Items`. Because you want to keep generating images until it either correctly generates the specified number of items, or after a certain number of iterations, you should build your agent using a `LoopAgent`.
 
-As with other [workflow agents](index.md), the `LoopAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned only with their execution (i.e. in a loop), and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
+As with other [workflow agents](index.md), the `LoopAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned with their execution, such as in a loop, and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
 
 ### How it Works
 
@@ -2035,7 +3124,7 @@ File: docs/agents/index.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
-In the Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
+In Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
 
 The foundation for all agents in ADK is the `BaseAgent` class. It serves as the fundamental blueprint. To create functional agents, you typically extend `BaseAgent` in one of three main ways, catering to different needs – from intelligent reasoning to structured process control.
 
@@ -2082,7 +3171,7 @@ Now that you have an overview of the different agent types available in ADK, div
 * [**Workflow Agents:**](workflow-agents/index.md) Learn how to orchestrate tasks using `SequentialAgent`, `ParallelAgent`, and `LoopAgent` for structured and predictable processes.
 * [**Custom Agents:**](custom-agents.md) Discover the principles of extending `BaseAgent` to build agents with unique logic and integrations tailored to your specific needs.
 * [**Multi-Agents:**](multi-agents.md) Understand how to combine different agent types to create sophisticated, collaborative systems capable of tackling complex problems.
-* [**Models:**](models.md) Learn about the different LLM integrations available and how to select the right model for your agents.
+* [**Models:**](/adk-docs/agents/models/) Learn about the different LLM integrations available and how to select the right model for your agents.
 
 ================
 File: docs/agents/llm-agents.md
@@ -2132,7 +3221,7 @@ First, you need to establish what the agent *is* and what it's *for*.
 * **`model` (Required):** Specify the underlying LLM that will power this
   agent's reasoning. This is a string identifier like `"gemini-2.5-flash"`. The
   choice of model impacts the agent's capabilities, cost, and performance. See
-  the [Models](models.md) page for available options and considerations.
+  the [Models](/adk-docs/agents/models/) page for available options and considerations.
 
 === "Python"
 
@@ -2843,1012 +3932,6 @@ While this page covers the core configuration of `LlmAgent`, several related con
 
 * **Callbacks:** Intercepting execution points (before/after model calls, before/after tool calls) using `before_model_callback`, `after_model_callback`, etc. See [Callbacks](../callbacks/types-of-callbacks.md).
 * **Multi-Agent Control:** Advanced strategies for agent interaction, including planning (`planner`), controlling agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`), and system-wide instructions (`global_instruction`). See [Multi-Agents](multi-agents.md).
-
-================
-File: docs/agents/models.md
-================
-# Using Different Models with ADK
-
-<div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-The Agent Development Kit (ADK) is designed for flexibility, allowing you to
-integrate various Large Language Models (LLMs) into your agents. While the setup
-for Google Gemini models is covered in the
-[Setup Foundation Models](../get-started/installation.md) guide, this page
-details how to leverage Gemini effectively and integrate other popular models,
-including those hosted externally or running locally.
-
-ADK primarily uses two mechanisms for model integration:
-
-1. **Direct String / Registry:** For models tightly integrated with Google Cloud
-   (like Gemini models accessed via Google AI Studio or Vertex AI) or models
-   hosted on Vertex AI endpoints. You typically provide the model name or
-   endpoint resource string directly to the `LlmAgent`. ADK's internal registry
-   resolves this string to the appropriate backend client, often utilizing the
-   `google-genai` library.
-2. **Wrapper Classes:** For broader compatibility, especially with models
-   outside the Google ecosystem or those requiring specific client
-   configurations (like models accessed via Apigee or LiteLLM). You instantiate a specific
-   wrapper class (e.g., `ApigeeLlm` or `LiteLlm`) and pass this object as the `model` parameter
-   to your `LlmAgent`.
-
-The following sections guide you through using these methods based on your needs.
-
-## Google Gemini models
-
-ADK supports the Google Gemini family of generative AI models that provide a
-powerful set of models with a wide range of features. ADK provides support for many
-Gemini features, including
-[Code Execution](/adk-docs/tools/built-in-tools/#code-execution),
-[Google Search](/adk-docs/tools/built-in-tools/#google-search),
-[Context caching](/adk-docs/context/caching/),
-[Computer use](/adk-docs/tools/gemini-api/computer-use/)
-and the [Interactions API](#interactions-api).
-
-### Gemini Interactions API {#interactions-api}
-
-<div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
-</div>
-
-The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
-is an alternative to the ***generateContent*** inference API, which provides
-stateful conversation capabilities, allowing you to chain interactions using a
-`previous_interaction_id` instead of sending the full conversation history with
-each request. Using this feature can be more efficient for long conversations.
-
-You can enable the Interactions API by settting the `use_interactions_api=True`
-parameter in the Gemini model configuration, as shown in the following code
-snippet:
-
-```python
-from google.adk.agents.llm_agent import Agent
-from google.adk.models.google_llm import Gemini
-from google.adk.tools.google_search_tool import GoogleSearchTool
-
-root_agent = Agent(
-    model=Gemini(
-        model="gemini-2.5-flash",
-        use_interactions_api=True,  # Enable Interactions API
-    ),
-    name="interactions_test_agent",
-    tools=[
-        GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
-        get_current_weather,  # Custom function tool
-    ],
-)
-```
-
-For a complete code sample, see the
-[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/interactions_api).
-
-#### Known limitations
-
-The Interactions API **does not** support mixing custom function calling tools with
-built-in tools, such as the
-[Google Search](/adk-docs/tools/built-in-tools/#google-search),
-tool, within the same agent. You can work around this limitation by configuring the
-the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
-parameter:
-
-```python
-# Use bypass_multi_tools_limit=True to convert google_search to a function tool
-GoogleSearchTool(bypass_multi_tools_limit=True)
-```
-
-In this example, this option converts the built-in google_search to a function
-calling tool (via GoogleSearchAgentTool), which allows it to work alongside
-custom function tools.
-
-## Gemini model authentication
-
-This section covers authenticating with Google's Gemini models, either through Google AI Studio for rapid development or Google Cloud Vertex AI for enterprise applications. This is the most direct way to use Google's flagship models within ADK.
-
-**Integration Method:** Once you are authenticated using one of the below methods, you can pass the model's identifier string directly to the
-`model` parameter of `LlmAgent`.
-
-
-!!! tip
-
-    The `google-genai` library, used internally by ADK for Gemini models, can connect
-    through either Google AI Studio or Vertex AI.
-
-    **Model support for voice/video streaming**
-
-    In order to use voice/video streaming in ADK, you will need to use Gemini
-    models that support the Live API. You can find the **model ID(s)** that
-    support the Gemini Live API in the documentation:
-
-    - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-    - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
-
-### Google AI Studio
-
-This is the simplest method and is recommended for getting started quickly.
-
-*   **Authentication Method:** API Key
-*   **Setup:**
-    1.  **Get an API key:** Obtain your key from [Google AI Studio](https://aistudio.google.com/apikey).
-    2.  **Set environment variables:** Create a `.env` file (Python) or `.properties` (Java) in your project's root directory and add the following lines. ADK will automatically load this file.
-
-        ```shell
-        export GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
-        export GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        ```
-
-        (or)
-
-        Pass these variables during the model initialization via the `Client` (see example below).
-
-* **Models:** Find all available models on the
-  [Google AI for Developers site](https://ai.google.dev/gemini-api/docs/models).
-
-### Google Cloud Vertex AI
-
-For scalable and production-oriented use cases, Vertex AI is the recommended platform. Gemini on Vertex AI supports enterprise-grade features, security, and compliance controls. Based on your development environment and usecase, *choose one of the below methods to authenticate*.
-
-**Pre-requisites:** A Google Cloud Project with [Vertex AI enabled](https://console.cloud.google.com/apis/enableflow;apiid=aiplatform.googleapis.com).
-
-### **Method A: User Credentials (for Local Development)**
-
-1.  **Install the gcloud CLI:** Follow the official [installation instructions](https://cloud.google.com/sdk/docs/install).
-2.  **Log in using ADC:** This command opens a browser to authenticate your user account for local development.
-    ```bash
-    gcloud auth application-default login
-    ```
-3.  **Set environment variables:**
-    ```shell
-    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
-    ```
-
-    Explicitly tell the library to use Vertex AI:
-
-    ```shell
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    ```
-
-4. **Models:** Find available model IDs in the
-  [Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
-
-### **Method B: Vertex AI Express Mode**
-[Vertex AI Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) offers a simplified, API-key-based setup for rapid prototyping.
-
-1.  **Sign up for Express Mode** to get your API key.
-2.  **Set environment variables:**
-    ```shell
-    export GOOGLE_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    ```
-
-### **Method C: Service Account (for Production & Automation)**
-
-For deployed applications, a service account is the standard method.
-
-1.  [**Create a Service Account**](https://cloud.google.com/iam/docs/service-accounts-create#console) and grant it the `Vertex AI User` role.
-2.  **Provide credentials to your application:**
-    *   **On Google Cloud:** If you are running the agent in Cloud Run, GKE, VM or other Google Cloud services, the environment can automatically provide the service account credentials. You don't have to create a key file.
-    *   **Elsewhere:** Create a [service account key file](https://cloud.google.com/iam/docs/keys-create-delete#console) and point to it with an environment variable:
-        ```bash
-        export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/keyfile.json"
-        ```
-    Instead of the key file, you can also authenticate the service account using Workload Identity. But this is outside the scope of this guide.
-
-**Example:**
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-
-    # --- Example using a stable Gemini Flash model ---
-    agent_gemini_flash = LlmAgent(
-        # Use the latest stable Flash model identifier
-        model="gemini-2.5-flash",
-        name="gemini_flash_agent",
-        instruction="You are a fast and helpful Gemini assistant.",
-        # ... other agent parameters
-    )
-
-    # --- Example using a powerful Gemini Pro model ---
-    # Note: Always check the official Gemini documentation for the latest model names,
-    # including specific preview versions if needed. Preview models might have
-    # different availability or quota limitations.
-    agent_gemini_pro = LlmAgent(
-        # Use the latest generally available Pro model identifier
-        model="gemini-2.5-pro-preview-03-25",
-        name="gemini_pro_agent",
-        instruction="You are a powerful and knowledgeable Gemini assistant.",
-        # ... other agent parameters
-    )
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-    	"google.golang.org/adk/agent/llmagent"
-    	"google.golang.org/adk/model/gemini"
-    	"google.golang.org/genai"
-    )
-
-    --8<-- "examples/go/snippets/agents/models/models.go:gemini-example"
-    ```
-
-=== "Java"
-
-    ```java
-    // --- Example #1: using a stable Gemini Flash model with ENV variables---
-    LlmAgent agentGeminiFlash =
-        LlmAgent.builder()
-            // Use the latest stable Flash model identifier
-            .model("gemini-2.5-flash") // Set ENV variables to use this model
-            .name("gemini_flash_agent")
-            .instruction("You are a fast and helpful Gemini assistant.")
-            // ... other agent parameters
-            .build();
-
-    // --- Example #2: using a powerful Gemini Pro model with API Key in model ---
-    LlmAgent agentGeminiPro =
-        LlmAgent.builder()
-            // Use the latest generally available Pro model identifier
-            .model(new Gemini("gemini-2.5-pro-preview-03-25",
-                Client.builder()
-                    .vertexAI(false)
-                    .apiKey("API_KEY") // Set the API Key (or) project/ location
-                    .build()))
-            // Or, you can also directly pass the API_KEY
-            // .model(new Gemini("gemini-2.5-pro-preview-03-25", "API_KEY"))
-            .name("gemini_pro_agent")
-            .instruction("You are a powerful and knowledgeable Gemini assistant.")
-            // ... other agent parameters
-            .build();
-
-    // Note: Always check the official Gemini documentation for the latest model names,
-    // including specific preview versions if needed. Preview models might have
-    // different availability or quota limitations.
-    ```
-
-!!! warning "Secure Your Credentials"
-
-    Service account credentials or API keys are powerful credentials. Never
-    expose them publicly. Use a secret manager such as [Google Cloud Secret
-    Manager](https://cloud.google.com/security/products/secret-manager) to store
-    and access them securely in production.
-
-### Troubleshooting
-
-#### Error Code 429 - RESOURCE_EXHAUSTED
-
-This error usually happens if the number of your requests exceeds the capacity allocated to process requests.
-
-To mitigate this, you can do one of the following:
-
-1.  Request higher quota limits for the model you are trying to use.
-
-2.  Enable client-side retries. Retries allow the client to automatically retry the request after a delay, which can help if the quota issue is temporary.
-
-    There are two ways you can set retry options:
-
-    **Option 1:** Set retry options on the Agent as a part of generate_content_config.
-
-    You would use this option if you are instantiating this model adapter by
-    yourself.
-
-    ```python
-    root_agent = Agent(
-        model='gemini-2.5-flash',
-        ...
-        generate_content_config=types.GenerateContentConfig(
-            ...
-            http_options=types.HttpOptions(
-                ...
-                retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
-                ...
-            ),
-            ...
-        )
-    ```
-
-    **Option 2:** Retry options on this model adapter.
-
-    You would use this option if you were instantiating the instance of adapter
-    by yourself.
-
-    ```python
-    from google.genai import types
-
-    # ...
-
-    agent = Agent(
-        model=Gemini(
-        retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
-        )
-    )
-    ```
-
-## Using Anthropic models
-
-<div class="language-support-tag" title="Available for Java. Python support for direct Anthropic API (non-Vertex) is via LiteLLM.">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-java">Java v0.2.0</span>
-</div>
-
-You can integrate Anthropic's Claude models directly using their API key or from a Vertex AI backend into your Java ADK applications by using the ADK's `Claude` wrapper class.
-
-For Vertex AI backend, see the [Third-Party Models on Vertex AI](#third-party-models-on-vertex-ai-eg-anthropic-claude) section.
-
-**Prerequisites:**
-
-1.  **Dependencies:**
-    *   **Anthropic SDK Classes (Transitive):** The Java ADK's `com.google.adk.models.Claude` wrapper relies on classes from Anthropic's official Java SDK. These are typically included as **transitive dependencies**.
-
-2.  **Anthropic API Key:**
-    *   Obtain an API key from Anthropic. Securely manage this key using a secret manager.
-
-**Integration:**
-
-Instantiate `com.google.adk.models.Claude`, providing the desired Claude model name and an `AnthropicOkHttpClient` configured with your API key. Then, pass this `Claude` instance to your `LlmAgent`.
-
-**Example:**
-
-```java
-import com.anthropic.client.AnthropicClient;
-import com.google.adk.agents.LlmAgent;
-import com.google.adk.models.Claude;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient; // From Anthropic's SDK
-
-public class DirectAnthropicAgent {
-
-  private static final String CLAUDE_MODEL_ID = "claude-3-7-sonnet-latest"; // Or your preferred Claude model
-
-  public static LlmAgent createAgent() {
-
-    // It's recommended to load sensitive keys from a secure config
-    AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-        .apiKey("ANTHROPIC_API_KEY")
-        .build();
-
-    Claude claudeModel = new Claude(
-        CLAUDE_MODEL_ID,
-        anthropicClient
-    );
-
-    return LlmAgent.builder()
-        .name("claude_direct_agent")
-        .model(claudeModel)
-        .instruction("You are a helpful AI assistant powered by Anthropic Claude.")
-        // ... other LlmAgent configurations
-        .build();
-  }
-
-  public static void main(String[] args) {
-    try {
-      LlmAgent agent = createAgent();
-      System.out.println("Successfully created direct Anthropic agent: " + agent.name());
-    } catch (IllegalStateException e) {
-      System.err.println("Error creating agent: " + e.getMessage());
-    }
-  }
-}
-```
-
-## Using Apigee gateway for AI models
-
-<div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span><span class="lst-java">Java v0.4.0</span>
-</div>
-
-[Apigee](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee) acts as a powerful [AI Gateway](https://cloud.google.com/solutions/apigee-ai), transforming how you manage and govern your generative AI model traffic. By exposing your AI model endpoint (like Vertex AI or the Gemini API) through an Apigee proxy, you immediately gain enterprise-grade capabilities:
-
-- **Model Safety:** Implement security policies like Model Armor for threat protection.
-
-- **Traffic Governance:** Enforce Rate Limiting and Token Limiting to manage costs and prevent abuse.
-
-- **Performance:** Improve response times and efficiency using Semantic Caching and advanced model routing.
-
-- **Monitoring & Visibility:** Get granular monitoring, analysis, and auditing of all your AI requests.
-
-**NOTE:** The `ApigeeLLM` wrapper is currently designed for use with Vertex AI and the Gemini API (generateContent). We are continually expanding support for other models and interfaces.
-
-**Integration Method:**  To integrate Apigee's governance into your agent's workflow, simply instantiate the `ApigeeLlm` wrapper and pass it to an `LlmAgent` or other agent type.
-
-**Example:**
-
-=== "Python"
-
-    ```python
-
-    from google.adk.agents import LlmAgent
-    from google.adk.models.apigee_llm import ApigeeLlm
-
-    # Instantiate the ApigeeLlm wrapper
-    model = ApigeeLlm(
-        # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
-        model="apigee/gemini-2.5-flash",
-        # The proxy URL of your deployed Apigee proxy including the base path
-        proxy_url=f"https://{APIGEE_PROXY_URL}",
-        # Pass necessary authentication/authorization headers (like an API key)
-        custom_headers={"foo": "bar"}
-    )
-
-    # Pass the configured model wrapper to your LlmAgent
-    agent = LlmAgent(
-        model=model,
-        name="my_governed_agent",
-        instruction="You are a helpful assistant powered by Gemini and governed by Apigee.",
-        # ... other agent parameters
-    )
-
-    ```
-
-=== "Java"
-
-    ```java
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.ApigeeLlm;
-    import com.google.common.collect.ImmutableMap;
-
-    ApigeeLlm apigeeLlm =
-            ApigeeLlm.builder()
-                .modelName("apigee/gemini-2.5-flash") // Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation
-                .proxyUrl(APIGEE_PROXY_URL) //The proxy URL of your deployed Apigee proxy including the base path
-                .customHeaders(ImmutableMap.of("foo", "bar")) //Pass necessary authentication/authorization headers (like an API key)
-                .build();
-    LlmAgent agent =
-        LlmAgent.builder()
-            .model(apigeeLlm)
-            .name("my_governed_agent")
-            .description("my_governed_agent")
-            .instruction("You are a helpful assistant powered by Gemini and governed by Apigee.")
-            // tools will be added next
-            .build();
-    ```
-
-With this configuration, every API call from your agent will be routed through Apigee first, where all necessary policies (security, rate limiting, logging) are executed before the request is securely forwarded to the underlying AI model endpoint.
-
-For a full code example using the Apigee proxy, see [Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm)
-
-## Using Cloud & Proprietary Models via LiteLLM
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-To access a vast range of LLMs from providers like OpenAI, Anthropic (non-Vertex
-AI), Cohere, and many others, ADK offers integration through the LiteLLM
-library.
-
-**Integration Method:** Instantiate the `LiteLlm` wrapper class and pass it to
-the `model` parameter of `LlmAgent`.
-
-**LiteLLM Overview:** [LiteLLM](https://docs.litellm.ai/) acts as a translation
-layer, providing a standardized, OpenAI-compatible interface to over 100+ LLMs.
-
-**Setup:**
-
-1. **Install LiteLLM:**
-        ```shell
-        pip install litellm
-        ```
-2. **Set Provider API Keys:** Configure API keys as environment variables for
-   the specific providers you intend to use.
-
-    * *Example for OpenAI:*
-
-        ```shell
-        export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
-        ```
-
-    * *Example for Anthropic (non-Vertex AI):*
-
-        ```shell
-        export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
-        ```
-
-    * *Consult the
-      [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers)
-      for the correct environment variable names for other providers.*
-
-        **Example:**
-
-        ```python
-        from google.adk.agents import LlmAgent
-        from google.adk.models.lite_llm import LiteLlm
-
-        # --- Example Agent using OpenAI's GPT-4o ---
-        # (Requires OPENAI_API_KEY)
-        agent_openai = LlmAgent(
-            model=LiteLlm(model="openai/gpt-4o"), # LiteLLM model string format
-            name="openai_agent",
-            instruction="You are a helpful assistant powered by GPT-4o.",
-            # ... other agent parameters
-        )
-
-        # --- Example Agent using Anthropic's Claude Haiku (non-Vertex) ---
-        # (Requires ANTHROPIC_API_KEY)
-        agent_claude_direct = LlmAgent(
-            model=LiteLlm(model="anthropic/claude-3-haiku-20240307"),
-            name="claude_direct_agent",
-            instruction="You are an assistant powered by Claude Haiku.",
-            # ... other agent parameters
-        )
-        ```
-
-!!! warning "Windows Encoding Note for LiteLLM"
-
-    When using ADK agents with LiteLLM on Windows, you might encounter a `UnicodeDecodeError`. This error occurs because LiteLLM may attempt to read cached files using the default Windows encoding (`cp1252`) instead of UTF-8.
-
-    To prevent this, we recommend setting the `PYTHONUTF8` environment variable to `1`. This forces Python to use UTF-8 for all file I/O.
-
-    **Example (PowerShell):**
-    ```powershell
-    # Set for the current session
-    $env:PYTHONUTF8 = "1"
-
-    # Set persistently for the user
-    [System.Environment]::SetEnvironmentVariable('PYTHONUTF8', '1', [System.EnvironmentVariableTarget]::User)
-    ```
-
-
-## Using Open & Local Models via LiteLLM
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-For maximum control, cost savings, privacy, or offline use cases, you can run
-open-source models locally or self-host them and integrate them using LiteLLM.
-
-**Integration Method:** Instantiate the `LiteLlm` wrapper class, configured to
-point to your local model server.
-
-### Ollama Integration
-
-[Ollama](https://ollama.com/) allows you to easily run open-source models
-locally.
-
-#### Model choice
-
-If your agent is relying on tools, please make sure that you select a model with
-tool support from [Ollama website](https://ollama.com/search?c=tools).
-
-For reliable results, we recommend using a decent-sized model with tool support.
-
-The tool support for the model can be checked with the following command:
-
-```bash
-ollama show mistral-small3.1
-  Model
-    architecture        mistral3
-    parameters          24.0B
-    context length      131072
-    embedding length    5120
-    quantization        Q4_K_M
-
-  Capabilities
-    completion
-    vision
-    tools
-```
-
-You are supposed to see `tools` listed under capabilities.
-
-You can also look at the template the model is using and tweak it based on your
-needs.
-
-```bash
-ollama show --modelfile llama3.2 > model_file_to_modify
-```
-
-For instance, the default template for the above model inherently suggests that
-the model shall call a function all the time. This may result in an infinite
-loop of function calls.
-
-```
-Given the following functions, please respond with a JSON for a function call
-with its proper arguments that best answers the given prompt.
-
-Respond in the format {"name": function name, "parameters": dictionary of
-argument name and its value}. Do not use variables.
-```
-
-You can swap such prompts with a more descriptive one to prevent infinite tool
-call loops.
-
-For instance:
-
-```
-Review the user's prompt and the available functions listed below.
-First, determine if calling one of these functions is the most appropriate way to respond. A function call is likely needed if the prompt asks for a specific action, requires external data lookup, or involves calculations handled by the functions. If the prompt is a general question or can be answered directly, a function call is likely NOT needed.
-
-If you determine a function call IS required: Respond ONLY with a JSON object in the format {"name": "function_name", "parameters": {"argument_name": "value"}}. Ensure parameter values are concrete, not variables.
-
-If you determine a function call IS NOT required: Respond directly to the user's prompt in plain text, providing the answer or information requested. Do not output any JSON.
-```
-
-Then you can create a new model with the following command:
-
-```bash
-ollama create llama3.2-modified -f model_file_to_modify
-```
-
-#### Using ollama_chat provider
-
-Our LiteLLM wrapper can be used to create agents with Ollama models.
-
-```py
-root_agent = Agent(
-    model=LiteLlm(model="ollama_chat/mistral-small3.1"),
-    name="dice_agent",
-    description=(
-        "hello world agent that can roll a dice of 8 sides and check prime"
-        " numbers."
-    ),
-    instruction="""
-      You roll dice and answer questions about the outcome of the dice rolls.
-    """,
-    tools=[
-        roll_die,
-        check_prime,
-    ],
-)
-```
-
-**It is important to set the provider `ollama_chat` instead of `ollama`. Using
-`ollama` will result in unexpected behaviors such as infinite tool call loops
-and ignoring previous context.**
-
-While `api_base` can be provided inside LiteLLM for generation, LiteLLM library
-is calling other APIs relying on the env variable instead as of v1.65.5 after
-completion. So at this time, we recommend setting the env variable
-`OLLAMA_API_BASE` to point to the ollama server.
-
-```bash
-export OLLAMA_API_BASE="http://localhost:11434"
-adk web
-```
-
-#### Using openai provider
-
-Alternatively, `openai` can be used as the provider name. But this will also
-require setting the `OPENAI_API_BASE=http://localhost:11434/v1` and
-`OPENAI_API_KEY=anything` env variables instead of `OLLAMA_API_BASE`. **Please
-note that api base now has `/v1` at the end.**
-
-```py
-root_agent = Agent(
-    model=LiteLlm(model="openai/mistral-small3.1"),
-    name="dice_agent",
-    description=(
-        "hello world agent that can roll a dice of 8 sides and check prime"
-        " numbers."
-    ),
-    instruction="""
-      You roll dice and answer questions about the outcome of the dice rolls.
-    """,
-    tools=[
-        roll_die,
-        check_prime,
-    ],
-)
-```
-
-```bash
-export OPENAI_API_BASE=http://localhost:11434/v1
-export OPENAI_API_KEY=anything
-adk web
-```
-
-#### Debugging
-
-You can see the request sent to the Ollama server by adding the following in
-your agent code just after imports.
-
-```py
-import litellm
-litellm._turn_on_debug()
-```
-
-Look for a line like the following:
-
-```bash
-Request Sent from LiteLLM:
-curl -X POST \
-http://localhost:11434/api/chat \
--d '{'model': 'mistral-small3.1', 'messages': [{'role': 'system', 'content': ...
-```
-
-### Self-Hosted Endpoint (e.g., vLLM)
-
-<div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
-</div>
-
-Tools such as [vLLM](https://github.com/vllm-project/vllm) allow you to host
-models efficiently and often expose an OpenAI-compatible API endpoint.
-
-**Setup:**
-
-1. **Deploy Model:** Deploy your chosen model using vLLM (or a similar tool).
-   Note the API base URL (e.g., `https://your-vllm-endpoint.run.app/v1`).
-    * *Important for ADK Tools:* When deploying, ensure the serving tool
-      supports and enables OpenAI-compatible tool/function calling. For vLLM,
-      this might involve flags like `--enable-auto-tool-choice` and potentially
-      a specific `--tool-call-parser`, depending on the model. Refer to the vLLM
-      documentation on Tool Use.
-2. **Authentication:** Determine how your endpoint handles authentication (e.g.,
-   API key, bearer token).
-
-    **Integration Example:**
-
-    ```python
-    import subprocess
-    from google.adk.agents import LlmAgent
-    from google.adk.models.lite_llm import LiteLlm
-
-    # --- Example Agent using a model hosted on a vLLM endpoint ---
-
-    # Endpoint URL provided by your vLLM deployment
-    api_base_url = "https://your-vllm-endpoint.run.app/v1"
-
-    # Model name as recognized by *your* vLLM endpoint configuration
-    model_name_at_endpoint = "hosted_vllm/google/gemma-3-4b-it" # Example from vllm_test.py
-
-    # Authentication (Example: using gcloud identity token for a Cloud Run deployment)
-    # Adapt this based on your endpoint's security
-    try:
-        gcloud_token = subprocess.check_output(
-            ["gcloud", "auth", "print-identity-token", "-q"]
-        ).decode().strip()
-        auth_headers = {"Authorization": f"Bearer {gcloud_token}"}
-    except Exception as e:
-        print(f"Warning: Could not get gcloud token - {e}. Endpoint might be unsecured or require different auth.")
-        auth_headers = None # Or handle error appropriately
-
-    agent_vllm = LlmAgent(
-        model=LiteLlm(
-            model=model_name_at_endpoint,
-            api_base=api_base_url,
-            # Pass authentication headers if needed
-            extra_headers=auth_headers
-            # Alternatively, if endpoint uses an API key:
-            # api_key="YOUR_ENDPOINT_API_KEY"
-        ),
-        name="vllm_agent",
-        instruction="You are a helpful assistant running on a self-hosted vLLM endpoint.",
-        # ... other agent parameters
-    )
-    ```
-
-## Using Hosted & Tuned Models on Vertex AI
-
-For enterprise-grade scalability, reliability, and integration with Google
-Cloud's MLOps ecosystem, you can use models deployed to Vertex AI Endpoints.
-This includes models from Model Garden or your own fine-tuned models.
-
-**Integration Method:** Pass the full Vertex AI Endpoint resource string
-(`projects/PROJECT_ID/locations/LOCATION/endpoints/ENDPOINT_ID`) directly to the
-`model` parameter of `LlmAgent`.
-
-**Vertex AI Setup (Consolidated):**
-
-Ensure your environment is configured for Vertex AI:
-
-1. **Authentication:** Use Application Default Credentials (ADC):
-
-    ```shell
-    gcloud auth application-default login
-    ```
-
-2. **Environment Variables:** Set your project and location:
-
-    ```shell
-    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
-    ```
-
-3. **Enable Vertex Backend:** Crucially, ensure the `google-genai` library
-   targets Vertex AI:
-
-    ```shell
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    ```
-
-### Model Garden Deployments
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
-</div>
-
-You can deploy various open and proprietary models from the
-[Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
-to an endpoint.
-
-**Example:**
-
-```python
-from google.adk.agents import LlmAgent
-from google.genai import types # For config objects
-
-# --- Example Agent using a Llama 3 model deployed from Model Garden ---
-
-# Replace with your actual Vertex AI Endpoint resource name
-llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
-
-agent_llama3_vertex = LlmAgent(
-    model=llama3_endpoint,
-    name="llama3_vertex_agent",
-    instruction="You are a helpful assistant based on Llama 3, hosted on Vertex AI.",
-    generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
-    # ... other agent parameters
-)
-```
-
-### Fine-tuned Model Endpoints
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
-</div>
-
-Deploying your fine-tuned models (whether based on Gemini or other architectures
-supported by Vertex AI) results in an endpoint that can be used directly.
-
-**Example:**
-
-```python
-from google.adk.agents import LlmAgent
-
-# --- Example Agent using a fine-tuned Gemini model endpoint ---
-
-# Replace with your fine-tuned model's endpoint resource name
-finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
-
-agent_finetuned_gemini = LlmAgent(
-    model=finetuned_gemini_endpoint,
-    name="finetuned_gemini_agent",
-    instruction="You are a specialized assistant trained on specific data.",
-    # ... other agent parameters
-)
-```
-
-### Third-Party Models on Vertex AI (e.g., Anthropic Claude)
-
-Some providers, like Anthropic, make their models available directly through
-Vertex AI.
-
-=== "Python"
-
-    **Integration Method:** Uses the direct model string (e.g.,
-    `"claude-3-sonnet@20240229"`), *but requires manual registration* within ADK.
-
-    **Why Registration?** ADK's registry automatically recognizes `gemini-*` strings
-    and standard Vertex AI endpoint strings (`projects/.../endpoints/...`) and
-    routes them via the `google-genai` library. For other model types used directly
-    via Vertex AI (like Claude), you must explicitly tell the ADK registry which
-    specific wrapper class (`Claude` in this case) knows how to handle that model
-    identifier string with the Vertex AI backend.
-
-    **Setup:**
-
-    1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
-
-    2. **Install Provider Library:** Install the necessary client library configured
-       for Vertex AI.
-
-        ```shell
-        pip install "anthropic[vertex]"
-        ```
-
-    3. **Register Model Class:** Add this code near the start of your application,
-       *before* creating an agent using the Claude model string:
-
-        ```python
-        # Required for using Claude model strings directly via Vertex AI with LlmAgent
-        from google.adk.models.anthropic_llm import Claude
-        from google.adk.models.registry import LLMRegistry
-
-        LLMRegistry.register(Claude)
-        ```
-
-       **Example:**
-
-       ```python
-       from google.adk.agents import LlmAgent
-       from google.adk.models.anthropic_llm import Claude # Import needed for registration
-       from google.adk.models.registry import LLMRegistry # Import needed for registration
-       from google.genai import types
-
-       # --- Register Claude class (do this once at startup) ---
-       LLMRegistry.register(Claude)
-
-       # --- Example Agent using Claude 3 Sonnet on Vertex AI ---
-
-       # Standard model name for Claude 3 Sonnet on Vertex AI
-       claude_model_vertexai = "claude-3-sonnet@20240229"
-
-       agent_claude_vertexai = LlmAgent(
-           model=claude_model_vertexai, # Pass the direct string after registration
-           name="claude_vertexai_agent",
-           instruction="You are an assistant powered by Claude 3 Sonnet on Vertex AI.",
-           generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
-           # ... other agent parameters
-       )
-       ```
-
-=== "Java"
-
-    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with a Vertex AI backend.
-
-    **Why Direct Instantiation?** The Java ADK's `LlmRegistry` primarily handles Gemini models by default. For third-party models like Claude on Vertex AI, you directly provide an instance of the ADK's wrapper class (e.g., `Claude`) to the `LlmAgent`. This wrapper class is responsible for interacting with the model via its specific client library, configured for Vertex AI.
-
-    **Setup:**
-
-    1.  **Vertex AI Environment:**
-        *   Ensure your Google Cloud project and region are correctly set up.
-        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries will use these credentials to authenticate with Vertex AI. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
-
-    2.  **Provider Library Dependencies:**
-        *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Vertex AI (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
-
-    3.  **Instantiate and Configure the Model:**
-        When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
-
-    **Example:**
-
-    ```java
-    import com.anthropic.client.AnthropicClient;
-    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-    import com.anthropic.vertex.backends.VertexBackend;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Claude; // ADK's wrapper for Claude
-    import com.google.auth.oauth2.GoogleCredentials;
-    import java.io.IOException;
-
-    // ... other imports
-
-    public class ClaudeVertexAiAgent {
-
-        public static LlmAgent createAgent() throws IOException {
-            // Model name for Claude 3 Sonnet on Vertex AI (or other versions)
-            String claudeModelVertexAi = "claude-3-7-sonnet"; // Or any other Claude model
-
-            // Configure the AnthropicOkHttpClient with the VertexBackend
-            AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-                .backend(
-                    VertexBackend.builder()
-                        .region("us-east5") // Specify your Vertex AI region
-                        .project("your-gcp-project-id") // Specify your GCP Project ID
-                        .googleCredentials(GoogleCredentials.getApplicationDefault())
-                        .build())
-                .build();
-
-            // Instantiate LlmAgent with the ADK Claude wrapper
-            LlmAgent agentClaudeVertexAi = LlmAgent.builder()
-                .model(new Claude(claudeModelVertexAi, anthropicClient)) // Pass the Claude instance
-                .name("claude_vertexai_agent")
-                .instruction("You are an assistant powered by Claude 3 Sonnet on Vertex AI.")
-                // .generateContentConfig(...) // Optional: Add generation config if needed
-                // ... other agent parameters
-                .build();
-
-            return agentClaudeVertexAi;
-        }
-
-        public static void main(String[] args) {
-            try {
-                LlmAgent agent = createAgent();
-                System.out.println("Successfully created agent: " + agent.name());
-                // Here you would typically set up a Runner and Session to interact with the agent
-            } catch (IOException e) {
-                System.err.println("Failed to create agent: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-    ```
 
 ================
 File: docs/agents/multi-agents.md
@@ -11563,8 +11646,8 @@ Criterion                                | Description                          
 `tool_trajectory_avg_score`              | Exact match of tool call trajectory                       | Yes             | No               | No             | No
 `response_match_score`                   | ROUGE-1 similarity to reference response                  | Yes             | No               | No             | No
 `final_response_match_v2`                | LLM-judged semantic match to reference response           | Yes             | No               | Yes            | No
-`rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes            | No
-`rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes            | No
+`rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes            | Yes
+`rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes            | Yes
 `hallucinations_v1`                      | LLM-judged groundedness of agent response against context | No              | No               | Yes            | Yes
 `safety_v1`                              | Safety/harmlessness of agent response                     | No              | No               | Yes            | Yes
 `per_turn_user_simulator_quality_v1`     | LLM-judged user simulator quality                         | No              | No               | Yes            | Yes
@@ -15027,7 +15110,7 @@ An ADK agent project requires this dependency in your
 ```
 
 Update the `pom.xml` project file to include this dependency and
-addtional settings with the following configuration code:
+additional settings with the following configuration code:
 
 ??? info "Complete `pom.xml` configuration for project"
     The following code shows a complete `pom.xml` configuration for
@@ -15588,7 +15671,7 @@ valid authentication, the LLM service will deny the agent's requests, and the
 agent will be unable to function.
 
 !!!tip "Model Authentication guide"
-    For a detailed guide on authenticating to different models, see the [Authentication guide](../agents/models.md#google-ai-studio).
+    For a detailed guide on authenticating to different models, see the [Authentication guide](/adk-docs/agents/models/google-gemini#google-ai-studio).
     This is a critical step to ensure your agent can make calls to the LLM service.
 
 === "Gemini - Google AI Studio"
@@ -19950,12 +20033,18 @@ File: docs/runtime/api-server.md
 </div>
 
 Before you deploy your agent, you should test it to ensure that it is working as
-intended. The easiest way to test your agent in your development environment is
-to use the ADK API server.
+intended. Use the API server in ADK to expose your agents through a REST API for
+programmatic testing and integration.
+
+![ADK API Server](../assets/adk-api-server.png)
+
+## Start the API server
+
+Use the following command to run your agent in an ADK API server:
 
 === "Python"
 
-    ```py
+    ```shell
     adk api_server
     ```
 
@@ -19967,7 +20056,7 @@ to use the ADK API server.
 
 === "Go"
 
-    ```go
+    ```shell
     go run agent.go web api
     ```
 
@@ -20008,15 +20097,17 @@ to use the ADK API server.
 
     In Java, both the Dev UI and the API server are bundled together.
 
-This command will launch a local web server, where you can run cURL commands or send API requests to test your agent.
+This command will launch a local web server, where you can run cURL commands or
+send API requests to test your agent. By default, the server runs on
+`http://localhost:8000`.
 
 !!! tip "Advanced Usage and Debugging"
 
     For a complete reference on all available endpoints, request/response formats, and tips for debugging (including how to use the interactive API documentation), see the **ADK API Server Guide** below.
 
-## Local testing
+## Test locally
 
-Local testing involves launching a local web server, creating a session, and
+Testing locally involves launching a local web server, creating a session, and
 sending queries to your agent. First, ensure you are in the correct working
 directory.
 
@@ -20059,7 +20150,6 @@ The output should appear similar to:
     2025-05-13T23:32:08.972-06:00  INFO 37864 --- [ebServer.main()] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
     2025-05-13T23:32:08.980-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : Started AdkWebServer in 1.15 seconds (process running for 2.877)
     2025-05-13T23:32:08.981-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : AdkWebServer application started successfully.
-    ```
     ```
 
 Your server is now running locally. Ensure you use the correct **_port number_** in all the subsequent commands.
@@ -20132,7 +20222,7 @@ curl -X POST http://localhost:8000/run \
 }'
 ```
 
-In TypeScript, currently only `cameCase` field names are supported (e.g. `appName`, `userId`, `sessionId`, etc.), with `snake_case` support coming soon.
+In TypeScript, currently only `camelCase` field names are supported (e.g. `appName`, `userId`, `sessionId`, etc.).
 
 If using `/run`, you will see the full output of events at the same time, as a
 list, which should appear similar to:
@@ -20176,8 +20266,8 @@ data: {"content":{"parts":[{"text":"OK. The weather in New York is sunny with a 
 
 ```shell
 curl -X POST http://localhost:8000/run \
---H 'Content-Type: application/json' \
---d '{
+-H 'Content-Type: application/json' \
+-d '{
    "appName":"my_sample_agent",
    "userId":"u_123",
    "sessionId":"s_123",
@@ -20216,37 +20306,18 @@ issues, and evaluating performance.
   observability and evaluation platform that
   [natively supports ADK](https://www.comet.com/docs/opik/tracing/integrations/adk).
 
-## Deploying your agent
+## Deploy your agent
 
 Now that you've verified the local operation of your agent, you're ready to move
 on to deploying your agent! Here are some ways you can deploy your agent:
 
-* Deploy to [Agent Engine](../deploy/agent-engine/index.md), the easiest way to deploy
+* Deploy to [Agent Engine](../deploy/agent-engine/index.md), a simple way to deploy
   your ADK agents to a managed service in Vertex AI on Google Cloud.
 * Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
   you scale and manage your agents using serverless architecture on Google
   Cloud.
 
-
-## The ADK API Server
-
-The ADK API Server is a pre-packaged [FastAPI](https://fastapi.tiangolo.com/) web server that exposes your agents through a RESTful API. It is the primary tool for local testing and development, allowing you to interact with your agents programmatically before deploying them.
-
-## Running the Server
-
-To start the server, run the following command from your project's root directory:
-
-```shell
-adk api_server
-```
-
-By default, the server runs on `http://localhost:8000`. You will see output confirming that the server has started:
-
-```shell
-INFO:     Uvicorn running on http://localhost:8000 (Press CTRL+C to quit)
-```
-
-## Debugging with Interactive API Docs
+## Interactive API docs
 
 The API server automatically generates interactive API documentation using Swagger UI. This is an invaluable tool for exploring endpoints, understanding request formats, and testing your agent directly from your browser.
 
@@ -20254,18 +20325,16 @@ To access the interactive docs, start the API server and navigate to [http://loc
 
 You will see a complete, interactive list of all available API endpoints, which you can expand to see detailed information about parameters, request bodies, and response schemas. You can even click "Try it out" to send live requests to your running agents.
 
-In TypeScript, interactive API documentation support is coming soon.
-
-## API Endpoints
+## API endpoints
 
 The following sections detail the primary endpoints for interacting with your agents.
 
 !!! note "JSON Naming Convention"
     - **Both Request and Response bodies** will use `camelCase` for field names (e.g., `"appName"`).
 
-### Utility Endpoints
+### Utility endpoints
 
-#### List Available Agents
+#### List available agents
 
 Returns a list of all agent applications discovered by the server.
 
@@ -20284,11 +20353,11 @@ curl -X GET http://localhost:8000/list-apps
 
 ---
 
-### Session Management
+### Session management
 
 Sessions store the state and event history for a specific user's interaction with an agent.
 
-#### Update a Session
+#### Update a session
 
 Updates an existing session.
 
@@ -20317,7 +20386,7 @@ curl -X PATCH http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_
 {"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[],"lastUpdateTime":1743711430.022186}
 ```
 
-#### Get a Session
+#### Get a session
 
 Retrieves the details of a specific session, including its current state and all associated events.
 
@@ -20334,7 +20403,7 @@ curl -X GET http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s_ab
 {"id":"s_abc","appName":"my_sample_agent","userId":"u_123","state":{"visit_count":5},"events":[...],"lastUpdateTime":1743711430.022186}
 ```
 
-#### Delete a Session
+#### Delete a session
 
 Deletes a session and all of its associated data.
 
@@ -20351,11 +20420,11 @@ A successful deletion returns an empty response with a `204 No Content` status c
 
 ---
 
-### Agent Execution
+### Agent execution
 
 These endpoints are used to send a new message to an agent and get a response.
 
-#### Run Agent (Single Response)
+#### Run agent (single response)
 
 Executes the agent and returns all generated events in a single JSON array after the run is complete.
 
@@ -20377,7 +20446,8 @@ Executes the agent and returns all generated events in a single JSON array after
 }
 ```
 
-In TypeScript, currently only `cameCase` field names are supported (e.g. `appName`, `userId`, `sessionId`, etc.), with `snake_case` support coming soon.
+In TypeScript, currently only `camelCase` field names are supported (e.g.
+`appName`, `userId`, `sessionId`, etc.).
 
 **Example Request**
 ```shell
@@ -20394,7 +20464,7 @@ curl -X POST http://localhost:8000/run \
   }'
 ```
 
-#### Run Agent (Streaming)
+#### Run agent (streaming)
 
 Executes the agent and streams events back to the client as they are generated using [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events).
 
@@ -20436,9 +20506,137 @@ curl -X POST http://localhost:8000/run_sse \
 ```
 
 ================
-File: docs/runtime/index.md
+File: docs/runtime/command-line.md
 ================
-# Runtime
+# Use the Command Line
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+ADK provides an interactive terminal interface for testing your agents. This is
+useful for quick testing, scripted interactions, and CI/CD pipelines.
+
+![ADK Run](../assets/adk-run.png)
+
+## Run an agent
+
+Use the following command to run your agent in the ADK command line interface:
+
+=== "Python"
+
+    ```shell
+    adk run my_agent
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    npx @google/adk-devtools run agent.ts
+    ```
+
+=== "Go"
+
+    ```shell
+    go run agent.go
+    ```
+
+=== "Java"
+
+    Create an `AgentCliRunner` class (see [Java Quickstart](../get-started/java.md)) and run:
+
+    ```shell
+    mvn compile exec:java -Dexec.mainClass="com.example.agent.AgentCliRunner"
+    ```
+
+This starts an interactive session where you can type queries and see agent
+responses directly in your terminal:
+
+```shell
+Running agent my_agent, type exit to exit.
+[user]: What's the weather in New York?
+[my_agent]: The weather in New York is sunny with a temperature of 25°C.
+[user]: exit
+```
+
+## Session options
+
+The `adk run` command includes options for saving, resuming, and replaying
+sessions.
+
+### Save sessions
+
+To save the session when you exit:
+
+```shell
+adk run --save_session path/to/my_agent
+```
+
+You'll be prompted to enter a session ID, and the session will be saved to
+`path/to/my_agent/<session_id>.session.json`.
+
+You can also specify the session ID upfront:
+
+```shell
+adk run --save_session --session_id my_session path/to/my_agent
+```
+
+### Resume sessions
+
+To continue a previously saved session:
+
+```shell
+adk run --resume path/to/my_agent/my_session.session.json path/to/my_agent
+```
+
+This loads the previous session state and event history, displays it, and allows
+you to continue the conversation.
+
+### Replay sessions
+
+To replay a session file without interactive input:
+
+```shell
+adk run --replay path/to/input.json path/to/my_agent
+```
+
+The input file should contain initial state and queries:
+
+```json
+{
+  "state": {"key": "value"},
+  "queries": ["What is 2 + 2?", "What is the capital of France?"]
+}
+```
+
+## Storage options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--session_service_uri` | Custom session storage URI | SQLite under `.adk/session.db` |
+| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+
+### Example with storage options
+
+```shell
+adk run --session_service_uri "sqlite:///my_sessions.db" path/to/my_agent
+```
+
+## All options
+
+| Option | Description |
+|--------|-------------|
+| `--save_session` | Save the session to a JSON file on exit |
+| `--session_id` | Session ID to use when saving |
+| `--resume` | Path to a saved session file to resume |
+| `--replay` | Path to an input file for non-interactive replay |
+| `--session_service_uri` | Custom session storage URI |
+| `--artifact_service_uri` | Custom artifact storage URI |
+
+================
+File: docs/runtime/event-loop.md
+================
+# Runtime Event Loop
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
@@ -21135,6 +21333,61 @@ This primarily relates to how responses from the LLM are handled, especially whe
 Understanding these behaviors helps you write more robust ADK applications and debug issues related to state consistency, streaming updates, and asynchronous execution.
 
 ================
+File: docs/runtime/index.md
+================
+# Agent Runtime
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+ADK provides several ways to run and test your agents during development. Choose
+the method that best fits your development workflow.
+
+## Ways to run agents
+
+<div class="grid cards" markdown>
+
+-   :material-web:{ .lg .middle } **Dev UI**
+
+    ---
+
+    Use `adk web` to launch a browser-based interface for interacting with your
+    agents.
+
+    [:octicons-arrow-right-24: Use the Web Interface](web-interface.md)
+
+-   :material-console:{ .lg .middle } **Command Line**
+
+    ---
+
+    Use `adk run` to interact with your agents directly in the terminal.
+
+    [:octicons-arrow-right-24: Use the Command Line](command-line.md)
+
+-   :material-api:{ .lg .middle } **API Server**
+
+    ---
+
+    Use `adk api_server` to expose your agents through a RESTful API.
+
+    [:octicons-arrow-right-24: Use the API Server](api-server.md)
+
+</div>
+
+## Technical reference
+
+For more in-depth information on runtime configuration and behavior, see these
+pages:
+
+- **[Event Loop](event-loop.md)**: Understand the core event loop that powers
+  ADK, including the yield/pause/resume cycle.
+- **[Resume Agents](resume.md)**: Learn how to resume agent execution from a
+  previous state.
+- **[Runtime Config](runconfig.md)**: Configure runtime behavior with
+  RunConfig.
+
+================
 File: docs/runtime/resume.md
 ================
 # Resume stopped agents
@@ -21392,9 +21645,9 @@ File: docs/runtime/runconfig.md
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-`RunConfig` defines runtime behavior and options for agents in the ADK. It
-controls speech and streaming settings, function calling, artifact saving, and
-limits on LLM calls.
+`RunConfig` defines runtime behavior and options for agents in ADK. It controls
+speech and streaming settings, function calling, artifact saving, and limits on
+LLM calls.
 
 When constructing an agent run, you can pass a `RunConfig` to customize how the
 agent interacts with models, handles audio, and streams responses. By default,
@@ -21882,6 +22135,119 @@ requiring complex workflows.
 
     The Compositional Function Calling (CFC) streaming feature is an
     experimental release.
+
+================
+File: docs/runtime/web-interface.md
+================
+# Use the Web Interface
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+The ADK web interface lets you test your agents directly in the browser. This
+tool provides a simple way to interactively develop and debug your agents.
+
+![ADK Web Interface](../assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
+
+## Start the web interface
+
+Use the following command to run your agent in the ADK web interface:
+
+=== "Python"
+
+    ```shell
+    adk web
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    npx adk web
+    ```
+
+=== "Go"
+
+    ```shell
+    go run agent.go web api webui
+    ```
+
+=== "Java"
+
+    Make sure to update the port number.
+    === "Maven"
+        With Maven, compile and run the ADK web server:
+        ```console
+        mvn compile exec:java \
+         -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8080"
+        ```
+    === "Gradle"
+        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
+
+        ```groovy
+        plugins {
+            id('java')
+            // other plugins
+        }
+        ```
+        Then, elsewhere in the build file, at the top-level, create a new task:
+
+        ```groovy
+        tasks.register('runADKWebServer', JavaExec) {
+            dependsOn classes
+            classpath = sourceSets.main.runtimeClasspath
+            mainClass = 'com.google.adk.web.AdkWebServer'
+            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8080'
+        }
+        ```
+
+        Finally, on the command-line, run the following command:
+        ```console
+        gradle runADKWebServer
+        ```
+
+
+    In Java, the Web Interface and the API server are bundled together.
+
+The server starts on `http://localhost:8000` by default:
+
+```shell
++-----------------------------------------------------------------------------+
+| ADK Web Server started                                                      |
+|                                                                             |
+| For local testing, access at http://localhost:8000.                         |
++-----------------------------------------------------------------------------+
+```
+
+## Features
+
+Key features of the ADK web interface include:
+
+- **Chat interface**: Send messages to your agents and view responses in real-time
+- **Session management**: Create and switch between sessions
+- **State inspection**: View and modify session state during development
+- **Event history**: Inspect all events generated during agent execution
+
+## Common options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--port` | Port to run the server on | `8000` |
+| `--host` | Host binding address | `127.0.0.1` |
+| `--session_service_uri` | Custom session storage URI | In-memory |
+| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+| `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
+
+### Example with options
+
+```shell
+adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
+```
 
 ================
 File: docs/safety/index.md
@@ -26923,26 +27289,39 @@ sequenceDiagram
 
 ### Progressive SSE Streaming
 
-**Progressive SSE streaming** is an experimental feature that enhances how SSE mode delivers streaming responses. When enabled, this feature improves response aggregation by:
+**Progressive SSE streaming** is a feature that enhances how SSE mode delivers streaming responses. This feature improves response aggregation by:
 
 - **Content ordering preservation**: Maintains the original order of mixed content types (text, function calls, inline data)
 - **Intelligent text merging**: Only merges consecutive text parts of the same type (regular text vs thought text)
 - **Progressive delivery**: Marks all intermediate chunks as `partial=True`, with a single final aggregated response at the end
-- **Deferred function execution**: Skips executing function calls in partial events, only executing them in the final aggregated event to avoid duplicate executions
+- **Deferred function execution**: Skips executing function calls in partial events, only executing them in the final aggregated event to ensure parallel function calls are executed together rather than sequentially
+- **Function call argument streaming**: Supports progressive building of function call arguments through `partial_args`, enabling real-time display of function call construction
 
-**Enabling the feature:**
+**Default Behavior:**
 
-This is an experimental (WIP stage) feature disabled by default. Enable it via environment variable:
+Progressive SSE streaming is **enabled by default** in ADK. This means when you use `StreamingMode.SSE`, you automatically benefit from these improvements without any configuration.
+
+**Disabling the feature (if needed):**
+
+If you need to revert to the legacy SSE streaming behavior (simple text accumulation), you can disable it via environment variable:
 
 ```bash
-export ADK_ENABLE_PROGRESSIVE_SSE_STREAMING=1
+export ADK_DISABLE_PROGRESSIVE_SSE_STREAMING=1
 ```
 
-**When to use:**
+!!! warning "Legacy Behavior Trade-offs"
 
-- You're using `StreamingMode.SSE` and need better handling of mixed content types (text + function calls)
+    Disabling progressive SSE streaming reverts to simple text accumulation, which:
+    - May lose original content ordering when mixing text and function calls
+    - Does not support function call argument streaming via `partial_args`
+    - Is provided for backward compatibility only—new applications should use the default progressive mode
+
+**When progressive SSE streaming helps:**
+
+- You're using `StreamingMode.SSE` and have mixed content types (text + function calls)
 - Your responses include thought text (extended thinking) mixed with regular text
 - You want to ensure function calls execute only once after complete response aggregation
+- You need to display function call construction in real-time as arguments stream in
 
 **Note:** This feature only affects `StreamingMode.SSE`. It does not apply to `StreamingMode.BIDI` (the focus of this guide), which uses the Live API's native bidirectional protocol.
 
@@ -29891,7 +30270,7 @@ Before using the API Registry with your agent, you need to ensure the following:
     `bigquery.dataViewer` and `bigquery.jobUser`. For more information about
     required permissions, see [Authentication and access](#auth).
 
-You can check what MCP servers are enabled with API Registry using the follwing
+You can check what MCP servers are enabled with API Registry using the following
 gcloud command:
 
 ```console
@@ -31362,7 +31741,7 @@ File: docs/tools/google-cloud/vertex-ai-rag-engine.md
 The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using Vertex
 AI RAG Engine.
 
-When you use grounding with Vertex AI RAG Engine, you need to prepare a RAG corpus before hand.
+When you use grounding with Vertex AI RAG Engine, you need to prepare a RAG corpus beforehand.
 Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [Vertex AI RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
 
 !!! warning "Warning: Single tool per agent limitation"
@@ -36736,7 +37115,7 @@ async def query_database(query: str) -> list:
 
 ### Example of yielding behavior for long loops
 
-In cases where a tool is processing multiple requests or numerous long running
+In cases where a tool is processing multiple requests or numerous long-running
 requests, consider adding yielding code to allow other tools to execute, as
 shown in the following code sample:
 
@@ -39220,6 +39599,45 @@ Development Kit community.
       <div class="type">Video</div>
       <h3>📺 Getting Started with ADK Tools</h3>
       <p>A guide to building a software bug assistant using tools like MCP and Google Search.</p>
+    </div>
+  </a>
+</div>
+
+## ADK Community Calls
+
+!!! tip "Stay Connected"
+
+    Join the [ADK Community Google Group](https://groups.google.com/g/adk-community) for updates, calendar invites, and to connect with the ADK community.
+
+<div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=cNVWhrbdn-E" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/cNVWhrbdn-E/maxresdefault.jpg" alt="ADK Community Call Dec 2025">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 ADK Community Call (Dec 2025)</h3>
+      <p>Discussions include the ADK TypeScript launch, Gemini 3 Flash support, bidirectional streaming for voice agents, and the Visual Builder UI.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=bftUz-WBqyw" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/bftUz-WBqyw/maxresdefault.jpg" alt="ADK Community Call Nov 2025">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 ADK Community Call (Nov 2025)</h3>
+      <p>Discussions include the ADK Go launch, the reflect & retry plugin for error recovery, and time travel debugging for rewinding agent sessions.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=A95mQaSRKik" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/A95mQaSRKik/maxresdefault.jpg" alt="ADK Community Call Oct 2025">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 ADK Community Call (Oct 2025)</h3>
+      <p>Discussions include the ADK roadmap, context compaction and caching for reducing cost and latency, and community contribution guidelines.</p>
     </div>
   </a>
 </div>
