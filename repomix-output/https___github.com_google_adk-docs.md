@@ -13837,11 +13837,13 @@ public class ScienceTeacherAgent {
   // (the agent must be initialized at declaration time)
   public static final BaseAgent ROOT_AGENT = initAgent();
 
+  // Please fill in the latest model id that supports live API from
+  // https://google.github.io/adk-docs/get-started/streaming/quickstart-streaming/#supported-models
   public static BaseAgent initAgent() {
     return LlmAgent.builder()
         .name("science-app")
         .description("Science teacher agent")
-        .model("gemini-2.0-flash-exp")
+        .model("...") // Pleaase fill in the latest model id for live API
         .instruction("""
             You are a helpful science teacher that explains
             science concepts to kids and teenagers.
@@ -13850,10 +13852,6 @@ public class ScienceTeacherAgent {
   }
 }
 ```
-
-!!!note "Troubleshooting"
-
-    The model `gemini-2.0-flash-exp` will be deprecated in the future. If you see any issues on using it, try using `gemini-2.0-flash-live-001` instead
 
 We will use `Dev UI` to run this agent later. For the tool to automatically recognize the agent, its Java class has to comply with the following two rules:
 
@@ -13903,7 +13901,7 @@ the dropdown. Select "science-app".
     ADK Web is ***not meant for use in production deployments***. You should
     use ADK Web for development and debugging purposes only.
 
-## Try Dev UI with text
+## Try Dev UI with voice and video
 
 With your favorite browser, navigate to: [http://127.0.0.1:8080/](http://127.0.0.1:8080/)
 
@@ -13911,15 +13909,13 @@ You should see the following interface:
 
 ![Dev UI](../../assets/quickstart-streaming-devui.png)
 
-Click the `Token Streaming` switch at the top right, and ask any questions for the science teacher such as `What's the electron?`. Then you should see the output text in streaming on the UI.
-
-As we saw, you do not have to write any specific code in the agent itself for the text streaming capability. It is provided as an ADK Agent feature by default.
-
-### Try with voice and video
-
-To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
+Click the microphone button to enable the voice input, and ask a question `What's the electron?` in voice. You will hear the answer in voice in real-time.
 
 To try with video, reload the web browser, click the camera button to enable the video input, and ask questions like "What do you see?". The agent will answer what they see in the video input.
+
+### Caveat
+
+- You can not use text chat with the native-audio models. You will see errors when entering text messages on `adk web`.
 
 ### Stop the tool
 
@@ -14406,7 +14402,7 @@ root_agent = Agent(
    # The Large Language Model (LLM) that agent will use.
    # Please fill in the latest model id that supports live from
    # https://google.github.io/adk-docs/get-started/streaming/quickstart-streaming/#supported-models
-   model="...",  # for example: model="gemini-2.0-flash-live-001" or model="gemini-2.0-flash-live-preview-04-09"
+   model="...",
    # A short description of the agent's purpose.
    description="Agent to answer questions using Google Search.",
    # Instructions to set the agent's behavior.
@@ -14504,24 +14500,20 @@ Open the URL provided (usually `http://localhost:8000` or
 `http://127.0.0.1:8000`) **directly in your browser**. This connection stays
 entirely on your local machine. Select `google_search_agent`.
 
-### Try with text
+### Try with voice and video
 
-Try the following prompts by typing them in the UI.
+To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the the following questions in voice. The agent will use the google_search tool to get the latest information to answer those questions. You will hear the answer in voice in real-time.
 
 * What is the weather in New York?
 * What is the time in New York?
 * What is the weather in Paris?
 * What is the time in Paris?
 
-The agent will use the google_search tool to get the latest information to answer those questions.
-
-### Try with voice and video
-
-To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the same question in voice. You will hear the answer in voice in real-time.
-
 To try with video, reload the web browser, click the camera button to enable the video input, and ask questions like "What do you see?". The agent will answer what they see in the video input.
 
-(Just clicking the microphone or camera button once is enough. Your voice or video will be streamed to models and the model response will be streamed back continuously. Clicking on the microphone or camera button multiple times is not supported.)
+#### Caveat
+
+- You can not use text chat with the native-audio models. You will see errors when entering text messages on `adk web`.
 
 ### Stop the tool
 
@@ -24982,7 +24974,7 @@ live_request_queue = LiveRequestQueue()
 
     Never reuse a `LiveRequestQueue` across multiple streaming sessions. Each call to `run_live()` requires a fresh queue. Reusing queues can cause message ordering issues and state corruption.
 
-    The close signal persists in the queue (see [`live_request_queue.py:59-60`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/live_request_queue.py#L59-L60)) and terminates the sender loop (see [`base_llm_flow.py:264-266`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/base_llm_flow.py#L264-L266)). Reusing a queue would carry over this signal and any remaining messages from the previous session.
+    The close signal persists in the queue (see [`live_request_queue.py:59-60`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/agents/live_request_queue.py#L66-L67)) and terminates the sender loop (see [`base_llm_flow.py:264-266`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L260-L262)). Reusing a queue would carry over this signal and any remaining messages from the previous session.
 
 ### Phase 3: Bidi-streaming with `run_live()` event loop
 
@@ -25464,7 +25456,7 @@ The `close` signal provides graceful termination semantics for streaming session
 
 **Manual closure in BIDI mode:** When using `StreamingMode.BIDI` (Bidi-streaming), your application should manually call `close()` when the session terminates or when errors occur. This practice minimizes session resource usage.
 
-**Automatic closure in SSE mode:** When using the legacy `StreamingMode.SSE` (not Bidi-streaming), ADK automatically calls `close()` on the queue when it receives a `turn_complete=True` event from the model (see [`base_llm_flow.py:781`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/base_llm_flow.py#L781)).
+**Automatic closure in SSE mode:** When using the legacy `StreamingMode.SSE` (not Bidi-streaming), ADK automatically calls `close()` on the queue when it receives a `turn_complete=True` event from the model (see [`base_llm_flow.py:781`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L780)).
 
 See [Part 4: Understanding RunConfig](part4.md#streamingmode-bidi-or-sse) for detailed comparison and when to use each mode.
 
@@ -25814,7 +25806,7 @@ This transformation ensures that transcribed user input is correctly attributed 
 
 !!! note "Source Reference"
 
-    See author attribution logic in [`base_llm_flow.py:292-326`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/base_llm_flow.py#L292-L326)
+    See author attribution logic in [`base_llm_flow.py:292-326`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L287-L321)
 
 ### Event Types and Handling
 
@@ -26478,7 +26470,7 @@ This shows how to parse and handle serialized events on the client side, enablin
 
 On the client side (JavaScript/TypeScript), parse the JSON back to objects:
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L339-L688" target="_blank">app.js:339-688</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L341-L690" target="_blank">app.js:339-688</a>'
 // Handle incoming messages
 websocket.onmessage = function (event) {
     // Parse the incoming ADK Event
@@ -26554,7 +26546,7 @@ websocket.onmessage = function (event) {
 
 !!! note "Demo Implementation"
 
-    See the complete WebSocket message handler in [`app.js:339-688`](https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L339-L688)
+    See the complete WebSocket message handler in [`app.js:339-688`](https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L341-L690)
 
 ### Optimization for Audio Transmission
 
@@ -28054,7 +28046,7 @@ ADK validates CFC compatibility at session initialization and will raise an erro
 
 - ✅ **Supported**: `gemini-2.x` models (e.g., `gemini-2.5-flash-native-audio-preview-12-2025`)
 - ❌ **Not supported**: `gemini-1.5-x` models
-- **Validation**: ADK checks that the model name starts with `gemini-2` when `support_cfc=True` ([`runners.py:1322-1328`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py#L1322-L1328))
+- **Validation**: ADK checks that the model name starts with `gemini-2` when `support_cfc=True` ([`runners.py:1322-1328`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/runners.py#L1361-L1367))
 - **Code executor**: ADK automatically injects `BuiltInCodeExecutor` when CFC is enabled for safe parallel tool execution
 
 **CFC capabilities:**
@@ -28221,7 +28213,7 @@ class PCMProcessor extends AudioWorkletProcessor {
 registerProcessor("pcm-recorder-processor", PCMProcessor);
 ```
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L977-L986" target="_blank">app.js:977-986</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L979-L988" target="_blank">app.js:977-986</a>'
 // Audio recorder handler - called for each audio chunk
 function audioRecorderHandler(pcmData) {
     if (websocket && websocket.readyState === WebSocket.OPEN && is_audio) {
@@ -28321,7 +28313,7 @@ async for event in runner.run_live(
 
 The client-side implementation involves three components: WebSocket message handling, audio player setup with AudioWorklet, and the AudioWorklet processor itself.
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L638-L688" target="_blank">app.js:638-688</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L640-L690" target="_blank">app.js:638-688</a>'
 // 1. WebSocket Message Handler
 // Handle content events (text or audio)
 if (adkEvent.content && adkEvent.content.parts) {
@@ -28541,7 +28533,7 @@ In browser-based applications, capturing images from the user's webcam and sendi
 4. **Base64 encoding**: Convert canvas to base64 data URL for transmission
 5. **WebSocket transmission**: Send as JSON message to server
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L801-L843" target="_blank">app.js:801-843</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L803-L845" target="_blank">app.js:801-843</a>'
 // 1. Opening Camera Preview
 // Open camera modal and start preview
 async function openCameraPreview() {
@@ -28583,7 +28575,7 @@ function closeCameraPreview() {
 }
 ```
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L846-L914" target="_blank">app.js:846-914</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L848-L916" target="_blank">app.js:846-914</a>'
 // 2. Capturing and Sending Image
 // Capture image from the live preview
 function captureImageFromPreview() {
@@ -28936,7 +28928,7 @@ In web applications, transcription events need to be forwarded from the server t
 2. **Client side**: Process `inputTranscription` and `outputTranscription` events from the WebSocket
 3. **UI rendering**: Display partial transcriptions with typing indicators, finalize when `finished: true`
 
-```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/static/js/app.js#L530-L653" target="_blank">app.js:530-653</a>'
+```javascript title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/2f7b82f182659e0990bfb86f6ef400dd82633c07/python/agents/bidi-demo/app/static/js/app.js#L532-L655" target="_blank">app.js:530-653</a>'
 // Handle input transcription (user's spoken words)
 if (adkEvent.inputTranscription && adkEvent.inputTranscription.text) {
     const transcriptionText = adkEvent.inputTranscription.text;
@@ -29075,7 +29067,7 @@ The automatic enablement happens in `Runner.run_live()` when both conditions are
 
 !!! note "Source"
 
-    [`runners.py:1359-1374`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py#L1359-L1374)
+    [`runners.py:1395-1404`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/runners.py#L1395-L1404)
 
 ## Voice Configuration (Speech Config)
 
