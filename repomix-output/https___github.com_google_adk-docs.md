@@ -2005,7 +2005,7 @@ Vertex AI.
 
     1.  **Vertex AI Environment:**
         *   Ensure your Google Cloud project and region are correctly set up.
-        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries will use these credentials to authenticate with Vertex AI. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
+        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries use these credentials to authenticate with Vertex AI. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
 
     2.  **Provider Library Dependencies:**
         *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Vertex AI (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
@@ -2065,6 +2065,47 @@ Vertex AI.
             }
         }
     }
+    ```
+
+## Open Models on Vertex AI {#open-models}
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+Vertex AI offers a curated selection of open-source models, such as Meta Llama, through Model-as-a-Service (MaaS). These models are accessible via managed APIs, allowing you to deploy and scale without managing the underlying infrastructure. For a full list of available options, see the [Vertex AI open models for MaaS](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/use-open-models#open-models) documentation.
+
+=== "Python"
+
+    You can use the [LiteLLM](https://docs.litellm.ai/) library to access open models like Meta's Llama on VertexAI MaaS
+
+    **Integration Method:** Use the `LiteLlm` wrapper class and set it
+    as the `model` parameter of `LlmAgent`. Make sure you go through the [LiteLLM model connector for ADK agents](/adk-docs/agents/models/litellm/#litellm-model-connector-for-adk-agents) documentation on how to use LiteLLM in ADK
+
+    **Setup:**
+
+    1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env
+       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+
+    2. **Install LiteLLM:**
+            ```shell
+            pip install litellm
+            ```
+    
+    **Example:**
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.models.lite_llm import LiteLlm
+
+    # --- Example Agent using Meta's Llama 4 Scout ---
+    agent_llama_vertexai = LlmAgent(
+        model=LiteLlm(model="vertex_ai/meta/llama-4-scout-17b-16e-instruct-maas"), # LiteLLM model string format
+        name="llama4_agent",
+        instruction="You are a helpful assistant powered by Llama 4 Scout.",
+        # ... other agent parameters
+    )
+
     ```
 
 ================
@@ -2412,7 +2453,7 @@ File: docs/agents/config.md
 The ADK Agent Config feature lets you build an ADK workflow without writing
 code. An Agent Config uses a YAML format text file with a brief description of
 the agent, allowing just about anyone to assemble and run an ADK agent. The
-following is a simple example of an basic Agent Config definition:
+following is a simple example of a basic Agent Config definition:
 
 ```
 name: assistant_agent
@@ -2451,7 +2492,7 @@ the Agent Config files.
     information about additional; functional restrictions, see
     [Known limitations](#known-limitations).
 
-To setup ADK for use with Agent Config:
+To set up ADK for use with Agent Config:
 
 1.  Install the ADK Python libraries by following the
     [Installation](/adk-docs/get-started/installation/#python)
@@ -6148,7 +6189,7 @@ building complex agentic systems:
 
 The ***App*** class is used as the primary container of your agent workflow and
 contains the root agent of the project. The ***root agent*** is the container
-for the primary controller agent and any additonal sub-agents. 
+for the primary controller agent and any additional sub-agents. 
 
 ### Define app with root agent
 
@@ -9800,26 +9841,6 @@ To deploy your agent to Agent Engine, you need a Google Cloud project:
 5. **Enable Cloud Resource Manager API in your project**
     * To use Agent Engine, you need to [enable the Cloud Resource Manager API](https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview). Click on the "Enable" button to enable the API. Once enabled, it should say "API Enabled".
 
-6. **Create a Google Cloud Storage (GCS) Bucket**:
-    * Agent Engine requires a GCS bucket to stage your agent's code and
-      dependencies for deployment. If you already have a GCS bucket, you should
-      create a new one specifically for deployment use.
-    * Create a GCS bucket by following the
-      [instructions](https://cloud.google.com/storage/docs/creating-buckets).
-      You should start with the default settings when creating your first
-      bucket.
-    * Once you have created a storage bucket, you should be able to see it on
-      the [Cloud Storage Buckets page](https://console.cloud.google.com/storage/browser).
-    * You need the GCS bucket path to set as your staging bucket. For example,
-      if your GCS bucket name is "my-bucket", then your bucket path should be
-      "gs://my-bucket".
-
-??? note "Deploy without a GCS bucket"
-    You can avoid using a Google Cloud Storage bucket for deployment using a
-    different configuration method. For details on this method, see
-    [Deploy an Agent](https://docs.cloud.google.com/agent-builder/agent-engine/deploy#from-source-files)
-    in the Agent Engine documentation.
-
 ## Set up your coding environment {#prerequisites-coding-env}
 
 Now that you prepared your Google Cloud project, you can return to your coding
@@ -9890,12 +9911,10 @@ the project to be deployed:
 ```shell
 PROJECT_ID=my-project-id
 LOCATION_ID=us-central1
-GCS_BUCKET=gs://MY-CLOUD-STORAGE-BUCKET
 
 adk deploy agent_engine \
         --project=$PROJECT_ID \
         --region=$LOCATION_ID \
-        --staging_bucket=$GCS_BUCKET \
         --display_name="My First Agent" \
         multi_tool_agent
 ```
@@ -17524,6 +17543,8 @@ You can customize the plugin using `BigQueryLoggerConfig`.
     types, refer to the [Event types and payloads](#event-types) section.
 -   **`content_formatter`** (`Optional[Callable[[Any, str], Any]]`, default: `None`): An optional function to format event content before logging.
 -   **`log_multi_modal_content`** (`bool`, default: `True`): Whether to log detailed content parts (including GCS references).
+-   **`queue_max_size`** (`int`, default: `10000`): The maximum number of events to hold in the in-memory queue before dropping new events.
+-   **`retry_config`** (`RetryConfig`, default: `RetryConfig()`): Configuration for retrying failed BigQuery writes (attributes: `max_retries`, `initial_delay`, `multiplier`, `max_delay`).
 
 
 The following code sample shows how to define a configuration for the
@@ -17560,7 +17581,8 @@ config = BigQueryLoggerConfig(
     client_close_timeout=2.0, # Wait up to 2s for BQ client to close
     max_content_length=500, # Truncate content to 500 chars
     content_formatter=redact_dollar_amounts, # Redact the dollar amounts in the logging content
-
+    queue_max_size=10000, # Max events to hold in memory
+    # retry_config=RetryConfig(max_retries=3), # Optional: Configure retries
 )
 
 plugin = BigQueryAgentAnalyticsPlugin(..., config=config)
@@ -17601,7 +17623,7 @@ CREATE TABLE `your-gcp-project-id.adk_agent_logs.agent_events_v2`
     part_attributes STRING,
     storage_mode STRING
   >> OPTIONS(description="Detailed content parts for multi-modal data."),
-  attributes JSON OPTIONS(description="Arbitrary key-value pairs for additional metadata."),
+  attributes JSON OPTIONS(description="Arbitrary key-value pairs for additional metadata (e.g., 'root_agent_name', 'model_version', 'usage_metadata')."),
   latency_ms JSON OPTIONS(description="Latency measurements (e.g., total_ms)."),
   status STRING OPTIONS(description="The outcome of the event, typically 'OK' or 'ERROR'."),
   error_message STRING OPTIONS(description="Populated if an error occurs."),
@@ -17649,7 +17671,8 @@ LLM.
       <td><p><pre>
 {
   "tools": ["tool_a", "tool_b"],
-  "llm_config": {"temperature": 0.5}
+  "llm_config": {"temperature": 0.5},
+  "root_agent_name": "my_root_agent"
 }
 </pre></p></td>
       <td><p><pre>
@@ -17669,7 +17692,16 @@ LLM.
   "usage": {...}
 }
 </pre></p></td>
-      <td><p><pre>{}</pre></p></td>
+      <td><p><pre>
+{
+  "model_version": "gemini-2.5-pro-001",
+  "usage_metadata": {
+    "prompt_token_count": 15,
+    "candidates_token_count": 7,
+    "total_token_count": 22
+  }
+}
+</pre></p></td>
       <td><p><pre>
 {
   "response": "The capital of France is Paris.",
@@ -17929,10 +17961,68 @@ WHERE trace_id = 'your-trace-id'
 ORDER BY timestamp ASC;
 ```
 
+
+### 7. AI-Powered Root Cause Analysis (Agent Ops)
+
+Automatically analyze failed sessions to determine the root cause of errors using BigQuery ML and Gemini.
+
+```sql
+DECLARE failed_session_id STRING;
+-- Find a recent failed session
+SET failed_session_id = (
+    SELECT session_id
+    FROM `your-gcp-project-id.your-dataset-id.agent_events_v2`
+    WHERE error_message IS NOT NULL
+    ORDER BY timestamp DESC
+    LIMIT 1
+);
+
+-- Reconstruct the full conversation context
+WITH SessionContext AS (
+    SELECT
+        session_id,
+        STRING_AGG(CONCAT(event_type, ': ', COALESCE(TO_JSON_STRING(content), '')), '\n' ORDER BY timestamp) as full_history
+    FROM `your-gcp-project-id.your-dataset-id.agent_events_v2`
+    WHERE session_id = failed_session_id
+    GROUP BY session_id
+)
+-- Ask Gemini to diagnose the issue
+SELECT
+    session_id,
+    AI.GENERATE(
+        ('Analyze this conversation log and explain the root cause of the failure. Log: ', full_history),
+        connection_id => 'your-gcp-project-id.us.my-connection',
+        endpoint => 'gemini-2.5-flash'
+    ).result AS root_cause_explanation
+FROM SessionContext;
+```
+
+
+## Conversational Analytics in BigQuery
+
+You can also use 
+[BigQuery Conversational Analytics](https://cloud.google.com/bigquery/docs/conversational-analytics)
+to analyze your agent logs using natural language. Use this tool to answer questions like:
+
+*   "Show me the error rate over time"
+*   "What are the most common tool calls?"
+*   "Identify sessions with high token usage"
+
+## Looker Studio Dashboard
+
+You can visualize your agent's performance using our pre-built [Looker Studio Dashboard template](https://lookerstudio.google.com/c/reporting/f1c5b513-3095-44f8-90a2-54953d41b125/page/8YdhF).
+
+To connect this dashboard to your own BigQuery table, use the following link format, replacing the placeholders with your specific project, dataset, and table IDs:
+
+```text
+https://lookerstudio.google.com/reporting/create?c.reportId=f1c5b513-3095-44f8-90a2-54953d41b125&ds.ds3.connector=bigQuery&ds.ds3.type=TABLE&ds.ds3.projectId=<your-project-id>&ds.ds3.datasetId=<your-dataset-id>&ds.ds3.tableId=<your-table-id>
+```
+
 ## Additional resources
 
 -   [BigQuery Storage Write API](https://cloud.google.com/bigquery/docs/write-api)
 -   [Introduction to Object Tables](https://cloud.google.com/bigquery/docs/object-tables-intro)
+-   [Interactive Demo Notebook](https://github.com/haiyuan-eng-google/demo_BQ_agent_analytics_plugin_notebook)
 
 ================
 File: docs/observability/cloud-trace.md
@@ -22802,128 +22892,6 @@ However, identity and perimeters only provide coarse controls around agent actio
 Care must be taken when agent output is visualized in a browser: if HTML or JS content isn't properly escaped in the UI, the text returned by the model could be executed, leading to data exfiltration. For example, an indirect prompt injection can trick a model to include an img tag tricking the browser to send the session content to a 3rd party site; or construct URLs that, if clicked, send data to external sites. Proper escaping of such content must ensure that model-generated text isn't interpreted as code by browsers.
 
 ================
-File: docs/sessions/express-mode.md
-================
-# Vertex AI Express Mode: Using Vertex AI Sessions and Memory
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-If you are interested in using either the `VertexAiSessionService` or `VertexAiMemoryBankService` but you don't have a Google Cloud Project, you can sign up for Vertex AI Express Mode and get access
-for without cost and try out these services! You can sign up with an eligible ***gmail*** account [here](https://console.cloud.google.com/expressmode). For more details about Vertex AI Express mode, see the [overview page](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
-Once you sign up, get an [API key](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview#api-keys) and you can get started using your local ADK agent with Vertex AI Session and Memory services!
-
-!!! info Vertex AI Express mode limitations
-
-    Vertex AI Express Mode has certain limitations in the free tier. Free Express mode projects are only valid for 90 days and only select services are available to be used with limited quota. For example, the number of Agent Engines is restricted to 10 and deployment to Agent Engine is reserved for the paid tier only. To remove the quota restrictions and use all of Vertex AI's services, add a billing account to your Express Mode project.
-
-## Create an Agent Engine
-
-`Session` objects are children of an `AgentEngine`. When using Vertex AI Express Mode, we can create an empty `AgentEngine` parent to manage all of our `Session` and `Memory` objects.
-First, ensure that your environment variables are set correctly. For example, in Python:
-
-```env title="agent/.env"
-GOOGLE_GENAI_USE_VERTEXAI=TRUE
-GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-```
-
-Next, we can create our Agent Engine instance. You can use the Vertex AI SDK.
-
-=== "Vertex AI SDK"
-
-    1. Import Vertex AI SDK.
-
-        ```py
-        import vertexai
-        from vertexai import agent_engines
-        ```
-
-    2. Initialize the Vertex AI Client with your API key and create an agent engine instance.
-
-        ```py
-        # Create Agent Engine with Gen AI SDK
-        client = vertexai.Client(
-          api_key="YOUR_API_KEY",
-        )
-
-        agent_engine = client.agent_engines.create(
-          config={
-            "display_name": "Demo Agent Engine",
-            "description": "Agent Engine for Session and Memory",
-          })
-        ```
-
-    3. Replace `YOUR_AGENT_ENGINE_DISPLAY_NAME` and `YOUR_AGENT_ENGINE_DESCRIPTION` with your use case.
-    4. Get the Agent Engine name and ID from the response to use with Memories and Sessions.
-
-        ```py
-        APP_ID = agent_engine.api_resource.name.split('/')[-1]
-        ```
-
-## Managing Sessions with a `VertexAiSessionService`
-
-[`VertexAiSessionService`](session.md#sessionservice-implementations) is compatible with Vertex AI Express mode API Keys. We can
-instead initialize the session object without any project or location.
-
-```py
-# Requires: pip install google-adk[vertexai]
-# Plus environment variable setup:
-# GOOGLE_GENAI_USE_VERTEXAI=TRUE
-# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-from google.adk.sessions import VertexAiSessionService
-
-# The app_name used with this service should be the Reasoning Engine ID or name
-APP_ID = "your-reasoning-engine-id"
-
-# Project and location are not required when initializing with Vertex Express Mode
-session_service = VertexAiSessionService(agent_engine_id=APP_ID)
-# Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
-# session = await session_service.create_session(app_name=APP_ID, user_id= ...)
-```
-
-!!! info Session Service Quotas
-
-    For Free Express Mode Projects, `VertexAiSessionService` has the following quota:
-
-    - 10 Create, delete, or update Vertex AI Agent Engine sessions per minute
-    - 30 Append event to Vertex AI Agent Engine sessions per minute
-
-## Managing Memories with a `VertexAiMemoryBankService`
-
-[`VertexAiMemoryBankService`](memory.md#vertex-ai-memory-bank) is compatible with Vertex AI Express mode API Keys. We can
-instead initialize the memory object without any project or location.
-
-```py
-# Requires: pip install google-adk[vertexai]
-# Plus environment variable setup:
-# GOOGLE_GENAI_USE_VERTEXAI=TRUE
-# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-from google.adk.memory import VertexAiMemoryBankService
-
-# The app_name used with this service should be the Reasoning Engine ID or name
-APP_ID = "your-reasoning-engine-id"
-
-# Project and location are not required when initializing with Vertex Express Mode
-memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
-# Generate a memory from that session so the Agent can remember relevant details about the user
-# memory = await memory_service.add_session_to_memory(session)
-```
-
-!!! info Memory Service Quotas
-
-    For Free Express Mode Projects, `VertexAiMemoryBankService` has the following quota:
-
-    - 10 Create, delete, or update Vertex AI Agent Engine memory resources per minute
-    - 10 Get, list, or retrieve from Vertex AI Agent Engine Memory Bank per minute
-
-## Code Sample: Weather Agent with Session and Memory using Vertex AI Express Mode
-
-In this sample, we create a weather agent that utilizes both `VertexAiSessionService` and `VertexAiMemoryBankService` for context management, allowing our agent to recall user preferences and conversations!
-
-**[Weather Agent with Session and Memory using Vertex AI Express Mode](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)**
-
-================
 File: docs/sessions/index.md
 ================
 # Introduction to Conversational Context: Session, State, and Memory
@@ -23661,7 +23629,7 @@ the storage backend that best suits your needs:
             [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
         *   A Reasoning Engine resource name/ID that can setup following this
             [tutorial](https://google.github.io/adk-docs/deploy/agent-engine/).
-        *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService for free, see how to [try Session and Memory for free.](express-mode.md)
+        *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/adk-docs/tools/google-cloud/express-mode/).
     *   **Best for:** Scalable production applications deployed on Google Cloud,
         especially when integrating with other Vertex AI features.
 
@@ -25814,7 +25782,7 @@ ADK streams distinct event types through `runner.run_live()` to support differen
 
 ### Text Events
 
-The most common event type, containing the model's text responses when you specifying `response_modalities` in `RunConfig` to `["TEXT"]` mode:
+The most common event type, containing the model's text responses when you specify `response_modalities` in `RunConfig` to `["TEXT"]` mode:
 
 **Usage:**
 
@@ -29836,7 +29804,7 @@ To define a streaming tool, you must adhere to the following:
 
 
 We support two types of streaming tools:
-- Simple type. This is a one type of streaming tools that only take non video/audio streams(the streams that you feed to adk web or adk runner) as input.
+- Simple type. This is a one type of streaming tools that only take non-video/-audio streams(the streams that you feed to adk web or adk runner) as input.
 - Video streaming tools. This only works in video streaming and the video stream(the streams that you feed to adk web or adk runner) will be passed into this function.
 
 Now let's define an agent that can monitor stock price changes and monitor the video stream changes. 
@@ -30406,7 +30374,7 @@ File: docs/tools/google-cloud/apigee-api-hub.md
 </div>
 
 **ApiHubToolset** lets you turn any documented API from Apigee API hub into a
-tool with a few lines of code. This section shows you the step by step
+tool with a few lines of code. This section shows you the step-by-step
 instructions including setting up authentication for a secure connection to your
 APIs.
 
@@ -31220,6 +31188,152 @@ When plotting trends, you should make sure to sort and order the data by the x-a
 
 For a complete version of an ADK agent using this example code, see the
 [agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
+
+================
+File: docs/tools/google-cloud/express-mode.md
+================
+# Vertex AI express mode
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-preview">Preview</span>
+</div>
+
+Google Cloud Vertex AI express mode provides a no-cost access tier for
+prototyping and development, allowing you to use Vertex AI services without
+creating a full Google Cloud Project. This service includes access to many
+powerful Vertex AI services, including:
+
+- [Vertex AI SessionService](#vertex-ai-session-service)
+- [Vertex AI MemoryBankService](#vertex-ai-memory-bank)
+
+You can sign up for an express mode account using a Gmail account and receive an
+API key to use with the ADK. Obtain an API key through the
+[Google Cloud Console](https://console.cloud.google.com/expressmode).
+For more information, see
+[Vertex AI express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
+
+!!! example "Preview release"
+    The Vertex AI express mode feature is a Preview release. For
+    more information, see the
+    [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
+
+??? info "Vertex AI express mode limitations"
+
+    Vertex AI express mode projects are only valid for 90 days and only select
+    services are available to be used with limited quota. For example, the number of
+    Agent Engines is restricted to 10 and deployment to Agent Engine requires paid
+    access. To remove the quota restrictions and use all of Vertex AI's services,
+    add a billing account to your express mode project.
+
+## Configure Agent Engine container
+
+When using Vertex AI express mode, create an `AgentEngine` object to enable
+Vertex AI management of agent components such as `Session` and `Memory` objects.
+With this approach, `Session` objects are handled as children of the
+`AgentEngine` object. Before running your agent make sure your environment
+variables are set correctly, as shown below:
+
+```env title="agent/.env"
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+```
+
+Next, create your Agent Engine instance using the Vertex AI SDK.
+
+1. Import Vertex AI SDK.
+
+    ```py
+    import vertexai
+    from vertexai import agent_engines
+    ```
+
+2. Initialize the Vertex AI Client with your API key and create an agent engine instance.
+
+    ```py
+    # Create Agent Engine with Gen AI SDK
+    client = vertexai.Client(
+      api_key="YOUR_API_KEY",
+    )
+
+    agent_engine = client.agent_engines.create(
+      config={
+        "display_name": "Demo Agent Engine",
+        "description": "Agent Engine for Session and Memory",
+      })
+    ```
+
+3. Get the Agent Engine name and ID from the response to use with Memories and Sessions.
+
+    ```py
+    APP_ID = agent_engine.api_resource.name.split('/')[-1]
+    ```
+
+## Manage Sessions with `VertexAiSessionService` {#vertex-ai-session-service}
+
+[`VertexAiSessionService`](/adk-docs/sessions/session.md#sessionservice-implementations)
+is compatible with Vertex AI express mode API Keys. You can instead initialize
+the session object without any project or location.
+
+```py
+# Requires: pip install google-adk[vertexai]
+# Plus environment variable setup:
+# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+from google.adk.sessions import VertexAiSessionService
+
+# The app_name used with this service should be the Reasoning Engine ID or name
+APP_ID = "your-reasoning-engine-id"
+
+# Project and location are not required when initializing with Vertex express mode
+session_service = VertexAiSessionService(agent_engine_id=APP_ID)
+# Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
+# session = await session_service.create_session(app_name=APP_ID, user_id= ...)
+```
+
+!!! info "Session Service Quotas"
+
+    For Free express mode Projects, `VertexAiSessionService` has the following quota:
+
+    - 10 Create, delete, or update Vertex AI Agent Engine sessions per minute
+    - 30 Append event to Vertex AI Agent Engine sessions per minute
+
+## Manage Memory with `VertexAiMemoryBankService` {#vertex-ai-memory-bank}
+
+[`VertexAiMemoryBankService`](/adk-docs/sessions/memory.md#vertex-ai-memory-bank)
+is compatible with Vertex AI express mode API Keys. You can instead initialize
+the memory object without any project or location.
+
+```py
+# Requires: pip install google-adk[vertexai]
+# Plus environment variable setup:
+# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+from google.adk.memory import VertexAiMemoryBankService
+
+# The app_name used with this service should be the Reasoning Engine ID or name
+APP_ID = "your-reasoning-engine-id"
+
+# Project and location are not required when initializing with express mode
+memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
+# Generate a memory from that session so the Agent can remember relevant details about the user
+# memory = await memory_service.add_session_to_memory(session)
+```
+
+!!! info "Memory Service Quotas"
+
+    For Free express mode Projects, `VertexAiMemoryBankService` has the following quota:
+
+    - 10 Create, delete, or update Vertex AI Agent Engine memory resources per minute
+    - 10 Get, list, or retrieve from Vertex AI Agent Engine Memory Bank per minute
+
+### Code Sample: Weather Agent with Session and Memory
+
+This code sample shows a weather agent that utilizes both
+`VertexAiSessionService` and `VertexAiMemoryBankService` for context management,
+allowing your agent to recall user preferences and conversations.
+
+*   [Weather Agent with Session and Memory](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)
+    using Vertex AI express mode
 
 ================
 File: docs/tools/google-cloud/gke-code-executor.md
@@ -32425,6 +32539,16 @@ Check out the following third-party tools that you can use with ADK agents:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/third-party/stripe/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-stripe.png" alt="Stripe">
+    </div>
+    <div class="tool-card-content">
+      <h3>Stripe</h3>
+      <p>Manage payments, customers, subscriptions, and invoices</p>
+    </div>
+  </a>
+
 </div>
 
 ================
@@ -33118,6 +33242,142 @@ env={
 - [Qdrant Cloud](https://cloud.qdrant.io/)
 
 ================
+File: docs/tools/third-party/stripe.md
+================
+# Stripe
+
+The [Stripe MCP Server](https://docs.stripe.com/mcp) connects your ADK agent to
+the [Stripe](https://stripe.com/) ecosystem. This integration gives your agent
+the ability to manage payments, customers, subscriptions, and invoices using
+natural language, enabling automated commerce workflows and financial
+operations.
+
+## Use cases
+
+- **Automate Payment Operations**: Create payment links, process refunds, and
+  list payment intents through conversational commands.
+
+- **Streamline Invoicing**: Generate and finalize invoices, add line items, and
+  track outstanding payments without leaving your development environment.
+
+- **Access Business Insights**: Query account balances, list products and
+  prices, and search across Stripe resources to make data-driven decisions.
+
+## Prerequisites
+
+- Create a [Stripe account](https://dashboard.stripe.com/register)
+- Generate a [Restricted API key](https://dashboard.stripe.com/apikeys) from the
+  Stripe Dashboard
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="stripe_agent",
+        instruction="Help users manage their Stripe account",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@stripe/mcp",
+                            "--tools=all",
+                            # (Optional) Specify which tools to enable
+                            # "--tools=customers.read,invoices.read,products.read",
+                        ],
+                        env={
+                            "STRIPE_SECRET_KEY": STRIPE_SECRET_KEY,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+    STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="stripe_agent",
+        instruction="Help users manage their Stripe account",
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.stripe.com",
+                    headers={
+                        "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+!!! tip "Best practices"
+
+    Enable human confirmation of tool actions and exercise caution when using
+    the Stripe MCP server alongside other MCP servers to mitigate prompt
+    injection risks.
+
+## Available tools
+
+Resource | Tool | API
+-------- | ---- | ----
+Account | `get_stripe_account_info` | Retrieve account
+Balance | `retrieve_balance` | Retrieve balance
+Coupon | `create_coupon` | Create coupon
+Coupon | `list_coupons` | List coupons
+Customer | `create_customer` | Create customer
+Customer | `list_customers` | List customers
+Dispute | `list_disputes` | List disputes
+Dispute | `update_dispute` | Update dispute
+Invoice | `create_invoice` | Create invoice
+Invoice | `create_invoice_item` | Create invoice item
+Invoice | `finalize_invoice` | Finalize invoice
+Invoice | `list_invoices` | List invoices
+Payment Link | `create_payment_link` | Create payment link
+PaymentIntent | `list_payment_intents` | List PaymentIntents
+Price | `create_price` | Create price
+Price | `list_prices` | List prices
+Product | `create_product` | Create product
+Product | `list_products` | List products
+Refund | `create_refund` | Create refund
+Subscription | `cancel_subscription` | Cancel subscription
+Subscription | `list_subscriptions` | List subscriptions
+Subscription | `update_subscription` | Update subscription
+Others | `search_stripe_resources` | Search Stripe resources
+Others | `fetch_stripe_resources` | Fetch Stripe object
+Others | `search_stripe_documentation` | Search Stripe knowledge
+
+## Additional resources
+
+- [Stripe MCP Server Documentation](https://docs.stripe.com/mcp)
+- [Stripe MCP Server on GitHub](https://github.com/stripe/ai/tree/main/tools/modelcontextprotocol)
+- [Build on Stripe with LLMs](https://docs.stripe.com/building-with-llms)
+- [Add Stripe to your agentic workflows](https://docs.stripe.com/agents)
+
+================
 File: docs/tools/index.md
 ================
 ---
@@ -33372,6 +33632,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Qdrant</h3>
       <p>Store and retrieve information using semantic vector search</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/stripe/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-stripe.png" alt="Stripe">
+    </div>
+    <div class="tool-card-content">
+      <h3>Stripe</h3>
+      <p>Manage payments, customers, subscriptions, and invoices</p>
     </div>
   </a>
 
@@ -34583,7 +34853,7 @@ File: docs/tools-custom/function-tools.md
 </div>
 
 When pre-built ADK tools don't meet your requirements, you can create custom *function tools*. Building function tools allows you to create tailored functionality, such as connecting to proprietary databases or implementing unique algorithms.
-For example, a function tool, `myfinancetool`, might be a function that calculates a specific financial metric. ADK also supports long running functions, so if that calculation takes a while, the agent can continue working on other tasks.
+For example, a function tool, `myfinancetool`, might be a function that calculates a specific financial metric. ADK also supports long-running functions, so if that calculation takes a while, the agent can continue working on other tasks.
 
 ADK offers several ways to create functions tools, each suited to different levels of complexity and control:
 
