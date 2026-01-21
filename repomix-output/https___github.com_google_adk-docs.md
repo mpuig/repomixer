@@ -10484,7 +10484,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     export SERVICE_NAME="capital-agent-service"
 
     # Set an application name (optional)
-    export APP_NAME="capital-agent-app"
+    export APP_NAME="capital_agent_app"
     ```
 
     #### Command usage
@@ -31559,6 +31559,16 @@ connect your agents with:
     </div>
   </a>
 
+  <a href="/adk-docs/tools/google-cloud/pubsub/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-pubsub.png" alt="Pub/Sub">
+    </div>
+    <div class="tool-card-content">
+      <h3>Pub/Sub Tools</h3>
+      <p>Publish, pull, and acknowledge messages from Google Cloud Pub/Sub</p>
+    </div>
+  </a>
+
 </div>
 
 ================
@@ -31811,6 +31821,67 @@ For more information, read more about the following features:
 * [OpenTelemetry](https://googleapis.github.io/genai-toolbox/how-to/export_telemetry/): get metrics and tracing from Toolbox with OpenTelemetry
 
 ================
+File: docs/tools/google-cloud/pubsub.md
+================
+# Pub/Sub tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.22.0</span>
+</div>
+
+The `PubSubToolset` allows agents to interact with
+[Google Cloud Pub/Sub](https://cloud.google.com/pubsub)
+service to publish, pull, and acknowledge messages.
+
+## Prerequisites
+
+Before using the `PubSubToolset`, you need to:
+
+1.  **Enable the Pub/Sub API** in your Google Cloud project.
+2.  **Authenticate and authorize**: Ensure that the principal (e.g., user, service account) running the agent has the necessary IAM permissions to perform Pub/Sub operations. For more information on Pub/Sub roles, see the [Pub/Sub access control documentation](https://cloud.google.com/pubsub/docs/access-control).
+3.  **Create a topic or subscription**: [Create a topic](https://cloud.google.com/pubsub/docs/create-topic) to publish messages and [create a subscription](https://cloud.google.com/pubsub/docs/create-subscription) to receive them.
+
+
+## Usage
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/pubsub.py"
+```
+## Tools
+
+The `PubSubToolset` includes the following tools:
+
+### `publish_message`
+
+Publishes a message to a Pub/Sub topic.
+
+| Parameter      | Type                | Description                                                                                             |
+| -------------- | ------------------- | ------------------------------------------------------------------------------------------------------- |
+| `topic_name`   | `str`               | The name of the Pub/Sub topic (e.g., `projects/my-project/topics/my-topic`).                            |
+| `message`      | `str`               | The message content to publish.                                                                         |
+| `attributes`   | `dict[str, str]`    | (Optional) Attributes to attach to the message.                                                         |
+| `ordering_key` | `str`               | (Optional) The ordering key for the message. If you set this parameter, messages are published in order. |
+
+### `pull_messages`
+
+Pulls messages from a Pub/Sub subscription.
+
+| Parameter           | Type    | Description                                                                                                 |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `subscription_name` | `str`   | The name of the Pub/Sub subscription (e.g., `projects/my-project/subscriptions/my-sub`).                      |
+| `max_messages`      | `int`   | (Optional) The maximum number of messages to pull. Defaults to `1`.                                         |
+| `auto_ack`          | `bool`  | (Optional) Whether to automatically acknowledge the messages. Defaults to `False`.                            |
+
+### `acknowledge_messages`
+
+Acknowledges one or more messages on a Pub/Sub subscription.
+
+| Parameter           | Type          | Description                                                                                       |
+| ------------------- | ------------- | ------------------------------------------------------------------------------------------------- |
+| `subscription_name` | `str`         | The name of the Pub/Sub subscription (e.g., `projects/my-project/subscriptions/my-sub`).            |
+| `ack_ids`           | `list[str]`   | A list of acknowledgment IDs to acknowledge.                                                      |
+
+================
 File: docs/tools/google-cloud/spanner.md
 ================
 # Spanner database tool for ADK
@@ -31998,6 +32069,91 @@ To see what other features you can build into your UI with AG-UI, refer to the C
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
+File: docs/tools/third-party/asana.md
+================
+# Asana
+
+The [Asana MCP Server](https://developers.asana.com/docs/using-asanas-mcp-server)
+connects your ADK agent to the [Asana](https://asana.com/) work management
+platform. This integration gives your agent the ability to manage projects,
+tasks, goals, and team collaboration using natural language.
+
+## Use cases
+
+- **Track Project Status**: Get real-time updates on project progress, view
+  status reports, and retrieve information about milestones and deadlines.
+
+- **Manage Tasks**: Create, update, and organize tasks using natural language.
+  Let your agent handle task assignments, status changes, and priority updates.
+
+- **Monitor Goals**: Access and update Asana Goals to track team objectives and
+  key results across your organization.
+
+## Prerequisites
+
+- An [Asana](https://asana.com/) account with access to a workspace
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="asana_agent",
+        instruction="Help users manage projects, tasks, and goals in Asana",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "mcp-remote",
+                            "https://mcp.asana.com/sse",
+                        ]
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+!!! note
+
+    When you run this agent for the first time, a browser window opens
+    automatically to request access via OAuth. Alternatively, you can use the
+    authorization URL printed in the console. You must approve this request to
+    allow the agent to access your Asana data.
+
+## Available tools
+
+Asana's MCP server includes 30+ tools organized by category. Tools are
+automatically discovered when your agent connects. Use the
+[ADK Web UI](/adk-docs/runtime/web-interface/) to view available tools in the
+trace graph after running your agent.
+
+Category | Description
+-------- | -----------
+Project tracking | Get project status updates and reports
+Task management | Create, update, and organize tasks
+User information | Access user details and assignments
+Goals | Track and update Asana Goals
+Team organization | Manage team structures and membership
+Object search | Quick typeahead search across Asana objects
+
+## Additional resources
+
+- [Asana MCP Server Documentation](https://developers.asana.com/docs/using-asanas-mcp-server)
+- [Asana MCP Integration Guide](https://developers.asana.com/docs/integrating-with-asanas-mcp-server)
+
+================
 File: docs/tools/third-party/atlassian.md
 ================
 # Atlassian
@@ -32101,6 +32257,240 @@ Tool | Description
 
 - [Atlassian MCP Server Repository](https://github.com/atlassian/atlassian-mcp-server)
 - [Atlassian MCP Server Documentation](https://support.atlassian.com/atlassian-rovo-mcp-server/docs/getting-started-with-the-atlassian-remote-mcp-server/)
+
+================
+File: docs/tools/third-party/cartesia.md
+================
+# Cartesia
+
+The [Cartesia MCP Server](https://github.com/cartesia-ai/cartesia-mcp) connects
+your ADK agent to the [Cartesia](https://cartesia.ai/) AI audio platform. This
+integration gives your agent the ability to generate speech, localize voices
+across languages, and create audio content using natural language.
+
+## Use cases
+
+- **Text-to-Speech Generation**: Convert text into natural-sounding speech
+  using Cartesia's diverse voice library, with control over voice selection and
+  output format.
+
+- **Voice Localization**: Transform existing voices into different languages
+  while preserving the original speaker's characteristics—ideal for
+  multilingual content creation.
+
+- **Audio Infill**: Fill gaps between audio segments to create smooth
+  transitions, useful for podcast editing or audiobook production.
+
+- **Voice Transformation**: Convert audio clips to sound like different voices
+  from Cartesia's library.
+
+## Prerequisites
+
+- Sign up for a [Cartesia account](https://play.cartesia.ai/sign-in)
+- Generate an [API key](https://play.cartesia.ai/keys) from the Cartesia
+  playground
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="cartesia_agent",
+        instruction="Help users generate speech and work with audio content",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="uvx",
+                        args=["cartesia-mcp"],
+                        env={
+                            "CARTESIA_API_KEY": CARTESIA_API_KEY,
+                            # "OUTPUT_DIRECTORY": "/path/to/output",  # Optional
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`text_to_speech` | Convert text to audio using a specified voice
+`list_voices` | List all available Cartesia voices
+`get_voice` | Get details about a specific voice
+`clone_voice` | Clone a voice from audio samples
+`update_voice` | Update an existing voice
+`delete_voice` | Delete a voice from your library
+`localize_voice` | Transform a voice into a different language
+`voice_change` | Convert an audio file to use a different voice
+`infill` | Fill gaps between audio segments
+
+## Configuration
+
+The Cartesia MCP server can be configured using environment variables:
+
+Variable | Description | Required
+-------- | ----------- | --------
+`CARTESIA_API_KEY` | Your Cartesia API key | Yes
+`OUTPUT_DIRECTORY` | Directory to store generated audio files | No
+
+## Additional resources
+
+- [Cartesia MCP Server Repository](https://github.com/cartesia-ai/cartesia-mcp)
+- [Cartesia MCP Documentation](https://docs.cartesia.ai/integrations/mcp)
+- [Cartesia Playground](https://play.cartesia.ai/)
+
+================
+File: docs/tools/third-party/elevenlabs.md
+================
+# ElevenLabs
+
+The [ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp)
+connects your ADK agent to the [ElevenLabs](https://elevenlabs.io/) AI audio
+platform. This integration gives your agent the ability to generate speech,
+clone voices, transcribe audio, create sound effects, and build conversational
+AI experiences using natural language.
+
+## Use cases
+
+- **Text-to-Speech Generation**: Convert text into natural-sounding speech
+  using a variety of voices, with fine-grained control over stability, style,
+  and similarity settings.
+
+- **Voice Cloning & Design**: Clone voices from audio samples or generate new
+  voices from text descriptions of desired characteristics like age, gender,
+  accent, and tone.
+
+- **Audio Processing**: Isolate speech from background noise, convert audio to
+  sound like different voices, or transcribe speech to text with speaker
+  identification.
+
+- **Sound Effects & Soundscapes**: Generate sound effects and ambient
+  soundscapes from text descriptions, such as "a thunderstorm in a dense jungle
+  with animals reacting to the weather."
+
+## Prerequisites
+
+- Sign up for an [ElevenLabs account](https://elevenlabs.io/app/sign-up)
+- Generate an [API key](https://elevenlabs.io/app/settings/api-keys) from your
+  account settings
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="elevenlabs_agent",
+        instruction="Help users generate speech, clone voices, and process audio",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="uvx",
+                        args=["elevenlabs-mcp"],
+                        env={
+                            "ELEVENLABS_API_KEY": ELEVENLABS_API_KEY,
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+## Available tools
+
+### Text-to-speech and voice
+
+Tool | Description
+---- | -----------
+`text_to_speech` | Generate speech from text using a specified voice
+`speech_to_speech` | Transform audio to sound like a different voice
+`text_to_voice` | Generate a voice preview from text description
+`create_voice_from_preview` | Save a generated voice preview to your library
+`voice_clone` | Clone a voice from audio samples
+`get_voice` | Get details about a specific voice
+`search_voices` | Search for voices in your library
+`search_voice_library` | Search the public voice library
+`list_models` | List available text-to-speech models
+
+### Audio processing
+
+Tool | Description
+---- | -----------
+`speech_to_text` | Transcribe audio to text with speaker identification
+`text_to_sound_effects` | Generate sound effects from text descriptions
+`isolate_audio` | Separate speech from background noise and music
+`play_audio` | Play an audio file locally
+`compose_music` | Generate music from a description
+`create_composition_plan` | Create a plan for music composition
+
+### Conversational AI
+
+Tool | Description
+---- | -----------
+`create_agent` | Create a conversational AI agent
+`get_agent` | Get details about a specific agent
+`list_agents` | List all your conversational AI agents
+`add_knowledge_base_to_agent` | Add a knowledge base to an agent
+`make_outbound_call` | Initiate an outbound phone call using an agent
+`list_phone_numbers` | List available phone numbers
+`get_conversation` | Get details about a specific conversation
+`list_conversations` | List all conversations
+
+### Account
+
+Tool | Description
+---- | -----------
+`check_subscription` | Check your subscription and credit usage
+
+## Configuration
+
+The ElevenLabs MCP server can be configured using environment variables:
+
+Variable | Description | Default
+-------- | ----------- | -------
+`ELEVENLABS_API_KEY` | Your ElevenLabs API key | Required
+`ELEVENLABS_MCP_BASE_PATH` | Base path for file operations | `~/Desktop`
+`ELEVENLABS_MCP_OUTPUT_MODE` | How generated files are returned | `files`
+`ELEVENLABS_API_RESIDENCY` | Data residency region (enterprise only) | `us`
+
+### Output modes
+
+The `ELEVENLABS_MCP_OUTPUT_MODE` environment variable supports three modes:
+
+- **`files`** (default): Save files to disk and return file paths
+- **`resources`**: Return files as MCP resources (base64-encoded binary data)
+- **`both`**: Save files to disk AND return as MCP resources
+
+## Additional resources
+
+- [ElevenLabs MCP Server Repository](https://github.com/elevenlabs/elevenlabs-mcp)
+- [Introducing ElevenLabs MCP](https://elevenlabs.io/blog/introducing-elevenlabs-mcp)
+- [ElevenLabs Documentation](https://elevenlabs.io/docs)
 
 ================
 File: docs/tools/third-party/github.md
@@ -32449,6 +32839,16 @@ Check out the following third-party tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/asana/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-asana.png" alt="Asana">
+    </div>
+    <div class="tool-card-content">
+      <h3>Asana</h3>
+      <p>Manage projects, tasks, and goals for team collaboration</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
@@ -32456,6 +32856,26 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Atlassian</h3>
       <p>Manage issues, search pages, and update team content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/cartesia/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-cartesia.png" alt="Cartesia">
+    </div>
+    <div class="tool-card-content">
+      <h3>Cartesia</h3>
+      <p>Generate speech, localize voices, and create audio content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/elevenlabs/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-elevenlabs.png" alt="ElevenLabs">
+    </div>
+    <div class="tool-card-content">
+      <h3>ElevenLabs</h3>
+      <p>Generate speech, clone voices, transcribe audio, and create sound effects</p>
     </div>
   </a>
 
@@ -32516,6 +32936,16 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/postman/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-postman.png" alt="Postman">
+    </div>
+    <div class="tool-card-content">
+      <h3>Postman</h3>
+      <p>Manage API collections, workspaces, and generate client code</p>
     </div>
   </a>
 
@@ -33137,6 +33567,128 @@ specific tool identifiers.
 - [PayPal Agent Tools Reference](https://docs.paypal.ai/developer/tools/ai/agent-tools-ref)
 
 ================
+File: docs/tools/third-party/postman.md
+================
+# Postman
+
+The [Postman MCP Server](https://github.com/postmanlabs/postman-mcp-server)
+connects your ADK agent to the [Postman](https://www.postman.com/) ecosystem.
+This integration gives your agent the ability to access workspaces, manage
+collections and environments, evaluate APIs, and automate workflows through
+natural language interactions.
+
+## Use cases
+
+- **API testing**: Continuously test your APIs using your Postman collections.
+
+- **Collection management**: Create and tag collections, update documentation,
+  add comments, or perform actions across multiple collections without leaving
+  your editor.
+
+- **Workspace and environment management**: Create workspaces and environments,
+  and manage your environment variables.
+
+- **Client code generation**: Generate production-ready client code that
+  consumes APIs following best practices and project conventions.
+
+## Prerequisites
+
+- Create a [Postman account](https://identity.getpostman.com/signup)
+- Generate a [Postman API key](https://postman.postman.co/settings/me/api-keys)
+
+## Use with agent
+
+=== "Local MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="postman_agent",
+        instruction="Help users manage their Postman workspaces and collections",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@postman/postman-mcp-server",
+                            # "--full",  # Use all 100+ tools
+                            # "--code",  # Use code generation tools
+                            # "--region", "eu",  # Use EU region
+                        ],
+                        env={
+                            "POSTMAN_API_KEY": POSTMAN_API_KEY,
+                        },
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "Remote MCP Server"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+    POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-2.5-pro",
+        name="postman_agent",
+        instruction="Help users manage their Postman workspaces and collections",
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPServerParams(
+                    url="https://mcp.postman.com/mcp",
+                    # (Optional) Use "/minimal" for essential tools only
+                    # (Optional) Use "/code" for code generation tools
+                    # (Optional) Use "https://mcp.eu.postman.com" for EU region
+                    headers={
+                        "Authorization": f"Bearer {POSTMAN_API_KEY}",
+                    },
+                ),
+            )
+        ],
+    )
+    ```
+
+## Configuration
+
+Postman offers three tool configurations:
+
+- **Minimal** (default): Essential tools for basic Postman operations. Best for
+  simple modifications to collections, workspaces, or environments.
+- **Full**: All available Postman API tools (100+ tools). Ideal for advanced
+  collaboration and enterprise features.
+- **Code**: Tools for searching API definitions and generating client code.
+  Perfect for developers who need to consume APIs.
+
+To select a configuration:
+
+- **Local server**: Add `--full` or `--code` to the `args` list.
+- **Remote server**: Change the URL path to `/minimal`, `/mcp` (full), or `/code`.
+
+For EU region, use `--region eu` (local) or `https://mcp.eu.postman.com` (remote).
+
+## Additional resources
+
+- [Postman MCP Server on GitHub](https://github.com/postmanlabs/postman-mcp-server)
+- [Postman API key settings](https://postman.postman.co/settings/me/api-keys)
+- [Postman Learning Center](https://learning.postman.com/)
+
+================
 File: docs/tools/third-party/qdrant.md
 ================
 # Qdrant
@@ -33545,6 +34097,16 @@ Check out the following pre-built tools that you can use with ADK agents:
 
 <div class="tool-card-grid">
 
+  <a href="/adk-docs/tools/third-party/asana/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-asana.png" alt="Asana">
+    </div>
+    <div class="tool-card-content">
+      <h3>Asana</h3>
+      <p>Manage projects, tasks, and goals for team collaboration</p>
+    </div>
+  </a>
+
   <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
     <div class="tool-card-image-wrapper">
       <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
@@ -33552,6 +34114,26 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Atlassian</h3>
       <p>Manage issues, search pages, and update team content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/cartesia/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-cartesia.png" alt="Cartesia">
+    </div>
+    <div class="tool-card-content">
+      <h3>Cartesia</h3>
+      <p>Generate speech, localize voices, and create audio content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/elevenlabs/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-elevenlabs.png" alt="ElevenLabs">
+    </div>
+    <div class="tool-card-content">
+      <h3>ElevenLabs</h3>
+      <p>Generate speech, clone voices, transcribe audio, and create sound effects</p>
     </div>
   </a>
 
@@ -33612,6 +34194,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Notion</h3>
       <p>Search workspaces, create pages, and manage tasks and databases</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/postman/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/tools-postman.png" alt="Postman">
+    </div>
+    <div class="tool-card-content">
+      <h3>Postman</h3>
+      <p>Manage API collections, workspaces, and generate client code</p>
     </div>
   </a>
 
@@ -40236,29 +40828,6 @@ ADK is **model-agnostic**, **deployment-agnostic**, and is built for
 development feel more like software development, to make it easier for
 developers to create, deploy, and orchestrate agentic architectures that range
 from simple tasks to complex workflows.
-
-??? tip "News: ADK TypeScript v0.2.0 released!"
-
-    ADK TypeScript v0.2.0 is officially released! By popular demand, the ADK
-    team has brought the power of Agent Development Kit to one of the most
-    popular programming languages on the planet. For details, check out the
-    [blog post](https://developers.googleblog.com/introducing-agent-development-kit-for-typescript-build-ai-agents-with-the-power-of-a-code-first-approach/).
-
-??? tip "News: ADK Go v0.3.0 released!"
-
-    ADK Go release v0.3.0 includes numerous bug fixes, introduces new features
-    such as agent-to-agent request callbacks and extendability, and updates
-    dependencies like the GenAI SDK and the ADK Web UI.
-    For release details, check out the
-    [release notes](https://github.com/google/adk-go/releases/tag/v0.3.0).
-
-??? tip "News: ADK Java v0.5.0 released!"
-
-    The ADK Java v0.5.0 release adds new features for tool execution mode
-    configuration and model versioning, along with numerous bug fixes,
-    dependency updates, and significant refactoring to improve the agent
-    and runner architecture. For release details, check out the
-    [release notes](https://github.com/google/adk-java/releases/tag/v0.5.0).
 
 <div id="centered-install-tabs" class="install-command-container" markdown="1">
 

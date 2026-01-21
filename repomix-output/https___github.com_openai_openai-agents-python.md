@@ -1268,9 +1268,9 @@ search:
 ---
 # 세션
 
-Agents SDK 는 여러 에이전트 실행(run) 간에 대화 기록을 자동으로 유지하는 내장 세션 메모리를 제공하여, 턴마다 수동으로 `.to_input_list()` 를 처리할 필요를 없앱니다.
+Agents SDK 는 내장된 세션 메모리를 제공하여 여러 에이전트 실행에 걸쳐 대화 기록을 자동으로 유지하므로, 턴 사이에 `.to_input_list()` 를 수동으로 처리할 필요가 없습니다.
 
-세션은 특정 세션에 대한 대화 기록을 저장하여, 명시적인 수동 메모리 관리 없이도 에이전트가 컨텍스트를 유지하도록 합니다. 이는 에이전트가 이전 상호작용을 기억해야 하는 채팅 애플리케이션이나 멀티 턴 대화 구축에 특히 유용합니다.
+Sessions 는 특정 세션의 대화 기록을 저장하여, 에이전트가 명시적인 수동 메모리 관리 없이도 컨텍스트를 유지할 수 있게 합니다. 이는 이전 상호작용을 에이전트가 기억하도록 하고 싶은 채팅 애플리케이션이나 멀티턴 대화를 구축할 때 특히 유용합니다.
 
 ## 빠른 시작
 
@@ -1315,17 +1315,17 @@ print(result.final_output)  # "Approximately 39 million"
 
 세션 메모리가 활성화되면:
 
-1. **각 실행 전**: 러너가 해당 세션의 대화 기록을 자동으로 가져와 입력 항목 앞에 추가합니다
-2. **각 실행 후**: 실행 중에 생성된 모든 새 항목(사용자 입력, 어시스턴트 응답, 도구 호출 등)이 자동으로 세션에 저장됩니다
-3. **컨텍스트 유지**: 동일한 세션으로 후속 실행 시 전체 대화 기록이 포함되어 에이전트가 컨텍스트를 유지할 수 있습니다
+1. **각 실행 전**: 러너가 해당 세션의 대화 기록을 자동으로 가져와 입력 항목 앞에 덧붙입니다
+2. **각 실행 후**: 실행 중 생성된 모든 새 항목(사용자 입력, 어시스턴트 응답, 도구 호출 등)이 자동으로 세션에 저장됩니다
+3. **컨텍스트 유지**: 동일한 세션으로 이후 실행할 때마다 전체 대화 기록이 포함되어, 에이전트가 컨텍스트를 유지할 수 있습니다
 
-이를 통해 실행 간에 `.to_input_list()` 를 수동으로 호출하고 대화 상태를 관리할 필요가 없습니다.
+이로써 `.to_input_list()` 를 수동으로 호출하고 실행 간 대화 상태를 관리할 필요가 없어집니다.
 
 ## 메모리 작업
 
 ### 기본 작업
 
-세션은 대화 기록을 관리하기 위한 여러 작업을 지원합니다:
+Sessions 는 대화 기록 관리를 위한 여러 작업을 지원합니다:
 
 ```python
 from agents import SQLiteSession
@@ -1350,9 +1350,9 @@ print(last_item)  # {"role": "assistant", "content": "Hi there!"}
 await session.clear_session()
 ```
 
-### 수정용 pop_item 사용
+### 수정에 pop_item 사용
 
-`pop_item` 메서드는 대화에서 마지막 항목을 취소하거나 수정하고자 할 때 특히 유용합니다:
+`pop_item` 메서드는 대화에서 마지막 항목을 되돌리거나 수정하고 싶을 때 특히 유용합니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -1387,7 +1387,7 @@ SDK 는 다양한 사용 사례를 위한 여러 세션 구현을 제공합니�
 
 ### OpenAI Conversations API 세션
 
-`OpenAIConversationsSession` 을 통해 [OpenAI's Conversations API](https://platform.openai.com/docs/api-reference/conversations)를 사용하세요.
+`OpenAIConversationsSession` 을 통해 [OpenAI's Conversations API](https://platform.openai.com/docs/api-reference/conversations) 를 사용합니다.
 
 ```python
 from agents import Agent, Runner, OpenAIConversationsSession
@@ -1421,9 +1421,57 @@ result = await Runner.run(
 print(result.final_output)  # "California"
 ```
 
+### OpenAI Responses 압축 세션
+
+`OpenAIResponsesCompactionSession` 을 사용해 Responses API (`responses.compact`) 로 세션 기록을 압축합니다. 이는 기반 세션을 감싸며, `should_trigger_compaction` 에 따라 각 턴 이후 자동으로 압축할 수 있습니다.
+
+#### 일반적인 사용법(자동 압축)
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+print(result.final_output)
+```
+
+기본적으로 후보 임계값에 도달하면 각 턴 이후 압축이 실행됩니다.
+
+#### 자동 압축은 스트리밍을 차단할 수 있음
+
+압축은 세션 기록을 지우고 다시 작성하므로, SDK 는 압축이 끝나야 실행이 완료된 것으로 간주합니다. 스트리밍 모드에서는 압축이 무거운 경우 마지막 출력 토큰 이후에도 `run.stream_events()` 가 몇 초 동안 열린 상태로 남을 수 있습니다.
+
+낮은 지연의 스트리밍이나 빠른 턴 전환을 원한다면 자동 압축을 비활성화하고, 턴 사이(또는 유휴 시간)에 직접 `run_compaction()` 을 호출하세요. 자체 기준에 따라 언제 압축을 강제할지 결정할 수 있습니다.
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+    # Disable triggering the auto compaction
+    should_trigger_compaction=lambda _: False,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+
+# Decide when to compact (e.g., on idle, every N turns, or size thresholds).
+await session.run_compaction({"force": True})
+```
+
 ### SQLite 세션
 
-기본 제공되는 경량 SQLite 세션 구현:
+SQLite 를 사용하는 기본 경량 세션 구현입니다:
 
 ```python
 from agents import SQLiteSession
@@ -1444,7 +1492,7 @@ result = await Runner.run(
 
 ### SQLAlchemy 세션
 
-모든 SQLAlchemy 지원 데이터베이스를 사용하는 프로덕션 준비 세션:
+SQLAlchemy 가 지원하는 어떤 데이터베이스든 사용할 수 있는 프로덕션 준비 세션입니다:
 
 ```python
 from agents.extensions.memory import SQLAlchemySession
@@ -1462,13 +1510,13 @@ engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
 session = SQLAlchemySession("user_123", engine=engine, create_tables=True)
 ```
 
-자세한 문서는 [SQLAlchemy 세션](sqlalchemy_session.md)을 참조하세요.
+자세한 문서는 [SQLAlchemy Sessions](sqlalchemy_session.md) 를 참고하세요.
 
 
 
 ### 고급 SQLite 세션
 
-대화 분기, 사용량 분석, 구조화 쿼리를 제공하는 향상된 SQLite 세션:
+대화 브랜칭, 사용량 분석, structured 쿼리를 제공하는 강화된 SQLite 세션입니다:
 
 ```python
 from agents.extensions.memory import AdvancedSQLiteSession
@@ -1488,11 +1536,11 @@ await session.store_run_usage(result)  # Track token usage
 await session.create_branch_from_turn(2)  # Branch from turn 2
 ```
 
-자세한 문서는 [고급 SQLite 세션](advanced_sqlite_session.md)을 참조하세요.
+자세한 문서는 [Advanced SQLite Sessions](advanced_sqlite_session.md) 를 참고하세요.
 
-### 암호화된 세션
+### 암호화 세션
 
-모든 세션 구현에 대한 투명한 암호화 래퍼:
+어떤 세션 구현에도 적용할 수 있는 투명한 암호화 래퍼입니다:
 
 ```python
 from agents.extensions.memory import EncryptedSession, SQLAlchemySession
@@ -1515,34 +1563,33 @@ session = EncryptedSession(
 result = await Runner.run(agent, "Hello", session=session)
 ```
 
-자세한 문서는 [암호화된 세션](encrypted_session.md)을 참조하세요.
+자세한 문서는 [Encrypted Sessions](encrypted_session.md) 를 참고하세요.
 
 ### 기타 세션 유형
 
-추가로 몇 가지 내장 옵션이 있습니다. `examples/memory/` 와 `extensions/memory/` 아래의 소스 코드를 참고하세요.
+내장된 옵션이 몇 가지 더 있습니다. `examples/memory/` 및 `extensions/memory/` 아래의 소스 코드를 참고하세요.
 
 ## 세션 관리
 
-### 세션 ID 명명
+### 세션 ID 네이밍
 
-대화를 체계적으로 구성할 수 있도록 의미 있는 세션 ID 를 사용하세요:
+대화를 정리하는 데 도움이 되는 의미 있는 세션 ID 를 사용하세요:
 
-- User 기반: `"user_12345"`
-- Thread 기반: `"thread_abc123"`
-- 컨텍스트 기반: `"support_ticket_456"`
+-   사용자 기반: `"user_12345"`
+-   스레드 기반: `"thread_abc123"`
+-   컨텍스트 기반: `"support_ticket_456"`
 
-### 메모리 지속성
+### 메모리 영속성
 
-- 임시 대화에는 인메모리 SQLite(`SQLiteSession("session_id")`) 사용
-- 지속형 대화에는 파일 기반 SQLite(`SQLiteSession("session_id", "path/to/db.sqlite")`) 사용
-- SQLAlchemy 가 지원하는 기존 데이터베이스를 사용하는 프로덕션 시스템에는 SQLAlchemy 기반 세션(`SQLAlchemySession("session_id", engine=engine, create_tables=True)`) 사용
-- 프로덕션 클라우드 네이티브 배포에서는 Dapr 상태 저장소 세션(`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`) 사용. 지원:
-30+ 데이터베이스 백엔드, 내장 텔레메트리, 트레이싱, 데이터 분리
-- OpenAI Conversations API 에 기록을 저장하길 원할 때는 OpenAI 가 호스팅하는 스토리지(`OpenAIConversationsSession()`) 사용
-- 투명한 암호화와 TTL 기반 만료를 위해 암호화된 세션(`EncryptedSession(session_id, underlying_session, encryption_key)`)으로 어떤 세션이든 래핑
-- 더 고급 사용 사례를 위해 다른 프로덕션 시스템(Redis, Django 등)에 대한 커스텀 세션 백엔드를 구현하는 것도 고려
+-   임시 대화에는 인메모리 SQLite (`SQLiteSession("session_id")`) 를 사용하세요
+-   영속적 대화에는 파일 기반 SQLite (`SQLiteSession("session_id", "path/to/db.sqlite")`) 를 사용하세요
+-   SQLAlchemy 가 지원하는 기존 데이터베이스를 사용하는 프로덕션 시스템에는 SQLAlchemy 기반 세션 (`SQLAlchemySession("session_id", engine=engine, create_tables=True)`) 을 사용하세요
+-   내장 텔레메트리, 트레이싱, 데이터 격리를 갖춘 30+ 데이터베이스 백엔드를 지원하는 프로덕션 클라우드 네이티브 배포에는 Dapr 상태 저장소 세션 (`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`) 을 사용하세요
+-   기록을 OpenAI Conversations API 에 저장하고 싶다면 OpenAI 호스트하는 스토리지 (`OpenAIConversationsSession()`) 를 사용하세요
+-   투명한 암호화 및 TTL 기반 만료를 위해 어떤 세션이든 감싸려면 암호화 세션 (`EncryptedSession(session_id, underlying_session, encryption_key)`) 을 사용하세요
+-   더 고급 사용 사례를 위해 다른 프로덕션 시스템(Redis, Django 등)에 대한 커스텀 세션 백엔드를 구현하는 것도 고려하세요
 
-### 다중 세션
+### 여러 세션
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -1650,9 +1697,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## 사용자 정의 세션 구현
+## 커스텀 세션 구현
 
-[`Session`][agents.memory.session.Session] 프로토콜을 따르는 클래스를 생성하여 자체 세션 메모리를 구현할 수 있습니다:
+[`Session`][agents.memory.session.Session] 프로토콜을 따르는 클래스를 만들어 자체 세션 메모리를 구현할 수 있습니다:
 
 ```python
 from agents.memory.session import SessionABC
@@ -1701,21 +1748,22 @@ result = await Runner.run(
 
 | Package | Description |
 |---------|-------------|
-| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | Django 가 지원하는 모든 데이터베이스(PostgreSQL, MySQL, SQLite 등)를 위한 Django ORM 기반 세션 |
+| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | Django 가 지원하는 어떤 데이터베이스(PostgreSQL, MySQL, SQLite 등)에도 사용할 수 있는 Django ORM 기반 세션 |
 
-세션 구현을 만드셨다면, 여기에 추가할 수 있도록 문서 PR 을 자유롭게 제출해 주세요!
+세션 구현을 만들었다면, 여기에 추가할 수 있도록 문서 PR 을 제출해 주세요!
 
-## API 참조
+## API Reference
 
-자세한 API 문서는 다음을 참조하세요:
+자세한 API 문서는 다음을 참고하세요:
 
-- [`Session`][agents.memory.session.Session] - 프로토콜 인터페이스
-- [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API 구현
-- [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 기본 SQLite 구현
-- [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy 기반 구현
-- [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 상태 저장소 구현
-- [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 분기 및 분석을 지원하는 향상된 SQLite
-- [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 모든 세션에 대한 암호화 래퍼
+-   [`Session`][agents.memory.session.Session] - 프로토콜 인터페이스
+-   [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API 구현
+-   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API 압축 래퍼
+-   [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 기본 SQLite 구현
+-   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy 기반 구현
+-   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 상태 저장소 구현
+-   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 브랜칭 및 분석을 포함한 강화된 SQLite
+-   [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 어떤 세션이든 적용 가능한 암호화 래퍼
 
 ================
 File: docs/ko/sessions/sqlalchemy_session.md
@@ -2526,30 +2574,30 @@ search:
 ---
 # 컨텍스트 관리
 
-컨텍스트라는 용어는 여러 의미로 사용됩니다. 여기서 중요한 컨텍스트는 두 가지입니다:
+컨텍스트는 의미가 중첩된 용어입니다. 관심을 가질 수 있는 컨텍스트는 크게 두 가지 범주가 있습니다:
 
-1. 코드에서 로컬로 사용할 수 있는 컨텍스트: 도구 함수 실행 시, `on_handoff` 같은 콜백, 라이프사이클 훅 등에서 필요할 수 있는 데이터와 의존성
-2. LLM 에서 사용할 수 있는 컨텍스트: LLM 이 응답을 생성할 때 볼 수 있는 데이터
+1. 코드에서 로컬로 사용할 수 있는 컨텍스트: 도구 함수 실행 시, `on_handoff` 같은 콜백 중, 라이프사이클 훅 등에서 필요할 수 있는 데이터와 의존성입니다
+2. LLM에서 사용할 수 있는 컨텍스트: 응답을 생성할 때 LLM이 보게 되는 데이터입니다
 
 ## 로컬 컨텍스트
 
-이는 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 클래스와 그 안의 [`context`][agents.run_context.RunContextWrapper.context] 속성으로 표현됩니다. 동작 방식은 다음과 같습니다:
+이는 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 클래스와 그 안의 [`context`][agents.run_context.RunContextWrapper.context] 프로퍼티로 표현됩니다. 동작 방식은 다음과 같습니다:
 
-1. 원하는 Python 객체를 만듭니다. 일반적으로 dataclass 또는 Pydantic 객체를 사용합니다
-2. 해당 객체를 다양한 실행 메서드에 전달합니다(예: `Runner.run(..., **context=whatever**))`
-3. 모든 도구 호출, 라이프사이클 훅 등에는 `RunContextWrapper[T]` 래퍼 객체가 전달되며, 여기서 `T` 는 컨텍스트 객체 타입을 나타내며 `wrapper.context` 를 통해 접근할 수 있습니다
+1. 원하는 어떤 파이썬 객체든 생성합니다. 흔한 패턴은 dataclass 또는 Pydantic 객체를 사용하는 것입니다
+2. 해당 객체를 다양한 run 메서드(예: `Runner.run(..., context=whatever)`)에 전달합니다
+3. 모든 도구 호출, 라이프사이클 훅 등에는 래퍼 객체 `RunContextWrapper[T]`가 전달되며, 여기서 `T`는 `wrapper.context`로 접근할 수 있는 컨텍스트 객체의 타입을 나타냅니다
 
-가장 **중요한** 점: 특정 agent run 에 대해 각 에이전트, 도구 함수, 라이프사이클 등은 동일한 _type_ 의 컨텍스트를 사용해야 합니다.
+가장 **중요한** 점: 특정 에이전트 run에 대해, 해당 run에서 사용되는 모든 에이전트, 도구 함수, 라이프사이클 등은 동일한 컨텍스트 _타입_을 사용해야 합니다
 
 컨텍스트는 다음과 같은 용도로 사용할 수 있습니다:
 
--   실행을 위한 컨텍스트 데이터(예: 사용자 이름/uid 또는 사용자에 대한 기타 정보)
--   의존성(예: 로거 객체, 데이터 페처 등)
--   헬퍼 함수
+- 실행에 대한 컨텍스트 데이터(예: 사용자 이름/uid 또는 사용자에 대한 기타 정보)
+- 의존성(예: 로거 객체, 데이터 페처 등)
+- 헬퍼 함수
 
-!!! danger "주의"
+!!! danger "Note"
 
-    컨텍스트 객체는 LLM 에게 **전송되지 않습니다**. 순수하게 로컬 객체이며, 읽기/쓰기 및 메서드 호출이 가능합니다.
+    컨텍스트 객체는 **LLM에 전송되지 않습니다**. 이는 순수하게 로컬 객체로, 읽고/쓰고/메서드를 호출할 수 있습니다
 
 ```python
 import asyncio
@@ -2588,18 +2636,18 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-1. 이것이 컨텍스트 객체입니다. 여기서는 dataclass 를 사용했지만, 어떤 타입이든 사용할 수 있습니다.
-2. 이것은 도구입니다. `RunContextWrapper[UserInfo]` 를 받는 것을 볼 수 있습니다. 도구 구현은 컨텍스트에서 값을 읽습니다.
-3. 에이전트에 제네릭 `UserInfo` 를 지정하여, 타입 체커가 오류를 잡을 수 있게 합니다(예: 다른 컨텍스트 타입을 받는 도구를 전달하려 할 때).
-4. 컨텍스트는 `run` 함수로 전달됩니다.
-5. 에이전트는 도구를 올바르게 호출하여 나이를 가져옵니다.
+1. 이것이 컨텍스트 객체입니다. 여기서는 dataclass를 사용했지만 어떤 타입이든 사용할 수 있습니다
+2. 이것은 도구입니다. `RunContextWrapper[UserInfo]`를 받는 것을 볼 수 있습니다. 도구 구현은 컨텍스트에서 값을 읽습니다
+3. 타입체커가 오류를 잡을 수 있도록(예: 다른 컨텍스트 타입을 받는 도구를 전달하려고 할 때) 에이전트에 제네릭 `UserInfo`를 표시합니다
+4. 컨텍스트는 `run` 함수에 전달됩니다
+5. 에이전트는 도구를 올바르게 호출하고 나이를 얻습니다
 
 ---
 
 ### 고급: `ToolContext`
 
-경우에 따라 실행 중인 도구의 추가 메타데이터(예: 이름, 호출 ID, 원문 인자 문자열)에 접근하고 싶을 수 있습니다.  
-이를 위해 `RunContextWrapper` 를 확장한 [`ToolContext`][agents.tool_context.ToolContext] 클래스를 사용할 수 있습니다.
+일부 경우에는 실행 중인 도구에 대한 추가 메타데이터(예: 이름, 호출 ID, 원문 인자 문자열)에 접근하고 싶을 수 있습니다.  
+이를 위해 `RunContextWrapper`를 확장한 [`ToolContext`][agents.tool_context.ToolContext] 클래스를 사용할 수 있습니다.
 
 ```python
 from typing import Annotated
@@ -2627,26 +2675,26 @@ agent = Agent(
 )
 ```
 
-`ToolContext` 는 `RunContextWrapper` 와 동일한 `.context` 속성을 제공하며,  
-현재 도구 호출에 특화된 추가 필드가 있습니다:
+`ToolContext`는 `RunContextWrapper`와 동일한 `.context` 프로퍼티를 제공하며,  
+여기에 더해 현재 도구 호출에 특화된 추가 필드를 제공합니다:
 
-- `tool_name` – 호출 중인 도구의 이름  
-- `tool_call_id` – 이 도구 호출의 고유 식별자  
+- `tool_name` – 호출되는 도구의 이름  
+- `tool_call_id` – 이 도구 호출을 위한 고유 식별자  
 - `tool_arguments` – 도구에 전달된 원문 인자 문자열  
 
-실행 중 도구 수준의 메타데이터가 필요할 때 `ToolContext` 를 사용하세요.  
-에이전트와 도구 간의 일반적인 컨텍스트 공유에는 `RunContextWrapper` 로 충분합니다.
+실행 중 도구 수준의 메타데이터가 필요할 때 `ToolContext`를 사용하세요.  
+에이전트와 도구 간 일반적인 컨텍스트 공유에는 `RunContextWrapper`만으로도 충분합니다.
 
 ---
 
 ## 에이전트/LLM 컨텍스트
 
-LLM 이 호출될 때, LLM 이 볼 수 있는 **유일한** 데이터는 대화 히스토리에서 옵니다. 즉, 새로운 데이터를 LLM 이 보게 하려면 그 히스토리에 포함되도록 해야 합니다. 방법은 몇 가지가 있습니다:
+LLM이 호출될 때, LLM이 볼 수 있는 데이터는 대화 히스토리에서 온 것 **뿐**입니다. 즉, 새로운 데이터를 LLM에서 사용할 수 있게 만들고 싶다면, 해당 데이터가 그 히스토리에 포함되도록 하는 방식으로 해야 합니다. 이를 위한 몇 가지 방법이 있습니다:
 
-1. 에이전트 `instructions` 에 추가하세요. 이는 "system prompt" 또는 "developer message" 라고도 합니다. 시스템 프롬프트는 정적 문자열일 수도 있고, 컨텍스트를 입력받아 문자열을 출력하는 동적 함수일 수도 있습니다. 항상 유용한 정보(예: 사용자 이름이나 현재 날짜)에 흔히 사용됩니다
-2. `Runner.run` 함수를 호출할 때 `input` 에 추가하세요. 이는 `instructions` 전략과 유사하지만, [지휘 계통](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command) 하위의 메시지를 사용할 수 있습니다
-3. 함수 도구로 노출하세요. 이는 _on-demand_ 컨텍스트에 유용합니다 — LLM 이 데이터가 필요할 때를 스스로 판단하고, 도구를 호출해 해당 데이터를 가져옵니다
-4. 파일 검색 또는 웹 검색을 사용하세요. 이는 파일이나 데이터베이스에서 관련 데이터를 가져오거나(파일 검색), 웹에서 가져오는(웹 검색) 특수 도구입니다. 관련 컨텍스트 데이터로 응답을 "그라운딩" 하는 데 유용합니다
+1. Agent `instructions`에 추가할 수 있습니다. 이는 "system prompt" 또는 "developer message"라고도 합니다. 시스템 프롬프트는 정적인 문자열일 수도 있고, 컨텍스트를 받아 문자열을 출력하는 동적 함수일 수도 있습니다. 이는 항상 유용한 정보(예: 사용자 이름 또는 현재 날짜)에 대한 일반적인 전술입니다
+2. `Runner.run` 함수를 호출할 때 `input`에 추가합니다. 이는 `instructions` 전술과 유사하지만, [chain of command](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command)에서 더 낮은 수준의 메시지를 둘 수 있습니다
+3. 함수 도구를 통해 노출합니다. 이는 _온디맨드_ 컨텍스트에 유용합니다. LLM이 언제 어떤 데이터가 필요한지 결정하고, 해당 데이터를 가져오기 위해 도구를 호출할 수 있습니다
+4. retrieval 또는 웹 검색을 사용합니다. 이는 파일이나 데이터베이스에서 관련 데이터를 가져오거나(retrieval), 웹에서 가져올 수 있는(웹 검색) 특수 도구입니다. 이는 응답을 관련 컨텍스트 데이터에 "그라운딩"하는 데 유용합니다
 
 ================
 File: docs/ko/examples.md
@@ -7325,6 +7373,54 @@ result = await Runner.run(
 print(result.final_output)  # "California"
 ```
 
+### OpenAI Responses compaction sessions
+
+Use `OpenAIResponsesCompactionSession` to compact session history with the Responses API (`responses.compact`). It wraps an underlying session and can automatically compact after each turn based on `should_trigger_compaction`.
+
+#### Typical usage (auto-compaction)
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+print(result.final_output)
+```
+
+By default, compaction runs after each turn once the candidate threshold is reached.
+
+#### auto-compaction can block streaming
+
+Compaction clears and rewrites the session history, so the SDK waits for compaction to finish before considering the run complete. In streaming mode, this means `run.stream_events()` can stay open for a few seconds after the last output token if compaction is heavy.
+
+If you want low-latency streaming or fast turn-taking, disable auto-compaction and call `run_compaction()` yourself between turns (or during idle time). You can decide when to force compaction based on your own criteria.
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+    # Disable triggering the auto compaction
+    should_trigger_compaction=lambda _: False,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+
+# Decide when to compact (e.g., on idle, every N turns, or size thresholds).
+await session.run_compaction({"force": True})
+```
+
 ### SQLite sessions
 
 The default, lightweight session implementation using SQLite:
@@ -7615,6 +7711,7 @@ For detailed API documentation, see:
 
 -   [`Session`][agents.memory.session.Session] - Protocol interface
 -   [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API implementation
+-   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API compaction wrapper
 -   [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - Basic SQLite implementation
 -   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy-powered implementation
 -   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr state store implementation
@@ -9263,9 +9360,9 @@ search:
 ---
 # 会话
 
-Agents SDK 提供内置的会话记忆，用于在多次智能体运行间自动维护对话历史，免去在轮次间手动处理 `.to_input_list()` 的需要。
+Agents SDK 提供内置的会话记忆，可在多次智能体运行之间自动维护对话历史，从而无需在回合之间手动处理 `.to_input_list()`。
 
-会话为特定会话存储对话历史，使智能体无需显式的手动记忆管理即可保持上下文。这对于构建聊天应用或多轮对话尤为有用，可让智能体记住先前的交互。
+Sessions 为特定会话存储对话历史，使智能体能够在无需显式手动记忆管理的情况下保持上下文。这对于构建聊天应用或多轮对话尤其有用——在这些场景中，你希望智能体记住先前的交互。
 
 ## 快速开始
 
@@ -9308,19 +9405,19 @@ print(result.final_output)  # "Approximately 39 million"
 
 ## 工作原理
 
-当启用会话记忆时：
+启用会话记忆后：
 
-1. **每次运行前**：运行器会自动检索该会话的对话历史，并将其预置到输入项前。
-2. **每次运行后**：运行期间生成的所有新项（用户输入、助手回复、工具调用等）都会自动存储到会话中。
-3. **上下文保留**：同一会话的后续运行会包含完整的对话历史，使智能体能够保持上下文。
+1. **每次运行前**：runner 会自动检索该会话的对话历史，并将其前置到输入项中。
+2. **每次运行后**：运行期间生成的所有新项（用户输入、助手回复、工具调用等）都会自动存入会话。
+3. **上下文保留**：后续使用相同会话的每次运行都会包含完整对话历史，使智能体能够保持上下文。
 
-这消除了在运行间手动调用 `.to_input_list()` 并管理对话状态的需要。
+这消除了手动调用 `.to_input_list()` 以及在多次运行之间管理对话状态的需要。
 
 ## 记忆操作
 
 ### 基本操作
 
-会话支持多种管理对话历史的操作：
+Sessions 支持多种用于管理对话历史的操作：
 
 ```python
 from agents import SQLiteSession
@@ -9347,7 +9444,7 @@ await session.clear_session()
 
 ### 使用 pop_item 进行更正
 
-当你想撤销或修改对话中的最后一项时，`pop_item` 方法尤其有用：
+当你想要撤销或修改对话中的最后一项时，`pop_item` 方法特别有用：
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -9382,7 +9479,7 @@ SDK 为不同用例提供了多种会话实现：
 
 ### OpenAI Conversations API 会话
 
-通过 `OpenAIConversationsSession` 使用 [OpenAI's Conversations API](https://platform.openai.com/docs/api-reference/conversations)。
+通过 `OpenAIConversationsSession` 使用 [OpenAI 的 Conversations API](https://platform.openai.com/docs/api-reference/conversations)。
 
 ```python
 from agents import Agent, Runner, OpenAIConversationsSession
@@ -9416,9 +9513,57 @@ result = await Runner.run(
 print(result.final_output)  # "California"
 ```
 
+### OpenAI Responses 压缩会话
+
+使用 `OpenAIResponsesCompactionSession` 通过 Responses API（`responses.compact`）压缩会话历史。它包装了一个底层会话，并可根据 `should_trigger_compaction` 在每个回合后自动压缩。
+
+#### 典型用法（自动压缩）
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+print(result.final_output)
+```
+
+默认情况下，一旦达到候选阈值，压缩会在每个回合后运行。
+
+#### 自动压缩可能会阻塞流式传输
+
+压缩会清空并重写会话历史，因此 SDK 会等待压缩完成后才认为该次运行结束。在流式模式下，这意味着如果压缩开销较大，`run.stream_events()` 可能会在最后一个输出 token 之后仍保持打开几秒钟。
+
+如果你希望低延迟的流式传输或更快的回合切换，请禁用自动压缩，并在回合之间（或空闲时间）自行调用 `run_compaction()`。你可以根据自己的标准决定何时强制压缩。
+
+```python
+from agents import Agent, Runner, SQLiteSession
+from agents.memory import OpenAIResponsesCompactionSession
+
+underlying = SQLiteSession("conversation_123")
+session = OpenAIResponsesCompactionSession(
+    session_id="conversation_123",
+    underlying_session=underlying,
+    # Disable triggering the auto compaction
+    should_trigger_compaction=lambda _: False,
+)
+
+agent = Agent(name="Assistant")
+result = await Runner.run(agent, "Hello", session=session)
+
+# Decide when to compact (e.g., on idle, every N turns, or size thresholds).
+await session.run_compaction({"force": True})
+```
+
 ### SQLite 会话
 
-使用 SQLite 的默认轻量级会话实现：
+默认的轻量级会话实现，使用 SQLite：
 
 ```python
 from agents import SQLiteSession
@@ -9439,7 +9584,7 @@ result = await Runner.run(
 
 ### SQLAlchemy 会话
 
-使用任意 SQLAlchemy 支持的数据库的生产就绪会话：
+使用任意 SQLAlchemy 支持的数据库的生产级会话：
 
 ```python
 from agents.extensions.memory import SQLAlchemySession
@@ -9457,11 +9602,11 @@ engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
 session = SQLAlchemySession("user_123", engine=engine, create_tables=True)
 ```
 
-详见[SQLAlchemy 会话](sqlalchemy_session.md)。
+详见 [SQLAlchemy Sessions](sqlalchemy_session.md) 获取完整文档。
 
 ### 高级 SQLite 会话
 
-具备会话分支、使用分析和结构化查询的增强型 SQLite 会话：
+增强版 SQLite 会话，支持对话分支、用量分析和结构化查询：
 
 ```python
 from agents.extensions.memory import AdvancedSQLiteSession
@@ -9481,11 +9626,11 @@ await session.store_run_usage(result)  # Track token usage
 await session.create_branch_from_turn(2)  # Branch from turn 2
 ```
 
-详见[高级 SQLite 会话](advanced_sqlite_session.md)。
+详见 [Advanced SQLite Sessions](advanced_sqlite_session.md) 获取完整文档。
 
 ### 加密会话
 
-适用于任何会话实现的透明加密封装：
+适用于任何会话实现的透明加密包装器：
 
 ```python
 from agents.extensions.memory import EncryptedSession, SQLAlchemySession
@@ -9508,31 +9653,31 @@ session = EncryptedSession(
 result = await Runner.run(agent, "Hello", session=session)
 ```
 
-详见[加密会话](encrypted_session.md)。
+详见 [Encrypted Sessions](encrypted_session.md) 获取完整文档。
 
 ### 其他会话类型
 
-还有更多内置选项。请参考 `examples/memory/` 以及 `extensions/memory/` 下的源代码。
+还有一些内置选项。请参考 `examples/memory/` 以及 `extensions/memory/` 下的源代码。
 
 ## 会话管理
 
 ### 会话 ID 命名
 
-使用有意义的会话 ID，便于组织对话：
+使用有意义的会话 ID，帮助你组织对话：
 
-- 用户维度：`"user_12345"`
-- 线程维度：`"thread_abc123"`
-- 上下文维度：`"support_ticket_456"`
+-   基于用户：`"user_12345"`
+-   基于线程：`"thread_abc123"`
+-   基于上下文：`"support_ticket_456"`
 
 ### 记忆持久化
 
-- 使用内存型 SQLite（`SQLiteSession("session_id")`）用于临时对话
-- 使用文件型 SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）用于持久对话
-- 使用 SQLAlchemy 驱动的会话（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）用于由 SQLAlchemy 支持的现有数据库的生产系统
-- 使用 Dapr 状态存储会话（`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`）用于支持 30+ 数据库后端、内置遥测、追踪与数据隔离的云原生生产部署
-- 当你希望将历史存储在 OpenAI Conversations API 中时，使用 OpenAI 托管的存储（`OpenAIConversationsSession()`）
-- 使用加密会话（`EncryptedSession(session_id, underlying_session, encryption_key)`）为任意会话提供透明加密与基于 TTL 的过期
-- 针对更高级的用例，考虑为其他生产系统（Redis、Django 等）实现自定义会话后端
+-   对临时对话使用内存 SQLite（`SQLiteSession("session_id")`）
+-   对持久化对话使用基于文件的 SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）
+-   对生产系统（使用 SQLAlchemy 支持的现有数据库）使用由 SQLAlchemy 驱动的会话（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）
+-   对生产级云原生部署使用 Dapr 状态存储会话（`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`），支持 30+ 数据库后端，并内置遥测、追踪和数据隔离
+-   当你更希望将历史存储在 OpenAI Conversations API 中时，使用由OpenAI托管的存储（`OpenAIConversationsSession()`）
+-   使用加密会话（`EncryptedSession(session_id, underlying_session, encryption_key)`）以透明加密与基于 TTL 的过期机制包装任意会话
+-   对更高级用例，考虑为其他生产系统（Redis、Django 等）实现自定义会话后端
 
 ### 多个会话
 
@@ -9580,7 +9725,7 @@ result2 = await Runner.run(
 
 ## 完整示例
 
-以下是展示会话记忆实际效果的完整示例：
+下面是一个展示会话记忆实际效果的完整示例：
 
 ```python
 import asyncio
@@ -9644,7 +9789,7 @@ if __name__ == "__main__":
 
 ## 自定义会话实现
 
-你可以通过创建一个遵循 [`Session`][agents.memory.session.Session] 协议的类来实现自定义会话记忆：
+你可以通过创建一个遵循 [`Session`][agents.memory.session.Session] 协议的类来实现自己的会话记忆：
 
 ```python
 from agents.memory.session import SessionABC
@@ -9689,25 +9834,26 @@ result = await Runner.run(
 
 ## 社区会话实现
 
-社区还开发了其他会话实现：
+社区开发了额外的会话实现：
 
-| 软件包 | 描述 |
+| 包 | 描述 |
 |---------|-------------|
-| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | 基于 Django ORM 的会话，适用于任何 Django 支持的数据库（PostgreSQL、MySQL、SQLite 等） |
+| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | 基于 Django ORM 的会话实现，适用于任何 Django 支持的数据库（PostgreSQL、MySQL、SQLite 等） |
 
-如果你已构建了会话实现，欢迎提交文档 PR 将其添加到此处！
+如果你构建了一个会话实现，欢迎提交文档 PR 将其添加到这里！
 
 ## API 参考
 
-详细 API 文档参见：
+如需详细的 API 文档，请参见：
 
-- [`Session`][agents.memory.session.Session] - 协议接口
-- [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API 实现
-- [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 基本 SQLite 实现
-- [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 基于 SQLAlchemy 的实现
-- [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 状态存储实现
-- [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 具备分支与分析的增强型 SQLite
-- [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 适用于任意会话的加密封装
+-   [`Session`][agents.memory.session.Session] - 协议接口
+-   [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API 实现
+-   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API 压缩包装器
+-   [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 基础 SQLite 实现
+-   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 由 SQLAlchemy 驱动的实现
+-   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 状态存储实现
+-   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 带分支与分析能力的增强 SQLite
+-   [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 适用于任何会话的加密包装器
 
 ================
 File: docs/zh/sessions/sqlalchemy_session.md
@@ -10518,30 +10664,30 @@ search:
 ---
 # 上下文管理
 
-“上下文”一词含义广泛。通常你会关心两大类上下文：
+上下文（Context）是一个含义很宽泛的术语。你可能会关注两类主要的上下文：
 
-1. 代码本地可用的上下文：这是在工具函数运行、`on_handoff` 等回调、生命周期钩子中可能需要的数据和依赖。
-2. LLM 可用的上下文：这是 LLM 在生成响应时可以看到的数据。
+1. 你的代码在本地可用的上下文：这是在工具函数运行时、`on_handoff` 等回调期间、生命周期钩子中等场景可能需要的数据与依赖。
+2. LLM 可用的上下文：这是 LLM 在生成响应时看到的数据。
 
 ## 本地上下文
 
-这通过 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 类以及其中的 [`context`][agents.run_context.RunContextWrapper.context] 属性来表示。其工作方式为：
+这通过 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 类以及其中的 [`context`][agents.run_context.RunContextWrapper.context] 属性来表示。其工作方式如下：
 
-1. 你创建任意 Python 对象。常见做法是使用 dataclass 或 Pydantic 对象。
-2. 将该对象传递给各类运行方法（例如 `Runner.run(..., **context=whatever**)`）。
-3. 你的所有工具调用、生命周期钩子等都会接收到一个包装对象 `RunContextWrapper[T]`，其中 `T` 表示你的上下文对象类型，你可以通过 `wrapper.context` 访问。
+1. 你创建任意你想要的 Python 对象。常见模式是使用 dataclass 或 Pydantic 对象。
+2. 你将该对象传给各种 run 方法（例如 `Runner.run(..., context=whatever)`）。
+3. 你所有的工具调用、生命周期钩子等都会收到一个包装对象 `RunContextWrapper[T]`，其中 `T` 表示你的上下文对象类型；你可以通过 `wrapper.context` 访问它。
 
-需要特别注意的**最重要**事项：给定一次智能体运行，所有智能体、工具函数、生命周期等必须使用相同的上下文_类型_。
+需要注意的**最重要**的一点是：对于一次给定的智能体运行，该运行中的每个智能体、工具函数、生命周期等都必须使用相同的上下文 _类型_。
 
-你可以将上下文用于以下用途：
+你可以用上下文来做这些事情，例如：
 
-- 为运行提供上下文数据（例如用户名/uid 或关于用户的其他信息）
-- 依赖（例如日志记录器对象、数据获取器等）
-- 辅助函数
+-   运行的上下文数据（例如用户名/uid 或其他与用户相关的信息）
+-   依赖（例如 logger 对象、数据获取器等）
+-   辅助函数
 
 !!! danger "注意"
 
-    上下文对象**不会**发送给 LLM。它只是一个本地对象，你可以读取、写入并在其上调用方法。
+    上下文对象**不会**发送给 LLM。它完全是一个本地对象，你可以从中读取、向其中写入并调用其方法。
 
 ```python
 import asyncio
@@ -10580,18 +10726,18 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-1. 这是上下文对象。此处使用了 dataclass，但你可以使用任意类型。
-2. 这是一个工具。它接收 `RunContextWrapper[UserInfo]`。该工具的实现会从上下文中读取数据。
-3. 我们用泛型 `UserInfo` 标注智能体，以便类型检查器能捕获错误（例如，如果我们尝试传入一个接收不同上下文类型的工具）。
-4. 通过 `run` 函数传入上下文。
-5. 智能体正确调用工具并获得年龄。
+1. 这是上下文对象。这里我们使用了 dataclass，但你可以使用任何类型。
+2. 这是一个工具。你可以看到它接收 `RunContextWrapper[UserInfo]`。该工具实现会从上下文中读取数据。
+3. 我们用泛型 `UserInfo` 标注该智能体，这样类型检查器就能捕获错误（例如，如果我们尝试传入一个接收不同上下文类型的工具）。
+4. 上下文被传入 `run` 函数。
+5. 该智能体正确调用工具并获取年龄。
 
 ---
 
-### 进阶：`ToolContext`
+### 高级：`ToolContext`
 
-在某些情况下，你可能需要访问正在执行的工具的额外元数据——例如其名称、调用 ID 或原始参数字符串。  
-为此，你可以使用 [`ToolContext`][agents.tool_context.ToolContext] 类，它继承自 `RunContextWrapper`。
+在某些情况下，你可能想访问正在执行的工具的额外元数据——例如工具名、调用 ID，或原始参数字符串。  
+为此，你可以使用 [`ToolContext`][agents.tool_context.ToolContext] 类，它扩展了 `RunContextWrapper`。
 
 ```python
 from typing import Annotated
@@ -10620,25 +10766,25 @@ agent = Agent(
 ```
 
 `ToolContext` 提供与 `RunContextWrapper` 相同的 `.context` 属性，  
-并额外包含与当前工具调用相关的字段：
+并额外提供当前工具调用特有的字段：
 
 - `tool_name` – 被调用工具的名称  
 - `tool_call_id` – 此次工具调用的唯一标识符  
-- `tool_arguments` – 传递给工具的原始参数字符串  
+- `tool_arguments` – 传给工具的原始参数字符串  
 
-当你在执行期间需要工具级元数据时，请使用 `ToolContext`。  
-对于智能体与工具之间的一般上下文共享，`RunContextWrapper` 已经足够。
+当你在执行期间需要工具级元数据时，使用 `ToolContext`。  
+对于智能体与工具之间的一般上下文共享，`RunContextWrapper` 仍然足够。
 
 ---
 
 ## 智能体/LLM 上下文
 
-在调用 LLM 时，它能看到的**唯一**数据来自对话历史。这意味着若要让 LLM 获取新数据，必须以使其出现在对话历史中的方式提供。常见方法包括：
+当调用 LLM 时，它能看到的**唯一**数据来自对话历史。这意味着，如果你想让一些新数据对 LLM 可用，你必须以一种能让它出现在历史中的方式来做。实现方式有几种：
 
-1. 将其添加到智能体的 `instructions` 中。这也称为“系统提示词”或“开发者消息”。系统提示词可以是静态字符串，也可以是接收上下文并输出字符串的动态函数。对于始终有用的信息（例如用户名或当前日期），这是常见做法。
-2. 在调用 `Runner.run` 时将其添加到 `input` 中。这与 `instructions` 的策略类似，但允许你在[指挥链](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command)中具有较低优先级的消息。
-3. 通过 工具调用 暴露。这对于_按需_上下文很有用——LLM 会在需要某些数据时自行决定，并可调用工具获取该数据。
-4. 使用 文件检索 或 网络检索。它们是能够从文件或数据库（文件检索），或从网络（网络检索）获取相关数据的特殊工具。这有助于使响应“落地”在相关的上下文数据上。
+1. 你可以把它加入智能体的 `instructions`。这也被称为 “system prompt” 或 “developer message”。系统提示词可以是静态字符串，也可以是接收上下文并输出字符串的动态函数。这是针对始终有用的信息的常见策略（例如用户的名字或当前日期）。
+2. 在调用 `Runner.run` 函数时，把它加入 `input`。这与 `instructions` 的策略类似，但允许你的消息在[指令优先级链](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command)中处于更低位置。
+3. 通过工具调用暴露它。这适用于 _按需_ 上下文——LLM 决定何时需要某些数据，并可以调用工具来获取这些数据。
+4. 使用检索或网络检索。这些是特殊工具，能够从文件或数据库（检索）或从网络（网络检索）中获取相关数据。这有助于将响应“落地”到相关的上下文数据之上。
 
 ================
 File: docs/zh/examples.md
@@ -13550,7 +13696,7 @@ Context is an overloaded term. There are two main classes of context you might c
 This is represented via the [`RunContextWrapper`][agents.run_context.RunContextWrapper] class and the [`context`][agents.run_context.RunContextWrapper.context] property within it. The way this works is:
 
 1. You create any Python object you want. A common pattern is to use a dataclass or a Pydantic object.
-2. You pass that object to the various run methods (e.g. `Runner.run(..., **context=whatever**))`.
+2. You pass that object to the various run methods (e.g. `Runner.run(..., context=whatever)`).
 3. All your tool calls, lifecycle hooks etc will be passed a wrapper object, `RunContextWrapper[T]`, where `T` represents your context object type which you can access via `wrapper.context`.
 
 The **most important** thing to be aware of: every agent, tool function, lifecycle etc for a given agent run must use the same _type_ of context.
