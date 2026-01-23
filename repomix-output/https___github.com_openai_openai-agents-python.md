@@ -3029,21 +3029,21 @@ search:
 ---
 # 핸드오프
 
-핸드오프는 한 에이전트가 다른 에이전트에 작업을 위임할 수 있게 합니다. 이는 서로 다른 분야에 특화된 에이전트가 있는 시나리오에서 특히 유용합니다. 예를 들어, 고객 지원 앱에는 주문 상태, 환불, FAQ 등과 같은 작업을 각각 전담하는 에이전트가 있을 수 있습니다.
+핸드오프를 사용하면 에이전트가 다른 에이전트에게 작업을 위임할 수 있습니다. 이는 서로 다른 에이전트가 각기 다른 영역에 특화된 시나리오에서 특히 유용합니다. 예를 들어 고객 지원 앱에는 주문 상태, 환불, FAQ 등과 같은 작업을 각각 전담하는 에이전트가 있을 수 있습니다.
 
-핸드오프는 LLM 에게 도구로 표현됩니다. 예를 들어 `Refund Agent` 에 대한 핸드오프가 있다면, 도구 이름은 `transfer_to_refund_agent` 가 됩니다.
+핸드오프는 LLM에 도구로 표현됩니다. 따라서 `Refund Agent`라는 에이전트로 핸드오프가 있다면, 도구 이름은 `transfer_to_refund_agent`가 됩니다.
 
 ## 핸드오프 생성
 
-모든 에이전트는 [`handoffs`][agents.agent.Agent.handoffs] 매개변수를 가지며, 여기에 `Agent` 를 직접 전달하거나 Handoff 를 사용자 지정하는 `Handoff` 객체를 전달할 수 있습니다.
+모든 에이전트에는 [`handoffs`][agents.agent.Agent.handoffs] 매개변수가 있으며, 여기에 `Agent`를 직접 전달하거나 핸드오프를 커스터마이즈하는 `Handoff` 객체를 전달할 수 있습니다.
 
-순수한 `Agent` 인스턴스를 전달하면, 설정된 경우 그들의 [`handoff_description`][agents.agent.Agent.handoff_description] 이 기본 도구 설명에 추가됩니다. 전체 `handoff()` 객체를 작성하지 않고도 모델이 해당 핸드오프를 선택해야 하는 시점을 힌트하는 용도로 사용하세요.
+일반 `Agent` 인스턴스를 전달하면, 해당 에이전트의 [`handoff_description`][agents.agent.Agent.handoff_description](설정된 경우)이 기본 도구 설명에 추가됩니다. 전체 `handoff()` 객체를 작성하지 않고도, 모델이 언제 해당 핸드오프를 선택해야 하는지 힌트를 주는 데 사용할 수 있습니다.
 
-Agents SDK 에서 제공하는 [`handoff()`][agents.handoffs.handoff] 함수를 사용해 핸드오프를 생성할 수 있습니다. 이 함수는 핸드오프 대상 에이전트와 선택적 override 및 입력 필터를 지정할 수 있게 해줍니다.
+Agents SDK에서 제공하는 [`handoff()`][agents.handoffs.handoff] 함수를 사용해 핸드오프를 생성할 수 있습니다. 이 함수로 핸드오프 대상 에이전트를 지정하고, 선택적으로 오버라이드와 입력 필터를 지정할 수 있습니다.
 
 ### 기본 사용법
 
-간단한 핸드오프를 만드는 방법은 다음과 같습니다:
+다음은 간단한 핸드오프를 만드는 방법입니다:
 
 ```python
 from agents import Agent, handoff
@@ -3055,19 +3055,19 @@ refund_agent = Agent(name="Refund agent")
 triage_agent = Agent(name="Triage agent", handoffs=[billing_agent, handoff(refund_agent)])
 ```
 
-1. `billing_agent` 처럼 에이전트를 직접 사용할 수도 있고, `handoff()` 함수를 사용할 수도 있습니다
+1. 에이전트를 직접 사용할 수도 있고(`billing_agent`처럼), `handoff()` 함수를 사용할 수도 있습니다.
 
-### `handoff()` 함수를 통한 핸드오프 사용자 지정
+### `handoff()` 함수를 통한 핸드오프 커스터마이즈
 
-[`handoff()`][agents.handoffs.handoff] 함수로 다양한 항목을 사용자 지정할 수 있습니다.
+[`handoff()`][agents.handoffs.handoff] 함수로 다양한 항목을 커스터마이즈할 수 있습니다.
 
-- `agent`: 핸드오프 대상 에이전트
-- `tool_name_override`: 기본적으로 `Handoff.default_tool_name()` 함수가 사용되며, 이는 `transfer_to_<agent_name>` 으로 결정됩니다. 이를 override 할 수 있습니다
-- `tool_description_override`: `Handoff.default_tool_description()` 의 기본 도구 설명을 override
-- `on_handoff`: 핸드오프가 호출될 때 실행되는 콜백 함수입니다. 핸드오프가 호출됨을 알게 되는 즉시 데이터 페칭을 시작하는 등의 작업에 유용합니다. 이 함수는 에이전트 컨텍스트를 전달받고, 선택적으로 LLM 이 생성한 입력도 전달받을 수 있습니다. 입력 데이터는 `input_type` 매개변수로 제어됩니다
-- `input_type`: 핸드오프가 예상하는 입력의 타입(선택 사항)
-- `input_filter`: 다음 에이전트가 수신하는 입력을 필터링할 수 있습니다. 아래를 참조하세요
-- `is_enabled`: 핸드오프 활성화 여부입니다. 불리언 또는 불리언을 반환하는 함수가 될 수 있어 런타임에 동적으로 활성화/비활성화를 제어할 수 있습니다
+-   `agent`: 작업이 핸드오프될 대상 에이전트입니다.
+-   `tool_name_override`: 기본값으로 `Handoff.default_tool_name()` 함수가 사용되며, 이는 `transfer_to_<agent_name>`으로 해석됩니다. 이를 오버라이드할 수 있습니다.
+-   `tool_description_override`: `Handoff.default_tool_description()`의 기본 도구 설명을 오버라이드합니다
+-   `on_handoff`: 핸드오프가 호출될 때 실행되는 콜백 함수입니다. 핸드오프가 호출된다는 사실을 알자마자 데이터 페칭을 시작하는 등의 용도에 유용합니다. 이 함수는 에이전트 컨텍스트를 받으며, 선택적으로 LLM이 생성한 입력도 받을 수 있습니다. 입력 데이터는 `input_type` 매개변수로 제어됩니다.
+-   `input_type`: 핸드오프가 기대하는 입력 타입(선택 사항)입니다.
+-   `input_filter`: 다음 에이전트가 받는 입력을 필터링할 수 있습니다. 자세한 내용은 아래를 참고하세요.
+-   `is_enabled`: 핸드오프 활성화 여부입니다. boolean 또는 boolean을 반환하는 함수가 될 수 있어, 런타임에 동적으로 핸드오프를 활성화/비활성화할 수 있습니다.
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -3087,7 +3087,7 @@ handoff_obj = handoff(
 
 ## 핸드오프 입력
 
-일부 상황에서는 LLM 이 핸드오프를 호출할 때 일부 데이터를 제공하길 원할 수 있습니다. 예를 들어, “에스컬레이션 에이전트” 로의 핸드오프를 상상해 보세요. 로깅을 위해 사유를 제공받고 싶을 수 있습니다.
+일부 상황에서는 LLM이 핸드오프를 호출할 때 특정 데이터를 제공하길 원할 수 있습니다. 예를 들어 "Escalation agent"로 핸드오프하는 상황을 생각해 보세요. 로그를 남길 수 있도록 사유가 함께 제공되길 원할 수 있습니다.
 
 ```python
 from pydantic import BaseModel
@@ -3111,11 +3111,11 @@ handoff_obj = handoff(
 
 ## 입력 필터
 
-핸드오프가 발생하면 마치 새 에이전트가 대화를 인수하는 것과 같으며, 이전의 전체 대화 이력을 볼 수 있습니다. 이를 변경하려면 [`input_filter`][agents.handoffs.Handoff.input_filter] 를 설정할 수 있습니다. 입력 필터는 [`HandoffInputData`][agents.handoffs.HandoffInputData] 를 통해 기존 입력을 받아 새로운 `HandoffInputData` 를 반환해야 하는 함수입니다.
+핸드오프가 발생하면 새 에이전트가 대화를 이어받아 이전의 전체 대화 기록을 볼 수 있는 것과 같습니다. 이를 변경하고 싶다면 [`input_filter`][agents.handoffs.Handoff.input_filter]를 설정할 수 있습니다. 입력 필터는 [`HandoffInputData`][agents.handoffs.HandoffInputData]를 통해 기존 입력을 받아, 새로운 `HandoffInputData`를 반환해야 하는 함수입니다.
 
-기본적으로 러너는 이전 대화 기록을 단일 assistant 요약 메시지로 축약합니다([`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history] 참조). 이 요약은 동일한 실행 동안 여러 번의 핸드오프가 발생할 때 새로운 턴을 계속 추가하는 `<CONVERSATION HISTORY>` 블록 안에 나타납니다. 생성된 메시지를 완전한 `input_filter` 없이 교체하려면 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] 를 통해 직접 매핑 함수를 제공할 수 있습니다. 이 기본 동작은 핸드오프와 실행 어느 쪽도 명시적인 `input_filter` 를 제공하지 않을 때만 적용되므로, 이미 페이로드를 사용자 지정하고 있는 기존 코드(이 저장소의 code examples 포함)는 변경 없이 현재 동작을 유지합니다. 단일 핸드오프에 대해 중첩 동작을 재정의하려면 [`handoff(...)`][agents.handoffs.handoff] 에 `nest_handoff_history=True` 또는 `False` 를 전달하여 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 를 설정하세요. 생성된 요약의 래퍼 텍스트만 변경하면 되는 경우, 에이전트를 실행하기 전에 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (선택적으로 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]) 를 호출하세요.
+중첩 핸드오프는 옵트인 베타로 제공되며, 안정화하는 동안 기본적으로 비활성화되어 있습니다. [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]를 활성화하면, 러너가 이전 대화 기록을 단일 어시스턴트 요약 메시지로 축약하고 `<CONVERSATION HISTORY>` 블록으로 감싸며, 동일한 실행 중 여러 핸드오프가 발생할 때 새로운 턴을 계속 덧붙입니다. 전체 `input_filter`를 작성하지 않고도 생성된 메시지를 대체하려면 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]를 통해 자체 매핑 함수를 제공할 수 있습니다. 이 옵트인은 핸드오프나 실행에서 명시적인 `input_filter`를 제공하지 않는 경우에만 적용되므로, 이미 페이로드를 커스터마이즈하는 기존 코드(이 저장소의 예제 포함)는 변경 없이 현재 동작을 유지합니다. 단일 핸드오프에 대해 중첩 동작을 오버라이드하려면 [`handoff(...)`][agents.handoffs.handoff]에 `nest_handoff_history=True` 또는 `False`를 전달하면 되며, 이는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 설정합니다. 생성된 요약의 래퍼 텍스트만 변경하면 된다면, 에이전트를 실행하기 전에 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers](그리고 선택적으로 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers])를 호출하세요.
 
-일반적인 패턴(예: 이력에서 모든 도구 호출 제거 등)이 [`agents.extensions.handoff_filters`][] 에 구현되어 있습니다
+일부 공통 패턴(예: 기록에서 모든 도구 호출 제거)은 [`agents.extensions.handoff_filters`][]에 이미 구현되어 있습니다
 
 ```python
 from agents import Agent, handoff
@@ -3129,11 +3129,11 @@ handoff_obj = handoff(
 )
 ```
 
-1. 이것은 `FAQ agent` 가 호출될 때 이력에서 모든 도구를 자동으로 제거합니다
+1. 이는 `FAQ agent`가 호출될 때 기록에서 모든 도구를 자동으로 제거합니다.
 
 ## 권장 프롬프트
 
-LLM 이 핸드오프를 올바르게 이해하도록 하려면, 에이전트에 핸드오프에 대한 정보를 포함하는 것을 권장합니다. [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] 에 권장 접두사가 있으며, 또는 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] 를 호출하여 권장 데이터를 프롬프트에 자동으로 추가할 수 있습니다.
+LLM이 핸드오프를 올바르게 이해하도록 하려면, 에이전트에 핸드오프 관련 정보를 포함하는 것을 권장합니다. [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][]에 권장 프리픽스가 있으며, 또는 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][]를 호출해 권장 데이터를 프롬프트에 자동으로 추가할 수 있습니다.
 
 ```python
 from agents import Agent
@@ -3957,11 +3957,11 @@ search:
 ---
 # 에이전트 실행
 
-에이전트는 [`Runner`][agents.run.Runner] 클래스를 통해 실행할 수 있습니다. 선택지는 3가지입니다:
+[`Runner`][agents.run.Runner] 클래스를 통해 에이전트를 실행할 수 있습니다. 3가지 옵션이 있습니다:
 
-1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult] 를 반환합니다
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드로, 내부적으로 `.run()` 을 실행합니다
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming] 을 반환합니다. LLM 을 스트리밍 모드로 호출하고, 수신되는 대로 이벤트를 스트리밍합니다
+1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult]를 반환합니다
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며 내부적으로 `.run()`을 실행합니다
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]을 반환합니다. 스트리밍 모드로 LLM을 호출하고, 수신되는 즉시 해당 이벤트를 스트리밍으로 전달합니다
 
 ```python
 from agents import Agent, Runner
@@ -3980,58 +3980,58 @@ async def main():
 
 ## 에이전트 루프
 
-`Runner` 의 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주) 또는 OpenAI Responses API 의 입력 항목 리스트일 수 있습니다.
+`Runner`에서 run 메서드를 사용할 때, 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주됨)일 수도 있고, 입력 항목의 리스트일 수도 있으며, 이 항목들은 OpenAI Responses API의 항목들입니다.
 
-이후 러너는 다음과 같은 루프를 실행합니다:
+그다음 러너가 루프를 실행합니다:
 
-1. 현재 에이전트와 현재 입력으로 LLM 을 호출합니다
-2. LLM 이 출력을 생성합니다
-    1. LLM 이 `final_output` 을 반환하면 루프가 종료되고 결과를 반환합니다
-    2. LLM 이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트하고 루프를 재실행합니다
-    3. LLM 이 도구 호출을 생성하면 해당 도구 호출을 실행하고 결과를 추가한 뒤 루프를 재실행합니다
-3. 전달된 `max_turns` 를 초과하면 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 예외를 발생시킵니다
+1. 현재 입력과 함께 현재 에이전트에 대해 LLM을 호출합니다
+2. LLM이 출력을 생성합니다
+    1. LLM이 `final_output`을 반환하면 루프가 종료되고 결과를 반환합니다
+    2. LLM이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트하고 루프를 다시 실행합니다
+    3. LLM이 도구 호출을 생성하면 해당 도구 호출을 실행하고 결과를 추가한 뒤 루프를 다시 실행합니다
+3. 전달된 `max_turns`를 초과하면 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 예외를 발생시킵니다
 
 !!! note
 
-    LLM 출력이 "최종 출력"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없어야 한다는 점입니다.
+    LLM 출력이 "최종 출력"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없을 때입니다.
 
 ## 스트리밍
 
-스트리밍을 사용하면 LLM 이 실행되는 동안 스트리밍 이벤트를 추가로 수신할 수 있습니다. 스트림이 완료되면 [`RunResultStreaming`][agents.result.RunResultStreaming] 에는 실행에 대한 전체 정보(생성된 모든 새로운 출력 포함)가 담깁니다. 스트리밍 이벤트는 `.stream_events()` 로 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
+스트리밍을 사용하면 LLM이 실행되는 동안 스트리밍 이벤트를 추가로 받을 수 있습니다. 스트림이 완료되면 [`RunResultStreaming`][agents.result.RunResultStreaming]에는 생성된 모든 새 출력을 포함해 실행에 대한 전체 정보가 담깁니다. 스트리밍 이벤트는 `.stream_events()`로 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
 
 ## 실행 구성
 
-`run_config` 매개변수를 사용하여 에이전트 실행에 대한 일부 전역 설정을 구성할 수 있습니다:
+`run_config` 매개변수로 에이전트 실행을 위한 일부 전역 설정을 구성할 수 있습니다:
 
--   [`model`][agents.run.RunConfig.model]: 각 Agent 의 `model` 설정과 무관하게 사용할 전역 LLM 모델을 지정
--   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름 조회를 위한 모델 프로바이더로, 기본값은 OpenAI
--   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 재정의. 예: 전역 `temperature` 또는 `top_p` 설정
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일 리스트
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 이미 지정된 필터가 없는 경우 모든 핸드오프에 적용되는 전역 입력 필터. 입력 필터로 새 에이전트에 전달되는 입력을 수정할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 의 문서를 참고하세요
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: `True`(기본값) 인 경우, 다음 에이전트를 호출하기 전에 이전 대화 기록을 하나의 assistant 메시지로 접어 넣습니다. 도우미는 내용물을 `<CONVERSATION HISTORY>` 블록 안에 배치하고, 이후 핸드오프가 발생할 때마다 새로운 턴을 계속 추가합니다. 원문(transcript)을 그대로 전달하려면 이를 `False` 로 설정하거나 사용자 지정 핸드오프 필터를 제공하세요. 모든 [`Runner` 메서드](agents.run.Runner) 는 전달하지 않을 경우 자동으로 `RunConfig` 를 생성하므로, 퀵스타트와 code examples 는 이 기본값을 자동으로 사용하며, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 재정의합니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 로 이 설정을 재정의할 수 있습니다
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history` 가 `True` 인 경우 정규화된 대화록(기록 + 핸드오프 항목)을 전달받는 선택적 호출 가능 객체. 다음 에이전트로 전달할 입력 항목 리스트를 정확히 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 교체할 수 있습니다
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대한 [트레이싱](tracing.md) 비활성화
--   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 내보내기, 프로세서, 트레이싱 메타데이터를 재정의하는 [`TracingConfig`][agents.tracing.TracingConfig] 전달
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: LLM 및 도구 호출의 입력/출력과 같은 민감할 수 있는 데이터가 트레이스에 포함될지 여부 구성
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행에 대한 트레이싱 워크플로 이름, 트레이스 ID, 트레이스 그룹 ID 설정. 최소한 `workflow_name` 설정을 권장합니다. 그룹 ID 는 여러 실행에 걸쳐 트레이스를 연결할 수 있는 선택적 필드입니다
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions 사용 시 각 턴 전에 새로운 사용자 입력을 세션 기록과 병합하는 방식을 사용자 정의
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하기 위한 훅. 예: 기록을 잘라내거나 시스템 프롬프트를 주입
+-   [`model`][agents.run.RunConfig.model]: 각 Agent에 설정된 `model`과 무관하게, 사용할 전역 LLM 모델을 설정할 수 있습니다
+-   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름을 조회하기 위한 모델 프로바이더로, 기본값은 OpenAI입니다
+-   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 재정의합니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일의 리스트입니다
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 이미 필터가 없는 경우, 모든 핸드오프에 적용할 전역 입력 필터입니다. 입력 필터를 사용하면 새 에이전트로 전송되는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 트랜스크립트를 단일 assistant 메시지로 접는 옵트인 베타입니다. 중첩 핸드오프를 안정화하는 동안 기본적으로 비활성화되어 있으며, 활성화하려면 `True`로 설정하고, 원문 트랜스크립트를 그대로 전달하려면 `False`로 두세요. `Runner`의 모든 [메서드](agents.run.Runner)는 `RunConfig`를 전달하지 않으면 자동으로 생성하므로, 퀵스타트와 코드 예제는 기본값(꺼짐)을 유지하고, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 재정의합니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 재정의할 수 있습니다
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 트랜스크립트(히스토리 + 핸드오프 항목)를 받는 선택적 호출 가능 객체입니다. 다음 에이전트로 전달할 입력 항목의 정확한 리스트를 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [트레이싱](tracing.md)을 비활성화할 수 있습니다
+-   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 익스포터, 프로세서 또는 트레이싱 메타데이터를 재정의하기 위해 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력 등 잠재적으로 민감한 데이터가 포함될지 여부를 구성합니다
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행에 대한 트레이싱 워크플로 이름, trace ID, trace group ID를 설정합니다. 최소한 `workflow_name` 설정을 권장합니다. group ID는 여러 실행 간 트레이스를 연결할 수 있게 해주는 선택적 필드입니다
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터입니다
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions를 사용할 때 각 턴 전에 새 사용자 입력이 세션 히스토리와 어떻게 병합되는지 커스터마이즈합니다
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하기 위한 훅입니다. 예를 들어 히스토리를 잘라내거나 시스템 프롬프트를 주입할 수 있습니다
 
-기본적으로, 이제 SDK 는 한 에이전트가 다른 에이전트로 핸드오프할 때 이전 턴을 하나의 assistant 요약 메시지 내부로 중첩합니다. 이는 반복되는 assistant 메시지를 줄이고, 전체 대화록을 새 에이전트가 빠르게 훑어볼 수 있는 단일 블록 안에 유지합니다. 기존 동작으로 돌아가려면 `RunConfig(nest_handoff_history=False)` 를 전달하거나, 대화를 필요한 그대로 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`) 를 제공하세요. 특정 핸드오프에 대해서만 옵트아웃(또는 옵트인)하려면 `handoff(..., nest_handoff_history=False)` 또는 `True` 로 설정하면 됩니다. 사용자 지정 매퍼를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] 를 호출하세요(기본값으로 되돌리려면 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
+중첩 핸드오프는 옵트인 베타로 제공됩니다. 접힌 트랜스크립트 동작을 활성화하려면 `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정하세요. 원문 트랜스크립트(기본값)를 유지하려면 플래그를 설정하지 않거나, 대화를 필요한 그대로 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 매퍼를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하고(기본값 복원은 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]) 사용하세요.
 
 ## 대화/채팅 스레드
 
-어떤 run 메서드를 호출하든 하나 이상의 에이전트가 실행될 수 있으며(따라서 하나 이상의 LLM 호출), 이는 채팅 대화에서 하나의 논리적 턴을 의미합니다. 예:
+어떤 run 메서드를 호출하든 하나 이상의 에이전트가 실행될 수 있으며(따라서 하나 이상의 LLM 호출이 발생), 이는 채팅 대화에서 단일 논리적 턴을 나타냅니다. 예를 들어:
 
-1. 사용자 턴: 사용자가 텍스트 입력
-2. 러너 실행: 첫 번째 에이전트가 LLM 을 호출하고 도구를 실행한 다음 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 더 많은 도구를 실행한 뒤 출력을 생성
+1. 사용자 턴: 사용자가 텍스트를 입력
+2. Runner 실행: 첫 번째 에이전트가 LLM을 호출하고, 도구를 실행하고, 두 번째 에이전트로 핸드오프한 뒤, 두 번째 에이전트가 추가 도구를 실행하고, سپس 출력을 생성합니다
 
-에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어, 에이전트가 생성한 모든 새로운 항목을 보여주거나 최종 출력만 보여줄 수 있습니다. 어느 쪽이든, 사용자가 후속 질문을 할 수 있으며, 이 경우 run 메서드를 다시 호출하면 됩니다.
+에이전트 실행이 끝나면, 사용자가 보게 될 내용을 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 새 항목을 사용자에게 보여줄 수도 있고, 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자가 후속 질문을 할 수 있으며, 그 경우 run 메서드를 다시 호출하면 됩니다.
 
 ### 수동 대화 관리
 
-다음 턴의 입력을 얻기 위해 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용하여 대화 기록을 수동으로 관리할 수 있습니다:
+[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴의 입력을 얻어 대화 히스토리를 수동으로 관리할 수 있습니다:
 
 ```python
 async def main():
@@ -4051,9 +4051,9 @@ async def main():
         # California
 ```
 
-### Sessions 로 자동 대화 관리
+### Sessions를 통한 자동 대화 관리
 
-더 간단한 접근을 원하시면, [Sessions](sessions/index.md) 를 사용하여 `.to_input_list()` 를 수동으로 호출하지 않고도 대화 기록을 자동으로 처리할 수 있습니다:
+더 간단한 접근으로, [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동으로 호출하지 않고도 대화 히스토리를 자동으로 처리할 수 있습니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -4077,23 +4077,23 @@ async def main():
         # California
 ```
 
-Sessions 는 다음을 자동으로 수행합니다:
+Sessions는 자동으로 다음을 수행합니다:
 
--   각 실행 전 대화 기록 조회
--   각 실행 후 새 메시지 저장
--   서로 다른 세션 ID 별로 개별 대화 유지
+-   각 실행 전에 대화 히스토리를 조회
+-   각 실행 후 새 메시지를 저장
+-   서로 다른 세션 ID에 대해 분리된 대화를 유지
 
-자세한 내용은 [Sessions 문서](sessions/index.md) 를 참고하세요.
+자세한 내용은 [Sessions 문서](sessions/index.md)를 참고하세요.
 
-### 서버 관리형 대화
+### 서버 관리 대화
 
-OpenAI 의 conversation state 기능을 사용하여 `to_input_list()` 또는 `Sessions` 로 로컬에서 처리하는 대신 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이를 통해 과거 메시지를 모두 수동으로 다시 보내지 않고도 대화 기록을 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses) 를 참고하세요.
+`to_input_list()` 또는 `Sessions`로 로컬에서 처리하는 대신, OpenAI conversation state 기능이 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이를 통해 과거 메시지를 모두 수동으로 다시 보내지 않고도 대화 히스토리를 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
 
-OpenAI 는 턴 간 상태 추적을 위한 두 가지 방법을 제공합니다:
+OpenAI는 턴 간 상태를 추적하는 두 가지 방법을 제공합니다:
 
 #### 1. `conversation_id` 사용
 
-먼저 OpenAI Conversations API 를 사용해 대화를 생성한 다음, 이후의 모든 호출에서 해당 ID 를 재사용합니다:
+먼저 OpenAI Conversations API로 대화를 생성한 다음, 이후 모든 호출에서 해당 ID를 재사용합니다:
 
 ```python
 from agents import Agent, Runner
@@ -4116,7 +4116,7 @@ async def main():
 
 #### 2. `previous_response_id` 사용
 
-또 다른 방법은 **response chaining** 으로, 각 턴을 이전 턴의 응답 ID 에 명시적으로 연결합니다.
+또 다른 옵션은 **응답 체이닝(response chaining)**으로, 각 턴이 이전 턴의 응답 ID에 명시적으로 연결됩니다.
 
 ```python
 from agents import Agent, Runner
@@ -4143,7 +4143,7 @@ async def main():
 
 ## Call model input filter
 
-모델 호출 직전에 모델 입력을 수정하려면 `call_model_input_filter` 를 사용하세요. 이 훅은 현재 에이전트, 컨텍스트, 결합된 입력 항목(세션 기록이 있으면 포함) 을 받아 새로운 `ModelInputData` 를 반환합니다.
+모델 호출 직전에 모델 입력을 편집하려면 `call_model_input_filter`를 사용하세요. 이 훅은 현재 에이전트, 컨텍스트, 결합된 입력 항목(세션 히스토리가 있으면 포함)을 받아 새 `ModelInputData`를 반환합니다.
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -4162,23 +4162,23 @@ result = Runner.run_sync(
 )
 ```
 
-실행별로 `run_config` 를 통해 설정하거나 `Runner` 에 기본값으로 설정하여 민감한 데이터 마스킹, 긴 기록 잘라내기, 추가 시스템 프롬프트 주입 등을 수행할 수 있습니다.
+민감한 데이터 마스킹, 긴 히스토리 축약, 추가 시스템 가이던스 주입 등을 위해 `run_config`로 실행별 훅을 설정하거나 `Runner`의 기본값으로 훅을 설정하세요.
 
-## 장기 실행 에이전트 & 휴먼인더루프
+## 장시간 실행 에이전트 & 휴먼인더루프 (HITL)
 
-Agents SDK 의 [Temporal](https://temporal.io/) 통합을 사용하면 내구성이 있는 장기 실행 워크플로(휴먼인더루프 작업 포함) 를 실행할 수 있습니다. 장기 실행 작업을 완료하기 위해 Temporal 과 Agents SDK 가 함께 작동하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8) 과 [이 문서](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents) 를 참고하세요.
+Agents SDK의 [Temporal](https://temporal.io/) 통합을 사용하면 휴먼인더루프 작업을 포함한 내구성 있는 장시간 실행 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 동작해 장시간 작업을 완료하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, 문서는 [여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 확인하세요.
 
 ## 예외
 
-SDK 는 특정 경우 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][] 에 있습니다. 개요는 다음과 같습니다:
+SDK는 특정 경우에 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다:
 
--   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 기본 클래스입니다. 다른 모든 구체적 예외의 상위 타입 역할을 합니다
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과할 때 발생합니다. 지정된 상호작용 턴 수 내에 에이전트가 작업을 완료하지 못했음을 나타냅니다
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기본 모델(LLM) 이 예기치 않거나 잘못된 출력을 생성할 때 발생합니다. 다음을 포함할 수 있습니다:
-    -   잘못된 JSON: 모델이 도구 호출 또는 직접 출력에서 잘못된 JSON 구조를 제공하는 경우(특히 특정 `output_type` 이 정의된 경우)
-    -   예기치 않은 도구 관련 실패: 모델이 기대한 방식으로 도구를 사용하지 못한 경우
--   [`UserError`][agents.exceptions.UserError]: SDK 를 사용하는 여러분(코드를 작성하는 사람) 이 SDK 사용 중 오류를 범했을 때 발생합니다. 보통 잘못된 코드 구현, 유효하지 않은 구성, SDK API 오용에서 비롯됩니다
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족될 때 발생합니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 에이전트의 최종 응답을 전달하기 전에 검사합니다
+-   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 기본 클래스입니다. 다른 모든 구체적인 예외가 파생되는 일반 타입으로 사용됩니다
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과할 때 발생합니다. 지정된 상호작용 턴 수 내에 에이전트가 작업을 완료하지 못했음을 의미합니다
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 못한 또는 유효하지 않은 출력을 생성할 때 발생합니다. 예를 들면 다음이 포함됩니다:
+    -   잘못된 JSON: 특히 특정 `output_type`이 정의된 경우, 모델이 도구 호출 또는 직접 출력에서 잘못된 JSON 구조를 제공하는 경우
+    -   예상치 못한 도구 관련 실패: 모델이 기대되는 방식으로 도구를 사용하지 못하는 경우
+-   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK 사용 중 오류를 낼 때 발생합니다. 보통 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API의 오용에서 비롯됩니다
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 입력 가드레일 또는 출력 가드레일의 조건이 각각 충족될 때 발생합니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 검사합니다
 
 ================
 File: docs/ko/streaming.md
@@ -11118,21 +11118,21 @@ search:
 ---
 # 任务转移
 
-任务转移允许一个智能体将任务委派给另一个智能体。在不同智能体擅长不同领域的场景中尤为有用。例如，一个客户支持应用可能有各自专门处理订单状态、退款、常见问题等任务的智能体。
+任务转移允许一个智能体将任务委派给另一个智能体。这在不同智能体分别专精于不同领域的场景中特别有用。例如，一个客户支持应用可能包含多个智能体，分别专门处理订单状态、退款、常见问题解答等任务。
 
-在 LLM 看来，任务转移以工具的形式呈现。因此，如果有一个交接到名为 `Refund Agent` 的智能体，工具将被命名为 `transfer_to_refund_agent`。
+任务转移会以工具的形式呈现给 LLM。因此，如果要任务转移到名为 `Refund Agent` 的智能体，该工具会被命名为 `transfer_to_refund_agent`。
 
 ## 创建任务转移
 
-所有智能体都有一个 [`handoffs`][agents.agent.Agent.handoffs] 参数，它既可以直接接收一个 `Agent`，也可以接收一个自定义任务转移的 `Handoff` 对象。
+所有智能体都有一个 [`handoffs`][agents.agent.Agent.handoffs] 参数，它既可以直接接收一个 `Agent`，也可以接收一个用于自定义任务转移的 `Handoff` 对象。
 
-如果你传入的是普通的 `Agent` 实例，其 [`handoff_description`][agents.agent.Agent.handoff_description]（如果设置）会被追加到默认工具描述中。用它来提示模型在无需编写完整 `handoff()` 对象的情况下选择该任务转移。
+如果你传入的是普通的 `Agent` 实例，它们的 [`handoff_description`][agents.agent.Agent.handoff_description]（设置后）会被追加到默认的工具描述中。你可以用它来提示模型在何时应选择该任务转移，而无需编写完整的 `handoff()` 对象。
 
-你可以使用 Agents SDK 提供的 [`handoff()`][agents.handoffs.handoff] 函数来创建任务转移。该函数允许你指定要交接到的智能体，并可选地设置覆盖项和输入过滤器。
+你可以使用 Agents SDK 提供的 [`handoff()`][agents.handoffs.handoff] 函数来创建任务转移。该函数允许你指定要转移到的智能体，并提供可选的覆写项与输入过滤器。
 
 ### 基本用法
 
-以下是创建一个简单任务转移的方法：
+下面展示如何创建一个简单的任务转移：
 
 ```python
 from agents import Agent, handoff
@@ -11148,15 +11148,15 @@ triage_agent = Agent(name="Triage agent", handoffs=[billing_agent, handoff(refun
 
 ### 通过 `handoff()` 函数自定义任务转移
 
-[`handoff()`][agents.handoffs.handoff] 函数允许你进行自定义。
+[`handoff()`][agents.handoffs.handoff] 函数允许你自定义相关内容。
 
-- `agent`: 要交接到的智能体。
-- `tool_name_override`: 默认使用 `Handoff.default_tool_name()`，其结果为 `transfer_to_<agent_name>`。你可以覆盖它。
-- `tool_description_override`: 覆盖来自 `Handoff.default_tool_description()` 的默认工具描述。
-- `on_handoff`: 任务转移被调用时执行的回调函数。可用于在确认触发任务转移后立即启动数据拉取等操作。该函数接收智能体上下文，并可选地接收 LLM 生成的输入。输入数据由 `input_type` 参数控制。
-- `input_type`: 任务转移期望的输入类型（可选）。
-- `input_filter`: 允许你过滤下一个智能体接收的输入。详见下文。
-- `is_enabled`: 任务转移是否启用。可以是布尔值，或返回布尔值的函数，用于在运行时动态启用或禁用任务转移。
+-   `agent`：要将任务转移给的智能体。
+-   `tool_name_override`：默认使用 `Handoff.default_tool_name()` 函数，解析为 `transfer_to_<agent_name>`。你可以覆写它。
+-   `tool_description_override`：覆写 `Handoff.default_tool_description()` 的默认工具描述。
+-   `on_handoff`：当任务转移被调用时执行的回调函数。这对在你确定将发生任务转移时立即触发数据拉取等操作很有用。该函数会接收智能体上下文，并且也可以选择接收由 LLM 生成的输入。输入数据由 `input_type` 参数控制。
+-   `input_type`：任务转移期望的输入类型（可选）。
+-   `input_filter`：用于过滤下一个智能体接收到的输入。更多内容见下文。
+-   `is_enabled`：任务转移是否启用。可以是布尔值，也可以是返回布尔值的函数，从而支持在运行时动态启用或禁用任务转移。
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -11176,7 +11176,7 @@ handoff_obj = handoff(
 
 ## 任务转移输入
 
-在某些情况下，你希望 LLM 在调用任务转移时提供一些数据。例如，设想交接到一个“升级处理（Escalation）智能体”。你可能希望提供一个原因，以便进行日志记录。
+在某些情况下，你希望 LLM 在调用任务转移时提供一些数据。例如，设想有一个转移到“升级处理智能体”的任务转移。你可能希望提供一个原因，以便记录日志。
 
 ```python
 from pydantic import BaseModel
@@ -11200,11 +11200,11 @@ handoff_obj = handoff(
 
 ## 输入过滤器
 
-当发生任务转移时，就像新智能体接管了对话，并能看到整个先前的对话历史。如果你想改变这一点，可以设置一个 [`input_filter`][agents.handoffs.Handoff.input_filter]。输入过滤器是一个函数，它通过 [`HandoffInputData`][agents.handoffs.HandoffInputData] 接收现有输入，并且必须返回一个新的 `HandoffInputData`。
+当发生任务转移时，就像新的智能体接管了对话，并能看到此前的全部对话历史。如果你想改变这一点，可以设置一个 [`input_filter`][agents.handoffs.Handoff.input_filter]。输入过滤器是一个函数，它通过 [`HandoffInputData`][agents.handoffs.HandoffInputData] 接收现有输入，并必须返回一个新的 `HandoffInputData`。
 
-默认情况下，runner 现在会将先前的对话记录折叠为一条助理摘要消息（参见 [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]）。该摘要出现在一个 `<CONVERSATION HISTORY>` 块中，当同一次运行中发生多次任务转移时，会持续追加新的轮次。你可以通过 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] 提供自己的映射函数来替换生成的消息，而无需编写完整的 `input_filter`。该默认行为仅在任务转移和运行都未提供显式 `input_filter` 时生效，因此已自定义负载的现有代码（包括本仓库中的 code examples）无需更改即可保持当前行为。你可以通过向 [`handoff(...)`][agents.handoffs.handoff] 传入 `nest_handoff_history=True` 或 `False` 来覆盖单次任务转移的嵌套行为，这会设置 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]。如果你只需要更改生成摘要的包装文本，请在运行智能体之前调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并可选地调用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]）。
+嵌套任务转移以可选加入（opt-in）的 beta 形式提供；在我们稳定它们期间，默认是禁用的。当你启用 [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history] 时，runner 会将此前的对话记录折叠为一条 assistant 总结消息，并将其包裹在一个 `<CONVERSATION HISTORY>` 块中；当同一次运行期间发生多次任务转移时，该块会持续追加新的轮次。你可以通过 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] 提供自己的映射函数，以在不编写完整 `input_filter` 的情况下替换生成的消息。该 opt-in 仅在任务转移和运行都未提供显式 `input_filter` 时生效，因此现有已经自定义 payload 的代码（包括本仓库中的代码示例）无需修改即可保持当前行为。你可以通过在 [`handoff(...)`][agents.handoffs.handoff] 中传入 `nest_handoff_history=True` 或 `False` 来为单个任务转移覆写嵌套行为，这会设置 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]。如果你只需要修改生成总结的包装文本，请在运行智能体之前调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并可选调用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]）。
 
-一些常见模式（例如从历史中移除所有工具调用）已在 [`agents.extensions.handoff_filters`][] 中为你实现。
+有一些常见模式（例如从历史记录中移除所有工具调用），我们已在 [`agents.extensions.handoff_filters`][] 中为你实现。
 
 ```python
 from agents import Agent, handoff
@@ -11218,11 +11218,11 @@ handoff_obj = handoff(
 )
 ```
 
-1. 当调用 `FAQ agent` 时，这将自动从历史中移除所有工具。
+1. 当调用 `FAQ agent` 时，这会自动从历史记录中移除所有工具。
 
 ## 推荐提示词
 
-为确保 LLM 正确理解任务转移，我们建议在你的智能体中包含有关任务转移的信息。我们在 [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] 中提供了一个建议前缀，或者你可以调用 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] 将推荐的数据自动添加到你的提示词中。
+为确保 LLM 正确理解任务转移，我们建议在你的智能体中包含有关任务转移的信息。我们在 [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] 中提供了建议的前缀；或者你可以调用 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] 来自动将推荐数据添加到你的提示词中。
 
 ```python
 from agents import Agent
@@ -12037,11 +12037,11 @@ search:
 ---
 # 运行智能体
 
-你可以通过 [`Runner`][agents.run.Runner] 类来运行智能体。你有 3 种选择：
+你可以通过 [`Runner`][agents.run.Runner] 类运行智能体。你有 3 个选项：
 
-1. [`Runner.run()`][agents.run.Runner.run]：异步运行并返回一个 [`RunResult`][agents.result.RunResult]。
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，本质上在内部调用 `.run()`。
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：异步运行并返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并将接收到的事件实时流式传输给你。
+1. [`Runner.run()`][agents.run.Runner.run]：以异步方式运行，并返回 [`RunResult`][agents.result.RunResult]。
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，底层只是运行 `.run()`。
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：以异步方式运行，并返回 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式传输模式调用 LLM，并在事件到达时将其流式传输给你。
 
 ```python
 from agents import Agent, Runner
@@ -12056,62 +12056,62 @@ async def main():
     # Infinite loop's dance
 ```
 
-在[结果指南](results.md)中阅读更多内容。
+在[结果指南](results.md)中了解更多。
 
 ## 智能体循环
 
-当你使用 `Runner` 中的 run 方法时，你需要传入一个起始智能体和输入。输入可以是字符串（被视为用户消息），也可以是输入项列表，这些输入项符合 OpenAI Responses API 的格式。
+当你在 `Runner` 中使用 run 方法时，需要传入一个起始智能体和输入。输入可以是字符串（会被视为一条用户消息），也可以是输入项列表（即 OpenAI Responses API 中的 items）。
 
-runner 随后会运行一个循环：
+然后 Runner 会运行一个循环：
 
-1. 我们用当前输入为当前智能体调用 LLM。
+1. 使用当前输入为当前智能体调用 LLM。
 2. LLM 生成输出。
     1. 如果 LLM 返回 `final_output`，循环结束并返回结果。
-    2. 如果 LLM 进行任务转移，我们会更新当前智能体和输入，并重新运行循环。
-    3. 如果 LLM 生成工具调用，我们会运行这些工具调用，追加结果，并重新运行循环。
+    2. 如果 LLM 执行任务转移，我们会更新当前智能体与输入，并重新运行循环。
+    3. 如果 LLM 产生工具调用，我们会运行这些工具调用，追加结果，并重新运行循环。
 3. 如果超过传入的 `max_turns`，我们会抛出 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 异常。
 
 !!! note
 
-    判断 LLM 输出是否被视为“最终输出”的规则是：输出为所需类型的文本，且没有工具调用。
+    判定 LLM 输出是否为“最终输出”的规则是：它生成了具有期望类型的文本输出，并且没有任何工具调用。
 
 ## 流式传输
 
-流式传输允许在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含关于此次运行的完整信息，包括所有新生成的输出。你可以调用 `.stream_events()` 获取流式事件。更多内容参见[流式传输指南](streaming.md)。
+流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括产生的所有新输出。你可以调用 `.stream_events()` 获取流式事件。在[流式传输指南](streaming.md)中了解更多。
 
 ## 运行配置
 
-`run_config` 参数允许你为一次智能体运行配置一些全局设置：
+`run_config` 参数让你为智能体运行配置一些全局设置：
 
--   [`model`][agents.run.RunConfig.model]：允许设置一个全局 LLM 模型来使用，而不考虑每个 Agent 的 `model`。
+-   [`model`][agents.run.RunConfig.model]：允许设置一个全局使用的 LLM 模型，不受每个 Agent 自身 `model` 的影响。
 -   [`model_provider`][agents.run.RunConfig.model_provider]：用于查找模型名称的模型提供方，默认为 OpenAI。
--   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体特定的设置。例如，你可以设置全局的 `temperature` 或 `top_p`。
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]：在所有运行中包含的输入或输出安全防护措施列表。
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：对所有任务转移应用的全局输入过滤器（如果该任务转移尚未设置）。输入过滤器允许你编辑发送给新智能体的输入。更多细节参见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 文档。
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：当为 `True`（默认）时，runner 会在调用下一个智能体之前，将之前的对话记录折叠为一条助理消息。该助手会将内容放入一个 `<CONVERSATION HISTORY>` 块，并在后续发生任务转移时不断追加新的轮次。如果你更希望传递原始对话记录，可将其设为 `False`，或提供自定义的 handoff 过滤器。所有 [`Runner` 方法](agents.run.Runner) 在未显式传入时会自动创建一个 `RunConfig`，因此快速上手和 code examples 会自动采用该默认值，且任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移也可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选的可调用对象，当 `nest_handoff_history` 为 `True` 时接收规范化后的对话记录（history + handoff items）。它必须返回要转发给下一个智能体的精确输入项列表，使你无需编写完整的 handoff 过滤器即可替换内置摘要。
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许为整个运行禁用[追踪](tracing.md)。
--   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig]，以覆盖本次运行的导出器、进程或追踪元数据。
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪中是否包含潜在的敏感数据，例如 LLM 和工具调用的输入/输出。
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]：为本次运行设置追踪工作流名称、追踪 ID 和追踪分组 ID。我们建议至少设置 `workflow_name`。分组 ID 是可选字段，允许你将多个运行的追踪关联在一起。
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有追踪中的元数据。
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义在每轮之前如何将新的用户输入与会话历史合并。
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：在模型调用前的最后一步编辑已准备好的模型输入（instructions 和 input items）的钩子，例如用于裁剪历史或注入 system prompt。
+-   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体级别的设置。例如，你可以设置全局 `temperature` 或 `top_p`。
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]：在所有运行中包含的一组输入或输出安全防护措施。
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（若该任务转移本身未指定）。输入过滤器允许你编辑发送给新智能体的输入。更多详情参见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 的文档。
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选启用的 beta 功能，会在调用下一个智能体前将此前的对话记录折叠为单条 assistant 消息。由于我们正在稳定嵌套任务转移，该功能默认关闭；将其设为 `True` 以启用，或保持 `False` 以透传原始对话记录。所有 [`Runner` 方法](agents.run.Runner)在你未传入 `RunConfig` 时都会自动创建一个 `RunConfig`，因此快速入门与示例会保持默认关闭；任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选可调用对象。当你选择启用 `nest_handoff_history` 时，它会在每次任务转移接收标准化后的对话记录（history + handoff items）。它必须返回要转发给下一个智能体的输入项列表，使你无需编写完整的任务转移过滤器也能替换内置摘要。
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许你为整个运行禁用[追踪](tracing.md)。
+-   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig] 以覆盖本次运行的 exporter、processor 或追踪元数据。
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪中是否包含潜在敏感数据，例如 LLM 与工具调用的输入/输出。
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]：为本次运行设置追踪工作流名称、trace ID 和 trace group ID。我们建议至少设置 `workflow_name`。group ID 是可选字段，可用于跨多个运行关联 traces。
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有 traces 中的元数据。
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义每个回合前如何将新的用户输入与会话历史合并。
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：用于在模型调用前，编辑已完全准备好的模型输入（instructions 和输入项）的 hook，例如用于裁剪历史或注入系统提示词。
 
-默认情况下，当一个智能体将任务转移给另一个智能体时，SDK 现在会将之前的轮次嵌套进单个助理总结消息内。这减少了重复的助理消息，并将完整对话记录保存在单个块中，便于新智能体快速扫描。如果你希望恢复旧的行为，可传入 `RunConfig(nest_handoff_history=False)` 或提供 `handoff_input_filter`（或 `handoff_history_mapper`）以按需转发对话。你也可以在特定 handoff 上选择退出（或加入），通过设置 `handoff(..., nest_handoff_history=False)` 或 `True`。如需在不编写自定义映射器的情况下更改生成摘要中使用的包装文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（以及 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 来恢复默认值）。
+嵌套任务转移以可选启用的 beta 形式提供。通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠对话记录行为，或对某个特定任务转移设置 `handoff(..., nest_handoff_history=True)` 以仅对其启用。若你更希望保留原始对话记录（默认行为），请保持该标志不设置，或提供一个 `handoff_input_filter`（或 `handoff_history_mapper`）来按需精确转发对话。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包装文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并使用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
 
 ## 对话/聊天线程
 
-调用任一运行方法都可能导致一个或多个智能体运行（从而一个或多个 LLM 调用），但它代表聊天会话中的单个逻辑轮次。例如：
+调用任一 run 方法都可能导致一个或多个智能体运行（因此也会进行一次或多次 LLM 调用），但它代表聊天对话中的一个逻辑回合。例如：
 
-1. 用户轮次：用户输入文本
-2. Runner 运行：第一个智能体调用 LLM、运行工具、将任务转移给第二个智能体，第二个智能体运行更多工具，然后生成输出。
+1. 用户回合：用户输入文本
+2. Runner run：第一个智能体调用 LLM、运行工具、任务转移到第二个智能体；第二个智能体运行更多工具，然后生成输出。
 
-在智能体运行结束时，你可以选择向用户展示什么。例如，你可以向用户展示智能体生成的每个新项目，或者仅展示最终输出。无论哪种方式，用户都可能继续追问，此时你可以再次调用运行方法。
+在智能体运行结束时，你可以选择向用户展示什么。例如，你可能向用户展示智能体生成的每一个新条目，或只展示最终输出。无论哪种方式，用户随后都可能提出追问，这时你可以再次调用 run 方法。
 
 ### 手动对话管理
 
-你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 手动管理对话历史，以获取下一轮的输入：
+你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 方法获取下一回合的输入，从而手动管理对话历史：
 
 ```python
 async def main():
@@ -12133,7 +12133,7 @@ async def main():
 
 ### 使用 Sessions 的自动对话管理
 
-更简单的方法是使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
+为了更简单，你可以使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -12161,19 +12161,19 @@ Sessions 会自动：
 
 -   在每次运行前检索对话历史
 -   在每次运行后存储新消息
--   为不同的会话 ID 维护独立的对话
+-   为不同的 session ID 维护彼此独立的对话
 
-更多细节参见 [Sessions 文档](sessions/index.md)。
+更多详情参见 [Sessions 文档](sessions/index.md)。
 
-### 服务端管理的对话
+### 由服务端管理的对话
 
-你也可以让 OpenAI 的对话状态功能在服务端管理对话状态，而不是在本地通过 `to_input_list()` 或 `Sessions` 来处理。这样可以在无需手动重发所有历史消息的情况下保留对话历史。更多细节参见 [OpenAI Conversation state 指南](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
+你也可以让 OpenAI conversation state 功能在服务端管理对话状态，而不是在本地通过 `to_input_list()` 或 `Sessions` 处理。这使你无需手动重发所有历史消息也能保留对话历史。更多信息请参见 [OpenAI Conversation state 指南](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
 
-OpenAI 提供两种跨轮次追踪状态的方式：
+OpenAI 提供两种跨回合跟踪状态的方式：
 
 #### 1. 使用 `conversation_id`
 
-你首先使用 OpenAI Conversations API 创建一个对话，然后在后续的每次调用中复用其 ID：
+你先通过 OpenAI Conversations API 创建一个对话，然后在后续每次调用中复用其 ID：
 
 ```python
 from agents import Agent, Runner
@@ -12196,7 +12196,7 @@ async def main():
 
 #### 2. 使用 `previous_response_id`
 
-另一种选择是**响应链（response chaining）**，每一轮都显式链接到上一轮的响应 ID。
+另一种方式是**响应链式调用（response chaining）**，即每一回合都显式链接到上一回合的 response ID。
 
 ```python
 from agents import Agent, Runner
@@ -12221,9 +12221,9 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
-## 模型调用输入过滤器
+## 调用模型输入过滤器
 
-使用 `call_model_input_filter` 在模型调用前编辑模型输入。该钩子接收当前智能体、上下文以及合并后的输入项（在存在会话历史时包含会话历史），并返回新的 `ModelInputData`。
+使用 `call_model_input_filter` 在模型调用前编辑模型输入。该 hook 会接收当前智能体、上下文以及合并后的输入项（包含存在时的会话历史），并返回新的 `ModelInputData`。
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -12242,23 +12242,23 @@ result = Runner.run_sync(
 )
 ```
 
-通过 `run_config` 为每次运行设置该钩子，或在你的 `Runner` 上设置为默认，以便去除敏感数据、裁剪过长历史，或注入额外的系统指导。
+你可以通过 `run_config` 为每次运行设置该 hook，或在 `Runner` 上设置默认值，以便对敏感数据做脱敏、裁剪过长的历史记录，或注入额外的系统指引。
 
-## 长时运行智能体与人类参与环节
+## 长时间运行的智能体与人工参与（human-in-the-loop）
 
-你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行持久的、长时运行的工作流，包括人类参与（human-in-the-loop）任务。查看一段演示 Temporal 与 Agents SDK 协同完成长时任务的[视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并[在此查看文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。
+你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行可持久化、长时间运行的工作流，包括人工参与（human-in-the-loop）任务。观看 Temporal 与 Agents SDK 协同完成长时间任务的演示[视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，以及[文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。
 
 ## 异常
 
-SDK 在某些情况下会抛出异常。完整列表见 [`agents.exceptions`][]。概览如下：
+SDK 会在某些情况下抛出异常。完整列表在 [`agents.exceptions`][] 中。概览如下：
 
--   [`AgentsException`][agents.exceptions.AgentsException]：这是 SDK 内抛出的所有异常的基类。它作为通用类型，其他所有具体异常均由此派生。
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体的运行超过传递给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 的 `max_turns` 限制时抛出该异常。它表示智能体无法在指定的交互轮次内完成任务。
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生此异常。这可能包括：
-    -   JSON 格式错误：当模型为工具调用或直接输出提供了格式错误的 JSON 结构，尤其是在定义了特定的 `output_type` 时。
-    -   意外的与工具相关的失败：当模型未以预期方式使用工具时
--   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出现错误，会抛出该异常。通常由错误的代码实现、无效的配置或对 SDK API 的误用导致。
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的条件分别被触发时，抛出该异常。输入安全防护措施在处理前检查传入消息，而输出安全防护措施在交付前检查智能体的最终响应。
+-   [`AgentsException`][agents.exceptions.AgentsException]：SDK 内所有异常的基类。它是一个通用类型，所有其他更具体的异常都从它派生。
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体的运行超过传递给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表明智能体无法在指定的交互回合数内完成任务。
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。可能包括：
+    -   JSON 格式错误：当模型为工具调用或直接输出提供了格式错误的 JSON 结构时，尤其是在定义了特定 `output_type` 的情况下。
+    -   与工具相关的意外失败：当模型未能以预期方式使用工具时
+-   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出现错误而抛出。通常源于错误的代码实现、无效配置或误用 SDK 的 API。
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的条件分别被满足时抛出。输入安全防护措施会在处理前检查传入消息，而输出安全防护措施会在交付前检查智能体的最终响应。
 
 ================
 File: docs/zh/streaming.md
@@ -14213,7 +14213,7 @@ handoff_obj = handoff(
 
 When a handoff occurs, it's as though the new agent takes over the conversation, and gets to see the entire previous conversation history. If you want to change this, you can set an [`input_filter`][agents.handoffs.Handoff.input_filter]. An input filter is a function that receives the existing input via a [`HandoffInputData`][agents.handoffs.HandoffInputData], and must return a new `HandoffInputData`.
 
-By default the runner now collapses the prior transcript into a single assistant summary message (see [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]). The summary appears inside a `<CONVERSATION HISTORY>` block that keeps appending new turns when multiple handoffs happen during the same run. You can provide your own mapping function via [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] to replace the generated message without writing a full `input_filter`. That default only applies when neither the handoff nor the run supplies an explicit `input_filter`, so existing code that already customizes the payload (including the examples in this repository) keeps its current behavior without changes. You can override the nesting behaviour for a single handoff by passing `nest_handoff_history=True` or `False` to [`handoff(...)`][agents.handoffs.handoff], which sets [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]. If you just need to change the wrapper text for the generated summary, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (and optionally [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]) before running your agents.
+Nested handoffs are available as an opt-in beta and are disabled by default while we stabilize them. When you enable [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history], the runner collapses the prior transcript into a single assistant summary message and wraps it in a `<CONVERSATION HISTORY>` block that keeps appending new turns when multiple handoffs happen during the same run. You can provide your own mapping function via [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] to replace the generated message without writing a full `input_filter`. The opt-in only applies when neither the handoff nor the run supplies an explicit `input_filter`, so existing code that already customizes the payload (including the examples in this repository) keeps its current behavior without changes. You can override the nesting behaviour for a single handoff by passing `nest_handoff_history=True` or `False` to [`handoff(...)`][agents.handoffs.handoff], which sets [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]. If you just need to change the wrapper text for the generated summary, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (and optionally [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]) before running your agents.
 
 There are some common patterns (for example removing all tool calls from the history), which are implemented for you in [`agents.extensions.handoff_filters`][]
 
@@ -15090,8 +15090,8 @@ The `run_config` parameter lets you configure some global settings for the agent
 -   [`model_settings`][agents.run.RunConfig.model_settings]: Overrides agent-specific settings. For example, you can set a global `temperature` or `top_p`.
 -   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: A list of input or output guardrails to include on all runs.
 -   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: A global input filter to apply to all handoffs, if the handoff doesn't already have one. The input filter allows you to edit the inputs that are sent to the new agent. See the documentation in [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] for more details.
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: When `True` (the default) the runner collapses the prior transcript into a single assistant message before invoking the next agent. The helper places the content inside a `<CONVERSATION HISTORY>` block that keeps appending new turns as subsequent handoffs occur. Set this to `False` or provide a custom handoff filter if you prefer to pass through the raw transcript. All [`Runner` methods](agents.run.Runner) automatically create a `RunConfig` when you do not pass one, so the quickstarts and examples pick up this default automatically, and any explicit [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] callbacks continue to override it. Individual handoffs can override this setting via [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history].
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: Optional callable that receives the normalized transcript (history + handoff items) whenever `nest_handoff_history` is `True`. It must return the exact list of input items to forward to the next agent, allowing you to replace the built-in summary without writing a full handoff filter.
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: Opt-in beta that collapses the prior transcript into a single assistant message before invoking the next agent. This is disabled by default while we stabilize nested handoffs; set to `True` to enable or leave `False` to pass through the raw transcript. All [`Runner` methods](agents.run.Runner) automatically create a `RunConfig` when you do not pass one, so the quickstarts and examples keep the default off, and any explicit [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] callbacks continue to override it. Individual handoffs can override this setting via [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history].
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: Optional callable that receives the normalized transcript (history + handoff items) whenever you opt in to `nest_handoff_history`. It must return the exact list of input items to forward to the next agent, allowing you to replace the built-in summary without writing a full handoff filter.
 -   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: Allows you to disable [tracing](tracing.md) for the entire run.
 -   [`tracing`][agents.run.RunConfig.tracing]: Pass a [`TracingConfig`][agents.tracing.TracingConfig] to override exporters, processors, or tracing metadata for this run.
 -   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: Configures whether traces will include potentially sensitive data, such as LLM and tool call inputs/outputs.
@@ -15100,7 +15100,7 @@ The `run_config` parameter lets you configure some global settings for the agent
 -   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions.
 -   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: Hook to edit the fully prepared model input (instructions and input items) immediately before the model call, e.g., to trim history or inject a system prompt.
 
-By default, the SDK now nests prior turns inside a single assistant summary message whenever an agent hands off to another agent. This reduces repeated assistant messages and keeps the full transcript inside a single block that new agents can scan quickly. If you'd like to return to the legacy behavior, pass `RunConfig(nest_handoff_history=False)` or supply a `handoff_input_filter` (or `handoff_history_mapper`) that forwards the conversation exactly as you need. You can also opt out (or in) for a specific handoff by setting `handoff(..., nest_handoff_history=False)` or `True`. To change the wrapper text used in the generated summary without writing a custom mapper, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (and [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] to restore the defaults).
+Nested handoffs are available as an opt-in beta. Enable the collapsed-transcript behavior by passing `RunConfig(nest_handoff_history=True)` or set `handoff(..., nest_handoff_history=True)` to turn it on for a specific handoff. If you prefer to keep the raw transcript (the default), leave the flag unset or provide a `handoff_input_filter` (or `handoff_history_mapper`) that forwards the conversation exactly as you need. To change the wrapper text used in the generated summary without writing a custom mapper, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (and [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] to restore the defaults).
 
 ## Conversations/chat threads
 
