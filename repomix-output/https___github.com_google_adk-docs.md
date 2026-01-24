@@ -17453,6 +17453,17 @@ from google.adk.agents import Agent
 from google.adk.models.google_llm import Gemini
 from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 
+
+# --- OpenTelemetry Initialization (Optional) ---
+# Recommended for enabling distributed tracing (populates trace_id, span_id).
+# If not configured, the plugin uses internal UUIDs for span correlation.
+try:
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    trace.set_tracer_provider(TracerProvider())
+except ImportError:
+    pass # OpenTelemetry is optional
+
 # --- Configuration ---
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
 DATASET_ID = os.environ.get("BIG_QUERY_DATASET_ID", "your-big-query-dataset-id")
@@ -17521,6 +17532,16 @@ FROM `your-gcp-project-id.your-big-query-dataset-id.agent_events_v2`
 ORDER BY timestamp DESC
 LIMIT 20;
 ```
+
+```
+
+## Tracing and Observability
+
+The plugin supports **OpenTelemetry** for distributed tracing.
+
+- **Automatic Span Management**: The plugin automatically generates spans for Agent execution, LLM calls, and Tool executions.
+- **OpenTelemetry Integration**: If an OpenTelemetry `TracerProvider` is configured (as shown in the example above), the plugin will use valid OTel spans, populating `trace_id`, `span_id`, and `parent_span_id` with standard OTel identifiers. This allows you to correlate agent logs with other services in your distributed system.
+- **Fallback Mechanism**: If OpenTelemetry is not installed or configured, the plugin automatically falls back to generating internal UUIDs for spans and uses the `invocation_id` as the trace ID. This ensures that the parent-child hierarchy (Agent -> Span -> Tool/LLM) is *always* preserved in the BigQuery logs, even without a full OTel setup.
 
 ## Configuration options
 
@@ -30957,7 +30978,7 @@ workflow as a tool for your agent or create a new one.
 ================
 File: docs/tools/google-cloud/bigquery.md
 ================
-# BigQuery database tool for ADK
+# BigQuery tools for ADK
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.1.0</span>
@@ -30978,6 +30999,8 @@ They are packaged in the toolset `BigQueryToolset`.
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/bigquery.py"
 ```
+
+Note: If you want to access a BigQuery data agent as a tool, see [Data Agents tools for ADK](data-agent.md).
 
 ================
 File: docs/tools/google-cloud/bigtable.md
@@ -31242,6 +31265,39 @@ When plotting trends, you should make sure to sort and order the data by the x-a
 
 For a complete version of an ADK agent using this example code, see the
 [agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
+
+================
+File: docs/tools/google-cloud/data-agent.md
+================
+# Data Agents tools for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.23.0</span>
+</div>
+
+These are a set of tools aimed to provide integration with Data Agents powered by [Conversational Analytics API](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/overview).
+
+Data Agents are AI-powered agents that help you analyze your data using natural language. When configuring a Data Agent, you can choose from supported data sources, including **BigQuery**, **Looker**, and **Looker Studio**.
+
+**Prerequisites**
+
+Before using these tools, you must build and configure your Data Agents in Google Cloud:
+
+* [Build a data agent using HTTP and Python](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/build-agent-http)
+* [Build a data agent using the Python SDK](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/build-agent-sdk)
+* [Create a data agent in BigQuery Studio](https://docs.cloud.google.com/bigquery/docs/create-data-agents#create_a_data_agent)
+
+The `DataAgentToolset` includes the following tools:
+
+* **`list_accessible_data_agents`**: Lists Data Agents you have permission to access in the configured GCP project.
+* **`get_data_agent_info`**: Retrieves details about a specific Data Agent given its full resource name.
+* **`ask_data_agent`**: Chats with a specific Data Agent using natural language.
+
+They are packaged in the toolset `DataAgentToolset`.
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/data_agent.py"
+```
 
 ================
 File: docs/tools/google-cloud/express-mode.md
@@ -31713,33 +31769,82 @@ documentation:
 
 === "Python"
 
-    ADK relies on the `toolbox-core` python package to use Toolbox. Install the
+    ADK relies on the `toolbox-adk` python package to use Toolbox. Install the
     package before getting started:
 
     ```shell
-    pip install toolbox-core
+    pip install google-adk[toolbox]
     ```
 
     ### Loading Toolbox Tools
 
-    Once you’re Toolbox server is configured and up and running, you can load tools
+    Once your Toolbox server is configured, up and running, you can load tools
     from your server using ADK:
 
     ```python
     from google.adk.agents import Agent
-    from toolbox_core import ToolboxSyncClient
+    from google.adk.tools.toolbox_toolset import ToolboxToolset
 
-    toolbox = ToolboxSyncClient("https://127.0.0.1:5000")
-
-    # Load a specific set of tools
-    tools = toolbox.load_toolset('my-toolset-name'),
-    # Load single tool
-    tools = toolbox.load_tool('my-tool-name'),
+    toolset = ToolboxToolset(
+        server_url="http://127.0.0.1:5000"
+    )
 
     root_agent = Agent(
         ...,
-        tools=tools # Provide the list of tools to the Agent
+        tools=[toolset] # Provide the toolset to the Agent
+    )
+    ```
 
+    ### Authentication
+
+    The `ToolboxToolset` supports various authentication strategies including Workload Identity (ADC), User Identity (OAuth2), and API Keys. For full documentation, see the [Toolbox ADK Authentication Guide](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk#authentication).
+
+    **Example: Workload Identity (ADC)**
+
+    Recommended for Cloud Run, GKE, or local development with `gcloud auth login`.
+
+    ```python
+    from google.adk.tools.toolbox_toolset import ToolboxToolset
+    from toolbox_adk import CredentialStrategy
+
+    # target_audience: The URL of your Toolbox server
+    creds = CredentialStrategy.workload_identity(target_audience="<TOOLBOX_URL>")
+
+    toolset = ToolboxToolset(
+        server_url="<TOOLBOX_URL>",
+        credentials=creds
+    )
+    ```
+
+    ### Advanced Configuration
+
+    You can configure parameter binding, request hooks, and additional headers. See the [Toolbox ADK documentation](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk) for details.
+
+    #### Parameter Binding
+
+    Bind values to tool parameters globally. These values are hidden from the model.
+
+    ```python
+    toolset = ToolboxToolset(
+        server_url="...",
+        bound_params={
+            "region": "us-central1",
+            "api_key": lambda: get_api_key() # Can be a callable
+        }
+    )
+    ```
+
+    #### Usage with Hooks
+
+    Attach `pre_hook` and `post_hook` functions to execute logic before and after tool invocation.
+
+    ```python
+    async def log_start(context, args):
+        print(f"Starting tool with args: {args}")
+
+    toolset = ToolboxToolset(
+        server_url="...",
+        pre_hook=log_start
     )
     ```
 
