@@ -12268,7 +12268,7 @@ This approach involves creating individual test files, each representing a singl
     through the right path to generate final response.
 -   `Final Response`: The expected final response from the agent.
 
-You can give the file any name for example `evaluation.test.json`.The framework only checks for the `.test.json` suffix, and the preceding part of the filename is not constrained. The test files are backed by a formal Pydantic data model. The two key schema files are
+You can give the file any name for example `evaluation.test.json`. The framework only checks for the `.test.json` suffix, and the preceding part of the filename is not constrained. The test files are backed by a formal Pydantic data model. The two key schema files are
 [Eval Set](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) and
 [Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py).
 Here is a test file with a few examples:
@@ -12315,16 +12315,16 @@ Here is a test file with a few examples:
               }
             ],
             "intermediate_responses": [] # Any intermediate sub-agent responses.
-          },
+          }
         }
       ],
       "session_input": { # Initial session input.
         "app_name": "home_automation_agent",
         "user_id": "test_user",
         "state": {}
-      },
+      }
     }
-  ],
+  ]
 }
 ```
 
@@ -12390,14 +12390,14 @@ Creating evalsets manually can be complex, therefore UI tools are provided to he
           "intermediate_data": {
             "tool_uses": [],
             "intermediate_responses": []
-          },
-        },
+          }
+        }
       ],
       "session_input": {
         "app_name": "hello_world",
         "user_id": "user",
         "state": {}
-      },
+      }
     },
     {
       "eval_id": "session_02",
@@ -12423,7 +12423,7 @@ Creating evalsets manually can be complex, therefore UI tools are provided to he
           "intermediate_data": {
             "tool_uses": [],
             "intermediate_responses": []
-          },
+          }
         },
         {
           "invocation_id": "e-bf8549a1-2a61-4ecc-a4ee-4efbbf25a8ea",
@@ -12479,16 +12479,16 @@ Creating evalsets manually can be complex, therefore UI tools are provided to he
                 ]
               ]
             ]
-          },
+          }
         }
       ],
       "session_input": {
         "app_name": "hello_world",
         "user_id": "user",
         "state": {}
-      },
+      }
     }
-  ],
+  ]
 }
 ```
 
@@ -27334,7 +27334,7 @@ sequenceDiagram
 
 **Default Behavior:**
 
-Progressive SSE streaming is **enabled by default** in ADK. This means when you use `StreamingMode.SSE`, you automatically benefit from these improvements without any configuration.
+When you use `StreamingMode.SSE`, progressive SSE streaming is **enabled by default**. This means you automatically benefit from these improvements without any additional configuration.
 
 **Disabling the feature (if needed):**
 
@@ -32513,6 +32513,80 @@ Variable | Description | Required
 - [Cartesia Playground](https://play.cartesia.ai/)
 
 ================
+File: docs/tools/third-party/daytona.md
+================
+# Daytona
+
+The [Daytona ADK plugin](https://github.com/daytonaio/daytona-adk-plugin) connects your ADK
+agent to [Daytona](https://www.daytona.io/) sandboxes. This integration gives
+your agent the ability to execute code, run shell commands, and manage files in
+isolated environments, enabling secure execution of AI-generated code.
+
+## Use cases
+
+- **Secure Code Execution**: Run Python, JavaScript, and TypeScript code in
+  isolated sandboxes without risking your local environment.
+
+- **Shell Command Automation**: Execute shell commands with configurable
+  timeouts and working directories for build tasks, installations, or system
+  operations.
+
+- **File Management**: Upload scripts and datasets to sandboxes, then retrieve
+  generated outputs and results.
+
+## Prerequisites
+
+- A [Daytona](https://www.daytona.io/) account
+- Daytona API key
+
+## Installation
+
+```bash
+pip install daytona-adk
+```
+
+## Use with agent
+
+```python
+from daytona_adk import DaytonaPlugin
+from google.adk.agents import Agent
+
+plugin = DaytonaPlugin(
+  api_key="your-daytona-api-key" # Or set DAYTONA_API_KEY environment variable
+)
+
+root_agent = Agent(
+    model="gemini-2.5-pro",
+    name="sandbox_agent",
+    instruction="Help users execute code and commands in a secure sandbox",
+    tools=plugin.get_tools(),
+)
+```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`execute_code_in_daytona` | Execute Python, JavaScript, or TypeScript code
+`execute_command_in_daytona` | Run shell commands
+`upload_file_to_daytona` | Upload scripts or data files to the sandbox
+`read_file_from_daytona` | Read script outputs or generated files
+`start_long_running_command_daytona` | Start background processes (servers, watchers)
+
+## Learn more
+
+For a detailed guide on building a code generator agent that writes, tests, and
+verifies code in secure sandboxes, check out
+[this guide](https://www.daytona.io/docs/en/google-adk-code-generator).
+
+## Additional resources
+
+- [Code Generator Agent Guide](https://www.daytona.io/docs/en/google-adk-code-generator)
+- [Daytona ADK on PyPI](https://pypi.org/project/daytona-adk/)
+- [Daytona ADK on GitHub](https://github.com/daytonaio/daytona-adk-plugin)
+- [Daytona Documentation](https://www.daytona.io/docs)
+
+================
 File: docs/tools/third-party/elevenlabs.md
 ================
 # ElevenLabs
@@ -33025,6 +33099,16 @@ Check out the following third-party tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Cartesia</h3>
       <p>Generate speech, localize voices, and create audio content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/daytona/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/plugins-daytona.png" alt="Daytona">
+    </div>
+    <div class="tool-card-content">
+      <h3>Daytona</h3>
+      <p>Execute code, run shell commands, and manage files in secure sandboxes</p>
     </div>
   </a>
 
@@ -34283,6 +34367,16 @@ Check out the following pre-built tools that you can use with ADK agents:
     <div class="tool-card-content">
       <h3>Cartesia</h3>
       <p>Generate speech, localize voices, and create audio content</p>
+    </div>
+  </a>
+
+  <a href="/adk-docs/tools/third-party/daytona/" class="tool-card">
+    <div class="tool-card-image-wrapper">
+      <img src="/adk-docs/assets/plugins-daytona.png" alt="Daytona">
+    </div>
+    <div class="tool-card-content">
+      <h3>Daytona</h3>
+      <p>Execute code, run shell commands, and manage files in secure sandboxes</p>
     </div>
   </a>
 
@@ -40664,7 +40758,7 @@ Development Kit community.
     </div>
     <div class="card-content">
       <div class="type">Online Course</div>
-      <h3>5-Day AI Agents Intensive Course with Google</h3>
+      <h3>🎓 5-Day AI Agents Intensive Course with Google</h3>
       <p>Build with core ADK agent components including, models, tools, memory, evaluation, and deployment.</p>
     </div>
   </a>
@@ -40715,7 +40809,17 @@ Development Kit community.
     <div class="card-content">
       <div class="type">Blog Series</div>
       <h3>🎓 Building Intelligent Agents with Google ADK</h3>
-      <p>A developer's guide to building intelligent agents with Google’s code-first Python toolkit.</p>
+      <p>A developer's guide to building intelligent agents with Google's code-first Python toolkit.</p>
+    </div>
+  </a>
+  <a href="https://github.com/arjunprabhulal/google-adk-masterclass" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-masterclass-hands-on.png" alt="Google ADK Masterclass Hands-on Series">
+    </div>
+    <div class="card-content">
+      <div class="type">Online Course</div>
+      <h3>🎓 Google ADK Masterclass: Hands-on Series</h3>
+      <p>Build production-ready AI agents with 20 modules covering agents, workflows, tools, memory, and MCP integrations.</p>
     </div>
   </a>
   <a href="https://www.youtube.com/playlist?list=PL0Zc2RFDZsM_MkHOzWNJpaT4EH5fQxA8n" class="resource-card">
@@ -40781,6 +40885,16 @@ Development Kit community.
       <div class="type">Video Demo</div>
       <h3>📺 Shopper's Concierge Demo</h3>
       <p>See how AI agents can revolutionize shopping with personalized, real-time recommendations.</p>
+    </div>
+  </a>
+  <a href="https://agentdirectory.folch.ai/" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-agent-directory.png" alt="ADK Agent Directory">
+    </div>
+    <div class="card-content">
+      <div class="type">Gallery</div>
+      <h3>📖 ADK Agent Directory</h3>
+      <p>Discover and test production-ready ADK agents for web search, image generation, research, and more.</p>
     </div>
   </a>
 </div>
