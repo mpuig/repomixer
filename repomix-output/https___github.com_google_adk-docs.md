@@ -16085,19 +16085,15 @@ File: docs/get-started/typescript.md
 This guide shows you how to get up and running with Agent Development Kit
 for TypeScript. Before you start, make sure you have the following installed:
 
-*   Node.js 20.12.7 or later
-*   Node Package Manager (npm) 9.2.0 or later
+*   Node.js 24.13.0 or later
+*   Node Package Manager (npm) 11.8.0 or later
 
 ## Create an agent project
 
-Create an agent project with the following files and directory structure:
+Create an empty `my-agent` directory for your project:
 
 ```none
 my-agent/
-    agent.ts        # main agent code
-    package.json    # project configuration
-    tsconfig.json   # TypeScript configuration
-    .env            # API keys or project IDs
 ```
 
 ??? tip "Create this project structure using the command line"
@@ -16105,30 +16101,40 @@ my-agent/
     === "MacOS / Linux"
 
         ```bash
-        mkdir -p my-agent/ && \
-            touch my-agent/agent.ts \
-            touch my-agent/package.json \
-            touch my-agent/.env
+        mkdir -p my-agent/
         ```
 
     === "Windows"
 
         ```console
-        mkdir my-agent\
-        type nul > my-agent\agent.ts
-        type nul > my-agent\package.json
-        type nul > my-agent\.env
+        mkdir my-agent
         ```
 
-    **Note:** Do not create `tsconfig.json`, you generate that
-    file in a later step.
+### Configure project and dependencies
+
+Use the `npm` tool to install and configure dependencies for your project,
+including the package file, ADK TypeScript main
+library, and developer tools. Run the following commands from your
+`my-agent/` directory to create the `package.json` file and install the
+project dependencies:
+
+```console
+cd my-agent/
+# initialize a project as an ES module
+npm init --yes
+npm pkg set type="module"
+npm pkg set main="agent.ts"
+# install ADK libraries
+npm install @google/adk
+# install dev tools as a dev dependency
+npm install -D @google/adk-devtools
+```
 
 ### Define the agent code
 
 Create the code for a basic agent, including a simple implementation of an ADK
 [Function Tool](/adk-docs/tools/function-tools/), called `getCurrentTime`.
-Add the following code to the `agent.ts` file in your project
-directory:
+Create an `agent.ts` file in your project directory and add the following code:
 
 ```typescript title="my-agent/agent.ts"
 import {FunctionTool, LlmAgent} from '@google/adk';
@@ -16154,67 +16160,6 @@ export const rootAgent = new LlmAgent({
                 Use the 'getCurrentTime' tool for this purpose.`,
   tools: [getCurrentTime],
 });
-```
-
-### Configure project and dependencies
-
-Use the `npm` tool to install and configure dependencies for your project,
-including the package file, TypeScript configuration, ADK TypeScript main
-library and developer tools. Run the following commands from your
-`my-agent/` directory:
-
-```console
-cd my-agent/
-# initialize a project with default values
-npm init --yes
-# configure TypeScript
-npm install -D typescript
-npx tsc --init
-# install ADK libraries
-npm install @google/adk
-npm install @google/adk-devtools
-```
-
-After completing these installation and configuration steps, open
-the `package.json` project file and verify that the `main:` value
-is set to `agent.ts`, that the TypeScript dependency is set, as
-well as the ADK library dependencies, as shown in this example:
-
-```json title="my-agent/package.json"
-{
-  "name": "my-agent",
-  "version": "1.0.0",
-  "description": "My ADK Agent",
-  "main": "agent.ts",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "@google/adk": "^0.2.0",
-    "@google/adk-devtools": "^0.2.0"
-  }
-}
-```
-
-For development convenience, in the `tsconfig.json` file, update the
-setting for `verbatimModuleSyntax` to `false` to allow simpler syntax
-when adding modules:
-
-```json title="my-agent/tsconfig.json"
-    // set to false to allow CommonJS module syntax:
-    "verbatimModuleSyntax": false,
-```
-
-### Compile the project
-
-After completing the project setup, compile the project to prepare for
-running your ADK agent:
-
-```console
-npx tsc
 ```
 
 ### Set your API key
@@ -16248,7 +16193,7 @@ Run your agent with the ADK TypeScript command-line interface tool
 using the following command:
 
 ```console
-npx @google/adk-devtools run agent.ts
+npx adk run agent.ts
 ```
 
 ![adk-run.png](/adk-docs/assets/adk-run.png)
@@ -16258,7 +16203,7 @@ npx @google/adk-devtools run agent.ts
 Run your agent with the ADK web interface using the following command:
 
 ```console
-npx @google/adk-devtools web
+npx adk web
 ```
 
 This command starts a web server with a chat interface for your agent. You can
@@ -32232,6 +32177,10 @@ File: docs/tools/third-party/asana.md
 ================
 # Asana
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Asana MCP Server](https://developers.asana.com/docs/using-asanas-mcp-server)
 connects your ADK agent to the [Asana](https://asana.com/) work management
 platform. This integration gives your agent the ability to manage projects,
@@ -32254,35 +32203,66 @@ tasks, goals, and team collaboration using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="asana_agent",
-        instruction="Help users manage projects, tasks, and goals in Asana",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="asana_agent",
+            instruction="Help users manage projects, tasks, and goals in Asana",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://mcp.asana.com/sse",
+                            ]
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "asana_agent",
+            instruction: "Help users manage projects, tasks, and goals in Asana",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "mcp-remote",
                             "https://mcp.asana.com/sse",
-                        ]
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                        ],
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 !!! note
 
@@ -32317,6 +32297,10 @@ File: docs/tools/third-party/atlassian.md
 ================
 # Atlassian
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Atlassian MCP Server](https://github.com/atlassian/atlassian-mcp-server)
 connects your ADK agent to the [Atlassian](https://www.atlassian.com/)
 ecosystem, bridging the gap between project tracking in Jira and knowledge
@@ -32342,36 +32326,67 @@ collaboration workflows using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="atlassian_agent",
-        instruction="Help users work with data in Atlassian products",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="atlassian_agent",
+            instruction="Help users work with data in Atlassian products",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://mcp.atlassian.com/v1/mcp",
+                            ]
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "atlassian_agent",
+            instruction: "Help users work with data in Atlassian products",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "mcp-remote",
-                            "https://mcp.atlassian.com/v1/sse",
-                        ]
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                            "https://mcp.atlassian.com/v1/mcp",
+                        ],
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 !!! note
 
@@ -32422,6 +32437,10 @@ File: docs/tools/third-party/cartesia.md
 ================
 # Cartesia
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Cartesia MCP Server](https://github.com/cartesia-ai/cartesia-mcp) connects
 your ADK agent to the [Cartesia](https://cartesia.ai/) AI audio platform. This
 integration gives your agent the ability to generate speech, localize voices
@@ -32451,37 +32470,70 @@ across languages, and create audio content using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="cartesia_agent",
-        instruction="Help users generate speech and work with audio content",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="uvx",
-                        args=["cartesia-mcp"],
-                        env={
-                            "CARTESIA_API_KEY": CARTESIA_API_KEY,
-                            # "OUTPUT_DIRECTORY": "/path/to/output",  # Optional
-                        }
+        CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="cartesia_agent",
+            instruction="Help users generate speech and work with audio content",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="uvx",
+                            args=["cartesia-mcp"],
+                            env={
+                                "CARTESIA_API_KEY": CARTESIA_API_KEY,
+                                # "OUTPUT_DIRECTORY": "/path/to/output",  # Optional
+                            }
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "cartesia_agent",
+            instruction: "Help users generate speech and work with audio content",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "uvx",
+                        args: ["cartesia-mcp"],
+                        env: {
+                            CARTESIA_API_KEY: CARTESIA_API_KEY,
+                            // OUTPUT_DIRECTORY: "/path/to/output",  // Optional
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -32517,6 +32569,10 @@ File: docs/tools/third-party/chroma.md
 ================
 # Chroma
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Chroma MCP Server](https://github.com/chroma-core/chroma-mcp) connects your
 ADK agent to [Chroma](https://www.trychroma.com/), an open-source embedding
 database. This integration gives your agent the ability to create collections,
@@ -32543,55 +32599,106 @@ search, and metadata filtering.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    # For local storage, use:
-    DATA_DIR = "/path/to/your/data/directory"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    # For Chroma Cloud, use:
-    # CHROMA_TENANT = "your-tenant-id"
-    # CHROMA_DATABASE = "your-database-name"
-    # CHROMA_API_KEY = "your-api-key"
+        # For local storage, use:
+        DATA_DIR = "/path/to/your/data/directory"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="chroma_agent",
-        instruction="Help users store and retrieve information using semantic search",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="uvx",
-                        args=[
+        # For Chroma Cloud, use:
+        # CHROMA_TENANT = "your-tenant-id"
+        # CHROMA_DATABASE = "your-database-name"
+        # CHROMA_API_KEY = "your-api-key"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="chroma_agent",
+            instruction="Help users store and retrieve information using semantic search",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="uvx",
+                            args=[
+                                "chroma-mcp",
+                                # For local storage, use:
+                                "--client-type",
+                                "persistent",
+                                "--data-dir",
+                                DATA_DIR,
+                                # For Chroma Cloud, use:
+                                # "--client-type",
+                                # "cloud",
+                                # "--tenant",
+                                # CHROMA_TENANT,
+                                # "--database",
+                                # CHROMA_DATABASE,
+                                # "--api-key",
+                                # CHROMA_API_KEY,
+                            ],
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        // For local storage, use:
+        const DATA_DIR = "/path/to/your/data/directory";
+
+        // For Chroma Cloud, use:
+        // const CHROMA_TENANT = "your-tenant-id";
+        // const CHROMA_DATABASE = "your-database-name";
+        // const CHROMA_API_KEY = "your-api-key";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "chroma_agent",
+            instruction: "Help users store and retrieve information using semantic search",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "uvx",
+                        args: [
                             "chroma-mcp",
-                            # For local storage, use:
+                            // For local storage, use:
                             "--client-type",
                             "persistent",
                             "--data-dir",
                             DATA_DIR,
-                            # For Chroma Cloud, use:
-                            # "--client-type",
-                            # "cloud",
-                            # "--tenant",
-                            # CHROMA_TENANT,
-                            # "--database",
-                            # CHROMA_DATABASE,
-                            # "--api-key",
-                            # CHROMA_API_KEY,
+                            // For Chroma Cloud, use:
+                            // "--client-type",
+                            // "cloud",
+                            // "--tenant",
+                            // CHROMA_TENANT,
+                            // "--database",
+                            // CHROMA_DATABASE,
+                            // "--api-key",
+                            // CHROMA_API_KEY,
                         ],
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -32657,6 +32764,10 @@ Variable | Description
 File: docs/tools/third-party/daytona.md
 ================
 # Daytona
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
 
 The [Daytona ADK plugin](https://github.com/daytonaio/daytona-adk-plugin) connects your ADK
 agent to [Daytona](https://www.daytona.io/) sandboxes. This integration gives
@@ -32732,6 +32843,10 @@ File: docs/tools/third-party/elevenlabs.md
 ================
 # ElevenLabs
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [ElevenLabs MCP Server](https://github.com/elevenlabs/elevenlabs-mcp)
 connects your ADK agent to the [ElevenLabs](https://elevenlabs.io/) AI audio
 platform. This integration gives your agent the ability to generate speech,
@@ -32764,36 +32879,68 @@ AI experiences using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="elevenlabs_agent",
-        instruction="Help users generate speech, clone voices, and process audio",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="uvx",
-                        args=["elevenlabs-mcp"],
-                        env={
-                            "ELEVENLABS_API_KEY": ELEVENLABS_API_KEY,
-                        }
+        ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="elevenlabs_agent",
+            instruction="Help users generate speech, clone voices, and process audio",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="uvx",
+                            args=["elevenlabs-mcp"],
+                            env={
+                                "ELEVENLABS_API_KEY": ELEVENLABS_API_KEY,
+                            }
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "elevenlabs_agent",
+            instruction: "Help users generate speech, clone voices, and process audio",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "uvx",
+                        args: ["elevenlabs-mcp"],
+                        env: {
+                            ELEVENLABS_API_KEY: ELEVENLABS_API_KEY,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -32871,6 +33018,10 @@ File: docs/tools/third-party/github.md
 ================
 # GitHub
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [GitHub MCP Server](https://github.com/github/github-mcp-server) connects AI
 tools directly to GitHub's platform. This gives your ADK agent the ability to
 read repositories and code files, manage issues and PRs, analyze code, and
@@ -32894,33 +33045,64 @@ automate workflows using natural language.
 
 ## Use with agent
 
-=== "Remote MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    === "Remote MCP Server"
 
-    GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="github_agent",
-        instruction="Help users get information from GitHub",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://api.githubcopilot.com/mcp/",
-                    headers={
-                        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="github_agent",
+            instruction="Help users get information from GitHub",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://api.githubcopilot.com/mcp/",
+                        headers={
+                            "Authorization": f"Bearer {GITHUB_TOKEN}",
+                            "X-MCP-Toolsets": "all",
+                            "X-MCP-Readonly": "true"
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const GITHUB_TOKEN = "YOUR_GITHUB_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "github_agent",
+            instruction: "Help users get information from GitHub",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://api.githubcopilot.com/mcp/",
+                    header: {
+                        Authorization: `Bearer ${GITHUB_TOKEN}`,
                         "X-MCP-Toolsets": "all",
-                        "X-MCP-Readonly": "true"
+                        "X-MCP-Readonly": "true",
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -32975,6 +33157,10 @@ File: docs/tools/third-party/gitlab.md
 ================
 # GitLab
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The
 [GitLab MCP Server](https://docs.gitlab.com/user/gitlab_duo/model_context_protocol/mcp_server/)
 connects your ADK agent directly to [GitLab.com](https://gitlab.com/) or your
@@ -33006,40 +33192,76 @@ searches, and automate development workflows using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    # Replace with your instance URL if self-hosted (e.g., "gitlab.example.com")
-    GITLAB_INSTANCE_URL = "gitlab.com"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="gitlab_agent",
-        instruction="Help users get information from GitLab",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
+        # Replace with your instance URL if self-hosted (e.g., "gitlab.example.com")
+        GITLAB_INSTANCE_URL = "gitlab.com"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="gitlab_agent",
+            instruction="Help users get information from GitLab",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params = StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                f"https://{GITLAB_INSTANCE_URL}/api/v4/mcp",
+                                "--static-oauth-client-metadata",
+                                "{\"scope\": \"mcp\"}",
+                            ],
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        // Replace with your instance URL if self-hosted (e.g., "gitlab.example.com")
+        const GITLAB_INSTANCE_URL = "gitlab.com";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "gitlab_agent",
+            instruction: "Help users get information from GitLab",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "mcp-remote",
-                            f"https://{GITLAB_INSTANCE_URL}/api/v4/mcp",
+                            `https://${GITLAB_INSTANCE_URL}/api/v4/mcp`,
                             "--static-oauth-client-metadata",
-                            "{\"scope\": \"mcp\"}",
+                            '{"scope": "mcp"}',
                         ],
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 !!! note
 
@@ -33073,6 +33295,10 @@ File: docs/tools/third-party/hugging-face.md
 ================
 # Hugging Face
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Hugging Face MCP Server](https://github.com/huggingface/hf-mcp-server) can be used to connect
 your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
 
@@ -33094,65 +33320,122 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="hugging_face_agent",
-        instruction="Help users get information from Hugging Face",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "@llmindset/hf-mcp-server",
-                        ],
-                        env={
-                            "HF_TOKEN": HUGGING_FACE_TOKEN,
-                        }
+        HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="hugging_face_agent",
+            instruction="Help users get information from Hugging Face",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params = StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@llmindset/hf-mcp-server",
+                            ],
+                            env={
+                                "HF_TOKEN": HUGGING_FACE_TOKEN,
+                            }
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
 
-=== "Remote MCP Server"
+    === "Remote MCP Server"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
 
-    HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
+        HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="hugging_face_agent",
-        instruction="Help users get information from Hugging Face",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://huggingface.co/mcp",
-                    headers={
-                        "Authorization": f"Bearer {HUGGING_FACE_TOKEN}",
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="hugging_face_agent",
+            instruction="Help users get information from Hugging Face",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://huggingface.co/mcp",
+                        headers={
+                            "Authorization": f"Bearer {HUGGING_FACE_TOKEN}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "hugging_face_agent",
+            instruction: "Help users get information from Hugging Face",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "@llmindset/hf-mcp-server"],
+                        env: {
+                            HF_TOKEN: HUGGING_FACE_TOKEN,
+                        },
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "hugging_face_agent",
+            instruction: "Help users get information from Hugging Face",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://huggingface.co/mcp",
+                    header: {
+                        Authorization: `Bearer ${HUGGING_FACE_TOKEN}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -33390,6 +33673,10 @@ File: docs/tools/third-party/linear.md
 ================
 # Linear
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Linear MCP Server](https://linear.app/docs/mcp) connects your ADK agent to
 [Linear](https://linear.app/), a purpose-built tool for planning and building
 products. This integration gives your agent the ability to manage issues, track
@@ -33418,74 +33705,139 @@ project cycles, and automate development workflows using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="linear_agent",
-        instruction="Help users manage issues, projects, and cycles in Linear",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "mcp-remote",
-                            "https://mcp.linear.app/mcp",
-                        ]
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="linear_agent",
+            instruction="Help users manage issues, projects, and cycles in Linear",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://mcp.linear.app/mcp",
+                            ]
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
 
-    !!! note
+        !!! note
 
-        When you run this agent for the first time, a browser window will open
-        automatically to request access via OAuth. Alternatively, you can use
-        the authorization URL printed in the console. You must approve this
-        request to allow the agent to access your Linear data.
+            When you run this agent for the first time, a browser window will open
+            automatically to request access via OAuth. Alternatively, you can use
+            the authorization URL printed in the console. You must approve this
+            request to allow the agent to access your Linear data.
 
-=== "Remote MCP Server"
+    === "Remote MCP Server"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
 
-    LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
+        LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="linear_agent",
-        instruction="Help users manage issues, projects, and cycles in Linear",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.linear.app/mcp",
-                    headers={
-                        "Authorization": f"Bearer {LINEAR_API_KEY}",
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="linear_agent",
+            instruction="Help users manage issues, projects, and cycles in Linear",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://mcp.linear.app/mcp",
+                        headers={
+                            "Authorization": f"Bearer {LINEAR_API_KEY}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+        !!! note
+
+            This code example uses an API key for authentication. To use a
+            browser-based OAuth authentication flow instead, remove the `headers`
+            parameter and run the agent.
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "linear_agent",
+            instruction: "Help users manage issues, projects, and cycles in Linear",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "mcp-remote", "https://mcp.linear.app/mcp"],
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
 
-    !!! note
+        export { rootAgent };
+        ```
 
-        This code example uses an API key for authentication. To use a
-        browser-based OAuth authentication flow instead, remove the `headers`
-        parameter and run the agent.
+        !!! note
+
+            When you run this agent for the first time, a browser window will open
+            automatically to request access via OAuth. Alternatively, you can use
+            the authorization URL printed in the console. You must approve this
+            request to allow the agent to access your Linear data.
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const LINEAR_API_KEY = "YOUR_LINEAR_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "linear_agent",
+            instruction: "Help users manage issues, projects, and cycles in Linear",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.linear.app/mcp",
+                    header: {
+                        Authorization: `Bearer ${LINEAR_API_KEY}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+        !!! note
+
+            This code example uses an API key for authentication. To use a
+            browser-based OAuth authentication flow instead, remove the `header`
+            property and run the agent.
 
 ## Available tools
 
@@ -33525,6 +33877,10 @@ File: docs/tools/third-party/mongodb.md
 ================
 # MongoDB
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [MongoDB MCP Server](https://github.com/mongodb-js/mongodb-mcp-server)
 connects your ADK agent to [MongoDB](https://www.mongodb.com/) databases and
 MongoDB Atlas clusters. This integration gives your agent the ability to query
@@ -33553,49 +33909,94 @@ using natural language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    # For database access, use a connection string:
-    CONNECTION_STRING = "mongodb://localhost:27017/myDatabase"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    # For Atlas management, use API credentials:
-    # ATLAS_CLIENT_ID = "YOUR_ATLAS_CLIENT_ID"
-    # ATLAS_CLIENT_SECRET = "YOUR_ATLAS_CLIENT_SECRET"
+        # For database access, use a connection string:
+        CONNECTION_STRING = "mongodb://localhost:27017/myDatabase"
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="mongodb_agent",
-        instruction="Help users query and manage MongoDB databases",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        # For Atlas management, use API credentials:
+        # ATLAS_CLIENT_ID = "YOUR_ATLAS_CLIENT_ID"
+        # ATLAS_CLIENT_SECRET = "YOUR_ATLAS_CLIENT_SECRET"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="mongodb_agent",
+            instruction="Help users query and manage MongoDB databases",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mongodb-mcp-server",
+                                "--readOnly",  # Remove for write operations
+                            ],
+                            env={
+                                # For database access, use:
+                                "MDB_MCP_CONNECTION_STRING": CONNECTION_STRING,
+                                # For Atlas management, use:
+                                # "MDB_MCP_API_CLIENT_ID": ATLAS_CLIENT_ID,
+                                # "MDB_MCP_API_CLIENT_SECRET": ATLAS_CLIENT_SECRET,
+                            },
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        // For database access, use a connection string:
+        const CONNECTION_STRING = "mongodb://localhost:27017/myDatabase";
+
+        // For Atlas management, use API credentials:
+        // const ATLAS_CLIENT_ID = "YOUR_ATLAS_CLIENT_ID";
+        // const ATLAS_CLIENT_SECRET = "YOUR_ATLAS_CLIENT_SECRET";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "mongodb_agent",
+            instruction: "Help users query and manage MongoDB databases",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "mongodb-mcp-server",
-                            "--readOnly",  # Remove for write operations
+                            "--readOnly", // Remove for write operations
                         ],
-                        env={
-                            # For database access, use:
-                            "MDB_MCP_CONNECTION_STRING": CONNECTION_STRING,
-                            # For Atlas management, use:
-                            # "MDB_MCP_API_CLIENT_ID": ATLAS_CLIENT_ID,
-                            # "MDB_MCP_API_CLIENT_SECRET": ATLAS_CLIENT_SECRET,
+                        env: {
+                            // For database access, use:
+                            MDB_MCP_CONNECTION_STRING: CONNECTION_STRING,
+                            // For Atlas management, use:
+                            // MDB_MCP_API_CLIENT_ID: ATLAS_CLIENT_ID,
+                            // MDB_MCP_API_CLIENT_SECRET: ATLAS_CLIENT_SECRET,
                         },
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -33683,6 +34084,10 @@ File: docs/tools/third-party/n8n.md
 ================
 # n8n
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [n8n MCP Server](https://docs.n8n.io/advanced-ai/accessing-n8n-mcp-server/)
 connects your ADK agent to [n8n](https://n8n.io/), an extendable workflow
 automation tool. This integration allows your agent to securely connect to an
@@ -33726,68 +34131,131 @@ for detailed setup instructions.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    N8N_INSTANCE_URL = "https://localhost:5678"
-    N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="n8n_agent",
-        instruction="Help users manage and execute workflows in n8n",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        N8N_INSTANCE_URL = "https://localhost:5678"
+        N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="n8n_agent",
+            instruction="Help users manage and execute workflows in n8n",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "supergateway",
+                                "--streamableHttp",
+                                f"{N8N_INSTANCE_URL}/mcp-server/http",
+                                "--header",
+                                f"authorization:Bearer {N8N_MCP_TOKEN}"
+                            ]
+                        ),
+                        timeout=300,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+        N8N_INSTANCE_URL = "https://localhost:5678"
+        N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="n8n_agent",
+            instruction="Help users manage and execute workflows in n8n",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url=f"{N8N_INSTANCE_URL}/mcp-server/http",
+                        headers={
+                            "Authorization": f"Bearer {N8N_MCP_TOKEN}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const N8N_INSTANCE_URL = "https://localhost:5678";
+        const N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "n8n_agent",
+            instruction: "Help users manage and execute workflows in n8n",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "supergateway",
                             "--streamableHttp",
-                            f"{N8N_INSTANCE_URL}/mcp-server/http",
+                            `${N8N_INSTANCE_URL}/mcp-server/http`,
                             "--header",
-                            f"authorization:Bearer {N8N_MCP_TOKEN}"
-                        ]
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    N8N_INSTANCE_URL = "https://localhost:5678"
-    N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="n8n_agent",
-        instruction="Help users manage and execute workflows in n8n",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url=f"{N8N_INSTANCE_URL}/mcp-server/http",
-                    headers={
-                        "Authorization": f"Bearer {N8N_MCP_TOKEN}",
+                            `authorization:Bearer ${N8N_MCP_TOKEN}`,
+                        ],
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const N8N_INSTANCE_URL = "https://localhost:5678";
+        const N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "n8n_agent",
+            instruction: "Help users manage and execute workflows in n8n",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: `${N8N_INSTANCE_URL}/mcp-server/http`,
+                    header: {
+                        Authorization: `Bearer ${N8N_MCP_TOKEN}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -33818,6 +34286,10 @@ criteria:
 File: docs/tools/third-party/notion.md
 ================
 # Notion
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
 
 The [Notion MCP Server](https://github.com/makenotion/notion-mcp-server)
 connects your ADK agent to Notion, allowing it to search, create, and manage
@@ -33853,39 +34325,71 @@ language.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    NOTION_TOKEN = "YOUR_NOTION_TOKEN"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="notion_agent",
-        instruction="Help users get information from Notion",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params = StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "@notionhq/notion-mcp-server",
-                        ],
-                        env={
-                            "NOTION_TOKEN": NOTION_TOKEN,
-                        }
+        NOTION_TOKEN = "YOUR_NOTION_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="notion_agent",
+            instruction="Help users get information from Notion",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params = StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@notionhq/notion-mcp-server",
+                            ],
+                            env={
+                                "NOTION_TOKEN": NOTION_TOKEN,
+                            }
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const NOTION_TOKEN = "YOUR_NOTION_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "notion_agent",
+            instruction: "Help users get information from Notion",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "@notionhq/notion-mcp-server"],
+                        env: {
+                            NOTION_TOKEN: NOTION_TOKEN,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -33915,6 +34419,10 @@ Tool <img width="200px"/> | Description
 File: docs/tools/third-party/paypal.md
 ================
 # PayPal
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
 
 The [PayPal MCP Server](https://github.com/paypal/paypal-mcp-server) connects
 your ADK agent to the [PayPal](https://www.paypal.com/) ecosystem. This
@@ -33946,71 +34454,111 @@ workflows and business insights.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    PAYPAL_ENVIRONMENT = "SANDBOX"  # Options: "SANDBOX" or "PRODUCTION"
-    PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="paypal_agent",
-        instruction="Help users manage their PayPal account",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        PAYPAL_ENVIRONMENT = "SANDBOX"  # Options: "SANDBOX" or "PRODUCTION"
+        PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="paypal_agent",
+            instruction="Help users manage their PayPal account",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@paypal/mcp",
+                                "--tools=all",
+                                # (Optional) Specify which tools to enable
+                                # "--tools=subscriptionPlans.list,subscriptionPlans.show",
+                            ],
+                            env={
+                                "PAYPAL_ACCESS_TOKEN": PAYPAL_ACCESS_TOKEN,
+                                "PAYPAL_ENVIRONMENT": PAYPAL_ENVIRONMENT,
+                            }
+                        ),
+                        timeout=300,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
+
+        PAYPAL_MCP_ENDPOINT = "https://mcp.sandbox.paypal.com/sse"  # Production: https://mcp.paypal.com/sse
+        PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="paypal_agent",
+            instruction="Help users manage their PayPal account",
+            tools=[
+                McpToolset(
+                    connection_params=SseConnectionParams(
+                        url=PAYPAL_MCP_ENDPOINT,
+                        headers={
+                            "Authorization": f"Bearer {PAYPAL_ACCESS_TOKEN}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const PAYPAL_ENVIRONMENT = "SANDBOX"; // Options: "SANDBOX" or "PRODUCTION"
+        const PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "paypal_agent",
+            instruction: "Help users manage their PayPal account",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "@paypal/mcp",
                             "--tools=all",
-                            # (Optional) Specify which tools to enable
-                            # "--tools=subscriptionPlans.list,subscriptionPlans.show",
+                            // (Optional) Specify which tools to enable
+                            // "--tools=subscriptionPlans.list,subscriptionPlans.show",
                         ],
-                        env={
-                            "PAYPAL_ACCESS_TOKEN": PAYPAL_ACCESS_TOKEN,
-                            "PAYPAL_ENVIRONMENT": PAYPAL_ENVIRONMENT,
-                        }
-                    ),
-                    timeout=300,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
-
-    PAYPAL_MCP_ENDPOINT = "https://mcp.sandbox.paypal.com/sse"  # Production: https://mcp.paypal.com/sse
-    PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="paypal_agent",
-        instruction="Help users manage their PayPal account",
-        tools=[
-            McpToolset(
-                connection_params=SseConnectionParams(
-                    url=PAYPAL_MCP_ENDPOINT,
-                    headers={
-                        "Authorization": f"Bearer {PAYPAL_ACCESS_TOKEN}",
+                        env: {
+                            PAYPAL_ACCESS_TOKEN: PAYPAL_ACCESS_TOKEN,
+                            PAYPAL_ENVIRONMENT: PAYPAL_ENVIRONMENT,
+                        },
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 !!! note
 
@@ -34133,6 +34681,10 @@ File: docs/tools/third-party/postman.md
 ================
 # Postman
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Postman MCP Server](https://github.com/postmanlabs/postman-mcp-server)
 connects your ADK agent to the [Postman](https://www.postman.com/) ecosystem.
 This integration gives your agent the ability to access workspaces, manage
@@ -34160,71 +34712,137 @@ natural language interactions.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="postman_agent",
-        instruction="Help users manage their Postman workspaces and collections",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
-                            "-y",
-                            "@postman/postman-mcp-server",
-                            # "--full",  # Use all 100+ tools
-                            # "--code",  # Use code generation tools
-                            # "--region", "eu",  # Use EU region
-                        ],
-                        env={
-                            "POSTMAN_API_KEY": POSTMAN_API_KEY,
+        POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="postman_agent",
+            instruction="Help users manage their Postman workspaces and collections",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@postman/postman-mcp-server",
+                                # "--full",  # Use all 100+ tools
+                                # "--code",  # Use code generation tools
+                                # "--region", "eu",  # Use EU region
+                            ],
+                            env={
+                                "POSTMAN_API_KEY": POSTMAN_API_KEY,
+                            },
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+        POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="postman_agent",
+            instruction="Help users manage their Postman workspaces and collections",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://mcp.postman.com/mcp",
+                        # (Optional) Use "/minimal" for essential tools only
+                        # (Optional) Use "/code" for code generation tools
+                        # (Optional) Use "https://mcp.eu.postman.com" for EU region
+                        headers={
+                            "Authorization": f"Bearer {POSTMAN_API_KEY}",
                         },
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
 
-=== "Remote MCP Server"
+=== "TypeScript"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+    === "Local MCP Server"
 
-    POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="postman_agent",
-        instruction="Help users manage their Postman workspaces and collections",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.postman.com/mcp",
-                    # (Optional) Use "/minimal" for essential tools only
-                    # (Optional) Use "/code" for code generation tools
-                    # (Optional) Use "https://mcp.eu.postman.com" for EU region
-                    headers={
-                        "Authorization": f"Bearer {POSTMAN_API_KEY}",
+        const POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "postman_agent",
+            instruction: "Help users manage their Postman workspaces and collections",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
+                            "-y",
+                            "@postman/postman-mcp-server",
+                            // "--full",  // Use all 100+ tools
+                            // "--code",  // Use code generation tools
+                            // "--region", "eu",  // Use EU region
+                        ],
+                        env: {
+                            POSTMAN_API_KEY: POSTMAN_API_KEY,
+                        },
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "postman_agent",
+            instruction: "Help users manage their Postman workspaces and collections",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.postman.com/mcp",
+                    // (Optional) Use "/minimal" for essential tools only
+                    // (Optional) Use "/code" for code generation tools
+                    // (Optional) Use "https://mcp.eu.postman.com" for EU region
+                    header: {
+                        Authorization: `Bearer ${POSTMAN_API_KEY}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Configuration
 
@@ -34255,6 +34873,10 @@ File: docs/tools/third-party/qdrant.md
 ================
 # Qdrant
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Qdrant MCP Server](https://github.com/qdrant/mcp-server-qdrant) connects
 your ADK agent to [Qdrant](https://qdrant.tech/), an open-source vector search engine. This integration gives your agent the ability to store and
 retrieve information using semantic search.
@@ -34279,40 +34901,76 @@ retrieve information using semantic search.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    QDRANT_URL = "http://localhost:6333"  # Or your Qdrant Cloud URL
-    COLLECTION_NAME = "my_collection"
-    # QDRANT_API_KEY = "YOUR_QDRANT_API_KEY"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="qdrant_agent",
-        instruction="Help users store and retrieve information using semantic search",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="uvx",
-                        args=["mcp-server-qdrant"],
-                        env={
-                            "QDRANT_URL": QDRANT_URL,
-                            "COLLECTION_NAME": COLLECTION_NAME,
-                            # "QDRANT_API_KEY": QDRANT_API_KEY,
-                        }
+        QDRANT_URL = "http://localhost:6333"  # Or your Qdrant Cloud URL
+        COLLECTION_NAME = "my_collection"
+        # QDRANT_API_KEY = "YOUR_QDRANT_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="qdrant_agent",
+            instruction="Help users store and retrieve information using semantic search",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="uvx",
+                            args=["mcp-server-qdrant"],
+                            env={
+                                "QDRANT_URL": QDRANT_URL,
+                                "COLLECTION_NAME": COLLECTION_NAME,
+                                # "QDRANT_API_KEY": QDRANT_API_KEY,
+                            }
+                        ),
+                        timeout=30,
                     ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const QDRANT_URL = "http://localhost:6333"; // Or your Qdrant Cloud URL
+        const COLLECTION_NAME = "my_collection";
+        // const QDRANT_API_KEY = "YOUR_QDRANT_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "qdrant_agent",
+            instruction: "Help users store and retrieve information using semantic search",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "uvx",
+                        args: ["mcp-server-qdrant"],
+                        env: {
+                            QDRANT_URL: QDRANT_URL,
+                            COLLECTION_NAME: COLLECTION_NAME,
+                            // QDRANT_API_KEY: QDRANT_API_KEY,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 ## Available tools
 
@@ -34360,6 +35018,10 @@ File: docs/tools/third-party/stripe.md
 ================
 # Stripe
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+</div>
+
 The [Stripe MCP Server](https://docs.stripe.com/mcp) connects your ADK agent to
 the [Stripe](https://stripe.com/) ecosystem. This integration gives your agent
 the ability to manage payments, customers, subscriptions, and invoices using
@@ -34385,68 +35047,131 @@ operations.
 
 ## Use with agent
 
-=== "Local MCP Server"
+=== "Python"
 
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-    from mcp import StdioServerParameters
+    === "Local MCP Server"
 
-    STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
 
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="stripe_agent",
-        instruction="Help users manage their Stripe account",
-        tools=[
-            McpToolset(
-                connection_params=StdioConnectionParams(
-                    server_params=StdioServerParameters(
-                        command="npx",
-                        args=[
+        STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="stripe_agent",
+            instruction="Help users manage their Stripe account",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@stripe/mcp",
+                                "--tools=all",
+                                # (Optional) Specify which tools to enable
+                                # "--tools=customers.read,invoices.read,products.read",
+                            ],
+                            env={
+                                "STRIPE_SECRET_KEY": STRIPE_SECRET_KEY,
+                            }
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+        STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="stripe_agent",
+            instruction="Help users manage their Stripe account",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://mcp.stripe.com",
+                        headers={
+                            "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "stripe_agent",
+            instruction: "Help users manage their Stripe account",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
                             "-y",
                             "@stripe/mcp",
                             "--tools=all",
-                            # (Optional) Specify which tools to enable
-                            # "--tools=customers.read,invoices.read,products.read",
+                            // (Optional) Specify which tools to enable
+                            // "--tools=customers.read,invoices.read,products.read",
                         ],
-                        env={
-                            "STRIPE_SECRET_KEY": STRIPE_SECRET_KEY,
-                        }
-                    ),
-                    timeout=30,
-                ),
-            )
-        ],
-    )
-    ```
-
-=== "Remote MCP Server"
-
-    ```python
-    from google.adk.agents import Agent
-    from google.adk.tools.mcp_tool import McpToolset
-    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
-
-    STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
-
-    root_agent = Agent(
-        model="gemini-2.5-pro",
-        name="stripe_agent",
-        instruction="Help users manage their Stripe account",
-        tools=[
-            McpToolset(
-                connection_params=StreamableHTTPServerParams(
-                    url="https://mcp.stripe.com",
-                    headers={
-                        "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
+                        env: {
+                            STRIPE_SECRET_KEY: STRIPE_SECRET_KEY,
+                        },
                     },
-                ),
-            )
-        ],
-    )
-    ```
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "stripe_agent",
+            instruction: "Help users manage their Stripe account",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.stripe.com",
+                    header: {
+                        Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
 
 !!! tip "Best practices"
 
@@ -34871,6 +35596,12 @@ Some ADK tools have limitations that can impact how you implement them within an
 agent workflow. This page lists these tool limitations and workarounds, if available.
 
 ## One tool per agent limitation {#one-tool-one-agent}
+
+!!! note "ONLY for Search in ADK Python v1.15.0 and lower"
+
+    This limitation only applies to the use of Google Search and Vertex AI Search
+    tools in ADK Python v1.15.0 and lower. ADK Python release v1.16.0 and higher
+    provides a built-in workaround to remove this limitation.
 
 In general, you can use more than one tool in an agent, but use of specific
 tools within an agent excludes the use of any other tools in that agent. The
@@ -41055,14 +41786,26 @@ Development Kit community.
 
     Join the [ADK Community Google Group](https://groups.google.com/g/adk-community) for updates, calendar invites, and to connect with the ADK community.
 
+    See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
+
 <div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=h9Lueiqo89E" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/h9Lueiqo89E/maxresdefault.jpg" alt="ADK Community Call Jan 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Jan 2026 Recording</h3>
+      <p>Discussions include Session Service schema for cross-language support, TypeScript multi-agent demo, API Registry for MCP servers, and third-party tool integrations.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=cNVWhrbdn-E" class="resource-card">
     <div class="card-image-wrapper">
       <img src="https://img.youtube.com/vi/cNVWhrbdn-E/maxresdefault.jpg" alt="ADK Community Call Dec 2025">
     </div>
     <div class="card-content">
       <div class="type">Community Call</div>
-      <h3>📞 ADK Community Call (Dec 2025)</h3>
+      <h3>📞 Dec 2025 Recording</h3>
       <p>Discussions include the ADK TypeScript launch, Gemini 3 Flash support, bidirectional streaming for voice agents, and the Visual Builder UI.</p>
     </div>
   </a>
@@ -41072,20 +41815,11 @@ Development Kit community.
     </div>
     <div class="card-content">
       <div class="type">Community Call</div>
-      <h3>📞 ADK Community Call (Nov 2025)</h3>
+      <h3>📞 Nov 2025 Recording</h3>
       <p>Discussions include the ADK Go launch, the reflect & retry plugin for error recovery, and time travel debugging for rewinding agent sessions.</p>
     </div>
   </a>
-  <a href="https://www.youtube.com/watch?v=A95mQaSRKik" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/A95mQaSRKik/maxresdefault.jpg" alt="ADK Community Call Oct 2025">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 ADK Community Call (Oct 2025)</h3>
-      <p>Discussions include the ADK roadmap, context compaction and caching for reducing cost and latency, and community contribution guidelines.</p>
-    </div>
-  </a>
+
 </div>
 
 ## Courses & Deep Dives
