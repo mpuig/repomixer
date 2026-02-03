@@ -29965,6 +29965,12 @@ Here are some sample queries to test:
 ================
 File: docs/tools/gemini-api/code-execution.md
 ================
+---
+catalog_title: Code Execution
+catalog_description: Execute code and debug using Gemini models
+catalog_icon: /adk-docs/assets/tools-gemini-spark.svg
+---
+
 # Code Execution with Gemini API
 
 <div class="language-support-tag">
@@ -29996,6 +30002,12 @@ perform tasks like calculations, data manipulation, or running small scripts.
 ================
 File: docs/tools/gemini-api/computer-use.md
 ================
+---
+catalog_title: Computer Use
+catalog_description: Operate computer user interfaces using Gemini models
+catalog_icon: /adk-docs/assets/tools-gemini-spark.svg
+---
+
 # Computer Use Toolset with Gemini API
 
 <div class="language-support-tag">
@@ -30105,6 +30117,12 @@ agent sample project.
 ================
 File: docs/tools/gemini-api/google-search.md
 ================
+---
+catalog_title: Google Search
+catalog_description: Perform web searches using Google Search with Gemini
+catalog_icon: /adk-docs/assets/tools-google-search.png
+---
+
 # Google Search tool for ADK
 
 <div class="language-support-tag">
@@ -30169,43 +30187,17 @@ hide:
 
 Check out the following Gemini tools that you can use with ADK agents:
 
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/gemini-api/google-search/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-google-search.png" alt="Google Search">
-    </div>
-    <div class="tool-card-content">
-      <h3>Google Search</h3>
-      <p>Perform web searches using Google Search with Gemini</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/gemini-api/code-execution/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
-    </div>
-    <div class="tool-card-content">
-      <h3>Code Execution</h3>
-      <p>Execute code and debug using Gemini models</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/gemini-api/computer-use/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
-    </div>
-    <div class="tool-card-content">
-      <h3>Computer Use</h3>
-      <p>Operate computer user interfaces using Gemini models</p>
-    </div>
-  </a>
-
-</div>
+{{$ render_catalog('tools/gemini-api/*.md') $}}
 
 ================
 File: docs/tools/google-cloud/api-registry.md
 ================
+---
+catalog_title: API Registry
+catalog_description: Dynamically connect with Google Cloud services as MCP tools
+catalog_icon: /adk-docs/assets/developer-tools-color.svg
+---
+
 # Connect MCP tools from Cloud API Registry
 
 <div class="language-support-tag">
@@ -30387,6 +30379,12 @@ The `get_toolset()` function has the following configuration options:
 ================
 File: docs/tools/google-cloud/apigee-api-hub.md
 ================
+---
+catalog_title: Apigee API Hub
+catalog_description: Turn any documented API from Apigee API hub into a tool
+catalog_icon: /adk-docs/assets/tools-apigee.png
+---
+
 # Apigee API Hub tools for ADK
 
 <div class="language-support-tag">
@@ -30511,6 +30509,12 @@ you only need to follow a subset of these steps.
 ================
 File: docs/tools/google-cloud/application-integration.md
 ================
+---
+catalog_title: Application Integration
+catalog_description: Link your agents to enterprise apps using Integration Connectors
+catalog_icon: /adk-docs/assets/tools-apigee-integration.png
+---
+
 # Application Integration Tools for ADK
 
 <div class="language-support-tag">
@@ -30923,6 +30927,12 @@ workflow as a tool for your agent or create a new one.
 ================
 File: docs/tools/google-cloud/bigquery.md
 ================
+---
+catalog_title: BigQuery Tools
+catalog_description: Connect with BigQuery to retrieve data and perform analysis
+catalog_icon: /adk-docs/assets/tools-bigquery.png
+---
+
 # BigQuery tools for ADK
 
 <div class="language-support-tag">
@@ -30950,6 +30960,12 @@ Note: If you want to access a BigQuery data agent as a tool, see [Data Agents to
 ================
 File: docs/tools/google-cloud/bigtable.md
 ================
+---
+catalog_title: Bigtable Tools
+catalog_description: Interact with Bigtable to retrieve data and execute SQL
+catalog_icon: /adk-docs/assets/tools-bigtable.png
+---
+
 # Bigtable database tool for ADK
 
 <div class="language-support-tag">
@@ -30973,6 +30989,12 @@ They are packaged in the toolset `BigtableToolset`.
 ================
 File: docs/tools/google-cloud/code-exec-agent-engine.md
 ================
+---
+catalog_title: Code Execution Tool with Agent Engine
+catalog_description: Run AI-generated code in a secure and scalable GKE environment
+catalog_icon: /adk-docs/assets/tools-vertex-ai.png
+---
+
 # Code Execution Tool with Agent Engine
 
 <div class="language-support-tag">
@@ -31214,6 +31236,12 @@ For a complete version of an ADK agent using this example code, see the
 ================
 File: docs/tools/google-cloud/data-agent.md
 ================
+---
+catalog_title: Data Agents
+catalog_description: Analyze data with AI-powered agents
+catalog_icon: /adk-docs/assets/tools-vertex-ai.png
+---
+
 # Data Agents tools for ADK
 
 <div class="language-support-tag">
@@ -31247,6 +31275,12 @@ They are packaged in the toolset `DataAgentToolset`.
 ================
 File: docs/tools/google-cloud/express-mode.md
 ================
+---
+catalog_title: Vertex AI express mode
+catalog_description: Try development with Vertex AI services at no cost
+catalog_icon: /adk-docs/assets/tools-vertex-ai.png
+---
+
 # Vertex AI express mode
 
 <div class="language-support-tag">
@@ -31393,6 +31427,12 @@ allowing your agent to recall user preferences and conversations.
 ================
 File: docs/tools/google-cloud/gke-code-executor.md
 ================
+---
+catalog_title: GKE Code Executor
+catalog_description: Run AI-generated code in a secure and scalable GKE environment
+catalog_icon: /adk-docs/assets/tools-gke.png
+---
+
 # GKE Code Executor tool for ADK
 
 <div class="language-support-tag">
@@ -31502,133 +31542,17 @@ connect your agents with:
 * **Databases** such as Spanner, AlloyDB, Postgres and more using the MCP
   Toolbox for databases.
 
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/google-cloud/apigee-api-hub/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-apigee.png" alt="Apigee">
-    </div>
-    <div class="tool-card-content">
-      <h3>Apigee API Hub</h3>
-      <p>Turn any documented API from Apigee API hub into a tool</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/api-registry/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/developer-tools-color.svg" alt="Cloud API Registry">
-    </div>
-    <div class="tool-card-content">
-      <h3>API Registry</h3>
-      <p>Dynamically connect with Google Cloud services as MCP tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/application-integration/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-apigee-integration.png" alt="Apigee Integration">
-    </div>
-    <div class="tool-card-content">
-      <h3>Application Integration</h3>
-      <p>Link your agents to enterprise apps using Integration Connectors</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/observability/bigquery-agent-analytics/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Agent Analytics</h3>
-      <p>Analyze and debug agent behavior at scale</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/bigquery/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Tools</h3>
-      <p>Connect with BigQuery to retrieve data and perform analysis</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/bigtable/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigtable.png" alt="Bigtable">
-    </div>
-    <div class="tool-card-content">
-      <h3>Bigtable Tools</h3>
-      <p>Interact with Bigtable to retrieve data and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/gke-code-executor/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gke.png" alt="Google Kubernetes Engine">
-    </div>
-    <div class="tool-card-content">
-      <h3>GKE Code Executor</h3>
-      <p>Run AI-generated code in a secure and scalable GKE environment</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/spanner/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-spanner.png" alt="Spanner">
-    </div>
-    <div class="tool-card-content">
-      <h3>Spanner Tools</h3>
-      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
-    </div>
-    <div class="tool-card-content">
-      <h3>MCP Toolbox for Databases</h3>
-      <p>Connect over 30 different data sources to your agents</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/vertex-ai-rag-engine/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI RAG Engine</h3>
-      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/vertex-ai-search/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI Search</h3>
-      <p>Search across your private, configured data stores in Vertex AI Search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/pubsub/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-pubsub.png" alt="Pub/Sub">
-    </div>
-    <div class="tool-card-content">
-      <h3>Pub/Sub Tools</h3>
-      <p>Publish, pull, and acknowledge messages from Google Cloud Pub/Sub</p>
-    </div>
-  </a>
-
-</div>
+{{$ render_catalog('tools/google-cloud/*.md') $}}
 
 ================
 File: docs/tools/google-cloud/mcp-toolbox-for-databases.md
 ================
+---
+catalog_title: MCP Toolbox for Databases
+catalog_description: Connect over 30 different data sources to your agents
+catalog_icon: /adk-docs/assets/tools-mcp-toolbox-for-databases.png
+---
+
 # MCP Toolbox for Databases
 
 <div class="language-support-tag">
@@ -31927,7 +31851,13 @@ For more information, read more about the following features:
 ================
 File: docs/tools/google-cloud/pubsub.md
 ================
-# Pub/Sub tool for ADK
+---
+catalog_title: Pub/Sub Tools
+catalog_description: Publish, pull, and acknowledge messages from Google Cloud Pub/Sub
+catalog_icon: /adk-docs/assets/tools-pubsub.png
+---
+
+# Pub/Sub Tools for ADK
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.22.0</span>
@@ -31988,6 +31918,12 @@ Acknowledges one or more messages on a Pub/Sub subscription.
 ================
 File: docs/tools/google-cloud/spanner.md
 ================
+---
+catalog_title: Spanner Tools
+catalog_description: Interact with Spanner to retrieve data, search, and execute SQL
+catalog_icon: /adk-docs/assets/tools-spanner.png
+---
+
 # Spanner database tool for ADK
 
 <div class="language-support-tag">
@@ -32013,6 +31949,12 @@ They are packaged in the toolset `SpannerToolset`.
 ================
 File: docs/tools/google-cloud/vertex-ai-rag-engine.md
 ================
+---
+catalog_title: Vertex AI RAG Engine
+catalog_description: Perform private data retrieval using Vertex AI RAG Engine
+catalog_icon: /adk-docs/assets/tools-vertex-ai.png
+---
+
 # Vertex AI RAG Engine tool for ADK
 
 <div class="language-support-tag">
@@ -32040,6 +31982,12 @@ Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples
 ================
 File: docs/tools/google-cloud/vertex-ai-search.md
 ================
+---
+catalog_title: Vertex AI Search
+catalog_description: Search across your private, configured data stores in Vertex AI Search
+catalog_icon: /adk-docs/assets/tools-vertex-ai.png
+---
+
 # Vertex AI Search tool for ADK
 
 <div class="language-support-tag">
@@ -32066,21 +32014,33 @@ of the tool, see
 ================
 File: docs/tools/third-party/ag-ui.md
 ================
+---
+catalog_title: AG-UI
+catalog_description: Build interactive chat UIs with streaming, state sync, and agentic actions
+catalog_icon: /adk-docs/assets/tools-ag-ui.png
+---
+
 # Build chat experiences with AG-UI and CopilotKit
 
-As an agent builder, you want users to interact with your agents through a rich
-and responsive interface. Building UIs from scratch requires a lot of effort,
-especially to support streaming events and client state. That's exactly what
-[AG-UI](https://docs.ag-ui.com/) was designed for - rich user experiences
-directly connected to an agent.
+Turn your ADK agents into full-featured applications with rich, responsive UIs.
+[AG-UI](https://docs.ag-ui.com/) is an open protocol that handles streaming
+events, client state, and bi-directional communication between your agents and
+users.
 
 [AG-UI](https://github.com/ag-ui-protocol/ag-ui) provides a consistent interface
 to empower rich clients across technology stacks, from mobile to the web and
 even the command line. There are a number of different clients that support
 AG-UI:
 
-- [CopilotKit](https://copilotkit.ai) provides tooling and components to tightly integrate your agent with web applications
-- Clients for [Kotlin](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/kotlin), [Java](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/java), [Go](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/go/example/client), and [CLI implementations](https://github.com/ag-ui-protocol/ag-ui/tree/main/apps/client-cli-example/src) in TypeScript
+- [CopilotKit](https://copilotkit.ai) provides tooling and components to tightly
+  integrate your agent with web applications
+- Clients for
+  [Kotlin](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/kotlin),
+  [Java](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/java),
+  [Go](https://github.com/ag-ui-protocol/ag-ui/tree/main/sdks/community/go/example/client),
+  and [CLI
+  implementations](https://github.com/ag-ui-protocol/ag-ui/tree/main/apps/client-cli-example/src)
+  in TypeScript
 
 This tutorial uses CopilotKit to create a sample app backed by an ADK agent that
 demonstrates some of the features supported by AG-UI.
@@ -32090,9 +32050,33 @@ demonstrates some of the features supported by AG-UI.
 To get started, let's create a sample application with an ADK agent and a simple
 web client:
 
-```
-npx create-ag-ui-app@latest --adk
-```
+1. Create the app:
+
+    ```bash
+    npx copilotkit@latest create -f adk
+    ```
+
+2. Set your Google API key:
+
+    ```bash
+    export GOOGLE_API_KEY="your-api-key"
+    ```
+
+3. Install dependencies and run:
+
+    ```bash
+    npm install && npm run dev
+    ```
+
+This starts two servers:
+
+- **http://localhost:3000** - The web UI (open this in your browser)
+- **http://localhost:8000** - The ADK agent API (backend only)
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to chat with
+your agent.
+
+## Features
 
 ### Chat
 
@@ -32113,27 +32097,27 @@ streaming messages between your users and agents:
 Learn more about the chat UI
 [in the CopilotKit docs](https://docs.copilotkit.ai/adk/agentic-chat-ui).
 
-### Tool Based Generative UI (Rendering Tools)
+### Generative UI
 
 AG-UI lets you share tool information with a Generative UI so that it can be
 displayed to users:
 
 ```tsx title="src/app/page.tsx"
-useCopilotAction({
-  name: "get_weather",
-  description: "Get the weather for a given location.",
-  available: "disabled",
-  parameters: [
-    { name: "location", type: "string", required: true },
-  ],
-  render: ({ args }) => {
-    return <WeatherCard location={args.location} themeColor={themeColor} />
+useRenderToolCall(
+  {
+    name: "get_weather",
+    description: "Get the weather for a given location.",
+    parameters: [{ name: "location", type: "string", required: true }],
+    render: ({ args }) => {
+      return <WeatherCard location={args.location} themeColor={themeColor} />;
+    },
   },
-});
+  [themeColor],
+);
 ```
 
-Learn more about the Tool-based Generative UI
-[in the CopilotKit docs](https://docs.copilotkit.ai/adk/generative-ui/tool-based).
+Learn more about Generative UI
+[in the CopilotKit docs](https://docs.copilotkit.ai/adk/generative-ui).
 
 ### Shared State
 
@@ -32147,7 +32131,7 @@ const { state, setState } = useCoAgent<AgentState>({
   name: "my_agent",
   initialState: {
     proverbs: [
-      "CopilotKit may be new, but its the best thing since sliced bread.",
+      "A journey of a thousand miles begins with a single step.",
     ],
   },
 })
@@ -32156,18 +32140,13 @@ const { state, setState } = useCoAgent<AgentState>({
 Learn more about shared state
 [in the CopilotKit docs](https://docs.copilotkit.ai/adk/shared-state).
 
-### Try it out!
-
-```
-npm install && npm run dev
-```
-
 ## Resources
 
-To see what other features you can build into your UI with AG-UI, refer to the CopilotKit docs:
+To see what other features you can build into your UI with AG-UI, refer to the
+CopilotKit docs:
 
 - [Agentic Generative UI](https://docs.copilotkit.ai/adk/generative-ui/agentic)
-- [Human in the Loop](https://docs.copilotkit.ai/adk/human-in-the-loop/agent)
+- [Human in the Loop](https://docs.copilotkit.ai/adk/human-in-the-loop)
 - [Frontend Actions](https://docs.copilotkit.ai/adk/frontend-actions)
 
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
@@ -32175,6 +32154,12 @@ Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 ================
 File: docs/tools/third-party/asana.md
 ================
+---
+catalog_title: Asana
+catalog_description: Manage projects, tasks, and goals for team collaboration
+catalog_icon: /adk-docs/assets/tools-asana.png
+---
+
 # Asana
 
 <div class="language-support-tag">
@@ -32295,6 +32280,12 @@ Object search | Quick typeahead search across Asana objects
 ================
 File: docs/tools/third-party/atlassian.md
 ================
+---
+catalog_title: Atlassian
+catalog_description: Manage issues, search pages, and update team content
+catalog_icon: /adk-docs/assets/tools-atlassian.png
+---
+
 # Atlassian
 
 <div class="language-support-tag">
@@ -32435,6 +32426,12 @@ Tool | Description
 ================
 File: docs/tools/third-party/cartesia.md
 ================
+---
+catalog_title: Cartesia
+catalog_description: Generate speech, localize voices, and create audio content
+catalog_icon: /adk-docs/assets/tools-cartesia.png
+---
+
 # Cartesia
 
 <div class="language-support-tag">
@@ -32567,6 +32564,12 @@ Variable | Description | Required
 ================
 File: docs/tools/third-party/chroma.md
 ================
+---
+catalog_title: Chroma
+catalog_description: Store and retrieve information using semantic vector search
+catalog_icon: /adk-docs/assets/tools-chroma.png
+---
+
 # Chroma
 
 <div class="language-support-tag">
@@ -32763,6 +32766,12 @@ Variable | Description
 ================
 File: docs/tools/third-party/daytona.md
 ================
+---
+catalog_title: Daytona
+catalog_description: Execute code, run shell commands, and manage files in secure sandboxes
+catalog_icon: /adk-docs/assets/plugins-daytona.png
+---
+
 # Daytona
 
 <div class="language-support-tag">
@@ -32841,6 +32850,12 @@ verifies code in secure sandboxes, check out
 ================
 File: docs/tools/third-party/elevenlabs.md
 ================
+---
+catalog_title: ElevenLabs
+catalog_description: Generate speech, clone voices, transcribe audio, and create sound effects
+catalog_icon: /adk-docs/assets/tools-elevenlabs.png
+---
+
 # ElevenLabs
 
 <div class="language-support-tag">
@@ -32852,6 +32867,7 @@ connects your ADK agent to the [ElevenLabs](https://elevenlabs.io/) AI audio
 platform. This integration gives your agent the ability to generate speech,
 clone voices, transcribe audio, create sound effects, and build conversational
 AI experiences using natural language.
+
 
 ## Use cases
 
@@ -33016,6 +33032,12 @@ The `ELEVENLABS_MCP_OUTPUT_MODE` environment variable supports three modes:
 ================
 File: docs/tools/third-party/github.md
 ================
+---
+catalog_title: GitHub
+catalog_description: Analyze code, manage issues and PRs, and automate workflows
+catalog_icon: /adk-docs/assets/tools-github.png
+---
+
 # GitHub
 
 <div class="language-support-tag">
@@ -33155,6 +33177,12 @@ available toolsets and read-only mode:
 ================
 File: docs/tools/third-party/gitlab.md
 ================
+---
+catalog_title: GitLab
+catalog_description: Perform semantic code search, inspect pipelines, manage merge requests
+catalog_icon: /adk-docs/assets/tools-gitlab.png
+---
+
 # GitLab
 
 <div class="language-support-tag">
@@ -33293,6 +33321,12 @@ Tool | Description
 ================
 File: docs/tools/third-party/hugging-face.md
 ================
+---
+catalog_title: Hugging Face
+catalog_description: Access models, datasets, research papers, and AI tools
+catalog_icon: /adk-docs/assets/tools-hugging-face.png
+---
+
 # Hugging Face
 
 <div class="language-support-tag">
@@ -33492,185 +33526,19 @@ hide:
 
 # Third-Party Tools
 
-Check out the following third-party tools that you can use with ADK agents:
+Check out the following third-party tools and integrations you can use with ADK agents:
 
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/third-party/asana/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-asana.png" alt="Asana">
-    </div>
-    <div class="tool-card-content">
-      <h3>Asana</h3>
-      <p>Manage projects, tasks, and goals for team collaboration</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
-    </div>
-    <div class="tool-card-content">
-      <h3>Atlassian</h3>
-      <p>Manage issues, search pages, and update team content</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/cartesia/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-cartesia.png" alt="Cartesia">
-    </div>
-    <div class="tool-card-content">
-      <h3>Cartesia</h3>
-      <p>Generate speech, localize voices, and create audio content</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/chroma/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-chroma.png" alt="Chroma">
-    </div>
-    <div class="tool-card-content">
-      <h3>Chroma</h3>
-      <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/daytona/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/plugins-daytona.png" alt="Daytona">
-    </div>
-    <div class="tool-card-content">
-      <h3>Daytona</h3>
-      <p>Execute code, run shell commands, and manage files in secure sandboxes</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/elevenlabs/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-elevenlabs.png" alt="ElevenLabs">
-    </div>
-    <div class="tool-card-content">
-      <h3>ElevenLabs</h3>
-      <p>Generate speech, clone voices, transcribe audio, and create sound effects</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-github.png" alt="GitHub">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitHub</h3>
-      <p>Analyze code, manage issues and PRs, and automate workflows</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gitlab.png" alt="GitLab">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitLab</h3>
-      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-hugging-face.png" alt="Hugging Face">
-    </div>
-    <div class="tool-card-content">
-      <h3>Hugging Face</h3>
-      <p>Access models, datasets, research papers, and AI tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-linear.png" alt="Linear">
-    </div>
-    <div class="tool-card-content">
-      <h3>Linear</h3>
-      <p>Manage issues, track projects, and streamline development</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/mongodb/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-mongodb.png" alt="MongoDB">
-    </div>
-    <div class="tool-card-content">
-      <h3>MongoDB</h3>
-      <p>Query collections, manage databases, and analyze schemas</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/n8n/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-n8n.png" alt="n8n">
-    </div>
-    <div class="tool-card-content">
-      <h3>n8n</h3>
-      <p>Trigger automated workflows, connect apps, and process data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-notion.png" alt="Notion">
-    </div>
-    <div class="tool-card-content">
-      <h3>Notion</h3>
-      <p>Search workspaces, create pages, and manage tasks and databases</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/postman/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-postman.png" alt="Postman">
-    </div>
-    <div class="tool-card-content">
-      <h3>Postman</h3>
-      <p>Manage API collections, workspaces, and generate client code</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/paypal/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-paypal.png" alt="Paypal">
-    </div>
-    <div class="tool-card-content">
-      <h3>Paypal</h3>
-      <p>Manage payments, send invoices, and handle subscriptions</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/qdrant/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-qdrant.png" alt="Qdrant">
-    </div>
-    <div class="tool-card-content">
-      <h3>Qdrant</h3>
-      <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/stripe/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-stripe.png" alt="Stripe">
-    </div>
-    <div class="tool-card-content">
-      <h3>Stripe</h3>
-      <p>Manage payments, customers, subscriptions, and invoices</p>
-    </div>
-  </a>
-
-</div>
+{{$ render_catalog('tools/third-party/*.md') $}}
 
 ================
 File: docs/tools/third-party/linear.md
 ================
+---
+catalog_title: Linear
+catalog_description: Manage issues, track projects, and streamline development
+catalog_icon: /adk-docs/assets/tools-linear.png
+---
+
 # Linear
 
 <div class="language-support-tag">
@@ -33875,6 +33743,12 @@ Tool | Description
 ================
 File: docs/tools/third-party/mongodb.md
 ================
+---
+catalog_title: MongoDB
+catalog_description: Query collections, manage databases, and analyze schemas
+catalog_icon: /adk-docs/assets/tools-mongodb.png
+---
+
 # MongoDB
 
 <div class="language-support-tag">
@@ -34082,6 +33956,12 @@ You can disable specific tools or categories using `MDB_MCP_DISABLED_TOOLS`:
 ================
 File: docs/tools/third-party/n8n.md
 ================
+---
+catalog_title: n8n
+catalog_description: Trigger automated workflows, connect apps, and process data
+catalog_icon: /adk-docs/assets/tools-n8n.png
+---
+
 # n8n
 
 <div class="language-support-tag">
@@ -34285,6 +34165,12 @@ criteria:
 ================
 File: docs/tools/third-party/notion.md
 ================
+---
+catalog_title: Notion
+catalog_description: Search workspaces, create pages, and manage tasks and databases
+catalog_icon: /adk-docs/assets/tools-notion.png
+---
+
 # Notion
 
 <div class="language-support-tag">
@@ -34418,6 +34304,12 @@ Tool <img width="200px"/> | Description
 ================
 File: docs/tools/third-party/paypal.md
 ================
+---
+catalog_title: Paypal
+catalog_description: Manage payments, send invoices, and handle subscriptions
+catalog_icon: /adk-docs/assets/tools-paypal.png
+---
+
 # PayPal
 
 <div class="language-support-tag">
@@ -34679,6 +34571,12 @@ specific tool identifiers.
 ================
 File: docs/tools/third-party/postman.md
 ================
+---
+catalog_title: Postman
+catalog_description: Manage API collections, workspaces, and generate client code
+catalog_icon: /adk-docs/assets/tools-postman.png
+---
+
 # Postman
 
 <div class="language-support-tag">
@@ -34871,6 +34769,12 @@ For EU region, use `--region eu` (local) or `https://mcp.eu.postman.com` (remote
 ================
 File: docs/tools/third-party/qdrant.md
 ================
+---
+catalog_title: Qdrant
+catalog_description: Store and retrieve information using semantic vector search
+catalog_icon: /adk-docs/assets/tools-qdrant.png
+---
+
 # Qdrant
 
 <div class="language-support-tag">
@@ -35016,6 +34920,12 @@ env={
 ================
 File: docs/tools/third-party/stripe.md
 ================
+---
+catalog_title: Stripe
+catalog_description: Manage payments, customers, subscriptions, and invoices
+catalog_icon: /adk-docs/assets/tools-stripe.png
+---
+
 # Stripe
 
 <div class="language-support-tag">
@@ -35224,337 +35134,21 @@ hide:
   - toc
 ---
 
-# Tools for Agents
+# Tools and Integrations for Agents
 
-Check out the following pre-built tools that you can use with ADK agents:
+Check out the following pre-built tools and integrations that you can use with ADK agents:
 
-### Gemini tools
+### Gemini
 
-<div class="tool-card-grid">
+{{$ render_catalog('tools/gemini-api/*.md') $}}
 
-  <a href="/adk-docs/tools/gemini-api/google-search/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-google-search.png" alt="Google Search">
-    </div>
-    <div class="tool-card-content">
-      <h3>Google Search</h3>
-      <p>Perform web searches using Google Search with Gemini</p>
-    </div>
-  </a>
+### Google Cloud
 
-  <a href="/adk-docs/tools/gemini-api/code-execution/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
-    </div>
-    <div class="tool-card-content">
-      <h3>Code Execution</h3>
-      <p>Execute code and debug using Gemini models</p>
-    </div>
-  </a>
+{{$ render_catalog('tools/google-cloud/*.md') $}}
 
-  <a href="/adk-docs/tools/gemini-api/computer-use/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gemini.png" alt="Gemini">
-    </div>
-    <div class="tool-card-content">
-      <h3>Computer Use</h3>
-      <p>Operate computer user interfaces using Gemini models</p>
-    </div>
-  </a>
+### Third-party
 
-</div>
-
-### Google Cloud tools
-
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/google-cloud/apigee-api-hub/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-apigee.png" alt="Apigee">
-    </div>
-    <div class="tool-card-content">
-      <h3>Apigee API Hub</h3>
-      <p>Turn any documented API from Apigee API hub into a tool</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/api-registry/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/developer-tools-color.svg" alt="Cloud API Registry">
-    </div>
-    <div class="tool-card-content">
-      <h3>API Registry</h3>
-      <p>Dynamically connect with Google Cloud services as MCP tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/application-integration/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-apigee-integration.png" alt="Apigee Integration">
-    </div>
-    <div class="tool-card-content">
-      <h3>Application Integration</h3>
-      <p>Link your agents to enterprise apps using Integration Connectors</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/observability/bigquery-agent-analytics/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Agent Analytics</h3>
-      <p>Analyze and debug agent behavior at scale</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/bigquery/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigquery.png" alt="BigQuery">
-    </div>
-    <div class="tool-card-content">
-      <h3>BigQuery Tools</h3>
-      <p>Connect with BigQuery to retrieve data and perform analysis</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/bigtable/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-bigtable.png" alt="Bigtable">
-    </div>
-    <div class="tool-card-content">
-      <h3>Bigtable Tools</h3>
-      <p>Interact with Bigtable to retrieve data and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/gke-code-executor/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gke.png" alt="Google Kubernetes Engine">
-    </div>
-    <div class="tool-card-content">
-      <h3>GKE Code Executor</h3>
-      <p>Run AI-generated code in a secure and scalable GKE environment</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/spanner/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-spanner.png" alt="Spanner">
-    </div>
-    <div class="tool-card-content">
-      <h3>Spanner Tools</h3>
-      <p>Interact with Spanner to retrieve data, search, and execute SQL</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/mcp-toolbox-for-databases/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-mcp-toolbox-for-databases.png" alt="MCP Toolbox for Databases">
-    </div>
-    <div class="tool-card-content">
-      <h3>MCP Toolbox for Databases</h3>
-      <p>Connect over 30 different data sources to your agents</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/vertex-ai-rag-engine/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI RAG Engine</h3>
-      <p>Perform private data retrieval using Vertex AI RAG Engine</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/google-cloud/vertex-ai-search/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-vertex-ai.png" alt="Vertex AI">
-    </div>
-    <div class="tool-card-content">
-      <h3>Vertex AI Search</h3>
-      <p>Search across your private, configured data stores in Vertex AI Search</p>
-    </div>
-  </a>
-
-</div>
-
-### Third-party tools
-
-<div class="tool-card-grid">
-
-  <a href="/adk-docs/tools/third-party/asana/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-asana.png" alt="Asana">
-    </div>
-    <div class="tool-card-content">
-      <h3>Asana</h3>
-      <p>Manage projects, tasks, and goals for team collaboration</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/atlassian/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-atlassian.png" alt="Atlassian">
-    </div>
-    <div class="tool-card-content">
-      <h3>Atlassian</h3>
-      <p>Manage issues, search pages, and update team content</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/cartesia/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-cartesia.png" alt="Cartesia">
-    </div>
-    <div class="tool-card-content">
-      <h3>Cartesia</h3>
-      <p>Generate speech, localize voices, and create audio content</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/chroma/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-chroma.png" alt="Chroma">
-    </div>
-    <div class="tool-card-content">
-      <h3>Chroma</h3>
-      <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/daytona/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/plugins-daytona.png" alt="Daytona">
-    </div>
-    <div class="tool-card-content">
-      <h3>Daytona</h3>
-      <p>Execute code, run shell commands, and manage files in secure sandboxes</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/elevenlabs/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-elevenlabs.png" alt="ElevenLabs">
-    </div>
-    <div class="tool-card-content">
-      <h3>ElevenLabs</h3>
-      <p>Generate speech, clone voices, transcribe audio, and create sound effects</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/github/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-github.png" alt="GitHub">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitHub</h3>
-      <p>Analyze code, manage issues and PRs, and automate workflows</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/gitlab/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-gitlab.png" alt="GitLab">
-    </div>
-    <div class="tool-card-content">
-      <h3>GitLab</h3>
-      <p>Perform semantic code search, inspect pipelines, manage merge requests</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/hugging-face/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-hugging-face.png" alt="Hugging Face">
-    </div>
-    <div class="tool-card-content">
-      <h3>Hugging Face</h3>
-      <p>Access models, datasets, research papers, and AI tools</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/linear/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-linear.png" alt="Linear">
-    </div>
-    <div class="tool-card-content">
-      <h3>Linear</h3>
-      <p>Manage issues, track projects, and streamline development</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/mongodb/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-mongodb.png" alt="MongoDB">
-    </div>
-    <div class="tool-card-content">
-      <h3>MongoDB</h3>
-      <p>Query collections, manage databases, and analyze schemas</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/n8n/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-n8n.png" alt="n8n">
-    </div>
-    <div class="tool-card-content">
-      <h3>n8n</h3>
-      <p>Trigger automated workflows, connect apps, and process data</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/notion/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-notion.png" alt="Notion">
-    </div>
-    <div class="tool-card-content">
-      <h3>Notion</h3>
-      <p>Search workspaces, create pages, and manage tasks and databases</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/postman/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-postman.png" alt="Postman">
-    </div>
-    <div class="tool-card-content">
-      <h3>Postman</h3>
-      <p>Manage API collections, workspaces, and generate client code</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/paypal/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-paypal.png" alt="Paypal">
-    </div>
-    <div class="tool-card-content">
-      <h3>Paypal</h3>
-      <p>Manage payments, send invoices, and handle subscriptions</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/qdrant/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-qdrant.png" alt="Qdrant">
-    </div>
-    <div class="tool-card-content">
-      <h3>Qdrant</h3>
-      <p>Store and retrieve information using semantic vector search</p>
-    </div>
-  </a>
-
-  <a href="/adk-docs/tools/third-party/stripe/" class="tool-card">
-    <div class="tool-card-image-wrapper">
-      <img src="/adk-docs/assets/tools-stripe.png" alt="Stripe">
-    </div>
-    <div class="tool-card-content">
-      <h3>Stripe</h3>
-      <p>Manage payments, customers, subscriptions, and invoices</p>
-    </div>
-  </a>
-
-</div>
+{{$ render_catalog('tools/third-party/*.md') $}}
 
 ## Use pre-built tools with ADK agents
 

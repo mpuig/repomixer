@@ -5084,6 +5084,7 @@ await Runner.run(
 -   [LangDB AI](https://docs.langdb.ai/getting-started/working-with-agent-frameworks/working-with-openai-agents-sdk)
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
+-   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
 
 ================
 File: docs/ko/usage.md
@@ -13354,6 +13355,7 @@ await Runner.run(
 -   [LangDB AI](https://docs.langdb.ai/getting-started/working-with-agent-frameworks/working-with-openai-agents-sdk)
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
+-   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
 
 ================
 File: docs/zh/usage.md
@@ -16456,6 +16458,7 @@ await Runner.run(
 -   [LangDB AI](https://docs.langdb.ai/getting-started/working-with-agent-frameworks/working-with-openai-agents-sdk)
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
+-   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
 
 ================
 File: docs/usage.md
