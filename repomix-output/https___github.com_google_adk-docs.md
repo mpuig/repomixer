@@ -10526,6 +10526,22 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
     * `--help`: Show the help message and exit.
 
+    ##### Passing gcloud CLI Arguments
+
+    To pass specific gcloud flags through the `adk deploy cloud_run` command, use the double-dash separator (`--`) after the ADK arguments. Any flags (except ADK-managed) following the `--` will be passed directly to the underlying gcloud command.
+
+    ###### Syntax Example:
+
+    ```bash
+    adk deploy cloud_run [ADK_FLAGS] -- [GCLOUD_FLAGS]
+    ```
+
+    ###### Example:
+
+    ```bash
+    adk deploy cloud_run --project=[PROJECT_ID] --region=[REGION] path/to/my_agent    -- --no-allow-unauthenticated --min-instances=2
+    ```
+
     ##### Authenticated access
     During the deployment process, you might be prompted: `Allow unauthenticated invocations to [your-service-name] (y/N)?`.
 
@@ -16227,7 +16243,7 @@ your own agent with our build guides:
 ================
 File: docs/grounding/google_search_grounding.md
 ================
-# Understanding Google Search Grounding
+# Google Search Grounding for agents
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
@@ -16578,9 +16594,74 @@ Google Search Grounding transforms AI agents from static knowledge repositories 
 The grounding process seamlessly connects user queries to Google's vast search index, enriching responses with up-to-date context while maintaining the conversational flow. With proper implementation and display of grounded responses, your agents become powerful tools for information discovery and decision-making.
 
 ================
+File: docs/grounding/index.md
+================
+# Grounding agents with data
+
+Grounding is the process that connects your AI agents to external information sources, allowing them to generate more accurate, current, and verifiable responses. By grounding agent responses in authoritative data, you can reduce hallucinations and provide users with answers backed by reliable sources.
+
+ADK supports multiple grounding approaches:
+
+- **Google Search Grounding**: Connect agents to real-time web information for queries requiring current data like news, weather, or facts that may have changed since the model's training.
+- **Vertex AI Search Grounding**: Connect agents to your organization's private documents and enterprise data for queries requiring proprietary information.
+- **Agentic RAG**: Build agents that reason about how to search, constructing queries and filters dynamically using Vector Search 2.0, Vertex AI RAG Engine, or other retrieval systems.
+
+<div class="grid cards" markdown>
+
+-   :material-magnify: **Google Search Grounding**
+
+    ---
+
+    Enable your agents to access real-time, authoritative information from the web. Learn how to set up Google Search grounding, understand the data flow, interpret grounded responses, and display citations to users.
+
+    - [Understanding Google Search Grounding](google_search_grounding.md)
+
+-   :material-file-search: **Vertex AI Search Grounding**
+
+    ---
+
+    Connect your agents to indexed enterprise documents and private data repositories. Learn how to configure Vertex AI Search datastores, ground responses in your organization's knowledge base, and provide source attribution.
+
+    - [Understanding Vertex AI Search Grounding](vertex_ai_search_grounding.md)
+
+-   :material-post: **Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK**
+
+    ---
+
+    Learn how to build an Agentic RAG system that goes beyond simple retrieve-then-generate patterns. This article walks through building a travel agent that parses user intent, constructs metadata filters, and searches 2,000 London Airbnb listings using hybrid search with Vector Search 2.0 and ADK.
+
+    - [Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK](https://medium.com/google-cloud/10-minute-agentic-rag-with-the-new-vector-search-2-0-and-adk-655fff0bacac)
+
+-   :material-notebook: **Vector Search 2.0 Travel Agent Notebook**
+
+    ---
+
+    A hands-on Jupyter notebook companion to the Agentic RAG blog post. Build an end-to-end travel agent using real Airbnb data, auto-embeddings, hybrid search with RRF ranking, and ADK tool integration.
+
+    - [Vector Search 2.0 Travel Agent Notebook](https://github.com/google/adk-samples/blob/main/python/notebooks/grounding/vectorsearch2_travel_agent.ipynb)
+
+-   :material-text-search: **Deep Search Agent**
+
+    ---
+
+    A production-ready fullstack research agent that transforms topics into comprehensive reports with citations. Features a two-phase workflow with human-in-the-loop plan approval, iterative search refinement, and multi-agent architecture for planning, researching, critiquing, and composing.
+
+    - [Deep Search Agent](https://github.com/google/adk-samples/tree/main/python/agents/deep-search)
+
+-   :material-file-document-multiple: **RAG Agent**
+
+    ---
+
+    A document Q&A agent powered by Vertex AI RAG Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
+
+    - [RAG Agent](https://github.com/google/adk-samples/tree/main/python/agents/RAG)
+
+</div>
+
+================
 File: docs/grounding/vertex_ai_search_grounding.md
 ================
-# Understanding Vertex AI Search Grounding
+# Vertex AI Search Grounding for agents
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
@@ -17511,6 +17592,8 @@ You can customize the plugin using `BigQueryLoggerConfig`.
 -   **`log_multi_modal_content`** (`bool`, default: `True`): Whether to log detailed content parts (including GCS references).
 -   **`queue_max_size`** (`int`, default: `10000`): The maximum number of events to hold in the in-memory queue before dropping new events.
 -   **`retry_config`** (`RetryConfig`, default: `RetryConfig()`): Configuration for retrying failed BigQuery writes (attributes: `max_retries`, `initial_delay`, `multiplier`, `max_delay`).
+-   **`log_session_metadata`** (`bool`, default: `True`): If True, logs metadata from the `session` object (e.g., `session.metadata`) into the `attributes` column.
+-   **`custom_tags`** (`Dict[str, Any]`, default: `{}`): A dictionary of static tags (e.g., `{"env": "prod", "version": "1.0"}`) to be included in the `attributes` column for every event.
 
 
 The following code sample shows how to define a configuration for the
@@ -17589,7 +17672,7 @@ CREATE TABLE `your-gcp-project-id.adk_agent_logs.agent_events_v2`
     part_attributes STRING,
     storage_mode STRING
   >> OPTIONS(description="Detailed content parts for multi-modal data."),
-  attributes JSON OPTIONS(description="Arbitrary key-value pairs for additional metadata (e.g., 'root_agent_name', 'model_version', 'usage_metadata')."),
+  attributes JSON OPTIONS(description="Arbitrary key-value pairs for additional metadata (e.g., 'root_agent_name', 'model_version', 'usage_metadata', 'session_metadata', 'custom_tags')."),
   latency_ms JSON OPTIONS(description="Latency measurements (e.g., total_ms)."),
   status STRING OPTIONS(description="The outcome of the event, typically 'OK' or 'ERROR'."),
   error_message STRING OPTIONS(description="Populated if an error occurs."),
@@ -17739,6 +17822,35 @@ These events track the execution of tools by the agent.
       <td><p><pre>{}</pre></p></td>
       <td><p><pre>
 {"tool": "list_datasets", "args": {}}
+</pre></p></td>
+    </tr>
+  </tbody>
+</table>
+
+#### State Management
+
+These events track changes to the agent's state, typically triggered by tools.
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Event Type</strong></th>
+      <th><strong>Content (JSON) Structure</strong></th>
+      <th><strong>Attributes (JSON)</strong></th>
+      <th><strong>Example Content</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><p><pre>STATE_DELTA</pre></p></td>
+      <td><p><pre>
+{
+  "state_delta": {...}
+}
+</pre></p></td>
+      <td><p><pre>{}</pre></p></td>
+      <td><p><pre>
+{"state_delta": {"order_id": "123", "status": "confirmed"}}
 </pre></p></td>
     </tr>
   </tbody>
