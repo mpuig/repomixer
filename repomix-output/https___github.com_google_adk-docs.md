@@ -17018,7 +17018,6 @@ File: docs/integrations/ag-ui.md
 catalog_title: AG-UI
 catalog_description: Build interactive chat UIs with streaming, state sync, and agentic actions
 catalog_icon: /adk-docs/integrations/assets/ag-ui.png
-catalog_tags: ["ui"]
 ---
 
 # AG-UI user interface for ADK
@@ -17313,6 +17312,7 @@ File: docs/integrations/api-registry.md
 catalog_title: API Registry
 catalog_description: Dynamically connect with Google Cloud services as MCP tools
 catalog_icon: /adk-docs/integrations/assets/developer-tools-color.svg
+catalog_tags: ["google", "mcp", "connectors"]
 ---
 
 # Google Cloud API Registry tool for ADK
@@ -17500,6 +17500,7 @@ File: docs/integrations/apigee-api-hub.md
 catalog_title: Apigee API Hub
 catalog_description: Turn any documented API from Apigee API hub into a tool
 catalog_icon: /adk-docs/integrations/assets/apigee.png
+catalog_tags: ["connectors", "google"]
 ---
 
 # Apigee API Hub tool for ADK
@@ -17630,6 +17631,7 @@ File: docs/integrations/application-integration.md
 catalog_title: Application Integration
 catalog_description: Link your agents to enterprise apps using Integration Connectors
 catalog_icon: /adk-docs/integrations/assets/apigee-integration.png
+catalog_tags: ["google", "connectors"]
 ---
 
 # Google Cloud Application Integration tool for ADK
@@ -18190,6 +18192,7 @@ File: docs/integrations/asana.md
 catalog_title: Asana
 catalog_description: Manage projects, tasks, and goals for team collaboration
 catalog_icon: /adk-docs/integrations/assets/asana.png
+catalog_tags: ["mcp"]
 ---
 
 # Asana MCP tool for ADK
@@ -18316,6 +18319,7 @@ File: docs/integrations/atlassian.md
 catalog_title: Atlassian
 catalog_description: Manage issues, search pages, and update team content
 catalog_icon: /adk-docs/integrations/assets/atlassian.png
+catalog_tags: ["mcp"]
 ---
 
 # Atlassian MCP tool for ADK
@@ -19142,6 +19146,7 @@ File: docs/integrations/bigquery.md
 catalog_title: BigQuery Tools
 catalog_description: Connect with BigQuery to retrieve data and perform analysis
 catalog_icon: /adk-docs/integrations/assets/bigquery.png
+catalog_tags: ["data", "google"]
 ---
 
 # BigQuery tool for ADK
@@ -19175,6 +19180,7 @@ File: docs/integrations/bigtable.md
 catalog_title: Bigtable Tools
 catalog_description: Interact with Bigtable to retrieve data and execute SQL
 catalog_icon: /adk-docs/integrations/assets/bigtable.png
+catalog_tags: ["data", "google"]
 ---
 
 # Bigtable tool for ADK
@@ -19204,6 +19210,7 @@ File: docs/integrations/cartesia.md
 catalog_title: Cartesia
 catalog_description: Generate speech, localize voices, and create audio content
 catalog_icon: /adk-docs/integrations/assets/cartesia.png
+catalog_tags: ["mcp"]
 ---
 
 # Cartesia MCP tool for ADK
@@ -19342,6 +19349,7 @@ File: docs/integrations/chroma.md
 catalog_title: Chroma
 catalog_description: Store and retrieve information using semantic vector search
 catalog_icon: /adk-docs/integrations/assets/chroma.png
+catalog_tags: ["data","mcp"]
 ---
 
 # Chroma MCP tool for ADK
@@ -19544,7 +19552,7 @@ File: docs/integrations/cloud-trace.md
 catalog_title: Google Cloud Trace
 catalog_description: Monitor, debug, and trace ADK agent interactions
 catalog_icon: /adk-docs/integrations/assets/cloud-trace.svg
-catalog_tags: ["observability", "google-cloud"]
+catalog_tags: ["observability", "google"]
 ---
 
 # Google Cloud Trace observability for ADK
@@ -19819,6 +19827,7 @@ File: docs/integrations/code-exec-agent-engine.md
 catalog_title: Code Execution Tool with Agent Engine
 catalog_description: Run AI-generated code in a secure and scalable GKE environment
 catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_tags: ["code", "google"]
 ---
 
 # Agent Engine Code Execution tool for ADK
@@ -20066,6 +20075,7 @@ File: docs/integrations/code-execution.md
 catalog_title: Code Execution
 catalog_description: Execute code and debug using Gemini models
 catalog_icon: /adk-docs/integrations/assets/gemini-spark.svg
+catalog_tags: ["code", "google"]
 ---
 
 # Gemini API Code Execution tool for ADK
@@ -20103,6 +20113,7 @@ File: docs/integrations/computer-use.md
 catalog_title: Computer Use
 catalog_description: Operate computer user interfaces using Gemini models
 catalog_icon: /adk-docs/integrations/assets/gemini-spark.svg
+catalog_tags: ["google"]
 ---
 
 # Gemini API Computer Use tool for ADK
@@ -20218,6 +20229,7 @@ File: docs/integrations/data-agent.md
 catalog_title: Data Agents
 catalog_description: Analyze data with AI-powered agents
 catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_tags: ["data", "google"]
 ---
 
 # Google Cloud Data Agents tool for ADK
@@ -20257,6 +20269,7 @@ File: docs/integrations/daytona.md
 catalog_title: Daytona
 catalog_description: Execute code, run shell commands, and manage files in secure sandboxes
 catalog_icon: /adk-docs/integrations/assets/daytona.png
+catalog_tags: ["code"]
 ---
 
 # Daytona plugin for ADK
@@ -20341,6 +20354,7 @@ File: docs/integrations/elevenlabs.md
 catalog_title: ElevenLabs
 catalog_description: Generate speech, clone voices, transcribe audio, and create sound effects
 catalog_icon: /adk-docs/integrations/assets/elevenlabs.png
+catalog_tags: ["mcp"]
 ---
 
 # ElevenLabs MCP tool for ADK
@@ -20523,6 +20537,7 @@ File: docs/integrations/express-mode.md
 catalog_title: Vertex AI express mode
 catalog_description: Try development with Vertex AI services at no cost
 catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_tags: ["google"]
 ---
 
 # Google Cloud Vertex AI express mode for ADK
@@ -20879,6 +20894,7 @@ File: docs/integrations/github.md
 catalog_title: GitHub
 catalog_description: Analyze code, manage issues and PRs, and automate workflows
 catalog_icon: /adk-docs/integrations/assets/github.png
+catalog_tags: ["code"]
 ---
 
 # GitHub MCP tool for ADK
@@ -21024,6 +21040,7 @@ File: docs/integrations/gitlab.md
 catalog_title: GitLab
 catalog_description: Perform semantic code search, inspect pipelines, manage merge requests
 catalog_icon: /adk-docs/integrations/assets/gitlab.png
+catalog_tags: ["code"]
 ---
 
 # GitLab MCP tool for ADK
@@ -21168,6 +21185,7 @@ File: docs/integrations/gke-code-executor.md
 catalog_title: GKE Code Executor
 catalog_description: Run AI-generated code in a secure and scalable GKE environment
 catalog_icon: /adk-docs/integrations/assets/gke.png
+catalog_tags: ["code","google"]
 ---
 
 # Google Cloud GKE Code Executor tool for ADK
@@ -21265,6 +21283,7 @@ File: docs/integrations/google-search.md
 catalog_title: Google Search
 catalog_description: Perform web searches using Google Search with Gemini
 catalog_icon: /adk-docs/integrations/assets/google-search.png
+catalog_tags: ["search","google"]
 ---
 
 # Gemini API Google Search tool for ADK
@@ -21326,6 +21345,7 @@ File: docs/integrations/hugging-face.md
 catalog_title: Hugging Face
 catalog_description: Access models, datasets, research papers, and AI tools
 catalog_icon: /adk-docs/integrations/assets/hugging-face.png
+catalog_tags: ["mcp"]
 ---
 
 # Hugging Face MCP tool for ADK
@@ -21529,7 +21549,9 @@ hide:
 
 Check out the following pre-built tools and integrations that you can use with
 ADK agents. For information on building custom tools, see
-[Custom Tools](/adk-docs/tools-custom/).
+[Custom Tools](/adk-docs/tools-custom/). For information on submitting
+integrations to the catalog, see the
+[Contributing Guide](/adk-docs/contributing-guide/).
 
 {{$ render_catalog('integrations/*.md') $}}
 
@@ -21540,6 +21562,7 @@ File: docs/integrations/linear.md
 catalog_title: Linear
 catalog_description: Manage issues, track projects, and streamline development
 catalog_icon: /adk-docs/integrations/assets/linear.png
+catalog_tags: ["mcp"]
 ---
 
 # Linear MCP tool for ADK
@@ -21750,6 +21773,7 @@ File: docs/integrations/mcp-toolbox-for-databases.md
 catalog_title: MCP Toolbox for Databases
 catalog_description: Connect over 30 different data sources to your agents
 catalog_icon: /adk-docs/integrations/assets/mcp-toolbox-for-databases.png
+catalog_tags: ["mcp","data","google"]
 ---
 
 # MCP Toolbox for Databases tool for ADK
@@ -22200,6 +22224,7 @@ File: docs/integrations/mongodb.md
 catalog_title: MongoDB
 catalog_description: Query collections, manage databases, and analyze schemas
 catalog_icon: /adk-docs/integrations/assets/mongodb.png
+catalog_tags: ["data","mcp"]
 ---
 
 # MongoDB MCP tool for ADK
@@ -22634,6 +22659,7 @@ File: docs/integrations/n8n.md
 catalog_title: n8n
 catalog_description: Trigger automated workflows, connect apps, and process data
 catalog_icon: /adk-docs/integrations/assets/n8n.png
+catalog_tags: ["mcp"]
 ---
 
 # n8n MCP tool for ADK
@@ -22843,6 +22869,7 @@ File: docs/integrations/notion.md
 catalog_title: Notion
 catalog_description: Search workspaces, create pages, and manage tasks and databases
 catalog_icon: /adk-docs/integrations/assets/notion.png
+catalog_tags: ["mcp"]
 ---
 
 # Notion MCP tool for ADK
@@ -22982,6 +23009,7 @@ File: docs/integrations/paypal.md
 catalog_title: Paypal
 catalog_description: Manage payments, send invoices, and handle subscriptions
 catalog_icon: /adk-docs/integrations/assets/paypal.png
+catalog_tags: ["mcp"]
 ---
 
 # PayPal MCP tool for ADK
@@ -23393,6 +23421,7 @@ File: docs/integrations/postman.md
 catalog_title: Postman
 catalog_description: Manage API collections, workspaces, and generate client code
 catalog_icon: /adk-docs/integrations/assets/postman.png
+catalog_tags: ["mcp"]
 ---
 
 # Postman MCP tool for ADK
@@ -23591,6 +23620,7 @@ File: docs/integrations/pubsub.md
 catalog_title: Pub/Sub Tools
 catalog_description: Publish, pull, and acknowledge messages from Google Cloud Pub/Sub
 catalog_icon: /adk-docs/integrations/assets/pubsub.png
+catalog_tags: ["google"]
 ---
 
 # Google Cloud Pub/Sub tool for ADK
@@ -23658,6 +23688,7 @@ File: docs/integrations/qdrant.md
 catalog_title: Qdrant
 catalog_description: Store and retrieve information using semantic vector search
 catalog_icon: /adk-docs/integrations/assets/qdrant.png
+catalog_tags: ["data","mcp"]
 ---
 
 # Qdrant MCP tool for ADK
@@ -23809,7 +23840,9 @@ File: docs/integrations/reflect-and-retry.md
 catalog_title: Reflect and Retry Plugin
 catalog_description: Automatically retry tool calls that fail
 catalog_icon: /adk-docs/integrations/assets/adk.png
+catalog_tags: ["google"]
 ---
+
 # Reflect and Retry plugin for ADK
 
 <div class="language-support-tag">
@@ -23900,6 +23933,7 @@ File: docs/integrations/spanner.md
 catalog_title: Spanner Tools
 catalog_description: Interact with Spanner to retrieve data, search, and execute SQL
 catalog_icon: /adk-docs/integrations/assets/spanner.png
+catalog_tags: ["data","google"]
 ---
 
 # Google Cloud Spanner tool for ADK
@@ -23931,6 +23965,7 @@ File: docs/integrations/stripe.md
 catalog_title: Stripe
 catalog_description: Manage payments, customers, subscriptions, and invoices
 catalog_icon: /adk-docs/integrations/assets/stripe.png
+catalog_tags: ["mcp"]
 ---
 
 # Stripe MCP tool for ADK
@@ -24140,6 +24175,7 @@ File: docs/integrations/vertex-ai-rag-engine.md
 catalog_title: Vertex AI RAG Engine
 catalog_description: Perform private data retrieval using Vertex AI RAG Engine
 catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_tags: ["data","google"]
 ---
 
 # Vertex AI RAG Engine tool for ADK
@@ -24173,6 +24209,7 @@ File: docs/integrations/vertex-ai-search.md
 catalog_title: Vertex AI Search
 catalog_description: Search across your private, configured data stores in Vertex AI Search
 catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_tags: ["search","google"]
 ---
 
 # Vertex AI Search tool for ADK

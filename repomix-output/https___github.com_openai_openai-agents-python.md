@@ -330,14 +330,14 @@ search:
 ---
 # 가이드
 
-이 가이드는 OpenAI Agents SDK의 실시간 기능을 사용하여 음성 지원 AI 에이전트를 구축하는 방법을 자세히 설명합니다.
+이 가이드는 OpenAI Agents SDK 의 실시간 기능을 사용해 음성 지원 AI 에이전트를 구축하는 방법을 심층적으로 다룹니다
 
 !!! warning "Beta feature"
-Realtime agents는 베타 상태입니다. 구현을 개선하는 과정에서 호환성 깨짐이 발생할 수 있습니다.
+실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
 
 ## 개요
 
-실시간 에이전트는 오디오와 텍스트 입력을 실시간으로 처리하고 실시간 오디오로 응답하는 대화형 흐름을 제공합니다. OpenAI의 Realtime API와 지속적인 연결을 유지하여 낮은 지연의 자연스러운 음성 대화를 가능하게 하고, 인터럽션(중단 처리)도 우아하게 처리합니다.
+실시간 에이전트는 오디오와 텍스트 입력을 실시간으로 처리하고 실시간 오디오로 응답하는 대화 흐름을 지원합니다. OpenAI 의 Realtime API 와 영구 연결을 유지하여 낮은 지연으로 자연스러운 음성 대화를 가능하게 하며, 인터럽션(중단 처리)도 우아하게 처리할 수 있습니다.
 
 ## 아키텍처
 
@@ -345,50 +345,50 @@ Realtime agents는 베타 상태입니다. 구현을 개선하는 과정에서 �
 
 실시간 시스템은 다음과 같은 주요 구성 요소로 이루어져 있습니다:
 
--   **RealtimeAgent**: instructions, tools, 핸드오프로 구성된 에이전트
--   **RealtimeRunner**: 구성을 관리합니다. `runner.run()`을 호출하여 세션을 얻을 수 있습니다
--   **RealtimeSession**: 단일 상호작용 세션입니다. 일반적으로 사용자가 대화를 시작할 때마다 하나를 생성하고 대화가 끝날 때까지 유지합니다
--   **RealtimeModel**: 기본 모델 인터페이스(일반적으로 OpenAI의 WebSocket 구현)
+-   **RealtimeAgent**: instructions, tools, handoffs 로 구성된 에이전트
+-   **RealtimeRunner**: 구성을 관리합니다. `runner.run()` 을 호출해 세션을 얻을 수 있습니다.
+-   **RealtimeSession**: 단일 상호작용 세션입니다. 일반적으로 사용자가 대화를 시작할 때마다 하나를 만들고, 대화가 끝날 때까지 유지합니다.
+-   **RealtimeModel**: 기반 모델 인터페이스(일반적으로 OpenAI 의 WebSocket 구현)
 
 ### 세션 흐름
 
 일반적인 실시간 세션은 다음 흐름을 따릅니다:
 
-1. instructions, tools, 핸드오프로 **RealtimeAgent 를 생성**합니다
-2. 에이전트와 구성 옵션으로 **RealtimeRunner 를 설정**합니다
-3. `await runner.run()`을 사용해 **세션을 시작**하고 RealtimeSession 을 반환받습니다
-4. `send_audio()` 또는 `send_message()`를 사용해 **오디오 또는 텍스트 메시지**를 세션에 보냅니다
-5. 세션을 반복(iterate)하며 **이벤트를 수신**합니다 - 오디오 출력, 전사, 도구 호출, 핸드오프, 에러 등의 이벤트가 포함됩니다
-6. 사용자가 에이전트 말 중에 끼어들 때 **인터럽션(중단 처리)**을 처리합니다. 현재 오디오 생성이 자동으로 중지됩니다
+1. instructions, tools, handoffs 로 **RealtimeAgent(들)을 생성**합니다.
+2. 에이전트와 구성 옵션으로 **RealtimeRunner 를 설정**합니다.
+3. `await runner.run()` 으로 **세션을 시작**하면 RealtimeSession 이 반환됩니다.
+4. `send_audio()` 또는 `send_message()` 를 사용해 세션에 **오디오 또는 텍스트 메시지를 전송**합니다.
+5. 세션을 순회하며 **이벤트를 수신**합니다. 이벤트에는 오디오 출력, 전사(transcript), 도구 호출, 핸드오프, 오류가 포함됩니다.
+6. 사용자가 에이전트 발화 중에 말하는 **인터럽션(중단 처리)을 처리**합니다. 이 경우 현재 오디오 생성이 자동으로 중지됩니다.
 
-세션은 대화 기록을 유지하고 실시간 모델과의 지속적인 연결을 관리합니다.
+세션은 대화 기록을 유지하고 실시간 모델과의 영구 연결을 관리합니다.
 
 ## 에이전트 구성
 
-RealtimeAgent 는 일반적인 Agent 클래스와 유사하게 동작하지만 몇 가지 중요한 차이가 있습니다. 전체 API 세부 정보는 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 레퍼런스를 참고하세요.
+RealtimeAgent 는 일반 Agent 클래스와 유사하게 동작하지만 몇 가지 중요한 차이가 있습니다. 전체 API 세부 사항은 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 레퍼런스를 참고하세요.
 
 일반 에이전트와의 주요 차이점:
 
--   모델 선택은 에이전트 수준이 아닌 세션 수준에서 구성합니다
--   structured outputs 지원 없음 (`outputType`은 지원되지 않음)
--   음성은 에이전트별로 구성할 수 있지만 첫 번째 에이전트가 말하기 시작한 후에는 변경할 수 없음
--   도구, 핸드오프, instructions 등 다른 기능은 동일하게 동작
+-   모델 선택은 에이전트 수준이 아니라 세션 수준에서 구성됩니다.
+-   structured output 지원이 없습니다(`outputType` 을 지원하지 않음).
+-   음성은 에이전트별로 구성할 수 있지만, 첫 번째 에이전트가 말한 이후에는 변경할 수 없습니다.
+-   tools, handoffs, instructions 같은 다른 기능은 동일하게 동작합니다.
 
 ## 세션 구성
 
 ### 모델 설정
 
-세션 구성으로 기본 실시간 모델 동작을 제어할 수 있습니다. 모델 이름(예: `gpt-realtime`), 음성 선택(alloy, echo, fable, onyx, nova, shimmer), 지원 모달리티(텍스트 및/또는 오디오)를 구성할 수 있습니다. 오디오 형식은 입력과 출력 모두에 대해 설정 가능하며, 기본값은 PCM16 입니다.
+세션 구성은 기반 실시간 모델의 동작을 제어할 수 있게 합니다. 모델 이름(예: `gpt-realtime`), 음성 선택(alloy, echo, fable, onyx, nova, shimmer), 지원 모달리티(text 및/또는 audio)를 설정할 수 있습니다. 오디오 형식은 입력과 출력 모두에 대해 설정할 수 있으며, 기본값은 PCM16 입니다.
 
 ### 오디오 구성
 
-오디오 설정은 세션이 음성 입력과 출력을 처리하는 방식을 제어합니다. Whisper 등의 모델을 사용한 입력 오디오 전사, 언어 기본값 설정, 도메인 특화 용어의 정확도를 높이기 위한 전사 프롬프트 제공이 가능합니다. 턴 감지 설정은 에이전트가 언제 응답을 시작/종료해야 하는지를 제어하며, 음성 활동 감지 임계값, 무음 지속 시간, 감지된 음성 주변 패딩 옵션을 제공합니다.
+오디오 설정은 세션이 음성 입력과 출력을 처리하는 방식을 제어합니다. Whisper 같은 모델을 사용한 입력 오디오 전사를 구성하고, 언어 선호를 설정하며, 도메인 특화 용어의 정확도를 높이기 위해 전사 프롬프트를 제공할 수 있습니다. 턴 감지 설정은 에이전트가 언제 응답을 시작하고 멈출지를 제어하며, 음성 활동 감지 임계값, 무음 지속 시간, 감지된 음성 전후 패딩 옵션을 포함합니다.
 
-## 도구와 함수
+## 도구 및 함수
 
 ### 도구 추가
 
-일반 에이전트와 마찬가지로, 실시간 에이전트는 대화 중에 실행되는 함수 도구를 지원합니다:
+일반 에이전트와 마찬가지로, 실시간 에이전트는 대화 중 실행되는 함수 도구를 지원합니다:
 
 ```python
 from agents import function_tool
@@ -416,7 +416,7 @@ agent = RealtimeAgent(
 
 ### 핸드오프 생성
 
-핸드오프를 통해 특화된 에이전트 간에 대화를 전환할 수 있습니다.
+핸드오프는 대화를 전문 에이전트 간에 전환할 수 있게 합니다.
 
 ```python
 from agents.realtime import realtime_handoff
@@ -445,20 +445,20 @@ main_agent = RealtimeAgent(
 
 ## 이벤트 처리
 
-세션은 세션 객체를 반복(iterate)하여 수신할 수 있는 이벤트를 스트리밍합니다. 이벤트에는 오디오 출력 청크, 전사 결과, 도구 실행 시작/종료, 에이전트 핸드오프, 에러가 포함됩니다. 처리해야 할 주요 이벤트는 다음과 같습니다:
+세션은 session 객체를 순회하여 수신할 수 있는 이벤트를 스트리밍합니다. 이벤트에는 오디오 출력 청크, 전사 결과, 도구 실행 시작과 종료, 에이전트 핸드오프, 오류가 포함됩니다. 처리해야 할 주요 이벤트는 다음과 같습니다:
 
 -   **audio**: 에이전트 응답의 원문 오디오 데이터
 -   **audio_end**: 에이전트 발화 종료
--   **audio_interrupted**: 사용자가 에이전트를 중단
+-   **audio_interrupted**: 사용자가 에이전트를 중단함
 -   **tool_start/tool_end**: 도구 실행 라이프사이클
 -   **handoff**: 에이전트 핸드오프 발생
 -   **error**: 처리 중 오류 발생
 
-전체 이벤트 세부 정보는 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]를 참고하세요.
+전체 이벤트 세부 사항은 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent] 를 참고하세요.
 
 ## 가드레일
 
-실시간 에이전트는 출력 가드레일만 지원합니다. 성능 문제를 피하기 위해(매 단어마다가 아니라) 주기적으로 디바운스되어 실행됩니다. 기본 디바운스 길이는 100자이며, 이는 구성할 수 있습니다.
+실시간 에이전트는 출력 가드레일만 지원합니다. 이 가드레일은 실시간 생성 중 성능 문제를 피하기 위해 디바운스 처리되며, 매 단어마다가 아니라 주기적으로 실행됩니다. 기본 디바운스 길이는 100 자이며, 구성으로 변경할 수 있습니다.
 
 가드레일은 `RealtimeAgent` 에 직접 연결하거나 세션의 `run_config` 를 통해 제공할 수 있습니다. 두 소스의 가드레일은 함께 실행됩니다.
 
@@ -478,19 +478,19 @@ agent = RealtimeAgent(
 )
 ```
 
-가드레일이 트리거되면 `guardrail_tripped` 이벤트를 생성하고 에이전트의 현재 응답을 인터럽트할 수 있습니다. 디바운스 동작은 안전성과 실시간 성능 요구 간의 균형을 맞추는 데 도움이 됩니다. 텍스트 에이전트와 달리, 실시간 에이전트는 가드레일이 트리거되어도 Exception 을 발생시키지 **않습니다**.
+가드레일이 트리거되면 `guardrail_tripped` 이벤트를 생성하며, 에이전트의 현재 응답을 인터럽트할 수 있습니다. 디바운스 동작은 안전성과 실시간 성능 요구 사항 사이의 균형을 맞추는 데 도움이 됩니다. 텍스트 에이전트와 달리, 실시간 에이전트는 가드레일이 트리거되어도 Exception 을 발생시키지 **않습니다**.
 
 ## 오디오 처리
 
-[`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 를 사용해 오디오를 세션으로 전송하거나, [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 를 사용해 텍스트를 보냅니다.
+[`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 를 사용해 세션에 오디오를 보내거나, [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 로 텍스트를 보낼 수 있습니다.
 
-오디오 출력의 경우 `audio` 이벤트를 수신하여 선호하는 오디오 라이브러리로 재생하세요. 사용자가 에이전트를 중단할 때 즉시 재생을 중지하고 대기 중인 오디오를 비우기 위해 `audio_interrupted` 이벤트를 반드시 수신하세요.
+오디오 출력의 경우 `audio` 이벤트를 수신하고, 선호하는 오디오 라이브러리로 오디오 데이터를 재생하세요. 사용자가 에이전트를 중단할 때 즉시 재생을 멈추고 대기 중인 오디오를 비우기 위해 `audio_interrupted` 이벤트도 반드시 수신해야 합니다.
 
-## SIP 연동
+## SIP 통합
 
-[Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 를 통해 들어오는 전화 통화에 실시간 에이전트를 연결할 수 있습니다. SDK는 SIP 상에서 미디어를 협상하면서 동일한 에이전트 흐름을 재사용하는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 을 제공합니다.
+[Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 를 통해 들어오는 전화 통화에 실시간 에이전트를 연결할 수 있습니다. SDK 는 동일한 에이전트 흐름을 재사용하면서 SIP 로 미디어를 협상하는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 을 제공합니다.
 
-이를 사용하려면 모델 인스턴스를 러너에 전달하고 세션 시작 시 SIP `call_id` 를 제공하세요. 콜 ID 는 수신 전화를 알리는 웹훅을 통해 전달됩니다.
+사용하려면 runner 에 모델 인스턴스를 전달하고, 세션을 시작할 때 SIP `call_id` 를 제공하세요. call ID 는 수신 통화를 알리는 웹훅이 전달합니다.
 
 ```python
 from agents.realtime import RealtimeAgent, RealtimeRunner
@@ -513,22 +513,35 @@ async with await runner.run(
         ...
 ```
 
-발신자가 전화를 끊으면 SIP 세션이 종료되고 실시간 연결이 자동으로 닫힙니다. 완전한 전화 통신 code examples 는 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) 를 참고하세요.
+발신자가 전화를 끊으면 SIP 세션이 종료되고 실시간 연결이 자동으로 닫힙니다. 전체 전화 예제는 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) 를 참고하세요.
 
-## 모델 직접 액세스
+## 모델 직접 접근
 
-기저 모델에 접근하여 커스텀 리스너를 추가하거나 고급 작업을 수행할 수 있습니다:
+기본 모델에 접근하여 커스텀 리스너를 추가하거나 고급 작업을 수행할 수 있습니다:
 
 ```python
 # Add a custom listener to the model
 session.model.add_listener(my_custom_listener)
 ```
 
-이를 통해 연결에 대한 더 낮은 수준의 제어가 필요한 고급 사용 사례를 위해 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 인터페이스에 직접 접근할 수 있습니다.
+이를 통해 연결을 더 낮은 수준에서 제어해야 하는 고급 사용 사례를 위해 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 인터페이스에 직접 접근할 수 있습니다.
 
-## 코드 예제
+## 예제
 
-완전한 동작 code examples 는 [examples/realtime 디렉터리](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 를 참고하세요. UI 구성 요소가 있는 데모와 없는 데모가 포함되어 있습니다.
+완전한 동작 예제는 UI 구성 요소가 있는 데모와 없는 데모를 포함한 [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 를 확인하세요.
+
+## Azure OpenAI 엔드포인트 형식
+
+Azure OpenAI 에 연결할 때는 GA Realtime 엔드포인트 형식을 사용하고 `model_config` 의 headers 를 통해 자격 증명을 전달하세요:
+
+```python
+model_config = {
+    "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+    "headers": {"api-key": "<your-azure-api-key>"},
+}
+```
+
+토큰 기반 인증의 경우 `headers` 에 `{"authorization": f"Bearer {token}"}` 를 사용하세요.
 
 ================
 File: docs/ko/realtime/quickstart.md
@@ -539,16 +552,16 @@ search:
 ---
 # 빠른 시작
 
-실시간 에이전트는 OpenAI의 Realtime API를 사용하여 AI 에이전트와의 음성 대화를 가능하게 합니다. 이 가이드는 첫 실시간 음성 에이전트를 만드는 과정을 안내합니다.
+실시간 에이전트를 사용하면 OpenAI의 Realtime API로 AI 에이전트와 음성 대화를 할 수 있습니다. 이 가이드에서는 첫 번째 실시간 음성 에이전트를 만드는 과정을 안내합니다.
 
 !!! warning "베타 기능"
-실시간 에이전트는 베타 상태입니다. 구현을 개선하는 과정에서 호환성에 영향을 주는 변경이 있을 수 있습니다.
+실시간 에이전트는 베타 버전입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
 
 ## 사전 준비 사항
 
-- Python 3.9 이상
-- OpenAI API 키
-- OpenAI Agents SDK 기본 지식
+-   Python 3.9 이상
+-   OpenAI API 키
+-   OpenAI Agents SDK에 대한 기본적인 이해
 
 ## 설치
 
@@ -560,14 +573,14 @@ pip install openai-agents
 
 ## 첫 실시간 에이전트 만들기
 
-### 1. 필수 컴포넌트 가져오기
+### 1. 필요한 구성 요소 가져오기
 
 ```python
 import asyncio
 from agents.realtime import RealtimeAgent, RealtimeRunner
 ```
 
-### 2. 실시간 에이전트 생성
+### 2. 실시간 에이전트 생성하기
 
 ```python
 agent = RealtimeAgent(
@@ -576,7 +589,7 @@ agent = RealtimeAgent(
 )
 ```
 
-### 3. 러너 설정
+### 3. 러너 설정하기
 
 ```python
 runner = RealtimeRunner(
@@ -595,7 +608,7 @@ runner = RealtimeRunner(
 )
 ```
 
-### 4. 세션 시작
+### 4. 세션 시작하기
 
 ```python
 # Start the session
@@ -646,7 +659,7 @@ def _truncate_str(s: str, max_length: int) -> str:
 
 ## 전체 예제
 
-전체 동작 예제는 다음과 같습니다:
+다음은 완전하게 동작하는 전체 예제입니다:
 
 ```python
 import asyncio
@@ -727,44 +740,71 @@ if __name__ == "__main__":
 
 ### 모델 설정
 
-- `model_name`: 사용 가능한 실시간 모델에서 선택 (예: `gpt-realtime`)
-- `voice`: 보이스 선택 (`alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
-- `modalities`: 텍스트 또는 오디오 활성화 (`["text"]` 또는 `["audio"]`)
+-   `model_name`: 사용 가능한 실시간 모델에서 선택하세요(예: `gpt-realtime`)
+-   `voice`: 음성 선택(`alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
+-   `modalities`: 텍스트 또는 오디오 활성화(`["text"]` 또는 `["audio"]`)
 
 ### 오디오 설정
 
-- `input_audio_format`: 입력 오디오 형식 (`pcm16`, `g711_ulaw`, `g711_alaw`)
-- `output_audio_format`: 출력 오디오 형식
-- `input_audio_transcription`: 전사 구성
+-   `input_audio_format`: 입력 오디오 형식(`pcm16`, `g711_ulaw`, `g711_alaw`)
+-   `output_audio_format`: 출력 오디오 형식
+-   `input_audio_transcription`: 전사 구성
 
 ### 턴 감지
 
-- `type`: 감지 방식 (`server_vad`, `semantic_vad`)
-- `threshold`: 음성 활동 임계값 (0.0-1.0)
-- `silence_duration_ms`: 턴 종료를 감지하기 위한 무음 지속 시간
-- `prefix_padding_ms`: 발화 전 오디오 패딩
+-   `type`: 감지 방식(`server_vad`, `semantic_vad`)
+-   `threshold`: 음성 활동 임곗값(0.0-1.0)
+-   `silence_duration_ms`: 턴 종료를 감지하기 위한 무음 지속 시간
+-   `prefix_padding_ms`: 발화 이전 오디오 패딩
 
 ## 다음 단계
 
-- [실시간 에이전트 자세히 알아보기](guide.md)
-- [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 폴더의 동작하는 code examples 확인
-- 에이전트에 도구 추가
-- 에이전트 간 핸드오프 구현
-- 안전을 위한 가드레일 설정
+-   [실시간 에이전트 더 알아보기](guide.md)
+-   [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 폴더의 동작 예제를 확인하세요
+-   에이전트에 도구 추가하기
+-   에이전트 간 핸드오프 구현하기
+-   안전을 위한 가드레일 설정하기
 
 ## 인증
 
-환경에 OpenAI API 키가 설정되어 있는지 확인하세요:
+환경 변수에 OpenAI API 키가 설정되어 있는지 확인하세요:
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-또는 세션을 생성할 때 직접 전달하세요:
+또는 세션을 생성할 때 직접 전달할 수도 있습니다:
 
 ```python
 session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
+
+## Azure OpenAI 엔드포인트 형식
+
+OpenAI 기본 엔드포인트 대신 Azure OpenAI에 연결하는 경우,
+`model_config["url"]`에 GA Realtime URL을 전달하고 인증 헤더를 명시적으로 설정하세요.
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"api-key": "<your-azure-api-key>"},
+    }
+)
+```
+
+Bearer 토큰도 사용할 수 있습니다:
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"authorization": f"Bearer {token}"},
+    }
+)
+```
+
+실시간 에이전트와 함께 레거시 베타 경로(`/openai/realtime?api-version=...`)를 사용하는 것은 피하세요. SDK는 GA Realtime 인터페이스를 기대합니다.
 
 ================
 File: docs/ko/sessions/advanced_sqlite_session.md
@@ -6188,6 +6228,20 @@ This gives you direct access to the [`RealtimeModel`][agents.realtime.model.Real
 
 For complete working examples, check out the [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) which includes demos with and without UI components.
 
+## Azure OpenAI endpoint format
+
+When connecting to Azure OpenAI, use the GA Realtime endpoint format and pass credentials via
+headers in `model_config`:
+
+```python
+model_config = {
+    "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+    "headers": {"api-key": "<your-azure-api-key>"},
+}
+```
+
+For token-based auth, use `{"authorization": f"Bearer {token}"}` in `headers`.
+
 ================
 File: docs/realtime/quickstart.md
 ================
@@ -6419,6 +6473,34 @@ Or pass it directly when creating the session:
 ```python
 session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
+
+## Azure OpenAI endpoint format
+
+If you connect to Azure OpenAI instead of OpenAI's default endpoint, pass a GA Realtime URL in
+`model_config["url"]` and set auth headers explicitly.
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"api-key": "<your-azure-api-key>"},
+    }
+)
+```
+
+You can also use a bearer token:
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"authorization": f"Bearer {token}"},
+    }
+)
+```
+
+Avoid using the legacy beta path (`/openai/realtime?api-version=...`) with realtime agents. The
+SDK expects the GA Realtime interface.
 
 ================
 File: docs/ref/extensions/experimental/codex/codex_options.md
@@ -9144,65 +9226,65 @@ search:
 ---
 # 指南
 
-本指南深入介绍如何使用 OpenAI Agents SDK 的实时能力构建语音智能体。
+本指南深入介绍如何使用 OpenAI Agents SDK 的实时能力构建支持语音的 AI 智能体。
 
-!!! warning "测试版功能"
-实时智能体处于测试阶段。随着实现的改进，可能会出现不兼容的变更。
+!!! warning "Beta 功能"
+Realtime 智能体目前处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
 
 ## 概述
 
-实时智能体支持对话式流程，能够实时处理音频和文本输入，并以实时音频进行响应。它们与 OpenAI 的 Realtime API 保持持久连接，从而实现低延迟的自然语音对话，并能优雅地处理打断。
+Realtime 智能体支持对话流程，实时处理音频与文本输入，并以实时音频进行响应。它们与 OpenAI 的 Realtime API 保持持久连接，从而实现低延迟的自然语音对话，并能优雅地处理打断。
 
 ## 架构
 
 ### 核心组件
 
-实时系统由以下关键组件组成：
+Realtime 系统由若干关键组件构成：
 
--   **RealtimeAgent**: 一个智能体，配置了指令（instructions）、工具（tools）和任务转移（handoffs）。
--   **RealtimeRunner**: 管理配置。你可以调用 `runner.run()` 获取一个会话。
--   **RealtimeSession**: 单次交互会话。通常在每次用户开始对话时创建一个，并保持到对话结束。
--   **RealtimeModel**: 底层模型接口（通常是 OpenAI 的 WebSocket 实现）
+-   **RealtimeAgent**：一个智能体，使用 instructions、tools 和 handoffs 进行配置。
+-   **RealtimeRunner**：管理配置。你可以调用 `runner.run()` 获取一个会话。
+-   **RealtimeSession**：一次交互会话。通常在用户开始对话时创建一个，并保持存活直到对话结束。
+-   **RealtimeModel**：底层模型接口（通常是 OpenAI 的 WebSocket 实现）
 
 ### 会话流程
 
-典型的实时会话遵循如下流程：
+典型的 realtime 会话遵循如下流程：
 
-1. **创建 RealtimeAgent**，并配置指令、工具和任务转移。
-2. **设置 RealtimeRunner**，传入智能体和相关配置选项。
-3. **启动会话**，使用 `await runner.run()`，它会返回一个 RealtimeSession。
-4. **发送音频或文本消息** 到会话，使用 `send_audio()` 或 `send_message()`。
-5. **监听事件**，通过遍历会话对象来接收事件——事件包括音频输出、转录文本、工具调用、任务转移和错误。
-6. **处理打断**，当用户在智能体说话时插话，会自动停止当前音频生成。
+1. 使用 instructions、tools 和 handoffs **创建你的 RealtimeAgent（可多个）**。
+2. 使用智能体与配置选项 **设置 RealtimeRunner**。
+3. 使用 `await runner.run()` **启动会话**，该调用会返回一个 RealtimeSession。
+4. 使用 `send_audio()` 或 `send_message()` 向会话 **发送音频或文本消息**。
+5. 通过迭代 session 来 **监听事件**——事件包括音频输出、转写文本、工具调用、任务转移以及错误。
+6. 在用户抢话时 **处理打断**：这会自动停止当前音频生成。
 
-会话会维护对话历史，并管理与实时模型的持久连接。
+会话会维护对话历史，并管理与 realtime 模型的持久连接。
 
 ## 智能体配置
 
-RealtimeAgent 的工作方式与常规 Agent 类似，但有一些关键差异。完整的 API 详情请参阅 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 参考。
+RealtimeAgent 的工作方式与常规 Agent 类相似，但存在一些关键差异。完整 API 细节请参见 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 参考。
 
 与常规智能体的关键差异：
 
--   模型选择在会话级配置，而非智能体级。
+-   模型选择在会话级别配置，而不是在智能体级别。
 -   不支持 structured outputs（不支持 `outputType`）。
--   可为每个智能体配置语音，但在第一个智能体开始说话后不可再更改。
--   其他功能如工具、任务转移和指令的工作方式相同。
+-   Voice 可按智能体配置，但在第一个智能体开口后就不能再更改。
+-   其他特性（如工具、任务转移和 instructions）工作方式相同。
 
 ## 会话配置
 
 ### 模型设置
 
-会话配置允许你控制底层实时模型的行为。你可以配置模型名称（例如 `gpt-realtime`）、语音选择（alloy、echo、fable、onyx、nova、shimmer）以及支持的模态（文本和/或音频）。音频格式可分别为输入与输出设置，默认是 PCM16。
+会话配置允许你控制底层 realtime 模型的行为。你可以配置模型名称（如 `gpt-realtime`）、voice 选择（alloy、echo、fable、onyx、nova、shimmer）以及支持的模态（文本和/或音频）。输入与输出的音频格式也都可设置，默认是 PCM16。
 
 ### 音频配置
 
-音频设置控制会话如何处理语音输入与输出。你可以使用如 Whisper 的模型配置输入音频转录，设置语言偏好，并提供转录提示以提高领域术语的准确性。回合检测设置用于控制智能体何时开始和结束响应，可配置语音活动检测阈值、静音时长以及检测语音前后的填充。
+音频设置控制会话如何处理语音输入与输出。你可以使用 Whisper 等模型配置输入音频转写、设置语言偏好，并提供转写提示词以提升领域术语的准确率。Turn detection 设置控制智能体何时开始与停止响应，可配置语音活动检测阈值、静音时长以及检测到语音前后的 padding。
 
 ## 工具与函数
 
 ### 添加工具
 
-与常规智能体相同，实时智能体支持在对话过程中执行的工具调用：
+与常规智能体一样，realtime 智能体支持在对话中执行的工具调用：
 
 ```python
 from agents import function_tool
@@ -9230,7 +9312,7 @@ agent = RealtimeAgent(
 
 ### 创建任务转移
 
-任务转移可在专用智能体之间传递会话。
+任务转移允许在专门的智能体之间转接对话。
 
 ```python
 from agents.realtime import realtime_handoff
@@ -9259,22 +9341,22 @@ main_agent = RealtimeAgent(
 
 ## 事件处理
 
-会话会流式传输事件，你可以通过遍历会话对象来监听。事件包括音频输出分片、转录结果、工具执行开始与结束、智能体任务转移以及错误。需要重点处理的事件包括：
+会话会流式输出事件，你可以通过迭代 session 对象来监听。事件包括音频输出分片、转写结果、工具执行开始与结束、智能体任务转移以及错误。需要重点处理的事件包括：
 
--   **audio**: 智能体响应的原始音频数据
--   **audio_end**: 智能体完成发声
--   **audio_interrupted**: 用户打断了智能体
--   **tool_start/tool_end**: 工具执行生命周期
--   **handoff**: 发生智能体任务转移
--   **error**: 处理过程中出现错误
+-   **audio**：智能体响应中的原始音频数据
+-   **audio_end**：智能体结束说话
+-   **audio_interrupted**：用户打断了智能体
+-   **tool_start/tool_end**：工具执行生命周期
+-   **handoff**：发生了智能体任务转移
+-   **error**：处理过程中发生错误
 
-完整事件详情参见 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]。
+完整事件细节请参见 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]。
 
 ## 安全防护措施
 
-实时智能体仅支持输出安全防护措施。这些防护以防抖方式周期性运行（而非每个词都运行），以避免实时生成过程中的性能问题。默认防抖长度为 100 个字符，可配置。
+Realtime 智能体仅支持输出安全防护措施。这些安全防护措施会进行去抖（debounced）并周期性运行（不会逐词运行），以避免实时生成时的性能问题。默认去抖长度为 100 个字符，但可配置。
 
-安全防护措施可以直接附加到 `RealtimeAgent`，或通过会话的 `run_config` 提供。来自两处的安全防护会共同运行。
+安全防护措施可以直接附加到 `RealtimeAgent`，也可以通过会话的 `run_config` 提供。两处来源的安全防护措施会一起运行。
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -9292,19 +9374,19 @@ agent = RealtimeAgent(
 )
 ```
 
-当安全防护被触发时，会生成 `guardrail_tripped` 事件，并可中断智能体当前的响应。防抖行为有助于在安全与实时性能之间取得平衡。与文本智能体不同，实时智能体在防护触发时不会抛出异常（Exception）。
+当触发安全防护措施时，会生成 `guardrail_tripped` 事件，并可能中断智能体当前响应。去抖行为有助于在安全性与实时性能要求之间取得平衡。与文本智能体不同，realtime 智能体在触发安全防护措施时**不会**抛出 Exception。
 
 ## 音频处理
 
-通过 [`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 向会话发送音频，或通过 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 发送文本。
+使用 [`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 向会话发送音频，或使用 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 发送文本。
 
-对于音频输出，监听 `audio` 事件，并使用你偏好的音频库播放音频数据。务必监听 `audio_interrupted` 事件，以在用户打断智能体时立即停止播放并清空任何已排队的音频。
+对于音频输出，请监听 `audio` 事件，并通过你偏好的音频库播放音频数据。务必监听 `audio_interrupted` 事件，以便在用户打断智能体时立即停止播放并清空任何排队的音频。
 
 ## SIP 集成
 
-你可以将实时智能体接入通过 [Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 到达的电话。SDK 提供了 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]，它在通过 SIP 协商媒体的同时复用相同的智能体流程。
+你可以将 realtime 智能体接入通过 [Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 到来的电话呼叫。SDK 提供 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]，它在通过 SIP 协商媒体的同时复用相同的智能体流程。
 
-要使用它，将该模型实例传入 runner，并在启动会话时提供 SIP 的 `call_id`。该呼叫 ID 由指示来电的 webhook 传递。
+使用方式：将模型实例传给 runner，并在启动会话时提供 SIP `call_id`。该 call ID 由用于通知来电的 webhook 传递。
 
 ```python
 from agents.realtime import RealtimeAgent, RealtimeRunner
@@ -9327,9 +9409,9 @@ async with await runner.run(
         ...
 ```
 
-当来电方挂断时，SIP 会话结束，实时连接会自动关闭。完整话音示例参见 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)。
+当来电方挂断时，SIP 会话结束，realtime 连接会自动关闭。完整的电话示例请参见 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)。
 
-## 直接模型访问
+## 直接访问模型
 
 你可以访问底层模型以添加自定义监听器或执行高级操作：
 
@@ -9338,11 +9420,24 @@ async with await runner.run(
 session.model.add_listener(my_custom_listener)
 ```
 
-这为你提供对 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 接口的直接访问，适用于需要更底层连接控制的高级用例。
+这会让你直接访问 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 接口，适用于需要更底层连接控制的高级用例。
 
 ## 代码示例
 
-要查看完整可运行的示例，请参阅 [examples/realtime 目录](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)，其中包含带有和不带 UI 组件的演示。
+如需完整可运行的示例，请查看 [examples/realtime 目录](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)，其中包含带 UI 与不带 UI 组件的演示。
+
+## Azure OpenAI endpoint 格式
+
+连接 Azure OpenAI 时，请使用 GA Realtime endpoint 格式，并通过 `model_config` 中的 headers 传入凭据：
+
+```python
+model_config = {
+    "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+    "headers": {"api-key": "<your-azure-api-key>"},
+}
+```
+
+对于基于 token 的鉴权，请在 `headers` 中使用 `{"authorization": f"Bearer {token}"}`。
 
 ================
 File: docs/zh/realtime/quickstart.md
@@ -9353,26 +9448,26 @@ search:
 ---
 # 快速入门
 
-实时智能体通过 OpenAI 的 Realtime API 让你的 AI 智能体具备语音对话能力。本指南将带你创建第一个实时语音智能体。
+Realtime 智能体支持使用 OpenAI 的 Realtime API 与你的 AI 智能体进行语音对话。本指南将带你创建第一个 realtime 语音智能体。
 
-!!! warning "测试版功能"
-实时智能体处于测试版。在我们改进实现的过程中，可能会有不兼容的变更。
+!!! warning "Beta 功能"
+Realtime 智能体目前处于 beta 阶段。随着我们改进实现，可能会出现一些破坏性变更。
 
-## 先决条件
+## 前置条件
 
-- Python 3.9 或更高版本
-- OpenAI API key
-- 对 OpenAI Agents SDK 的基本了解
+-   Python 3.9 或更高版本
+-   OpenAI API key
+-   对 OpenAI Agents SDK 的基本了解
 
 ## 安装
 
-如果尚未安装，请安装 OpenAI Agents SDK：
+如果你还没有安装 OpenAI Agents SDK，请先安装：
 
 ```bash
 pip install openai-agents
 ```
 
-## 创建你的第一个实时智能体
+## 创建你的第一个 realtime 智能体
 
 ### 1. 导入所需组件
 
@@ -9381,7 +9476,7 @@ import asyncio
 from agents.realtime import RealtimeAgent, RealtimeRunner
 ```
 
-### 2. 创建一个实时智能体
+### 2. 创建一个 realtime 智能体
 
 ```python
 agent = RealtimeAgent(
@@ -9390,7 +9485,7 @@ agent = RealtimeAgent(
 )
 ```
 
-### 3. 设置运行器
+### 3. 设置 runner
 
 ```python
 runner = RealtimeRunner(
@@ -9460,7 +9555,7 @@ def _truncate_str(s: str, max_length: int) -> str:
 
 ## 完整示例
 
-下面是一个完整可运行示例：
+下面是一个完整可运行的示例：
 
 ```python
 import asyncio
@@ -9541,44 +9636,71 @@ if __name__ == "__main__":
 
 ### 模型设置
 
-- `model_name`: 从可用的实时模型中选择（例如，`gpt-realtime`）
-- `voice`: 选择语音（`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`）
-- `modalities`: 启用文本或音频（`["text"]` 或 `["audio"]`）
+-   `model_name`: 从可用的 realtime 模型中选择（例如 `gpt-realtime`）
+-   `voice`: 选择声音（`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`）
+-   `modalities`: 启用文本或音频（`["text"]` 或 `["audio"]`）
 
 ### 音频设置
 
-- `input_audio_format`: 输入音频格式（`pcm16`、`g711_ulaw`、`g711_alaw`）
-- `output_audio_format`: 输出音频格式
-- `input_audio_transcription`: 转录配置
+-   `input_audio_format`: 输入音频的格式（`pcm16`、`g711_ulaw`、`g711_alaw`）
+-   `output_audio_format`: 输出音频的格式
+-   `input_audio_transcription`: 转写配置
 
 ### 轮次检测
 
-- `type`: 检测方法（`server_vad`、`semantic_vad`）
-- `threshold`: 语音活动阈值（0.0-1.0）
-- `silence_duration_ms`: 用于检测轮次结束的静音时长
-- `prefix_padding_ms`: 语音前的音频填充
+-   `type`: 检测方法（`server_vad`、`semantic_vad`）
+-   `threshold`: 语音活动阈值（0.0-1.0）
+-   `silence_duration_ms`: 用于检测轮次结束的静默时长
+-   `prefix_padding_ms`: 语音前的音频填充
 
 ## 后续步骤
 
-- [进一步了解实时智能体](guide.md)
-- 查看 [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 文件夹中的可运行示例
-- 为你的智能体添加工具
-- 实现智能体之间的任务转移
-- 设置安全防护措施以确保安全
+-   [了解更多 realtime 智能体](guide.md)
+-   查看 [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 文件夹中的可运行示例
+-   为你的智能体添加工具调用
+-   实现智能体之间的任务转移
+-   为安全设置安全防护措施
 
 ## 身份验证
 
-确保在环境中设置了 OpenAI API key：
+确保你的环境中已设置 OpenAI API key：
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-或在创建会话时直接传入：
+或者在创建会话时直接传入：
 
 ```python
 session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
+
+## Azure OpenAI 端点格式
+
+如果你连接的是 Azure OpenAI 而不是 OpenAI 的默认端点，请在
+`model_config["url"]` 中传入 GA Realtime URL，并显式设置认证 headers。
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"api-key": "<your-azure-api-key>"},
+    }
+)
+```
+
+你也可以使用 bearer token：
+
+```python
+session = await runner.run(
+    model_config={
+        "url": "wss://<your-resource>.openai.azure.com/openai/v1/realtime?model=<deployment-name>",
+        "headers": {"authorization": f"Bearer {token}"},
+    }
+)
+```
+
+避免在 realtime 智能体中使用旧版 beta 路径（`/openai/realtime?api-version=...`）。SDK 期望使用 GA Realtime 接口。
 
 ================
 File: docs/zh/sessions/advanced_sqlite_session.md
