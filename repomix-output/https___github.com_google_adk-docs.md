@@ -6455,11 +6455,12 @@ Understanding artifacts involves grasping a few key components: the service that
     import { InMemoryRunner } from '@google/adk';
     import { LlmAgent } from '@google/adk';
     import { InMemoryArtifactService } from '@google/adk';
+	import { InMemorySessionService } from '@google/adk';
 
     // Example: Configuring the Runner with an Artifact Service
     const myAgent = new LlmAgent({name: "artifact_user_agent", model: "gemini-2.5-flash"});
     const artifactService = new InMemoryArtifactService(); // Choose an implementation
-    const sessionService = new InMemoryArtifactService();
+    const sessionService = new InMemorySessionService();
 
     const runner = new InMemoryRunner({
         agent: myAgent,
@@ -6699,7 +6700,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
 === "Typescript"
 
     ```typescript
-    import { LlmAgent, InMemoryRunner, InMemoryArtifactService } from '@google/adk';
+    import { LlmAgent, InMemoryRunner, InMemoryArtifactService, InMemorySessionService } from '@google/adk';
 
     // Your agent definition
     const agent = new LlmAgent({name: "my_agent", model: "gemini-2.5-flash"});
@@ -6711,7 +6712,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
     const runner = new InMemoryRunner({
         agent: agent,
         appName: "artifact_app",
-        sessionService: new InMemoryArtifactService(),
+        sessionService: new InMemorySessionService(),
         artifactService: artifactService, // Service must be provided here
     });
     // If no artifactService is configured, calling artifact methods on context objects will throw an error.
@@ -18477,7 +18478,7 @@ catalog_tags: ["observability", "google"]
 
 !!! important "Version Requirement"
 
-   Use the ***latest version*** of the ADK (version 1.21.0 or higher) to make full use of the features described in this document.
+    Use ADK Python version 1.21.0 or higher to make full use of the features described in this document.
 
 The BigQuery Agent Analytics Plugin significantly enhances the Agent Development Kit (ADK) by providing a robust solution for in-depth agent behavior analysis. Using the ADK Plugin architecture and the **BigQuery Storage Write API**, it captures and logs critical operational events directly into a Google BigQuery table, empowering you with advanced capabilities for debugging, real-time monitoring, and comprehensive offline performance evaluation.
 
@@ -20894,7 +20895,7 @@ File: docs/integrations/github.md
 catalog_title: GitHub
 catalog_description: Analyze code, manage issues and PRs, and automate workflows
 catalog_icon: /adk-docs/integrations/assets/github.png
-catalog_tags: ["code"]
+catalog_tags: ["code", "mcp"]
 ---
 
 # GitHub MCP tool for ADK
@@ -21040,7 +21041,7 @@ File: docs/integrations/gitlab.md
 catalog_title: GitLab
 catalog_description: Perform semantic code search, inspect pipelines, manage merge requests
 catalog_icon: /adk-docs/integrations/assets/gitlab.png
-catalog_tags: ["code"]
+catalog_tags: ["code", "mcp"]
 ---
 
 # GitLab MCP tool for ADK
@@ -21551,7 +21552,7 @@ Check out the following pre-built tools and integrations that you can use with
 ADK agents. For information on building custom tools, see
 [Custom Tools](/adk-docs/tools-custom/). For information on submitting
 integrations to the catalog, see the
-[Contributing Guide](/adk-docs/contributing-guide/).
+[Contribution Guide for Integrations](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md#integrations).
 
 {{$ render_catalog('integrations/*.md') $}}
 
@@ -21788,11 +21789,11 @@ production-quality in mind. It enables you to develop tools easier, faster, and
 more securely by handling the complexities such as connection pooling,
 authentication, and more.
 
-Google’s Agent Development Kit (ADK) has built in support for Toolbox. For more
+Google’s Agent Development Kit (ADK) has built in support for MCP Toolbox. For more
 information on
 [getting started](https://googleapis.github.io/genai-toolbox/getting-started/) or
 [configuring](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
-Toolbox, see the
+MCP Toolbox, see the
 [documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
 
 ![MCP Toolbox for Databases](/adk-docs/integrations/assets/mcp-db-toolbox.png)
@@ -21850,31 +21851,31 @@ MCP Toolbox provides out-of-the-box toolsets for the following databases and dat
 
 ## Configure and deploy
 
-Toolbox is an open source server that you deploy and manage yourself. For more
+MCP Toolbox is an open source server that you deploy and manage yourself. For more
 instructions on deploying and configuring, see the official Toolbox
 documentation:
 
 * [Installing the Server](https://googleapis.github.io/genai-toolbox/getting-started/introduction/#installing-the-server)
-* [Configuring Toolbox](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
+* [Configuring MCP Toolbox](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
 
 ## Install Client SDK for ADK
 
 === "Python"
 
-    ADK relies on the `toolbox-adk` python package to use Toolbox. Install the
+    ADK relies on the `toolbox-adk` python package to use MCP Toolbox. Install the
     package before getting started:
 
     ```shell
     pip install google-adk[toolbox]
     ```
 
-    ### Loading Toolbox Tools
+    ### Loading MCP Toolbox Tools
 
-    Once your Toolbox server is configured, up and running, you can load tools
+    Once your MCP Toolbox server is configured, up and running, you can load tools
     from your server using ADK:
 
     ```python
-    from google.adk.agents import Agent
+    from google.adk import Agent
     from google.adk.tools.toolbox_toolset import ToolboxToolset
 
     toolset = ToolboxToolset(
@@ -21889,7 +21890,7 @@ documentation:
 
     ### Authentication
 
-    The `ToolboxToolset` supports various authentication strategies including Workload Identity (ADC), User Identity (OAuth2), and API Keys. For full documentation, see the [Toolbox ADK Authentication Guide](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk#authentication).
+    The `ToolboxToolset` supports various authentication strategies including Workload Identity (ADC), User Identity (OAuth2), and API Keys. For full documentation, see the [MCP Toolbox ADK Authentication Guide](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk#authentication).
 
     **Example: Workload Identity (ADC)**
 
@@ -21899,7 +21900,7 @@ documentation:
     from google.adk.tools.toolbox_toolset import ToolboxToolset
     from toolbox_adk import CredentialStrategy
 
-    # target_audience: The URL of your Toolbox server
+    # target_audience: The URL of your MCP Toolbox server
     creds = CredentialStrategy.workload_identity(target_audience="<TOOLBOX_URL>")
 
     toolset = ToolboxToolset(
@@ -21910,11 +21911,10 @@ documentation:
 
     ### Advanced Configuration
 
-    You can configure parameter binding, request hooks, and additional headers. See the [Toolbox ADK documentation](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk) for details.
+    You can configure parameter binding and additional headers. See the [MCP Toolbox ADK documentation](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk) for details. For example, you can bind values to tool parameters.
 
-    #### Parameter Binding
-
-    Bind values to tool parameters globally. These values are hidden from the model.
+    !!! Note
+        These values are hidden from the model.
 
     ```python
     toolset = ToolboxToolset(
@@ -21926,32 +21926,18 @@ documentation:
     )
     ```
 
-    #### Usage with Hooks
-
-    Attach `pre_hook` and `post_hook` functions to execute logic before and after tool invocation.
-
-    ```python
-    async def log_start(context, args):
-        print(f"Starting tool with args: {args}")
-
-    toolset = ToolboxToolset(
-        server_url="...",
-        pre_hook=log_start
-    )
-    ```
-
 === "Typescript"
 
-    ADK relies on the `@toolbox-sdk/adk` TS package to use Toolbox. Install the
+    ADK relies on the `@toolbox-sdk/adk` TS package to use MCP Toolbox. Install the
     package before getting started:
 
     ```shell
     npm install @toolbox-sdk/adk
     ```
 
-    ### Loading Toolbox Tools
+    ### Loading MCP Toolbox Tools
 
-    Once you’re Toolbox server is configured and up and running, you can load tools
+    Once your MCP Toolbox server is configured and up and running, you can load tools
     from your server using ADK:
 
     ```typescript
@@ -22003,16 +21989,16 @@ documentation:
 
 === "Go"
 
-    ADK relies on the `mcp-toolbox-sdk-go` go module to use Toolbox. Install the
+    ADK relies on the `mcp-toolbox-sdk-go` go module to use MCP Toolbox. Install the
     module before getting started:
 
     ```shell
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-    ### Loading Toolbox Tools
+    ### Loading MCP Toolbox Tools
 
-    Once you’re Toolbox server is configured and up and running, you can load tools
+    Once your MCP Toolbox server is configured and up and running, you can load tools
     from your server using ADK:
 
     ```go
@@ -22036,7 +22022,7 @@ documentation:
       // Load a specific set of tools
       toolboxtools, err := toolboxClient.LoadToolset("my-toolset-name", ctx)
       if err != nil {
-        return fmt.Sprintln("Could not load Toolbox Toolset", err)
+        return fmt.Sprintln("Could not load MCP Toolbox Toolset", err)
       }
 
       toolsList := make([]tool.Tool, len(toolboxtools))
@@ -22052,7 +22038,7 @@ documentation:
       // Load a single tool
       tool, err := client.LoadTool("my-tool-name", ctx)
       if err != nil {
-        return fmt.Sprintln("Could not load Toolbox Tool", err)
+        return fmt.Sprintln("Could not load MCP Toolbox Tool", err)
       }
 
       llmagent, err := llmagent.New(llmagent.Config{
@@ -22062,9 +22048,9 @@ documentation:
     }
     ```
 
-## Advanced Toolbox Features
+## Advanced MCP Toolbox Features
 
-Toolbox has a variety of features to make developing Gen AI tools for databases.
+MCP Toolbox has a variety of features to make developing Gen AI tools for databases.
 For more information, read more about the following features:
 
 * [Authenticated Parameters](https://googleapis.github.io/genai-toolbox/resources/tools/#authenticated-parameters): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
@@ -24393,6 +24379,10 @@ Gemini and Claude communicate with external applications, data sources, and
 tools. Think of it as a universal connection mechanism that simplifies how LLMs
 obtain context, execute actions, and interact with various systems.
 
+!!! tip "MCP tools for ADK"
+    For a list of pre-built MCP tools for ADK, see
+    [Tools and Integrations](/adk-docs/integrations/?topic=mcp).
+
 ## How does MCP work?
 
 MCP follows a client-server architecture, defining how data (resources),
@@ -24439,6 +24429,29 @@ example
 agent](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia/sample-agents/adk)
 and the
 [Genkit example](https://github.com/GoogleCloudPlatform/vertex-ai-creative-studio/tree/main/experiments/mcp-genmedia/sample-agents/genkit).
+
+================
+File: docs/observability/index.md
+================
+# Observability for agents
+
+Observability for agents enables measurement of a system's internal
+state, including reasoning traces, tool calls, and latent model outputs, by
+analyzing its external telemetry and structured logs. When building
+agents, you may need these features to help debug and diagnose their
+in-process behavior. Basic input and output monitoring is typically
+insufficient for agents with any significant level of complexity.
+
+Agent Development Kit (ADK) provides configurable
+[logging](/adk-docs/observability/logging/)
+functionality for monitoring and debugging agents. However, you may
+need to consider more advanced
+[observability ADK Integrations](/adk-docs/integrations/?topic=observability)
+for monitoring and analysis.
+
+!!! tip "ADK Integrations for observability"
+    For a list of pre-built observability libraries for ADK, see
+    [Tools and Integrations](/adk-docs/integrations/?topic=observability).
 
 ================
 File: docs/observability/logging.md
@@ -24649,16 +24662,14 @@ Some typical applications of Plugins are as follows:
 -   **Request or response modification**: Dynamically add information to AI
     model prompts or standardize tool output responses.
 
-!!! tip
+!!! tip "Tip: Use Plugins for safety features"
     When implementing security guardrails and policies, use ADK Plugins for
     better modularity and flexibility than Callbacks. For more details, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
-!!! warning "Caution"
-    Plugins are not supported by the
-    [ADK web interface](../evaluate/index.md#1-adk-web-run-evaluations-via-the-web-ui).
-    If your ADK workflow uses Plugins, you must run your workflow without the
-    web interface.
+!!! tip "Tip: ADK Integrations"
+    For a list of pre-built plugins and other integrations for ADK, see
+    [Tools and Integrations](/adk-docs/integrations/).
 
 ## How do Plugins work?
 
@@ -24785,7 +24796,7 @@ methods, as shown in the following code example:
             console.log(`[Plugin] LLM request count: ${this.llmRequestCount}`);
             return undefined;
         }
-    }    
+    }
     ```
 
 This example code implements callbacks for `before_agent_callback` and
@@ -24944,11 +24955,6 @@ command line:
     ```sh
     npx ts-node path.to.main.ts
     ```
-
-Plugins are not supported by the
-[ADK web interface](../evaluate/index.md#1-adk-web-run-evaluations-via-the-web-ui).
-If your ADK workflow uses Plugins, you must run your workflow without the web
-interface.
 
 The output of this previously described agent should look similar to the
 following:
@@ -25227,7 +25233,7 @@ The following code example shows the basic syntax of this callback:
         error: Error
     ): Promise<LlmResponse | undefined> {
         // Your implementation here
-    }  
+    }
     ```
 
 ### Tool callbacks
@@ -25289,7 +25295,7 @@ The following code example shows the basic syntax of this callback:
         error: Error
     ): Promise<{ [key:string]: any } | undefined> {
         // Your implementation here
-    }    
+    }
     ```
 
 ### Event callbacks
@@ -25324,7 +25330,7 @@ The following code example shows the basic syntax of this callback:
         event: Event
     ): Promise<Event | undefined> {
         // Your implementation here
-    }    
+    }
     ```
 
 ### Runner end callbacks
@@ -25356,7 +25362,7 @@ The following code example shows the basic syntax of this callback:
     ```typescript
     async afterRunCallback(invocationContext: InvocationContext): Promise<void> {
         // Your implementation here
-    }    
+    }
     ```
 
 ## Next steps
@@ -25366,7 +25372,7 @@ projects:
 
 -   For more ADK Plugin code examples, see the
     [ADK Python repository](https://github.com/google/adk-python/tree/main/src/google/adk/plugins).
--   For information on applying Plugins for security purposes, see 
+-   For information on applying Plugins for security purposes, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
 ================
@@ -26003,7 +26009,7 @@ In simple terms:
 1. The `Runner` receives a user query and asks the main `Agent` to start processing.
 2. The `Agent` (and its associated logic) runs until it has something to report (like a response, a request to use a tool, or a state change) – it then **yields** or **emits** an `Event`.
 3. The `Runner` receives this `Event`, processes any associated actions (like saving state changes via `Services`), and forwards the event onwards (e.g., to the user interface).
-4. Only *after* the `Runner` has processed the event does the `Agent`'s logic **resume** from where it paused, now potentially seeing the effects of the changes committed by the Runner.
+4. The `Agent`'s logic **resumes** from where it paused only *after* the `Runner` has processed the event, and then potentially sees the effects of the changes committed by the Runner.
 5. This cycle repeats until the agent has no more events to yield for the current user query.
 
 This event-driven loop is the fundamental pattern governing how ADK executes your agent code.
@@ -37532,6 +37538,9 @@ File: docs/tools-custom/mcp-tools.md
 
 This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
 
+!!! tip "MCP tools for ADK"
+    For a list of pre-built MCP tools for ADK, see [Tools and Integrations](/adk-docs/integrations/?topic=mcp).
+
 ## What is Model Context Protocol (MCP)?
 
 The Model Context Protocol (MCP) is an open standard designed to standardize how Large Language Models (LLMs) like Gemini and Claude communicate with external applications, data sources, and tools. Think of it as a universal connection mechanism that simplifies how LLMs obtain context, execute actions, and interact with various systems.
@@ -41688,6 +41697,7 @@ Community-provided translations of the ADK documentation.
   <li><a href="https://adk.wiki/">🇨🇳 Chinese (中文) Documentation</a></li>
   <li><a href="https://adk-labs.github.io/adk-docs/ko/">🇰🇷 Korean (한국어) Documentation</a></li>
   <li><a href="https://adk-labs.github.io/adk-docs/ja/">🇯🇵 Japanese (日本語) Documentation</a></li>
+  <li><a href="https://adk-es.fabian-castro-c.dev/">🇪🇸 Spanish (Español) Documentation</a></li>
 </ul>
 
 ## Contributing Your Resource
