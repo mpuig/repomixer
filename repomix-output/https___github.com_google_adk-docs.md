@@ -10356,7 +10356,7 @@ File: docs/deploy/cloud-run.md
 # Deploy to Cloud Run
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 [Cloud Run](https://cloud.google.com/run)
@@ -10376,6 +10376,12 @@ To proceed, confirm that your agent code is configured as follows:
     2. Your agent variable is named `root_agent`.
     3. `__init__.py` is within your agent directory and contains `from . import agent`.
     4. Your `requirements.txt` file is present in the agent directory.
+
+=== "TypeScript"
+
+    1. Agent code is in a file called `agent.ts` within your project directory.
+    2. Your agent variable is named `rootAgent` and is exported.
+    3. Your `package.json` file is present in the agent directory with `@google/adk` and other dependencies.
 
 === "Go"
 
@@ -10447,7 +10453,7 @@ gcloud secrets add-iam-policy-binding GOOGLE_API_KEY --member="serviceAccount:12
 
 ## Deployment payload {#payload}
 
-When you deploy your ADK agent workflow to the Google Cloud Run,
+When you deploy your ADK agent workflow to Google Cloud Run,
 the following content is uploaded to the service:
 
 - Your ADK agent code
@@ -10688,6 +10694,69 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     `gcloud` will build the Docker image, push it to Google Artifact Registry, and deploy it to Cloud Run. Upon completion, it will output the URL of your deployed service.
 
     For a full list of deployment options, see the [`gcloud run deploy` reference documentation](https://cloud.google.com/sdk/gcloud/reference/run/deploy).
+
+=== "TypeScript - adk CLI"
+
+    ### adk CLI
+
+    The `adk deploy cloud_run` command deploys your agent code to Google Cloud Run.
+
+    Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
+
+    #### Setup environment variables
+
+    Optional but recommended: Setting environment variables can make the deployment commands cleaner.
+
+    ```bash
+    # Set your Google Cloud Project ID
+    export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
+
+    # Set your desired Google Cloud Location
+    export GOOGLE_CLOUD_LOCATION="us-central1" # Example location
+
+    # Set a name for your Cloud Run service (optional)
+    export SERVICE_NAME="capital-agent-service"
+    ```
+
+    #### Command usage
+
+    This deployment command should be run from the directory of your agent code, where your `package.json` file is located.
+
+    ##### Minimal command
+
+    ```bash
+    npx adk deploy cloud_run \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION
+    ```
+
+    ##### Full command with optional flags
+
+    ```bash
+    npx adk deploy cloud_run \
+    --project=$GOOGLE_CLOUD_PROJECT \
+    --region=$GOOGLE_CLOUD_LOCATION \
+    --service_name=$SERVICE_NAME \
+    --with_ui
+    ```
+
+    ##### Options
+
+    * `--project TEXT`: (Required) Your Google Cloud project ID (e.g., `$GOOGLE_CLOUD_PROJECT`).
+    * `--region TEXT`: (Required) The Google Cloud location for deployment (e.g., `$GOOGLE_CLOUD_LOCATION`, `us-central1`).
+    * `--service_name TEXT`: (Optional) The name for the Cloud Run service (e.g., `$SERVICE_NAME`). Defaults to `adk-default-service-name`.
+    * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
+    * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
+    * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
+    * `--help`: Show the help message and exit.
+
+    ##### Authenticated access
+    During the deployment process, you might be prompted: `Allow unauthenticated invocations to [your-service-name] (y/N)?`.
+
+    * Enter `y` to allow public access to your agent's API endpoint without authentication.
+    * Enter `N` (or press Enter for the default) to require authentication (e.g., using an identity token as shown in the "Testing your agent" section).
+
+    Upon successful execution, the command deploys your agent to Cloud Run and provides the URL of the deployed service.
 
 === "Go - adkgo CLI"
 
@@ -17157,6 +17226,150 @@ CopilotKit docs:
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
 
 ================
+File: docs/integrations/agentmail.md
+================
+---
+catalog_title: AgentMail
+catalog_description: Create email inboxes for AI agents to send, receive, and manage messages
+catalog_icon: /adk-docs/integrations/assets/agentmail.png
+catalog_tags: ["mcp"]
+---
+
+# AgentMail MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [AgentMail MCP Server](https://github.com/agentmail-to/agentmail-mcp)
+connects your ADK agent to [AgentMail](https://agentmail.to/), an email inbox
+API built for AI agents. This integration gives your agent its own email
+inboxes to send, receive, reply to, and forward messages using natural
+language.
+
+## Use cases
+
+- **Give Agents Their Own Inboxes**: Create dedicated email addresses for your
+  agents so they can send and receive emails independently, just like a human
+  team member.
+
+- **Automate Email Workflows**: Let your agent handle email conversations end
+  to end, including sending initial outreach, reading replies, and following up
+  on threads.
+
+- **Manage Conversations Across Inboxes**: List and search across threads and
+  messages, forward emails, and retrieve attachments to keep your agent informed
+  and responsive.
+
+## Prerequisites
+
+- Create an [AgentMail account](https://agentmail.to/)
+- Generate an API key from the
+  [AgentMail Dashboard](https://agentmail.to/)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        AGENTMAIL_API_KEY = "YOUR_AGENTMAIL_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="agentmail_agent",
+            instruction="Help users manage email inboxes and send messages",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "agentmail-mcp",
+                            ],
+                            env={
+                                "AGENTMAIL_API_KEY": AGENTMAIL_API_KEY,
+                            }
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const AGENTMAIL_API_KEY = "YOUR_AGENTMAIL_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "agentmail_agent",
+            instruction: "Help users manage email inboxes and send messages",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "agentmail-mcp"],
+                        env: {
+                            AGENTMAIL_API_KEY: AGENTMAIL_API_KEY,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Available tools
+
+### Inbox management
+
+Tool | Description
+---- | -----------
+`list_inboxes` | List all inboxes
+`get_inbox` | Get details for a specific inbox
+`create_inbox` | Create a new inbox with a username and domain
+`delete_inbox` | Delete an inbox
+
+### Thread management
+
+Tool | Description
+---- | -----------
+`list_threads` | List threads in an inbox
+`get_thread` | Get a specific thread with its messages
+`get_attachment` | Download an attachment from a message
+
+### Message operations
+
+Tool | Description
+---- | -----------
+`send_message` | Send a new email from an inbox
+`reply_to_message` | Reply to an existing message
+`forward_message` | Forward a message to another recipient
+`update_message` | Update message properties such as read status
+
+## Additional resources
+
+- [AgentMail MCP Server Repository](https://github.com/agentmail-to/agentmail-mcp)
+- [AgentMail Documentation](https://docs.agentmail.to/)
+- [AgentMail Toolkit](https://github.com/agentmail-to/agentmail-toolkit)
+
+================
 File: docs/integrations/agentops.md
 ================
 ---
@@ -21768,6 +21981,207 @@ Tool | Description
 - [Linear Getting Started Guide](https://linear.app/docs/start-guide)
 
 ================
+File: docs/integrations/mailgun.md
+================
+---
+catalog_title: Mailgun
+catalog_description: Send emails, track delivery metrics, and manage mailing lists
+catalog_icon: /adk-docs/integrations/assets/mailgun.png
+catalog_tags: ["mcp"]
+---
+
+# Mailgun MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Mailgun MCP Server](https://github.com/mailgun/mailgun-mcp-server) connects
+your ADK agent to [Mailgun](https://www.mailgun.com/), a transactional email
+service. This integration gives your agent the ability to send emails, track
+delivery metrics, manage domains and templates, and handle mailing lists using
+natural language.
+
+## Use cases
+
+- **Send and Manage Emails**: Compose and send transactional or marketing emails,
+  retrieve stored messages, and resend messages through conversational commands.
+
+- **Monitor Delivery Performance**: Fetch delivery statistics, analyze bounce
+  classifications, and review suppression lists to maintain sender reputation.
+
+- **Manage Email Infrastructure**: Verify domain DNS configuration, configure
+  tracking settings, create email templates, and set up inbound routing rules.
+
+## Prerequisites
+
+- Create a [Mailgun account](https://www.mailgun.com/)
+- Generate an API key from the
+  [Mailgun Dashboard](https://app.mailgun.com/settings/api_security)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        MAILGUN_API_KEY = "YOUR_MAILGUN_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="mailgun_agent",
+            instruction="Help users send emails and manage their Mailgun account",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@mailgun/mcp-server",
+                            ],
+                            env={
+                                "MAILGUN_API_KEY": MAILGUN_API_KEY,
+                                # "MAILGUN_API_REGION": "eu",  # Optional: defaults to "us"
+                            }
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const MAILGUN_API_KEY = "YOUR_MAILGUN_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "mailgun_agent",
+            instruction: "Help users send emails and manage their Mailgun account",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "@mailgun/mcp-server"],
+                        env: {
+                            MAILGUN_API_KEY: MAILGUN_API_KEY,
+                            // MAILGUN_API_REGION: "eu",  // Optional: defaults to "us"
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Available tools
+
+### Messaging
+
+Tool | Description
+---- | -----------
+`send_email` | Send an email with support for HTML content and attachments
+`get_stored_message` | Retrieve a stored email message
+`resend_message` | Resend a previously sent message
+
+### Domains
+
+Tool | Description
+---- | -----------
+`get_domain` | View details for a specific domain
+`verify_domain` | Verify DNS configuration for a domain
+`get_tracking_settings` | View tracking settings (click, open, unsubscribe)
+`update_tracking_settings` | Update tracking settings for a domain
+
+### Webhooks
+
+Tool | Description
+---- | -----------
+`list_webhooks` | List all event webhooks for a domain
+`create_webhook` | Create a new event webhook
+`update_webhook` | Update an existing webhook
+`delete_webhook` | Delete a webhook
+
+### Routes
+
+Tool | Description
+---- | -----------
+`list_routes` | View inbound email routing rules
+`update_route` | Update an inbound routing rule
+
+### Mailing lists
+
+Tool | Description
+---- | -----------
+`create_mailing_list` | Create a new mailing list
+`manage_list_members` | Add, remove, or update mailing list members
+
+### Templates
+
+Tool | Description
+---- | -----------
+`create_template` | Create a new email template
+`manage_template_versions` | Create and manage template versions
+
+### Analytics and stats
+
+Tool | Description
+---- | -----------
+`query_metrics` | Query sending and usage metrics for a date range
+`get_logs` | Retrieve email event logs
+`get_stats` | View aggregate statistics by domain, tag, provider, device, or country
+
+### Suppressions
+
+Tool | Description
+---- | -----------
+`get_bounces` | View bounced email addresses
+`get_unsubscribes` | View unsubscribed email addresses
+`get_complaints` | View complaint records
+`get_allowlist` | View allowlist entries
+
+### IPs
+
+Tool | Description
+---- | -----------
+`list_ips` | View IP assignments
+`get_ip_pools` | View dedicated IP pool configuration
+
+### Bounce classification
+
+Tool | Description
+---- | -----------
+`get_bounce_classification` | Analyze bounce types and delivery issues
+
+## Configuration
+
+Variable | Required | Default | Description
+-------- | -------- | ------- | -----------
+`MAILGUN_API_KEY` | Yes | — | Your Mailgun API key
+`MAILGUN_API_REGION` | No | `us` | API region: `us` or `eu`
+
+## Additional resources
+
+- [Mailgun MCP Server Repository](https://github.com/mailgun/mailgun-mcp-server)
+- [Mailgun MCP Integration Guide](https://www.mailgun.com/resources/integrations/mcp-server/)
+- [Mailgun Documentation](https://documentation.mailgun.com/)
+
+================
 File: docs/integrations/mcp-toolbox-for-databases.md
 ================
 ---
@@ -23401,6 +23815,150 @@ async for event in runner.run_async(
 - [OpenInference Package](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
 
 ================
+File: docs/integrations/pinecone.md
+================
+---
+catalog_title: Pinecone
+catalog_description: Store data, perform semantic search, and rerank results
+catalog_icon: /adk-docs/integrations/assets/pinecone.png
+catalog_tags: ["data","mcp"]
+---
+
+# Pinecone MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Pinecone MCP Server](https://github.com/pinecone-io/pinecone-mcp)
+connects your ADK agent to [Pinecone](https://www.pinecone.io/), a vector
+database for AI applications. This integration gives your agent the ability to
+manage indexes, store and search data using semantic search with metadata
+filtering, and search across multiple indexes with reranking.
+
+## Use cases
+
+- **Semantic Search and Retrieval**: Search stored data using natural language
+  queries with metadata filtering and reranking.
+
+- **Knowledge Base Management**: Store and manage data to build and maintain
+  retrieval-augmented generation (RAG) systems.
+
+- **Cross-Index Search**: Search across multiple Pinecone indexes
+  simultaneously, with automatic deduplication and reranking of results.
+
+## Prerequisites
+
+- A [Pinecone](https://www.pinecone.io/) account
+- An API key from the [Pinecone Console](https://app.pinecone.io)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        PINECONE_API_KEY = "YOUR_PINECONE_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="pinecone_agent",
+            instruction="Help users manage and search their Pinecone vector indexes",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "@pinecone-database/mcp",
+                            ],
+                            env={
+                                "PINECONE_API_KEY": PINECONE_API_KEY,
+                            }
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const PINECONE_API_KEY = "YOUR_PINECONE_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "pinecone_agent",
+            instruction: "Help users manage and search their Pinecone vector indexes",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "@pinecone-database/mcp"],
+                        env: {
+                            PINECONE_API_KEY: PINECONE_API_KEY,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+!!! note
+
+    Only indexes with [integrated inference](https://docs.pinecone.io/guides/inference/understanding-inference)
+    are supported. Indexes without an integrated embedding model are not
+    supported by this MCP server.
+
+## Available tools
+
+### Documentation
+
+Tool | Description
+---- | -----------
+`search-docs` | Search the official Pinecone documentation
+
+### Index management
+
+Tool | Description
+---- | -----------
+`list-indexes` | List all Pinecone indexes
+`describe-index` | Describe the configuration of an index
+`describe-index-stats` | Get statistics about an index, including record count and available namespaces
+`create-index-for-model` | Create a new index with an integrated inference model for embedding
+
+### Data operations
+
+Tool | Description
+---- | -----------
+`upsert-records` | Insert or update records in an index with integrated inference
+`search-records` | Search for records using a text query with options for metadata filtering and reranking
+`cascading-search` | Search across multiple indexes, deduplicating and reranking the results
+`rerank-documents` | Rerank a collection of records or text documents using a specialized reranking model
+
+## Additional resources
+
+- [Pinecone MCP Server Repository](https://github.com/pinecone-io/pinecone-mcp)
+- [Pinecone MCP Documentation](https://docs.pinecone.io/guides/operations/mcp-server)
+- [Pinecone Documentation](https://docs.pinecone.io)
+
+================
 File: docs/integrations/postman.md
 ================
 ---
@@ -23911,6 +24469,163 @@ For complete code samples using the Reflect and Retry plugin, see the following:
     code sample
 *   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/hallucinating_func_name)
     code sample
+
+================
+File: docs/integrations/restate.md
+================
+---
+catalog_title: Restate
+catalog_description: Resilient agent execution and orchestration with durable sessions and human approvals
+catalog_icon: /adk-docs/integrations/assets/restate.svg
+---
+
+# Restate plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[Restate](https://restate.dev) is a durable execution engine that turns ADK
+agents into innately resilient, robust systems. It provides persistent sessions,
+pause/resume for human approvals, resilient multi-agent orchestration, safe
+versioning, and full observability and control over every execution. All LLM
+calls and tool executions are journaled, so if anything fails, your agent
+recovers from exactly where it left off.
+
+## Use cases
+
+The Restate plugin gives your agents:
+
+- **Durable execution**: Never lose progress. If your agent crashes, it picks up
+  exactly where it left off, with automatic retries and recovery.
+- **Pause/resume for human-in-the-loop**: Pause execution for days or weeks
+  until a human approves, then resume where you left off.
+- **Durable state**: Agent memory and conversation history persist across
+  restarts with built-in session management.
+- **Observability & Task control**: See exactly what your agent did and kill,
+  pause, and resume agent executions at any time.
+- **Resilient multi-agent orchestration**: Run resilient workflows across
+  multiple agents with parallel execution.
+- **Safe versioning**: Deploy new versions without breaking ongoing executions
+  via immutable deployments.
+
+## Prerequisites
+
+- Python 3.12+
+- A [Gemini API key](https://aistudio.google.com/app/api-keys)
+
+To run the example below, you'll also need:
+
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
+- [Docker](https://docs.docker.com/get-docker/) (or
+  [Brew/npm/binary](https://docs.restate.dev/develop/local_dev#running-restate-server--cli-locally)
+  for the Restate server)
+
+## Installation
+
+Install the Restate SDK for Python:
+
+```bash
+pip install "restate-sdk[serde]"
+```
+
+## Use with agent
+
+Follow these steps to run a durable agent and inspect its execution journal in
+the Restate UI:
+
+1. **Clone the [restate-google-adk-example repository](https://github.com/restatedev/restate-google-adk-example) and navigate to the example**
+
+    ```bash
+    git clone https://github.com/restatedev/restate-google-adk-example.git
+    cd restate-google-adk-example/examples/hello-world
+    ```
+
+2. **Export your Gemini API key**
+
+    ```bash
+    export GOOGLE_API_KEY=your-api-key
+    ```
+
+3. **Start the weather agent**
+
+    ```bash
+    uv run .
+    ```
+
+4. **Start Restate in another terminal**
+
+    ```bash
+    docker run --name restate --rm -p 8080:8080 -p 9070:9070 -d \
+      --add-host host.docker.internal:host-gateway \
+      docker.restate.dev/restatedev/restate:latest
+    ```
+
+    Other installation methods: [Brew, npm, binary
+    downloads](https://docs.restate.dev/develop/local_dev#running-restate-server--cli-locally)
+
+5. **Register the agent**
+
+    Open the Restate UI at `localhost:9070` and register your agent deployment
+    (e.g., `http://host.docker.internal:9080`):
+
+    ![Restate registration](./assets/restate-registration.png)
+
+    !!! tip "Safe versioning"
+
+        Restate registers each deployment as an immutable snapshot. When you
+        deploy a new version, ongoing executions finish on the original
+        deployment while new requests route to the latest one. Learn more about
+        [version-aware routing](https://docs.restate.dev/services/versioning).
+
+6. **Send a request to the agent**
+
+    In the Restate UI, select **WeatherAgent**, open the **Playground**, and
+    send a request:
+
+    ![Send request in the UI](./assets/restate-request.png)
+
+    !!! tip "Durable sessions and retries"
+
+        This request goes through Restate, which persists it before forwarding
+        to your agent. Each session (here `session-1`) is isolated, stateful,
+        and durable. If the agent crashes mid-execution, Restate automatically
+        retries and resumes from the last journaled step, without losing
+        progress.
+
+7. **Inspect the execution journal**
+
+    Click on the **Invocations** tab and then on your invocation to see the
+    execution journal:
+
+    ![Restate journal in the UI](./assets/restate-journal.png)
+
+    !!! tip "Full control over agent executions"
+
+        Every LLM call and tool execution is recorded in the journal. From the
+        UI, you can pause, resume, restart from any intermediate step, or kill
+        an execution. Check the **State** tab to inspect your agent's current
+        session data.
+
+## Capabilities
+
+The Restate plugin provides the following capabilities for your ADK agents:
+
+| Capability | Description |
+| --- | --- |
+| Durable tool execution | Wraps tool logic with `restate_object_context().run_typed()` so it retries and recovers automatically |
+| Human-in-the-loop | Pauses execution with `restate_object_context().awakeable()` until an external signal (e.g. human approval) |
+| Persistent sessions | `RestateSessionService()` stores agent memory and conversation state durably |
+| Durable LLM calls | `RestatePlugin()` journals LLM calls with automatic retries |
+| Multi-agent communication | Durable cross-agent HTTP calls with `restate_object_context().service_call()` |
+| Parallel execution | Run tools and agents concurrently with `restate.gather()` for deterministic recovery |
+
+## Additional resources
+
+- [Restate ADK example repository](https://github.com/restatedev/restate-google-adk-example) - Runnable examples including claims processing with human approval
+- [Restate ADK tutorial](https://docs.restate.dev/tour/google-adk) - Walkthrough of agent development with Restate and ADK
+- [Restate AI documentation](https://docs.restate.dev/ai) - Full reference for durable AI agent patterns
+- [Restate SDK on PyPI](https://pypi.org/project/restate-sdk/) - Python package
 
 ================
 File: docs/integrations/spanner.md
