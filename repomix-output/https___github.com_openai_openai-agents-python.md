@@ -330,59 +330,69 @@ search:
 ---
 # 가이드
 
-이 가이드는 OpenAI Agents SDK 의 실시간 기능을 사용해 음성 지원 AI 에이전트를 구축하는 방법을 심층적으로 다룹니다
+이 가이드는 OpenAI Agents SDK의 Realtime 기능을 사용해 음성 지원 AI 에이전트를 구축하는 방법을 심층적으로 살펴봅니다.
 
-!!! warning "Beta feature"
-실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
+!!! warning "베타 기능"
+실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 하위 호환성이 깨지는 변경이 있을 수 있습니다.
 
 ## 개요
 
-실시간 에이전트는 오디오와 텍스트 입력을 실시간으로 처리하고 실시간 오디오로 응답하는 대화 흐름을 지원합니다. OpenAI 의 Realtime API 와 영구 연결을 유지하여 낮은 지연으로 자연스러운 음성 대화를 가능하게 하며, 인터럽션(중단 처리)도 우아하게 처리할 수 있습니다.
+실시간 에이전트는 오디오 및 텍스트 입력을 실시간으로 처리하고 실시간 오디오로 응답하는 대화 흐름을 지원합니다. OpenAI의 Realtime API와 지속적인 연결을 유지하여, 낮은 지연으로 자연스러운 음성 대화를 가능하게 하며 인터럽션(중단 처리)을 우아하게 처리할 수 있습니다.
 
 ## 아키텍처
 
 ### 핵심 구성 요소
 
-실시간 시스템은 다음과 같은 주요 구성 요소로 이루어져 있습니다:
+실시간 시스템은 몇 가지 핵심 구성 요소로 이루어집니다:
 
--   **RealtimeAgent**: instructions, tools, handoffs 로 구성된 에이전트
--   **RealtimeRunner**: 구성을 관리합니다. `runner.run()` 을 호출해 세션을 얻을 수 있습니다.
--   **RealtimeSession**: 단일 상호작용 세션입니다. 일반적으로 사용자가 대화를 시작할 때마다 하나를 만들고, 대화가 끝날 때까지 유지합니다.
--   **RealtimeModel**: 기반 모델 인터페이스(일반적으로 OpenAI 의 WebSocket 구현)
+-   **RealtimeAgent**: instructions, tools, handoffs로 구성된 에이전트
+-   **RealtimeRunner**: 구성을 관리합니다. `runner.run()`을 호출해 세션을 얻을 수 있습니다
+-   **RealtimeSession**: 단일 상호작용 세션입니다. 일반적으로 사용자가 대화를 시작할 때마다 하나를 만들고, 대화가 끝날 때까지 유지합니다
+-   **RealtimeModel**: 기본 모델 인터페이스(일반적으로 OpenAI의 WebSocket 구현)
 
 ### 세션 흐름
 
 일반적인 실시간 세션은 다음 흐름을 따릅니다:
 
-1. instructions, tools, handoffs 로 **RealtimeAgent(들)을 생성**합니다.
-2. 에이전트와 구성 옵션으로 **RealtimeRunner 를 설정**합니다.
-3. `await runner.run()` 으로 **세션을 시작**하면 RealtimeSession 이 반환됩니다.
-4. `send_audio()` 또는 `send_message()` 를 사용해 세션에 **오디오 또는 텍스트 메시지를 전송**합니다.
-5. 세션을 순회하며 **이벤트를 수신**합니다. 이벤트에는 오디오 출력, 전사(transcript), 도구 호출, 핸드오프, 오류가 포함됩니다.
-6. 사용자가 에이전트 발화 중에 말하는 **인터럽션(중단 처리)을 처리**합니다. 이 경우 현재 오디오 생성이 자동으로 중지됩니다.
+1. instructions, tools, handoffs로 **RealtimeAgent(들) 생성**
+2. 에이전트와 구성 옵션으로 **RealtimeRunner 설정**
+3. `await runner.run()`을 사용해 **세션 시작**(RealtimeSession 반환)
+4. `send_audio()` 또는 `send_message()`로 세션에 **오디오 또는 텍스트 메시지 전송**
+5. 세션을 순회(iterating)하여 **이벤트 수신** - 이벤트에는 오디오 출력, 전사(transcript), 도구 호출, 핸드오프, 오류가 포함됩니다
+6. 사용자가 에이전트 위로 말하는 경우 **인터럽션(중단 처리) 처리** - 현재 오디오 생성이 자동으로 중지됩니다
 
-세션은 대화 기록을 유지하고 실시간 모델과의 영구 연결을 관리합니다.
+세션은 대화 기록을 유지하고 실시간 모델과의 지속 연결을 관리합니다.
 
 ## 에이전트 구성
 
-RealtimeAgent 는 일반 Agent 클래스와 유사하게 동작하지만 몇 가지 중요한 차이가 있습니다. 전체 API 세부 사항은 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 레퍼런스를 참고하세요.
+RealtimeAgent는 일반 Agent 클래스와 유사하게 동작하지만 몇 가지 중요한 차이점이 있습니다. 전체 API 세부 정보는 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 레퍼런스를 참고하세요.
 
 일반 에이전트와의 주요 차이점:
 
--   모델 선택은 에이전트 수준이 아니라 세션 수준에서 구성됩니다.
--   structured output 지원이 없습니다(`outputType` 을 지원하지 않음).
--   음성은 에이전트별로 구성할 수 있지만, 첫 번째 에이전트가 말한 이후에는 변경할 수 없습니다.
--   tools, handoffs, instructions 같은 다른 기능은 동일하게 동작합니다.
+-   모델 선택은 에이전트 레벨이 아니라 세션 레벨에서 구성합니다
+-   structured output 미지원(`outputType` 미지원)
+-   음성은 에이전트별로 구성할 수 있지만, 첫 번째 에이전트가 말한 이후에는 변경할 수 없습니다
+-   tools, handoffs, instructions 등 다른 기능은 동일하게 동작합니다
 
 ## 세션 구성
 
 ### 모델 설정
 
-세션 구성은 기반 실시간 모델의 동작을 제어할 수 있게 합니다. 모델 이름(예: `gpt-realtime`), 음성 선택(alloy, echo, fable, onyx, nova, shimmer), 지원 모달리티(text 및/또는 audio)를 설정할 수 있습니다. 오디오 형식은 입력과 출력 모두에 대해 설정할 수 있으며, 기본값은 PCM16 입니다.
+세션 구성은 기본 실시간 모델 동작을 제어할 수 있게 해줍니다. 모델 이름(예: `gpt-realtime`), 음성 선택(alloy, echo, fable, onyx, nova, shimmer), 지원 모달리티(text 및/또는 audio)를 구성할 수 있습니다. 오디오 포맷은 입력과 출력 모두 설정할 수 있으며, 기본값은 PCM16입니다.
 
 ### 오디오 구성
 
-오디오 설정은 세션이 음성 입력과 출력을 처리하는 방식을 제어합니다. Whisper 같은 모델을 사용한 입력 오디오 전사를 구성하고, 언어 선호를 설정하며, 도메인 특화 용어의 정확도를 높이기 위해 전사 프롬프트를 제공할 수 있습니다. 턴 감지 설정은 에이전트가 언제 응답을 시작하고 멈출지를 제어하며, 음성 활동 감지 임계값, 무음 지속 시간, 감지된 음성 전후 패딩 옵션을 포함합니다.
+오디오 설정은 세션이 음성 입력과 출력을 처리하는 방식을 제어합니다. Whisper 같은 모델을 사용한 입력 오디오 전사를 구성하고, 언어 선호를 설정하며, 도메인 특화 용어의 정확도를 높이기 위한 전사 프롬프트를 제공할 수 있습니다. 턴 감지(turn detection) 설정은 에이전트가 언제 응답을 시작하고 멈출지를 제어하며, 음성 활동 감지 임계값, 무음 지속 시간, 감지된 발화 주변의 패딩 같은 옵션이 있습니다.
+
+`RealtimeRunner(config=...)`에서 설정할 수 있는 추가 구성 옵션은 다음과 같습니다:
+
+-   `model_settings.output_modalities`로 출력을 텍스트 및/또는 오디오로 제한
+-   `model_settings.input_audio_noise_reduction`로 근거리/원거리 오디오에 대한 노이즈 감소 튜닝
+-   `guardrails_settings.debounce_text_length`로 출력 가드레일 실행 빈도 제어
+-   `async_tool_calls`로 함수 도구를 동시에 실행
+-   `tool_error_formatter`로 모델에 보이는 도구 오류 메시지 커스터마이즈
+
+전체 타입 구성은 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요.
 
 ## 도구 및 함수
 
@@ -416,7 +426,7 @@ agent = RealtimeAgent(
 
 ### 핸드오프 생성
 
-핸드오프는 대화를 전문 에이전트 간에 전환할 수 있게 합니다.
+핸드오프는 대화를 전문화된 에이전트 사이에서 전환할 수 있게 해줍니다.
 
 ```python
 from agents.realtime import realtime_handoff
@@ -445,22 +455,22 @@ main_agent = RealtimeAgent(
 
 ## 이벤트 처리
 
-세션은 session 객체를 순회하여 수신할 수 있는 이벤트를 스트리밍합니다. 이벤트에는 오디오 출력 청크, 전사 결과, 도구 실행 시작과 종료, 에이전트 핸드오프, 오류가 포함됩니다. 처리해야 할 주요 이벤트는 다음과 같습니다:
+세션은 세션 객체를 순회(iterating)하여 수신할 수 있는 이벤트를 스트리밍합니다. 이벤트에는 오디오 출력 청크, 전사 결과, 도구 실행 시작 및 종료, 에이전트 핸드오프, 오류가 포함됩니다. 처리해야 할 주요 이벤트는 다음과 같습니다:
 
--   **audio**: 에이전트 응답의 원문 오디오 데이터
+-   **audio**: 에이전트 응답의 원시 오디오 데이터
 -   **audio_end**: 에이전트 발화 종료
--   **audio_interrupted**: 사용자가 에이전트를 중단함
+-   **audio_interrupted**: 사용자가 에이전트를 인터럽트
 -   **tool_start/tool_end**: 도구 실행 라이프사이클
 -   **handoff**: 에이전트 핸드오프 발생
 -   **error**: 처리 중 오류 발생
 
-전체 이벤트 세부 사항은 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent] 를 참고하세요.
+전체 이벤트 세부 정보는 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]를 참고하세요.
 
 ## 가드레일
 
-실시간 에이전트는 출력 가드레일만 지원합니다. 이 가드레일은 실시간 생성 중 성능 문제를 피하기 위해 디바운스 처리되며, 매 단어마다가 아니라 주기적으로 실행됩니다. 기본 디바운스 길이는 100 자이며, 구성으로 변경할 수 있습니다.
+실시간 에이전트에서는 출력 가드레일만 지원됩니다. 이러한 가드레일은 실시간 생성 중 성능 문제를 피하기 위해 디바운스되며, 주기적으로 실행됩니다(모든 단어마다 실행되지 않음). 기본 디바운스 길이는 100자이지만, 구성할 수 있습니다.
 
-가드레일은 `RealtimeAgent` 에 직접 연결하거나 세션의 `run_config` 를 통해 제공할 수 있습니다. 두 소스의 가드레일은 함께 실행됩니다.
+가드레일은 `RealtimeAgent`에 직접 붙이거나 세션의 `run_config`를 통해 제공할 수 있습니다. 두 소스의 가드레일은 함께 실행됩니다.
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -478,19 +488,19 @@ agent = RealtimeAgent(
 )
 ```
 
-가드레일이 트리거되면 `guardrail_tripped` 이벤트를 생성하며, 에이전트의 현재 응답을 인터럽트할 수 있습니다. 디바운스 동작은 안전성과 실시간 성능 요구 사항 사이의 균형을 맞추는 데 도움이 됩니다. 텍스트 에이전트와 달리, 실시간 에이전트는 가드레일이 트리거되어도 Exception 을 발생시키지 **않습니다**.
+가드레일이 트리거되면 `guardrail_tripped` 이벤트가 생성되며, 에이전트의 현재 응답을 인터럽트할 수 있습니다. 디바운스 동작은 안전성과 실시간 성능 요구 사이의 균형을 맞추는 데 도움이 됩니다. 텍스트 에이전트와 달리, 실시간 에이전트는 가드레일이 트리거되어도 Exception을 **발생시키지 않습니다**.
 
 ## 오디오 처리
 
-[`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 를 사용해 세션에 오디오를 보내거나, [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 로 텍스트를 보낼 수 있습니다.
+[`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio]로 세션에 오디오를 보내거나, [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message]로 텍스트를 보낼 수 있습니다.
 
-오디오 출력의 경우 `audio` 이벤트를 수신하고, 선호하는 오디오 라이브러리로 오디오 데이터를 재생하세요. 사용자가 에이전트를 중단할 때 즉시 재생을 멈추고 대기 중인 오디오를 비우기 위해 `audio_interrupted` 이벤트도 반드시 수신해야 합니다.
+오디오 출력의 경우 `audio` 이벤트를 수신해 선호하는 오디오 라이브러리로 오디오 데이터를 재생하세요. 사용자가 에이전트를 인터럽트할 때 즉시 재생을 멈추고 큐에 쌓인 오디오를 비우기 위해 `audio_interrupted` 이벤트도 반드시 처리하세요.
 
 ## SIP 통합
 
-[Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 를 통해 들어오는 전화 통화에 실시간 에이전트를 연결할 수 있습니다. SDK 는 동일한 에이전트 흐름을 재사용하면서 SIP 로 미디어를 협상하는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 을 제공합니다.
+[Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip)로 들어오는 전화 통화에 실시간 에이전트를 연결할 수 있습니다. SDK는 미디어를 SIP로 협상하면서 동일한 에이전트 흐름을 재사용하는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]을 제공합니다.
 
-사용하려면 runner 에 모델 인스턴스를 전달하고, 세션을 시작할 때 SIP `call_id` 를 제공하세요. call ID 는 수신 통화를 알리는 웹훅이 전달합니다.
+사용하려면 러너에 모델 인스턴스를 전달하고, 세션을 시작할 때 SIP `call_id`를 제공하세요. call ID는 수신 통화를 알리는 webhook으로 전달됩니다.
 
 ```python
 from agents.realtime import RealtimeAgent, RealtimeRunner
@@ -513,26 +523,26 @@ async with await runner.run(
         ...
 ```
 
-발신자가 전화를 끊으면 SIP 세션이 종료되고 실시간 연결이 자동으로 닫힙니다. 전체 전화 예제는 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) 를 참고하세요.
+발신자가 전화를 끊으면 SIP 세션이 종료되고 실시간 연결도 자동으로 닫힙니다. 전체 전화 예제는 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)을 참고하세요.
 
 ## 모델 직접 접근
 
-기본 모델에 접근하여 커스텀 리스너를 추가하거나 고급 작업을 수행할 수 있습니다:
+기본 모델에 접근해 커스텀 리스너를 추가하거나 고급 작업을 수행할 수 있습니다:
 
 ```python
 # Add a custom listener to the model
 session.model.add_listener(my_custom_listener)
 ```
 
-이를 통해 연결을 더 낮은 수준에서 제어해야 하는 고급 사용 사례를 위해 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 인터페이스에 직접 접근할 수 있습니다.
+이를 통해 연결에 대해 더 낮은 수준의 제어가 필요한 고급 사용 사례에서 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 인터페이스에 직접 접근할 수 있습니다.
 
 ## 예제
 
-완전한 동작 예제는 UI 구성 요소가 있는 데모와 없는 데모를 포함한 [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 를 확인하세요.
+UI 구성 요소가 있는/없는 데모를 포함한 완전한 동작 예제는 [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)를 확인하세요.
 
 ## Azure OpenAI 엔드포인트 형식
 
-Azure OpenAI 에 연결할 때는 GA Realtime 엔드포인트 형식을 사용하고 `model_config` 의 headers 를 통해 자격 증명을 전달하세요:
+Azure OpenAI에 연결할 때는 GA Realtime 엔드포인트 형식을 사용하고 `model_config`의 headers를 통해 자격 증명을 전달하세요:
 
 ```python
 model_config = {
@@ -541,7 +551,7 @@ model_config = {
 }
 ```
 
-토큰 기반 인증의 경우 `headers` 에 `{"authorization": f"Bearer {token}"}` 를 사용하세요.
+토큰 기반 인증의 경우 `headers`에 `{"authorization": f"Bearer {token}"}`을 사용하세요.
 
 ================
 File: docs/ko/realtime/quickstart.md
@@ -552,14 +562,14 @@ search:
 ---
 # 빠른 시작
 
-실시간 에이전트를 사용하면 OpenAI의 Realtime API로 AI 에이전트와 음성 대화를 할 수 있습니다. 이 가이드에서는 첫 번째 실시간 음성 에이전트를 만드는 과정을 안내합니다.
+실시간 에이전트를 사용하면 OpenAI의 Realtime API로 AI 에이전트와 음성 대화를 할 수 있습니다. 이 가이드는 첫 번째 실시간 음성 에이전트를 만드는 과정을 안내합니다.
 
 !!! warning "베타 기능"
-실시간 에이전트는 베타 버전입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
+실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 변경이 호환성을 깨뜨릴 수 있습니다.
 
 ## 사전 준비 사항
 
--   Python 3.9 이상
+-   Python 3.10 이상
 -   OpenAI API 키
 -   OpenAI Agents SDK에 대한 기본적인 이해
 
@@ -571,7 +581,7 @@ search:
 pip install openai-agents
 ```
 
-## 첫 실시간 에이전트 만들기
+## 첫 번째 실시간 에이전트 만들기
 
 ### 1. 필요한 구성 요소 가져오기
 
@@ -580,7 +590,7 @@ import asyncio
 from agents.realtime import RealtimeAgent, RealtimeRunner
 ```
 
-### 2. 실시간 에이전트 생성하기
+### 2. 실시간 에이전트 만들기
 
 ```python
 agent = RealtimeAgent(
@@ -589,7 +599,7 @@ agent = RealtimeAgent(
 )
 ```
 
-### 3. 러너 설정하기
+### 3. 러너 설정
 
 ```python
 runner = RealtimeRunner(
@@ -608,7 +618,7 @@ runner = RealtimeRunner(
 )
 ```
 
-### 4. 세션 시작하기
+### 4. 세션 시작
 
 ```python
 # Start the session
@@ -659,7 +669,7 @@ def _truncate_str(s: str, max_length: int) -> str:
 
 ## 전체 예제
 
-다음은 완전하게 동작하는 전체 예제입니다:
+다음은 완전히 동작하는 전체 예제입니다:
 
 ```python
 import asyncio
@@ -740,40 +750,50 @@ if __name__ == "__main__":
 
 ### 모델 설정
 
--   `model_name`: 사용 가능한 실시간 모델에서 선택하세요(예: `gpt-realtime`)
--   `voice`: 음성 선택(`alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
--   `modalities`: 텍스트 또는 오디오 활성화(`["text"]` 또는 `["audio"]`)
+-   `model_name`: 사용 가능한 실시간 모델에서 선택합니다(예: `gpt-realtime`)
+-   `voice`: 음성을 선택합니다(`alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
+-   `modalities`: 텍스트 또는 오디오를 활성화합니다(`["text"]` 또는 `["audio"]`)
+-   `output_modalities`: 선택적으로 출력이 텍스트 및/또는 오디오로만 나오도록 제한합니다(`["text"]`, `["audio"]`, 또는 둘 다)
 
 ### 오디오 설정
 
 -   `input_audio_format`: 입력 오디오 형식(`pcm16`, `g711_ulaw`, `g711_alaw`)
 -   `output_audio_format`: 출력 오디오 형식
 -   `input_audio_transcription`: 전사 구성
+-   `input_audio_noise_reduction`: 입력 노이즈 감소 구성(`near_field` 또는 `far_field`)
 
 ### 턴 감지
 
 -   `type`: 감지 방식(`server_vad`, `semantic_vad`)
--   `threshold`: 음성 활동 임곗값(0.0-1.0)
+-   `threshold`: 음성 활동 임계값(0.0-1.0)
 -   `silence_duration_ms`: 턴 종료를 감지하기 위한 무음 지속 시간
--   `prefix_padding_ms`: 발화 이전 오디오 패딩
+-   `prefix_padding_ms`: 발화 전 오디오 패딩
+
+### 실행 설정
+
+-   `async_tool_calls`: 함수 도구를 비동기로 실행할지 여부(기본값 `True`)
+-   `guardrails_settings.debounce_text_length`: 출력 가드레일을 실행하기 전 누적 전사 최소 크기(기본값 `100`)
+-   `tool_error_formatter`: 모델에 표시되는 도구 오류 메시지를 커스터마이즈하는 콜백
+
+전체 스키마는 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]의 API 레퍼런스를 참고하세요.
 
 ## 다음 단계
 
--   [실시간 에이전트 더 알아보기](guide.md)
--   [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 폴더의 동작 예제를 확인하세요
--   에이전트에 도구 추가하기
--   에이전트 간 핸드오프 구현하기
--   안전을 위한 가드레일 설정하기
+-   [실시간 에이전트 자세히 알아보기](guide.md)
+-   [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 폴더에서 동작하는 예제를 확인하세요
+-   에이전트에 도구 추가
+-   에이전트 간 핸드오프 구현
+-   안전을 위한 가드레일 설정
 
 ## 인증
 
-환경 변수에 OpenAI API 키가 설정되어 있는지 확인하세요:
+환경에 OpenAI API 키가 설정되어 있는지 확인하세요:
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
-또는 세션을 생성할 때 직접 전달할 수도 있습니다:
+또는 세션을 만들 때 직접 전달할 수 있습니다:
 
 ```python
 session = await runner.run(model_config={"api_key": "your-api-key"})
@@ -781,7 +801,7 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 
 ## Azure OpenAI 엔드포인트 형식
 
-OpenAI 기본 엔드포인트 대신 Azure OpenAI에 연결하는 경우,
+OpenAI의 기본 엔드포인트 대신 Azure OpenAI에 연결하는 경우,
 `model_config["url"]`에 GA Realtime URL을 전달하고 인증 헤더를 명시적으로 설정하세요.
 
 ```python
@@ -793,7 +813,7 @@ session = await runner.run(
 )
 ```
 
-Bearer 토큰도 사용할 수 있습니다:
+bearer 토큰을 사용할 수도 있습니다:
 
 ```python
 session = await runner.run(
@@ -804,7 +824,7 @@ session = await runner.run(
 )
 ```
 
-실시간 에이전트와 함께 레거시 베타 경로(`/openai/realtime?api-version=...`)를 사용하는 것은 피하세요. SDK는 GA Realtime 인터페이스를 기대합니다.
+실시간 에이전트에서는 레거시 베타 경로(`/openai/realtime?api-version=...`) 사용을 피하세요. SDK는 GA Realtime 인터페이스를 기대합니다.
 
 ================
 File: docs/ko/sessions/advanced_sqlite_session.md
@@ -1898,7 +1918,7 @@ search:
 ---
 # 파이프라인과 워크플로
 
-[`VoicePipeline`][agents.voice.pipeline.VoicePipeline]은 에이전트 워크플로를 음성 앱으로 쉽게 전환할 수 있게 해주는 클래스입니다. 실행할 워크플로를 전달하면, 파이프라인이 입력 오디오의 음성 인식, 오디오 종료 시점 감지, 적절한 시점에 워크플로 호출, 워크플로 출력을 다시 오디오로 변환하는 작업을 처리합니다.
+[`VoicePipeline`][agents.voice.pipeline.VoicePipeline]은 에이전트 워크플로를 음성 앱으로 쉽게 전환할 수 있게 해주는 클래스입니다. 실행할 워크플로를 전달하면, 파이프라인이 입력 오디오 전사, 오디오 종료 시점 감지, 적절한 타이밍에 워크플로 호출, 그리고 워크플로 출력의 오디오 변환까지 처리합니다.
 
 ```mermaid
 graph LR
@@ -1928,29 +1948,29 @@ graph LR
 
 ## 파이프라인 구성
 
-파이프라인을 생성할 때 다음을 설정할 수 있습니다:
+파이프라인을 생성할 때 몇 가지를 설정할 수 있습니다:
 
-1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase]: 새 오디오가 음성 인식될 때마다 실행되는 코드
+1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase]: 새 오디오가 전사될 때마다 실행되는 코드입니다
 2. 사용되는 [`speech-to-text`][agents.voice.model.STTModel] 및 [`text-to-speech`][agents.voice.model.TTSModel] 모델
-3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig]: 다음과 같은 항목을 구성
-    - 모델 공급자(모델 이름을 모델에 매핑)
-    - 트레이싱(트레이싱 비활성화 여부, 오디오 파일 업로드 여부, 워크플로 이름, trace IDs 등)
-    - TTS 및 STT 모델에 대한 설정(프롬프트, 언어, 사용되는 데이터 타입 등)
+3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig]: 다음과 같은 항목을 구성할 수 있습니다
+    - 모델 제공자: 모델 이름을 모델에 매핑할 수 있습니다
+    - 트레이싱: 트레이싱 비활성화 여부, 오디오 파일 업로드 여부, 워크플로 이름, trace ID 등
+    - TTS 및 STT 모델 설정: 프롬프트, 언어, 사용되는 데이터 타입 등
 
 ## 파이프라인 실행
 
-[`run()`][agents.voice.pipeline.VoicePipeline.run] 메서드를 통해 파이프라인을 실행할 수 있으며, 두 가지 형태의 오디오 입력을 전달할 수 있습니다:
+[`run()`][agents.voice.pipeline.VoicePipeline.run] 메서드로 파이프라인을 실행할 수 있으며, 오디오 입력을 두 가지 형태로 전달할 수 있습니다:
 
-1. [`AudioInput`][agents.voice.input.AudioInput]: 전체 오디오 전사를 가지고 있고 그에 대한 결과만 생성하면 될 때 사용합니다. 이는 화자가 말을 마치는 시점을 감지할 필요가 없는 경우(예: 사전 녹음된 오디오, 사용자가 말하기를 마치는 시점이 명확한 푸시‑투‑토크 앱) 유용합니다
-2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]: 사용자가 말을 마치는 시점을 감지해야 할 수 있을 때 사용합니다. 감지되는 대로 오디오 청크를 푸시할 수 있으며, 음성 파이프라인은 "activity detection(활동 감지)"이라고 하는 프로세스를 통해 적절한 시점에 에이전트 워크플로를 자동으로 실행합니다
+1. [`AudioInput`][agents.voice.input.AudioInput]: 전체 오디오 전사본이 있고, 이에 대한 결과만 생성하고 싶을 때 사용합니다. 화자가 말하기를 끝냈는지 감지할 필요가 없는 경우에 유용합니다. 예를 들어, 사전 녹음된 오디오가 있거나 사용자가 말하기를 끝낸 시점이 명확한 푸시-투-토크 앱에서 사용할 수 있습니다
+2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]: 사용자가 말하기를 끝냈는지 감지해야 할 수 있을 때 사용합니다. 감지되는 대로 오디오 청크를 푸시할 수 있으며, 음성 파이프라인은 "activity detection"이라는 프로세스를 통해 적절한 시점에 에이전트 워크플로를 자동으로 실행합니다
 
 ## 결과
 
-음성 파이프라인 실행 결과는 [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult]입니다. 이는 발생하는 이벤트를 스트리밍할 수 있는 객체입니다. 다음과 같은 여러 종류의 [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent]가 있습니다:
+음성 파이프라인 실행 결과는 [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult]입니다. 이는 이벤트가 발생하는 대로 스트리밍할 수 있게 해주는 객체입니다. 몇 가지 유형의 [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent]가 있으며, 예시는 다음과 같습니다:
 
-1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio]: 오디오 청크를 포함
-2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle]: 턴 시작/종료 같은 라이프사이클 이벤트를 알림
-3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError]: 오류 이벤트
+1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio]: 오디오 청크를 포함합니다
+2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle]: 턴 시작/종료 같은 라이프사이클 이벤트를 알려줍니다
+3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError]: 오류 이벤트입니다
 
 ```python
 
@@ -1961,7 +1981,7 @@ async for event in result.stream():
         # play audio
     elif event.type == "voice_stream_event_lifecycle":
         # lifecycle
-    elif event.type == "voice_stream_event_error"
+    elif event.type == "voice_stream_event_error":
         # error
     ...
 ```
@@ -1970,7 +1990,7 @@ async for event in result.stream():
 
 ### 인터럽션(중단 처리)
 
-Agents SDK 는 현재 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]에 대한 내장 인터럽션 지원을 제공하지 않습니다. 대신 감지된 각 턴마다 워크플로의 별도 실행을 트리거합니다. 애플리케이션 내부에서 인터럽션을 처리하려면 [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] 이벤트를 수신하면 됩니다. `turn_started`는 새 턴이 전사되어 처리가 시작되었음을 나타냅니다. `turn_ended`는 해당 턴에 대한 모든 오디오가 전송된 후에 트리거됩니다. 모델이 턴을 시작할 때 화자의 마이크를 음소거하고, 해당 턴의 관련 오디오를 모두 전송한 후 음소거를 해제하는 데 이러한 이벤트를 사용할 수 있습니다.
+Agents SDK는 현재 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]에 대해 기본 제공 인터럽션(중단 처리) 지원을 제공하지 않습니다. 대신 감지된 각 턴마다 워크플로가 별도로 실행되도록 트리거합니다. 애플리케이션 내부에서 인터럽션(중단 처리)을 처리하려면 [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] 이벤트를 수신하면 됩니다. `turn_started`는 새 턴이 전사되었고 처리가 시작됨을 나타냅니다. `turn_ended`는 해당 턴에 대해 모든 오디오가 디스패치된 후 트리거됩니다. 이 이벤트를 사용해 모델이 턴을 시작할 때 화자의 마이크를 음소거하고, 해당 턴과 관련된 모든 오디오를 플러시한 뒤 음소거를 해제할 수 있습니다
 
 ================
 File: docs/ko/voice/quickstart.md
@@ -2183,18 +2203,18 @@ search:
 ---
 # 트레이싱
 
-[에이전트 트레이싱](../tracing.md)과 마찬가지로, 보이스 파이프라인도 자동으로 트레이싱됩니다.
+[에이전트가 트레이싱되는](../tracing.md) 방식과 마찬가지로, 음성 파이프라인도 자동으로 트레이싱됩니다.
 
-기본적인 트레이싱 정보는 위 문서를 참고하시고, 추가로 [`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig]를 통해 파이프라인의 트레이싱을 구성할 수 있습니다.
+기본적인 트레이싱 정보는 위의 트레이싱 문서를 참고하시면 되며, 추가로 [`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig]를 통해 파이프라인의 트레이싱을 구성할 수 있습니다.
 
-주요 트레이싱 관련 필드는 다음과 같습니다:
+트레이싱 관련 핵심 필드는 다음과 같습니다:
 
--   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: 트레이싱 비활성화 여부를 제어합니다. 기본값은 트레이싱 활성화입니다
--   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]: 오디오 전사와 같은 민감할 수 있는 데이터를 트레이스에 포함할지 제어합니다. 이는 보이스 파이프라인에만 적용되며, Workflow 내부에서 발생하는 내용에는 적용되지 않습니다
--   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: 트레이스에 오디오 데이터를 포함할지 제어합니다
--   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: 트레이스 워크플로 이름입니다
--   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: 트레이스의 `group_id`로, 여러 트레이스를 연결할 수 있게 합니다
--   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: 트레이스에 포함할 추가 메타데이터입니다
+-   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: 트레이싱을 비활성화할지 여부를 제어합니다. 기본값은 트레이싱 활성화입니다.
+-   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]: 오디오 전사본과 같은 잠재적으로 민감한 데이터를 트레이스에 포함할지 여부를 제어합니다. 이는 음성 파이프라인에만 해당하며, Workflow 내부에서 발생하는 모든 것에는 적용되지 않습니다.
+-   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: 트레이스에 오디오 데이터를 포함할지 여부를 제어합니다.
+-   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: 트레이스 워크플로의 이름입니다.
+-   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: 트레이스의 `group_id`로, 여러 트레이스를 연결할 수 있습니다.
+-   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.trace_metadata]: 트레이스에 포함할 추가 메타데이터입니다.
 
 ================
 File: docs/ko/agents.md
@@ -2562,7 +2582,7 @@ search:
 
 ## API 키 및 클라이언트
 
-기본적으로 SDK 는 가져오는 즉시 LLM 요청과 트레이싱을 위해 `OPENAI_API_KEY` 환경 변수를 찾습니다. 앱이 시작되기 전에 해당 환경 변수를 설정할 수 없는 경우, [set_default_openai_key()][agents.set_default_openai_key] 함수를 사용해 키를 설정할 수 있습니다.
+기본적으로 SDK 는 임포트되는 즉시 LLM 요청과 트레이싱을 위해 `OPENAI_API_KEY` 환경 변수를 찾습니다. 앱이 시작되기 전에 해당 환경 변수를 설정할 수 없는 경우, [set_default_openai_key()][agents.set_default_openai_key] 함수를 사용해 키를 설정할 수 있습니다.
 
 ```python
 from agents import set_default_openai_key
@@ -2580,7 +2600,7 @@ custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
 
-마지막으로, 사용되는 OpenAI API 도 커스터마이즈할 수 있습니다. 기본적으로는 OpenAI Responses API 를 사용합니다. [set_default_openai_api()][agents.set_default_openai_api] 함수를 사용해 이를 재정의하여 Chat Completions API 를 사용하도록 할 수 있습니다.
+마지막으로, 사용되는 OpenAI API 도 사용자 지정할 수 있습니다. 기본적으로는 OpenAI Responses API 를 사용합니다. [set_default_openai_api()][agents.set_default_openai_api] 함수를 사용해 이를 재정의하여 Chat Completions API 를 사용할 수 있습니다.
 
 ```python
 from agents import set_default_openai_api
@@ -2590,7 +2610,7 @@ set_default_openai_api("chat_completions")
 
 ## 트레이싱
 
-트레이싱은 기본적으로 활성화되어 있습니다. 기본적으로 위 섹션의 OpenAI API 키(즉, 환경 변수 또는 설정한 기본 키)를 사용합니다. [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 함수를 사용해 트레이싱에 사용되는 API 키를 별도로 설정할 수 있습니다.
+트레이싱은 기본적으로 활성화되어 있습니다. 기본적으로는 위 섹션의 OpenAI API 키(즉, 환경 변수 또는 설정한 기본 키)를 사용합니다. [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 함수를 사용해 트레이싱에 사용되는 API 키를 명시적으로 설정할 수 있습니다.
 
 ```python
 from agents import set_tracing_export_api_key
@@ -2598,14 +2618,14 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-기본 exporter 를 사용할 때 트레이스를 특정 조직 또는 프로젝트로 귀속시키려면, 앱이 시작되기 전에 다음 환경 변수를 설정하세요.
+기본 exporter 를 사용할 때 트레이스를 특정 조직 또는 프로젝트로 귀속해야 한다면, 앱이 시작되기 전에 다음 환경 변수를 설정하세요:
 
 ```bash
 export OPENAI_ORG_ID="org_..."
 export OPENAI_PROJECT_ID="proj_..."
 ```
 
-전역 exporter 를 변경하지 않고도 실행(run) 단위로 트레이싱 API 키를 설정할 수도 있습니다.
+전역 exporter 를 변경하지 않고도 실행(run)별로 트레이싱 API 키를 설정할 수도 있습니다.
 
 ```python
 from agents import Runner, RunConfig
@@ -2627,9 +2647,9 @@ set_tracing_disabled(True)
 
 ## 디버그 로깅
 
-SDK 에는 핸들러가 설정되지 않은 두 개의 Python 로거가 있습니다. 기본적으로 경고와 오류는 `stdout` 으로 전송되지만, 다른 로그는 억제됩니다.
+SDK 는 두 개의 Python 로거(`openai.agents` 및 `openai.agents.tracing`)를 정의하며, 기본적으로 핸들러를 연결하지 않습니다. 로그는 애플리케이션의 Python 로깅 설정을 따릅니다.
 
-자세한 로깅을 활성화하려면 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 함수를 사용하세요.
+상세(Verbose) 로깅을 활성화하려면 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 함수를 사용하세요.
 
 ```python
 from agents import enable_verbose_stdout_logging
@@ -2637,7 +2657,7 @@ from agents import enable_verbose_stdout_logging
 enable_verbose_stdout_logging()
 ```
 
-또는 핸들러, 필터, 포매터 등을 추가해 로그를 커스터마이즈할 수 있습니다. 자세한 내용은 [Python 로깅 가이드](https://docs.python.org/3/howto/logging.html)를 참고하세요.
+또는 핸들러, 필터, 포매터 등을 추가해 로그를 사용자 지정할 수 있습니다. 자세한 내용은 [Python 로깅 가이드](https://docs.python.org/3/howto/logging.html)를 참고하세요.
 
 ```python
 import logging
@@ -2812,12 +2832,12 @@ search:
 ---
 # 예제
 
-[repo](https://github.com/openai/openai-agents-python/tree/main/examples)의 examples 섹션에서 SDK의 다양한 샘플 구현을 확인해 보세요. 예제는 여러 카테고리로 구성되어 있으며, 서로 다른 패턴과 기능을 보여 줍니다.
+[repo](https://github.com/openai/openai-agents-python/tree/main/examples)의 examples 섹션에서 SDK의 다양한 샘플 구현을 확인해 보세요. examples는 여러 카테고리로 구성되어 있으며, 서로 다른 패턴과 기능을 보여줍니다.
 
 ## 카테고리
 
 -   **[agent_patterns](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns):**
-    이 카테고리의 예제는 다음과 같은 일반적인 에이전트 설계 패턴을 보여 줍니다
+    이 카테고리의 예제는 다음과 같은 일반적인 에이전트 설계 패턴을 보여줍니다
 
     -   결정적 워크플로
     -   Agents as tools
@@ -2829,41 +2849,41 @@ search:
     -   스트리밍 가드레일
 
 -   **[basic](https://github.com/openai/openai-agents-python/tree/main/examples/basic):**
-    이 예제는 다음과 같은 SDK의 기본 기능을 보여 줍니다
+    이 예제들은 다음과 같은 SDK의 기초 기능을 보여줍니다
 
-    -   Hello World 예제(기본 모델, GPT-5, 오픈 웨이트 모델)
-    -   에이전트 라이프사이클 관리
+    -   Hello world examples (Default model, GPT-5, open-weight model)
+    -   에이전트 생명주기 관리
     -   동적 시스템 프롬프트
-    -   스트리밍 출력(텍스트, 항목, 함수 호출 인자)
+    -   스트리밍 outputs (텍스트, items, 함수 호출 args)
     -   프롬프트 템플릿
     -   파일 처리(로컬 및 원격, 이미지 및 PDF)
     -   사용량 추적
-    -   비엄격 출력 타입
-    -   이전 응답 ID 사용
+    -   엄격하지 않은 출력 타입
+    -   이전 response ID 사용
 
 -   **[customer_service](https://github.com/openai/openai-agents-python/tree/main/examples/customer_service):**
-    항공사를 위한 고객 서비스 시스템 예제입니다
+    항공사를 위한 고객 서비스 시스템 예제입니다.
 
 -   **[financial_research_agent](https://github.com/openai/openai-agents-python/tree/main/examples/financial_research_agent):**
-    금융 데이터 분석을 위한 에이전트와 도구로 구조화된 리서치 워크플로를 보여 주는 금융 리서치 에이전트입니다
+    금융 데이터 분석을 위한 에이전트와 도구로 구조화된 리서치 워크플로를 보여주는 금융 리서치 에이전트입니다.
 
 -   **[handoffs](https://github.com/openai/openai-agents-python/tree/main/examples/handoffs):**
-    메시지 필터링과 함께 에이전트 핸드오프의 실용적인 예제를 확인하세요
+    메시지 필터링을 사용하는 에이전트 핸드오프의 실용적인 예제를 확인하세요.
 
 -   **[hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp):**
-    호스티드 MCP (Model context protocol) 커넥터와 승인 기능을 사용하는 방법을 보여 주는 예제입니다
+    호스티드 MCP (Model Context Protocol) 커넥터와 승인(approval)을 사용하는 방법을 보여주는 예제입니다.
 
 -   **[mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp):**
-    다음을 포함해 MCP (Model context protocol)로 에이전트를 구축하는 방법을 알아보세요
+    다음을 포함해 MCP (Model Context Protocol)로 에이전트를 구축하는 방법을 알아보세요:
 
-    -   파일 시스템 예제
+    -   파일시스템 예제
     -   Git 예제
     -   MCP 프롬프트 서버 예제
     -   SSE (Server-Sent Events) 예제
     -   스트리밍 가능한 HTTP 예제
 
 -   **[memory](https://github.com/openai/openai-agents-python/tree/main/examples/memory):**
-    다음을 포함해 에이전트용 다양한 메모리 구현 예제입니다
+    다음을 포함해 에이전트를 위한 다양한 메모리 구현 예제입니다:
 
     -   SQLite 세션 스토리지
     -   고급 SQLite 세션 스토리지
@@ -2873,34 +2893,36 @@ search:
     -   OpenAI 세션 스토리지
 
 -   **[model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers):**
-    커스텀 프로바이더와 LiteLLM 통합을 포함해 SDK에서 비 OpenAI 모델을 사용하는 방법을 살펴보세요
+    커스텀 프로바이더와 LiteLLM 통합을 포함해 SDK에서 OpenAI가 아닌 모델을 사용하는 방법을 살펴보세요.
 
 -   **[realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime):**
-    다음을 포함해 SDK로 실시간 경험을 구축하는 방법을 보여 주는 예제입니다
+    다음을 포함해 SDK로 실시간 경험을 구축하는 방법을 보여주는 예제입니다:
 
     -   웹 애플리케이션
     -   커맨드라인 인터페이스
     -   Twilio 통합
 
 -   **[reasoning_content](https://github.com/openai/openai-agents-python/tree/main/examples/reasoning_content):**
-    reasoning content 및 structured outputs를 다루는 방법을 보여 주는 예제입니다
+    추론 콘텐츠와 structured outputs를 다루는 방법을 보여주는 예제입니다.
 
 -   **[research_bot](https://github.com/openai/openai-agents-python/tree/main/examples/research_bot):**
-    복잡한 멀티 에이전트 리서치 워크플로를 보여 주는 간단한 딥 리서치 클론입니다
+    복잡한 멀티 에이전트 리서치 워크플로를 보여주는 간단한 딥 리서치 클론입니다.
 
 -   **[tools](https://github.com/openai/openai-agents-python/tree/main/examples/tools):**
-    다음과 같은 OpenAI 호스트하는 도구 및 실험적 Codex 도구 워크플로를 구현하는 방법을 알아보세요
+    다음과 같은 OpenAI 호스트하는 도구 및 실험적 Codex 툴링을 구현하는 방법을 알아보세요:
 
-    -   웹 검색 및 필터를 적용한 웹 검색
+    -   웹 검색 및 필터가 있는 웹 검색
     -   파일 검색
     -   Code Interpreter
+    -   인라인 스킬을 사용하는 호스티드 컨테이너 셸 (`examples/tools/container_shell_inline_skill.py`)
+    -   스킬 참조를 사용하는 호스티드 컨테이너 셸 (`examples/tools/container_shell_skill_reference.py`)
     -   컴퓨터 사용
     -   이미지 생성
-    -   실험적 Codex 도구 워크플로(`examples/tools/codex.py`)
-    -   실험적 Codex 동일 스레드 워크플로(`examples/tools/codex_same_thread.py`)
+    -   실험적 Codex 도구 워크플로 (`examples/tools/codex.py`)
+    -   실험적 Codex same-thread 워크플로 (`examples/tools/codex_same_thread.py`)
 
 -   **[voice](https://github.com/openai/openai-agents-python/tree/main/examples/voice):**
-    스트리밍 음성 예제를 포함해 TTS 및 STT 모델을 사용하는 보이스 에이전트 예제를 확인하세요
+    스트리밍 음성 예제를 포함해 TTS 및 STT 모델을 사용하는 음성 에이전트 예제를 확인하세요.
 
 ================
 File: docs/ko/guardrails.md
@@ -3466,29 +3488,29 @@ search:
 ---
 # Model context protocol (MCP)
 
-[Model context protocol](https://modelcontextprotocol.io/introduction) (MCP)은 애플리케이션이 언어 모델에 도구와 컨텍스트를 노출하는 방식을 표준화합니다. 공식 문서에서 인용하면 다음과 같습니다:
+[Model context protocol](https://modelcontextprotocol.io/introduction) (MCP)은 애플리케이션이 언어 모델에 도구와 컨텍스트를 노출하는 방식을 표준화합니다. 공식 문서에 따르면 다음과 같습니다:
 
-> MCP는 애플리케이션이 LLM 에 컨텍스트를 제공하는 방식을 표준화하는 오픈 프로토콜입니다. MCP 를 AI 애플리케이션을 위한 USB-C 포트처럼 생각해 보세요
-> USB-C 가 기기를 다양한 주변기기와 액세서리에 연결하는 표준화된 방법을 제공하듯이, MCP 는 AI 모델을 다양한 데이터 소스와 도구에 연결하는 표준화된 방법을 제공합니다
+> MCP는 애플리케이션이 LLM에 컨텍스트를 제공하는 방식을 표준화하는 오픈 프로토콜입니다. MCP를 AI 애플리케이션을 위한 USB-C 포트처럼 생각해 보세요.
+> USB-C가 다양한 주변기기와 액세서리에 디바이스를 연결하는 표준화된 방법을 제공하듯, MCP는 AI 모델을 서로 다른 데이터 소스와 도구에 연결하는 표준화된 방법을 제공합니다.
 
-Agents Python SDK 는 여러 MCP 전송(transport)을 이해합니다. 이를 통해 기존 MCP 서버를 재사용하거나, 파일시스템, HTTP, 또는 커넥터 기반 도구를 에이전트에 노출하기 위한 자체 서버를 구축할 수 있습니다
+Agents Python SDK는 여러 MCP 전송(transport)을 이해합니다. 이를 통해 기존 MCP 서버를 재사용하거나, 파일 시스템/HTTP/커넥터 기반 도구를 에이전트에 노출하도록 직접 MCP 서버를 구축할 수 있습니다.
 
 ## MCP 통합 선택
 
-MCP 서버를 에이전트에 연결하기 전에, 도구 호출이 어디에서 실행되어야 하는지와 어떤 전송에 도달할 수 있는지를 결정하세요. 아래 매트릭스는 Python SDK 가 지원하는 옵션을 요약합니다
+에이전트에 MCP 서버를 연결하기 전에, 도구 호출이 어디에서 실행되어야 하는지와 어떤 전송 방식에 접근 가능한지를 결정하세요. 아래 매트릭스는 Python SDK가 지원하는 옵션을 요약합니다.
 
-| What you need                                                                        | Recommended option                                    |
+| 필요한 것                                                                        | 권장 옵션                                    |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| OpenAI's Responses API 가 모델을 대신해 공개적으로 접근 가능한 MCP 서버를 호출하게 하기| [`HostedMCPTool`][agents.tool.HostedMCPTool] 을 통한 **Hosted MCP server tools** |
-| 로컬 또는 원격에서 직접 실행하는 Streamable HTTP 서버에 연결                          | [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 을 통한 **Streamable HTTP MCP servers** |
-| Server-Sent Events 를 사용하는 HTTP 를 구현한 서버와 통신                              | [`MCPServerSse`][agents.mcp.server.MCPServerSse] 를 통한 **HTTP with SSE MCP servers** |
-| 로컬 프로세스를 실행하고 stdin/stdout 으로 통신                                       | [`MCPServerStdio`][agents.mcp.server.MCPServerStdio] 를 통한 **stdio MCP servers** |
+| 모델을 대신해 OpenAI의 Responses API가 공개적으로 접근 가능한 MCP 서버를 호출하게 하기| [`HostedMCPTool`][agents.tool.HostedMCPTool]을 통한 **Hosted MCP server tools** |
+| 로컬 또는 원격에서 직접 운영하는 Streamable HTTP 서버에 연결하기                  | [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]을 통한 **Streamable HTTP MCP servers** |
+| Server-Sent Events를 사용하는 HTTP를 구현한 서버와 통신하기                          | [`MCPServerSse`][agents.mcp.server.MCPServerSse]를 통한 **HTTP with SSE MCP servers** |
+| 로컬 프로세스를 실행하고 stdin/stdout으로 통신하기                             | [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]를 통한 **stdio MCP servers** |
 
-아래 섹션에서는 각 옵션, 구성 방법, 그리고 한 전송을 다른 전송보다 선호해야 하는 경우를 안내합니다
+아래 섹션에서는 각 옵션, 구성 방법, 그리고 어떤 전송을 언제 우선해야 하는지를 설명합니다.
 
 ## 에이전트 수준 MCP 구성
 
-전송을 선택하는 것 외에도, `Agent.mcp_config` 를 설정하여 MCP 도구가 준비되는 방식을 조정할 수 있습니다
+전송 방식 선택 외에도, `Agent.mcp_config`를 설정하여 MCP 도구가 준비되는 방식을 조정할 수 있습니다.
 
 ```python
 from agents import Agent
@@ -3508,18 +3530,18 @@ agent = Agent(
 
 참고:
 
-- `convert_schemas_to_strict` 는 best-effort 입니다. 스키마를 변환할 수 없는 경우 원래 스키마가 사용됩니다
-- `failure_error_function` 은 MCP 도구 호출 실패가 모델에 어떻게 노출되는지 제어합니다
-- `failure_error_function` 이 설정되지 않으면, SDK 는 기본 도구 오류 포매터를 사용합니다
-- 서버 수준의 `failure_error_function` 은 해당 서버에 대해 `Agent.mcp_config["failure_error_function"]` 을 오버라이드합니다
+- `convert_schemas_to_strict`는 최선의 노력(best-effort) 방식입니다. 스키마를 변환할 수 없으면 원래 스키마가 사용됩니다.
+- `failure_error_function`은 MCP 도구 호출 실패가 모델에 어떻게 노출되는지 제어합니다.
+- `failure_error_function`이 설정되지 않으면 SDK는 기본 도구 오류 포매터를 사용합니다.
+- 서버 수준 `failure_error_function`은 해당 서버에 대해 `Agent.mcp_config["failure_error_function"]`보다 우선합니다.
 
 ## 1. Hosted MCP server tools
 
-Hosted tool 은 전체 도구 라운드트립을 OpenAI 인프라로 밀어 넣습니다. 코드에서 도구를 나열하고 호출하는 대신, [`HostedMCPTool`][agents.tool.HostedMCPTool] 이 서버 레이블(및 선택적 커넥터 메타데이터)을 Responses API 로 전달합니다. 모델은 원격 서버의 도구를 나열하고, Python 프로세스에 대한 추가 콜백 없이 이를 호출합니다. Hosted tool 은 현재 Responses API 의 hosted MCP 통합을 지원하는 OpenAI 모델에서 동작합니다
+호스티드 툴은 도구 호출의 전체 왕복(round-trip)을 OpenAI 인프라로 푸시합니다. 코드에서 도구를 나열하고 호출하는 대신, [`HostedMCPTool`][agents.tool.HostedMCPTool]이 서버 라벨(및 선택적 커넥터 메타데이터)을 Responses API로 전달합니다. 모델은 원격 서버의 도구를 나열하고, Python 프로세스에 추가 콜백 없이 이를 호출합니다. 호스티드 툴은 현재 Responses API의 호스티드 MCP 통합을 지원하는 OpenAI 모델에서 동작합니다.
 
-### 기본 hosted MCP tool
+### 기본 호스티드 MCP 도구
 
-에이전트의 `tools` 목록에 [`HostedMCPTool`][agents.tool.HostedMCPTool] 을 추가해 hosted tool 을 생성합니다. `tool_config` dict 는 REST API 로 보낼 JSON 을 그대로 반영합니다:
+에이전트의 `tools` 목록에 [`HostedMCPTool`][agents.tool.HostedMCPTool]을 추가하여 호스티드 툴을 만드세요. `tool_config` 딕셔너리는 REST API로 보낼 JSON을 그대로 반영합니다:
 
 ```python
 import asyncio
@@ -3547,11 +3569,11 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-hosted 서버는 도구를 자동으로 노출하므로, `mcp_servers` 에 추가하지 않습니다
+호스티드 서버는 도구를 자동으로 노출하며, `mcp_servers`에 추가하지 않습니다.
 
-### Hosted MCP 결과 스트리밍
+### 호스티드 MCP 결과 스트리밍
 
-Hosted tool 은 함수 도구와 정확히 같은 방식으로 결과 스트리밍을 지원합니다. `Runner.run_streamed` 에 `stream=True` 를 전달하면, 모델이 아직 작업 중인 동안에도 점진적인 MCP 출력을 소비할 수 있습니다:
+호스티드 툴은 함수 도구와 정확히 같은 방식으로 결과 스트리밍을 지원합니다. 모델이 아직 작업 중일 때 증가분 MCP 출력을 소비하려면 `Runner.run_streamed`를 사용하세요:
 
 ```python
 result = Runner.run_streamed(agent, "Summarise this repository's top languages")
@@ -3561,9 +3583,9 @@ async for event in result.stream_events():
 print(result.final_output)
 ```
 
-### 선택적 승인 흐름
+### 선택적 승인 플로우
 
-서버가 민감한 작업을 수행할 수 있다면, 각 도구 실행 전에 사람 또는 프로그램 기반 승인을 요구할 수 있습니다. `tool_config` 에 `require_approval` 을 설정하되, 단일 정책(`"always"`, `"never"`) 또는 도구 이름을 정책에 매핑하는 dict 를 사용할 수 있습니다. Python 내부에서 결정을 내리려면 `on_approval_request` 콜백을 제공하세요
+서버가 민감한 작업을 수행할 수 있다면, 각 도구 실행 전에 사람 또는 프로그램 기반 승인을 요구할 수 있습니다. `tool_config`에서 `require_approval`을 단일 정책(`"always"`, `"never"`) 또는 도구 이름을 정책에 매핑하는 딕셔너리로 설정하세요. Python에서 결정을 내리려면 `on_approval_request` 콜백을 제공하세요.
 
 ```python
 from agents import MCPToolApprovalFunctionResult, MCPToolApprovalRequest
@@ -3591,11 +3613,11 @@ agent = Agent(
 )
 ```
 
-콜백은 동기 또는 비동기일 수 있으며, 모델이 계속 실행하기 위해 승인 데이터가 필요할 때마다 호출됩니다
+이 콜백은 동기 또는 비동기일 수 있으며, 모델이 계속 실행하기 위해 승인 데이터가 필요할 때마다 호출됩니다.
 
-### 커넥터 기반 hosted 서버
+### 커넥터 기반 호스티드 서버
 
-Hosted MCP 는 OpenAI 커넥터도 지원합니다. `server_url` 을 지정하는 대신 `connector_id` 와 액세스 토큰을 제공하세요. Responses API 가 인증을 처리하고, hosted 서버가 커넥터의 도구를 노출합니다
+호스티드 MCP는 OpenAI 커넥터도 지원합니다. `server_url`을 지정하는 대신 `connector_id`와 액세스 토큰을 제공하세요. Responses API가 인증을 처리하고 호스티드 서버가 커넥터의 도구를 노출합니다.
 
 ```python
 import os
@@ -3611,12 +3633,12 @@ HostedMCPTool(
 )
 ```
 
-스트리밍, 승인, 커넥터를 포함한 완전하게 동작하는 hosted tool 샘플은
-[`examples/hosted_mcp`](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) 에 있습니다
+스트리밍, 승인, 커넥터를 포함한 완전 동작 호스티드 툴 샘플은
+[`examples/hosted_mcp`](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp)에 있습니다.
 
 ## 2. Streamable HTTP MCP servers
 
-네트워크 연결을 직접 관리하고 싶다면 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 를 사용하세요. Streamable HTTP 서버는 전송을 제어하고 싶거나, 지연 시간을 낮게 유지하면서 자체 인프라 내에서 서버를 실행하고자 할 때 이상적입니다
+네트워크 연결을 직접 관리하려면 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]를 사용하세요. Streamable HTTP 서버는 전송을 제어하거나, 지연 시간을 낮게 유지하면서 자체 인프라에서 서버를 실행하고자 할 때 이상적입니다.
 
 ```python
 import asyncio
@@ -3653,24 +3675,24 @@ asyncio.run(main())
 
 생성자는 추가 옵션을 받습니다:
 
-- `client_session_timeout_seconds` 는 HTTP 읽기 타임아웃을 제어합니다
-- `use_structured_content` 는 텍스트 출력보다 `tool_result.structured_content` 를 선호할지 여부를 토글합니다
-- `max_retry_attempts` 와 `retry_backoff_seconds_base` 는 `list_tools()` 및 `call_tool()` 에 자동 재시도를 추가합니다
-- `tool_filter` 는 일부 도구만 노출할 수 있게 합니다([Tool filtering](#tool-filtering) 참조)
-- `require_approval` 는 로컬 MCP 도구에 대해 휴먼인더루프 승인 정책을 활성화합니다
-- `failure_error_function` 은 모델에 보이는 MCP 도구 실패 메시지를 커스터마이즈합니다. 대신 오류를 raise 하려면 `None` 으로 설정하세요
-- `tool_meta_resolver` 는 `call_tool()` 이전에 호출별 MCP `_meta` 페이로드를 주입합니다
+- `client_session_timeout_seconds`는 HTTP 읽기 타임아웃을 제어합니다.
+- `use_structured_content`는 텍스트 출력보다 `tool_result.structured_content`를 우선할지 여부를 토글합니다.
+- `max_retry_attempts` 및 `retry_backoff_seconds_base`는 `list_tools()`와 `call_tool()`에 대한 자동 재시도를 추가합니다.
+- `tool_filter`는 일부 도구만 노출할 수 있게 합니다([도구 필터링](#tool-filtering) 참고).
+- `require_approval`은 로컬 MCP 도구에 대한 휴먼인더루프 승인 정책을 활성화합니다.
+- `failure_error_function`은 모델에 표시되는 MCP 도구 실패 메시지를 커스터마이즈합니다. 대신 오류를 발생시키려면 `None`으로 설정하세요.
+- `tool_meta_resolver`는 `call_tool()` 전에 호출별 MCP `_meta` 페이로드를 주입합니다.
 
 ### 로컬 MCP 서버의 승인 정책
 
-`MCPServerStdio`, `MCPServerSse`, `MCPServerStreamableHttp` 는 모두 `require_approval` 을 받습니다
+`MCPServerStdio`, `MCPServerSse`, `MCPServerStreamableHttp`는 모두 `require_approval`을 받습니다.
 
 지원 형태:
 
 - 모든 도구에 대해 `"always"` 또는 `"never"`
-- `True` / `False` (always/never 와 동일)
+- `True` / `False` (항상/절대 안 함과 동일)
 - 도구별 맵, 예: `{"delete_file": "always", "read_file": "never"}`
-- 그룹화된 객체:
+- 그룹 객체:
   `{"always": {"tool_names": [...]}, "never": {"tool_names": [...]}}`
 
 ```python
@@ -3682,11 +3704,11 @@ async with MCPServerStreamableHttp(
     ...
 ```
 
-전체 pause/resume 흐름은 [Human-in-the-loop](human_in_the_loop.md) 및 `examples/mcp/get_all_mcp_tools_example/main.py` 를 참고하세요
+전체 일시정지/재개 플로우는 [Human-in-the-loop](human_in_the_loop.md) 및 `examples/mcp/get_all_mcp_tools_example/main.py`를 참고하세요.
 
-### `tool_meta_resolver` 로 호출별 메타데이터 전달
+### `tool_meta_resolver`로 호출별 메타데이터 전달
 
-MCP 서버가 `_meta` 에 요청 메타데이터(예: 테넌트 ID 또는 트레이스 컨텍스트)를 기대한다면 `tool_meta_resolver` 를 사용하세요. 아래 예시는 `Runner.run(...)` 에 `context` 로 `dict` 를 전달한다고 가정합니다
+MCP 서버가 `_meta`에 요청 메타데이터(예: 테넌트 ID 또는 트레이스 컨텍스트)를 기대하는 경우 `tool_meta_resolver`를 사용하세요. 아래 예시는 `Runner.run(...)`에 `dict`를 `context`로 전달한다고 가정합니다.
 
 ```python
 from agents.mcp import MCPServerStreamableHttp, MCPToolMetaContext
@@ -3707,19 +3729,19 @@ server = MCPServerStreamableHttp(
 )
 ```
 
-run context 가 Pydantic 모델, dataclass, 또는 커스텀 클래스라면, 대신 속성 접근으로 테넌트 ID 를 읽으세요
+실행 컨텍스트가 Pydantic 모델, dataclass, 또는 사용자 정의 클래스라면, 대신 속성 접근으로 테넌트 ID를 읽으세요.
 
 ### MCP 도구 출력: 텍스트와 이미지
 
-MCP 도구가 이미지 콘텐츠를 반환하면, SDK 는 이를 이미지 도구 출력 엔트리로 자동 매핑합니다. 텍스트/이미지 혼합 응답은 출력 아이템의 리스트로 전달되므로, 에이전트는 일반 함수 도구의 이미지 출력과 동일한 방식으로 MCP 이미지 결과를 소비할 수 있습니다
+MCP 도구가 이미지 콘텐츠를 반환하면 SDK는 이를 자동으로 이미지 도구 출력 엔트리로 매핑합니다. 텍스트/이미지가 섞인 응답은 출력 항목 리스트로 전달되므로, 에이전트는 일반 함수 도구의 이미지 출력과 동일한 방식으로 MCP 이미지 결과를 소비할 수 있습니다.
 
 ## 3. HTTP with SSE MCP servers
 
 !!! warning
 
-    MCP 프로젝트는 Server-Sent Events 전송을 deprecated 했습니다. 새 통합에는 Streamable HTTP 또는 stdio 를 선호하고, SSE 는 레거시 서버에만 유지하세요
+    MCP 프로젝트는 Server-Sent Events 전송을 더 이상 권장하지 않습니다. 새로운 통합에는 Streamable HTTP 또는 stdio를 선호하고, SSE는 레거시 서버에만 사용하세요.
 
-MCP 서버가 HTTP with SSE 전송을 구현한다면 [`MCPServerSse`][agents.mcp.server.MCPServerSse] 를 인스턴스화하세요. 전송을 제외하면 API 는 Streamable HTTP 서버와 동일합니다
+MCP 서버가 HTTP with SSE 전송을 구현한다면 [`MCPServerSse`][agents.mcp.server.MCPServerSse]를 인스턴스화하세요. 전송 방식 외에는 API가 Streamable HTTP 서버와 동일합니다.
 
 ```python
 
@@ -3748,7 +3770,7 @@ async with MCPServerSse(
 
 ## 4. stdio MCP servers
 
-로컬 서브프로세스로 실행되는 MCP 서버에는 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio] 를 사용하세요. SDK 는 프로세스를 스폰하고, 파이프를 열린 상태로 유지하며, 컨텍스트 매니저가 종료될 때 자동으로 닫습니다. 이 옵션은 빠른 PoC 나 서버가 커맨드 라인 엔트리 포인트만 노출하는 경우에 유용합니다
+로컬 서브프로세스로 실행되는 MCP 서버에는 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]를 사용하세요. SDK는 프로세스를 생성하고, 파이프를 열린 상태로 유지하며, 컨텍스트 매니저가 종료되면 자동으로 닫습니다. 이 옵션은 빠른 개념 검증(POC)이나 서버가 커맨드라인 엔트리 포인트만 노출하는 경우에 유용합니다.
 
 ```python
 from pathlib import Path
@@ -3774,9 +3796,9 @@ async with MCPServerStdio(
     print(result.final_output)
 ```
 
-## 5. MCP 서버 매니저
+## 5. MCP server manager
 
-여러 MCP 서버가 있을 때는 `MCPServerManager` 를 사용해 미리 연결하고, 연결된 부분집합을 에이전트에 노출하세요
+여러 MCP 서버가 있는 경우 `MCPServerManager`를 사용해 미리 연결하고, 연결된 하위 집합을 에이전트에 노출하세요.
 
 ```python
 from agents import Agent, Runner
@@ -3799,19 +3821,19 @@ async with MCPServerManager(servers) as manager:
 
 주요 동작:
 
-- `drop_failed_servers=True`(기본값) 인 경우 `active_servers` 는 성공적으로 연결된 서버만 포함합니다
-- 실패는 `failed_servers` 와 `errors` 에 추적됩니다
-- 첫 연결 실패에서 raise 하려면 `strict=True` 로 설정하세요
-- 실패한 서버를 재시도하려면 `reconnect(failed_only=True)` 를, 모든 서버를 재시작하려면 `reconnect(failed_only=False)` 를 호출하세요
-- 라이프사이클 동작을 조정하려면 `connect_timeout_seconds`, `cleanup_timeout_seconds`, `connect_in_parallel` 을 사용하세요
+- `active_servers`에는 `drop_failed_servers=True`(기본값)일 때 연결에 성공한 서버만 포함됩니다.
+- 실패는 `failed_servers` 및 `errors`에서 추적됩니다.
+- `strict=True`로 설정하면 첫 연결 실패에서 예외를 발생시킵니다.
+- `reconnect(failed_only=True)`를 호출해 실패한 서버만 재시도하거나, `reconnect(failed_only=False)`로 모든 서버를 재시작하세요.
+- `connect_timeout_seconds`, `cleanup_timeout_seconds`, `connect_in_parallel`로 라이프사이클 동작을 조정하세요.
 
-## Tool filtering
+## 도구 필터링
 
-각 MCP 서버는 도구 필터를 지원하여, 에이전트에 필요한 함수만 노출할 수 있습니다. 필터링은 생성 시점에 수행하거나, 실행(run)마다 동적으로 수행할 수 있습니다
+각 MCP 서버는 도구 필터를 지원하므로 에이전트에 필요한 함수만 노출할 수 있습니다. 필터링은 생성 시점 또는 실행(run)별 동적 방식으로 수행할 수 있습니다.
 
 ### 정적 도구 필터링
 
-단순한 허용/차단 목록을 구성하려면 [`create_static_tool_filter`][agents.mcp.create_static_tool_filter] 를 사용하세요:
+[`create_static_tool_filter`][agents.mcp.create_static_tool_filter]를 사용해 간단한 허용/차단 목록을 구성하세요:
 
 ```python
 from pathlib import Path
@@ -3829,11 +3851,11 @@ filesystem_server = MCPServerStdio(
 )
 ```
 
-`allowed_tool_names` 와 `blocked_tool_names` 를 모두 제공하면, SDK 는 먼저 허용 목록을 적용한 다음 남은 집합에서 차단 도구를 제거합니다
+`allowed_tool_names`와 `blocked_tool_names`가 모두 제공되면, SDK는 먼저 허용 목록을 적용한 뒤 남은 집합에서 차단 도구를 제거합니다.
 
 ### 동적 도구 필터링
 
-더 정교한 로직을 위해서는 [`ToolFilterContext`][agents.mcp.ToolFilterContext] 를 받는 callable 을 전달하세요. callable 은 동기 또는 비동기일 수 있으며, 도구를 노출해야 할 때 `True` 를 반환합니다
+더 정교한 로직이 필요하다면 [`ToolFilterContext`][agents.mcp.ToolFilterContext]를 받는 callable을 전달하세요. callable은 동기 또는 비동기일 수 있으며, 도구를 노출해야 할 때 `True`를 반환합니다.
 
 ```python
 from pathlib import Path
@@ -3857,14 +3879,14 @@ async with MCPServerStdio(
     ...
 ```
 
-필터 컨텍스트는 활성 `run_context`, 도구를 요청하는 `agent`, 그리고 `server_name` 을 노출합니다
+필터 컨텍스트는 활성 `run_context`, 도구를 요청하는 `agent`, 그리고 `server_name`을 노출합니다.
 
 ## 프롬프트
 
-MCP 서버는 에이전트 instructions 를 동적으로 생성하는 프롬프트도 제공할 수 있습니다. 프롬프트를 지원하는 서버는 두 가지 메서드를 노출합니다:
+MCP 서버는 에이전트 지시사항을 동적으로 생성하는 프롬프트도 제공할 수 있습니다. 프롬프트를 지원하는 서버는 두 가지 메서드를 노출합니다:
 
-- `list_prompts()` 는 사용 가능한 프롬프트 템플릿을 열거합니다
-- `get_prompt(name, arguments)` 는 구체적인 프롬프트를 가져오며, 선택적으로 매개변수를 포함할 수 있습니다
+- `list_prompts()`는 사용 가능한 프롬프트 템플릿을 열거합니다.
+- `get_prompt(name, arguments)`는 (선택적으로 매개변수와 함께) 구체적인 프롬프트를 가져옵니다.
 
 ```python
 from agents import Agent
@@ -3884,22 +3906,22 @@ agent = Agent(
 
 ## 캐싱
 
-모든 에이전트 실행은 각 MCP 서버에 대해 `list_tools()` 를 호출합니다. 원격 서버는 눈에 띄는 지연 시간을 유발할 수 있으므로, 모든 MCP 서버 클래스는 `cache_tools_list` 옵션을 노출합니다. 도구 정의가 자주 바뀌지 않는다고 확신할 때만 `True` 로 설정하세요. 이후에 최신 목록을 강제로 가져오려면 서버 인스턴스에서 `invalidate_tools_cache()` 를 호출하세요
+모든 에이전트 실행은 각 MCP 서버에서 `list_tools()`를 호출합니다. 원격 서버는 눈에 띄는 지연 시간을 유발할 수 있으므로, 모든 MCP 서버 클래스는 `cache_tools_list` 옵션을 제공합니다. 도구 정의가 자주 바뀌지 않는다고 확신하는 경우에만 `True`로 설정하세요. 나중에 최신 목록을 강제로 가져오려면 서버 인스턴스에서 `invalidate_tools_cache()`를 호출하세요.
 
 ## 트레이싱
 
-[Tracing](./tracing.md) 은 다음을 포함해 MCP 활동을 자동으로 캡처합니다:
+[트레이싱](./tracing.md)은 다음을 포함해 MCP 활동을 자동으로 캡처합니다:
 
-1. 도구 목록을 가져오기 위해 MCP 서버를 호출하는 동작
-2. 도구 호출 시 MCP 관련 정보
+1. 도구 목록을 나열하기 위한 MCP 서버 호출
+2. 도구 호출에 대한 MCP 관련 정보
 
 ![MCP 트레이싱 스크린샷](../assets/images/mcp-tracing.jpg)
 
 ## 추가 읽을거리
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) – 명세 및 설계 가이드
+- [Model Context Protocol](https://modelcontextprotocol.io/) – 사양 및 설계 가이드
 - [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) – 실행 가능한 stdio, SSE, Streamable HTTP 샘플
-- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 승인과 커넥터를 포함한 완전한 hosted MCP 데모
+- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 승인 및 커넥터를 포함한 완전한 호스티드 MCP 데모
 
 ================
 File: docs/ko/multi_agent.md
@@ -4162,66 +4184,70 @@ search:
 ---
 # 릴리스 프로세스/변경 로그
 
-이 프로젝트는 `0.Y.Z` 형식을 사용하는, 약간 수정된 시맨틱 버저닝을 따릅니다. 앞의 `0`은 SDK 가 아직 빠르게 진화하고 있음을 의미합니다. 구성 요소는 다음과 같이 증가합니다
+이 프로젝트는 `0.Y.Z` 형식을 사용하는, 약간 수정된 시맨틱 버저닝을 따릅니다. 앞의 `0`은 SDK가 아직 빠르게 진화하고 있음을 의미합니다. 구성 요소는 다음과 같이 증가합니다:
 
-## 마이너 (`Y`) 버전
+## 마이너(`Y`) 버전
 
-베타로 표시되지 않은 모든 공개 인터페이스에 대한 **호환성 깨짐 변경**이 있을 때 마이너 버전 `Y`를 증가합니다. 예를 들어 `0.0.x`에서 `0.1.x`로의 변경에는 호환성 깨짐 변경이 포함될 수 있습니다
+베타로 표시되지 않은 모든 공개 인터페이스에 대한 **호환성을 깨는 변경(breaking changes)** 이 있을 때 마이너 버전 `Y`를 올립니다. 예를 들어 `0.0.x`에서 `0.1.x`로 가는 경우 breaking changes가 포함될 수 있습니다.
 
-호환성 깨짐 변경을 원하지 않는다면, 프로젝트에서 `0.0.x` 버전으로 핀 고정하는 것을 권장합니다
+breaking changes를 원하지 않는다면, 프로젝트에서 `0.0.x` 버전에 고정(pin)하는 것을 권장합니다.
 
-## 패치 (`Z`) 버전
+## 패치(`Z`) 버전
 
-호환성 깨짐이 없는 변경에 대해 `Z`를 증가합니다
+호환성을 깨지 않는 변경에 대해서는 `Z`를 증가합니다:
 
 - 버그 수정
-- 새 기능
+- 새로운 기능
 - 비공개 인터페이스 변경
 - 베타 기능 업데이트
 
-## 호환성 깨짐 변경 로그
+## breaking change 변경 로그
+
+### 0.9.0
+
+이 버전에서는 Python 3.9가 더 이상 지원되지 않습니다. 메이저 버전이 이미 3개월 전에 EOL되었기 때문입니다. 더 새로운 런타임 버전으로 업그레이드해 주세요.
 
 ### 0.8.0
 
-이 버전에서는 두 가지 런타임 동작 변경으로 인해 마이그레이션 작업이 필요할 수 있습니다
+이 버전에서는 런타임 동작 변경 2가지로 인해 마이그레이션 작업이 필요할 수 있습니다:
 
-- **동기식** Python 호출 가능 객체(callable)를 래핑하는 함수 도구는 이제 이벤트 루프 스레드에서 실행하는 대신 `asyncio.to_thread(...)`를 통해 워커 스레드에서 실행됩니다. 도구 로직이 스레드 로컬 상태나 스레드에 종속된 리소스에 의존한다면, 비동기 도구 구현으로 마이그레이션하거나 도구 코드에서 스레드 종속성을 명시적으로 처리하세요
-- 로컬 MCP 도구 실패 처리 방식이 이제 설정 가능해졌으며, 기본 동작은 전체 실행을 실패시키는 대신 모델에 표시되는 오류 출력을 반환할 수 있습니다. fail-fast 동작에 의존한다면 `mcp_config={"failure_error_function": None}`를 설정하세요. 서버 수준의 `failure_error_function` 값이 에이전트 수준 설정을 덮어쓰므로, 명시적 핸들러가 있는 각 로컬 MCP 서버에서도 `failure_error_function=None`을 설정하세요
+- **동기식** Python callable을 래핑하는 함수 도구는 이제 이벤트 루프 스레드에서 실행하는 대신 `asyncio.to_thread(...)`를 통해 워커 스레드에서 실행됩니다. 도구 로직이 스레드 로컬 상태(thread-local state) 또는 스레드에 종속된 리소스(thread-affine resources)에 의존한다면, 비동기 도구 구현으로 마이그레이션하거나 도구 코드에서 스레드 종속성을 명시적으로 처리하세요.
+- 로컬 MCP 도구 실패 처리 방식이 이제 설정 가능하며, 기본 동작은 전체 실행을 실패시키는 대신 모델이 볼 수 있는 오류 출력을 반환할 수 있습니다. fail-fast 의미론에 의존한다면 `mcp_config={"failure_error_function": None}`로 설정하세요. 서버 레벨의 `failure_error_function` 값은 에이전트 레벨 설정을 덮어쓰므로, 명시적 핸들러가 있는 각 로컬 MCP 서버에서 `failure_error_function=None`을 설정하세요.
 
 ### 0.7.0
 
-이 버전에서는 기존 애플리케이션에 영향을 줄 수 있는 몇 가지 동작 변경이 있었습니다
+이 버전에서는 기존 애플리케이션에 영향을 줄 수 있는 몇 가지 동작 변경이 있었습니다:
 
-- 중첩된 핸드오프 기록은 이제 **옵트인**입니다(기본값은 비활성화). v0.6.x의 기본 중첩 동작에 의존했다면 `RunConfig(nest_handoff_history=True)`를 명시적으로 설정하세요
-- `gpt-5.1` / `gpt-5.2`의 기본 `reasoning.effort`가 `"none"`으로 변경되었습니다(이전에는 SDK 기본값으로 `"low"`가 설정됨). 프롬프트나 품질/비용 프로파일이 `"low"`에 의존했다면 `model_settings`에서 이를 명시적으로 설정하세요
+- 중첩 핸드오프 기록(nested handoff history)은 이제 **옵트인**(기본 비활성화)입니다. v0.6.x의 기본 중첩 동작에 의존했다면 `RunConfig(nest_handoff_history=True)`를 명시적으로 설정하세요.
+- `gpt-5.1` / `gpt-5.2`의 기본 `reasoning.effort`가 `"none"`으로 변경되었습니다(이전에는 SDK 기본값으로 `"low"`가 설정되어 있었음). 프롬프트나 품질/비용 프로파일이 `"low"`에 의존했다면 `model_settings`에서 이를 명시적으로 설정하세요.
 
 ### 0.6.0
 
-이 버전에서는 기본 핸드오프 기록이 원문 사용자/어시스턴트 턴을 노출하는 대신 단일 어시스턴트 메시지로 패키징되어, 다운스트림 에이전트에게 간결하고 예측 가능한 요약을 제공합니다
-- 기존의 단일 메시지 핸드오프 대화 기록은 이제 기본적으로 `<CONVERSATION HISTORY>` 블록 전에 "For context, here is the conversation so far between the user and the previous agent:"로 시작하므로, 다운스트림 에이전트가 명확하게 라벨된 요약을 받게 됩니다
+이 버전에서는 기본 핸드오프 기록이 원문 사용자/어시스턴트 턴을 노출하는 대신 하나의 assistant 메시지로 패키징되어, 다운스트림 에이전트에 간결하고 예측 가능한 요약을 제공합니다
+- 기존의 단일 메시지 핸드오프 전사본은 이제 기본적으로 `<CONVERSATION HISTORY>` 블록 앞에 "For context, here is the conversation so far between the user and the previous agent:"로 시작하여, 다운스트림 에이전트가 명확히 라벨된 요약을 받을 수 있습니다
 
 ### 0.5.0
 
-이 버전은 눈에 보이는 호환성 깨짐 변경을 도입하지는 않지만, 새 기능과 내부적으로 중요한 업데이트 몇 가지가 포함되어 있습니다
+이 버전은 눈에 띄는 breaking changes를 도입하지는 않지만, 새로운 기능과 내부적으로 몇 가지 중요한 업데이트를 포함합니다:
 
-- [SIP 프로토콜 연결](https://platform.openai.com/docs/guides/realtime-sip)을 처리하기 위한 `RealtimeRunner` 지원 추가
+- [SIP protocol connections](https://platform.openai.com/docs/guides/realtime-sip)을 처리하기 위한 `RealtimeRunner` 지원 추가
 - Python 3.14 호환성을 위해 `Runner#run_sync`의 내부 로직을 대폭 개정
 
 ### 0.4.0
 
-이 버전부터는 [openai](https://pypi.org/project/openai/) 패키지 v1.x 버전이 더 이상 지원되지 않습니다. 이 SDK 와 함께 openai v2.x를 사용하세요
+이 버전에서는 [openai](https://pypi.org/project/openai/) 패키지 v1.x 버전이 더 이상 지원되지 않습니다. 이 SDK와 함께 openai v2.x를 사용하세요.
 
 ### 0.3.0
 
-이 버전에서는 Realtime API 지원이 gpt-realtime 모델 및 해당 API 인터페이스(GA 버전)로 마이그레이션됩니다
+이 버전에서는 Realtime API 지원이 gpt-realtime 모델 및 해당 API 인터페이스(GA 버전)로 마이그레이션됩니다.
 
 ### 0.2.0
 
-이 버전에서는 이전에 `Agent`를 인자로 받던 몇 군데가 이제 대신 `AgentBase`를 인자로 받습니다. 예를 들어 MCP 서버의 `list_tools()` 호출이 그렇습니다. 이는 순수하게 타이핑 변경이며, 여전히 `Agent` 객체를 받게 됩니다. 업데이트하려면 `Agent`를 `AgentBase`로 바꾸어 타입 오류를 해결하기만 하면 됩니다
+이 버전에서는 과거에 `Agent`를 인자로 받던 몇몇 위치가 이제 `AgentBase`를 인자로 받도록 변경되었습니다. 예를 들어 MCP 서버의 `list_tools()` 호출이 그렇습니다. 이는 순수하게 타이핑 변경이며, 여전히 `Agent` 객체를 받게 됩니다. 업데이트하려면 `Agent`를 `AgentBase`로 바꿔 타입 오류를 수정하기만 하면 됩니다.
 
 ### 0.1.0
 
-이 버전에서 [`MCPServer.list_tools()`][agents.mcp.server.MCPServer]에 `run_context`와 `agent`라는 두 개의 새 매개변수가 추가되었습니다. `MCPServer`를 서브클래싱하는 모든 클래스에 이 매개변수를 추가해야 합니다
+이 버전에서는 [`MCPServer.list_tools()`][agents.mcp.server.MCPServer]에 `run_context`와 `agent`라는 두 개의 새 매개변수가 추가되었습니다. `MCPServer`를 서브클래싱하는 모든 클래스에 이 매개변수를 추가해야 합니다.
 
 ================
 File: docs/ko/repl.md
@@ -4348,11 +4374,11 @@ search:
 ---
 # 에이전트 실행
 
-[`Runner`][agents.run.Runner] 클래스를 통해 에이전트를 실행할 수 있습니다. 3가지 옵션이 있습니다.
+[`Runner`][agents.run.Runner] 클래스를 통해 에이전트를 실행할 수 있습니다. 3가지 옵션이 있습니다:
 
-1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult]를 반환합니다
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며 내부적으로 `.run()`을 실행하기만 합니다
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]을 반환합니다. 스트리밍 모드로 LLM을 호출하고, 수신되는 대로 해당 이벤트를 스트리밍으로 전달합니다
+1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult]를 반환합니다.
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며, 내부적으로 `.run()`을 실행합니다.
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]를 반환합니다. 스트리밍 모드로 LLM을 호출하고, 수신되는 대로 해당 이벤트를 스트리밍으로 전달합니다.
 
 ```python
 from agents import Agent, Runner
@@ -4367,64 +4393,64 @@ async def main():
     # Infinite loop's dance
 ```
 
-자세한 내용은 [results 가이드](results.md)를 참고하세요.
+자세한 내용은 [결과 가이드](results.md)를 참고하세요.
 
 ## 에이전트 루프
 
-`Runner`에서 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주됨) 또는 OpenAI Responses API의 항목들로 구성된 입력 항목 리스트가 될 수 있습니다.
+`Runner`에서 run 메서드를 사용할 때, 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주됨) 또는 입력 항목의 리스트일 수 있으며, 이는 OpenAI Responses API의 항목들입니다.
 
-그다음 runner가 루프를 실행합니다.
+그다음 runner는 루프를 실행합니다:
 
-1. 현재 입력으로 현재 에이전트에 대해 LLM을 호출합니다
-2. LLM이 출력을 생성합니다
-    1. LLM이 `final_output`을 반환하면 루프가 종료되고 결과를 반환합니다
-    2. LLM이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트하고 루프를 다시 실행합니다
-    3. LLM이 도구 호출을 생성하면 해당 도구 호출을 실행하고 결과를 추가한 뒤 루프를 다시 실행합니다
-3. 전달된 `max_turns`를 초과하면 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 예외를 발생시킵니다
+1. 현재 입력으로 현재 에이전트에 대해 LLM을 호출합니다.
+2. LLM이 출력을 생성합니다.
+    1. LLM이 `final_output`을 반환하면 루프를 종료하고 결과를 반환합니다.
+    2. LLM이 핸드오프를 수행하면, 현재 에이전트와 입력을 업데이트하고 루프를 다시 실행합니다.
+    3. LLM이 도구 호출을 생성하면, 해당 도구 호출을 실행하고 결과를 추가한 뒤 루프를 다시 실행합니다.
+3. 전달된 `max_turns`를 초과하면 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 예외를 발생시킵니다.
 
 !!! note
 
-    LLM 출력이 “final output”으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없어야 한다는 것입니다.
+    LLM 출력이 "최종 출력"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없을 때입니다.
 
 ## 스트리밍
 
-스트리밍을 사용하면 LLM이 실행되는 동안 스트리밍 이벤트도 추가로 받을 수 있습니다. 스트림이 끝나면 [`RunResultStreaming`][agents.result.RunResultStreaming]에 실행에 대한 완전한 정보(생성된 모든 신규 출력 포함)가 담깁니다. 스트리밍 이벤트는 `.stream_events()`를 호출해 받을 수 있습니다. 자세한 내용은 [streaming 가이드](streaming.md)를 참고하세요.
+스트리밍을 사용하면 LLM이 실행되는 동안 추가로 스트리밍 이벤트를 받을 수 있습니다. 스트림이 종료되면 [`RunResultStreaming`][agents.result.RunResultStreaming]에는 생성된 모든 새로운 출력물을 포함하여 실행에 대한 전체 정보가 담깁니다. 스트리밍 이벤트는 `.stream_events()`로 가져올 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
 
-## 실행 구성
+## Run config
 
-`run_config` 매개변수로 에이전트 실행에 대한 몇 가지 전역 설정을 구성할 수 있습니다.
+`run_config` 매개변수를 사용하면 에이전트 실행에 대한 일부 전역 설정을 구성할 수 있습니다:
 
--   [`model`][agents.run.RunConfig.model]: 각 Agent가 가진 `model`과 무관하게 전역으로 사용할 LLM 모델을 설정할 수 있습니다
--   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름을 조회하기 위한 모델 제공자이며 기본값은 OpenAI입니다
--   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 덮어씁니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
--   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 히스토리를 조회할 때 세션 수준 기본값(예: `SessionSettings(limit=...)`)을 덮어씁니다
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일 목록입니다
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 이미 필터가 없는 경우 모든 핸드오프에 적용할 전역 입력 필터입니다. 입력 필터를 통해 새 에이전트로 전송되는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 대화를 단일 assistant 메시지로 접어 넣는 옵트인 베타 기능입니다. 중첩 핸드오프를 안정화하는 동안 기본적으로 비활성화되어 있으며, 활성화하려면 `True`로 설정하거나 원문 대화를 그대로 전달하려면 `False`로 두세요. [Runner 메서드][agents.run.Runner]는 `RunConfig`를 전달하지 않으면 자동으로 `RunConfig`를 생성하므로, 퀵스타트와 예시는 기본값(비활성화)을 유지하며, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 덮어씁니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 재정의할 수 있습니다
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 대화 기록(히스토리 + 핸드오프 항목)을 받는 선택적 callable입니다. 다음 에이전트로 전달할 입력 항목의 정확한 리스트를 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [tracing](tracing.md)을 비활성화할 수 있습니다
--   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 exporter, 프로세서, 또는 트레이싱 메타데이터를 덮어쓰기 위해 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력 같은 잠재적으로 민감한 데이터가 포함될지 여부를 구성합니다
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행에 대한 트레이싱 워크플로 이름, 트레이스 ID, 트레이스 그룹 ID를 설정합니다. 최소한 `workflow_name` 설정을 권장합니다. 그룹 ID는 여러 실행에 걸쳐 트레이스를 연결할 수 있게 해주는 선택적 필드입니다
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터입니다
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions를 사용할 때 각 턴 전에 새 사용자 입력을 세션 히스토리와 어떻게 병합할지 사용자 정의합니다
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하기 위한 훅입니다. 예: 히스토리 트리밍 또는 시스템 프롬프트 주입
--   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 플로우 중 도구 호출이 거부될 때 모델에 보이는 메시지를 사용자 정의합니다
+-   [`model`][agents.run.RunConfig.model]: 각 Agent가 가진 `model`과 무관하게, 사용할 전역 LLM 모델을 설정할 수 있습니다.
+-   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름을 조회하기 위한 모델 provider이며, 기본값은 OpenAI입니다.
+-   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 덮어씁니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다.
+-   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 히스토리를 가져올 때 세션 수준의 기본값(예: `SessionSettings(limit=...)`)을 덮어씁니다.
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일 목록입니다.
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 입력 필터가 아직 없는 경우, 모든 핸드오프에 적용할 전역 입력 필터입니다. 입력 필터를 사용하면 새 에이전트로 전송되는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요.
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 대화를 단일 assistant 메시지로 접어 넣는 옵트인 베타 기능입니다. 중첩 핸드오프를 안정화하는 동안 기본값은 비활성화이며, 활성화하려면 `True`로 설정하거나, 원문 트랜스크립트를 그대로 전달하려면 `False`로 두세요. 모든 [Runner 메서드][agents.run.Runner]는 전달하지 않으면 자동으로 `RunConfig`를 생성하므로, 빠른 시작과 예시는 기본값(비활성화)을 유지하며, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 덮어씁니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 재정의할 수 있습니다.
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 트랜스크립트(히스토리 + 핸드오프 항목)를 받는 선택적 callable입니다. 다음 에이전트로 전달할 입력 항목의 정확한 리스트를 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다.
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [트레이싱](tracing.md)을 비활성화할 수 있습니다.
+-   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 exporter, 프로세서, 또는 트레이싱 메타데이터를 덮어쓰기 위해 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다.
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력 등 잠재적으로 민감한 데이터가 포함될지 여부를 구성합니다.
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행의 트레이싱 workflow name, trace ID, trace group ID를 설정합니다. 최소한 `workflow_name` 설정을 권장합니다. group ID는 여러 실행에 걸쳐 트레이스를 연결할 수 있는 선택적 필드입니다.
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터입니다.
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions를 사용할 때 각 턴 전에 새 사용자 입력이 세션 히스토리와 병합되는 방식을 커스터마이즈합니다.
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하는 훅입니다. 예: 히스토리 트리밍 또는 시스템 프롬프트 주입
+-   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 플로우 중 도구 호출이 거부될 때 모델에 보이는 메시지를 커스터마이즈합니다.
 
-중첩 핸드오프는 옵트인 베타로 제공됩니다. `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정하여 접힌 대화 기록 동작을 활성화할 수 있습니다. 원문 대화(기본값)를 유지하고 싶다면 플래그를 설정하지 않거나, 대화를 필요한 대로 정확히 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성된 요약에서 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하세요(기본값을 복원하려면 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
+중첩 핸드오프는 옵트인 베타로 제공됩니다. 접힌 트랜스크립트 동작을 활성화하려면 `RunConfig(nest_handoff_history=True)`를 전달하거나, 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정하세요. 원문 트랜스크립트를 유지하려면(기본값) 플래그를 설정하지 않거나, 대화를 필요한 형태로 정확히 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하세요(기본값으로 복원하려면 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
 
 ## 대화/채팅 스레드
 
-run 메서드 중 어떤 것을 호출하더라도 하나 이상의 에이전트가 실행될 수 있고(따라서 하나 이상의 LLM 호출이 발생), 이는 채팅 대화에서 하나의 논리적 턴을 나타냅니다. 예:
+어떤 run 메서드를 호출하더라도 하나 이상의 에이전트가 실행될 수 있고(따라서 하나 이상의 LLM 호출이 발생할 수 있음), 이는 채팅 대화에서 하나의 논리적 턴을 나타냅니다. 예를 들면:
 
 1. 사용자 턴: 사용자가 텍스트를 입력
-2. Runner 실행: 첫 번째 에이전트가 LLM을 호출하고 도구를 실행한 뒤 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 더 많은 도구를 실행한 다음 출력을 생성
+2. Runner 실행: 첫 번째 에이전트가 LLM 호출, 도구 실행, 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 추가 도구 실행 후 출력 생성
 
-에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 신규 항목을 사용자에게 보여줄 수도 있고, 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자가 후속 질문을 할 수 있으며, 그 경우 run 메서드를 다시 호출할 수 있습니다.
+에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 새 항목을 사용자에게 보여줄 수도 있고, 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자는 후속 질문을 할 수 있으며, 그 경우 run 메서드를 다시 호출하면 됩니다.
 
 ### 수동 대화 관리
 
-[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴을 위한 입력을 가져오면 대화 히스토리를 수동으로 관리할 수 있습니다.
+[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴의 입력을 가져와 대화 히스토리를 수동으로 관리할 수 있습니다:
 
 ```python
 async def main():
@@ -4446,7 +4472,7 @@ async def main():
 
 ### Sessions를 통한 자동 대화 관리
 
-더 간단한 접근으로, [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동으로 호출하지 않고도 대화 히스토리를 자동으로 처리할 수 있습니다.
+더 간단한 접근으로, [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동으로 호출하지 않고도 대화 히스토리를 자동으로 처리할 수 있습니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -4470,23 +4496,23 @@ async def main():
         # California
 ```
 
-Sessions는 자동으로 다음을 수행합니다.
+Sessions는 자동으로 다음을 수행합니다:
 
--   각 실행 전에 대화 히스토리를 조회
--   각 실행 후 새 메시지를 저장
--   서로 다른 세션 ID에 대해 별도의 대화를 유지
+-   각 실행 전에 대화 히스토리를 가져옴
+-   각 실행 후 새 메시지를 저장함
+-   서로 다른 세션 ID에 대해 별도의 대화를 유지함
 
 자세한 내용은 [Sessions 문서](sessions/index.md)를 참고하세요.
 
 ### 서버 관리형 대화
 
-`to_input_list()` 또는 `Sessions`로 로컬에서 처리하는 대신, OpenAI conversation state 기능이 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이를 통해 과거 메시지 전체를 매번 수동으로 재전송하지 않고도 대화 히스토리를 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
+`to_input_list()` 또는 `Sessions`로 로컬에서 처리하는 대신, OpenAI conversation state 기능이 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이를 통해 과거 메시지 전체를 매번 수동으로 다시 전송하지 않고도 대화 히스토리를 유지할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
 
-OpenAI는 턴 간 상태를 추적하는 두 가지 방법을 제공합니다.
+OpenAI는 턴 간 상태를 추적하는 두 가지 방법을 제공합니다:
 
 #### 1. `conversation_id` 사용
 
-먼저 OpenAI Conversations API로 대화를 생성한 뒤, 이후 모든 호출에서 해당 ID를 재사용합니다.
+먼저 OpenAI Conversations API로 대화를 생성한 다음, 이후 모든 호출에서 해당 ID를 재사용합니다:
 
 ```python
 from agents import Agent, Runner
@@ -4509,7 +4535,7 @@ async def main():
 
 #### 2. `previous_response_id` 사용
 
-또 다른 옵션은 **response chaining**으로, 각 턴이 이전 턴의 응답 ID에 명시적으로 연결됩니다.
+다른 옵션은 **response chaining**으로, 각 턴이 이전 턴의 response ID에 명시적으로 연결됩니다.
 
 ```python
 from agents import Agent, Runner
@@ -4536,7 +4562,7 @@ async def main():
 
 ## Call model input filter
 
-`call_model_input_filter`를 사용해 모델 호출 직전에 모델 입력을 편집합니다. 이 훅은 현재 에이전트, 컨텍스트, 그리고 결합된 입력 항목(세션 히스토리가 있으면 포함)을 받아 새 `ModelInputData`를 반환합니다.
+`call_model_input_filter`를 사용하면 모델 호출 직전에 모델 입력을 편집할 수 있습니다. 이 훅은 현재 에이전트, 컨텍스트, 그리고 결합된 입력 항목(세션 히스토리가 있는 경우 이를 포함)을 받아 새 `ModelInputData`를 반환합니다.
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -4555,7 +4581,7 @@ result = Runner.run_sync(
 )
 ```
 
-민감한 데이터 마스킹, 긴 히스토리 트리밍, 추가 시스템 가이던스 주입 등을 위해 `run_config`로 실행별 훅을 설정하거나 `Runner`에 기본값으로 설정하세요.
+민감 데이터 마스킹, 긴 히스토리 트리밍, 추가 시스템 가이던스 주입을 위해 `run_config`로 실행별로 훅을 설정하거나 `Runner`의 기본값으로 설정할 수 있습니다.
 
 ## 오류 핸들러
 
@@ -4590,34 +4616,35 @@ print(result.final_output)
 
 대체 출력이 대화 히스토리에 추가되지 않게 하려면 `include_in_history=False`로 설정하세요.
 
-## 장시간 실행 에이전트 & 휴먼인더루프
+## 장시간 실행 에이전트 & 휴먼인더루프 (HITL)
 
-도구 승인 일시정지/재개 패턴은 전용 [Human-in-the-loop 가이드](human_in_the_loop.md)를 참고하세요.
+도구 승인 일시중지/재개 패턴은 전용 [Human-in-the-loop 가이드](human_in_the_loop.md)를 참고하세요.
 
 ### Temporal
 
-Agents SDK [Temporal](https://temporal.io/) 통합을 사용하면 휴먼인더루프 작업을 포함한 내구성 있는 장시간 실행 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 동작하여 장시간 실행 작업을 완료하는 데모는 [이 비디오](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, [문서는 여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 볼 수 있습니다. 
+Agents SDK [Temporal](https://temporal.io/) 통합을 사용하면 휴먼인더루프 작업을 포함해 내구성 있는 장시간 실행 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 동작하여 장시간 작업을 완료하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, 문서는 [여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 확인할 수 있습니다. 
 
 ### Restate
 
-Agents SDK [Restate](https://restate.dev/) 통합을 사용하면 사람 승인, 핸드오프, 세션 관리 등을 포함하는 경량의 내구성 있는 에이전트를 사용할 수 있습니다. 이 통합은 Restate의 단일 바이너리 런타임을 의존성으로 필요로 하며, 프로세스/컨테이너 또는 서버리스 함수로 에이전트를 실행하는 것을 지원합니다.
-자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)를 읽거나 [문서](https://docs.restate.dev/ai)를 확인하세요.
+Agents SDK [Restate](https://restate.dev/) 통합을 사용하면 사람 승인, 핸드오프, 세션 관리 등을 포함한 경량의 내구성 있는 에이전트를 사용할 수 있습니다. 이 통합은 Restate의 단일 바이너리 런타임을 의존성으로 요구하며, 프로세스/컨테이너 또는 서버리스 함수로 에이전트를 실행하는 것을 지원합니다.
+자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)를 읽거나 [문서](https://docs.restate.dev/ai)를 참고하세요.
 
 ### DBOS
 
-Agents SDK [DBOS](https://dbos.dev/) 통합을 사용하면 장애 및 재시작 전반에 걸쳐 진행 상황을 보존하는 신뢰성 높은 에이전트를 실행할 수 있습니다. 장시간 실행 에이전트, 휴먼인더루프 워크플로, 핸드오프를 지원합니다. 동기 및 비동기 메서드를 모두 지원합니다. 통합은 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents)와 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
+Agents SDK [DBOS](https://dbos.dev/) 통합을 사용하면 장애 및 재시작 시에도 진행 상황을 보존하는 신뢰할 수 있는 에이전트를 실행할 수 있습니다. 장시간 실행 에이전트, 휴먼인더루프 워크플로, 핸드오프를 지원합니다. 동기 및 비동기 메서드를 모두 지원합니다. 이 통합은 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents)와 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
 
 ## 예외
 
-SDK는 특정 경우에 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다.
+SDK는 특정 경우에 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다:
 
--   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 기본 클래스입니다. 다른 모든 구체적 예외가 파생되는 일반 타입으로 사용됩니다
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과할 때 발생하는 예외입니다. 지정된 상호작용 턴 수 내에 에이전트가 작업을 완료하지 못했음을 의미합니다
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 못하거나 유효하지 않은 출력을 생성할 때 발생하는 예외입니다. 예를 들면 다음을 포함합니다
-    -   잘못된 형식의 JSON: 특히 특정 `output_type`이 정의되어 있을 때, 모델이 도구 호출 또는 직접 출력에 대해 잘못된 JSON 구조를 제공하는 경우
-    -   예상치 못한 도구 관련 실패: 모델이 기대되는 방식으로 도구를 사용하지 못하는 경우
--   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK 사용 중 오류를 범했을 때 발생하는 예외입니다. 일반적으로 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API의 오용으로 인해 발생합니다
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족될 때 발생하는 예외입니다. 입력 가드레일은 처리 전에 들어오는 메시지를 확인하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 확인합니다
+-   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 기본 클래스입니다. 다른 모든 구체적인 예외는 이 타입에서 파생됩니다.
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과할 때 발생하는 예외입니다. 지정된 상호작용 턴 수 내에 작업을 완료할 수 없었음을 의미합니다.
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 못하거나 유효하지 않은 출력을 생성할 때 발생하는 예외입니다. 예를 들면 다음을 포함합니다:
+    -   잘못된 형식의 JSON: 모델이 도구 호출 또는 직접 출력에서 잘못된 JSON 구조를 제공하는 경우(특히 특정 `output_type`이 정의된 경우)
+    -   예상치 못한 도구 관련 실패: 모델이 예상된 방식으로 도구를 사용하지 못하는 경우
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]: 함수 도구 호출이 구성된 timeout을 초과하고 도구가 `timeout_behavior="raise_exception"`을 사용하는 경우 발생하는 예외입니다.
+-   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드를 작성하는 사용자(개발자)가 SDK 사용 중 오류를 낼 때 발생하는 예외입니다. 보통 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API 오사용에서 비롯됩니다.
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족될 때 발생하는 예외입니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 검사합니다.
 
 ================
 File: docs/ko/streaming.md
@@ -4723,21 +4750,21 @@ search:
 ---
 # 도구
 
-도구는 에이전트가 작업을 수행할 수 있게 해줍니다. 예를 들어 데이터 가져오기, 코드 실행, 외부 API 호출, 심지어 컴퓨터 사용까지 가능합니다. SDK 는 다섯 가지 카테고리를 지원합니다:
+도구를 사용하면 에이전트가 행동을 수행할 수 있습니다. 예를 들어 데이터 가져오기, 코드 실행, 외부 API 호출, 심지어 컴퓨터 사용까지 가능합니다. SDK 는 다섯 가지 카테고리를 지원합니다:
 
 -   OpenAI 호스트하는 도구: OpenAI 서버에서 모델과 함께 실행됩니다
--   로컬 런타임 도구: 사용자의 환경에서 실행됩니다 (컴퓨터 사용, 셸, 패치 적용)
--   함수 호출: 어떤 Python 함수든 도구로 감쌉니다
--   Agents as tools: 전체 핸드오프 없이 에이전트를 호출 가능한 도구로 노출합니다
--   실험적: Codex 도구: 도구 호출로 워크스페이스 범위의 Codex 작업을 실행합니다
+-   로컬 런타임 도구: 여러분의 환경에서 실행됩니다(컴퓨터 사용, 셸, 패치 적용)
+-   함수 호출: 어떤 Python 함수든 도구로 래핑합니다
+-   Agents as tools: 완전한 핸드오프 없이 에이전트를 호출 가능한 도구로 노출합니다
+-   실험적: Codex 도구: 도구 호출에서 워크스페이스 범위 Codex 작업을 실행합니다
 
 ## 호스티드 툴
 
 OpenAI 는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 을 사용할 때 몇 가지 내장 도구를 제공합니다:
 
--   [`WebSearchTool`][agents.tool.WebSearchTool] 은 에이전트가 웹을 검색할 수 있게 해줍니다
--   [`FileSearchTool`][agents.tool.FileSearchTool] 은 OpenAI Vector Stores 에서 정보를 가져올 수 있게 해줍니다
--   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 은 LLM 이 샌드박스 환경에서 코드를 실행할 수 있게 해줍니다
+-   [`WebSearchTool`][agents.tool.WebSearchTool] 은 에이전트가 웹을 검색할 수 있게 합니다
+-   [`FileSearchTool`][agents.tool.FileSearchTool] 은 OpenAI 벡터 스토어에서 정보를 가져올 수 있게 합니다
+-   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 은 LLM 이 샌드박스 환경에서 코드를 실행할 수 있게 합니다
 -   [`HostedMCPTool`][agents.tool.HostedMCPTool] 은 원격 MCP 서버의 도구를 모델에 노출합니다
 -   [`ImageGenerationTool`][agents.tool.ImageGenerationTool] 은 프롬프트로부터 이미지를 생성합니다
 
@@ -4760,13 +4787,61 @@ async def main():
     print(result.final_output)
 ```
 
+### 호스티드 컨테이너 셸 + 스킬
+
+`ShellTool` 은 OpenAI 호스티드 컨테이너 실행도 지원합니다. 로컬 런타임 대신 관리형 컨테이너에서 모델이 셸 명령을 실행하길 원할 때 이 모드를 사용하세요.
+
+```python
+from agents import Agent, Runner, ShellTool, ShellToolSkillReference
+
+csv_skill: ShellToolSkillReference = {
+    "type": "skill_reference",
+    "skill_id": "skill_698bbe879adc81918725cbc69dcae7960bc5613dadaed377",
+    "version": "1",
+}
+
+agent = Agent(
+    name="Container shell agent",
+    model="gpt-5.2",
+    instructions="Use the mounted skill when helpful.",
+    tools=[
+        ShellTool(
+            environment={
+                "type": "container_auto",
+                "network_policy": {"type": "disabled"},
+                "skills": [csv_skill],
+            }
+        )
+    ],
+)
+
+result = await Runner.run(
+    agent,
+    "Use the configured skill to analyze CSV files in /mnt/data and summarize totals by region.",
+)
+print(result.final_output)
+```
+
+이후 실행에서 기존 컨테이너를 재사용하려면 `environment={"type": "container_reference", "container_id": "cntr_..."}` 를 설정하세요.
+
+알아둘 사항:
+
+-   호스티드 셸은 Responses API 셸 도구를 통해 사용할 수 있습니다
+-   `container_auto` 는 요청을 위해 컨테이너를 프로비저닝하고, `container_reference` 는 기존 컨테이너를 재사용합니다
+-   `environment.skills` 는 스킬 레퍼런스와 인라인 스킬 번들을 허용합니다
+-   호스티드 환경에서는 `ShellTool` 에 `executor`, `needs_approval`, `on_approval` 를 설정하지 마세요
+-   `network_policy` 는 `disabled` 및 `allowlist` 모드를 지원합니다
+-   전체 예제는 `examples/tools/container_shell_skill_reference.py` 와 `examples/tools/container_shell_inline_skill.py` 를 참고하세요
+-   OpenAI 플랫폼 가이드: [Shell](https://platform.openai.com/docs/guides/tools-shell) 및 [Skills](https://platform.openai.com/docs/guides/tools-skills)
+
 ## 로컬 런타임 도구
 
-로컬 런타임 도구는 사용자의 환경에서 실행되며, 사용자가 구현을 제공해야 합니다:
+로컬 런타임 도구는 여러분의 환경에서 실행되며, 구현을 제공해야 합니다:
 
--   [`ComputerTool`][agents.tool.ComputerTool]: [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 인터페이스를 구현해 GUI/브라우저 자동화를 활성화합니다
--   [`ShellTool`][agents.tool.ShellTool] 또는 [`LocalShellTool`][agents.tool.LocalShellTool]: 명령을 실행할 셸 실행기를 제공합니다
--   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]: [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor] 를 구현해 로컬에서 diff 를 적용합니다
+-   [`ComputerTool`][agents.tool.ComputerTool]: GUI/브라우저 자동화를 활성화하려면 [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 인터페이스를 구현합니다
+-   [`ShellTool`][agents.tool.ShellTool]: 로컬 실행과 호스티드 컨테이너 실행 모두를 위한 최신 셸 도구입니다
+-   [`LocalShellTool`][agents.tool.LocalShellTool]: 레거시 로컬 셸 통합입니다
+-   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]: 로컬에서 diff 를 적용하려면 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor] 를 구현합니다
 
 ```python
 from agents import Agent, ApplyPatchTool, ShellTool
@@ -4810,14 +4885,14 @@ agent = Agent(
 
 ## 함수 도구
 
-어떤 Python 함수든 도구로 사용할 수 있습니다. Agents SDK 가 자동으로 도구를 설정합니다:
+어떤 Python 함수든 도구로 사용할 수 있습니다. Agents SDK 가 도구를 자동으로 설정합니다:
 
--   도구의 이름은 Python 함수의 이름입니다(또는 이름을 제공할 수 있습니다)
+-   도구 이름은 Python 함수의 이름입니다(또는 이름을 제공할 수 있습니다)
 -   도구 설명은 함수의 docstring 에서 가져옵니다(또는 설명을 제공할 수 있습니다)
--   함수 입력에 대한 스키마는 함수의 인자에서 자동으로 생성됩니다
--   각 입력에 대한 설명은 비활성화하지 않는 한 함수의 docstring 에서 가져옵니다
+-   함수 입력을 위한 스키마는 함수의 인자에서 자동으로 생성됩니다
+-   각 입력에 대한 설명은 비활성화하지 않는 한 docstring 에서 가져옵니다
 
-Python 의 `inspect` 모듈을 사용해 함수 시그니처를 추출하고, [`griffe`](https://mkdocstrings.github.io/griffe/) 로 docstring 을 파싱하며, 스키마 생성을 위해 `pydantic` 을 사용합니다.
+Python 의 `inspect` 모듈로 함수 시그니처를 추출하고, [`griffe`](https://mkdocstrings.github.io/griffe/) 로 docstring 을 파싱하며, 스키마 생성을 위해 `pydantic` 을 사용합니다.
 
 ```python
 import json
@@ -4869,12 +4944,12 @@ for tool in agent.tools:
 
 ```
 
-1.  함수 인자로 어떤 Python 타입이든 사용할 수 있으며, 함수는 동기 또는 비동기일 수 있습니다
-2.  docstring 이 있으면 설명과 인자 설명을 캡처하는 데 사용됩니다
-3.  함수는 선택적으로 `context` 를 받을 수 있습니다(첫 번째 인자여야 합니다). 또한 도구 이름, 설명, 사용할 docstring 스타일 등과 같은 오버라이드를 설정할 수 있습니다
-4.  데코레이트된 함수를 tools 리스트에 전달할 수 있습니다
+1.  함수 인자로 어떤 Python 타입이든 사용할 수 있으며, 함수는 sync 또는 async 일 수 있습니다
+2.  docstring 이 있으면, 설명과 인자 설명을 캡처하는 데 사용됩니다
+3.  함수는 선택적으로 `context` 를 받을 수 있습니다(반드시 첫 번째 인자여야 합니다). 도구 이름, 설명, 사용할 docstring 스타일 등과 같은 오버라이드도 설정할 수 있습니다
+4.  데코레이트된 함수를 tools 목록에 전달할 수 있습니다
 
-??? note "출력을 보려면 펼치기"
+??? note "출력 보기"
 
     ```
     fetch_weather
@@ -4946,20 +5021,20 @@ for tool in agent.tools:
 
 ### 함수 도구에서 이미지 또는 파일 반환
 
-텍스트 출력 외에도, 함수 도구의 출력으로 하나 또는 여러 개의 이미지나 파일을 반환할 수 있습니다. 이를 위해 다음 중 아무 것이나 반환할 수 있습니다:
+텍스트 출력 외에도, 함수 도구의 출력으로 하나 또는 여러 개의 이미지나 파일을 반환할 수 있습니다. 이를 위해 다음 중 무엇이든 반환할 수 있습니다:
 
 -   이미지: [`ToolOutputImage`][agents.tool.ToolOutputImage] (또는 TypedDict 버전인 [`ToolOutputImageDict`][agents.tool.ToolOutputImageDict])
 -   파일: [`ToolOutputFileContent`][agents.tool.ToolOutputFileContent] (또는 TypedDict 버전인 [`ToolOutputFileContentDict`][agents.tool.ToolOutputFileContentDict])
 -   텍스트: 문자열 또는 문자열로 변환 가능한 객체, 또는 [`ToolOutputText`][agents.tool.ToolOutputText] (또는 TypedDict 버전인 [`ToolOutputTextDict`][agents.tool.ToolOutputTextDict])
 
-### 사용자 정의 함수 도구
+### 커스텀 함수 도구
 
 때로는 Python 함수를 도구로 사용하고 싶지 않을 수 있습니다. 원한다면 [`FunctionTool`][agents.tool.FunctionTool] 을 직접 만들 수 있습니다. 다음을 제공해야 합니다:
 
 -   `name`
 -   `description`
 -   `params_json_schema`: 인자에 대한 JSON 스키마
--   `on_invoke_tool`: [`ToolContext`][agents.tool_context.ToolContext] 와 JSON 문자열로 된 인자를 받고, 도구 출력을 문자열로 반환해야 하는 async 함수
+-   `on_invoke_tool`: [`ToolContext`][agents.tool_context.ToolContext] 와 JSON 문자열 형태의 인자를 받는 async 함수이며, 도구 출력을 문자열로 반환해야 합니다
 
 ```python
 from typing import Any
@@ -4994,16 +5069,16 @@ tool = FunctionTool(
 
 ### 인자 및 docstring 자동 파싱
 
-앞서 언급했듯이, 도구의 스키마를 추출하기 위해 함수 시그니처를 자동으로 파싱하고, 도구 및 개별 인자에 대한 설명을 추출하기 위해 docstring 을 파싱합니다. 이에 대한 참고 사항은 다음과 같습니다:
+앞서 언급했듯이, 도구를 위한 스키마를 추출하기 위해 함수 시그니처를 자동으로 파싱하고, 도구 및 개별 인자에 대한 설명을 추출하기 위해 docstring 을 파싱합니다. 관련 메모는 다음과 같습니다:
 
-1. 시그니처 파싱은 `inspect` 모듈을 통해 수행됩니다. 인자의 타입을 이해하기 위해 타입 어노테이션을 사용하고, 전체 스키마를 나타내는 Pydantic 모델을 동적으로 빌드합니다. Python 기본 타입, Pydantic 모델, TypedDict 등 대부분의 타입을 지원합니다
-2. docstring 파싱에는 `griffe` 를 사용합니다. 지원되는 docstring 형식은 `google`, `sphinx`, `numpy` 입니다. docstring 형식을 자동으로 감지하려고 시도하지만 이는 best-effort 이며, `function_tool` 호출 시 명시적으로 설정할 수 있습니다. 또한 `use_docstring_info` 를 `False` 로 설정해 docstring 파싱을 비활성화할 수 있습니다
+1. 시그니처 파싱은 `inspect` 모듈을 통해 수행됩니다. 타입 애너테이션을 사용해 인자의 타입을 이해하고, 전체 스키마를 표현하는 Pydantic 모델을 동적으로 구성합니다. Python 기본 타입, Pydantic 모델, TypedDict 등 대부분의 타입을 지원합니다
+2. docstring 파싱에는 `griffe` 를 사용합니다. 지원되는 docstring 형식은 `google`, `sphinx`, `numpy` 입니다. docstring 형식을 자동 감지하려고 시도하지만 이는 best-effort 이며, `function_tool` 호출 시 명시적으로 설정할 수 있습니다. `use_docstring_info` 를 `False` 로 설정하면 docstring 파싱을 비활성화할 수도 있습니다
 
 스키마 추출 코드는 [`agents.function_schema`][] 에 있습니다.
 
 ### Pydantic Field 로 인자 제약 및 설명 추가
 
-Pydantic 의 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 를 사용해 도구 인자에 제약(예: 숫자의 최소/최대, 문자열의 길이 또는 패턴)과 설명을 추가할 수 있습니다. Pydantic 과 동일하게 두 형태를 모두 지원합니다: 기본값 기반(`arg: int = Field(..., ge=1)`)과 `Annotated` (`arg: Annotated[int, Field(..., ge=1)]`). 생성된 JSON 스키마와 검증에는 이러한 제약이 포함됩니다.
+Pydantic 의 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 를 사용하여 도구 인자에 제약(예: 숫자의 최소/최대, 문자열 길이 또는 패턴)과 설명을 추가할 수 있습니다. Pydantic 과 동일하게 두 형태를 모두 지원합니다: 기본값 기반(`arg: int = Field(..., ge=1)`)과 `Annotated`(`arg: Annotated[int, Field(..., ge=1)]`). 생성된 JSON 스키마와 검증에는 이러한 제약이 포함됩니다.
 
 ```python
 from typing import Annotated
@@ -5023,7 +5098,7 @@ def score_b(score: Annotated[int, Field(..., ge=0, le=100, description="Score fr
 
 ## Agents as tools
 
-일부 워크플로에서는 제어를 핸드오프하기보다, 중앙 에이전트가 전문화된 에이전트 네트워크를 멀티 에이전트 오케스트레이션 하도록 만들고 싶을 수 있습니다. 에이전트를 도구로 모델링하여 이를 구현할 수 있습니다.
+일부 워크플로에서는 제어를 핸드오프하는 대신, 중앙 에이전트가 특화된 에이전트 네트워크를 오케스트레이션하길 원할 수 있습니다. 에이전트를 도구로 모델링하여 이를 수행할 수 있습니다.
 
 ```python
 from agents import Agent, Runner
@@ -5062,9 +5137,9 @@ async def main():
     print(result.final_output)
 ```
 
-### 도구 에이전트 커스터마이징
+### 도구-에이전트 커스터마이징
 
-`agent.as_tool` 함수는 에이전트를 도구로 쉽게 전환할 수 있는 편의 메서드입니다. `max_turns`, `run_config`, `hooks`, `previous_response_id`, `conversation_id`, `session`, `needs_approval` 같은 일반적인 런타임 옵션을 지원합니다. 또한 `parameters`, `input_builder`, `include_input_schema` 로 structured 입력도 지원합니다. 고급 오케스트레이션(예: 조건부 재시도, 폴백 동작, 여러 에이전트 호출 체이닝)을 위해서는, 도구 구현에서 `Runner.run` 을 직접 사용하세요:
+`agent.as_tool` 함수는 에이전트를 도구로 쉽게 바꿀 수 있도록 하는 편의 메서드입니다. `max_turns`, `run_config`, `hooks`, `previous_response_id`, `conversation_id`, `session`, `needs_approval` 와 같은 일반적인 런타임 옵션을 지원합니다. 또한 `parameters`, `input_builder`, `include_input_schema` 로 구조화된 입력도 지원합니다. 고급 오케스트레이션(예: 조건부 재시도, 폴백 동작, 여러 에이전트 호출 체이닝)을 위해서는 도구 구현에서 `Runner.run` 을 직접 사용하세요:
 
 ```python
 @function_tool
@@ -5083,15 +5158,15 @@ async def run_my_agent() -> str:
     return str(result.final_output)
 ```
 
-### 도구 에이전트의 structured 입력
+### 도구-에이전트를 위한 구조화된 입력
 
-기본적으로 `Agent.as_tool()` 은 단일 문자열 입력(`{"input": "..."}`)을 기대하지만, `parameters`(Pydantic 모델 또는 dataclass 타입)를 전달해 structured 스키마를 노출할 수 있습니다.
+기본적으로 `Agent.as_tool()` 은 단일 문자열 입력(`{"input": "..."}`)을 기대하지만, `parameters`(Pydantic 모델 또는 dataclass 타입)를 전달하여 구조화된 스키마를 노출할 수 있습니다.
 
 추가 옵션:
 
 - `include_input_schema=True` 는 생성된 중첩 입력에 전체 JSON Schema 를 포함합니다
-- `input_builder=...` 는 structured 도구 인자가 중첩된 에이전트 입력으로 변환되는 방식을 완전히 커스터마이즈할 수 있게 해줍니다
-- `RunContextWrapper.tool_input` 에는 중첩 실행 컨텍스트 내에서 파싱된 structured 페이로드가 들어 있습니다
+- `input_builder=...` 는 구조화된 도구 인자가 중첩된 에이전트 입력이 되는 방식을 완전히 커스터마이징할 수 있게 합니다
+- `RunContextWrapper.tool_input` 에는 중첩된 실행 컨텍스트 내부에서 파싱된 구조화 페이로드가 들어 있습니다
 
 ```python
 from pydantic import BaseModel, Field
@@ -5111,19 +5186,19 @@ translator_tool = translator_agent.as_tool(
 )
 ```
 
-완전한 실행 가능한 예제는 `examples/agent_patterns/agents_as_tools_structured.py` 를 참고하세요.
+전체 실행 가능한 예제는 `examples/agent_patterns/agents_as_tools_structured.py` 를 참고하세요.
 
-### 도구 에이전트의 승인 게이트
+### 도구-에이전트를 위한 승인 게이트
 
-`Agent.as_tool(..., needs_approval=...)` 는 `function_tool` 과 동일한 승인 플로우를 사용합니다. 승인이 필요하면 실행이 일시정지되고 보류 항목이 `result.interruptions` 에 나타납니다. 그런 다음 `result.to_state()` 를 사용하고 `state.approve(...)` 또는 `state.reject(...)` 호출 후 재개하세요. 전체 일시정지/재개 패턴은 [Human-in-the-loop guide](human_in_the_loop.md) 를 참고하세요.
+`Agent.as_tool(..., needs_approval=...)` 는 `function_tool` 과 동일한 승인 플로를 사용합니다. 승인이 필요하면 실행이 일시 중지되고 보류 항목이 `result.interruptions` 에 나타납니다. 그런 다음 `result.to_state()` 를 사용하고 `state.approve(...)` 또는 `state.reject(...)` 호출 후 재개하세요. 전체 일시 중지/재개 패턴은 [Human-in-the-loop 가이드](human_in_the_loop.md)를 참고하세요.
 
-### 사용자 정의 출력 추출
+### 커스텀 출력 추출
 
-특정 경우에는, 중앙 에이전트로 반환하기 전에 도구 에이전트의 출력을 수정하고 싶을 수 있습니다. 이는 다음과 같은 경우에 유용할 수 있습니다:
+특정 경우에는 중앙 에이전트로 반환하기 전에 도구-에이전트의 출력을 수정하고 싶을 수 있습니다. 이는 다음과 같은 경우에 유용할 수 있습니다:
 
--   서브 에이전트의 채팅 히스토리에서 특정 정보(예: JSON 페이로드)를 추출하려는 경우
--   에이전트의 최종 답변을 변환하거나 재포맷하려는 경우(예: Markdown 을 일반 텍스트 또는 CSV 로 변환)
--   출력 값을 검증하거나, 에이전트 응답이 누락되었거나 형식이 올바르지 않을 때 폴백 값을 제공하려는 경우
+-   서브 에이전트의 채팅 히스토리에서 특정 정보(예: JSON 페이로드)를 추출
+-   에이전트의 최종 답변을 변환 또는 재포맷(예: Markdown 을 일반 텍스트 또는 CSV 로 변환)
+-   출력 검증 또는 에이전트 응답이 누락되었거나 형식이 잘못된 경우 폴백 값 제공
 
 이를 위해 `as_tool` 메서드에 `custom_output_extractor` 인자를 제공할 수 있습니다:
 
@@ -5146,7 +5221,7 @@ json_tool = data_agent.as_tool(
 
 ### 중첩된 에이전트 실행 스트리밍
 
-`as_tool` 에 `on_stream` 콜백을 전달하면, 스트림이 완료된 뒤 최종 출력을 반환하면서도 중첩된 에이전트가 내보내는 streaming 이벤트를 수신할 수 있습니다.
+`as_tool` 에 `on_stream` 콜백을 전달하면, 스트림이 완료된 뒤 최종 출력을 반환하면서도 중첩된 에이전트가 발생시키는 스트리밍 이벤트를 수신할 수 있습니다.
 
 ```python
 from agents import AgentToolStreamEvent
@@ -5164,17 +5239,17 @@ billing_agent_tool = billing_agent.as_tool(
 )
 ```
 
-기대할 수 있는 사항:
+예상할 사항:
 
 - 이벤트 타입은 `StreamEvent["type"]` 과 동일합니다: `raw_response_event`, `run_item_stream_event`, `agent_updated_stream_event`
-- `on_stream` 을 제공하면 중첩된 에이전트는 자동으로 streaming 모드로 실행되며, 최종 출력을 반환하기 전에 스트림을 모두 소비합니다
+- `on_stream` 을 제공하면 중첩된 에이전트가 자동으로 스트리밍 모드로 실행되며, 최종 출력을 반환하기 전에 스트림을 모두 소비합니다
 - 핸들러는 동기 또는 비동기일 수 있으며, 각 이벤트는 도착하는 순서대로 전달됩니다
-- 도구가 모델 도구 호출을 통해 호출된 경우 `tool_call` 이 존재합니다. 직접 호출의 경우 `None` 일 수 있습니다
-- 완전한 실행 가능한 샘플은 `examples/agent_patterns/agents_as_tools_streaming.py` 를 참고하세요
+- 도구가 모델의 도구 호출로 실행될 때 `tool_call` 이 존재하며, 직접 호출에서는 `None` 일 수 있습니다
+- 전체 실행 가능한 샘플은 `examples/agent_patterns/agents_as_tools_streaming.py` 를 참고하세요
 
 ### 조건부 도구 활성화
 
-`is_enabled` 매개변수를 사용하면 런타임에 에이전트 도구를 조건부로 활성화하거나 비활성화할 수 있습니다. 이를 통해 컨텍스트, 사용자 선호, 런타임 조건에 따라 LLM 이 사용할 수 있는 도구를 동적으로 필터링할 수 있습니다.
+`is_enabled` 매개변수를 사용하면 런타임에 에이전트 도구를 조건부로 활성화 또는 비활성화할 수 있습니다. 이를 통해 컨텍스트, 사용자 선호, 런타임 조건에 따라 LLM 에게 उपलब्ध한 도구를 동적으로 필터링할 수 있습니다.
 
 ```python
 import asyncio
@@ -5235,19 +5310,19 @@ asyncio.run(main())
 -   **호출 가능한 함수**: `(context, agent)` 를 받아 불리언을 반환하는 함수
 -   **비동기 함수**: 복잡한 조건 로직을 위한 async 함수
 
-비활성화된 도구는 런타임에 LLM 에서 완전히 숨겨지므로, 다음에 유용합니다:
+비활성화된 도구는 런타임에서 LLM 에게 완전히 숨겨지므로, 다음에 유용합니다:
 
--   사용자 권한에 따른 기능 게이팅
+-   사용자 권한에 기반한 기능 게이팅
 -   환경별 도구 가용성(dev vs prod)
 -   서로 다른 도구 구성에 대한 A/B 테스트
--   런타임 상태에 따른 동적 도구 필터링
+-   런타임 상태에 기반한 동적 도구 필터링
 
 ## 실험적: Codex 도구
 
-`codex_tool` 은 Codex CLI 를 감싸서, 에이전트가 도구 호출 중에 워크스페이스 범위의 작업(셸, 파일 편집, MCP 도구)을 실행할 수 있게 합니다.
-이 표면은 실험적이며 변경될 수 있습니다.
-기본적으로 도구 이름은 `codex` 입니다. 사용자 정의 이름을 설정하는 경우, `codex` 이거나 `codex_` 로 시작해야 합니다.
-에이전트에 여러 Codex 도구가 포함될 때는, 각각이 고유한 이름을 사용해야 합니다(Codex 도구와 비 Codex 도구를 포함).
+`codex_tool` 은 Codex CLI 를 래핑하여 에이전트가 도구 호출 동안 워크스페이스 범위 작업(셸, 파일 편집, MCP 도구)을 실행할 수 있게 합니다.
+이 인터페이스는 실험적이며 변경될 수 있습니다.
+기본적으로 도구 이름은 `codex` 입니다. 커스텀 이름을 설정하는 경우 `codex` 이거나 `codex_` 로 시작해야 합니다.
+에이전트가 여러 Codex 도구를 포함할 때는(비 Codex 도구 포함) 각각 고유한 이름을 사용해야 합니다.
 
 ```python
 from agents import Agent
@@ -5276,32 +5351,85 @@ agent = Agent(
 )
 ```
 
-알아둘 점:
+알아둘 사항:
 
--   인증: `CODEX_API_KEY`(권장) 또는 `OPENAI_API_KEY` 를 설정하거나, `codex_options={"api_key": "..."}` 를 전달하세요
+-   인증: `CODEX_API_KEY`(권장) 또는 `OPENAI_API_KEY` 를 설정하거나 `codex_options={"api_key": "..."}` 를 전달하세요
 -   런타임: `codex_options.base_url` 은 CLI base URL 을 오버라이드합니다
--   바이너리 해석: `codex_options.codex_path_override`(또는 `CODEX_PATH`)를 설정해 CLI 경로를 고정할 수 있습니다. 그렇지 않으면 SDK 는 `PATH` 에서 `codex` 를 찾고, 그 다음 번들된 vendor 바이너리로 폴백합니다
+-   바이너리 탐색: `codex_options.codex_path_override`(또는 `CODEX_PATH`)를 설정해 CLI 경로를 고정하세요. 그렇지 않으면 SDK 는 `PATH` 에서 `codex` 를 찾고, 그다음 번들된 vendor 바이너리로 폴백합니다
 -   환경: `codex_options.env` 는 서브프로세스 환경을 완전히 제어합니다. 제공되면 서브프로세스는 `os.environ` 을 상속하지 않습니다
--   스트림 제한: `codex_options.codex_subprocess_stream_limit_bytes`(또는 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`)가 stdout/stderr 리더 제한을 제어합니다. 유효 범위는 `65536` ~ `67108864` 이며 기본값은 `8388608` 입니다
--   입력: 도구 호출은 `inputs` 에 최소 1개 항목을 포함해야 하며, `{ "type": "text", "text": ... }` 또는 `{ "type": "local_image", "path": ... }` 여야 합니다
--   스레드 기본값: `model_reasoning_effort`, `web_search_mode`(레거시 `web_search_enabled` 보다 권장), `approval_policy`, `additional_directories` 에 대해 `default_thread_options` 를 구성하세요
--   턴 기본값: `idle_timeout_seconds` 와 취소 `signal` 에 대해 `default_turn_options` 를 구성하세요
--   안전: `sandbox_mode` 를 `working_directory` 와 함께 사용하세요. Git 저장소 밖에서는 `skip_git_repo_check=True` 를 설정하세요
--   실행 컨텍스트 스레드 지속성: `use_run_context_thread_id=True` 는 해당 컨텍스트를 공유하는 실행들 전반에서 run context 에 `thread_id` 를 저장하고 재사용합니다. 이를 위해서는 변경 가능한 run context(예: `dict` 또는 쓰기 가능한 객체 필드)가 필요합니다
--   실행 컨텍스트 키 기본값: 저장되는 키는 `name="codex"` 인 경우 기본적으로 `codex_thread_id` 이고, `name="codex_<suffix>"` 인 경우 `codex_thread_id_<suffix>` 입니다. 오버라이드하려면 `run_context_thread_id_key` 를 설정하세요
--   스레드 ID 우선순위: 호출별 `thread_id` 입력이 최우선이며, 그 다음은(활성화된 경우) run-context `thread_id`, 그 다음은 구성된 `thread_id` 옵션입니다
--   스트리밍: `on_stream` 은 스레드/턴 라이프사이클 이벤트와 아이템 이벤트(`reasoning`, `command_execution`, `mcp_tool_call`, `file_change`, `web_search`, `todo_list`, `error` 아이템 업데이트)를 수신합니다
+-   스트림 제한: `codex_options.codex_subprocess_stream_limit_bytes`(또는 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`)는 stdout/stderr 리더 제한을 제어합니다. 유효 범위는 `65536` ~ `67108864` 이며 기본값은 `8388608` 입니다
+-   입력: 도구 호출에는 `inputs` 에 `{ "type": "text", "text": ... }` 또는 `{ "type": "local_image", "path": ... }` 를 포함하는 항목이 최소 1개 있어야 합니다
+-   스레드 기본값: `model_reasoning_effort`, `web_search_mode`(레거시 `web_search_enabled` 보다 권장), `approval_policy`, `additional_directories` 를 위해 `default_thread_options` 를 구성하세요
+-   턴 기본값: `idle_timeout_seconds` 와 취소 `signal` 을 위해 `default_turn_options` 를 구성하세요
+-   안전: `sandbox_mode` 를 `working_directory` 와 함께 사용하세요. Git repo 밖에서는 `skip_git_repo_check=True` 를 설정하세요
+-   실행 컨텍스트 스레드 지속성: `use_run_context_thread_id=True` 는 동일한 컨텍스트를 공유하는 실행들 간에 run context 에 `thread_id` 를 저장하고 재사용합니다. 이는 변경 가능한 run context(예: `dict` 또는 쓰기 가능한 객체 필드)가 필요합니다
+-   실행 컨텍스트 키 기본값: 저장되는 키는 `name="codex"` 인 경우 기본 `codex_thread_id`, `name="codex_<suffix>"` 인 경우 `codex_thread_id_<suffix>` 입니다. 오버라이드하려면 `run_context_thread_id_key` 를 설정하세요
+-   스레드 ID 우선순위: 호출별 `thread_id` 입력이 가장 우선이며, 그다음 run-context `thread_id`(활성화된 경우), 그다음 구성된 `thread_id` 옵션입니다
+-   스트리밍: `on_stream` 은 스레드/턴 라이프사이클 이벤트와 아이템 이벤트(`reasoning`, `command_execution`, `mcp_tool_call`, `file_change`, `web_search`, `todo_list`, `error` 아이템 업데이트)를 받습니다
 -   출력: 결과에는 `response`, `usage`, `thread_id` 가 포함되며, usage 는 `RunContextWrapper.usage` 에 추가됩니다
--   구조: `output_schema` 는 typed 출력이 필요할 때 structured Codex 응답을 강제합니다
--   완전한 실행 가능한 샘플은 `examples/tools/codex.py` 와 `examples/tools/codex_same_thread.py` 를 참고하세요
+-   구조: `output_schema` 는 타입이 있는 출력이 필요할 때 구조화된 Codex 응답을 강제합니다
+-   전체 실행 가능한 샘플은 `examples/tools/codex.py` 와 `examples/tools/codex_same_thread.py` 를 참고하세요
+
+## 함수 도구 타임아웃
+
+`@function_tool(timeout=...)` 로 async 함수 도구에 대해 호출별 타임아웃을 설정할 수 있습니다.
+
+```python
+import asyncio
+from agents import Agent, Runner, function_tool
+
+
+@function_tool(timeout=2.0)
+async def slow_lookup(query: str) -> str:
+    await asyncio.sleep(10)
+    return f"Result for {query}"
+
+
+agent = Agent(
+    name="Timeout demo",
+    instructions="Use tools when helpful.",
+    tools=[slow_lookup],
+)
+```
+
+타임아웃에 도달하면 기본 동작은 `timeout_behavior="error_as_result"` 이며, 모델이 볼 수 있는 타임아웃 메시지(예: `Tool 'slow_lookup' timed out after 2 seconds.`)를 전송합니다.
+
+타임아웃 처리 방식을 제어할 수 있습니다:
+
+-   `timeout_behavior="error_as_result"` (기본값): 모델에 타임아웃 메시지를 반환하여 복구할 수 있게 합니다
+-   `timeout_behavior="raise_exception"`: [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError] 를 발생시키고 실행을 실패 처리합니다
+-   `timeout_error_function=...`: `error_as_result` 사용 시 타임아웃 메시지를 커스터마이징합니다
+
+```python
+import asyncio
+from agents import Agent, Runner, ToolTimeoutError, function_tool
+
+
+@function_tool(timeout=1.5, timeout_behavior="raise_exception")
+async def slow_tool() -> str:
+    await asyncio.sleep(5)
+    return "done"
+
+
+agent = Agent(name="Timeout hard-fail", tools=[slow_tool])
+
+try:
+    await Runner.run(agent, "Run the tool")
+except ToolTimeoutError as e:
+    print(f"{e.tool_name} timed out in {e.timeout_seconds} seconds")
+```
+
+!!! note
+
+    타임아웃 구성은 async `@function_tool` 핸들러에서만 지원됩니다.
 
 ## 함수 도구에서 오류 처리
 
-`@function_tool` 로 함수 도구를 만들 때 `failure_error_function` 을 전달할 수 있습니다. 이는 도구 호출이 크래시할 경우 LLM 에 오류 응답을 제공하는 함수입니다.
+`@function_tool` 로 함수 도구를 만들 때 `failure_error_function` 을 전달할 수 있습니다. 이는 도구 호출이 크래시 났을 때 LLM 에게 오류 응답을 제공하는 함수입니다.
 
--   기본적으로(즉, 아무것도 전달하지 않으면) 오류가 발생했음을 LLM 에 알려주는 `default_tool_error_function` 이 실행됩니다
--   자체 오류 함수를 전달하면, 대신 그 함수가 실행되고 그 응답이 LLM 에 전송됩니다
--   명시적으로 `None` 을 전달하면, 모든 도구 호출 오류가 사용자가 처리할 수 있도록 다시 raise 됩니다. 이는 모델이 잘못된 JSON 을 생성한 경우 `ModelBehaviorError` 일 수도 있고, 코드가 크래시한 경우 `UserError` 일 수도 있습니다
+-   기본값(즉, 아무것도 전달하지 않으면)으로는 오류가 발생했음을 LLM 에 알려주는 `default_tool_error_function` 을 실행합니다
+-   자체 오류 함수를 전달하면 그것이 대신 실행되며, 그 응답이 LLM 에 전송됩니다
+-   `None` 을 명시적으로 전달하면, 도구 호출 오류는 여러분이 처리할 수 있도록 다시 raise 됩니다. 이는 모델이 잘못된 JSON 을 생성한 경우 `ModelBehaviorError` 일 수 있고, 코드가 크래시 난 경우 `UserError` 일 수도 있습니다
 
 ```python
 from agents import function_tool, RunContextWrapper
@@ -5324,7 +5452,7 @@ def get_user_profile(user_id: str) -> str:
 
 ```
 
-`FunctionTool` 객체를 수동으로 생성하는 경우에는, `on_invoke_tool` 함수 내부에서 오류를 처리해야 합니다.
+`FunctionTool` 객체를 수동으로 생성하는 경우에는 `on_invoke_tool` 함수 내부에서 오류를 처리해야 합니다.
 
 ================
 File: docs/ko/tracing.md
@@ -6082,6 +6210,16 @@ The session configuration allows you to control the underlying realtime model be
 
 Audio settings control how the session handles voice input and output. You can configure input audio transcription using models like Whisper, set language preferences, and provide transcription prompts to improve accuracy for domain-specific terms. Turn detection settings control when the agent should start and stop responding, with options for voice activity detection thresholds, silence duration, and padding around detected speech.
 
+Additional configuration options you can set on `RealtimeRunner(config=...)` include:
+
+-   `model_settings.output_modalities` to constrain output to text and/or audio.
+-   `model_settings.input_audio_noise_reduction` to tune noise reduction for near-field or far-field audio.
+-   `guardrails_settings.debounce_text_length` to control how frequently output guardrails run.
+-   `async_tool_calls` to run function tools concurrently.
+-   `tool_error_formatter` to customize model-visible tool error messages.
+
+See [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] and [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings] for the complete typed configuration.
+
 ## Tools and Functions
 
 ### Adding Tools
@@ -6254,7 +6392,7 @@ Realtime agents are in beta. Expect some breaking changes as we improve the impl
 
 ## Prerequisites
 
--   Python 3.9 or higher
+-   Python 3.10 or higher
 -   OpenAI API key
 -   Basic familiarity with the OpenAI Agents SDK
 
@@ -6438,12 +6576,14 @@ if __name__ == "__main__":
 -   `model_name`: Choose from available realtime models (e.g., `gpt-realtime`)
 -   `voice`: Select voice (`alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`)
 -   `modalities`: Enable text or audio (`["text"]` or `["audio"]`)
+-   `output_modalities`: Optionally constrain output to text and/or audio (`["text"]`, `["audio"]`, or both)
 
 ### Audio settings
 
 -   `input_audio_format`: Format for input audio (`pcm16`, `g711_ulaw`, `g711_alaw`)
 -   `output_audio_format`: Format for output audio
 -   `input_audio_transcription`: Transcription configuration
+-   `input_audio_noise_reduction`: Input noise-reduction config (`near_field` or `far_field`)
 
 ### Turn detection
 
@@ -6451,6 +6591,14 @@ if __name__ == "__main__":
 -   `threshold`: Voice activity threshold (0.0-1.0)
 -   `silence_duration_ms`: Silence duration to detect turn end
 -   `prefix_padding_ms`: Audio padding before speech
+
+### Run settings
+
+-   `async_tool_calls`: Whether function tools run asynchronously (defaults to `True`)
+-   `guardrails_settings.debounce_text_length`: Minimum accumulated transcript size before output guardrails run (defaults to `100`)
+-   `tool_error_formatter`: Callback to customize model-visible tool error messages
+
+For the full schema, see the API reference for [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] and [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings].
 
 ## Next steps
 
@@ -6658,6 +6806,13 @@ File: docs/ref/extensions/litellm.md
 # `LiteLLM Models`
 
 ::: agents.extensions.models.litellm_model
+
+================
+File: docs/ref/extensions/tool_output_trimmer.md
+================
+# `Tool Output Trimmer`
+
+::: agents.extensions.tool_output_trimmer
 
 ================
 File: docs/ref/extensions/visualization.md
@@ -8671,7 +8826,7 @@ async for event in result.stream():
         # play audio
     elif event.type == "voice_stream_event_lifecycle":
         # lifecycle
-    elif event.type == "voice_stream_event_error"
+    elif event.type == "voice_stream_event_error":
         # error
     ...
 ```
@@ -8896,7 +9051,7 @@ Key tracing related fields are:
 -   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: controls whether traces include audio data.
 -   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: The name of the trace workflow.
 -   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: The `group_id` of the trace, which lets you link multiple traces.
--   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: Additional metadata to include with the trace.
+-   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.trace_metadata]: Additional metadata to include with the trace.
 
 ================
 File: docs/zh/models/index.md
@@ -9226,20 +9381,20 @@ search:
 ---
 # 指南
 
-本指南深入介绍如何使用 OpenAI Agents SDK 的实时能力构建支持语音的 AI 智能体。
+本指南深入介绍如何使用 OpenAI Agents SDK 的 realtime 能力构建支持语音的 AI 智能体。
 
 !!! warning "Beta 功能"
-Realtime 智能体目前处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
+Realtime 智能体处于 beta 阶段。随着我们改进实现，可能会有一些破坏性变更。
 
-## 概述
+## 概览
 
-Realtime 智能体支持对话流程，实时处理音频与文本输入，并以实时音频进行响应。它们与 OpenAI 的 Realtime API 保持持久连接，从而实现低延迟的自然语音对话，并能优雅地处理打断。
+Realtime 智能体支持对话式流程，可实时处理音频与文本输入，并以 realtime 音频进行响应。它们与 OpenAI 的 Realtime API 保持持久连接，从而实现低延迟的自然语音对话，并能优雅地处理打断。
 
 ## 架构
 
 ### 核心组件
 
-Realtime 系统由若干关键组件构成：
+realtime 系统由若干关键组件组成：
 
 -   **RealtimeAgent**：一个智能体，使用 instructions、tools 和 handoffs 进行配置。
 -   **RealtimeRunner**：管理配置。你可以调用 `runner.run()` 获取一个会话。
@@ -9248,37 +9403,47 @@ Realtime 系统由若干关键组件构成：
 
 ### 会话流程
 
-典型的 realtime 会话遵循如下流程：
+一个典型的 realtime 会话遵循以下流程：
 
-1. 使用 instructions、tools 和 handoffs **创建你的 RealtimeAgent（可多个）**。
-2. 使用智能体与配置选项 **设置 RealtimeRunner**。
+1. 使用 instructions、tools 和 handoffs **创建你的 RealtimeAgent**。
+2. 使用该智能体与配置选项 **设置 RealtimeRunner**
 3. 使用 `await runner.run()` **启动会话**，该调用会返回一个 RealtimeSession。
-4. 使用 `send_audio()` 或 `send_message()` 向会话 **发送音频或文本消息**。
-5. 通过迭代 session 来 **监听事件**——事件包括音频输出、转写文本、工具调用、任务转移以及错误。
-6. 在用户抢话时 **处理打断**：这会自动停止当前音频生成。
+4. 使用 `send_audio()` 或 `send_message()` 向会话 **发送音频或文本消息**
+5. 通过迭代 session **监听事件**——事件包括音频输出、转写文本、工具调用、任务转移以及错误
+6. 在用户抢话时 **处理打断**，系统会自动停止当前音频生成
 
-会话会维护对话历史，并管理与 realtime 模型的持久连接。
+会话会维护对话历史，并管理与 realtime 模型之间的持久连接。
 
 ## 智能体配置
 
-RealtimeAgent 的工作方式与常规 Agent 类相似，但存在一些关键差异。完整 API 细节请参见 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 参考。
+RealtimeAgent 与常规 Agent 类工作方式类似，但有一些关键差异。完整 API 详情见 [`RealtimeAgent`][agents.realtime.agent.RealtimeAgent] API 参考。
 
-与常规智能体的关键差异：
+与常规智能体的主要差异：
 
 -   模型选择在会话级别配置，而不是在智能体级别。
 -   不支持 structured outputs（不支持 `outputType`）。
--   Voice 可按智能体配置，但在第一个智能体开口后就不能再更改。
+-   Voice 可按智能体配置，但在第一个智能体开口后无法更改。
 -   其他特性（如工具、任务转移和 instructions）工作方式相同。
 
 ## 会话配置
 
 ### 模型设置
 
-会话配置允许你控制底层 realtime 模型的行为。你可以配置模型名称（如 `gpt-realtime`）、voice 选择（alloy、echo、fable、onyx、nova、shimmer）以及支持的模态（文本和/或音频）。输入与输出的音频格式也都可设置，默认是 PCM16。
+会话配置允许你控制底层 realtime 模型的行为。你可以配置模型名称（例如 `gpt-realtime`）、voice 选择（alloy、echo、fable、onyx、nova、shimmer）以及支持的模态（文本和/或音频）。输入与输出的音频格式都可设置，默认是 PCM16。
 
 ### 音频配置
 
-音频设置控制会话如何处理语音输入与输出。你可以使用 Whisper 等模型配置输入音频转写、设置语言偏好，并提供转写提示词以提升领域术语的准确率。Turn detection 设置控制智能体何时开始与停止响应，可配置语音活动检测阈值、静音时长以及检测到语音前后的 padding。
+音频设置用于控制会话如何处理语音输入与输出。你可以使用 Whisper 等模型配置输入音频转写、设置语言偏好，并提供转写提示词以提升特定领域术语的准确率。Turn detection 设置用于控制智能体何时开始和停止响应，可配置语音活动检测阈值、静音时长，以及检测到的语音前后 padding。
+
+你还可以在 `RealtimeRunner(config=...)` 上设置的其他配置选项包括：
+
+-   `model_settings.output_modalities`：将输出限制为文本和/或音频。
+-   `model_settings.input_audio_noise_reduction`：为近场或远场音频调节降噪。
+-   `guardrails_settings.debounce_text_length`：控制输出安全防护措施运行的频率。
+-   `async_tool_calls`：并发运行工具调用。
+-   `tool_error_formatter`：自定义模型可见的工具错误消息。
+
+完整的类型化配置见 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 和 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]。
 
 ## 工具与函数
 
@@ -9341,22 +9506,22 @@ main_agent = RealtimeAgent(
 
 ## 事件处理
 
-会话会流式输出事件，你可以通过迭代 session 对象来监听。事件包括音频输出分片、转写结果、工具执行开始与结束、智能体任务转移以及错误。需要重点处理的事件包括：
+会话会流式传输事件，你可以通过迭代 session 对象来监听。事件包括音频输出分片、转写结果、工具执行开始与结束、智能体任务转移以及错误。需要处理的关键事件包括：
 
--   **audio**：智能体响应中的原始音频数据
--   **audio_end**：智能体结束说话
+-   **audio**：来自智能体响应的原始音频数据
+-   **audio_end**：智能体说完
 -   **audio_interrupted**：用户打断了智能体
 -   **tool_start/tool_end**：工具执行生命周期
 -   **handoff**：发生了智能体任务转移
 -   **error**：处理过程中发生错误
 
-完整事件细节请参见 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]。
+完整事件详情见 [`RealtimeSessionEvent`][agents.realtime.events.RealtimeSessionEvent]。
 
 ## 安全防护措施
 
-Realtime 智能体仅支持输出安全防护措施。这些安全防护措施会进行去抖（debounced）并周期性运行（不会逐词运行），以避免实时生成时的性能问题。默认去抖长度为 100 个字符，但可配置。
+realtime 智能体仅支持输出安全防护措施。这些安全防护措施采用防抖机制并周期性运行（而非每个词都运行），以避免实时生成过程中的性能问题。默认防抖长度为 100 个字符，但可配置。
 
-安全防护措施可以直接附加到 `RealtimeAgent`，也可以通过会话的 `run_config` 提供。两处来源的安全防护措施会一起运行。
+安全防护措施可以直接附加到 `RealtimeAgent`，也可以通过会话的 `run_config` 提供。两种来源的安全防护措施会一起运行。
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -9374,19 +9539,19 @@ agent = RealtimeAgent(
 )
 ```
 
-当触发安全防护措施时，会生成 `guardrail_tripped` 事件，并可能中断智能体当前响应。去抖行为有助于在安全性与实时性能要求之间取得平衡。与文本智能体不同，realtime 智能体在触发安全防护措施时**不会**抛出 Exception。
+当触发安全防护措施时，会生成 `guardrail_tripped` 事件，并可能中断智能体当前的响应。防抖行为有助于在安全性与实时性能要求之间取得平衡。与文本智能体不同，realtime 智能体在安全防护措施被触发时**不会**抛出 Exception。
 
 ## 音频处理
 
 使用 [`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] 向会话发送音频，或使用 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 发送文本。
 
-对于音频输出，请监听 `audio` 事件，并通过你偏好的音频库播放音频数据。务必监听 `audio_interrupted` 事件，以便在用户打断智能体时立即停止播放并清空任何排队的音频。
+对于音频输出，监听 `audio` 事件并通过你偏好的音频库播放音频数据。务必监听 `audio_interrupted` 事件，在用户打断智能体时立即停止播放并清空任何已排队的音频。
 
 ## SIP 集成
 
-你可以将 realtime 智能体接入通过 [Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 到来的电话呼叫。SDK 提供 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]，它在通过 SIP 协商媒体的同时复用相同的智能体流程。
+你可以将 realtime 智能体附加到通过 [Realtime Calls API](https://platform.openai.com/docs/guides/realtime-sip) 接入的电话呼叫上。SDK 提供了 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]，它在通过 SIP 协商媒体的同时复用相同的智能体流程。
 
-使用方式：将模型实例传给 runner，并在启动会话时提供 SIP `call_id`。该 call ID 由用于通知来电的 webhook 传递。
+使用方式是：将该模型实例传给 runner，并在启动会话时提供 SIP 的 `call_id`。该 call ID 由 webhook 传递，webhook 用于指示有来电接入。
 
 ```python
 from agents.realtime import RealtimeAgent, RealtimeRunner
@@ -9409,7 +9574,7 @@ async with await runner.run(
         ...
 ```
 
-当来电方挂断时，SIP 会话结束，realtime 连接会自动关闭。完整的电话示例请参见 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)。
+当来电方挂断时，SIP 会话结束，realtime 连接会自动关闭。完整的电话示例见 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)。
 
 ## 直接访问模型
 
@@ -9420,15 +9585,15 @@ async with await runner.run(
 session.model.add_listener(my_custom_listener)
 ```
 
-这会让你直接访问 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 接口，适用于需要更底层连接控制的高级用例。
+这将为你提供对 [`RealtimeModel`][agents.realtime.model.RealtimeModel] 接口的直接访问，以支持需要更低层级连接控制的高级用例。
 
 ## 代码示例
 
-如需完整可运行的示例，请查看 [examples/realtime 目录](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)，其中包含带 UI 与不带 UI 组件的演示。
+如需完整可运行的代码示例，请查看 [examples/realtime directory](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)，其中包含带 UI 与不带 UI 组件的演示。
 
-## Azure OpenAI endpoint 格式
+## Azure OpenAI 端点格式
 
-连接 Azure OpenAI 时，请使用 GA Realtime endpoint 格式，并通过 `model_config` 中的 headers 传入凭据：
+连接到 Azure OpenAI 时，请使用 GA Realtime 端点格式，并通过 `model_config` 中的 headers 传递凭据：
 
 ```python
 model_config = {
@@ -9437,7 +9602,7 @@ model_config = {
 }
 ```
 
-对于基于 token 的鉴权，请在 `headers` 中使用 `{"authorization": f"Bearer {token}"}`。
+对于基于 token 的认证，在 `headers` 中使用 `{"authorization": f"Bearer {token}"}`。
 
 ================
 File: docs/zh/realtime/quickstart.md
@@ -9448,20 +9613,20 @@ search:
 ---
 # 快速入门
 
-Realtime 智能体支持使用 OpenAI 的 Realtime API 与你的 AI 智能体进行语音对话。本指南将带你创建第一个 realtime 语音智能体。
+Realtime 智能体支持通过 OpenAI 的 Realtime API 与你的 AI 智能体进行语音对话。本指南将带你创建你的第一个 realtime 语音智能体。
 
-!!! warning "Beta 功能"
-Realtime 智能体目前处于 beta 阶段。随着我们改进实现，可能会出现一些破坏性变更。
+!!! warning "Beta feature"
+Realtime 智能体目前处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
 
-## 前置条件
+## 前提条件
 
--   Python 3.9 或更高版本
+-   Python 3.10 或更高版本
 -   OpenAI API key
--   对 OpenAI Agents SDK 的基本了解
+-   对 OpenAI Agents SDK 的基本熟悉
 
 ## 安装
 
-如果你还没有安装 OpenAI Agents SDK，请先安装：
+如果你还没有安装，请安装 OpenAI Agents SDK：
 
 ```bash
 pip install openai-agents
@@ -9637,33 +9802,43 @@ if __name__ == "__main__":
 ### 模型设置
 
 -   `model_name`: 从可用的 realtime 模型中选择（例如 `gpt-realtime`）
--   `voice`: 选择声音（`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`）
+-   `voice`: 选择语音（`alloy`、`echo`、`fable`、`onyx`、`nova`、`shimmer`）
 -   `modalities`: 启用文本或音频（`["text"]` 或 `["audio"]`）
+-   `output_modalities`: 可选，将输出限制为文本和/或音频（`["text"]`、`["audio"]`，或两者）
 
 ### 音频设置
 
--   `input_audio_format`: 输入音频的格式（`pcm16`、`g711_ulaw`、`g711_alaw`）
--   `output_audio_format`: 输出音频的格式
+-   `input_audio_format`: 输入音频格式（`pcm16`、`g711_ulaw`、`g711_alaw`）
+-   `output_audio_format`: 输出音频格式
 -   `input_audio_transcription`: 转写配置
+-   `input_audio_noise_reduction`: 输入降噪配置（`near_field` 或 `far_field`）
 
 ### 轮次检测
 
 -   `type`: 检测方法（`server_vad`、`semantic_vad`）
 -   `threshold`: 语音活动阈值（0.0-1.0）
--   `silence_duration_ms`: 用于检测轮次结束的静默时长
+-   `silence_duration_ms`: 用于检测轮次结束的静音时长
 -   `prefix_padding_ms`: 语音前的音频填充
+
+### 运行设置
+
+-   `async_tool_calls`: 工具调用是否异步运行（默认 `True`）
+-   `guardrails_settings.debounce_text_length`: 在运行输出安全防护措施之前，累计转写内容的最小长度（默认 `100`）
+-   `tool_error_formatter`: 用于自定义模型可见的工具错误消息的回调
+
+完整 schema 请参阅 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 和 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings] 的 API 参考。
 
 ## 后续步骤
 
 -   [了解更多 realtime 智能体](guide.md)
 -   查看 [examples/realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 文件夹中的可运行示例
--   为你的智能体添加工具调用
+-   为你的智能体添加工具
 -   实现智能体之间的任务转移
--   为安全设置安全防护措施
+-   设置安全防护措施以确保安全
 
 ## 身份验证
 
-确保你的环境中已设置 OpenAI API key：
+请确保你的环境中已设置 OpenAI API key：
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
@@ -9678,7 +9853,7 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 ## Azure OpenAI 端点格式
 
 如果你连接的是 Azure OpenAI 而不是 OpenAI 的默认端点，请在
-`model_config["url"]` 中传入 GA Realtime URL，并显式设置认证 headers。
+`model_config["url"]` 中传入 GA Realtime URL，并显式设置 auth headers。
 
 ```python
 session = await runner.run(
@@ -9700,7 +9875,8 @@ session = await runner.run(
 )
 ```
 
-避免在 realtime 智能体中使用旧版 beta 路径（`/openai/realtime?api-version=...`）。SDK 期望使用 GA Realtime 接口。
+避免在 realtime 智能体中使用旧版 beta 路径（`/openai/realtime?api-version=...`）。
+SDK 期望使用 GA Realtime 接口。
 
 ================
 File: docs/zh/sessions/advanced_sqlite_session.md
@@ -10791,9 +10967,9 @@ File: docs/zh/voice/pipeline.md
 search:
   exclude: true
 ---
-# 流水线与工作流
+# 管道与工作流
 
-[`VoicePipeline`][agents.voice.pipeline.VoicePipeline] 是一个类，可将你的智能体工作流轻松转换为语音应用。你传入要运行的工作流，流水线会负责转录输入音频、检测音频结束时间、在正确时机调用你的工作流，并将工作流输出重新合成为音频。
+[`VoicePipeline`][agents.voice.pipeline.VoicePipeline] 是一个类，可让你轻松将智能体工作流转换为语音应用。你传入要运行的工作流，管道会负责转写输入音频、检测音频何时结束、在合适的时间调用你的工作流，并将工作流输出再转换为音频。
 
 ```mermaid
 graph LR
@@ -10821,30 +10997,30 @@ graph LR
 
 ```
 
-## 配置流水线
+## 管道配置
 
-创建流水线时，你可以设置以下内容：
+创建管道时，你可以设置以下几项：
 
-1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase]：每次有新音频被转录时运行的代码。
-2. 使用的 [`speech-to-text`][agents.voice.model.STTModel] 与 [`text-to-speech`][agents.voice.model.TTSModel] 模型。
+1. [`workflow`][agents.voice.workflow.VoiceWorkflowBase]：每次有新音频被转写时运行的代码。
+2. 所使用的 [`speech-to-text`][agents.voice.model.STTModel] 和 [`text-to-speech`][agents.voice.model.TTSModel] 模型
 3. [`config`][agents.voice.pipeline_config.VoicePipelineConfig]：用于配置例如：
-    - 模型提供方，可将模型名称映射到实际模型
-    - 追踪，包括是否禁用追踪、是否上传音频文件、工作流名称、追踪 ID 等
-    - TTS 与 STT 模型的设置，如提示词、语言与所用数据类型
+    - 模型提供方，可将模型名称映射到模型
+    - 追踪，包括是否禁用追踪、是否上传音频文件、工作流名称、trace IDs 等
+    - TTS 和 STT 模型的设置，例如所使用的提示词、语言和数据类型
 
-## 运行流水线
+## 运行管道
 
-你可以通过 [`run()`][agents.voice.pipeline.VoicePipeline.run] 方法运行流水线，该方法允许以两种形式传入音频输入：
+你可以通过 [`run()`][agents.voice.pipeline.VoicePipeline.run] 方法运行管道，它允许你以两种形式传入音频输入：
 
-1. [`AudioInput`][agents.voice.input.AudioInput]：当你已有完整音频并只需为其生成结果时使用。适用于无需检测说话者何时结束的场景；例如，使用预录音频，或在明确知道用户何时结束说话的按键说话应用中。
-2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]：当你需要检测用户何时结束说话时使用。它允许你在检测到音频片段时持续推送，语音流水线会通过“活动检测（activity detection）”在正确时机自动运行智能体工作流。
+1. [`AudioInput`][agents.voice.input.AudioInput]：适用于你有完整音频转写（或完整音频内容）且只想为其生成结果的场景。这在你不需要检测说话者何时说完时很有用；例如，你有预录音频，或在按键说话（push-to-talk）应用中，用户何时说完很明确。
+2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]：适用于你可能需要检测用户何时说完的场景。它允许你在检测到音频分块时将其推送进来，而语音管道会通过称为“activity detection”的过程，在合适的时间自动运行智能体工作流。
 
 ## 结果
 
-语音流水线运行的结果是 [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult]。该对象允许你在事件发生时进行流式接收。包含几类 [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent]：
+一次语音管道运行的结果是 [`StreamedAudioResult`][agents.voice.result.StreamedAudioResult]。该对象允许你在事件发生时进行流式输出。存在几种 [`VoiceStreamEvent`][agents.voice.events.VoiceStreamEvent]，包括：
 
-1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio]：包含一段音频数据。
-2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle]：通知诸如轮次开始或结束等生命周期事件。
+1. [`VoiceStreamEventAudio`][agents.voice.events.VoiceStreamEventAudio]：包含一段音频分块。
+2. [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle]：通知你轮次开始或结束等生命周期事件。
 3. [`VoiceStreamEventError`][agents.voice.events.VoiceStreamEventError]：错误事件。
 
 ```python
@@ -10856,7 +11032,7 @@ async for event in result.stream():
         # play audio
     elif event.type == "voice_stream_event_lifecycle":
         # lifecycle
-    elif event.type == "voice_stream_event_error"
+    elif event.type == "voice_stream_event_error":
         # error
     ...
 ```
@@ -10865,7 +11041,7 @@ async for event in result.stream():
 
 ### 打断
 
-Agents SDK 目前未对 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput] 提供任何内置的打断支持。相反，每检测到一个轮次，都会单独触发一次你的工作流运行。若你希望在应用内处理打断，可监听 [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] 事件。`turn_started` 表示新的轮次已被转录且开始处理；`turn_ended` 则在相应轮次的全部音频派发完毕后触发。你可以利用这些事件在模型开始一个轮次时静音说话者的麦克风，并在你为该轮次的相关音频全部输出后取消静音。
+Agents SDK 目前不支持对 [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput] 的任何内置打断能力。相反，对于每个检测到的轮次，它都会触发你的工作流的一次独立运行。如果你想在应用内处理打断，可以监听 [`VoiceStreamEventLifecycle`][agents.voice.events.VoiceStreamEventLifecycle] 事件。`turn_started` 表示一个新轮次已被转写且处理开始。`turn_ended` 会在相应轮次的所有音频都已分发后触发。你可以使用这些事件在模型开始一个轮次时将说话者的麦克风静音，并在你刷新完该轮次的所有相关音频后取消静音。
 
 ================
 File: docs/zh/voice/quickstart.md
@@ -11078,18 +11254,18 @@ search:
 ---
 # 追踪
 
-与[智能体的追踪方式](../tracing.md)相同，语音管线也会被自动追踪。
+就像[智能体如何被追踪](../tracing.md)一样，语音管道也会被自动追踪。
 
-你可以阅读上面的追踪文档以了解基础信息，此外还可以通过[`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig]对管线的追踪进行配置。
+你可以阅读上面的追踪文档以了解基础追踪信息，但你还可以通过 [`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] 额外配置管道的追踪。
 
-关键的追踪相关字段包括：
+与追踪相关的关键字段包括：
 
-- [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: 控制是否禁用追踪。默认启用追踪。
-- [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]: 控制追踪是否包含潜在敏感数据，如音频转写。这仅适用于语音管线，不涉及你的工作流内部发生的任何内容。
-- [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: 控制追踪是否包含音频数据。
-- [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: 跟踪工作流的名称。
-- [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: 跟踪的`group_id`，可用于关联多个跟踪。
-- [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: 要随跟踪一起包含的其他元数据。
+-   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]：控制是否禁用追踪。默认启用追踪。
+-   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]：控制追踪中是否包含潜在敏感数据，例如音频转写文本。这仅适用于语音管道，而不适用于你的 Workflow 内部发生的任何内容。
+-   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]：控制追踪中是否包含音频数据。
+-   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]：追踪工作流的名称。
+-   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]：追踪的 `group_id`，用于关联多个追踪记录。
+-   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.trace_metadata]：要随追踪一并包含的附加元数据。
 
 ================
 File: docs/zh/agents.md
@@ -11465,7 +11641,7 @@ from agents import set_default_openai_key
 set_default_openai_key("sk-...")
 ```
 
-或者，你也可以配置要使用的 OpenAI 客户端。默认情况下，SDK 会创建一个 `AsyncOpenAI` 实例，使用来自环境变量的 API 密钥或上面设置的默认密钥。你可以通过 [set_default_openai_client()][agents.set_default_openai_client] 函数来更改这一点。
+或者，你也可以配置要使用的 OpenAI 客户端。默认情况下，SDK 会创建一个 `AsyncOpenAI` 实例，使用环境变量中的 API 密钥或上面设置的默认密钥。你可以通过 [set_default_openai_client()][agents.set_default_openai_client] 函数来更改它。
 
 ```python
 from openai import AsyncOpenAI
@@ -11485,7 +11661,7 @@ set_default_openai_api("chat_completions")
 
 ## 追踪
 
-追踪默认启用。默认情况下它使用上文部分中的 OpenAI API 密钥（即环境变量或你设置的默认密钥）。你可以使用 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 函数专门设置用于追踪的 API 密钥。
+追踪默认启用。它默认使用上文部分中的 OpenAI API 密钥（即环境变量或你设置的默认密钥）。你可以使用 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 函数专门设置用于追踪的 API 密钥。
 
 ```python
 from agents import set_tracing_export_api_key
@@ -11493,7 +11669,7 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-如果你在使用默认导出器时需要将追踪归因到特定组织或项目，请在应用启动前设置这些环境变量：
+如果在使用默认导出器时，你需要将 traces 归因到特定组织或项目，请在应用启动前设置以下环境变量：
 
 ```bash
 export OPENAI_ORG_ID="org_..."
@@ -11512,7 +11688,7 @@ await Runner.run(
 )
 ```
 
-你还可以使用 [`set_tracing_disabled()`][agents.set_tracing_disabled] 函数完全禁用追踪。
+你也可以使用 [`set_tracing_disabled()`][agents.set_tracing_disabled] 函数完全禁用追踪。
 
 ```python
 from agents import set_tracing_disabled
@@ -11522,7 +11698,7 @@ set_tracing_disabled(True)
 
 ## 调试日志
 
-SDK 有两个 Python logger，且未设置任何 handler。默认情况下，这意味着警告和错误会发送到 `stdout`，而其他日志会被抑制。
+SDK 定义了两个 Python logger（`openai.agents` 与 `openai.agents.tracing`），并且默认不附加 handler。日志会遵循你的应用的 Python logging 配置。
 
 要启用详细日志，请使用 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 函数。
 
@@ -11532,7 +11708,7 @@ from agents import enable_verbose_stdout_logging
 enable_verbose_stdout_logging()
 ```
 
-或者，你也可以通过添加 handler、filter、formatter 等来自定义日志。你可以在 [Python logging guide](https://docs.python.org/3/howto/logging.html) 中了解更多。
+或者，你可以通过添加 handler、filter、formatter 等来自定义日志。更多内容可阅读 [Python logging guide](https://docs.python.org/3/howto/logging.html)。
 
 ```python
 import logging
@@ -11553,15 +11729,15 @@ logger.addHandler(logging.StreamHandler())
 
 ### 日志中的敏感数据
 
-某些日志可能包含敏感数据（例如，用户数据）。如果你希望禁止记录这些数据，请设置以下环境变量。
+某些日志可能包含敏感数据（例如，用户数据）。如果你想禁止记录这些数据，请设置以下环境变量。
 
-要禁用记录 LLM 输入与输出：
+禁用记录 LLM 输入与输出：
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 ```
 
-要禁用记录工具输入与输出：
+禁用记录工具调用输入与输出：
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
@@ -11707,26 +11883,26 @@ search:
 ---
 # 代码示例
 
-请查看 [repo](https://github.com/openai/openai-agents-python/tree/main/examples) 的 examples 部分，其中包含多种 SDK 的 sample implementations。这些代码示例按多个目录组织，用于展示不同的模式与能力。
+请在 [repo](https://github.com/openai/openai-agents-python/tree/main/examples) 的 examples 目录中查看 SDK 的多种示例实现。这些代码示例按多个目录组织，用于展示不同的模式与能力。
 
 ## 目录
 
 -   **[agent_patterns](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns):**
-    此目录中的代码示例展示常见的智能体设计模式，例如：
+    此目录中的代码示例展示了常见的智能体设计模式，例如：
 
     -   确定性工作流
     -   Agents as tools
     -   并行智能体执行
-    -   条件式工具使用
+    -   条件化工具使用
     -   输入/输出安全防护措施
-    -   LLM 作为评审
+    -   LLM 作为裁判
     -   路由
     -   流式传输安全防护措施
 
 -   **[basic](https://github.com/openai/openai-agents-python/tree/main/examples/basic):**
-    这些代码示例展示 SDK 的基础能力，例如：
+    这些代码示例展示了 SDK 的基础能力，例如：
 
-    -   Hello World 代码示例（Default model、GPT-5、open-weight model）
+    -   Hello World 代码示例（默认模型、GPT-5、开放权重模型）
     -   智能体生命周期管理
     -   动态系统提示词
     -   流式传输输出（文本、条目、函数调用参数）
@@ -11734,31 +11910,31 @@ search:
     -   文件处理（本地与远程、图片与 PDF）
     -   用量追踪
     -   非严格输出类型
-    -   先前 response ID 的使用
+    -   先前响应 ID 的使用
 
 -   **[customer_service](https://github.com/openai/openai-agents-python/tree/main/examples/customer_service):**
     面向航空公司的示例客服系统。
 
 -   **[financial_research_agent](https://github.com/openai/openai-agents-python/tree/main/examples/financial_research_agent):**
-    一个金融研究智能体，展示使用智能体与工具构建结构化研究工作流，以进行金融数据分析。
+    一个金融研究智能体，演示使用智能体与工具进行金融数据分析的结构化研究工作流。
 
 -   **[handoffs](https://github.com/openai/openai-agents-python/tree/main/examples/handoffs):**
-    查看带消息过滤的智能体任务转移的实用代码示例。
+    查看带有消息过滤的智能体任务转移的实用示例。
 
 -   **[hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp):**
-    展示如何使用 hosted MCP (Model Context Protocol) 连接器与审批的代码示例。
+    展示如何使用托管的 MCP（Model context protocol）连接器与审批的代码示例。
 
 -   **[mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp):**
-    了解如何使用 MCP (Model Context Protocol) 构建智能体，包括：
+    学习如何使用 MCP（Model context protocol）构建智能体，包括：
 
     -   文件系统代码示例
     -   Git 代码示例
-    -   MCP prompt server 代码示例
-    -   SSE (Server-Sent Events) 代码示例
-    -   可流式 HTTP 代码示例
+    -   MCP 提示词服务代码示例
+    -   SSE（Server-Sent Events）代码示例
+    -   可流式的 HTTP 代码示例
 
 -   **[memory](https://github.com/openai/openai-agents-python/tree/main/examples/memory):**
-    面向智能体的不同记忆实现的代码示例，包括：
+    智能体不同记忆实现的代码示例，包括：
 
     -   SQLite 会话存储
     -   高级 SQLite 会话存储
@@ -11768,7 +11944,7 @@ search:
     -   OpenAI 会话存储
 
 -   **[model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers):**
-    探索如何在 SDK 中使用非 OpenAI 模型，包括自定义 provider 与 LiteLLM 集成。
+    探索如何使用 SDK 调用非 OpenAI 模型，包括自定义 provider 与 LiteLLM 集成。
 
 -   **[realtime](https://github.com/openai/openai-agents-python/tree/main/examples/realtime):**
     展示如何使用 SDK 构建实时体验的代码示例，包括：
@@ -11778,17 +11954,19 @@ search:
     -   Twilio 集成
 
 -   **[reasoning_content](https://github.com/openai/openai-agents-python/tree/main/examples/reasoning_content):**
-    展示如何处理 reasoning content 与 structured outputs 的代码示例。
+    展示如何使用推理内容与 structured outputs 的代码示例。
 
 -   **[research_bot](https://github.com/openai/openai-agents-python/tree/main/examples/research_bot):**
-    一个简单的深度研究克隆，展示复杂的多智能体研究工作流。
+    一个简单的深度研究克隆，演示复杂的多智能体研究工作流。
 
 -   **[tools](https://github.com/openai/openai-agents-python/tree/main/examples/tools):**
-    了解如何实现由OpenAI托管的工具与实验性 Codex tooling，例如：
+    学习如何实现由OpenAI托管的工具以及实验性的 Codex 工具能力，例如：
 
-    -   网络检索以及带过滤条件的网络检索
+    -   网络检索以及带过滤器的网络检索
     -   文件检索
     -   Code Interpreter
+    -   带内联技能的托管容器 shell（`examples/tools/container_shell_inline_skill.py`）
+    -   带技能引用的托管容器 shell（`examples/tools/container_shell_skill_reference.py`）
     -   计算机操作
     -   图像生成
     -   实验性 Codex 工具工作流（`examples/tools/codex.py`）
@@ -12360,28 +12538,28 @@ search:
 ---
 # Model context protocol (MCP)
 
-[Model context protocol](https://modelcontextprotocol.io/introduction)（MCP）标准化了应用如何向语言模型暴露工具与上下文。来自官方文档：
+[Model context protocol](https://modelcontextprotocol.io/introduction)（MCP）对应用如何向语言模型暴露工具和上下文进行了标准化。摘自官方文档：
 
-> MCP 是一个开放协议，用于标准化应用如何向 LLMs 提供上下文。可以把 MCP 想象成 AI 应用的 USB-C 端口。正如 USB-C 提供了一种标准化方式，将你的设备连接到各种外设与配件，MCP 也提供了一种标准化方式，将 AI 模型连接到不同的数据源与工具。
+> MCP 是一种开放协议，用于标准化应用如何向 LLM 提供上下文。可以把 MCP 想象成 AI 应用的 USB-C 端口。正如 USB-C 提供了一种标准化方式，将你的设备连接到各种外设和配件，MCP 也提供了一种标准化方式，将 AI 模型连接到不同的数据源和工具。
 
-Agents Python SDK 支持多种 MCP 传输方式。这让你可以复用现有的 MCP 服务，或自行构建服务，以向智能体暴露由文件系统、HTTP 或连接器支撑的工具。
+Agents Python SDK 支持多种 MCP 传输方式。这使你能够复用现有 MCP server，或自行构建 MCP server，以向智能体暴露由文件系统、HTTP 或连接器支撑的工具。
 
-## MCP 集成选型
+## MCP 集成选择
 
-在将 MCP 服务接入智能体之前，先确定工具调用应在哪里执行，以及你能够访问哪些传输方式。下表概括了 Python SDK 支持的选项。
+在将 MCP server 接入智能体之前，请先决定工具调用应在哪里执行，以及你可以访问哪些传输方式。下表总结了 Python SDK 支持的选项。
 
-| 你的需求 | 推荐选项 |
+| 需求 | 推荐选项 |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| 让 OpenAI 的 Responses API 代表模型调用一个可公网访问的 MCP 服务 | 通过 [`HostedMCPTool`][agents.tool.HostedMCPTool] 使用 **Hosted MCP server tools** |
-| 连接到你在本地或远端运行的 Streamable HTTP 服务 | 通过 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 使用 **Streamable HTTP MCP servers** |
-| 与实现了带 Server-Sent Events 的 HTTP 的服务通信 | 通过 [`MCPServerSse`][agents.mcp.server.MCPServerSse] 使用 **HTTP with SSE MCP servers** |
+| 让 OpenAI 的 Responses API 代表模型调用一个可公开访问的 MCP server | 通过 [`HostedMCPTool`][agents.tool.HostedMCPTool] 使用 **Hosted MCP server tools** |
+| 连接到你在本地或远程运行的 Streamable HTTP server | 通过 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 使用 **Streamable HTTP MCP servers** |
+| 与实现了基于 Server-Sent Events 的 HTTP server 通信 | 通过 [`MCPServerSse`][agents.mcp.server.MCPServerSse] 使用 **HTTP with SSE MCP servers** |
 | 启动本地进程并通过 stdin/stdout 通信 | 通过 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio] 使用 **stdio MCP servers** |
 
-下面的章节会分别介绍每个选项、如何配置，以及何时应优先选择某种传输方式。
+下文将逐一介绍每个选项、如何配置，以及何时应优先选择某种传输方式。
 
 ## 智能体级 MCP 配置
 
-除了选择传输方式，你还可以通过设置 `Agent.mcp_config` 来调整 MCP 工具的准备方式。
+除了选择传输方式外，你还可以通过设置 `Agent.mcp_config` 来调整 MCP 工具的准备方式。
 
 ```python
 from agents import Agent
@@ -12399,20 +12577,20 @@ agent = Agent(
 )
 ```
 
-注意事项：
+说明：
 
-- `convert_schemas_to_strict` 采用尽力而为策略。如果某个 schema 无法转换，则使用原始 schema。
+- `convert_schemas_to_strict` 为尽力而为。如果某个 schema 无法转换，将使用原始 schema。
 - `failure_error_function` 控制 MCP 工具调用失败如何呈现给模型。
-- 未设置 `failure_error_function` 时，SDK 会使用默认的工具错误格式化器。
-- 服务级 `failure_error_function` 会覆盖该服务的 `Agent.mcp_config["failure_error_function"]`。
+- 当未设置 `failure_error_function` 时，SDK 使用默认的工具错误格式化器。
+- server 级别的 `failure_error_function` 会覆盖该 server 的 `Agent.mcp_config["failure_error_function"]`。
 
 ## 1. Hosted MCP server tools
 
-Hosted tools 将完整的工具调用往返都放到 OpenAI 的基础设施中完成。你的代码不再负责列出与调用工具；相反，[`HostedMCPTool`][agents.tool.HostedMCPTool] 会将服务标签（以及可选的连接器元数据）转发给 Responses API。模型会列出远端服务的工具并调用它们，而无需额外回调到你的 Python 进程。Hosted tools 当前适用于支持 Responses API 的 hosted MCP 集成的 OpenAI 模型。
+Hosted tools 将整个工具往返过程下沉到 OpenAI 的基础设施中。你的代码无需列出并调用工具；相反，[`HostedMCPTool`][agents.tool.HostedMCPTool] 会将一个 server 标签（以及可选的 connector 元数据）转发给 Responses API。模型会列出远程 server 的工具并调用它们，而无需额外回调到你的 Python 进程。Hosted tools 当前适用于支持 Responses API 的 hosted MCP 集成的 OpenAI 模型。
 
-### 基础 hosted MCP 工具
+### 基础 hosted MCP tool
 
-通过将一个 [`HostedMCPTool`][agents.tool.HostedMCPTool] 加入智能体的 `tools` 列表来创建 hosted 工具。`tool_config` 字典与发送到 REST API 的 JSON 保持一致：
+通过向智能体的 `tools` 列表添加一个 [`HostedMCPTool`][agents.tool.HostedMCPTool] 来创建 hosted tool。`tool_config` 字典与发送到 REST API 的 JSON 保持一致：
 
 ```python
 import asyncio
@@ -12440,11 +12618,11 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-该 hosted 服务会自动暴露其工具；你不需要将它添加到 `mcp_servers`。
+Hosted server 会自动暴露其工具；你无需将其添加到 `mcp_servers`。
 
 ### 流式传输 hosted MCP 结果
 
-Hosted tools 以与工具调用相同的方式支持流式传输结果。向 `Runner.run_streamed` 传入 `stream=True`，即可在模型仍在工作时消费增量的 MCP 输出：
+Hosted tools 以与工具调用完全相同的方式支持流式传输结果。使用 `Runner.run_streamed` 在模型仍在工作时消费增量 MCP 输出：
 
 ```python
 result = Runner.run_streamed(agent, "Summarise this repository's top languages")
@@ -12456,7 +12634,7 @@ print(result.final_output)
 
 ### 可选的审批流程
 
-如果某个服务可能执行敏感操作，你可以要求在每次工具执行前进行人工或程序化审批。在 `tool_config` 中配置 `require_approval`，可以是单一策略（`"always"`、`"never"`），也可以是将工具名映射到策略的字典。若要在 Python 中做决策，请提供 `on_approval_request` 回调。
+如果某个 server 可以执行敏感操作，你可以在每次工具执行前要求人工或程序化审批。在 `tool_config` 中配置 `require_approval`，可以是单一策略（`"always"`、`"never"`），也可以是将工具名映射到策略的字典。若要在 Python 内做出决策，请提供 `on_approval_request` 回调。
 
 ```python
 from agents import MCPToolApprovalFunctionResult, MCPToolApprovalRequest
@@ -12484,11 +12662,11 @@ agent = Agent(
 )
 ```
 
-该回调可以是同步或异步的，并且当模型需要审批数据以继续运行时就会被调用。
+该回调可以是同步或异步的，并且会在模型需要审批数据以继续运行时被调用。
 
-### 由连接器支撑的 hosted 服务
+### 基于 connector 的 hosted servers
 
-Hosted MCP 也支持 OpenAI connectors。无需指定 `server_url`，改为提供 `connector_id` 与访问令牌。Responses API 会处理认证，而 hosted 服务会暴露连接器的工具。
+Hosted MCP 也支持 OpenAI connectors。无需指定 `server_url`，只需提供 `connector_id` 和 access token。Responses API 负责鉴权，hosted server 将暴露 connector 的工具。
 
 ```python
 import os
@@ -12504,13 +12682,13 @@ HostedMCPTool(
 )
 ```
 
-完整可运行的 hosted 工具示例（包括流式传输、审批与连接器）位于
+可运行的完整 hosted tool 示例（包括流式传输、审批与 connectors）位于
 [`examples/hosted_mcp`](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp)。
 
 ## 2. Streamable HTTP MCP servers
 
-当你希望自行管理网络连接时，使用
-[`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]。当你能控制传输方式，或希望在自有基础设施中运行服务同时保持低延迟时，Streamable HTTP 服务是理想选择。
+当你希望自行管理网络连接时，请使用
+[`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]。当你控制传输层，或希望在自有基础设施内运行 server 并保持低延迟时，Streamable HTTP server 是理想选择。
 
 ```python
 import asyncio
@@ -12545,21 +12723,21 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-构造函数还接受额外选项：
+构造函数还接受其他选项：
 
 - `client_session_timeout_seconds` 控制 HTTP 读取超时。
-- `use_structured_content` 切换是否优先使用 `tool_result.structured_content` 而非文本输出。
-- `max_retry_attempts` 与 `retry_backoff_seconds_base` 为 `list_tools()` 与 `call_tool()` 增加自动重试。
-- `tool_filter` 允许你只暴露部分工具（见 [工具过滤](#tool-filtering)）。
+- `use_structured_content` 控制是否优先使用 `tool_result.structured_content` 而非文本输出。
+- `max_retry_attempts` 和 `retry_backoff_seconds_base` 为 `list_tools()` 与 `call_tool()` 添加自动重试。
+- `tool_filter` 允许你只暴露部分工具（参见 [工具过滤](#tool-filtering)）。
 - `require_approval` 为本地 MCP 工具启用 human-in-the-loop 审批策略。
-- `failure_error_function` 自定义对模型可见的 MCP 工具失败消息；将其设为 `None` 则改为抛出错误。
-- `tool_meta_resolver` 在 `call_tool()` 前为每次调用注入 MCP `_meta` 载荷。
+- `failure_error_function` 自定义模型可见的 MCP 工具失败消息；将其设为 `None` 则改为抛出错误。
+- `tool_meta_resolver` 在 `call_tool()` 之前为每次调用注入 MCP `_meta` 负载。
 
-### 本地 MCP 服务的审批策略
+### 本地 MCP servers 的审批策略
 
-`MCPServerStdio`、`MCPServerSse` 与 `MCPServerStreamableHttp` 都接受 `require_approval`。
+`MCPServerStdio`、`MCPServerSse` 与 `MCPServerStreamableHttp` 都支持 `require_approval`。
 
-支持的形式：
+支持形式：
 
 - 对所有工具使用 `"always"` 或 `"never"`。
 - `True` / `False`（等价于 always/never）。
@@ -12576,11 +12754,11 @@ async with MCPServerStreamableHttp(
     ...
 ```
 
-如需完整的暂停/恢复流程，参见 [Human-in-the-loop](human_in_the_loop.md) 与 `examples/mcp/get_all_mcp_tools_example/main.py`。
+如需完整的暂停/恢复流程，请参阅 [Human-in-the-loop](human_in_the_loop.md) 以及 `examples/mcp/get_all_mcp_tools_example/main.py`。
 
-### 使用 `tool_meta_resolver` 的逐次调用元数据
+### 使用 `tool_meta_resolver` 的逐调用元数据
 
-当你的 MCP 服务期望在 `_meta` 中接收请求元数据（例如租户 ID 或追踪上下文）时，使用 `tool_meta_resolver`。下面示例假设你将一个 `dict` 作为 `context` 传给 `Runner.run(...)`。
+当你的 MCP server 期望在 `_meta` 中接收请求元数据（例如租户 ID 或 trace 上下文）时，请使用 `tool_meta_resolver`。下面的示例假设你向 `Runner.run(...)` 传入一个 `dict` 作为 `context`。
 
 ```python
 from agents.mcp import MCPServerStreamableHttp, MCPToolMetaContext
@@ -12601,20 +12779,20 @@ server = MCPServerStreamableHttp(
 )
 ```
 
-如果你的运行上下文是 Pydantic 模型、dataclass 或自定义类，请改用属性访问读取租户 ID。
+如果你的 run context 是 Pydantic 模型、dataclass 或自定义类，请改为使用属性访问来读取租户 ID。
 
-### MCP 工具输出：文本与图片
+### MCP 工具输出：文本与图像
 
-当 MCP 工具返回图片内容时，SDK 会自动将其映射为图片工具输出条目。混合的文本/图片响应会作为输出条目列表被转发，因此智能体可以用与消费常规工具调用的图片输出相同的方式来消费 MCP 图片结果。
+当 MCP 工具返回图像内容时，SDK 会自动将其映射为图像工具输出条目。混合文本/图像的响应会以输出项列表的形式转发，因此智能体可以用与消费常规工具调用的图像输出相同的方式来消费 MCP 图像结果。
 
 ## 3. HTTP with SSE MCP servers
 
 !!! warning
 
-    MCP 项目已弃用 Server-Sent Events 传输方式。新集成请优先使用 Streamable HTTP 或 stdio，仅在遗留服务场景保留 SSE。
+    MCP 项目已弃用 Server-Sent Events 传输方式。新集成请优先使用 Streamable HTTP 或 stdio，SSE 仅用于遗留 server。
 
-如果 MCP 服务实现了 HTTP with SSE 传输方式，请实例化
-[`MCPServerSse`][agents.mcp.server.MCPServerSse]。除传输方式不同外，其 API 与 Streamable HTTP 服务完全一致。
+如果 MCP server 实现了 HTTP with SSE 传输方式，请实例化
+[`MCPServerSse`][agents.mcp.server.MCPServerSse]。除传输方式外，其 API 与 Streamable HTTP server 完全相同。
 
 ```python
 
@@ -12643,7 +12821,7 @@ async with MCPServerSse(
 
 ## 4. stdio MCP servers
 
-对于作为本地子进程运行的 MCP 服务，使用 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]。SDK 会启动该进程，保持管道打开，并在上下文管理器退出时自动关闭它们。该选项适用于快速概念验证，或当服务仅提供命令行入口时。
+对于以本地子进程方式运行的 MCP server，请使用 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]。SDK 会启动该进程，保持管道开启，并在上下文管理器退出时自动关闭。此选项适用于快速概念验证，或当 server 仅暴露命令行入口时。
 
 ```python
 from pathlib import Path
@@ -12669,9 +12847,9 @@ async with MCPServerStdio(
     print(result.final_output)
 ```
 
-## 5. MCP 服务管理器
+## 5. MCP server 管理器
 
-当你有多个 MCP 服务时，使用 `MCPServerManager` 预先连接它们，并将已连接的子集暴露给你的智能体。
+当你有多个 MCP server 时，请使用 `MCPServerManager` 预先连接它们，并将已连接的子集暴露给你的智能体。
 
 ```python
 from agents import Agent, Runner
@@ -12694,15 +12872,15 @@ async with MCPServerManager(servers) as manager:
 
 关键行为：
 
-- 当 `drop_failed_servers=True`（默认）时，`active_servers` 仅包含连接成功的服务。
+- 当 `drop_failed_servers=True`（默认）时，`active_servers` 仅包含连接成功的 server。
 - 失败会记录在 `failed_servers` 与 `errors` 中。
-- 设置 `strict=True` 会在首次连接失败时抛出异常。
-- 调用 `reconnect(failed_only=True)` 重试失败的服务，或 `reconnect(failed_only=False)` 重启所有服务。
-- 使用 `connect_timeout_seconds`、`cleanup_timeout_seconds` 与 `connect_in_parallel` 来调节生命周期行为。
+- 设置 `strict=True` 可在首次连接失败时直接抛出异常。
+- 调用 `reconnect(failed_only=True)` 重试失败的 server，或调用 `reconnect(failed_only=False)` 重启所有 server。
+- 使用 `connect_timeout_seconds`、`cleanup_timeout_seconds` 和 `connect_in_parallel` 来调整生命周期行为。
 
 ## 工具过滤
 
-每个 MCP 服务都支持工具过滤器，以便你只暴露智能体所需的函数。过滤既可以在构造时完成，也可以在每次运行时动态进行。
+每个 MCP server 都支持工具过滤，以便你仅暴露智能体所需的函数。过滤既可在构造时进行，也可在每次运行时动态进行。
 
 ### 静态工具过滤
 
@@ -12728,7 +12906,7 @@ filesystem_server = MCPServerStdio(
 
 ### 动态工具过滤
 
-对于更复杂的逻辑，传入一个可调用对象，它会接收 [`ToolFilterContext`][agents.mcp.ToolFilterContext]。该可调用对象可以是同步或异步的，并在工具应被暴露时返回 `True`。
+对于更复杂的逻辑，可传入一个可调用对象，该对象接收 [`ToolFilterContext`][agents.mcp.ToolFilterContext]。该可调用对象可以是同步或异步的，并在工具应被暴露时返回 `True`。
 
 ```python
 from pathlib import Path
@@ -12752,14 +12930,14 @@ async with MCPServerStdio(
     ...
 ```
 
-过滤上下文会暴露当前的 `run_context`、请求工具的 `agent` 以及 `server_name`。
+过滤上下文提供当前的 `run_context`、请求工具的 `agent` 以及 `server_name`。
 
-## 提示词
+## Prompts
 
-MCP 服务也可以提供提示词，用于动态生成智能体指令。支持提示词的服务会暴露两个方法：
+MCP server 也可以提供 prompts，用于动态生成智能体指令。支持 prompts 的 server 会暴露两个方法：
 
-- `list_prompts()` 枚举可用的提示词模板。
-- `get_prompt(name, arguments)` 获取一个具体提示词，并可选带参数。
+- `list_prompts()` 枚举可用的 prompt 模板。
+- `get_prompt(name, arguments)` 获取一个具体 prompt，并可选地带参数。
 
 ```python
 from agents import Agent
@@ -12779,22 +12957,22 @@ agent = Agent(
 
 ## 缓存
 
-每次智能体运行都会对每个 MCP 服务调用 `list_tools()`。远端服务可能引入明显延迟，因此所有 MCP 服务类都提供 `cache_tools_list` 选项。仅当你确信工具定义不会频繁变化时才将其设为 `True`。若之后需要强制刷新列表，请在服务实例上调用 `invalidate_tools_cache()`。
+每次智能体运行都会对每个 MCP server 调用 `list_tools()`。远程 server 可能引入明显延迟，因此所有 MCP server 类都提供 `cache_tools_list` 选项。仅当你确信工具定义不会频繁变化时才将其设为 `True`。若需稍后强制刷新列表，请在 server 实例上调用 `invalidate_tools_cache()`。
 
 ## 追踪
 
 [Tracing](./tracing.md) 会自动捕获 MCP 活动，包括：
 
-1. 调用 MCP 服务以列出工具。
+1. 调用 MCP server 列出工具的请求。
 2. 工具调用中的 MCP 相关信息。
 
-![MCP 追踪截图](../assets/images/mcp-tracing.jpg)
+![MCP Tracing Screenshot](../assets/images/mcp-tracing.jpg)
 
 ## 延伸阅读
 
 - [Model Context Protocol](https://modelcontextprotocol.io/) – 规范与设计指南。
 - [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) – 可运行的 stdio、SSE 与 Streamable HTTP 示例。
-- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 完整的 hosted MCP 演示，包括审批与连接器。
+- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 完整的 hosted MCP 演示，包括审批与 connectors。
 
 ================
 File: docs/zh/multi_agent.md
@@ -13057,54 +13235,58 @@ search:
 ---
 # 发布流程/变更日志
 
-本项目遵循略微修改的语义化版本规范，版本格式为 `0.Y.Z`。开头的 `0` 表示 SDK 仍在快速演进。各部分的递增规则如下：
+该项目遵循语义化版本的略微修改版，形式为 `0.Y.Z`。前导 `0` 表示 SDK 仍在快速演进。各部分的递增规则如下：
 
 ## 次版本（`Y`）
 
-对于任何未标记为 beta 的公共接口上的**破坏性变更**，我们会递增次版本号 `Y`。例如，从 `0.0.x` 升级到 `0.1.x` 可能包含破坏性变更。
+对于任何未标记为 beta 的公共接口的**破坏性变更**，我们将增加次版本号 `Y`。例如，从 `0.0.x` 升级到 `0.1.x` 可能包含破坏性变更。
 
-如果你不希望出现破坏性变更，我们建议在项目中将版本固定到 `0.0.x`。
+如果你不希望出现破坏性变更，我们建议在项目中将版本固定在 `0.0.x`。
 
-## 修订版本（`Z`）
+## 补丁版本（`Z`）
 
-对于非破坏性变更，我们会递增 `Z`：
+对于非破坏性变更，我们将递增 `Z`：
 
 - Bug 修复
 - 新功能
-- 私有接口变更
-- beta 功能更新
+- 对私有接口的更改
+- 对 beta 功能的更新
 
 ## 破坏性变更日志
+
+### 0.9.0
+
+在此版本中，由于 Python 3.9 的主版本已在三个月前结束生命周期（EOL），因此不再支持 Python 3.9。请升级到更新的运行时版本。
 
 ### 0.8.0
 
 在此版本中，有两项运行时行为变更可能需要迁移工作：
 
-- 包装**同步** Python 可调用对象的工具调用现在通过 `asyncio.to_thread(...)` 在工作线程上执行，而不是在事件循环线程上运行。如果你的工具逻辑依赖线程本地状态或线程亲和资源，请迁移到异步工具实现，或在你的工具代码中显式声明线程亲和性。
-- 本地 MCP 工具的失败处理现在可配置，且默认行为可能返回模型可见的错误输出，而不是让整个运行失败。如果你依赖快速失败（fail-fast）语义，请设置 `mcp_config={"failure_error_function": None}`。服务级别的 `failure_error_function` 值会覆盖智能体级别设置，因此请在每个带有显式处理器的本地 MCP 服务上设置 `failure_error_function=None`。
+- 包装**同步** Python 可调用对象的工具调用现在通过 `asyncio.to_thread(...)` 在工作线程上执行，而不是在事件循环线程上运行。如果你的工具逻辑依赖线程本地状态或线程亲和资源，请迁移到异步工具实现，或在工具代码中显式处理线程亲和性。
+- 本地 MCP 工具的失败处理现在可配置，且默认行为可以返回模型可见的错误输出，而不是让整个运行失败。如果你依赖快速失败（fail-fast）语义，请设置 `mcp_config={"failure_error_function": None}`。服务级别的 `failure_error_function` 值会覆盖智能体级别的设置，因此请在每个具有显式处理器的本地 MCP 服务上设置 `failure_error_function=None`。
 
 ### 0.7.0
 
 在此版本中，有一些行为变更可能影响现有应用：
 
-- 嵌套任务转移历史现在为**可选启用**（默认禁用）。如果你依赖 v0.6.x 默认的嵌套行为，请显式设置 `RunConfig(nest_handoff_history=True)`。
-- `gpt-5.1` / `gpt-5.2` 的默认 `reasoning.effort` 变更为 `"none"`（从之前由 SDK 默认配置的 `"low"` 变更而来）。如果你的提示词或质量/成本配置依赖 `"low"`，请在 `model_settings` 中显式设置。
+- 嵌套的任务转移历史现在为**可选启用**（默认禁用）。如果你依赖 v0.6.x 默认的嵌套行为，请显式设置 `RunConfig(nest_handoff_history=True)`。
+- `gpt-5.1` / `gpt-5.2` 的默认 `reasoning.effort` 更改为 `"none"`（此前 SDK 默认配置为 `"low"`）。如果你的提示词或质量/成本配置依赖 `"low"`，请在 `model_settings` 中显式设置。
 
 ### 0.6.0
 
-在此版本中，默认的任务转移历史现在会打包为一条 assistant 消息，而不是暴露原始的 user/assistant 轮次，从而为下游智能体提供简洁、可预测的回顾
-- 现有的单消息任务转移转录现在默认会在 `<CONVERSATION HISTORY>` 块之前以 "For context, here is the conversation so far between the user and the previous agent:" 开头，从而让下游智能体获得清晰标注的回顾
+在此版本中，默认的任务转移历史现在会打包为一条 assistant 消息，而不是暴露原始的用户/assistant 轮次，从而为下游智能体提供简洁、可预测的回顾
+- 现有的单消息任务转移转录现在默认会在 `<CONVERSATION HISTORY>` 块之前以 "For context, here is the conversation so far between the user and the previous agent:" 开头，以便下游智能体获得清晰标注的回顾
 
 ### 0.5.0
 
-此版本未引入任何可见的破坏性变更，但包含新功能，并在底层进行了若干重要更新：
+此版本没有引入任何可见的破坏性变更，但包含新功能以及一些底层的重要更新：
 
 - 增加对 `RealtimeRunner` 的支持，以处理 [SIP 协议连接](https://platform.openai.com/docs/guides/realtime-sip)
-- 为兼容 Python 3.14，对 `Runner#run_sync` 的内部逻辑进行了重大修订
+- 为兼容 Python 3.14，显著修订了 `Runner#run_sync` 的内部逻辑
 
 ### 0.4.0
 
-在此版本中，不再支持 [openai](https://pypi.org/project/openai/) 包 v1.x 版本。请将 openai v2.x 与本 SDK 一起使用。
+在此版本中，不再支持 [openai](https://pypi.org/project/openai/) 包 v1.x 版本。请使用 openai v2.x 并配合本 SDK。
 
 ### 0.3.0
 
@@ -13112,11 +13294,11 @@ search:
 
 ### 0.2.0
 
-在此版本中，原先有些地方以 `Agent` 作为参数，现在改为以 `AgentBase` 作为参数。例如，MCP 服务中的 `list_tools()` 调用。这纯粹是类型标注变更，你仍会收到 `Agent` 对象。要更新，只需将类型错误处的 `Agent` 替换为 `AgentBase`。
+在此版本中，若干原先以 `Agent` 作为参数的地方，现在改为以 `AgentBase` 作为参数。例如，MCP 服务中的 `list_tools()` 调用。这纯粹是类型标注变更，你仍会收到 `Agent` 对象。更新方式是将类型错误修复为用 `AgentBase` 替换 `Agent`。
 
 ### 0.1.0
 
-在此版本中，[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] 新增两个参数：`run_context` 和 `agent`。你需要将这些参数添加到任何继承 `MCPServer` 的类中。
+在此版本中，[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] 新增了两个参数：`run_context` 和 `agent`。你需要将这些参数添加到任何继承 `MCPServer` 的类中。
 
 ================
 File: docs/zh/repl.md
@@ -13243,11 +13425,11 @@ search:
 ---
 # 运行智能体
 
-你可以通过 [`Runner`][agents.run.Runner] 类运行智能体。你有 3 个选项：
+你可以通过 [`Runner`][agents.run.Runner] 类运行智能体。你有 3 种选择：
 
-1. [`Runner.run()`][agents.run.Runner.run]：以异步方式运行，并返回一个 [`RunResult`][agents.result.RunResult]。
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，底层只是运行 `.run()`。
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：以异步方式运行，并返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并在接收到事件时将这些事件流式传输给你。
+1. [`Runner.run()`][agents.run.Runner.run]：以异步方式运行并返回 [`RunResult`][agents.result.RunResult]。
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，内部只是调用 `.run()`。
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：以异步方式运行并返回 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并在收到事件时将其流式传递给你。
 
 ```python
 from agents import Agent, Runner
@@ -13266,56 +13448,56 @@ async def main():
 
 ## 智能体循环
 
-当你在 `Runner` 中使用 run 方法时，需要传入一个起始智能体和输入。输入可以是一个字符串（会被视为一条用户消息），也可以是一个输入项列表，这些输入项是 OpenAI Responses API 中的条目。
+当你在 `Runner` 中使用 run 方法时，你会传入一个起始智能体和输入。输入可以是字符串（会被视为一条用户消息），也可以是输入项列表，这些输入项是 OpenAI Responses API 中的 items。
 
-然后 runner 会运行一个循环：
+然后 Runner 会运行一个循环：
 
 1. 我们用当前输入为当前智能体调用 LLM。
-2. LLM 生成其输出。
+2. LLM 生成输出。
     1. 如果 LLM 返回 `final_output`，循环结束并返回结果。
-    2. 如果 LLM 进行了任务转移，我们会更新当前智能体与输入，并重新运行循环。
-    3. 如果 LLM 产生工具调用，我们会运行这些工具调用，追加结果，然后重新运行循环。
+    2. 如果 LLM 执行了 handoffs，我们更新当前智能体和输入，并重新运行循环。
+    3. 如果 LLM 生成了工具调用，我们执行这些工具调用，追加结果，并重新运行循环。
 3. 如果超过传入的 `max_turns`，我们会抛出 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 异常。
 
 !!! note
 
-    判断 LLM 输出是否被视为“最终输出”的规则是：它生成了具有期望类型的文本输出，并且没有工具调用。
+    判断 LLM 输出是否被视为“最终输出”的规则是：它产生了所需类型的文本输出，并且没有工具调用。
 
 ## 流式传输
 
-流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括所有新生成的输出。你可以调用 `.stream_events()` 获取流式事件。在[流式传输指南](streaming.md)中了解更多。
+流式传输让你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括生成的所有新输出。你可以调用 `.stream_events()` 获取流式事件。在[流式传输指南](streaming.md)中了解更多。
 
 ## 运行配置
 
-`run_config` 参数允许你为智能体运行配置一些全局设置：
+`run_config` 参数让你为智能体运行配置一些全局设置：
 
--   [`model`][agents.run.RunConfig.model]：允许设置一个全局要使用的 LLM 模型，不受每个 Agent 的 `model` 影响。
+-   [`model`][agents.run.RunConfig.model]：允许设置一个全局 LLM 模型，不受每个 Agent 自身 `model` 设置的影响。
 -   [`model_provider`][agents.run.RunConfig.model_provider]：用于查找模型名称的模型提供方，默认为 OpenAI。
--   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体级别的设置。例如，你可以设置全局的 `temperature` 或 `top_p`。
--   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史记录时，覆盖会话级别的默认值（例如，`SessionSettings(limit=...)`）。
+-   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体级设置。例如，你可以设置全局 `temperature` 或 `top_p`。
+-   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史记录时，覆盖会话级默认值（例如 `SessionSettings(limit=...)`）。
 -   [`input_guardrails`][agents.run.RunConfig.input_guardrails]、[`output_guardrails`][agents.run.RunConfig.output_guardrails]：要在所有运行中包含的输入或输出安全防护措施列表。
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（如果该任务转移尚未设置）。输入过滤器允许你编辑发送给新智能体的输入。更多细节见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 文档。
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选启用的 beta 功能，会在调用下一个智能体之前将先前的对话记录折叠为一条 assistant 消息。由于我们仍在稳定嵌套任务转移，该功能默认关闭；设置为 `True` 以启用，或保留 `False` 以传递原始对话记录。当你不传入 `RunConfig` 时，所有 [Runner 方法][agents.run.Runner]都会自动创建一个 `RunConfig`，因此 quickstarts 和 examples 默认保持关闭状态；而任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调依然会覆盖它。单个任务转移可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖该设置。
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选的可调用对象。当你启用 `nest_handoff_history` 时，它会在每次将规范化的对话记录（历史 + 任务转移条目）传入时被调用。它必须返回要转发给下一个智能体的输入项列表，从而允许你在不编写完整任务转移过滤器的情况下替换内置摘要。
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（如果任务转移本身未设置）。输入过滤器允许你编辑发送给新智能体的输入。更多细节见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 的文档。
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选启用的 beta 功能，会在调用下一个智能体之前，将之前的对话记录折叠为单条 assistant 消息。由于我们仍在稳定嵌套任务转移，该功能默认禁用；设置为 `True` 启用，或保持 `False` 以透传原始对话记录。当你未传入 `RunConfig` 时，所有 [Runner methods][agents.run.Runner] 会自动创建一个 `RunConfig`，因此快速入门和示例会保持默认关闭；任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调也会继续覆盖该设置。单个任务转移可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖该设置。
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：当你选择启用 `nest_handoff_history` 时，一个可选的可调用对象会在每次接收到规范化后的对话记录（history + handoff items）时被调用。它必须返回要转发给下一个智能体的**完全一致**的输入项列表，从而让你无需编写完整的任务转移过滤器，也能替换内置摘要。
 -   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许你为整个运行禁用[追踪](tracing.md)。
--   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig] 以覆盖本次运行的 exporter、processor 或追踪元数据。
+-   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig] 以覆盖本次运行的导出器、进程或追踪元数据。
 -   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪是否包含潜在敏感数据，例如 LLM 与工具调用的输入/输出。
--   [`workflow_name`][agents.run.RunConfig.workflow_name]、[`trace_id`][agents.run.RunConfig.trace_id]、[`group_id`][agents.run.RunConfig.group_id]：为本次运行设置追踪工作流名称、trace ID 与 trace group ID。我们建议至少设置 `workflow_name`。group ID 是一个可选字段，可让你在多次运行间关联追踪记录。
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有追踪记录中的元数据。
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义每轮运行前新用户输入如何与会话历史合并。
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：用于在模型调用前立刻编辑完全准备好的模型输入（instructions 和输入项）的钩子，例如裁剪历史或注入系统提示词。
--   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]：在审批流程中工具调用被拒绝时，自定义对模型可见的消息内容。
+-   [`workflow_name`][agents.run.RunConfig.workflow_name]、[`trace_id`][agents.run.RunConfig.trace_id]、[`group_id`][agents.run.RunConfig.group_id]：设置本次运行的追踪工作流名称、trace ID 和 trace group ID。我们建议至少设置 `workflow_name`。group ID 是可选字段，可让你跨多次运行关联追踪。
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有追踪中的元数据。
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义在每个回合前如何将新的用户输入与会话历史合并。
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：在模型调用前立即编辑已完全准备好的模型输入（instructions 和输入项）的钩子，例如裁剪历史或注入系统提示词。
+-   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]：在审批流程中工具调用被拒绝时，自定义模型可见的消息内容。
 
-嵌套任务转移以可选启用的 beta 形式提供。通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠对话记录行为，或设置 `handoff(..., nest_handoff_history=True)` 为某次特定任务转移启用。如果你更偏好保留原始对话记录（默认行为），请不要设置该标记，或提供一个能按你需要原样转发对话的 `handoff_input_filter`（或 `handoff_history_mapper`）。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包装文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并使用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
+嵌套任务转移以可选启用的 beta 形式提供。通过传入 `RunConfig(nest_handoff_history=True)` 来启用折叠对话记录行为，或对特定任务转移设置 `handoff(..., nest_handoff_history=True)` 来开启。如果你更希望保留原始对话记录（默认），请不要设置该标志，或提供一个 `handoff_input_filter`（或 `handoff_history_mapper`）以按你的需要精确转发对话。若要在不编写自定义 mapper 的情况下更改生成摘要所用的包装文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（以及用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
 
 ## 对话/聊天线程
 
-调用任何 run 方法都可能导致一个或多个智能体运行（因此也可能有一次或多次 LLM 调用），但它表示聊天对话中的单个逻辑回合。例如：
+调用任意 run 方法都可能导致一个或多个智能体运行（因此会有一次或多次 LLM 调用），但它表示聊天对话中的单个逻辑回合。例如：
 
 1. 用户回合：用户输入文本
-2. Runner 运行：第一个智能体调用 LLM、运行工具、向第二个智能体进行任务转移；第二个智能体运行更多工具，然后生成输出。
+2. Runner 运行：第一个智能体调用 LLM、运行工具、任务转移到第二个智能体；第二个智能体运行更多工具，然后生成输出。
 
-在智能体运行结束时，你可以选择向用户展示什么。例如，你可能向用户展示智能体生成的每一个新条目，或仅展示最终输出。无论哪种方式，用户随后可能会提出后续问题，此时你可以再次调用 run 方法。
+在智能体运行结束时，你可以选择向用户展示什么。例如，你可以展示智能体生成的每个新条目，或只展示最终输出。无论哪种方式，用户之后可能会提出后续问题，这时你可以再次调用 run 方法。
 
 ### 手动对话管理
 
@@ -13339,9 +13521,9 @@ async def main():
         # California
 ```
 
-### 使用 Sessions 的自动对话管理
+### 使用 Sessions 自动管理对话
 
-更简单的方式是使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
+为简化流程，你可以使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -13373,15 +13555,15 @@ Sessions 会自动：
 
 更多细节请参阅 [Sessions 文档](sessions/index.md)。
 
-### 服务端管理的对话
+### 由服务端管理的对话
 
-你也可以让 OpenAI 对话状态功能在服务端管理对话状态，而不是在本地通过 `to_input_list()` 或 `Sessions` 来处理。这允许你在不手动重发所有历史消息的情况下保留对话历史。更多细节请参阅 [OpenAI Conversation state 指南](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
+你也可以让 OpenAI 对话状态功能在服务端管理对话状态，而不是在本地用 `to_input_list()` 或 `Sessions` 处理。这可以让你在无需手动重发所有历史消息的情况下保留对话历史。更多细节见 [OpenAI Conversation state guide](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
 
-OpenAI 提供两种跨回合跟踪状态的方式：
+OpenAI 提供两种方式来跨回合跟踪状态：
 
 #### 1. 使用 `conversation_id`
 
-你先通过 OpenAI Conversations API 创建一个对话，然后在后续每次调用中复用该 ID：
+你先用 OpenAI Conversations API 创建一个对话，然后在每次后续调用中复用该 ID：
 
 ```python
 from agents import Agent, Runner
@@ -13404,7 +13586,7 @@ async def main():
 
 #### 2. 使用 `previous_response_id`
 
-另一种方式是**响应链式调用**，即每个回合都显式链接到上一回合的 response ID。
+另一种选项是**响应串联**，即每个回合都显式链接到上一回合的 response ID。
 
 ```python
 from agents import Agent, Runner
@@ -13431,7 +13613,7 @@ async def main():
 
 ## Call model input filter
 
-使用 `call_model_input_filter` 在模型调用前编辑模型输入。该钩子会接收当前智能体、上下文以及合并后的输入项（若存在会话历史也包含在内），并返回新的 `ModelInputData`。
+使用 `call_model_input_filter` 在模型调用前编辑模型输入。该钩子会接收当前智能体、上下文以及合并后的输入项（包含会话历史（如有）），并返回新的 `ModelInputData`。
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -13450,11 +13632,11 @@ result = Runner.run_sync(
 )
 ```
 
-你可以通过 `run_config` 为单次运行设置该钩子，或将其作为 `Runner` 的默认设置，以便对敏感数据进行脱敏、裁剪过长历史，或注入额外的系统级指导。
+你可以通过 `run_config` 为每次运行设置该钩子，或在你的 `Runner` 上设置为默认值，以便对敏感数据进行脱敏、裁剪过长历史，或注入额外的系统指导。
 
 ## 错误处理器
 
-所有 `Runner` 入口点都接受 `error_handlers`，这是一个以错误类型为键的 dict。当前支持的键是 `"max_turns"`。当你希望返回可控的最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
+所有 `Runner` 入口点都接受 `error_handlers`，这是一个以错误类型为键的 dict。目前支持的键是 `"max_turns"`。当你希望返回一个可控的最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
 
 ```python
 from agents import (
@@ -13485,34 +13667,35 @@ print(result.final_output)
 
 当你不希望将兜底输出追加到对话历史时，将 `include_in_history=False`。
 
-## 长时间运行的智能体与人类参与（human-in-the-loop）
+## 长时间运行的智能体与 human-in-the-loop
 
-关于工具审批的暂停/恢复模式，请参阅专门的[Human-in-the-loop 指南](human_in_the_loop.md)。
+关于工具审批的暂停/恢复模式，请参阅专门的 [Human-in-the-loop guide](human_in_the_loop.md)。
 
 ### Temporal
 
-你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行可持久化的长时工作流，包括 human-in-the-loop 任务。观看 Temporal 与 Agents SDK 协同完成长时任务的演示[视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，以及[在此查看文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。
+你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行持久、长时间运行的工作流，包括 human-in-the-loop 任务。观看 Temporal 与 Agents SDK 协同完成长时任务的演示视频：[in this video](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并在此查看文档：[view docs here](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。 
 
 ### Restate
 
-你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量且可持久化的智能体，包括人工审批、任务转移和会话管理。该集成依赖 Restate 的单二进制运行时，并支持将智能体作为进程/容器或无服务器函数运行。
-阅读[概览](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)或查看[文档](https://docs.restate.dev/ai)了解更多细节。
+你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量、持久的智能体，包括人工审批、任务转移和会话管理。该集成需要 Restate 的单二进制运行时作为依赖，并支持以进程/容器或无服务器函数运行智能体。
+阅读[概览](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)或查看[文档](https://docs.restate.dev/ai)了解更多。
 
 ### DBOS
 
-你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠的智能体，在失败与重启后仍能保留进度。它支持长时运行的智能体、human-in-the-loop 工作流与任务转移。它同时支持同步与异步方法。该集成仅需要一个 SQLite 或 Postgres 数据库。查看集成[仓库](https://github.com/dbos-inc/dbos-openai-agents)与[文档](https://docs.dbos.dev/integrations/openai-agents)了解更多细节。
+你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠的智能体，在失败与重启之间保留进度。它支持长时间运行的智能体、human-in-the-loop 工作流以及任务转移。同时支持同步和异步方法。该集成只需要 SQLite 或 Postgres 数据库。查看集成 [repo](https://github.com/dbos-inc/dbos-openai-agents) 和[文档](https://docs.dbos.dev/integrations/openai-agents)了解更多。
 
 ## 异常
 
 SDK 会在特定情况下抛出异常。完整列表见 [`agents.exceptions`][]. 概览如下：
 
--   [`AgentsException`][agents.exceptions.AgentsException]：SDK 内部抛出的所有异常的基类。它作为通用类型，其他所有具体异常都从它派生。
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体的运行超过传给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表示智能体无法在指定的交互回合数内完成任务。
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。这可能包括：
+-   [`AgentsException`][agents.exceptions.AgentsException]：这是 SDK 内所有异常的基类。它作为通用类型，其他所有特定异常都从它派生。
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体运行超过传给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表示智能体无法在指定的交互回合数内完成任务。
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。可能包括：
     -   JSON 格式错误：当模型为工具调用或直接输出提供了格式错误的 JSON 结构时，尤其是在定义了特定 `output_type` 的情况下。
-    -   与工具相关的意外失败：当模型未能以预期方式使用工具时
--   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出错而抛出。通常源于代码实现不正确、配置无效或误用 SDK 的 API。
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered]、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入或输出安全防护措施的条件分别被满足时抛出。输入安全防护措施会在处理前检查传入消息，而输出安全防护措施会在交付前检查智能体的最终响应。
+    -   与工具相关的意外失败：当模型未按预期方式使用工具时
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]：当某次工具调用超过其配置的超时时间且工具使用 `timeout_behavior="raise_exception"` 时抛出。
+-   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出错会抛出。通常源于代码实现不正确、配置无效或误用 SDK 的 API。
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered]、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施分别满足触发条件时抛出。输入安全防护措施会在处理前检查传入消息，而输出安全防护措施会在交付前检查智能体的最终响应。
 
 ================
 File: docs/zh/streaming.md
@@ -13618,22 +13801,22 @@ search:
 ---
 # 工具
 
-工具让智能体能够执行动作：例如获取数据、运行代码、调用外部 API，甚至使用计算机。SDK 支持五个目录：
+工具让智能体执行操作：例如获取数据、运行代码、调用外部 API，甚至使用计算机。SDK 支持五类：
 
--   由OpenAI托管的工具：与模型一起在 OpenAI 服务上运行。
--   本地运行时工具：在你的环境中运行（计算机操作、shell、应用补丁）。
--   工具调用：将任意 Python 函数封装为工具。
+-   由OpenAI托管的工具：与模型一起在 OpenAI 服务器上运行。
+-   本地运行时工具：在你的环境中运行（计算机操作、shell、apply patch）。
+-   Function Calling：将任意 Python 函数封装为工具。
 -   Agents as tools：将智能体暴露为可调用工具，而无需完整的任务转移。
--   实验性：Codex 工具：通过工具调用运行工作区范围的 Codex 任务。
+-   实验性：Codex 工具：通过工具调用运行作用域限定为工作区的 Codex 任务。
 
-## 托管工具
+## 由OpenAI托管的工具
 
-在使用 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 时，OpenAI 提供了一些内置工具：
+在使用 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 时，OpenAI 提供一些内置工具：
 
 -   [`WebSearchTool`][agents.tool.WebSearchTool] 让智能体进行网络检索。
 -   [`FileSearchTool`][agents.tool.FileSearchTool] 允许从你的 OpenAI 向量存储中检索信息。
--   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 让 LLM 在沙盒环境中执行代码。
--   [`HostedMCPTool`][agents.tool.HostedMCPTool] 将远程 MCP 服务的工具暴露给模型。
+-   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 让 LLM 在沙箱环境中执行代码。
+-   [`HostedMCPTool`][agents.tool.HostedMCPTool] 将远程 MCP 服务器的工具暴露给模型。
 -   [`ImageGenerationTool`][agents.tool.ImageGenerationTool] 根据提示词生成图像。
 
 ```python
@@ -13655,12 +13838,60 @@ async def main():
     print(result.final_output)
 ```
 
+### 托管容器 shell + skills
+
+`ShellTool` 也支持由 OpenAI 托管的容器执行。当你希望模型在托管容器中（而非本地运行时）运行 shell 命令时，请使用此模式。
+
+```python
+from agents import Agent, Runner, ShellTool, ShellToolSkillReference
+
+csv_skill: ShellToolSkillReference = {
+    "type": "skill_reference",
+    "skill_id": "skill_698bbe879adc81918725cbc69dcae7960bc5613dadaed377",
+    "version": "1",
+}
+
+agent = Agent(
+    name="Container shell agent",
+    model="gpt-5.2",
+    instructions="Use the mounted skill when helpful.",
+    tools=[
+        ShellTool(
+            environment={
+                "type": "container_auto",
+                "network_policy": {"type": "disabled"},
+                "skills": [csv_skill],
+            }
+        )
+    ],
+)
+
+result = await Runner.run(
+    agent,
+    "Use the configured skill to analyze CSV files in /mnt/data and summarize totals by region.",
+)
+print(result.final_output)
+```
+
+要在后续运行中复用现有容器，设置 `environment={"type": "container_reference", "container_id": "cntr_..."}`。
+
+须知：
+
+-   托管 shell 可通过 Responses API shell 工具使用。
+-   `container_auto` 会为请求创建容器；`container_reference` 复用已有容器。
+-   `environment.skills` 接受技能引用与内联技能包。
+-   使用托管环境时，不要在 `ShellTool` 上设置 `executor`、`needs_approval` 或 `on_approval`。
+-   `network_policy` 支持 `disabled` 与 `allowlist` 模式。
+-   完整示例见 `examples/tools/container_shell_skill_reference.py` 与 `examples/tools/container_shell_inline_skill.py`。
+-   OpenAI 平台指南：[Shell](https://platform.openai.com/docs/guides/tools-shell) 和 [Skills](https://platform.openai.com/docs/guides/tools-skills)。
+
 ## 本地运行时工具
 
-本地运行时工具在你的环境中执行，并且需要你提供实现：
+本地运行时工具在你的环境中执行，并需要你提供实现：
 
 -   [`ComputerTool`][agents.tool.ComputerTool]：实现 [`Computer`][agents.computer.Computer] 或 [`AsyncComputer`][agents.computer.AsyncComputer] 接口以启用 GUI/浏览器自动化。
--   [`ShellTool`][agents.tool.ShellTool] 或 [`LocalShellTool`][agents.tool.LocalShellTool]：提供一个 shell 执行器来运行命令。
+-   [`ShellTool`][agents.tool.ShellTool]：适用于本地执行与托管容器执行的最新 shell 工具。
+-   [`LocalShellTool`][agents.tool.LocalShellTool]：旧版 local-shell 集成。
 -   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]：实现 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor] 以在本地应用 diff。
 
 ```python
@@ -13705,14 +13936,14 @@ agent = Agent(
 
 ## 工具调用
 
-你可以将任意 Python 函数作为工具使用。Agents SDK 会自动设置该工具：
+你可以将任何 Python 函数作为工具使用。Agents SDK 会自动设置该工具：
 
--   工具名称将是 Python 函数的名称（或你也可以提供一个名称）
--   工具描述将从函数的 docstring 获取（或你也可以提供描述）
+-   工具名称将是 Python 函数名（或你也可以提供名称）
+-   工具描述将取自函数的 docstring（或你也可以提供描述）
 -   函数输入的 schema 会根据函数参数自动创建
--   每个输入的描述会从函数的 docstring 获取，除非禁用
+-   除非禁用，否则每个输入的描述取自函数的 docstring
 
-我们使用 Python 的 `inspect` 模块提取函数签名，并结合 [`griffe`](https://mkdocstrings.github.io/griffe/) 解析 docstring，使用 `pydantic` 创建 schema。
+我们使用 Python 的 `inspect` 模块提取函数签名，并结合 [`griffe`](https://mkdocstrings.github.io/griffe/) 解析 docstring，再用 `pydantic` 创建 schema。
 
 ```python
 import json
@@ -13764,10 +13995,10 @@ for tool in agent.tools:
 
 ```
 
-1.  你可以使用任意 Python 类型作为函数参数，并且函数可以是同步或异步。
-2.  如果存在 docstring，将用于捕获描述和参数描述
-3.  函数可以选择性接收 `context`（必须是第一个参数）。你也可以设置覆盖项，例如工具名称、描述、使用哪种 docstring 风格等。
-4.  你可以将装饰后的函数传入 tools 列表。
+1.  你可以将任意 Python 类型作为函数参数，且函数可以是同步或异步。
+2.  如果存在 docstring，将用于获取工具描述与参数描述。
+3.  函数可以选择性接收 `context`（必须是第一个参数）。你还可以设置覆盖项，例如工具名称、描述、docstring 风格等。
+4.  你可以把装饰后的函数传给工具列表。
 
 ??? note "展开以查看输出"
 
@@ -13841,7 +14072,7 @@ for tool in agent.tools:
 
 ### 从工具调用返回图像或文件
 
-除了返回文本输出外，你还可以返回一个或多个图像或文件作为工具调用的输出。为此，你可以返回以下任意类型：
+除了返回文本输出，你还可以返回一张或多张图像或文件作为工具调用的输出。为此，你可以返回以下任意一种：
 
 -   图像：[`ToolOutputImage`][agents.tool.ToolOutputImage]（或 TypedDict 版本 [`ToolOutputImageDict`][agents.tool.ToolOutputImageDict]）
 -   文件：[`ToolOutputFileContent`][agents.tool.ToolOutputFileContent]（或 TypedDict 版本 [`ToolOutputFileContentDict`][agents.tool.ToolOutputFileContentDict]）
@@ -13849,12 +14080,12 @@ for tool in agent.tools:
 
 ### 自定义工具调用
 
-有时，你并不想将 Python 函数作为工具。你也可以直接创建 [`FunctionTool`][agents.tool.FunctionTool]。你需要提供：
+有时你并不想把 Python 函数作为工具。你也可以直接创建 [`FunctionTool`][agents.tool.FunctionTool]。你需要提供：
 
 -   `name`
 -   `description`
 -   `params_json_schema`，即参数的 JSON schema
--   `on_invoke_tool`，一个 async 函数：接收 [`ToolContext`][agents.tool_context.ToolContext] 和以 JSON 字符串形式传入的参数，并且必须以字符串形式返回工具输出。
+-   `on_invoke_tool`，一个 async 函数，接收 [`ToolContext`][agents.tool_context.ToolContext] 与以 JSON 字符串形式传入的参数，并且必须以字符串形式返回工具输出。
 
 ```python
 from typing import Any
@@ -13887,18 +14118,18 @@ tool = FunctionTool(
 )
 ```
 
-### 自动参数与 docstring 解析
+### 自动解析参数与 docstring
 
-如前所述，我们会自动解析函数签名以提取工具 schema，并解析 docstring 以提取工具及各参数的描述。相关说明：
+如前所述，我们会自动解析函数签名以提取工具 schema，并解析 docstring 以提取工具描述与单个参数的描述。补充说明：
 
-1. 签名解析通过 `inspect` 模块完成。我们使用类型注解来理解参数类型，并动态构建一个 Pydantic 模型来表示整体 schema。它支持大多数类型，包括 Python 基本类型、Pydantic 模型、TypedDict 等。
-2. 我们使用 `griffe` 解析 docstring。支持的 docstring 格式包括 `google`、`sphinx` 和 `numpy`。我们会尝试自动检测 docstring 格式，但这只是尽力而为；你也可以在调用 `function_tool` 时显式设置。你还可以将 `use_docstring_info` 设为 `False` 来禁用 docstring 解析。
+1. 签名解析通过 `inspect` 模块完成。我们使用类型注解来理解参数类型，并动态构建一个 Pydantic 模型来表示整体 schema。它支持大多数类型，包括 Python 基元类型、Pydantic 模型、TypedDict 等。
+2. 我们使用 `griffe` 解析 docstring。支持的 docstring 格式为 `google`、`sphinx` 和 `numpy`。我们会尽量自动检测 docstring 格式，但这是尽力而为；你也可以在调用 `function_tool` 时显式指定。你还可以将 `use_docstring_info` 设为 `False` 以禁用 docstring 解析。
 
 schema 提取代码位于 [`agents.function_schema`][]。
 
-### 使用 Pydantic Field 约束与描述参数
+### 使用 Pydantic Field 约束并描述参数
 
-你可以使用 Pydantic 的 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 为工具参数添加约束（例如数字的最小/最大值、字符串的长度或正则模式）以及描述。与 Pydantic 一样，两种形式都支持：基于默认值（`arg: int = Field(..., ge=1)`）与 `Annotated`（`arg: Annotated[int, Field(..., ge=1)]`）。生成的 JSON schema 与校验会包含这些约束。
+你可以使用 Pydantic 的 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 为工具参数添加约束（例如数字的最小/最大值、字符串的长度或模式）以及描述。与 Pydantic 一样，两种形式都支持：基于默认值（`arg: int = Field(..., ge=1)`）与 `Annotated`（`arg: Annotated[int, Field(..., ge=1)]`）。生成的 JSON schema 与校验都会包含这些约束。
 
 ```python
 from typing import Annotated
@@ -13918,7 +14149,7 @@ def score_b(score: Annotated[int, Field(..., ge=0, le=100, description="Score fr
 
 ## Agents as tools
 
-在一些工作流中，你可能希望由一个中心智能体来编排一组专用智能体网络，而不是进行控制权交接。你可以通过将智能体建模为工具来实现这一点。
+在某些工作流中，你可能希望由一个中心智能体来编排一组专门智能体，而不是进行任务转移。你可以通过将智能体建模为工具来实现这一点。
 
 ```python
 from agents import Agent, Runner
@@ -13959,7 +14190,7 @@ async def main():
 
 ### 自定义工具智能体
 
-`agent.as_tool` 函数是一个便捷方法，用于轻松将智能体转换为工具。它支持常见的运行时选项，例如 `max_turns`、`run_config`、`hooks`、`previous_response_id`、`conversation_id`、`session` 和 `needs_approval`。它还支持通过 `parameters`、`input_builder` 和 `include_input_schema` 实现结构化输入。对于高级编排（例如条件重试、回退行为或串联多个智能体调用），请在你的工具实现中直接使用 `Runner.run`：
+`agent.as_tool` 函数是一个便捷方法，可轻松将智能体转换为工具。它支持常见运行时选项，例如 `max_turns`、`run_config`、`hooks`、`previous_response_id`、`conversation_id`、`session` 和 `needs_approval`。它也支持通过 `parameters`、`input_builder` 与 `include_input_schema` 提供结构化输入。对于高级编排（例如有条件重试、回退行为或串联多个智能体调用），请在工具实现中直接使用 `Runner.run`：
 
 ```python
 @function_tool
@@ -13980,13 +14211,13 @@ async def run_my_agent() -> str:
 
 ### 工具智能体的结构化输入
 
-默认情况下，`Agent.as_tool()` 期望单一字符串输入（`{"input": "..."}`），但你可以通过传入 `parameters`（一个 Pydantic 模型或 dataclass 类型）来暴露结构化 schema。
+默认情况下，`Agent.as_tool()` 期望单个字符串输入（`{"input": "..."}`），但你可以通过传入 `parameters`（Pydantic 模型或 dataclass 类型）来暴露结构化 schema。
 
 其他选项：
 
 - `include_input_schema=True` 会在生成的嵌套输入中包含完整的 JSON Schema。
-- `input_builder=...` 允许你完全自定义结构化工具参数如何转换为嵌套的智能体输入。
-- `RunContextWrapper.tool_input` 在嵌套运行上下文中包含已解析的结构化负载。
+- `input_builder=...` 允许你完全自定义结构化工具参数如何转为嵌套的智能体输入。
+- `RunContextWrapper.tool_input` 在嵌套运行上下文中包含已解析的结构化载荷。
 
 ```python
 from pydantic import BaseModel, Field
@@ -14008,17 +14239,17 @@ translator_tool = translator_agent.as_tool(
 
 完整可运行示例见 `examples/agent_patterns/agents_as_tools_structured.py`。
 
-### 工具智能体的审批门
+### 工具智能体的审批关卡
 
-`Agent.as_tool(..., needs_approval=...)` 使用与 `function_tool` 相同的审批流程。如果需要审批，运行会暂停，待处理项会出现在 `result.interruptions` 中；然后使用 `result.to_state()`，并在调用 `state.approve(...)` 或 `state.reject(...)` 后继续执行。完整的暂停/恢复模式见 [Human-in-the-loop guide](human_in_the_loop.md)。
+`Agent.as_tool(..., needs_approval=...)` 使用与 `function_tool` 相同的审批流程。如果需要审批，运行会暂停，待处理项会出现在 `result.interruptions` 中；然后使用 `result.to_state()`，并在调用 `state.approve(...)` 或 `state.reject(...)` 后恢复。完整的暂停/恢复模式请参见 [Human-in-the-loop guide](human_in_the_loop.md)。
 
 ### 自定义输出提取
 
-在某些情况下，你可能希望在将工具智能体的输出返回给中心智能体之前对其进行修改。这在以下场景可能很有用：
+在某些情况下，你可能希望在将工具智能体的输出返回给中心智能体之前对其进行修改。例如：
 
--   从子智能体的聊天历史中提取特定信息（例如 JSON 负载）。
--   转换或重新格式化智能体的最终答案（例如将 Markdown 转为纯文本或 CSV）。
--   校验输出，或在智能体响应缺失或格式不正确时提供回退值。
+-   从子智能体的聊天记录中提取特定信息（例如 JSON 载荷）。
+-   转换或重格式化智能体的最终答案（例如将 Markdown 转为纯文本或 CSV）。
+-   校验输出，或在智能体响应缺失/格式不正确时提供回退值。
 
 你可以通过向 `as_tool` 方法提供 `custom_output_extractor` 参数来实现：
 
@@ -14041,7 +14272,7 @@ json_tool = data_agent.as_tool(
 
 ### 流式传输嵌套智能体运行
 
-向 `as_tool` 传入 `on_stream` 回调，以监听嵌套智能体在运行过程中发出的流式事件，同时在流结束后仍返回其最终输出。
+向 `as_tool` 传入 `on_stream` 回调，以监听嵌套智能体发出的流式事件，同时在流结束后仍返回其最终输出。
 
 ```python
 from agents import AgentToolStreamEvent
@@ -14062,14 +14293,14 @@ billing_agent_tool = billing_agent.as_tool(
 预期行为：
 
 - 事件类型与 `StreamEvent["type"]` 一致：`raw_response_event`、`run_item_stream_event`、`agent_updated_stream_event`。
-- 提供 `on_stream` 会自动以流式模式运行嵌套智能体，并在返回最终输出前耗尽流。
-- 处理器可以是同步或异步；每个事件会按到达顺序交付。
-- 当工具通过模型工具调用被触发时，`tool_call` 会存在；直接调用可能将其置为 `None`。
+- 提供 `on_stream` 会自动以流式模式运行嵌套智能体，并在返回最终输出前消费完整流。
+- 处理器可以是同步或异步；每个事件会按到达顺序投递。
+- 当工具通过模型工具调用触发时会包含 `tool_call`；直接调用可能为 `None`。
 - 完整可运行示例见 `examples/agent_patterns/agents_as_tools_streaming.py`。
 
-### 条件启用工具
+### 条件式启用工具
 
-你可以使用 `is_enabled` 参数在运行时有条件地启用或禁用智能体工具。这允许你基于上下文、用户偏好或运行时条件，动态过滤 LLM 可用的工具。
+你可以在运行时使用 `is_enabled` 参数有条件地启用或禁用智能体工具。这允许你基于上下文、用户偏好或运行时条件，动态筛选对 LLM 可用的工具。
 
 ```python
 import asyncio
@@ -14132,17 +14363,17 @@ asyncio.run(main())
 
 被禁用的工具在运行时会对 LLM 完全隐藏，因此适用于：
 
--   基于用户权限的功能门控
--   特定环境的工具可用性（dev vs prod）
--   A/B 测试不同工具配置
+-   基于用户权限的功能开关
+-   环境特定的工具可用性（dev vs prod）
+-   不同工具配置的 A/B 测试
 -   基于运行时状态的动态工具过滤
 
 ## 实验性：Codex 工具
 
-`codex_tool` 封装了 Codex CLI，使智能体可以在工具调用期间运行工作区范围的任务（shell、文件编辑、MCP 工具）。
-该接口是实验性的，可能会发生变化。
+`codex_tool` 封装了 Codex CLI，使智能体能够在工具调用期间运行作用域限定为工作区的任务（shell、文件编辑、MCP 工具）。
+该接口为实验性，可能会发生变化。
 默认情况下，工具名称为 `codex`。如果你设置自定义名称，它必须是 `codex` 或以 `codex_` 开头。
-当一个智能体包含多个 Codex 工具时，每个工具都必须使用唯一名称（包括与非 Codex 工具之间）。
+当智能体包含多个 Codex 工具时，每个都必须使用唯一名称（包括与非 Codex 工具之间）。
 
 ```python
 from agents import Agent
@@ -14171,32 +14402,85 @@ agent = Agent(
 )
 ```
 
-需要了解的事项：
+须知：
 
--   认证：设置 `CODEX_API_KEY`（首选）或 `OPENAI_API_KEY`，或传入 `codex_options={"api_key": "..."}`。
+-   认证：设置 `CODEX_API_KEY`（推荐）或 `OPENAI_API_KEY`，或传入 `codex_options={"api_key": "..."}`。
 -   运行时：`codex_options.base_url` 会覆盖 CLI base URL。
--   二进制解析：设置 `codex_options.codex_path_override`（或 `CODEX_PATH`）以固定 CLI 路径。否则 SDK 会先从 `PATH` 解析 `codex`，再回退到打包的 vendor 二进制文件。
--   环境：`codex_options.env` 完全控制子进程环境。提供该参数时，子进程不会继承 `os.environ`。
+-   二进制解析：设置 `codex_options.codex_path_override`（或 `CODEX_PATH`）以固定 CLI 路径。否则 SDK 会先从 `PATH` 解析 `codex`，再回退到随 SDK 打包的 vendor 二进制文件。
+-   环境：`codex_options.env` 完全控制子进程环境。提供该项时，子进程不会继承 `os.environ`。
 -   流限制：`codex_options.codex_subprocess_stream_limit_bytes`（或 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`）控制 stdout/stderr 读取器限制。有效范围为 `65536` 到 `67108864`；默认值为 `8388608`。
--   输入：工具调用必须在 `inputs` 中至少包含一项 `{ "type": "text", "text": ... }` 或 `{ "type": "local_image", "path": ... }`。
--   线程默认值：通过 `default_thread_options` 配置 `model_reasoning_effort`、`web_search_mode`（优先于旧版 `web_search_enabled`）、`approval_policy` 和 `additional_directories`。
--   回合默认值：通过 `default_turn_options` 配置 `idle_timeout_seconds` 和用于取消的 `signal`。
+-   输入：工具调用必须在 `inputs` 中至少包含一个条目，形式为 `{ "type": "text", "text": ... }` 或 `{ "type": "local_image", "path": ... }`。
+-   Thread 默认值：为 `model_reasoning_effort`、`web_search_mode`（优先于旧版 `web_search_enabled`）、`approval_policy` 与 `additional_directories` 配置 `default_thread_options`。
+-   Turn 默认值：为 `idle_timeout_seconds` 与取消 `signal` 配置 `default_turn_options`。
 -   安全：将 `sandbox_mode` 与 `working_directory` 配对使用；在非 Git 仓库中设置 `skip_git_repo_check=True`。
--   运行上下文线程持久化：`use_run_context_thread_id=True` 会在运行上下文中存储并复用 `thread_id`，用于共享该上下文的多次运行。这需要可变的运行上下文（例如 `dict` 或可写对象字段）。
--   运行上下文 key 默认值：存储 key 在 `name="codex"` 时默认为 `codex_thread_id`，在 `name="codex_<suffix>"` 时默认为 `codex_thread_id_<suffix>`。可通过 `run_context_thread_id_key` 覆盖。
--   线程 ID 优先级：单次调用输入中的 `thread_id` 优先，其次为运行上下文中的 `thread_id`（如启用），最后为配置的 `thread_id` 选项。
+-   运行上下文的 thread 持久化：`use_run_context_thread_id=True` 会在运行上下文中存储并复用 `thread_id`，适用于共享该上下文的多次运行。这需要可变的运行上下文（例如 `dict` 或可写的对象字段）。
+-   运行上下文 key 默认值：当 `name="codex"` 时，存储 key 默认为 `codex_thread_id`；当 `name="codex_<suffix>"` 时默认为 `codex_thread_id_<suffix>`。可通过 `run_context_thread_id_key` 覆盖。
+-   Thread ID 优先级：单次调用传入的 `thread_id` 优先，其次是运行上下文的 `thread_id`（如启用），最后是配置的 `thread_id` 选项。
 -   流式传输：`on_stream` 接收 thread/turn 生命周期事件与条目事件（`reasoning`、`command_execution`、`mcp_tool_call`、`file_change`、`web_search`、`todo_list` 以及 `error` 条目更新）。
--   输出：结果包含 `response`、`usage` 和 `thread_id`；usage 会被添加到 `RunContextWrapper.usage`。
--   结构：当你需要类型化输出时，`output_schema` 会强制 Codex 返回结构化响应。
--   完整可运行示例见 `examples/tools/codex.py` 和 `examples/tools/codex_same_thread.py`。
+-   输出：结果包括 `response`、`usage` 和 `thread_id`；usage 会添加到 `RunContextWrapper.usage`。
+-   结构：当你需要类型化输出时，`output_schema` 会强制 Codex 返回 structured outputs。
+-   完整可运行示例见 `examples/tools/codex.py` 与 `examples/tools/codex_same_thread.py`。
 
-## 处理工具调用中的错误
+## 工具调用超时
+
+你可以通过 `@function_tool(timeout=...)` 为异步工具调用设置单次调用超时。
+
+```python
+import asyncio
+from agents import Agent, Runner, function_tool
+
+
+@function_tool(timeout=2.0)
+async def slow_lookup(query: str) -> str:
+    await asyncio.sleep(10)
+    return f"Result for {query}"
+
+
+agent = Agent(
+    name="Timeout demo",
+    instructions="Use tools when helpful.",
+    tools=[slow_lookup],
+)
+```
+
+当达到超时时，默认行为为 `timeout_behavior="error_as_result"`，它会发送一个对模型可见的超时消息（例如：`Tool 'slow_lookup' timed out after 2 seconds.`）。
+
+你可以控制超时处理方式：
+
+-   `timeout_behavior="error_as_result"`（默认）：向模型返回超时消息，使其可以恢复。
+-   `timeout_behavior="raise_exception"`：抛出 [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError] 并使运行失败。
+-   `timeout_error_function=...`：在使用 `error_as_result` 时自定义超时消息。
+
+```python
+import asyncio
+from agents import Agent, Runner, ToolTimeoutError, function_tool
+
+
+@function_tool(timeout=1.5, timeout_behavior="raise_exception")
+async def slow_tool() -> str:
+    await asyncio.sleep(5)
+    return "done"
+
+
+agent = Agent(name="Timeout hard-fail", tools=[slow_tool])
+
+try:
+    await Runner.run(agent, "Run the tool")
+except ToolTimeoutError as e:
+    print(f"{e.tool_name} timed out in {e.timeout_seconds} seconds")
+```
+
+!!! note
+
+    超时配置仅支持异步 `@function_tool` 处理器。
+
+## 工具调用中的错误处理
 
 当你通过 `@function_tool` 创建工具调用时，可以传入 `failure_error_function`。这是一个函数，用于在工具调用崩溃时向 LLM 提供错误响应。
 
--   默认情况下（即不传任何内容），会运行 `default_tool_error_function`，告知 LLM 发生了错误。
--   如果你传入自定义错误函数，则会改为运行它，并将响应发送给 LLM。
--   如果你显式传入 `None`，则任何工具调用错误都会被重新抛出供你处理。这可能是模型产生无效 JSON 时的 `ModelBehaviorError`，或你的代码崩溃时的 `UserError` 等。
+-   默认情况下（即你不传任何值），会运行 `default_tool_error_function`，告知 LLM 发生了错误。
+-   如果你传入自己的错误函数，则会运行它，并将响应发送给 LLM。
+-   如果你显式传入 `None`，则任何工具调用错误都会被重新抛出供你处理。这可能是模型生成无效 JSON 导致的 `ModelBehaviorError`，或你的代码崩溃导致的 `UserError` 等。
 
 ```python
 from agents import function_tool, RunContextWrapper
@@ -14219,7 +14503,7 @@ def get_user_profile(user_id: str) -> str:
 
 ```
 
-如果你是手动创建 `FunctionTool` 对象，那么你必须在 `on_invoke_tool` 函数中处理错误。
+如果你是手动创建 `FunctionTool` 对象，那么你必须在 `on_invoke_tool` 函数内部处理错误。
 
 ================
 File: docs/zh/tracing.md
@@ -15029,7 +15313,7 @@ set_tracing_disabled(True)
 
 ## Debug logging
 
-The SDK has two Python loggers without any handlers set. By default, this means that warnings and errors are sent to `stdout`, but other logs are suppressed.
+The SDK defines two Python loggers (`openai.agents` and `openai.agents.tracing`) and does not attach handlers by default. Logs follow your application's Python logging configuration.
 
 To enable verbose logging, use the [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] function.
 
@@ -15288,6 +15572,8 @@ Check out a variety of sample implementations of the SDK in the examples section
     -   Web search and web search with filters
     -   File search
     -   Code interpreter
+    -   Hosted container shell with inline skills (`examples/tools/container_shell_inline_skill.py`)
+    -   Hosted container shell with skill references (`examples/tools/container_shell_skill_reference.py`)
     -   Computer use
     -   Image generation
     -   Experimental Codex tool workflows (`examples/tools/codex.py`)
@@ -15933,7 +16219,7 @@ The hosted server exposes its tools automatically; you do not add it to `mcp_ser
 
 ### Streaming hosted MCP results
 
-Hosted tools support streaming results in exactly the same way as function tools. Pass `stream=True` to `Runner.run_streamed` to
+Hosted tools support streaming results in exactly the same way as function tools. Use `Runner.run_streamed` to
 consume incremental MCP output while the model is still working:
 
 ```python
@@ -16566,6 +16852,10 @@ We will increment `Z` for non-breaking changes:
 
 ## Breaking change changelog
 
+### 0.9.0
+
+In this version, Python 3.9 is no longer supported as the major version is already EOLed three months ago. Please ugprade to a newer runtime version.
+
 ### 0.8.0
 
 In this version, two runtime behavior changes may require migration work:
@@ -16991,6 +17281,7 @@ The SDK raises exceptions in certain cases. The full list is in [`agents.excepti
 -   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: This exception occurs when the underlying model (LLM) produces unexpected or invalid outputs. This can include:
     -   Malformed JSON: When the model provides a malformed JSON structure for tool calls or in its direct output, especially if a specific `output_type` is defined.
     -   Unexpected tool-related failures: When the model fails to use tools in an expected manner
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]: This exception is raised when a function tool call exceeds its configured timeout and the tool uses `timeout_behavior="raise_exception"`.
 -   [`UserError`][agents.exceptions.UserError]: This exception is raised when you (the person writing code using the SDK) make an error while using the SDK. This typically results from incorrect code implementation, invalid configuration, or misuse of the SDK's API.
 -   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: This exception is raised when the conditions of an input guardrail or output guardrail are met, respectively. Input guardrails check incoming messages before processing, while output guardrails check the agent's final response before delivery.
 
@@ -17127,12 +17418,60 @@ async def main():
     print(result.final_output)
 ```
 
+### Hosted container shell + skills
+
+`ShellTool` also supports OpenAI-hosted container execution. Use this mode when you want the model to run shell commands in a managed container instead of your local runtime.
+
+```python
+from agents import Agent, Runner, ShellTool, ShellToolSkillReference
+
+csv_skill: ShellToolSkillReference = {
+    "type": "skill_reference",
+    "skill_id": "skill_698bbe879adc81918725cbc69dcae7960bc5613dadaed377",
+    "version": "1",
+}
+
+agent = Agent(
+    name="Container shell agent",
+    model="gpt-5.2",
+    instructions="Use the mounted skill when helpful.",
+    tools=[
+        ShellTool(
+            environment={
+                "type": "container_auto",
+                "network_policy": {"type": "disabled"},
+                "skills": [csv_skill],
+            }
+        )
+    ],
+)
+
+result = await Runner.run(
+    agent,
+    "Use the configured skill to analyze CSV files in /mnt/data and summarize totals by region.",
+)
+print(result.final_output)
+```
+
+To reuse an existing container in later runs, set `environment={"type": "container_reference", "container_id": "cntr_..."}`.
+
+What to know:
+
+-   Hosted shell is available through the Responses API shell tool.
+-   `container_auto` provisions a container for the request; `container_reference` reuses an existing one.
+-   `environment.skills` accepts skill references and inline skill bundles.
+-   With hosted environments, do not set `executor`, `needs_approval`, or `on_approval` on `ShellTool`.
+-   `network_policy` supports `disabled` and `allowlist` modes.
+-   See `examples/tools/container_shell_skill_reference.py` and `examples/tools/container_shell_inline_skill.py` for complete examples.
+-   OpenAI platform guides: [Shell](https://platform.openai.com/docs/guides/tools-shell) and [Skills](https://platform.openai.com/docs/guides/tools-skills).
+
 ## Local runtime tools
 
 Local runtime tools execute in your environment and require you to supply implementations:
 
 -   [`ComputerTool`][agents.tool.ComputerTool]: implement the [`Computer`][agents.computer.Computer] or [`AsyncComputer`][agents.computer.AsyncComputer] interface to enable GUI/browser automation.
--   [`ShellTool`][agents.tool.ShellTool] or [`LocalShellTool`][agents.tool.LocalShellTool]: provide a shell executor to run commands.
+-   [`ShellTool`][agents.tool.ShellTool]: the latest shell tool for both local execution and hosted container execution.
+-   [`LocalShellTool`][agents.tool.LocalShellTool]: legacy local-shell integration.
 -   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]: implement [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor] to apply diffs locally.
 
 ```python
@@ -17661,6 +18000,59 @@ What to know:
 -   Outputs: results include `response`, `usage`, and `thread_id`; usage is added to `RunContextWrapper.usage`.
 -   Structure: `output_schema` enforces structured Codex responses when you need typed outputs.
 -   See `examples/tools/codex.py` and `examples/tools/codex_same_thread.py` for complete runnable samples.
+
+## Function tool timeouts
+
+You can set per-call timeouts for async function tools with `@function_tool(timeout=...)`.
+
+```python
+import asyncio
+from agents import Agent, Runner, function_tool
+
+
+@function_tool(timeout=2.0)
+async def slow_lookup(query: str) -> str:
+    await asyncio.sleep(10)
+    return f"Result for {query}"
+
+
+agent = Agent(
+    name="Timeout demo",
+    instructions="Use tools when helpful.",
+    tools=[slow_lookup],
+)
+```
+
+When a timeout is reached, the default behavior is `timeout_behavior="error_as_result"`, which sends a model-visible timeout message (for example, `Tool 'slow_lookup' timed out after 2 seconds.`).
+
+You can control timeout handling:
+
+-   `timeout_behavior="error_as_result"` (default): return a timeout message to the model so it can recover.
+-   `timeout_behavior="raise_exception"`: raise [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError] and fail the run.
+-   `timeout_error_function=...`: customize the timeout message when using `error_as_result`.
+
+```python
+import asyncio
+from agents import Agent, Runner, ToolTimeoutError, function_tool
+
+
+@function_tool(timeout=1.5, timeout_behavior="raise_exception")
+async def slow_tool() -> str:
+    await asyncio.sleep(5)
+    return "done"
+
+
+agent = Agent(name="Timeout hard-fail", tools=[slow_tool])
+
+try:
+    await Runner.run(agent, "Run the tool")
+except ToolTimeoutError as e:
+    print(f"{e.tool_name} timed out in {e.timeout_seconds} seconds")
+```
+
+!!! note
+
+    Timeout configuration is supported only for async `@function_tool` handlers.
 
 ## Handling errors in function tools
 

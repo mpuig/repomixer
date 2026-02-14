@@ -3202,9 +3202,44 @@ While each agent type serves a distinct purpose, the true power often comes from
 
 Understanding these core types is the first step toward building sophisticated, capable AI applications with ADK.
 
----
+## Extend Agent Capabilities
 
-## What's Next?
+Beyond the core agent types, ADK allows you to significantly expand what your
+agents can do through several key mechanisms:
+
+*   [**AI Models**](/adk-docs/agents/models/):
+    Swap the underlying intelligence of your agents by integrating with
+    different generative AI models from Google and other providers.
+
+*   [**Artifacts**](/adk-docs/artifacts/):
+    Enable agents to create and manage persistent outputs like files, code, or
+    documents that exist beyond the conversation lifecycle.
+
+*   [**Pre-built tools and integrations**](/adk-docs/integrations/):
+    Equip your agents with a wide array tools, plugins, and other integrations
+    to interact with the world, including web sites, MCP tools, applications,
+    databases, programming interfaces, and more.
+
+*   [**Custom tools**](/adk-docs/tools-custom/):
+    Create your own, task-specific tools for solving specific problems with
+    precision and control.
+
+*   [**Plugins**](/adk-docs/plugins/):
+    Integrate complex, pre-packaged behaviors and third-party services directly
+    into your agent's workflow.
+
+*   [**Skills**](/adk-docs/skills/):
+    Use prebuilt or custom [Agent Skills](https://agentskills.io/) to extend
+    agent capabilities in a way that works efficiently inside AI context window
+    limits.
+
+*   [**Callbacks**](/adk-docs/callbacks/):
+    Hook into specific events during an agent's execution lifecycle to add
+    logging, monitoring, or custom side-effects without altering core agent
+    logic.
+
+
+## Next Steps
 
 Now that you have an overview of the different agent types available in ADK, dive deeper into how they work and how to use them effectively:
 
@@ -19347,6 +19382,9 @@ To connect this dashboard to your own BigQuery table, use the following link for
 https://lookerstudio.google.com/reporting/create?c.reportId=f1c5b513-3095-44f8-90a2-54953d41b125&ds.ds3.connector=bigQuery&ds.ds3.type=TABLE&ds.ds3.projectId=<your-project-id>&ds.ds3.datasetId=<your-dataset-id>&ds.ds3.tableId=<your-table-id>
 ```
 
+## Feedback
+We welcome your feedback on BigQuery Agent Analytics. If you have questions, suggestions, or encounter any issues, please reach out to the team at bqaa-feedback@google.com.
+
 ## Additional resources
 
 -   [BigQuery Storage Write API](https://cloud.google.com/bigquery/docs/write-api)
@@ -21489,6 +21527,166 @@ The `GkeCodeExecutor` can be configured with the following parameters:
 | `mem_limit`          | `str`  | Maximum amount of memory the execution Pod can use. Defaults to `"512Mi"`.              |
 | `kubeconfig_path`    | `str`  | Path to a kubeconfig file to use for authentication. Falls back to in-cluster config or the default local kubeconfig. |
 | `kubeconfig_context` | `str`  | The `kubeconfig` context to use.  |
+
+================
+File: docs/integrations/goodmem.md
+================
+---
+catalog_title: GoodMem
+catalog_description: Add persistent semantic memory to agents across conversations
+catalog_icon: /adk-docs/integrations/assets/goodmem.svg
+catalog_tags: ["data"]
+---
+
+# GoodMem plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [GoodMem ADK plugin](https://github.com/PAIR-Systems-Inc/goodmem-adk)
+connects your ADK agent to [GoodMem](https://goodmem.ai), a vector-based
+semantic memory service. This integration gives your agent persistent,
+searchable memory across conversations, enabling it to recall past interactions,
+user preferences, and uploaded documents.
+
+There are two integration approaches:
+
+| Approach | Description |
+|----------|-------------|
+| **Plugin** (`GoodmemPlugin`) | Implicit, deterministic memory at every turn via ADK callbacks. Saves all conversation turns and file attachments automatically. |
+| **Tools** (`GoodmemSaveTool`, `GoodmemFetchTool`) | Explicit, agent-controlled memory. The agent decides when to save and retrieve information. |
+
+## Use cases
+
+- **Persistent memory for agents**: Give your agents long-term memory that
+  they can rely on across conversations.
+- **Hands-free, multimodal memory management**: Automatically saves and
+  retrieves information in conversations, including user messages, agent
+  responses, and file attachments (PDF, DOCX, etc.).
+- **Never start from scratch**: Agents recall who you are, what you've
+  discussed, and solutions you've already worked through — saving tokens and
+  avoiding redundant work.
+
+## Prerequisites
+
+- A [GoodMem](https://goodmem.ai/quick-start) instance (self-hosted or cloud)
+- GoodMem API key
+- [Gemini API key](https://aistudio.google.com/app/api-keys) (for auto-creating embeddings with Gemini)
+
+## Installation
+
+```bash
+pip install goodmem-adk
+```
+
+## Use with agent
+
+=== "Plugin (Automatic memory)"
+
+    ```python
+    import os
+    from google.adk.agents import LlmAgent
+    from google.adk.apps import App
+    from goodmem_adk import GoodmemPlugin
+
+    plugin = GoodmemPlugin(
+        base_url=os.getenv("GOODMEM_BASE_URL"),  # e.g. "http://localhost:8080"
+        api_key=os.getenv("GOODMEM_API_KEY"),
+        top_k=5,  # Number of memories to retrieve per turn
+    )
+
+    agent = LlmAgent(
+        name="memory_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant with persistent memory.",
+    )
+
+    app = App(name="GoodmemPluginDemo", root_agent=agent, plugins=[plugin])
+    ```
+
+=== "Tools (Agent-controlled memory)"
+
+    ```python
+    import os
+    from google.adk.agents import LlmAgent
+    from google.adk.apps import App
+    from goodmem_adk import GoodmemSaveTool, GoodmemFetchTool
+
+    save_tool = GoodmemSaveTool(
+        base_url=os.getenv("GOODMEM_BASE_URL"),  # e.g. "http://localhost:8080"
+        api_key=os.getenv("GOODMEM_API_KEY"),
+    )
+    fetch_tool = GoodmemFetchTool(
+        base_url=os.getenv("GOODMEM_BASE_URL"),
+        api_key=os.getenv("GOODMEM_API_KEY"),
+        top_k=5,
+    )
+
+    agent = LlmAgent(
+        name="memory_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful assistant with persistent memory.",
+        tools=[save_tool, fetch_tool],
+    )
+
+    app = App(name="GoodmemToolsDemo", root_agent=agent)
+    ```
+
+## Available tools
+
+### Plugin callbacks
+
+The `GoodmemPlugin` uses ADK callbacks to manage memory automatically:
+
+Callback | Description
+-------- | -----------
+`on_user_message_callback` | Saves user messages and file attachments to memory
+`before_model_callback` | Retrieves relevant memories and injects them into the prompt
+`after_model_callback` | Saves the agent's response to memory
+
+These callbacks are deterministic and run during every agent interaction, saving
+all information passed through the agent to memory. The agent doesn't need to
+decide when to save or retrieve information.
+
+### Tools
+
+When using the tools approach, the agent has access to:
+
+Tool | Description
+---- | -----------
+`goodmem_save` | Save text content and file attachments to persistent memory
+`goodmem_fetch` | Search memories using semantic similarity queries
+
+These tools are invoked by the agent on demand, and the agent can choose when to
+save (possibly with rewrites) or retrieve information based on the conversation
+context.
+
+## Configuration
+
+### Environment variables
+
+Variable | Required | Description
+-------- | -------- | -----------
+`GOODMEM_BASE_URL` | Yes | GoodMem server URL (without `/v1` suffix)
+`GOODMEM_API_KEY` | Yes | API key for GoodMem
+`GOOGLE_API_KEY` | Yes | Gemini API key for auto-creating Gemini embedder
+`GOODMEM_EMBEDDER_ID` | No | Pin a specific embedder (must exist)
+`GOODMEM_SPACE_ID` | No | Pin a specific memory space (must exist)
+`GOODMEM_SPACE_NAME` | No | Override default space name (auto-created if missing)
+
+### Space resolution
+
+If no space is configured, one is auto-created per user:
+
+- Plugin: `adk_chat_{user_id}`
+- Tools: `adk_tool_{user_id}`
+
+## Additional resources
+
+- [GoodMem ADK on GitHub](https://github.com/PAIR-Systems-Inc/goodmem-adk)
+- [GoodMem Documentation](https://goodmem.ai)
+- [GoodMem ADK on PyPI](https://pypi.org/project/goodmem-adk/)
 
 ================
 File: docs/integrations/google-search.md
@@ -30380,6 +30578,164 @@ State modifications *within* callbacks or tools using `CallbackContext.state` or
 * **Descriptive Keys & Prefixes:** Use clear names and appropriate prefixes (`user:`, `app:`, `temp:`, or none).
 * **Shallow Structures:** Avoid deep nesting where possible.
 * **Standard Update Flow:** Rely on `append_event`.
+
+================
+File: docs/skills/index.md
+================
+# Skills for ADK agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+An agent ***Skill*** is a self-contained unit of functionality that an ADK agent
+can use to perform a specific task. An agent Skill encapsulates the necessary
+instructions, resources, and tools required for a task, based on the
+[Agent Skill specification](https://agentskills.io/specification).
+The structure of a Skill allows it to be loaded incrementally to minimize the
+impact on the operating context window of the agent.
+
+!!! example "Experimental"
+    The Skills feature is experimental and has some
+    [known limitations](#known-limitations). We welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills)!
+
+## Get started
+
+Use the `SkillToolset` class to include one or more Skills in your agent
+definition and then add to your agent's tools list. You can define a
+[Skill in code](#inline-skills),
+or load the skill from a file definition, as shown below:
+
+```python
+import pathlib
+
+from google.adk import Agent
+from google.adk.skills import load_skill_from_dir
+from google.adk.tools import skill_toolset
+
+weather_skill = load_skill_from_dir(
+    pathlib.Path(__file__).parent / "skills" / "weather_skill"
+)
+
+my_skill_toolset = skill_toolset.SkillToolset(
+    skills=[weather_skill]
+)
+
+root_agent = Agent(
+    model="gemini-2.5-flash",
+    name="skill_user_agent",
+    description="An agent that can use specialized skills.",
+    instruction=(
+        "You are a helpful assistant that can leverage skills to perform tasks."
+    ),
+    tools=[
+        my_skill_toolset,
+    ],
+)
+```
+
+For a complete code example of an ADK agent with a Skill, including both
+file-based and in-line Skill definitions, see the code sample
+[skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
+
+## Define Skills
+
+The Skills feature allows you to create modular packages of Skill instructions
+and resources that agents can load on demand. This approach helps you organize
+your agent's capabilities and optimize the context window by only loading
+instructions when they are needed. The structure of Skills is organized into
+three levels:
+
+-   **L1 (Metadata):** Provides metadata for skill discovery. This information
+    is defined in the frontmatter section of the `SKILL.md` file and includes
+    properties such as the Skill name and description.
+-   **L2 (Instructions):** Contains the primary instructions for the Skill,
+    loaded when the Skill is triggered by the agent. This information is defined
+    in the body of the `SKILL.md` file.
+-   **L3 (Resources):** Includes additional resources such as reference
+    materials, assets, and scripts that can be loaded as needed. These resources
+    are organized into the following directories:
+    -   `references/`: Additional Markdown files with extended instructions,
+        workflows, or guidance.
+    -   `assets/`: Resource materials such as database schemas, API
+        documentation, templates, or examples.
+    -   `scripts/`: Executable scripts supported by the agent runtime.
+
+### Define Skills with files
+
+The following directory structure shows the recommended way to include Skills in
+your ADK agent project. The `example_skill/` directory shown below, and any
+parallel Skill directories, must follow the
+[Agent Skill specification](https://agentskills.io/specification)
+file structure. Only the `SKILL.md` file is required.
+
+```
+my_agent/
+    agent.py
+    .env
+    skills/
+        example_skill/        # Skill
+            SKILL.md          # main instructions (required)
+            references/
+                REFERENCE.md  # detailed API reference
+                FORMS.md      # form-filling guide
+                *.md          # domain-specific information
+            assets/
+                *.*           # templates, images, data
+            scripts/
+                *.py          # utility scripts
+```
+
+!!! warning "Script execution not supported"
+    Scripts execution is not yet supported and is a
+    [known limitation](#known-limitations).
+
+### Define Skills in code {#inline-skills}
+
+In ADK agents, you can also define Skills within the code of the agent, using
+the `Skill` model class, as shown below. This method of Skill definition enables
+you to dynamically modify skills from your ADK agent code.
+
+```python
+from google.adk.skills import models
+
+greeting_skill = models.Skill(
+    frontmatter=models.Frontmatter(
+        name="greeting-skill",
+        description=(
+            "A friendly greeting skill that can say hello to a specific person."
+        ),
+    ),
+    instructions=(
+        "Step 1: Read the 'references/hello_world.txt' file to understand how"
+        " to greet the user. Step 2: Return a greeting based on the reference."
+    ),
+    resources=models.Resources(
+        references={
+            "hello_world.txt": "Hello! So glad to have you here!",
+            "example.md": "This is an example reference.",
+        },
+    ),
+)
+```
+
+## Known limitations {#known-limitations}
+
+The Skills feature is experimental and includes the following
+limitations:
+
+-   **Script execution:** The Skills feature does not currently support
+    script execution (`scripts/` directory).
+
+## Next steps
+
+Check out these resources for building agents with Skills:
+
+*   ADK Skills agent code sample:
+    [skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
+*   Agent Skills
+    [specification documentation](https://agentskills.io/)
 
 ================
 File: docs/streaming/dev-guide/part1.md
