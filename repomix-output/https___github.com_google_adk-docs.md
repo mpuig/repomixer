@@ -17558,8 +17558,8 @@ To get started, [create an AgentOps account](http://app.agentops.ai). For featur
 File: docs/integrations/api-registry.md
 ================
 ---
-catalog_title: API Registry
-catalog_description: Dynamically connect with Google Cloud services as MCP tools
+catalog_title: Google Cloud API Registry
+catalog_description: Connect with Google Cloud services as MCP tools
 catalog_icon: /adk-docs/integrations/assets/developer-tools-color.svg
 catalog_tags: ["google", "mcp", "connectors"]
 ---
