@@ -3635,6 +3635,13 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
 
 * **`output_schema` (Optional):** Define a schema representing the desired output structure. If set, the agent's final response *must* be a JSON string conforming to this schema.
 
+!!! warning "Warning: Using `output_schema` with `tools`"
+
+    Using `output_schema` with `tools` in the same LLM request
+    is only supported by specific models, including [Gemini 3.0](https://ai.google.dev/gemini-api/docs/function-calling?example=meeting#structured-output).
+    For other models, workarounds using [function tools](https://github.com/google/adk-python/blob/main/src/google/adk/flows/llm_flows/_output_schema_processor.py)) in ADK
+    may not work reliably. In such cases, consider using sub-agents that handle output formatting separately.
+
 * **`output_key` (Optional):** Provide a string key. If set, the text content of the agent's *final* response will be automatically saved to the session's state dictionary under this key. This is useful for passing results between agents or steps in a workflow.
     * In Python, this might look like: `session.state[output_key] = agent_response_text`
     * In Java: `session.state().put(outputKey, agentResponseText)`
@@ -20146,7 +20153,7 @@ catalog_tags: ["code", "google"]
 # Agent Engine Code Execution tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-preview">Preview</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span>
 </div>
 
 The Agent Engine Code Execution ADK Tool provides a low-latency, highly
@@ -20169,10 +20176,6 @@ Code Execution feature in Agent Engine, see the
 [Agent Engine Code Execution](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/overview)
 documentation.
 
-!!! example "Preview release"
-    The Agent Engine Code Execution feature is a Preview release. For
-    more information, see the
-    [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
 
 ## Use the Tool
 
@@ -24919,6 +24922,251 @@ They are packaged in the toolset `SpannerToolset`.
 ```
 
 ================
+File: docs/integrations/stackone.md
+================
+---
+catalog_title: StackOne
+catalog_description: Connect agents to 200+ SaaS providers
+catalog_icon: /adk-docs/integrations/assets/stackone.png
+catalog_tags: ["connectors"]
+---
+
+# StackOne plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [StackOne ADK Plugin](https://github.com/StackOneHQ/stackone-adk-plugin)
+connects your ADK agent to hundreds of providers through
+[StackOne's](https://stackone.com) unified AI Integration gateway. Instead of manually defining tool functions for each API, this plugin dynamically discovers available tools from your connected providers and exposes them as native tools in ADK. It supports Human Resources Information Systems (HRIS), Applicant Tracking Systems (ATS), Customer Relationship Management (CRM), productivity and scheduling tools, and many more [integrations](https://www.stackone.com/connectors).
+
+## Use cases
+
+- **Sales and Revenue Operations**: Build agents that find leads in your CRM (e.g. HubSpot, Salesforce), enrich contact data, draft personalized outreach, and log activity back — all within one conversation.
+
+- **People Operations**: Create agents that screen candidates in your ATS (e.g. Greenhouse, Ashby), check availability in your calendar tool (e.g. Google Calendar, Calendly), collect interview scorecards, move applicants through pipeline stages, and automate onboarding into your HRIS (e.g. BambooHR, Workday) — covering the full employee lifecycle without manual intervention.
+
+- **Marketing Automation**: Build campaign agents that sync audience segments from your CRM to your email platform (e.g. Mailchimp, Klaviyo), trigger email sequences, and report on engagement metrics across channels.
+
+- **Product Delivery**: Create agents that triage incoming feedback from your support tools (e.g. Intercom, Zendesk, Slack), prioritize and create issues in your project management tool (e.g. Linear, Jira), and resolve incidents using insights from an observability platform (e.g. PagerDuty, Datadog) — uniting product research, delivery, and reliability in a single workflow.
+
+## Prerequisites
+
+- A [StackOne account](https://app.stackone.com) with at least one connected
+  provider
+- A StackOne API key from the
+  [StackOne Dashboard](https://app.stackone.com)
+- A [Gemini API key](https://aistudio.google.com/apikey)
+
+## Installation
+
+```bash
+pip install stackone-adk
+```
+
+Or with uv:
+
+```bash
+uv add stackone-adk
+```
+
+## Use with agent
+
+!!! tip "Environment variables"
+
+    Set your API keys as environment variables before running the examples below:
+
+    ```bash
+    export STACKONE_API_KEY="your-stackone-api-key"
+    export GOOGLE_API_KEY="your-google-api-key"
+    ```
+
+    Once `STACKONE_API_KEY` is set, the plugin automatically reads it and discovers your connected accounts.
+
+=== "Python"
+
+    === "With App (Recommended)"
+
+        ```python
+        import asyncio
+
+        from google.adk.agents import Agent
+        from google.adk.apps import App
+        from google.adk.runners import InMemoryRunner
+        from stackone_adk import StackOnePlugin
+
+
+        async def main():
+            plugin = StackOnePlugin()
+            # Or scope to a specific account:
+            # plugin = StackOnePlugin(account_id="YOUR_ACCOUNT_ID")
+
+            tools = plugin.get_tools()
+            print(f"Discovered {len(tools)} tools")
+
+            agent = Agent(
+                model="gemini-2.5-flash",
+                name="scheduling_agent",
+                description="Manages scheduling, HR, and CRM through StackOne.",
+                instruction=(
+                    "You are a helpful assistant powered by StackOne. "
+                    "You help users manage their scheduling, HR, and CRM tasks "
+                    "by using the available tools.\n\n"
+                    "Always be helpful and provide clear, organized responses."
+                ),
+                tools=tools,
+            )
+
+            app = App(
+                name="scheduling_app",
+                root_agent=agent,
+                plugins=[plugin],
+            )
+
+            async with InMemoryRunner(app=app) as runner:
+                events = await runner.run_debug(
+                    "Get my most recent scheduled meeting from Calendly.",
+                    quiet=True,
+                )
+                # Extract the agent's final text response
+                for event in reversed(events):
+                    if event.content and event.content.parts:
+                        text_parts = [p.text for p in event.content.parts if p.text]
+                        if text_parts:
+                            print("".join(text_parts))
+                            break
+
+
+        asyncio.run(main())
+        ```
+
+    === "With Runner Directly"
+
+        ```python
+        import asyncio
+
+        from google.adk.agents import Agent
+        from google.adk.runners import InMemoryRunner
+        from stackone_adk import StackOnePlugin
+
+
+        async def main():
+            plugin = StackOnePlugin()
+            # Or scope to a specific account:
+            # plugin = StackOnePlugin(account_id="YOUR_ACCOUNT_ID")
+
+            tools = plugin.get_tools()
+            print(f"Discovered {len(tools)} tools")
+
+            agent = Agent(
+                model="gemini-2.5-flash",
+                name="scheduling_agent",
+                description="Manages scheduling, HR, and CRM through StackOne.",
+                instruction=(
+                    "You are a helpful assistant powered by StackOne. "
+                    "You help users manage their scheduling, HR, and CRM tasks "
+                    "by using the available tools.\n\n"
+                    "Always be helpful and provide clear, organized responses."
+                ),
+                tools=tools,
+            )
+
+            async with InMemoryRunner(
+                app_name="scheduling_app", agent=agent
+            ) as runner:
+                events = await runner.run_debug(
+                    "Get my most recent scheduled meeting from Calendly.",
+                    quiet=True,
+                )
+                # Extract the agent's final text response
+                for event in reversed(events):
+                    if event.content and event.content.parts:
+                        text_parts = [p.text for p in event.content.parts if p.text]
+                        if text_parts:
+                            print("".join(text_parts))
+                            break
+
+
+        asyncio.run(main())
+        ```
+
+## Available tools
+
+Unlike integrations with a fixed set of tools, StackOne tools are **dynamically
+discovered** from your connected providers via the StackOne API. The available
+tools depend on which SaaS providers you have connected in your
+[StackOne Dashboard](https://app.stackone.com).
+
+To list discovered tools:
+
+```python
+plugin = StackOnePlugin(account_id="YOUR_ACCOUNT_ID") # Optional: omit to use all connected accounts
+for tool in plugin.get_tools():
+    print(f"{tool.name}: {tool.description}")
+```
+
+### Supported integration categories
+
+Category | Example providers
+-------- | -----------------
+HRIS | HiBob, BambooHR, Workday, SAP SuccessFactors, Personio, Gusto
+ATS | Greenhouse, Ashby, Lever, Bullhorn, SmartRecruiters, Teamtailor
+CRM & Sales | Salesforce, HubSpot, Pipedrive, Zoho CRM, Close, Copper
+Marketing | Mailchimp, Klaviyo, ActiveCampaign, Brevo, GetResponse
+Ticketing & Support | Zendesk, Freshdesk, Jira, ServiceNow, PagerDuty, Linear
+Productivity | Asana, ClickUp, Slack, Microsoft Teams, Notion, Confluence
+Scheduling | Calendly, Cal.com
+LMS & Learning | 360Learning, Docebo, Go1, Cornerstone, LinkedIn Learning
+Commerce | Shopify, BigCommerce, WooCommerce, Etsy
+Developer Tools | GitHub, GitLab, Twilio
+
+For a complete list of 200+ supported providers, visit the
+[StackOne integrations page](https://www.stackone.com/connectors).
+
+## Configuration
+
+### Plugin parameters
+
+Parameter | Type | Default | Description
+--------- | ---- | ------- | -----------
+`api_key` | `str | None` | `None` | StackOne API key. Falls back to `STACKONE_API_KEY` env var.
+`account_id` | `str | None` | `None` | Default account ID for all tools.
+`base_url` | `str | None` | `None` | API URL override (default: `https://api.stackone.com`).
+`plugin_name` | `str` | `"stackone_plugin"` | Plugin identifier for ADK.
+`providers` | `list[str] | None` | `None` | Filter by provider names (e.g., `["calendly", "hibob"]`).
+`actions` | `list[str] | None` | `None` | Filter by action patterns using glob syntax.
+`account_ids` | `list[str] | None` | `None` | Scope tools to specific connected account IDs.
+
+### Tool filtering
+
+Filter tools by provider, action pattern, account ID, or any combination:
+
+```python
+# Specify accounts
+plugin = StackOnePlugin(account_ids=["acct-hibob-1", "acct-bamboohr-1"])
+
+# Read-only operations
+plugin = StackOnePlugin(actions=["*_list_*", "*_get_*"])
+
+# Specific actions with glob patterns
+plugin = StackOnePlugin(actions=["calendly_list_events", "calendly_get_event_*"])
+
+# Combined filters
+plugin = StackOnePlugin(
+    actions=["*_list_*", "*_get_*"],
+    account_ids=["acct-hibob-1"],
+)
+```
+
+## Additional resources
+
+- [StackOne ADK Plugin Repository](https://github.com/StackOneHQ/stackone-adk-plugin)
+- [StackOne Documentation](https://docs.stackone.com/)
+- [StackOne Dashboard](https://app.stackone.com)
+- [StackOne Python AI SDK](https://github.com/StackOneHQ/stackone-ai-python)
+
+================
 File: docs/integrations/stripe.md
 ================
 ---
@@ -25336,6 +25584,140 @@ By following these steps, you can effectively integrate Google ADK with Weave, e
 - **[Navigate the Trace View](https://weave-docs.wandb.ai/guides/tracking/trace-tree)** - Learn how to effectively analyze and debug your traces in the Weave UI, including understanding trace hierarchies and span details.
 
 - **[Weave Integrations](https://weave-docs.wandb.ai/guides/integrations/)** - Explore other framework integrations and see how Weave can work with your entire AI stack.
+
+================
+File: docs/integrations/windsor-ai.md
+================
+---
+catalog_title: Windsor.ai
+catalog_description: Query and analyze marketing, sales, and customer data from 325+ platforms
+catalog_icon: /adk-docs/integrations/assets/windsor-ai.png
+catalog_tags: ["mcp", "data"]
+---
+
+# Windsor.ai MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Windsor MCP Server](https://github.com/windsor-ai/windsor_mcp) connects
+your ADK agent to [Windsor.ai](https://windsor.ai/), a data integration
+platform that unifies marketing, sales, and customer data from 325+ sources.
+This integration gives your agent the ability to query and analyze cross-channel
+business data using natural language, without writing SQL or custom scripts.
+
+## Use cases
+
+- **Marketing Performance Analysis**: Analyze campaign performance across
+  channels like Facebook Ads, Google Ads, TikTok Ads, and more. Ask questions
+  like "What campaigns had the best ROAS last month?" and get instant insights.
+
+- **Cross-Channel Reporting**: Generate comprehensive reports combining data
+  from multiple platforms such as GA4, Shopify, Salesforce, and HubSpot to get
+  a unified view of business performance.
+
+- **Budget Optimization**: Identify underperforming campaigns, detect budget
+  inefficiencies, and get AI-driven recommendations for spend allocation across
+  advertising channels.
+
+## Prerequisites
+
+- A [Windsor.ai](https://windsor.ai/) account with connected data sources
+- A Windsor.ai API key (obtain from [onboard.windsor.ai](https://onboard.windsor.ai))
+
+## Use with agent
+
+=== "Python"
+
+    === "Remote MCP Server"
+
+        ```python
+        import os
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+
+        # Required for recursive $ref in MCP schema (https://github.com/google/adk-python/issues/3870)
+        os.environ["ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL"] = "1"
+
+        WINDSOR_API_KEY = "YOUR_WINDSOR_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="windsor_agent",
+            instruction="Help users analyze their marketing and business data.",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPServerParams(
+                        url="https://mcp.windsor.ai",
+                        headers={
+                            "Authorization": f"Bearer {WINDSOR_API_KEY}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const WINDSOR_API_KEY = "YOUR_WINDSOR_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "windsor_agent",
+            instruction: "Help users analyze their marketing and business data.",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.windsor.ai",
+                    header: {
+                        Authorization: `Bearer ${WINDSOR_API_KEY}`,
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Capabilities
+
+Windsor MCP provides a natural language interface to your integrated business
+data. Rather than exposing discrete tools, it interprets your questions and
+returns structured insights from your connected data sources.
+
+Capability | Description
+---------- | -----------
+Data querying | Query normalized data from any of your 325+ connected platforms
+Performance analysis | Analyze KPIs, trends, and campaign metrics across channels
+Report generation | Create marketing dashboards and cross-channel performance reports
+Budget analysis | Identify spend inefficiencies and get optimization recommendations
+Anomaly detection | Detect outliers and unusual patterns in performance data
+
+## Supported data sources
+
+Windsor.ai connects to 325+ platforms, including:
+
+- **Advertising**: Facebook Ads, Google Ads, TikTok Ads, LinkedIn Ads, Microsoft Ads
+- **Analytics**: Google Analytics 4, Adobe Analytics
+- **CRM**: Salesforce, HubSpot
+- **E-commerce**: Shopify
+- **And more**: See the [full list of connectors](https://windsor.ai/) on the
+  Windsor.ai website
+
+## Additional resources
+
+- [Windsor MCP Server Repository](https://github.com/windsor-ai/windsor_mcp)
+- [Windsor.ai Documentation](https://windsor.ai/documentation/windsor-mcp/)
+- [Windsor MCP Introduction](https://windsor.ai/introducing-windsor-mcp/)
+- [Windsor MCP Use Cases & Examples](https://windsor.ai/how-to-use-windsor-mcp-examples-use-cases/)
 
 ================
 File: docs/mcp/index.md
