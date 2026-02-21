@@ -19456,7 +19456,7 @@ We welcome your feedback on BigQuery Agent Analytics. If you have questions, sug
 ## Additional resources
 
 -   [BigQuery Storage Write API](https://cloud.google.com/bigquery/docs/write-api)
--   [Introduction to Object Tables](https://cloud.google.com/bigquery/docs/object-tables-intro)
+-   [Introduction to Object Tables](https://docs.cloud.google.com/bigquery/docs/object-table-introduction)
 -   [Interactive Demo Notebook](https://github.com/haiyuan-eng-google/demo_BQ_agent_analytics_plugin_notebook)
 
 ================
@@ -42985,6 +42985,16 @@ Development Kit community.
     See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
 
 <div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=cXDr4RYJxK0" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/cXDr4RYJxK0/maxresdefault.jpg" alt="ADK Community Call Feb 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Feb 2026 Recording</h3>
+      <p>Discussions include ADK evaluations with built-in metrics, token-based context compaction, the BigQuery observability plugin, and a community spotlight on Redis integration.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=h9Lueiqo89E" class="resource-card">
     <div class="card-image-wrapper">
       <img src="https://img.youtube.com/vi/h9Lueiqo89E/maxresdefault.jpg" alt="ADK Community Call Jan 2026">
@@ -43003,16 +43013,6 @@ Development Kit community.
       <div class="type">Community Call</div>
       <h3>📞 Dec 2025 Recording</h3>
       <p>Discussions include the ADK TypeScript launch, Gemini 3 Flash support, bidirectional streaming for voice agents, and the Visual Builder UI.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=bftUz-WBqyw" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/bftUz-WBqyw/maxresdefault.jpg" alt="ADK Community Call Nov 2025">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Nov 2025 Recording</h3>
-      <p>Discussions include the ADK Go launch, the reflect & retry plugin for error recovery, and time travel debugging for rewinding agent sessions.</p>
     </div>
   </a>
 
