@@ -1328,9 +1328,9 @@ search:
 ---
 # 세션
 
-Agents SDK는 여러 에이전트 실행에 걸쳐 대화 기록을 자동으로 유지하기 위한 내장 세션 메모리를 제공하므로, 턴 사이에 `.to_input_list()`를 수동으로 처리할 필요가 없습니다.
+Agents SDK 는 내장된 세션 메모리를 제공하여 여러 번의 에이전트 실행에 걸쳐 대화 기록을 자동으로 유지하므로, 턴 사이에 `.to_input_list()` 를 수동으로 처리할 필요가 없습니다.
 
-세션은 특정 세션의 대화 기록을 저장하여, 명시적인 수동 메모리 관리 없이도 에이전트가 컨텍스트를 유지할 수 있게 합니다. 이는 에이전트가 이전 상호작용을 기억하길 원하는 채팅 애플리케이션이나 멀티턴 대화를 구축할 때 특히 유용합니다.
+세션은 특정 세션의 대화 기록을 저장하여, 에이전트가 명시적인 수동 메모리 관리 없이도 컨텍스트를 유지할 수 있게 합니다. 이는 채팅 애플리케이션이나 멀티턴 대화를 구축할 때, 에이전트가 이전 상호작용을 기억하길 원하는 경우에 특히 유용합니다.
 
 ## 빠른 시작
 
@@ -1373,19 +1373,80 @@ print(result.final_output)  # "Approximately 39 million"
 
 ## 동작 방식
 
-세션 메모리가 활성화되면:
+세션 메모리가 활성화되어 있을 때:
 
-1. **각 실행 전**: 러너가 세션의 대화 기록을 자동으로 가져와 입력 아이템 앞에 추가합니다
+1. **각 실행 전**: 러너가 세션의 대화 기록을 자동으로 가져와 입력 아이템 앞에 덧붙입니다
 2. **각 실행 후**: 실행 중 생성된 모든 새 아이템(사용자 입력, 어시스턴트 응답, 도구 호출 등)이 자동으로 세션에 저장됩니다
-3. **컨텍스트 보존**: 동일한 세션으로 이후 실행을 할 때마다 전체 대화 기록이 포함되어, 에이전트가 컨텍스트를 유지할 수 있습니다
+3. **컨텍스트 보존**: 동일한 세션으로 이어지는 각 실행에는 전체 대화 기록이 포함되어, 에이전트가 컨텍스트를 유지할 수 있습니다
 
-이를 통해 `.to_input_list()`를 수동으로 호출하고 실행 사이의 대화 상태를 관리할 필요가 없어집니다.
+이로써 `.to_input_list()` 를 수동으로 호출하고 실행 간 대화 상태를 관리할 필요가 없어집니다.
+
+## 준비된 입력 커스터마이징
+
+세션을 전달하면, 러너는 보통 모델 입력을 다음과 같이 준비합니다:
+
+1. 세션 히스토리(`session.get_items(...)` 에서 가져옴)
+2. 새 턴 입력
+
+모델 호출 전에 해당 병합 단계를 커스터마이징하려면 [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] 을 사용하세요. 콜백은 두 개의 리스트를 받습니다:
+
+-   `history`: 가져온 세션 히스토리(이미 input-item 형식으로 정규화됨)
+-   `new_input`: 현재 턴의 새 입력 아이템
+
+모델에 보낼 최종 입력 아이템 리스트를 반환하세요.
+
+```python
+from agents import Agent, RunConfig, Runner, SQLiteSession
+
+
+def keep_recent_history(history, new_input):
+    # Keep only the last 10 history items, then append the new turn.
+    return history[-10:] + new_input
+
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Continue from the latest updates only.",
+    session=session,
+    run_config=RunConfig(session_input_callback=keep_recent_history),
+)
+```
+
+세션이 아이템을 저장하는 방식은 바꾸지 않으면서, 히스토리의 커스텀 프루닝(pruning), 재정렬, 선택적 포함이 필요할 때 사용하세요.
+
+## 가져오는 히스토리 제한
+
+각 실행 전에 가져올 히스토리 양을 제어하려면 [`SessionSettings`][agents.memory.SessionSettings] 를 사용하세요.
+
+-   `SessionSettings(limit=None)` (기본값): 사용 가능한 모든 세션 아이템을 가져옵니다
+-   `SessionSettings(limit=N)`: 가장 최근의 `N` 개 아이템만 가져옵니다
+
+실행별로 [`RunConfig.session_settings`][agents.run.RunConfig.session_settings] 를 통해 적용할 수 있습니다:
+
+```python
+from agents import Agent, RunConfig, Runner, SessionSettings, SQLiteSession
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Summarize our recent discussion.",
+    session=session,
+    run_config=RunConfig(session_settings=SessionSettings(limit=50)),
+)
+```
+
+세션 구현이 기본 세션 설정을 노출하는 경우, `RunConfig.session_settings` 는 해당 실행에서 `None` 이 아닌 값들을 오버라이드합니다. 이는 긴 대화에서, 세션의 기본 동작을 바꾸지 않으면서도 가져오기 크기에 상한을 두고 싶을 때 유용합니다.
 
 ## 메모리 작업
 
 ### 기본 작업
 
-세션은 대화 기록을 관리하기 위한 여러 작업을 지원합니다:
+세션은 대화 기록 관리를 위한 여러 작업을 지원합니다:
 
 ```python
 from agents import SQLiteSession
@@ -1412,7 +1473,7 @@ await session.clear_session()
 
 ### 수정 시 pop_item 사용
 
-`pop_item` 메서드는 대화에서 마지막 아이템을 되돌리거나 수정하려는 경우 특히 유용합니다:
+`pop_item` 메서드는 대화에서 마지막 아이템을 되돌리거나 수정하고 싶을 때 특히 유용합니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -1443,11 +1504,11 @@ print(f"Agent: {result.final_output}")
 
 ## 세션 유형
 
-SDK는 다양한 사용 사례를 위한 여러 세션 구현을 제공합니다:
+SDK 는 다양한 사용 사례를 위해 여러 세션 구현을 제공합니다:
 
 ### OpenAI Conversations API 세션
 
-`OpenAIConversationsSession`을 통해 [OpenAI의 Conversations API](https://platform.openai.com/docs/api-reference/conversations)를 사용합니다.
+`OpenAIConversationsSession` 을 통해 [OpenAI's Conversations API](https://platform.openai.com/docs/api-reference/conversations) 를 사용합니다.
 
 ```python
 from agents import Agent, Runner, OpenAIConversationsSession
@@ -1481,9 +1542,9 @@ result = await Runner.run(
 print(result.final_output)  # "California"
 ```
 
-### OpenAI Responses 압축 세션
+### OpenAI Responses compaction 세션
 
-`OpenAIResponsesCompactionSession`을 사용하면 Responses API(`responses.compact`)로 세션 기록을 압축할 수 있습니다. 이는 기본 세션을 감싸는 래퍼이며, `should_trigger_compaction`에 따라 각 턴 이후 자동으로 압축할 수 있습니다.
+`OpenAIResponsesCompactionSession` 을 사용하면 Responses API(`responses.compact`) 로 세션 히스토리를 압축(compact)할 수 있습니다. 이는 하위 세션을 래핑하며, `should_trigger_compaction` 에 따라 각 턴 후 자동으로 압축할 수 있습니다.
 
 #### 일반적인 사용(자동 압축)
 
@@ -1502,13 +1563,13 @@ result = await Runner.run(agent, "Hello", session=session)
 print(result.final_output)
 ```
 
-기본적으로 후보 임계값에 도달하면 각 턴 이후 압축이 실행됩니다.
+기본적으로 후보 임계값에 도달하면 각 턴 후 압축이 실행됩니다.
 
-#### 자동 압축은 스트리밍을 차단할 수 있음
+#### 자동 압축은 스트리밍을 블로킹할 수 있음
 
-압축은 세션 기록을 지우고 다시 쓰므로, SDK는 압축이 끝날 때까지 실행이 완료된 것으로 간주하지 않습니다. 스트리밍 모드에서는 압축이 무거운 경우 마지막 출력 토큰 이후에도 `run.stream_events()`가 몇 초 동안 열린 상태로 유지될 수 있습니다.
+압축은 세션 히스토리를 비우고 다시 쓰므로, SDK 는 실행이 완료되었다고 간주하기 전에 압축이 끝나길 기다립니다. 스트리밍 모드에서는 압축이 무거운 경우 마지막 출력 토큰 이후에도 `run.stream_events()` 가 몇 초 동안 열려 있을 수 있다는 뜻입니다.
 
-지연이 낮은 스트리밍이나 빠른 턴 전환이 필요하다면 자동 압축을 비활성화하고, 턴 사이(또는 유휴 시간)에 직접 `run_compaction()`을 호출하세요. 자체 기준에 따라 언제 압축을 강제할지 결정할 수 있습니다.
+낮은 지연의 스트리밍이나 빠른 턴 전환이 필요하다면 자동 압축을 비활성화하고, 턴 사이(또는 유휴 시간)에 직접 `run_compaction()` 을 호출하세요. 자체 기준에 따라 언제 압축을 강제할지 결정할 수 있습니다.
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -1531,7 +1592,7 @@ await session.run_compaction({"force": True})
 
 ### SQLite 세션
 
-SQLite를 사용하는 기본 경량 세션 구현입니다:
+SQLite 를 사용하는 기본 경량 세션 구현입니다:
 
 ```python
 from agents import SQLiteSession
@@ -1552,7 +1613,7 @@ result = await Runner.run(
 
 ### 비동기 SQLite 세션
 
-`aiosqlite` 기반의 SQLite 영속성이 필요하면 `AsyncSQLiteSession`을 사용하세요.
+`aiosqlite` 기반 SQLite 영속성이 필요할 때 `AsyncSQLiteSession` 을 사용하세요.
 
 ```bash
 pip install aiosqlite
@@ -1569,7 +1630,7 @@ result = await Runner.run(agent, "Hello", session=session)
 
 ### Redis 세션
 
-여러 워커 또는 서비스 간에 공유되는 세션 메모리가 필요하면 `RedisSession`을 사용하세요.
+여러 워커나 서비스에 걸쳐 공유되는 세션 메모리가 필요하면 `RedisSession` 을 사용하세요.
 
 ```bash
 pip install openai-agents[redis]
@@ -1589,7 +1650,7 @@ result = await Runner.run(agent, "Hello", session=session)
 
 ### SQLAlchemy 세션
 
-SQLAlchemy가 지원하는 어떤 데이터베이스든 사용할 수 있는 프로덕션 준비 세션입니다:
+SQLAlchemy 가 지원하는 어떤 데이터베이스든 사용할 수 있는 프로덕션 준비 세션입니다:
 
 ```python
 from agents.extensions.memory import SQLAlchemySession
@@ -1607,13 +1668,13 @@ engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
 session = SQLAlchemySession("user_123", engine=engine, create_tables=True)
 ```
 
-자세한 문서는 [SQLAlchemy Sessions](sqlalchemy_session.md)를 참고하세요.
+자세한 문서는 [SQLAlchemy Sessions](sqlalchemy_session.md) 를 참고하세요.
 
 
 
 ### 고급 SQLite 세션
 
-대화 분기, 사용량 분석, structured outputs 쿼리를 지원하는 강화된 SQLite 세션입니다:
+대화 브랜칭, 사용량 분석, structured queries 를 제공하는 강화된 SQLite 세션입니다:
 
 ```python
 from agents.extensions.memory import AdvancedSQLiteSession
@@ -1633,9 +1694,9 @@ await session.store_run_usage(result)  # Track token usage
 await session.create_branch_from_turn(2)  # Branch from turn 2
 ```
 
-자세한 문서는 [Advanced SQLite Sessions](advanced_sqlite_session.md)를 참고하세요.
+자세한 문서는 [Advanced SQLite Sessions](advanced_sqlite_session.md) 를 참고하세요.
 
-### 암호화된 세션
+### 암호화 세션
 
 어떤 세션 구현에도 적용 가능한 투명한 암호화 래퍼입니다:
 
@@ -1660,17 +1721,17 @@ session = EncryptedSession(
 result = await Runner.run(agent, "Hello", session=session)
 ```
 
-자세한 문서는 [Encrypted Sessions](encrypted_session.md)를 참고하세요.
+자세한 문서는 [Encrypted Sessions](encrypted_session.md) 를 참고하세요.
 
 ### 기타 세션 유형
 
-몇 가지 내장 옵션이 더 있습니다. `examples/memory/` 및 `extensions/memory/` 아래의 소스 코드를 참고하세요.
+몇 가지 내장 옵션이 더 있습니다. `examples/memory/` 와 `extensions/memory/` 아래의 소스 코드를 참고하세요.
 
 ## 세션 관리
 
-### 세션 ID 명명
+### 세션 ID 네이밍
 
-대화를 정리하는 데 도움이 되는 의미 있는 세션 ID를 사용하세요:
+대화를 정리하는 데 도움이 되는 의미 있는 세션 ID 를 사용하세요:
 
 -   사용자 기반: `"user_12345"`
 -   스레드 기반: `"thread_abc123"`
@@ -1678,15 +1739,15 @@ result = await Runner.run(agent, "Hello", session=session)
 
 ### 메모리 영속성
 
--   임시 대화에는 인메모리 SQLite(`SQLiteSession("session_id")`)를 사용하세요
--   영속 대화에는 파일 기반 SQLite(`SQLiteSession("session_id", "path/to/db.sqlite")`)를 사용하세요
--   `aiosqlite` 기반 구현이 필요하면 비동기 SQLite(`AsyncSQLiteSession("session_id", db_path="...")`)를 사용하세요
--   공유되고 지연이 낮은 세션 메모리가 필요하면 Redis 백엔드 세션(`RedisSession.from_url("session_id", url="redis://...")`)을 사용하세요
--   SQLAlchemy가 지원하는 기존 데이터베이스를 사용하는 프로덕션 시스템에는 SQLAlchemy 기반 세션(`SQLAlchemySession("session_id", engine=engine, create_tables=True)`)을 사용하세요
--   내장 텔레메트리, 트레이싱, 데이터 격리를 갖추고 30개 이상의 데이터베이스 백엔드를 지원하는 프로덕션 클라우드 네이티브 배포에는 Dapr 상태 저장소 세션(`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`)을 사용하세요
--   OpenAI Conversations API에 기록을 저장하고 싶다면 OpenAI 호스트하는 스토리지(`OpenAIConversationsSession()`)를 사용하세요
--   투명한 암호화 및 TTL 기반 만료로 어떤 세션이든 감싸려면 암호화된 세션(`EncryptedSession(session_id, underlying_session, encryption_key)`)을 사용하세요
--   더 고급 사용 사례를 위해 다른 프로덕션 시스템(예: Django)을 대상으로 커스텀 세션 백엔드 구현을 고려하세요
+-   임시 대화에는 인메모리 SQLite (`SQLiteSession("session_id")`) 를 사용하세요
+-   영속 대화에는 파일 기반 SQLite (`SQLiteSession("session_id", "path/to/db.sqlite")`) 를 사용하세요
+-   `aiosqlite` 기반 구현이 필요하면 비동기 SQLite (`AsyncSQLiteSession("session_id", db_path="...")`) 를 사용하세요
+-   공유되고 지연이 낮은 세션 메모리가 필요하면 Redis 기반 세션 (`RedisSession.from_url("session_id", url="redis://...")`) 을 사용하세요
+-   SQLAlchemy 가 지원하는 기존 데이터베이스를 사용하는 프로덕션 시스템에는 SQLAlchemy 기반 세션 (`SQLAlchemySession("session_id", engine=engine, create_tables=True)`) 을 사용하세요
+-   내장 텔레메트리, 트레이싱, 데이터 격리를 갖춘 30+ 데이터베이스 백엔드 지원이 필요한 프로덕션 클라우드 네이티브 배포에는 Dapr state store 세션 (`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`) 을 사용하세요
+-   히스토리를 OpenAI Conversations API 에 저장하고 싶다면 OpenAI 호스트하는 스토리지 (`OpenAIConversationsSession()`) 를 사용하세요
+-   투명한 암호화와 TTL 기반 만료를 위해 어떤 세션이든 래핑하려면 암호화 세션 (`EncryptedSession(session_id, underlying_session, encryption_key)`) 을 사용하세요
+-   더 고급 사용 사례를 위해 다른 프로덕션 시스템(예: Django) 용 커스텀 세션 백엔드 구현을 고려하세요
 
 ### 여러 세션
 
@@ -1847,11 +1908,11 @@ result = await Runner.run(
 
 | Package | Description |
 |---------|-------------|
-| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | Django가 지원하는 어떤 데이터베이스(PostgreSQL, MySQL, SQLite 등)에서도 사용할 수 있는 Django ORM 기반 세션 |
+| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | Django 가 지원하는 어떤 데이터베이스(PostgreSQL, MySQL, SQLite 등)에도 사용할 수 있는 Django ORM 기반 세션 |
 
-세션 구현을 만들었다면, 여기에 추가할 수 있도록 문서 PR을 제출해 주세요!
+세션 구현을 만들었다면, 여기에 추가할 수 있도록 문서 PR 을 제출해 주세요!
 
-## API 레퍼런스
+## API 참조
 
 자세한 API 문서는 다음을 참고하세요:
 
@@ -1860,10 +1921,10 @@ result = await Runner.run(
 -   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API 압축 래퍼
 -   [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 기본 SQLite 구현
 -   [`AsyncSQLiteSession`][agents.extensions.memory.async_sqlite_session.AsyncSQLiteSession] - `aiosqlite` 기반 비동기 SQLite 구현
--   [`RedisSession`][agents.extensions.memory.redis_session.RedisSession] - Redis 백엔드 세션 구현
+-   [`RedisSession`][agents.extensions.memory.redis_session.RedisSession] - Redis 기반 세션 구현
 -   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy 기반 구현
--   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 상태 저장소 구현
--   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 분기 및 분석 기능을 갖춘 강화된 SQLite
+-   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr state store 구현
+-   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 브랜칭과 분석을 포함한 강화된 SQLite
 -   [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 어떤 세션에도 적용 가능한 암호화 래퍼
 
 ================
@@ -4443,8 +4504,8 @@ search:
 [`Runner`][agents.run.Runner] 클래스를 통해 에이전트를 실행할 수 있습니다. 3가지 옵션이 있습니다:
 
 1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult]를 반환합니다
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며 내부적으로 `.run()`을 실행합니다
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]을 반환합니다. LLM을 스트리밍 모드로 호출하고, 수신되는 대로 해당 이벤트를 스트리밍합니다
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며 내부적으로 `.run()`을 실행하기만 합니다
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]를 반환합니다. 스트리밍 모드로 LLM을 호출하고, 수신되는 대로 해당 이벤트를 스트리밍으로 전달합니다
 
 ```python
 from agents import Agent, Runner
@@ -4463,60 +4524,118 @@ async def main():
 
 ## 에이전트 루프
 
-`Runner`에서 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주됨)일 수도 있고, OpenAI Responses API의 아이템들로 구성된 입력 아이템 리스트일 수도 있습니다.
+`Runner`에서 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주)일 수도 있고, OpenAI Responses API의 항목들로 구성된 입력 항목 리스트일 수도 있습니다.
 
-그다음 runner는 루프를 실행합니다:
+그런 다음 runner가 루프를 실행합니다:
 
 1. 현재 입력으로 현재 에이전트에 대해 LLM을 호출합니다
 2. LLM이 출력을 생성합니다
     1. LLM이 `final_output`을 반환하면 루프가 종료되고 결과를 반환합니다
-    2. LLM이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트하고 루프를 다시 실행합니다
-    3. LLM이 도구 호출을 생성하면 해당 도구 호출을 실행하고, 결과를 추가한 뒤 루프를 다시 실행합니다
+    2. LLM이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트한 뒤 루프를 다시 실행합니다
+    3. LLM이 도구 호출을 생성하면 해당 도구 호출을 실행하고 결과를 추가한 뒤 루프를 다시 실행합니다
 3. 전달된 `max_turns`를 초과하면 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 예외를 발생시킵니다
 
 !!! note
 
-    LLM 출력이 "최종 출력(final output)"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없어야 한다는 것입니다.
+    LLM 출력이 "최종 출력"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없는 경우입니다.
 
 ## 스트리밍
 
-스트리밍을 사용하면 LLM이 실행되는 동안 스트리밍 이벤트를 추가로 받을 수 있습니다. 스트림이 완료되면 [`RunResultStreaming`][agents.result.RunResultStreaming]에는 실행에 대한 완전한 정보(생성된 모든 신규 출력 포함)가 담깁니다. 스트리밍 이벤트는 `.stream_events()`를 호출해 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
+스트리밍을 사용하면 LLM이 실행되는 동안 스트리밍 이벤트를 추가로 받을 수 있습니다. 스트림이 끝나면 [`RunResultStreaming`][agents.result.RunResultStreaming]에는 생성된 모든 새 출력을 포함하여 실행에 대한 완전한 정보가 담깁니다. 스트리밍 이벤트는 `.stream_events()`를 호출해 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
 
-## 실행 구성
+## Run config
 
 `run_config` 매개변수로 에이전트 실행에 대한 일부 전역 설정을 구성할 수 있습니다:
 
--   [`model`][agents.run.RunConfig.model]: 각 Agent가 가진 `model`과 무관하게, 사용할 전역 LLM 모델을 설정할 수 있습니다
--   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름을 조회하기 위한 모델 프로바이더로, 기본값은 OpenAI입니다
--   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 덮어씁니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
--   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 히스토리를 가져올 때 세션 레벨 기본값(예: `SessionSettings(limit=...)`)을 덮어씁니다
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일 리스트입니다
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 이미 설정된 것이 없다면, 모든 핸드오프에 적용되는 전역 입력 필터입니다. 입력 필터를 사용하면 새 에이전트로 전송되는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 대화를 단일 assistant 메시지로 접어 넣는 옵트인 베타 기능입니다. 중첩 핸드오프를 안정화하는 동안 기본값은 비활성화되어 있으며, 활성화하려면 `True`로 설정하거나 원문(raw) 대화를 그대로 전달하려면 `False`로 두세요. [Runner 메서드][agents.run.Runner]는 `RunConfig`를 전달하지 않으면 자동으로 생성하므로, 퀵스타트와 examples는 기본값(비활성화)을 유지하며, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 덮어씁니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 덮어쓸 수 있습니다
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 대화 기록(히스토리 + 핸드오프 아이템)을 받는 선택적 callable입니다. 다음 에이전트로 전달할 입력 아이템의 정확한 리스트를 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [트레이싱](tracing.md)을 비활성화할 수 있습니다
--   [`tracing`][agents.run.RunConfig.tracing]: 이 실행의 exporter, 프로세서, 또는 트레이싱 메타데이터를 덮어쓰기 위해 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력 등 잠재적으로 민감한 데이터가 포함될지 여부를 구성합니다
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행의 트레이싱 workflow 이름, trace ID, trace group ID를 설정합니다. 최소한 `workflow_name`을 설정하는 것을 권장합니다. group ID는 여러 실행에 걸쳐 트레이스를 연결할 수 있게 해주는 선택적 필드입니다
+-   [`model`][agents.run.RunConfig.model]: 각 Agent가 가진 `model`과 무관하게 사용할 전역 LLM 모델을 설정할 수 있습니다
+-   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름 조회를 위한 모델 provider이며, 기본값은 OpenAI입니다
+-   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 재정의합니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
+-   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 히스토리를 가져올 때 세션 수준 기본값(예: `SessionSettings(limit=...)`)을 재정의합니다
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력/출력 가드레일 목록입니다
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 입력 필터가 이미 없는 경우, 모든 핸드오프에 적용할 전역 입력 필터입니다. 입력 필터를 통해 새 에이전트로 보내는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 대화 기록을 하나의 assistant 메시지로 접어 넣는 옵트인 베타 기능입니다. 중첩 핸드오프를 안정화하는 동안 기본적으로 비활성화되어 있으며, 활성화하려면 `True`로 설정하고 원문 대화 기록을 그대로 전달하려면 `False`로 두세요. 모든 [Runner 메서드][agents.run.Runner]는 `RunConfig`를 전달하지 않으면 자동으로 `RunConfig`를 생성하므로, 퀵스타트와 examples는 기본값(꺼짐)을 유지하며, 명시적으로 지정한 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속해서 이를 재정의합니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 재정의할 수 있습니다
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 대화 기록(히스토리 + 핸드오프 항목)을 받는 선택적 callable입니다. 다음 에이전트로 전달할 입력 항목의 정확한 리스트를 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [tracing](tracing.md)을 비활성화할 수 있습니다
+-   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 exporter, 프로세서, 또는 트레이싱 메타데이터를 재정의하기 위해 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력과 같은 잠재적으로 민감한 데이터가 포함될지 여부를 구성합니다
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행에 대한 트레이싱 워크플로 이름, 트레이스 ID, 트레이스 그룹 ID를 설정합니다. 최소한 `workflow_name`은 설정하는 것을 권장합니다. group ID는 여러 실행에 걸쳐 트레이스를 연결할 수 있는 선택적 필드입니다
 -   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터입니다
 -   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions를 사용할 때 각 턴 전에 새 사용자 입력이 세션 히스토리와 병합되는 방식을 커스터마이즈합니다
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 아이템)을 편집하기 위한 훅입니다. 예: 히스토리 트리밍 또는 시스템 프롬프트 주입
--   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 플로우에서 도구 호출이 거부될 때 모델에 보이는 메시지를 커스터마이즈합니다
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하기 위한 훅입니다. 예: 히스토리 트리밍 또는 시스템 프롬프트 주입
+-   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 플로우 중 도구 호출이 거부될 때 모델에 보이는 메시지를 커스터마이즈합니다
+-   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]: runner가 이전 출력을 다음 턴 모델 입력으로 변환할 때 reasoning 항목 ID를 유지할지 또는 생략할지 제어합니다
 
-중첩 핸드오프는 옵트인 베타로 제공됩니다. `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정해 대화 접기 동작을 활성화하세요. 원문(raw) 대화(기본값)를 유지하고 싶다면 플래그를 설정하지 않거나, 대화를 필요한 형태로 정확히 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하세요(기본값 복원은 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
+중첩 핸드오프는 옵트인 베타로 제공됩니다. `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정해 축약된 대화 기록 동작을 활성화할 수 있습니다. 원문 대화 기록(기본값)을 유지하고 싶다면 플래그를 설정하지 않거나, 원하는 방식 그대로 대화를 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하고(기본값으로 복원하려면 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]를 사용) 설정하세요.
+
+### Run config 상세
+
+#### `tool_error_formatter`
+
+`tool_error_formatter`를 사용하면 승인 플로우에서 도구 호출이 거부될 때 모델에 반환되는 메시지를 커스터마이즈할 수 있습니다.
+
+formatter는 다음을 포함한 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]를 받습니다:
+
+-   `kind`: 오류 카테고리입니다. 현재는 `"approval_rejected"`입니다
+-   `tool_type`: 도구 런타임입니다(`"function"`, `"computer"`, `"shell"`, 또는 `"apply_patch"`)
+-   `tool_name`: 도구 이름입니다
+-   `call_id`: 도구 호출 ID입니다
+-   `default_message`: SDK의 기본 모델 표시 메시지입니다
+-   `run_context`: 활성 실행 컨텍스트 래퍼입니다
+
+메시지를 대체할 문자열을 반환하거나, SDK 기본값을 사용하려면 `None`을 반환하세요.
+
+```python
+from agents import Agent, RunConfig, Runner, ToolErrorFormatterArgs
+
+
+def format_rejection(args: ToolErrorFormatterArgs[None]) -> str | None:
+    if args.kind == "approval_rejected":
+        return (
+            f"Tool call '{args.tool_name}' was rejected by a human reviewer. "
+            "Ask for confirmation or propose a safer alternative."
+        )
+    return None
+
+
+agent = Agent(name="Assistant")
+result = Runner.run_sync(
+    agent,
+    "Please delete the production database.",
+    run_config=RunConfig(tool_error_formatter=format_rejection),
+)
+```
+
+#### `reasoning_item_id_policy`
+
+`reasoning_item_id_policy`는 runner가 히스토리를 앞으로 전달할 때(예: `RunResult.to_input_list()`를 사용하거나 세션 기반 실행을 할 때) reasoning 항목이 다음 턴 모델 입력으로 변환되는 방식을 제어합니다.
+
+-   `None` 또는 `"preserve"`(기본값): reasoning 항목 ID를 유지합니다
+-   `"omit"`: 생성된 다음 턴 입력에서 reasoning 항목 ID를 제거합니다
+
+`"omit"`은 주로, reasoning 항목이 `id`와 함께 전송되었지만 필수로 뒤따라야 하는 항목이 없는 경우 발생하는 Responses API 400 오류(예: `Item 'rs_...' of type 'reasoning' was provided without its required following item.`) 계열에 대한 옵트인 완화책으로 사용하세요.
+
+이 문제는 SDK가 이전 출력으로부터 후속 입력을 구성할 때(세션 영속성, 서버 관리 대화 델타, 스트리밍/비스트리밍 후속 턴, resume 경로 포함) reasoning 항목 ID는 보존되었지만 provider가 해당 ID가 대응되는 다음 항목과 계속 페어로 남아 있기를 요구하는 경우, 멀티턴 에이전트 실행에서 발생할 수 있습니다.
+
+`reasoning_item_id_policy="omit"`을 설정하면 reasoning 내용은 유지하면서 reasoning 항목 `id`는 제거하므로, SDK가 생성한 후속 입력에서 해당 API 불변 조건을 트리거하는 것을 피할 수 있습니다.
+
+범위 관련 참고 사항:
+
+-   이는 SDK가 후속 입력을 구성할 때 생성/전달하는 reasoning 항목만 변경합니다
+-   사용자가 제공한 초기 입력 항목은 재작성하지 않습니다
+-   `call_model_input_filter`는 이 정책이 적용된 뒤에도 의도적으로 reasoning ID를 다시 도입할 수 있습니다
 
 ## 대화/채팅 스레드
 
-어떤 run 메서드를 호출하든 하나 이상의 에이전트가 실행될 수 있고(따라서 하나 이상의 LLM 호출이 발생), 이는 채팅 대화에서 하나의 논리적 턴을 나타냅니다. 예:
+어떤 run 메서드를 호출하더라도 하나 이상의 에이전트가 실행될 수 있으며(따라서 하나 이상의 LLM 호출이 발생), 이는 채팅 대화에서 하나의 논리적 턴을 나타냅니다. 예를 들어:
 
-1. 사용자 턴: 사용자가 텍스트 입력
-2. Runner 실행: 첫 번째 에이전트가 LLM을 호출하고 도구를 실행한 뒤 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 추가 도구를 실행하고 출력을 생성
+1. 사용자 턴: 사용자가 텍스트를 입력합니다
+2. Runner 실행: 첫 번째 에이전트가 LLM을 호출하고, 도구를 실행하고, 두 번째 에이전트로 핸드오프합니다. 두 번째 에이전트는 더 많은 도구를 실행한 뒤 출력을 생성합니다
 
-에이전트 실행이 끝난 후, 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 신규 아이템을 사용자에게 보여줄 수도 있고, 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자가 후속 질문을 할 수 있으며, 그 경우 run 메서드를 다시 호출하면 됩니다.
+에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트들이 생성한 모든 새 항목을 사용자에게 보여줄 수도 있고, 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자가 후속 질문을 할 수 있으며, 그 경우 run 메서드를 다시 호출할 수 있습니다.
 
 ### 수동 대화 관리
 
-[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴 입력을 얻는 방식으로 대화 히스토리를 수동으로 관리할 수 있습니다:
+[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드로 다음 턴의 입력을 가져와 대화 히스토리를 수동으로 관리할 수 있습니다:
 
 ```python
 async def main():
@@ -4536,9 +4655,9 @@ async def main():
         # California
 ```
 
-### Sessions를 통한 자동 대화 관리
+### Sessions로 자동 대화 관리
 
-더 간단한 접근으로, [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동으로 호출하지 않고도 대화 히스토리를 자동으로 처리할 수 있습니다:
+더 간단한 접근을 위해 [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동으로 호출하지 않고도 대화 히스토리를 자동으로 처리할 수 있습니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -4564,21 +4683,21 @@ async def main():
 
 Sessions는 자동으로 다음을 수행합니다:
 
--   각 실행 전에 대화 히스토리를 조회
--   각 실행 후 신규 메시지를 저장
--   서로 다른 세션 ID에 대해 별도의 대화를 유지
+-   각 실행 전에 대화 히스토리를 조회합니다
+-   각 실행 후 새 메시지를 저장합니다
+-   서로 다른 세션 ID에 대해 별도의 대화를 유지합니다
 
 !!! note
 
-    세션 영속성은 server-managed 대화 설정
+    세션 영속성은 서버 관리 대화 설정
     (`conversation_id`, `previous_response_id`, 또는 `auto_previous_response_id`)과
-    같은 실행에서 함께 사용할 수 없습니다. 호출당 한 가지 방식만 선택하세요.
+    동일한 실행에서 함께 사용할 수 없습니다. 호출마다 한 가지 접근을 선택하세요.
 
 자세한 내용은 [Sessions 문서](sessions/index.md)를 참고하세요.
 
 ### 서버 관리 대화
 
-또한 `to_input_list()` 또는 `Sessions`로 로컬에서 처리하는 대신, OpenAI의 conversation state 기능이 서버 측에서 대화 상태를 관리하도록 할 수 있습니다. 이를 통해 과거 메시지를 모두 수동으로 다시 전송하지 않고도 대화 히스토리를 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
+`to_input_list()` 또는 `Sessions`로 로컬에서 상태를 처리하는 대신, OpenAI conversation state 기능이 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이를 통해 과거 메시지를 모두 다시 전송하지 않고도 대화 히스토리를 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
 
 OpenAI는 턴 간 상태를 추적하는 두 가지 방법을 제공합니다:
 
@@ -4607,7 +4726,7 @@ async def main():
 
 #### 2. `previous_response_id` 사용
 
-또 다른 옵션은 **response chaining**으로, 각 턴이 이전 턴의 응답 ID에 명시적으로 연결됩니다.
+또 다른 옵션은 **response chaining**으로, 각 턴이 이전 턴의 response ID에 명시적으로 연결됩니다.
 
 ```python
 from agents import Agent, Runner
@@ -4632,9 +4751,20 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
+!!! note
+
+    SDK는 `conversation_locked` 오류를 백오프로 자동 재시도합니다. 서버 관리 대화 실행에서는
+    재시도 전에 내부 conversation-tracker 입력을 되감아, 동일하게 준비된 항목들을 깔끔하게
+    다시 보낼 수 있게 합니다.
+
+    로컬의 세션 기반 실행(`conversation_id`,
+    `previous_response_id`, 또는 `auto_previous_response_id`와 함께 사용할 수 없음)에서는
+    SDK가 재시도 후 중복 히스토리 항목을 줄이기 위해 최근에 영속화된 입력 항목을
+    최선의 노력으로 롤백합니다.
+
 ## Call model input filter
 
-`call_model_input_filter`를 사용해 모델 호출 직전에 모델 입력을 편집하세요. 이 훅은 현재 에이전트, 컨텍스트, 그리고 결합된 입력 아이템(세션 히스토리가 있는 경우 포함)을 받아 새로운 `ModelInputData`를 반환합니다.
+`call_model_input_filter`를 사용해 모델 호출 직전에 모델 입력을 편집할 수 있습니다. 이 훅은 현재 에이전트, 컨텍스트, 그리고 결합된 입력 항목(세션 히스토리가 있는 경우 이를 포함)을 받아 새 `ModelInputData`를 반환합니다.
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -4653,11 +4783,11 @@ result = Runner.run_sync(
 )
 ```
 
-민감 데이터 마스킹, 긴 히스토리 트리밍, 추가 시스템 가이던스 주입 등을 위해 `run_config`로 실행별 훅을 설정하거나 `Runner`의 기본값으로 설정하세요.
+`run_config`로 실행별로 훅을 설정하거나 `Runner`의 기본값으로 설정해, 민감한 데이터 마스킹, 긴 히스토리 트리밍, 추가 시스템 가이드 주입을 수행할 수 있습니다.
 
 ## 오류 핸들러
 
-모든 `Runner` 엔트리 포인트는 오류 종류를 키로 하는 dict인 `error_handlers`를 받습니다. 현재 지원되는 키는 `"max_turns"`입니다. `MaxTurnsExceeded`를 발생시키는 대신 통제된 최종 출력을 반환하고 싶을 때 사용하세요.
+모든 `Runner` 엔트리 포인트는 오류 종류로 키잉된 dict인 `error_handlers`를 받습니다. 현재 지원되는 키는 `"max_turns"`입니다. `MaxTurnsExceeded`를 발생시키는 대신 제어된 최종 출력을 반환하고 싶을 때 사용하세요.
 
 ```python
 from agents import (
@@ -4686,37 +4816,37 @@ result = Runner.run_sync(
 print(result.final_output)
 ```
 
-대체 출력이 대화 히스토리에 추가되지 않도록 하려면 `include_in_history=False`로 설정하세요.
+fallback 출력이 대화 히스토리에 추가되지 않길 원한다면 `include_in_history=False`로 설정하세요.
 
-## 장시간 실행 에이전트 & 휴먼인더루프
+## 장기 실행 에이전트 & Human in the loop
 
 도구 승인 일시정지/재개 패턴은 전용 [Human-in-the-loop 가이드](human_in_the_loop.md)를 참고하세요.
 
 ### Temporal
 
-Agents SDK의 [Temporal](https://temporal.io/) 통합을 사용하면, 휴먼인더루프 작업을 포함한 내구성 있는 장시간 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 장시간 작업을 완료하는 동작 데모는 [이 비디오](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, 문서는 [여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 볼 수 있습니다. 
+Agents SDK의 [Temporal](https://temporal.io/) 통합을 사용하면 휴먼인더루프 (HITL) 작업을 포함해 내구성 있는 장기 실행 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 동작해 장기 작업을 완료하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, [문서는 여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 볼 수 있습니다. 
 
 ### Restate
 
-Agents SDK의 [Restate](https://restate.dev/) 통합을 사용하면, 사람 승인, 핸드오프, 세션 관리를 포함한 경량의 내구성 있는 에이전트를 사용할 수 있습니다. 이 통합은 의존성으로 Restate의 단일 바이너리 런타임이 필요하며, 프로세스/컨테이너 또는 serverless 함수로 에이전트를 실행하는 것을 지원합니다.
-자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)를 읽거나 [문서](https://docs.restate.dev/ai)를 참고하세요.
+Agents SDK의 [Restate](https://restate.dev/) 통합을 사용하면 휴먼 승인, 핸드오프, 세션 관리 등을 포함한 경량의 내구성 있는 에이전트를 사용할 수 있습니다. 이 통합은 의존성으로 Restate의 단일 바이너리 런타임이 필요하며, 프로세스/컨테이너 또는 서버리스 함수로 에이전트를 실행하는 것을 지원합니다.
+자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)를 읽거나 [문서](https://docs.restate.dev/ai)를 확인하세요.
 
 ### DBOS
 
-Agents SDK의 [DBOS](https://dbos.dev/) 통합을 사용하면 장애 및 재시작 전반에 걸쳐 진행 상황을 보존하는 신뢰할 수 있는 에이전트를 실행할 수 있습니다. 장시간 실행 에이전트, 휴먼인더루프 워크플로, 핸드오프를 지원합니다. 동기 및 비동기 메서드 모두를 지원합니다. 이 통합에는 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents)와 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
+Agents SDK의 [DBOS](https://dbos.dev/) 통합을 사용하면 장애 및 재시작에 걸쳐 진행 상황을 보존하는 신뢰할 수 있는 에이전트를 실행할 수 있습니다. 장기 실행 에이전트, 휴먼인더루프 (HITL) 워크플로, 핸드오프를 지원합니다. 동기 및 비동기 메서드를 모두 지원합니다. 이 통합은 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents)와 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
 
 ## 예외
 
 SDK는 특정 경우에 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다:
 
--   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 베이스 클래스입니다. 다른 모든 구체적인 예외가 파생되는 일반 타입 역할을 합니다
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과하면 발생합니다. 지정된 상호작용 턴 수 내에 에이전트가 작업을 완료하지 못했음을 나타냅니다
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 않거나 유효하지 않은 출력을 생성할 때 발생합니다. 예:
-    -   잘못된 형식의 JSON: 모델이 도구 호출 또는 직접 출력에서 잘못된 JSON 구조를 제공하는 경우(특히 특정 `output_type`이 정의된 경우)
-    -   예상치 못한 도구 관련 실패: 모델이 기대된 방식으로 도구를 사용하지 못하는 경우
--   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]: 함수 도구 호출이 설정된 타임아웃을 초과하고 도구가 `timeout_behavior="raise_exception"`을 사용하는 경우 발생합니다
--   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK 사용 중 오류를 만들었을 때 발생합니다. 이는 보통 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API 오용에서 비롯됩니다
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족되면 발생합니다. 입력 가드레일은 처리 전 수신 메시지를 검사하고, 출력 가드레일은 전달 전 에이전트의 최종 응답을 검사합니다
+-   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 베이스 클래스입니다. 다른 모든 구체적인 예외가 파생되는 일반 타입으로 사용됩니다
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과할 때 발생합니다. 지정된 상호작용 턴 수 내에 에이전트가 작업을 완료할 수 없었음을 의미합니다
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예기치 않거나 유효하지 않은 출력을 생성할 때 발생합니다. 예를 들면 다음을 포함합니다:
+    -   잘못된 형식의 JSON: 모델이 도구 호출 또는 직접 출력에 대해 잘못된 JSON 구조를 제공하는 경우, 특히 특정 `output_type`이 정의된 경우
+    -   예기치 않은 도구 관련 실패: 모델이 예상된 방식으로 도구를 사용하지 못하는 경우
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]: 함수 도구 호출이 구성된 타임아웃을 초과하고 도구가 `timeout_behavior="raise_exception"`을 사용하는 경우 발생합니다
+-   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK를 사용하는 과정에서 오류를 냈을 때 발생합니다. 보통 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API의 오용에서 비롯됩니다
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족될 때 발생합니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 검사합니다
 
 ================
 File: docs/ko/streaming.md
@@ -8313,6 +8443,67 @@ When session memory is enabled:
 
 This eliminates the need to manually call `.to_input_list()` and manage conversation state between runs.
 
+## Customizing prepared input
+
+When you pass a session, the runner normally prepares model input as:
+
+1. Session history (retrieved from `session.get_items(...)`)
+2. New turn input
+
+Use [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] to customize that merge step before the model call. The callback receives two lists:
+
+-   `history`: The retrieved session history (already normalized into input-item format)
+-   `new_input`: The current turn's new input items
+
+Return the final list of input items that should be sent to the model.
+
+```python
+from agents import Agent, RunConfig, Runner, SQLiteSession
+
+
+def keep_recent_history(history, new_input):
+    # Keep only the last 10 history items, then append the new turn.
+    return history[-10:] + new_input
+
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Continue from the latest updates only.",
+    session=session,
+    run_config=RunConfig(session_input_callback=keep_recent_history),
+)
+```
+
+Use this when you need custom pruning, reordering, or selective inclusion of history without changing how the session stores items.
+
+## Limiting retrieved history
+
+Use [`SessionSettings`][agents.memory.SessionSettings] to control how much history is fetched before each run.
+
+-   `SessionSettings(limit=None)` (default): retrieve all available session items
+-   `SessionSettings(limit=N)`: retrieve only the most recent `N` items
+
+You can apply this per run via [`RunConfig.session_settings`][agents.run.RunConfig.session_settings]:
+
+```python
+from agents import Agent, RunConfig, Runner, SessionSettings, SQLiteSession
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Summarize our recent discussion.",
+    session=session,
+    run_config=RunConfig(session_settings=SessionSettings(limit=50)),
+)
+```
+
+If your session implementation exposes default session settings, `RunConfig.session_settings` overrides any non-`None` values for that run. This is useful for long conversations where you want to cap retrieval size without changing the session's default behavior.
+
 ## Memory operations
 
 ### Basic operations
@@ -10501,9 +10692,9 @@ search:
 ---
 # 会话
 
-Agents SDK 提供内置的会话记忆，可在多个智能体运行之间自动维护对话历史，无需在多轮之间手动处理 `.to_input_list()`。
+Agents SDK 提供内置的会话记忆，可在多次智能体运行之间自动维护对话历史，从而无需在各轮对话之间手动处理 `.to_input_list()`。
 
-会话会为特定会话存储对话历史，使智能体无需显式的手动记忆管理即可保持上下文。这对于构建聊天应用或多轮对话尤其有用，因为你希望智能体记住之前的交互。
+会话为特定会话存储对话历史，使智能体无需显式的手动记忆管理也能保持上下文。这对于构建聊天应用或多轮对话尤其有用，因为你希望智能体记住先前的交互。
 
 ## 快速开始
 
@@ -10548,15 +10739,76 @@ print(result.final_output)  # "Approximately 39 million"
 
 启用会话记忆后：
 
-1. **每次运行之前**：runner 会自动检索该会话的对话历史，并将其前置到输入项中。
-2. **每次运行之后**：运行期间生成的所有新项（用户输入、助手回复、工具调用等）会自动存储到会话中。
-3. **上下文保留**：后续使用同一会话的每次运行都会包含完整的对话历史，使智能体能够保持上下文。
+1. **每次运行前**：runner 会自动检索该会话的对话历史，并将其预置到输入项之前。
+2. **每次运行后**：运行期间生成的所有新项（用户输入、助手回复、工具调用等）都会自动存储到会话中。
+3. **上下文保留**：后续使用同一会话的每次运行都会包含完整对话历史，使智能体能够保持上下文。
 
-这消除了手动调用 `.to_input_list()` 并在多次运行之间管理对话状态的需求。
+这消除了在多次运行之间手动调用 `.to_input_list()` 并管理对话状态的需要。
+
+## 自定义已准备输入
+
+当你传入一个会话时，runner 通常会按以下方式准备模型输入：
+
+1. 会话历史（从 `session.get_items(...)` 获取）
+2. 新一轮输入
+
+使用 [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] 在模型调用前自定义该合并步骤。该回调接收两个列表：
+
+-   `history`：检索到的会话历史（已归一化为 input-item 格式）
+-   `new_input`：当前轮的新输入项
+
+返回应发送给模型的最终输入项列表。
+
+```python
+from agents import Agent, RunConfig, Runner, SQLiteSession
+
+
+def keep_recent_history(history, new_input):
+    # Keep only the last 10 history items, then append the new turn.
+    return history[-10:] + new_input
+
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Continue from the latest updates only.",
+    session=session,
+    run_config=RunConfig(session_input_callback=keep_recent_history),
+)
+```
+
+当你需要在不改变会话存储方式的前提下进行自定义裁剪、重排序或选择性包含历史时，使用此功能。
+
+## 限制检索的历史
+
+使用 [`SessionSettings`][agents.memory.SessionSettings] 控制每次运行前获取的历史量。
+
+-   `SessionSettings(limit=None)`（默认）：检索所有可用的会话项
+-   `SessionSettings(limit=N)`：只检索最近的 `N` 个项
+
+你可以通过 [`RunConfig.session_settings`][agents.run.RunConfig.session_settings] 在每次运行中应用：
+
+```python
+from agents import Agent, RunConfig, Runner, SessionSettings, SQLiteSession
+
+agent = Agent(name="Assistant")
+session = SQLiteSession("conversation_123")
+
+result = await Runner.run(
+    agent,
+    "Summarize our recent discussion.",
+    session=session,
+    run_config=RunConfig(session_settings=SessionSettings(limit=50)),
+)
+```
+
+如果你的会话实现暴露了默认会话设置，`RunConfig.session_settings` 会在该次运行中覆盖任何非 `None` 的值。这对于长对话很有用：你可以在不改变会话默认行为的情况下限制检索大小。
 
 ## 记忆操作
 
-### 基础操作
+### 基本操作
 
 会话支持多种用于管理对话历史的操作：
 
@@ -10616,7 +10868,7 @@ print(f"Agent: {result.final_output}")
 
 ## 会话类型
 
-SDK 针对不同用例提供了多种会话实现：
+SDK 为不同使用场景提供了多种会话实现：
 
 ### OpenAI Conversations API 会话
 
@@ -10656,7 +10908,7 @@ print(result.final_output)  # "California"
 
 ### OpenAI Responses 压缩会话
 
-使用 `OpenAIResponsesCompactionSession` 通过 Responses API（`responses.compact`）压缩会话历史。它会包装一个底层会话，并可根据 `should_trigger_compaction` 在每轮后自动压缩。
+使用 `OpenAIResponsesCompactionSession` 通过 Responses API（`responses.compact`）压缩会话历史。它会包装一个底层会话，并可基于 `should_trigger_compaction` 在每轮之后自动压缩。
 
 #### 典型用法（自动压缩）
 
@@ -10679,9 +10931,9 @@ print(result.final_output)
 
 #### 自动压缩可能阻塞流式传输
 
-压缩会清空并重写会话历史，因此 SDK 会等待压缩完成后才认为该次运行结束。在流式模式下，如果压缩较重，这意味着在最后一个输出 token 之后，`run.stream_events()` 可能还会保持打开几秒钟。
+压缩会清空并重写会话历史，因此 SDK 会等待压缩完成后才认为该次运行结束。在流式模式下，这意味着如果压缩很重，`run.stream_events()` 可能会在最后一个输出 token 之后仍保持打开几秒。
 
-如果你希望低延迟流式传输或更快的轮次切换，请禁用自动压缩，并在多轮之间（或空闲时）自行调用 `run_compaction()`。你可以根据自己的标准决定何时强制压缩。
+如果你希望低延迟流式输出或快速轮转，请禁用自动压缩，并在各轮之间（或空闲时间）自行调用 `run_compaction()`。你可以根据自己的标准决定何时强制压缩。
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -10725,7 +10977,7 @@ result = await Runner.run(
 
 ### 异步 SQLite 会话
 
-当你希望使用由 `aiosqlite` 支持的 SQLite 持久化时，请使用 `AsyncSQLiteSession`。
+当你希望使用 `aiosqlite` 提供的 SQLite 持久化时，使用 `AsyncSQLiteSession`。
 
 ```bash
 pip install aiosqlite
@@ -10762,7 +11014,7 @@ result = await Runner.run(agent, "Hello", session=session)
 
 ### SQLAlchemy 会话
 
-面向生产的会话实现，可使用任何 SQLAlchemy 支持的数据库：
+面向生产环境的会话，可使用任何 SQLAlchemy 支持的数据库：
 
 ```python
 from agents.extensions.memory import SQLAlchemySession
@@ -10780,13 +11032,13 @@ engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
 session = SQLAlchemySession("user_123", engine=engine, create_tables=True)
 ```
 
-详见 [SQLAlchemy Sessions](sqlalchemy_session.md) 文档。
+详细文档请参见 [SQLAlchemy Sessions](sqlalchemy_session.md)。
 
 
 
 ### 高级 SQLite 会话
 
-增强版 SQLite 会话，支持对话分支、用量分析以及结构化查询：
+增强版 SQLite 会话，支持对话分支、用量分析和结构化查询：
 
 ```python
 from agents.extensions.memory import AdvancedSQLiteSession
@@ -10806,11 +11058,11 @@ await session.store_run_usage(result)  # Track token usage
 await session.create_branch_from_turn(2)  # Branch from turn 2
 ```
 
-详见 [Advanced SQLite Sessions](advanced_sqlite_session.md) 文档。
+详细文档请参见 [Advanced SQLite Sessions](advanced_sqlite_session.md)。
 
 ### 加密会话
 
-适用于任何会话实现的透明加密封装：
+适用于任何会话实现的透明加密包装器：
 
 ```python
 from agents.extensions.memory import EncryptedSession, SQLAlchemySession
@@ -10833,7 +11085,7 @@ session = EncryptedSession(
 result = await Runner.run(agent, "Hello", session=session)
 ```
 
-详见 [Encrypted Sessions](encrypted_session.md) 文档。
+详细文档请参见 [Encrypted Sessions](encrypted_session.md)。
 
 ### 其他会话类型
 
@@ -10852,14 +11104,14 @@ result = await Runner.run(agent, "Hello", session=session)
 ### 记忆持久化
 
 -   使用内存 SQLite（`SQLiteSession("session_id")`）用于临时对话
--   使用文件 SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）用于持久化对话
--   当你需要基于 `aiosqlite` 的实现时，使用异步 SQLite（`AsyncSQLiteSession("session_id", db_path="...")`）
--   使用 Redis 支撑的会话（`RedisSession.from_url("session_id", url="redis://...")`）实现共享、低延迟的会话记忆
--   使用由 SQLAlchemy 驱动的会话（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）用于生产系统，并复用 SQLAlchemy 支持的现有数据库
--   使用 Dapr 状态存储会话（`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`）用于生产级云原生部署，支持 30+ 数据库后端，并内置可观测性、追踪和数据隔离
--   当你倾向于将历史存储在 OpenAI Conversations API 中时，使用由OpenAI托管的存储（`OpenAIConversationsSession()`）
--   使用加密会话（`EncryptedSession(session_id, underlying_session, encryption_key)`）以透明加密与基于 TTL 的过期能力封装任意会话
--   对于更高级的用例，可考虑为其他生产系统（例如 Django）实现自定义会话后端
+-   使用基于文件的 SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）用于持久化对话
+-   需要基于 `aiosqlite` 的实现时使用异步 SQLite（`AsyncSQLiteSession("session_id", db_path="...")`）
+-   使用 Redis 支撑的会话（`RedisSession.from_url("session_id", url="redis://...")`）用于共享、低延迟的会话记忆
+-   生产系统中若已有 SQLAlchemy 支持的数据库，使用 SQLAlchemy 驱动的会话（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）
+-   生产云原生部署中，使用 Dapr 状态存储会话（`DaprSession.from_address("session_id", state_store_name="statestore", dapr_address="localhost:50001")`），支持 30+ 数据库后端，并内置遥测、追踪和数据隔离
+-   若你更偏好将历史存储在 OpenAI Conversations API 中，使用由OpenAI托管的存储（`OpenAIConversationsSession()`）
+-   使用加密会话（`EncryptedSession(session_id, underlying_session, encryption_key)`）为任意会话添加透明加密与基于 TTL 的过期
+-   对于更高级的使用场景，可考虑为其他生产系统（例如 Django）实现自定义会话后端
 
 ### 多个会话
 
@@ -11018,26 +11270,26 @@ result = await Runner.run(
 
 社区开发了额外的会话实现：
 
-| Package | Description |
+| 包 | 描述 |
 |---------|-------------|
-| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | 基于 Django ORM 的会话实现，适用于任何 Django 支持的数据库（PostgreSQL、MySQL、SQLite 等） |
+| [openai-django-sessions](https://pypi.org/project/openai-django-sessions/) | 基于 Django ORM 的会话，适用于任何 Django 支持的数据库（PostgreSQL、MySQL、SQLite 等） |
 
-如果你构建了一个会话实现，欢迎提交文档 PR，将其添加到这里！
+如果你构建了一个会话实现，欢迎提交文档 PR 将其添加到这里！
 
 ## API 参考
 
-如需详细的 API 文档，请参阅：
+详细的 API 文档请参见：
 
 -   [`Session`][agents.memory.session.Session] - 协议接口
 -   [`OpenAIConversationsSession`][agents.memory.OpenAIConversationsSession] - OpenAI Conversations API 实现
--   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API 压缩封装
+-   [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] - Responses API 压缩包装器
 -   [`SQLiteSession`][agents.memory.sqlite_session.SQLiteSession] - 基础 SQLite 实现
 -   [`AsyncSQLiteSession`][agents.extensions.memory.async_sqlite_session.AsyncSQLiteSession] - 基于 `aiosqlite` 的异步 SQLite 实现
 -   [`RedisSession`][agents.extensions.memory.redis_session.RedisSession] - 基于 Redis 的会话实现
--   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 由 SQLAlchemy 驱动的实现
+-   [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 基于 SQLAlchemy 的实现
 -   [`DaprSession`][agents.extensions.memory.dapr_session.DaprSession] - Dapr 状态存储实现
--   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 带分支与分析能力的增强 SQLite
--   [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 适用于任意会话的加密封装器
+-   [`AdvancedSQLiteSession`][agents.extensions.memory.advanced_sqlite_session.AdvancedSQLiteSession] - 支持分支与分析的增强 SQLite
+-   [`EncryptedSession`][agents.extensions.memory.encrypt_session.EncryptedSession] - 适用于任何会话的加密包装器
 
 ================
 File: docs/zh/sessions/sqlalchemy_session.md
@@ -13613,11 +13865,11 @@ search:
 ---
 # 运行智能体
 
-你可以通过 [`Runner`][agents.run.Runner] 类来运行智能体。你有 3 个选项：
+你可以通过 [`Runner`][agents.run.Runner] 类运行智能体。你有 3 种选择：
 
-1. [`Runner.run()`][agents.run.Runner.run]：异步运行并返回一个 [`RunResult`][agents.result.RunResult]。
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，底层只是运行 `.run()`。
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：异步运行并返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并在收到事件时将其流式传递给你。
+1. [`Runner.run()`][agents.run.Runner.run]：以异步方式运行，并返回 [`RunResult`][agents.result.RunResult]。
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，内部只是运行 `.run()`。
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：以异步方式运行，并返回 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并在事件接收时将这些事件流式传递给你。
 
 ```python
 from agents import Agent, Runner
@@ -13632,64 +13884,122 @@ async def main():
     # Infinite loop's dance
 ```
 
-在[结果指南](results.md)中了解更多。
+在 [results guide](results.md) 中了解更多。
 
 ## 智能体循环
 
-当你在 `Runner` 中使用 run 方法时，你会传入一个起始智能体和输入。输入可以是字符串（会被视为一条用户消息），也可以是输入项列表，这些输入项对应 OpenAI Responses API 中的 item。
+当你在 `Runner` 中使用 run 方法时，需要传入一个起始智能体和输入。输入可以是字符串（会被视为一条用户消息），也可以是输入条目的列表，这些条目对应 OpenAI Responses API 中的 items。
 
-随后 runner 会运行一个循环：
+然后 runner 会运行一个循环：
 
-1. 我们针对当前智能体、使用当前输入调用 LLM。
+1. 我们使用当前输入为当前智能体调用 LLM。
 2. LLM 生成输出。
     1. 如果 LLM 返回 `final_output`，循环结束并返回结果。
-    2. 如果 LLM 执行任务转移，我们更新当前智能体和输入，并重新运行循环。
-    3. 如果 LLM 生成工具调用，我们执行这些工具调用，追加结果，然后重新运行循环。
-3. 如果超过传入的 `max_turns`，我们抛出 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 异常。
+    2. 如果 LLM 执行任务转移，我们更新当前智能体和输入，然后重新运行循环。
+    3. 如果 LLM 生成工具调用，我们运行这些工具调用，追加结果，然后重新运行循环。
+3. 如果超过传入的 `max_turns`，我们会抛出 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 异常。
 
 !!! note
 
-    判断 LLM 输出是否被视为“最终输出”的规则是：它生成了具有期望类型的文本输出，并且没有任何工具调用。
+    判断 LLM 输出是否被视为“最终输出”的规则是：它生成了具有目标类型的文本输出，并且没有任何工具调用。
 
 ## 流式传输
 
-流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括生成的所有新输出。你可以调用 `.stream_events()` 来获取流式事件。更多内容请参阅[流式传输指南](streaming.md)。
+流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括生成的所有新输出。你可以调用 `.stream_events()` 获取流式事件。在 [streaming guide](streaming.md) 中了解更多。
 
 ## 运行配置
 
-`run_config` 参数允许你为智能体运行配置一些全局设置：
+`run_config` 参数让你为智能体运行配置一些全局设置：
 
--   [`model`][agents.run.RunConfig.model]：允许设置一个全局要使用的 LLM 模型，而不受每个 Agent 上 `model` 的影响。
+-   [`model`][agents.run.RunConfig.model]：允许设置一个全局要使用的 LLM 模型，而不管每个 Agent 上的 `model` 是什么。
 -   [`model_provider`][agents.run.RunConfig.model_provider]：用于查找模型名称的模型提供方，默认为 OpenAI。
 -   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体级别的设置。例如，你可以设置全局 `temperature` 或 `top_p`。
--   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史记录时，覆盖会话级默认值（例如 `SessionSettings(limit=...)`）。
+-   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史时，覆盖会话级默认值（例如 `SessionSettings(limit=...)`）。
 -   [`input_guardrails`][agents.run.RunConfig.input_guardrails]、[`output_guardrails`][agents.run.RunConfig.output_guardrails]：要在所有运行中包含的输入或输出安全防护措施列表。
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（如果任务转移本身尚未配置）。输入过滤器允许你编辑发送给新智能体的输入。更多细节见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 的文档。
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选加入的 beta 功能：在调用下一个智能体之前，将之前的对话记录折叠为单条 assistant 消息。我们在稳定嵌套任务转移期间默认禁用；设为 `True` 启用，或保留 `False` 以透传原始对话记录。当你未传入时，所有 [Runner 方法][agents.run.Runner]都会自动创建一个 `RunConfig`，因此快速入门与示例会保持默认关闭；任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选 callable；当你选择加入 `nest_handoff_history` 时，它会在每次将规范化后的对话记录（history + handoff items）传入。它必须返回要转发给下一个智能体的、完全一致的输入项列表，从而允许你在不编写完整任务转移过滤器的情况下替换内置摘要。
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许你为整个运行禁用[追踪](tracing.md)。
--   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig] 以覆盖本次运行的 exporter、processor 或追踪元数据。
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪中是否包含潜在敏感数据，例如 LLM 与工具调用的输入/输出。
--   [`workflow_name`][agents.run.RunConfig.workflow_name]、[`trace_id`][agents.run.RunConfig.trace_id]、[`group_id`][agents.run.RunConfig.group_id]：为本次运行设置追踪工作流名称、trace ID 和 trace group ID。我们建议至少设置 `workflow_name`。group ID 是可选字段，可用于跨多次运行关联追踪。
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有追踪中的元数据。
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义在每个 turn 前如何将新的用户输入与会话历史合并。
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：用于在模型调用前立即编辑已完全准备好的模型输入（instructions 和输入项）的 hook，例如裁剪历史或注入系统提示词。
--   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]：在审批流程中工具调用被拒绝时，自定义模型可见的消息。
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：要应用到所有任务转移的全局输入过滤器（如果任务转移本身没有指定）。输入过滤器允许你编辑发送给新智能体的输入。更多详情请参见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 中的文档。
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选的 beta 功能，会在调用下一个智能体之前，将之前的对话记录折叠为一条 assistant 消息。我们在稳定嵌套任务转移期间默认禁用它；设置为 `True` 启用，或保持 `False` 以传递原始对话记录。所有 [Runner methods][agents.run.Runner] 在你不传入时都会自动创建一个 `RunConfig`，因此 quickstarts 和示例会保持默认关闭；任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移也可以通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：当你选择启用 `nest_handoff_history` 时，每次都会接收归一化的对话记录（history + handoff items）的可选可调用对象。它必须返回要转发给下一个智能体的输入条目列表，从而让你无需编写完整的任务转移过滤器即可替换内置摘要。
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许为整个运行禁用 [tracing](tracing.md)。
+-   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig]，为本次运行覆盖导出器、进程或追踪元数据。
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪是否包含潜在敏感数据，例如 LLM 和工具调用的输入/输出。
+-   [`workflow_name`][agents.run.RunConfig.workflow_name]、[`trace_id`][agents.run.RunConfig.trace_id]、[`group_id`][agents.run.RunConfig.group_id]：设置本次运行的追踪工作流名称、trace ID 和 trace group ID。我们建议至少设置 `workflow_name`。group ID 是一个可选字段，可让你跨多次运行关联 traces。
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有 traces 上的元数据。
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义每个回合之前如何将新的用户输入与会话历史合并。
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：在模型调用前立刻编辑已完全准备好的模型输入（instructions 和输入条目）的钩子，例如裁剪历史或注入系统提示词。
+-   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]：在审批流程中工具调用被拒绝时，自定义对模型可见的消息。
+-   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]：控制 runner 将先前输出转换为下一回合模型输入时，是否保留或省略 reasoning 条目 ID。
 
-嵌套任务转移以可选加入的 beta 形式提供。可通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠对话记录行为，或设置 `handoff(..., nest_handoff_history=True)` 以仅对特定任务转移启用。如果你希望保留原始对话记录（默认行为），保持该标志不设置，或提供一个会按需精确转发对话的 `handoff_input_filter`（或 `handoff_history_mapper`）。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包裹文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并使用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
+嵌套任务转移以可选 beta 形式提供。通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠对话记录的行为，或在特定任务转移上设置 `handoff(..., nest_handoff_history=True)` 来开启。如果你更希望保留原始对话记录（默认行为），请不要设置该标志，或提供一个 `handoff_input_filter`（或 `handoff_history_mapper`）来按你的需要原样转发对话。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包装文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并可通过 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
 
-## 对话/聊天线程
+### 运行配置详情
 
-调用任意 run 方法都可能导致一个或多个智能体运行（因此也可能有一次或多次 LLM 调用），但它代表聊天对话中的一次逻辑 turn。例如：
+#### `tool_error_formatter`
 
-1. 用户 turn：用户输入文本
-2. Runner 运行：第一个智能体调用 LLM、运行工具、任务转移到第二个智能体；第二个智能体运行更多工具，然后生成输出。
+使用 `tool_error_formatter` 来自定义在审批流程中工具调用被拒绝时返回给模型的消息。
 
-在智能体运行结束时，你可以选择向用户展示什么内容。例如，你可以向用户展示智能体生成的每个新 item，或只展示最终输出。无论哪种方式，用户随后都可能提出追问，此时你可以再次调用 run 方法。
+formatter 会接收 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]，包含：
 
-### 手动对话管理
+-   `kind`：错误目录。当前为 `"approval_rejected"`。
+-   `tool_type`：工具运行时（`"function"`、`"computer"`、`"shell"` 或 `"apply_patch"`）。
+-   `tool_name`：工具名称。
+-   `call_id`：工具调用 ID。
+-   `default_message`：SDK 默认的对模型可见消息。
+-   `run_context`：当前运行上下文包装器。
 
-你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 方法手动管理对话历史，以获取下一轮的输入：
+返回一个字符串以替换该消息，或返回 `None` 以使用 SDK 默认值。
+
+```python
+from agents import Agent, RunConfig, Runner, ToolErrorFormatterArgs
+
+
+def format_rejection(args: ToolErrorFormatterArgs[None]) -> str | None:
+    if args.kind == "approval_rejected":
+        return (
+            f"Tool call '{args.tool_name}' was rejected by a human reviewer. "
+            "Ask for confirmation or propose a safer alternative."
+        )
+    return None
+
+
+agent = Agent(name="Assistant")
+result = Runner.run_sync(
+    agent,
+    "Please delete the production database.",
+    run_config=RunConfig(tool_error_formatter=format_rejection),
+)
+```
+
+#### `reasoning_item_id_policy`
+
+当 runner 继续沿用历史并将 reasoning 条目转换为下一回合模型输入时，`reasoning_item_id_policy` 用于控制转换方式（例如使用 `RunResult.to_input_list()` 或基于会话的运行时）。
+
+-   `None` 或 `"preserve"`（默认）：保留 reasoning 条目 ID。
+-   `"omit"`：从生成的下一回合输入中移除 reasoning 条目 ID。
+
+使用 `"omit"` 主要是作为可选的缓解措施，针对一类 Responses API 400 错误：发送了带 `id` 的 reasoning 条目，但缺少其必需的后续条目（例如 `Item 'rs_...' of type 'reasoning' was provided without its required following item.`）。
+
+这可能发生在多回合智能体运行中：当 SDK 从先前输出构造后续输入（包括会话持久化、服务端管理的对话增量、流式/非流式的后续回合以及恢复路径）时，如果保留了 reasoning 条目 ID，但提供方要求该 ID 必须与其对应的后续条目保持配对，就会触发此问题。
+
+设置 `reasoning_item_id_policy="omit"` 会保留 reasoning 内容，但移除 reasoning 条目的 `id`，从而避免在 SDK 生成的后续输入中触发该 API 不变量约束。
+
+作用域说明：
+
+-   这只会改变 SDK 在构建后续输入时生成/转发的 reasoning 条目。
+-   不会重写用户提供的初始输入条目。
+-   `call_model_input_filter` 仍然可以在该策略应用后有意重新引入 reasoning IDs。
+
+## 会话/聊天线程
+
+调用任意 run 方法都可能导致一个或多个智能体运行（因此也可能有一次或多次 LLM 调用），但它代表聊天对话中的一个逻辑回合。例如：
+
+1. 用户回合：用户输入文本
+2. Runner 运行：第一个智能体调用 LLM、运行工具、任务转移到第二个智能体，第二个智能体运行更多工具，然后生成输出。
+
+在智能体运行结束时，你可以选择向用户展示什么。例如，你可以向用户展示智能体生成的每一个新条目，或只展示最终输出。无论哪种方式，用户之后可能会提出后续问题，此时你可以再次调用 run 方法。
+
+### 手动会话管理
+
+你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 方法获取下一回合的输入，从而手动管理对话历史：
 
 ```python
 async def main():
@@ -13709,9 +14019,9 @@ async def main():
         # California
 ```
 
-### 使用 Sessions 的自动对话管理
+### 使用 Sessions 的自动会话管理
 
-如果希望更简单，你可以使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
+如需更简单的方法，你可以使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -13739,24 +14049,25 @@ Sessions 会自动：
 
 -   在每次运行前检索对话历史
 -   在每次运行后存储新消息
--   为不同的 session ID 维护彼此独立的对话
+-   为不同的 session ID 维护相互独立的对话
 
 !!! note
 
-    会话持久化不能与服务端管理的对话设置
-    （`conversation_id`、`previous_response_id` 或 `auto_previous_response_id`）在同一次运行中同时使用。每次调用请选择一种方式。
+    会话持久化不能与服务端管理的会话设置
+    （`conversation_id`、`previous_response_id` 或 `auto_previous_response_id`）
+    在同一次运行中同时使用。每次调用只能选择一种方式。
 
-更多细节请参阅 [Sessions 文档](sessions/index.md)。
+更多详情请参见 [Sessions documentation](sessions/index.md)。
 
-### 服务端管理的对话
+### 服务端管理的会话
 
-你也可以让 OpenAI 的对话状态功能在服务端管理对话状态，而不是在本地通过 `to_input_list()` 或 `Sessions` 来处理。这允许你在不手动重发所有历史消息的情况下保留对话历史。更多细节请参阅 [OpenAI Conversation state guide](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
+你也可以让 OpenAI 的 conversation state 功能在服务端管理会话状态，而不是在本地使用 `to_input_list()` 或 `Sessions` 来处理。这使你可以在不手动重新发送所有历史消息的情况下保留对话历史。更多详情请参见 [OpenAI Conversation state guide](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
 
-OpenAI 提供两种方式来跨 turn 跟踪状态：
+OpenAI 提供两种方式在回合之间跟踪状态：
 
 #### 1. 使用 `conversation_id`
 
-你先使用 OpenAI Conversations API 创建一个对话，然后在后续每次调用中复用其 ID：
+你先通过 OpenAI Conversations API 创建一个会话，然后在后续每次调用中复用该 ID：
 
 ```python
 from agents import Agent, Runner
@@ -13779,7 +14090,7 @@ async def main():
 
 #### 2. 使用 `previous_response_id`
 
-另一种方式是**响应链式调用**（response chaining），其中每一轮都会显式链接到上一轮的响应 ID。
+另一种选择是 **响应链式连接**（response chaining），即每个回合显式链接到上一回合的 response ID。
 
 ```python
 from agents import Agent, Runner
@@ -13804,9 +14115,19 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
-## 模型调用输入过滤器
+!!! note
 
-使用 `call_model_input_filter` 在模型调用前编辑模型输入。该 hook 接收当前智能体、上下文，以及合并后的输入项（若存在会话历史则包含在内），并返回新的 `ModelInputData`。
+    SDK 会自动对 `conversation_locked` 错误进行带退避的重试。在服务端管理的
+    会话运行中，它会在重试前回退内部的对话跟踪器输入，从而可以干净地重新发送
+    同一组已准备好的条目。
+
+    在基于本地会话的运行中（不能与 `conversation_id`、
+    `previous_response_id` 或 `auto_previous_response_id` 组合使用），SDK 也会尽力
+    回滚最近持久化的输入条目，以减少重试后重复的历史记录条目。
+
+## Call model input filter
+
+使用 `call_model_input_filter` 在模型调用前对模型输入进行编辑。该钩子会接收当前智能体、上下文以及合并后的输入条目（如果存在则包含会话历史），并返回新的 `ModelInputData`。
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -13825,11 +14146,11 @@ result = Runner.run_sync(
 )
 ```
 
-你可以通过 `run_config` 为每次运行设置该 hook，或将其设为 `Runner` 的默认值，用于脱敏敏感数据、裁剪过长历史，或注入额外的系统指导。
+你可以通过 `run_config` 为每次运行设置该钩子，或在 `Runner` 上将其设为默认值，以便脱敏敏感数据、裁剪过长历史或注入额外的系统指导。
 
 ## 错误处理器
 
-所有 `Runner` 入口点都接受 `error_handlers`，这是一个以错误类型为键的 dict。目前支持的键是 `"max_turns"`。当你希望返回可控的最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
+所有 `Runner` 入口点都接受 `error_handlers`，这是一个按错误类型（kind）作为键的 dict。当前支持的键是 `"max_turns"`。当你希望返回一个可控的最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
 
 ```python
 from agents import (
@@ -13858,37 +14179,37 @@ result = Runner.run_sync(
 print(result.final_output)
 ```
 
-当你不希望将回退输出追加到对话历史时，将 `include_in_history=False`。
+当你不希望将回退输出追加到对话历史时，设置 `include_in_history=False`。
 
-## 长时间运行的智能体与人类介入（human-in-the-loop）
+## 长时间运行的智能体与 human-in-the-loop
 
-关于工具审批的暂停/恢复模式，请参阅专门的[人类介入指南](human_in_the_loop.md)。
+关于工具审批的暂停/恢复模式，请参见专门的 [Human-in-the-loop guide](human_in_the_loop.md)。
 
 ### Temporal
 
-你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行可持久化、长时间运行的工作流，包括人类介入任务。查看 Temporal 与 Agents SDK 协同完成长时间运行任务的演示[视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并[在此查看文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。 
+你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行持久、长时间运行的工作流，包括 human-in-the-loop 任务。观看 Temporal 与 Agents SDK 协同完成长时间任务的演示视频请见 [in this video](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并在 [view docs here](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents) 查看文档。 
 
 ### Restate
 
-你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量且可持久化的智能体，包括人工审批、任务转移与会话管理。该集成依赖 Restate 的单二进制运行时，支持将智能体作为进程/容器或无服务器函数运行。
-阅读[概览](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)或查看[文档](https://docs.restate.dev/ai)以了解更多细节。
+你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量且持久的智能体，包括人工审批、任务转移和会话管理。该集成依赖 Restate 的单二进制运行时，并支持将智能体作为进程/容器或无服务器函数运行。
+更多详情请阅读 [overview](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk) 或查看 [docs](https://docs.restate.dev/ai)。
 
 ### DBOS
 
-你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠的智能体，在故障与重启之间保留进度。它支持长时间运行的智能体、人类介入工作流以及任务转移，并同时支持同步与异步方法。该集成仅需要 SQLite 或 Postgres 数据库。查看集成的 [repo](https://github.com/dbos-inc/dbos-openai-agents) 与[文档](https://docs.dbos.dev/integrations/openai-agents)以了解更多细节。
+你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠的智能体，在故障和重启后仍可保留进度。它支持长时间运行的智能体、human-in-the-loop 工作流以及任务转移。它同时支持同步与异步方法。该集成只需要 SQLite 或 Postgres 数据库。更多详情请查看该集成的 [repo](https://github.com/dbos-inc/dbos-openai-agents) 和 [docs](https://docs.dbos.dev/integrations/openai-agents)。
 
 ## 异常
 
 SDK 会在某些情况下抛出异常。完整列表见 [`agents.exceptions`][]. 概览如下：
 
--   [`AgentsException`][agents.exceptions.AgentsException]：SDK 内部抛出的所有异常的基类。它作为通用类型，其他所有特定异常都从中派生。
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体运行超过传给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 的 `max_turns` 限制时抛出。它表示智能体无法在指定的交互轮次内完成任务。
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。包括：
-    -   JSON 格式错误：模型为工具调用或其直接输出提供了格式错误的 JSON 结构，尤其是在定义了特定 `output_type` 时。
-    -   与工具相关的意外失败：模型未以预期方式使用工具
--   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]：当一次工具调用超过其配置的超时时间，且工具使用 `timeout_behavior="raise_exception"` 时抛出。
--   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时犯错而抛出。通常由错误的代码实现、无效配置或误用 SDK API 导致。
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered]、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的条件分别满足时抛出。输入安全防护措施会在处理前检查传入消息，而输出安全防护措施会在交付前检查智能体的最终响应。
+-   [`AgentsException`][agents.exceptions.AgentsException]：SDK 内部抛出的所有异常的基类。它作为通用类型，其他所有具体异常都从它派生。
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体运行超过传递给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表示智能体无法在指定的交互回合数内完成任务。
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。可能包括：
+    -   JSON 格式错误：当模型为工具调用或其直接输出提供了格式错误的 JSON 结构，尤其是在定义了特定 `output_type` 的情况下。
+    -   与工具相关的意外失败：当模型未按预期方式使用工具时
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]：当一个工具调用超过其配置的超时时间，且该工具使用 `timeout_behavior="raise_exception"` 时抛出。
+-   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时发生错误而抛出。通常由代码实现不正确、配置无效或误用 SDK 的 API 导致。
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered]、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的条件分别被满足时抛出。输入安全防护措施在处理前检查传入消息，而输出安全防护措施在交付前检查智能体的最终响应。
 
 ================
 File: docs/zh/streaming.md
@@ -17300,8 +17621,66 @@ The `run_config` parameter lets you configure some global settings for the agent
 -   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions.
 -   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: Hook to edit the fully prepared model input (instructions and input items) immediately before the model call, e.g., to trim history or inject a system prompt.
 -   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: Customize the model-visible message when a tool call is rejected during approval flows.
+-   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]: Control whether reasoning item IDs are preserved or omitted when the runner converts prior outputs into next-turn model input.
 
 Nested handoffs are available as an opt-in beta. Enable the collapsed-transcript behavior by passing `RunConfig(nest_handoff_history=True)` or set `handoff(..., nest_handoff_history=True)` to turn it on for a specific handoff. If you prefer to keep the raw transcript (the default), leave the flag unset or provide a `handoff_input_filter` (or `handoff_history_mapper`) that forwards the conversation exactly as you need. To change the wrapper text used in the generated summary without writing a custom mapper, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] (and [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] to restore the defaults).
+
+### Run config details
+
+#### `tool_error_formatter`
+
+Use `tool_error_formatter` to customize the message that is returned to the model when a tool call is rejected in an approval flow.
+
+The formatter receives [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs] with:
+
+-   `kind`: The error category. Today this is `"approval_rejected"`.
+-   `tool_type`: The tool runtime (`"function"`, `"computer"`, `"shell"`, or `"apply_patch"`).
+-   `tool_name`: The tool name.
+-   `call_id`: The tool call ID.
+-   `default_message`: The SDK's default model-visible message.
+-   `run_context`: The active run context wrapper.
+
+Return a string to replace the message, or `None` to use the SDK default.
+
+```python
+from agents import Agent, RunConfig, Runner, ToolErrorFormatterArgs
+
+
+def format_rejection(args: ToolErrorFormatterArgs[None]) -> str | None:
+    if args.kind == "approval_rejected":
+        return (
+            f"Tool call '{args.tool_name}' was rejected by a human reviewer. "
+            "Ask for confirmation or propose a safer alternative."
+        )
+    return None
+
+
+agent = Agent(name="Assistant")
+result = Runner.run_sync(
+    agent,
+    "Please delete the production database.",
+    run_config=RunConfig(tool_error_formatter=format_rejection),
+)
+```
+
+#### `reasoning_item_id_policy`
+
+`reasoning_item_id_policy` controls how reasoning items are converted into next-turn model input when the runner carries history forward (for example, when using `RunResult.to_input_list()` or session-backed runs).
+
+-   `None` or `"preserve"` (default): Keep reasoning item IDs.
+-   `"omit"`: Strip reasoning item IDs from the generated next-turn input.
+
+Use `"omit"` primarily as an opt-in mitigation for a class of Responses API 400 errors where a reasoning item is sent with an `id` but without the required following item (for example, `Item 'rs_...' of type 'reasoning' was provided without its required following item.`).
+
+This can happen in multi-turn agent runs when the SDK constructs follow-up input from prior outputs (including session persistence, server-managed conversation deltas, streamed/non-streamed follow-up turns, and resume paths) and a reasoning item ID is preserved but the provider requires that ID to remain paired with its corresponding following item.
+
+Setting `reasoning_item_id_policy="omit"` keeps the reasoning content but strips the reasoning item `id`, which avoids triggering that API invariant in SDK-generated follow-up inputs.
+
+Scope notes:
+
+-   This only changes reasoning items generated/forwarded by the SDK when it builds follow-up input.
+-   It does not rewrite user-supplied initial input items.
+-   `call_model_input_filter` can still intentionally reintroduce reasoning IDs after this policy is applied.
 
 ## Conversations/chat threads
 
@@ -17430,6 +17809,16 @@ async def main():
         previous_response_id = result.last_response_id
         print(f"Assistant: {result.final_output}")
 ```
+
+!!! note
+
+    The SDK automatically retries `conversation_locked` errors with backoff. In server-managed
+    conversation runs, it rewinds the internal conversation-tracker input before retrying so the
+    same prepared items can be resent cleanly.
+
+    In local session-based runs (which cannot be combined with `conversation_id`,
+    `previous_response_id`, or `auto_previous_response_id`), the SDK also performs a best-effort
+    rollback of recently persisted input items to reduce duplicate history entries after a retry.
 
 ## Call model input filter
 
