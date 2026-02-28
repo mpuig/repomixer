@@ -5976,11 +5976,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ================
 File: docs/api-reference/java/legal/jqueryUI.md
 ================
-## jQuery UI v1.13.2
+## jQuery UI v1.14.1
 
 ### jQuery UI License
 ```
-Copyright jQuery Foundation and other contributors, https://jquery.org/
+Copyright OpenJS Foundation and other contributors, https://openjsf.org/
 
 This software consists of voluntary contributions made by many
 individuals. For exact contribution history, see the revision history
@@ -8092,7 +8092,7 @@ increases size of the second summary compression, and each summary afterwards,
 as shown in Figure 1.
 
 ![Context compaction example illustration](/adk-docs/assets/context-compaction.svg)
-**Figure 1.** Ilustration of event compaction configuration with a interval of 3
+**Figure 1.** Illustration of event compaction configuration with an interval of 3
 and overlap of 1.
 
 With this example configuration, the context compression tasks happen as follows:
@@ -12930,20 +12930,13 @@ Each `UserBehavior` includes:
 ADK provides a set of pre-built personas composed of common behaviors. The table
 below summarizes the behaviors for each persona:
 
-| Behavior        | **EXPERT**        | **NOVICE**     | **EVALUATOR** persona |
-:                 : persona           : persona        :                       :
-| :-------------- | :---------------- | :------------- | :-------------------- |
-| **Advance**     | Detail oriented   | Goal oriented  | Detail oriented       |
-:                 : (proactively      : (waits to be   :                       :
-:                 : provides details) : asked for      :                       :
-:                 :                   : details)       :                       :
-| **Answer**      | Relevant          | Answer all     | Relevant questions    |
-:                 : questions only    : questions      : only                  :
-| **Correct Agent | Yes               | No             | No                    |
-: Inaccuracies**  :                   :                :                       :
-| **Troubleshoot  | Once              | Never          | Never                 |
-: Agent Errors**  :                   :                :                       :
-| **Tone**        | Professional      | Conversational | Conversational        |
+| Behavior | **EXPERT** persona | **NOVICE** persona | **EVALUATOR** persona |
+| :--- | :--- | :--- | :--- |
+| **Advance** | Detail oriented (proactively provides details) | Goal oriented (waits to be asked for details) | Detail oriented |
+| **Answer** | Relevant questions only | Answer all questions | Relevant questions only |
+| **Correct Agent Inaccuracies** | Yes | No | No |
+| **Troubleshoot Agent Errors** | Once | Never | Never |
+| **Tone** | Professional | Conversational | Conversational |
 
 ## Example: Evaluating the [`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world) agent with conversation scenarios
 
@@ -14643,7 +14636,7 @@ adk-streaming/  # Project folder
 
 Copy-paste the following code block into the `agent.py` file.
 
-For `model`, please double check the model ID as described earlier in the [Models section](#supported-models).
+For `model`, please double-check the model ID as described earlier in the [Models section](#supported-models).
 
 ```py
 from google.adk.agents import Agent
@@ -14780,7 +14773,7 @@ Congratulations\! You've successfully created and interacted with your first Str
 
 ## Next steps: build custom streaming app
 
-The [Bidi-streaming development guide series](../../streaming/dev-guide/part1.md) gives an overview of the server and client code for a custom asynchronous web app built with ADK Streaming, enabling real-time, bidirectional audio and text communication.
+The [Gemini Live API Toolkit development guide series](../../streaming/dev-guide/part1.md) gives an overview of the server and client code for a custom asynchronous web app built with ADK Streaming, enabling real-time, bidirectional audio and text communication.
 
 ================
 File: docs/get-started/about.md
@@ -29858,7 +29851,7 @@ Code execution is a special tool that has extra security implications: sandboxin
 
 Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/adk-docs/tools/gemini-api/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
 
-If none of these options satisfy your requirements, you can build your own code executor using the building blocks provided by the ADK. We recommend creating execution environments that are hermetic: no network connections and API calls permitted to avoid uncontrolled data exfiltration; and full clean up of data across execution to not create cross-user exfiltration concerns.
+If none of these options satisfy your requirements, you can build your own code executor using the building blocks provided by the ADK. We recommend creating execution environments that are hermetic: no network connections and API calls permitted to avoid uncontrolled data exfiltration; and full cleanup of data across execution to not create cross-user exfiltration concerns.
 
 ### Evaluations
 
@@ -31546,19 +31539,19 @@ Check out these resources for building agents with Skills:
 ================
 File: docs/streaming/dev-guide/part1.md
 ================
-# Part 1: Introduction to ADK Bidi-streaming
+# Part 1: Introduction to ADK Gemini Live API Toolkit
 
 Google's Agent Development Kit ([ADK](https://google.github.io/adk-docs/)) provides a production-ready framework for building Bidi-streaming applications with Gemini models. This guide introduces ADK's streaming architecture, which enables real-time, two-way communication between users and AI agents through multimodal channels (text, audio, video).
 
 **What you'll learn**: This part covers the fundamentals of Bidi-streaming, the underlying Live API technology (Gemini Live API and Vertex AI Live API), ADK's architectural components (`LiveRequestQueue`, `Runner`, `Agent`), and a complete FastAPI implementation example. You'll understand how ADK handles session management, tool orchestration, and platform abstraction—reducing months of infrastructure development to declarative configuration.
 
-## ADK Bidi-streaming Demo
+## ADK Gemini Live API Toolkit Demo
 
 To help you understand the concepts in this guide, we provide a working demo application that showcases ADK bidirectional streaming in action. This FastAPI-based demo implements the complete streaming lifecycle with a practical, real-world architecture.
 
 **Demo Repository**: [adk-samples/python/agents/bidi-demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
 
-![ADK Bidi-streaming Demo](assets/bidi-demo-screen.png)
+![ADK Gemini Live API Toolkit Demo](assets/bidi-demo-screen.png)
 
 The demo features:
 
@@ -31731,15 +31724,15 @@ Both APIs provide the same core Live API technology, but differ in deployment pl
 
     **Official Documentation**: [Gemini Live API Guide](https://ai.google.dev/gemini-api/docs/live-guide) | [Vertex AI Live API Overview](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
-## 1.3 ADK Bidi-streaming: For Building Realtime Agent Applications
+## 1.3 ADK Gemini Live API Toolkit: For Building Realtime Agent Applications
 
 Building realtime Agent applications from scratch presents significant engineering challenges. While Live API provides the underlying streaming technology, integrating it into production applications requires solving complex problems: managing WebSocket connections and reconnection logic, orchestrating tool execution and response handling, persisting conversation state across sessions, coordinating concurrent data flows for multimodal inputs, and handling platform differences between development and production environments.
 
 ADK transforms these challenges into simple, declarative APIs. Instead of spending months building infrastructure for session management, tool orchestration, and state persistence, developers can focus on defining agent behavior and creating user experiences. This section explores what ADK handles automatically and why it's the recommended path for building production-ready streaming applications.
 
-**Raw Live API v. ADK Bidi-streaming:**
+**Raw Live API v. ADK Gemini Live API Toolkit:**
 
-| Feature | Raw Live API (`google-genai` SDK) | ADK Bidi-streaming (`adk-python` and `adk-java` SDK) |
+| Feature | Raw Live API (`google-genai` SDK) | ADK Gemini Live API Toolkit (`adk-python` and `adk-java` SDK) |
 |---------|-----------------------------------|------------------------------------------------------|
 | **Agent Framework** | ❌ Not available | ✅ Single agent, multi-agent with sub-agents, and sequential workflow agents, Tool ecosystem, Deployment ready, Evaluation, Security and more (see [ADK Agent docs](https://google.github.io/adk-docs/agents/)) |
 | **Tool Execution** | ❌ Manual tool execution and response handling | ✅ Automatic tool execution (see [Part 3: Tool Call Events](part3.md#tool-call-events)) |
@@ -31795,7 +31788,7 @@ GOOGLE_CLOUD_LOCATION=us-central1
 
 By handling the complexity of session management, tool orchestration, state persistence, and platform differences, ADK lets you focus on building intelligent agent experiences rather than wrestling with streaming infrastructure. The same code works seamlessly across development and production environments, giving you the full power of Bidi-streaming without the implementation burden.
 
-## 1.4 ADK Bidi-streaming Architecture Overview
+## 1.4 ADK Gemini Live API Toolkit Architecture Overview
 
 Now that you understand Live API technology and why ADK adds value, let's explore how ADK actually works. This section maps the complete data flow from your application through ADK's pipeline to Live API and back, showing which components handle which responsibilities.
 
@@ -31816,7 +31809,7 @@ graph TB
     end
 
     subgraph "ADK"
-        subgraph "ADK Bidi-streaming"
+        subgraph "ADK Gemini Live API Toolkit"
             L1[LiveRequestQueue]
             L2[Runner]
             L3[Agent]
@@ -31850,13 +31843,13 @@ graph TB
 
 | Developer provides: | ADK provides: | Live API provide: |
 |---------------------|---------------|------------------|
-| **Web / Mobile**: Frontend applications that users interact with, handling UI/UX, user input capture, and response display<br><br>**[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) / [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) Server**: Real-time communication server (such as [FastAPI](https://fastapi.tiangolo.com/)) that manages client connections, handles streaming protocols, and routes messages between clients and ADK<br><br>**`Agent`**: Custom AI agent definition with specific instructions, tools, and behavior tailored to your application's needs | **[LiveRequestQueue](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/live_request_queue.py)**: Message queue that buffers and sequences incoming user messages (text content, audio blobs, control signals) for orderly processing by the agent<br><br>**[Runner](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py)**: Execution engine that orchestrates agent sessions, manages conversation state, and provides the `run_live()` streaming interface<br><br>**[RunConfig](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/run_config.py)**: Configuration for streaming behavior, modalities, and advanced features<br><br>**Internal components** (managed automatically, not directly used by developers): [LLM Flow](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/base_llm_flow.py) for processing pipeline and [GeminiLlmConnection](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/models/gemini_llm_connection.py) for protocol translation | **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud): Google's real-time language model services that process streaming input, generate responses, handle interruptions, support multimodal content (text, audio, video), and provide advanced AI capabilities like function calling and contextual understanding |
+| **Web / Mobile**: Frontend applications that users interact with, handling UI/UX, user input capture, and response display<br><br>**[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) / [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) Server**: Real-time communication server (such as [FastAPI](https://fastapi.tiangolo.com/)) that manages client connections, handles streaming protocols, and routes messages between clients and ADK<br><br>**`Agent`**: Custom AI agent definition with specific instructions, tools, and behavior tailored to your application's needs | **[LiveRequestQueue](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/live_request_queue.py)**: Message queue that buffers and sequences incoming user messages (text content, audio blobs, control signals) for orderly processing by the agent<br><br>**[Runner](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py)**: Execution engine that orchestrates agent sessions, manages conversation state, and provides the `run_live()` streaming interface<br><br>**[RunConfig](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/run_config.py)**: Configuration for streaming behavior, modalities, and advanced features<br><br>**Internal components** (managed automatically, not directly used by developers): [LLM Flow](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py) for processing pipeline and [GeminiLlmConnection](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/gemini_llm_connection.py) for protocol translation | **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud): Google's real-time language model services that process streaming input, generate responses, handle interruptions, support multimodal content (text, audio, video), and provide advanced AI capabilities like function calling and contextual understanding |
 
 This architecture demonstrates ADK's clear separation of concerns: your application handles user interaction and transport protocols, ADK manages the streaming orchestration and state, and Live API provide the AI intelligence. By abstracting away the complexity of LLM-side streaming connection management, event loops, and protocol translation, ADK enables you to focus on building agent behavior and user experiences rather than streaming infrastructure.
 
-## 1.5 ADK Bidi-streaming Application Lifecycle
+## 1.5 ADK Gemini Live API Toolkit Application Lifecycle
 
-ADK Bidi-streaming integrates Live API session into the ADK framework's application lifecycle. This integration creates a four-phase lifecycle that combines ADK's agent management with Live API's real-time streaming capabilities:
+ADK Gemini Live API Toolkit integrates Live API session into the ADK framework's application lifecycle. This integration creates a four-phase lifecycle that combines ADK's agent management with Live API's real-time streaming capabilities:
 
 - **Phase 1: Application Initialization** (Once at Startup)
   - ADK Application initialization
@@ -31867,8 +31860,8 @@ ADK Bidi-streaming integrates Live API session into the ADK framework's applicat
 - **Phase 2: Session Initialization** (Once per User Session)
   - ADK `Session` initialization:
     - Get or Create an ADK `Session` using the `SessionService`
-  - ADK Bidi-streaming initialization:
-    - Create a [RunConfig](part4.md) for configuring ADK Bidi-streaming
+  - ADK Gemini Live API Toolkit initialization:
+    - Create a [RunConfig](part4.md) for configuring ADK Gemini Live API Toolkit
     - Create a [LiveRequestQueue](part2.md) for sending user messages to the `Agent`
     - Start a [run_live()](part3.md) event loop
 
@@ -31963,7 +31956,7 @@ These components are created once when your application starts and shared across
 The `Agent` is the core of your streaming application—it defines what your AI can do, how it should behave, and which AI model powers it. You configure your agent with a specific model, tools it can use (like Google Search or custom APIs), and instructions that shape its personality and behavior.
 
 ```python title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/google_search_agent/agent.py#L10-L15" target="_blank">agent.py:10-15</a>'
-"""Google Search Agent definition for ADK Bidi-streaming demo."""
+"""Google Search Agent definition for ADK Gemini Live API Toolkit demo."""
 
 import os
 from google.adk.agents import Agent
@@ -32046,7 +32039,7 @@ The `app_name` parameter is required and identifies your application in session 
 
 #### Get or Create Session
 
-ADK `Session` provides a "conversation thread" of the Bidi-streaming application. Just like you wouldn't start every text message from scratch, agents need context regarding the ongoing interaction. `Session` is the ADK object designed specifically to track and manage these individual conversation threads.
+ADK `Session` provides a "conversation thread" of the ADK Gemini Live API Toolkit application. Just like you wouldn't start every text message from scratch, agents need context regarding the ongoing interaction. `Session` is the ADK object designed specifically to track and manage these individual conversation threads.
 
 ##### ADK `Session` vs Live API session
 
@@ -32143,7 +32136,7 @@ live_request_queue = LiveRequestQueue()
 
     Never reuse a `LiveRequestQueue` across multiple streaming sessions. Each call to `run_live()` requires a fresh queue. Reusing queues can cause message ordering issues and state corruption.
 
-    The close signal persists in the queue (see [`live_request_queue.py:59-60`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/agents/live_request_queue.py#L66-L67)) and terminates the sender loop (see [`base_llm_flow.py:264-266`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L260-L262)). Reusing a queue would carry over this signal and any remaining messages from the previous session.
+    The close signal persists in the queue (see [`live_request_queue.py:66-67`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/live_request_queue.py#L66-L67)) and terminates the sender loop (see [`base_llm_flow.py:628-630`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py#L628-L630)). Reusing a queue would carry over this signal and any remaining messages from the previous session.
 
 ### Phase 3: Bidi-streaming with `run_live()` event loop
 
@@ -32409,7 +32402,7 @@ This example shows the core pattern. For production applications, consider:
 
 ## 1.6 What We Will Learn
 
-This guide takes you through ADK's Bidi-streaming architecture step by step, following the natural flow of streaming applications: how messages travel upstream from users to agents, how events flow downstream from agents to users, how to configure session behaviors, and how to implement multimodal features. Each part focuses on a specific component of the streaming architecture with practical patterns you can apply immediately:
+This guide takes you through ADK Gemini Live API Toolkit's architecture step by step, following the natural flow of streaming applications: how messages travel upstream from users to agents, how events flow downstream from agents to users, how to configure session behaviors, and how to implement multimodal features. Each part focuses on a specific component of the streaming architecture with practical patterns you can apply immediately:
 
 - **[Part 2: Sending messages with LiveRequestQueue](part2.md)** - Learn how ADK's `LiveRequestQueue` provides a unified interface for handling text, audio, and control messages. You'll understand the `LiveRequest` message model, how to send different types of content, manage user activity signals, and handle graceful session termination through a single, elegant API.
 
@@ -32421,7 +32414,7 @@ This guide takes you through ADK's Bidi-streaming architecture step by step, fol
 
 ### Prerequisites and Learning Resources
 
-For building an ADK Bidi-streaming application in production, we recommend having basic knowledge of the following technologies:
+For building an ADK Gemini Live API Toolkit application in production, we recommend having basic knowledge of the following technologies:
 
 **[ADK (Agent Development Kit)](https://google.github.io/adk-docs/)**
 
@@ -32466,7 +32459,7 @@ File: docs/streaming/dev-guide/part2.md
 ================
 # Part 2: Sending messages with LiveRequestQueue
 
-In Part 1, you learned the four-phase lifecycle of ADK Bidi-streaming applications. This part focuses on the upstream flow—how your application sends messages to the agent using `LiveRequestQueue`.
+In Part 1, you learned the four-phase lifecycle of ADK Gemini Live API Toolkit applications. This part focuses on the upstream flow—how your application sends messages to the agent using `LiveRequestQueue`.
 
 Unlike traditional APIs where different message types require different endpoints or channels, ADK provides a single unified interface through `LiveRequestQueue` and its `LiveRequest` message model. This part covers:
 
@@ -32481,7 +32474,7 @@ Understanding `LiveRequestQueue` is essential for building responsive streaming 
 
 The `LiveRequestQueue` is your primary interface for sending messages to the Agent in streaming conversations. Rather than managing separate channels for text, audio, and control signals, ADK provides a unified `LiveRequest` container that handles all message types through a single, elegant API:
 
-```python title='Source reference: <a href="https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/live_request_queue.py" target="_blank">live_request_queue.py</a>'
+```python title='Source reference: <a href="https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/live_request_queue.py" target="_blank">live_request_queue.py</a>'
 class LiveRequest(BaseModel):
     content: Optional[Content] = None           # Text-based content and structured data
     blob: Optional[Blob] = None                 # Audio/video data and binary streams
@@ -32544,21 +32537,21 @@ content = types.Content(parts=[types.Part(text=json_message["text"])])
 live_request_queue.send_content(content)
 ```
 
-**Using Content and Part with ADK Bidi-streaming:**
+**Using Content and Part with ADK Gemini Live API Toolkit:**
 
 - **`Content`** (`google.genai.types.Content`): A container that represents a single message or turn in the conversation. It holds an array of `Part` objects that together compose the complete message.
 
-- **`Part`** (`google.genai.types.Part`): An individual piece of content within a message. For ADK Bidi-streaming with Live API, you'll use:
+- **`Part`** (`google.genai.types.Part`): An individual piece of content within a message. For ADK Gemini Live API Toolkit with Live API, you'll use:
   - `text`: Text content (including code) that you send to the model
 
-In practice, most messages use a single text Part for ADK Bidi-streaming. The multi-part structure is designed for scenarios like:
+In practice, most messages use a single text Part for ADK Gemini Live API Toolkit. The multi-part structure is designed for scenarios like:
 - Mixing text with function responses (automatically handled by ADK)
 - Combining text explanations with structured data
 - Future extensibility for new content types
 
 For Live API, multimodal inputs (audio/video) use different mechanisms (see `send_realtime()` below), not multi-part Content.
 
-!!! note "Content and Part usage in ADK Bidi-streaming"
+!!! note "Content and Part Usage in ADK Gemini Live API Toolkit"
     
     While the Gemini API `Part` type supports many fields (`inline_data`, `file_data`, `function_call`, `function_response`, etc.), most are either handled automatically by ADK or use different mechanisms in Live API:
     
@@ -32621,11 +32614,11 @@ live_request_queue.send_activity_end()  # Signal: user stopped speaking
 
 ### Control Signals
 
-The `close` signal provides graceful termination semantics for streaming sessions. It signals the system to cleanly close the model connection and end the Bidi-stream. In ADK Bidi-streaming, your application is responsible for sending the `close` signal explicitly:
+The `close` signal provides graceful termination semantics for streaming sessions. It signals the system to cleanly close the model connection and end the Bidi-stream. In ADK Gemini Live API Toolkit, your application is responsible for sending the `close` signal explicitly:
 
 **Manual closure in BIDI mode:** When using `StreamingMode.BIDI` (Bidi-streaming), your application should manually call `close()` when the session terminates or when errors occur. This practice minimizes session resource usage.
 
-**Automatic closure in SSE mode:** When using the legacy `StreamingMode.SSE` (not Bidi-streaming), ADK automatically calls `close()` on the queue when it receives a `turn_complete=True` event from the model (see [`base_llm_flow.py:781`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L780)).
+**Automatic closure in SSE mode:** When using the legacy `StreamingMode.SSE` (not Bidi-streaming), ADK automatically calls `close()` on the queue when it receives a `turn_complete=True` event from the model (see [`base_llm_flow.py:1150`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py#L1150)).
 
 See [Part 4: Understanding RunConfig](part4.md#streamingmode-bidi-or-sse) for detailed comparison and when to use each mode.
 
@@ -32727,7 +32720,7 @@ In this part, you learned how `LiveRequestQueue` provides a unified interface fo
 
 ---
 
-← [Previous: Part 1: Introduction to ADK Bidi-streaming](part1.md) | [Next: Part 3: Event Handling with run_live()](part3.md) →
+← [Previous: Part 1: Introduction to ADK Gemini Live API Toolkit](part1.md) | [Next: Part 3: Event Handling with run_live()](part3.md) →
 
 ================
 File: docs/streaming/dev-guide/part3.md
@@ -32750,7 +32743,7 @@ You'll learn how to process different event types (text, audio, transcriptions, 
 
 **Usage:**
 
-```python title='Source reference: <a href="https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py" target="_blank">runners.py</a>'
+```python title='Source reference: <a href="https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py" target="_blank">runners.py</a>'
 # The method signature reveals the thoughtful design
 async def run_live(
     self,
@@ -32832,7 +32825,7 @@ The `run_live()` method yields a stream of `Event` objects in real-time as the a
 
 !!! note "Source Reference"
 
-    See the complete event type handling implementation in [`runners.py`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py)
+    See the complete event type handling implementation in [`runners.py`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py)
 
 #### When run_live() Exits
 
@@ -32861,7 +32854,7 @@ Not all events yielded by `run_live()` are persisted to the ADK `Session`. When 
 
 !!! note "Source Reference"
 
-    See session event persistence logic in [`runners.py`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/runners.py)
+    See session event persistence logic in [`runners.py`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py)
 
 **Events Saved to the ADK `Session`:**
 
@@ -32886,7 +32879,7 @@ These events are ephemeral and only yielded to callers during active streaming:
 
 ## Understanding Events
 
-Events are the core communication mechanism in ADK's Bidi-streaming system. This section explores the complete lifecycle of events—from how they're generated through multiple pipeline layers, to concurrent processing patterns that enable true real-time interaction, to practical handling of interruptions and turn completion. You'll learn about event types (text, audio, transcriptions, tool calls), serialization strategies for network transport, and the connection lifecycle that manages streaming sessions across both Gemini Live API and Vertex AI Live API platforms.
+Events are the core communication mechanism in ADK Gemini Live API Toolkit's streaming system. This section explores the complete lifecycle of events—from how they're generated through multiple pipeline layers, to concurrent processing patterns that enable true real-time interaction, to practical handling of interruptions and turn completion. You'll learn about event types (text, audio, transcriptions, tool calls), serialization strategies for network transport, and the connection lifecycle that manages streaming sessions across both Gemini Live API and Vertex AI Live API platforms.
 
 ### The Event Class
 
@@ -32894,7 +32887,7 @@ ADK's `Event` class is a Pydantic model that represents all communication in a s
 
 !!! note "Source Reference"
 
-    See Event class implementation in [`event.py:30-128`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/events/event.py#L30-L128) and [`llm_response.py:28-200`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/models/llm_response.py#L28-L200)
+    See Event class implementation in [`event.py:30-128`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/events/event.py#L30-L128) and [`llm_response.py:28-200`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/llm_response.py#L28-L200)
 
 #### Key Fields
 
@@ -32975,7 +32968,7 @@ This transformation ensures that transcribed user input is correctly attributed 
 
 !!! note "Source Reference"
 
-    See author attribution logic in [`base_llm_flow.py:292-326`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/flows/llm_flows/base_llm_flow.py#L287-L321)
+    See author attribution logic in [`base_llm_flow.py:674-708`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py#L674-L708)
 
 ### Event Types and Handling
 
@@ -32983,7 +32976,7 @@ ADK streams distinct event types through `runner.run_live()` to support differen
 
 ### Text Events
 
-The most common event type, containing the model's text responses when you specify `response_modalities` in `RunConfig` to `["TEXT"]` mode:
+The most common event type, containing the model's text responses when you specifying `response_modalities` in `RunConfig` to `["TEXT"]` mode:
 
 **Usage:**
 
@@ -33072,7 +33065,7 @@ When audio data is aggregated and saved as files in artifacts, ADK yields events
 
 !!! note "Source Reference"
 
-    See audio file aggregation logic in [`audio_cache_manager.py:156-178`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/audio_cache_manager.py#L156-L178)
+    See audio file aggregation logic in [`audio_cache_manager.py:156-178`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/audio_cache_manager.py#L156-L178)
 
 **Receiving Audio File References:**
 
@@ -33111,7 +33104,7 @@ Usage metadata events contain token usage information for monitoring costs and q
 
 !!! note "Source Reference"
 
-    See usage metadata structure in [`llm_response.py:105`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/models/llm_response.py#L105)
+    See usage metadata structure in [`llm_response.py:105`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/llm_response.py#L105)
 
 **Accessing Token Usage:**
 
@@ -33378,7 +33371,7 @@ For complete error code listings and descriptions, refer to the official documen
 
     - **FinishReason** (when model stops generating tokens): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/Candidate/FinishReason) | [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini)
     - **BlockedReason** (when prompts are blocked by content filters): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/GenerateContentResponse/PromptFeedback/BlockReason) | [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes)
-    - **ADK Implementation**: [`llm_response.py:145-200`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/models/llm_response.py#L145-L200)
+    - **ADK Implementation**: [`llm_response.py:145-200`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/llm_response.py#L145-L200)
 
 **Best practices for error handling:**
 
@@ -33755,7 +33748,7 @@ This approach reduces bandwidth by ~75% for audio-heavy streams while maintainin
 
 !!! note "Source Reference"
 
-    See automatic tool execution implementation in [`functions.py`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/flows/llm_flows/functions.py)
+    See automatic tool execution implementation in [`functions.py`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/functions.py)
 
 One of the most powerful features of ADK's `run_live()` is **automatic tool execution**. Unlike the raw Gemini Live API, which requires you to manually handle tool calls and responses, ADK abstracts this complexity entirely.
 
@@ -33871,7 +33864,7 @@ This automatic handling is one of the core value propositions of ADK—it transf
 
 !!! note "Source Reference"
 
-    See InvocationContext implementation in [`invocation_context.py`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/invocation_context.py)
+    See InvocationContext implementation in [`invocation_context.py`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/invocation_context.py)
 
 While `run_live()` returns an AsyncGenerator for consuming events, internally it creates and manages an `InvocationContext`—ADK's unified state carrier that encapsulates everything needed for a complete conversation invocation. **One InvocationContext corresponds to one `run_live()` loop**—it's created when you call `run_live()` and persists for the entire streaming session.
 
@@ -33983,7 +33976,7 @@ When building multi-agent systems with ADK, understanding how agents transition 
 
 !!! note "Source Reference"
 
-    See SequentialAgent implementation in [`sequential_agent.py:119-158`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/sequential_agent.py#L119-L158)
+    See SequentialAgent implementation in [`sequential_agent.py:120-159`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/sequential_agent.py#L120-L159)
 
 **How it works:**
 
@@ -34216,7 +34209,7 @@ The SequentialAgent design ensures smooth transitions—your application simply 
 
 ## Summary
 
-In this part, you mastered event handling in ADK's Bidi-streaming architecture. We explored the different event types that agents generate—text responses, audio chunks, transcriptions, tool calls, and control signals—and learned how to process each event type effectively. You now understand how to handle interruptions and turn completion signals for natural conversation flow, serialize events for network transport using Pydantic's model serialization, leverage ADK's automatic tool execution to simplify agent workflows, and access InvocationContext for advanced state management scenarios. With these event handling patterns in place, you're equipped to build responsive streaming applications that provide real-time feedback to users. Next, you'll learn how to configure sophisticated streaming behaviors through RunConfig, including multimodal interactions, session resumption, and cost controls.
+In this part, you mastered event handling in ADK Gemini Live API Toolkit's streaming architecture. We explored the different event types that agents generate—text responses, audio chunks, transcriptions, tool calls, and control signals—and learned how to process each event type effectively. You now understand how to handle interruptions and turn completion signals for natural conversation flow, serialize events for network transport using Pydantic's model serialization, leverage ADK's automatic tool execution to simplify agent workflows, and access InvocationContext for advanced state management scenarios. With these event handling patterns in place, you're equipped to build responsive streaming applications that provide real-time feedback to users. Next, you'll learn how to configure sophisticated streaming behaviors through RunConfig, including multimodal interactions, session resumption, and cost controls.
 
 ---
 
@@ -34258,7 +34251,7 @@ This table provides a quick reference for all RunConfig parameters covered in th
 
 !!! note "Source Reference"
 
-    [`run_config.py`](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/src/google/adk/agents/run_config.py)
+    [`run_config.py`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/run_config.py)
 
 **Platform Support Legend:**
 
@@ -34450,39 +34443,26 @@ sequenceDiagram
 
 ### Progressive SSE Streaming
 
-**Progressive SSE streaming** is a feature that enhances how SSE mode delivers streaming responses. This feature improves response aggregation by:
+**Progressive SSE streaming** is an experimental feature that enhances how SSE mode delivers streaming responses. When enabled, this feature improves response aggregation by:
 
 - **Content ordering preservation**: Maintains the original order of mixed content types (text, function calls, inline data)
 - **Intelligent text merging**: Only merges consecutive text parts of the same type (regular text vs thought text)
 - **Progressive delivery**: Marks all intermediate chunks as `partial=True`, with a single final aggregated response at the end
-- **Deferred function execution**: Skips executing function calls in partial events, only executing them in the final aggregated event to ensure parallel function calls are executed together rather than sequentially
-- **Function call argument streaming**: Supports progressive building of function call arguments through `partial_args`, enabling real-time display of function call construction
+- **Deferred function execution**: Skips executing function calls in partial events, only executing them in the final aggregated event to avoid duplicate executions
 
-**Default Behavior:**
+**Enabling the feature:**
 
-When you use `StreamingMode.SSE`, progressive SSE streaming is **enabled by default**. This means you automatically benefit from these improvements without any additional configuration.
-
-**Disabling the feature (if needed):**
-
-If you need to revert to the legacy SSE streaming behavior (simple text accumulation), you can disable it via environment variable:
+This is an experimental (WIP stage) feature disabled by default. Enable it via environment variable:
 
 ```bash
-export ADK_DISABLE_PROGRESSIVE_SSE_STREAMING=1
+export ADK_ENABLE_PROGRESSIVE_SSE_STREAMING=1
 ```
 
-!!! warning "Legacy Behavior Trade-offs"
+**When to use:**
 
-    Disabling progressive SSE streaming reverts to simple text accumulation, which:
-    - May lose original content ordering when mixing text and function calls
-    - Does not support function call argument streaming via `partial_args`
-    - Is provided for backward compatibility only—new applications should use the default progressive mode
-
-**When progressive SSE streaming helps:**
-
-- You're using `StreamingMode.SSE` and have mixed content types (text + function calls)
+- You're using `StreamingMode.SSE` and need better handling of mixed content types (text + function calls)
 - Your responses include thought text (extended thinking) mixed with regular text
 - You want to ensure function calls execute only once after complete response aggregation
-- You need to display function call construction in real-time as arguments stream in
 
 **Note:** This feature only affects `StreamingMode.SSE`. It does not apply to `StreamingMode.BIDI` (the focus of this guide), which uses the Live API's native bidirectional protocol.
 
@@ -34536,11 +34516,11 @@ While this guide focuses on Bidi-streaming with Gemini 2.0 Live models, ADK also
 
 ## Understanding Live API Connections and Sessions
 
-When building ADK Bidi-streaming applications, it's essential to understand how ADK manages the communication layer between itself and the  Live API backend. This section explores the fundamental distinction between **connections** (the WebSocket transport links that ADK establishes to Live API) and **sessions** (the logical conversation contexts maintained by Live API). Unlike traditional request-response APIs, the Bidi-streaming architecture introduces unique constraints: connection timeouts, session duration limits that vary by modality (audio-only vs audio+video), finite context windows, and concurrent session quotas that differ between Gemini Live API and Vertex AI Live API.
+When building ADK Gemini Live API Toolkit applications, it's essential to understand how ADK manages the communication layer between itself and the  Live API backend. This section explores the fundamental distinction between **connections** (the WebSocket transport links that ADK establishes to Live API) and **sessions** (the logical conversation contexts maintained by Live API). Unlike traditional request-response APIs, the Bidi-streaming architecture introduces unique constraints: connection timeouts, session duration limits that vary by modality (audio-only vs audio+video), finite context windows, and concurrent session quotas that differ between Gemini Live API and Vertex AI Live API.
 
 ### ADK `Session` vs Live API Session
 
-Understanding the distinction between **ADK `Session`** and **Live API session** is crucial for building reliable streaming applications with ADK Bidi-streaming.
+Understanding the distinction between **ADK `Session`** and **Live API session** is crucial for building reliable streaming applications with ADK Gemini Live API Toolkit.
 
 **ADK `Session`** (managed by SessionService):
 - Persistent conversation storage for conversation history, events, and state, created via `SessionService.create_session()` 
@@ -34622,7 +34602,7 @@ Now that we understand the difference between ADK `Session` objects and Live API
 
 ### Live API Connections and Sessions
 
-Understanding the distinction between **connections** and **sessions** at the Live API level is crucial for building reliable ADK Bidi-streaming applications.
+Understanding the distinction between **connections** and **sessions** at the Live API level is crucial for building reliable ADK Gemini Live API Toolkit applications.
 
 **Connection**: The physical WebSocket link between ADK and the Live API server. This is the network transport layer that carries bidirectional streaming data.
 
@@ -35215,7 +35195,7 @@ ADK validates CFC compatibility at session initialization and will raise an erro
 
 - ✅ **Supported**: `gemini-2.x` models (e.g., `gemini-2.5-flash-native-audio-preview-12-2025`)
 - ❌ **Not supported**: `gemini-1.5-x` models
-- **Validation**: ADK checks that the model name starts with `gemini-2` when `support_cfc=True` ([`runners.py:1322-1328`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/runners.py#L1361-L1367))
+- **Validation**: ADK checks that the model name starts with `gemini-2` when `support_cfc=True` ([`runners.py:1354-1360`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py#L1354-L1360))
 - **Code executor**: ADK automatically injects `BuiltInCodeExecutor` when CFC is enabled for safe parallel tool execution
 
 **CFC capabilities:**
@@ -35238,12 +35218,12 @@ CFC is designed for complex, multi-step workflows that benefit from intelligent 
 **Learn more:**
 
 - [Gemini Function Calling Guide](https://ai.google.dev/gemini-api/docs/function-calling) - Official documentation on compositional and parallel function calling
-- [ADK Parallel Functions Example](https://github.com/google/adk-python/blob/29c1115959b0084ac1169748863b35323da3cf50/contributing/samples/parallel_functions/agent.py) - Working example with async tools
+- [ADK Parallel Functions Example](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/contributing/samples/parallel_functions/agent.py) - Working example with async tools
 - [ADK Performance Guide](https://google.github.io/adk-docs/tools/performance/) - Best practices for parallel-ready tools
 
 ## Summary
 
-In this part, you learned how RunConfig enables sophisticated control over ADK Bidi-streaming sessions through declarative configuration. We covered response modalities and their constraints, explored the differences between BIDI and SSE streaming modes, examined the relationship between ADK Sessions and Live API sessions, and learned how to manage session duration with session resumption and context window compression. You now understand how to handle concurrent session quotas, implement architectural patterns for quota management, configure cost controls through `max_llm_calls` and audio persistence options. With RunConfig mastery, you can build production-ready streaming applications that balance feature richness with operational constraints—enabling extended conversations, managing platform limits, controlling costs effectively, and monitoring resource consumption.
+In this part, you learned how RunConfig enables sophisticated control over ADK Gemini Live API Toolkit sessions through declarative configuration. We covered response modalities and their constraints, explored the differences between BIDI and SSE streaming modes, examined the relationship between ADK Sessions and Live API sessions, and learned how to manage session duration with session resumption and context window compression. You now understand how to handle concurrent session quotas, implement architectural patterns for quota management, configure cost controls through `max_llm_calls` and audio persistence options. With RunConfig mastery, you can build production-ready streaming applications that balance feature richness with operational constraints—enabling extended conversations, managing platform limits, controlling costs effectively, and monitoring resource consumption.
 
 ---
 
@@ -35652,7 +35632,7 @@ This architecture ensures smooth, low-latency audio playback while handling netw
 
 ## How to Use Image and Video
 
-Both images and video in ADK Bidi-streaming are processed as JPEG frames. Rather than typical video streaming using HLS, mp4, or H.264, ADK uses a straightforward frame-by-frame image processing approach where both static images and video frames are sent as individual JPEG images.
+Both images and video in ADK Gemini Live API Toolkit are processed as JPEG frames. Rather than typical video streaming using HLS, mp4, or H.264, ADK uses a straightforward frame-by-frame image processing approach where both static images and video frames are sent as individual JPEG images.
 
 **Image/Video Specifications:**
 
@@ -36236,7 +36216,7 @@ The automatic enablement happens in `Runner.run_live()` when both conditions are
 
 !!! note "Source"
 
-    [`runners.py:1395-1404`](https://github.com/google/adk-python/blob/fd2c0f556b786417a9f6add744827b07e7a06b7d/src/google/adk/runners.py#L1395-L1404)
+    [`runners.py:1391-1400`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py#L1391-L1400)
 
 ## Voice Configuration (Speech Config)
 
@@ -36848,9 +36828,9 @@ Consider disabling proactivity/affective dialog for:
 
 ## Summary
 
-In this part, you learned how to implement multimodal features in ADK Bidi-streaming applications, focusing on audio, image, and video capabilities. We covered audio specifications and format requirements, explored the differences between native audio and half-cascade architectures, examined how to send and receive audio streams through LiveRequestQueue and Events, and learned about advanced features like audio transcription, voice activity detection, and proactive/affective dialog. You now understand how to build natural voice-enabled AI experiences with proper audio handling, implement video streaming for visual context, and configure model-specific features based on platform capabilities. With this comprehensive understanding of ADK's multimodal streaming features, you're equipped to build production-ready applications that handle text, audio, image, and video seamlessly—creating rich, interactive AI experiences across diverse use cases.
+In this part, you learned how to implement multimodal features in ADK Gemini Live API Toolkit applications, focusing on audio, image, and video capabilities. We covered audio specifications and format requirements, explored the differences between native audio and half-cascade architectures, examined how to send and receive audio streams through LiveRequestQueue and Events, and learned about advanced features like audio transcription, voice activity detection, and proactive/affective dialog. You now understand how to build natural voice-enabled AI experiences with proper audio handling, implement video streaming for visual context, and configure model-specific features based on platform capabilities. With this comprehensive understanding of ADK's multimodal streaming features, you're equipped to build production-ready applications that handle text, audio, image, and video seamlessly—creating rich, interactive AI experiences across diverse use cases.
 
-**Congratulations!** You've completed the ADK Bidi-streaming Developer Guide. You now have a comprehensive understanding of how to build production-ready real-time streaming AI applications with Google's Agent Development Kit.
+**Congratulations!** You've completed the ADK Gemini Live API Toolkit Developer Guide. You now have a comprehensive understanding of how to build production-ready real-time streaming AI applications with Google's Agent Development Kit.
 
 ← [Previous: Part 4: Understanding RunConfig](part4.md)
 
@@ -36887,7 +36867,7 @@ runner.run_live(
 ================
 File: docs/streaming/index.md
 ================
-# Bidi-streaming (live) in ADK
+# Gemini Live API Toolkit in ADK
 
 <div class="language-support-tag">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
@@ -36905,7 +36885,7 @@ text, audio, and video inputs, and they can provide text and audio output.
 <div class="video-grid">
   <div class="video-item">
     <div class="video-container">
-      <iframe src="https://www.youtube-nocookie.com/embed/vLUkAGeLR1k" title="ADK Bidi-streaming in 5 minutes" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+      <iframe src="https://www.youtube-nocookie.com/embed/vLUkAGeLR1k" title="ADK Gemini Live API Toolkit in 5 minutes" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
     </div>
   </div>
   <div class="video-item">
@@ -36919,38 +36899,38 @@ text, audio, and video inputs, and they can provide text and audio output.
 
 <div class="grid cards" markdown>
 
--   :material-console-line: **Quickstart (Bidi-streaming)**
+-   :material-console-line: **Quickstart (Gemini Live API Toolkit)**
 
     ---
 
     In this quickstart, you'll build a simple agent and use streaming in ADK to
     implement low-latency and bidirectional voice and video communication.
 
-    - [Quickstart (Bidi-streaming)](../get-started/streaming/quickstart-streaming.md)
+    - [Quickstart (Gemini Live API Toolkit)](../get-started/streaming/quickstart-streaming.md)
 
--   :material-console-line: **Bidi-streaming Demo Application**
+-   :material-console-line: **Gemini Live API Toolkit Demo Application**
 
     ---
 
     A production-ready reference implementation showcasing ADK bidirectional streaming with multimodal support (text, audio, image). This FastAPI-based demo demonstrates real-time WebSocket communication, automatic transcription, tool calling with Google Search, and complete streaming lifecycle management. This demo is extensively referenced throughout the development guide series.
 
-    - [ADK Bidi-streaming Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
+    - [ADK Gemini Live API Toolkit Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
 
--   :material-console-line: **Blog post: ADK Bidi-streaming Visual Guide**
-
-    ---
-
-    A visual guide to real-time multimodal AI agent development with ADK Bidi-streaming. This article provides intuitive diagrams and illustrations to help you understand how Bidi-streaming works and how to build interactive AI agents.
-
-    - [Blog post: ADK Bidi-streaming Visual Guide](https://medium.com/google-cloud/adk-bidi-streaming-a-visual-guide-to-real-time-multimodal-ai-agent-development-62dd08c81399)
-
--   :material-console-line: **Bidi-streaming development guide series**
+-   :material-console-line: **Blog post: ADK Gemini Live API Toolkit Visual Guide**
 
     ---
 
-    A series of articles for diving deeper into the Bidi-streaming development with ADK. You can learn basic concepts and use cases, the core API, and end-to-end application design.
+    A visual guide to real-time multimodal AI agent development with ADK Gemini Live API Toolkit. This article provides intuitive diagrams and illustrations to help you understand how streaming works and how to build interactive AI agents.
 
-    - [Part 1: Introduction to ADK Bidi-streaming](dev-guide/part1.md) - Fundamentals of Bidi-streaming, Live API technology, ADK architecture components, and complete application lifecycle with FastAPI examples
+    - [Blog post: ADK Gemini Live API Toolkit Visual Guide](https://medium.com/google-cloud/adk-bidi-streaming-a-visual-guide-to-real-time-multimodal-ai-agent-development-62dd08c81399)
+
+-   :material-console-line: **Gemini Live API Toolkit development guide series**
+
+    ---
+
+    A series of articles for diving deeper into the Gemini Live API Toolkit development with ADK. You can learn basic concepts and use cases, the core API, and end-to-end application design.
+
+    - [Part 1: Introduction to ADK Gemini Live API Toolkit](dev-guide/part1.md) - Fundamentals of streaming, Live API technology, ADK architecture components, and complete application lifecycle with FastAPI examples
     - [Part 2: Sending messages with LiveRequestQueue](dev-guide/part2.md) - Upstream message flow, sending text/audio/video, activity signals, and concurrency patterns
     - [Part 3: Event handling with run_live()](dev-guide/part3.md) - Processing events, handling text/audio/transcriptions, automatic tool execution, and multi-agent workflows
     - [Part 4: Understanding RunConfig](dev-guide/part4.md) - Response modalities, streaming modes, session management, session resumption, context window compression, and quota management
@@ -36968,7 +36948,7 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     ---
 
-    This article shows how to use Bidi-streaming (live) in ADK for real-time audio/video streaming. It offers a Python server example using LiveRequestQueue to build custom, interactive AI agents.
+    This article shows how to use Gemini Live API Toolkit in ADK for real-time audio/video streaming. It offers a Python server example using LiveRequestQueue to build custom, interactive AI agents.
 
     - [Blog post: Google ADK + Vertex AI Live API](https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e)
 
@@ -36976,7 +36956,7 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     ---
 
-    This article demonstrates how to use Claude Code Skills to accelerate ADK development, with an example of building a Bidi-streaming chat app. Learn how to leverage AI-powered coding assistance to build better agents faster.
+    This article demonstrates how to use Claude Code Skills to accelerate ADK development, with an example of building a streaming chat app. Learn how to leverage AI-powered coding assistance to build better agents faster.
 
     - [Blog post: Supercharge ADK Development with Claude Code Skills](https://medium.com/@kazunori279/supercharge-adk-development-with-claude-code-skills-d192481cbe72)
 

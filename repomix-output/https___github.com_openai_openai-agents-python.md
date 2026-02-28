@@ -3485,11 +3485,11 @@ search:
 ---
 # 휴먼인더루프 (HITL)
 
-휴먼인더루프 (HITL) 흐름을 사용하면 사람이 민감한 도구 호출을 승인하거나 거부할 때까지 에이전트 실행을 일시 중지할 수 있습니다. 도구는 승인이 필요할 때 이를 선언하고, 실행 결과는 대기 중인 승인을 인터럽션(중단 처리)으로 노출하며, `RunState`를 사용하면 결정이 내려진 뒤 실행을 직렬화하고 재개할 수 있습니다.
+휴먼인더루프 (HITL) 흐름을 사용하면 사람이 민감한 도구 호출을 승인하거나 거절할 때까지 에이전트 실행을 일시 중지할 수 있습니다. 도구는 승인 필요 여부를 선언하고, 실행 결과는 대기 중인 승인을 인터럽션으로 표시하며, `RunState`를 통해 결정 이후 실행을 직렬화하고 재개할 수 있습니다.
 
 ## 승인이 필요한 도구 표시
 
-항상 승인을 요구하려면 `needs_approval`를 `True`로 설정하거나, 호출마다 결정하는 비동기 함수를 제공하세요. 이 callable은 실행 컨텍스트, 파싱된 도구 매개변수, 도구 호출 ID를 받습니다.
+항상 승인이 필요하도록 `needs_approval`을 `True`로 설정하거나, 호출별로 결정하는 비동기 함수를 제공할 수 있습니다. 이 callable은 실행 컨텍스트, 파싱된 도구 매개변수, 도구 호출 ID를 받습니다.
 
 ```python
 from agents import Agent, Runner, function_tool
@@ -3516,19 +3516,19 @@ agent = Agent(
 )
 ```
 
-`needs_approval`는 [`function_tool`][agents.tool.function_tool], [`Agent.as_tool`][agents.agent.Agent.as_tool], [`ShellTool`][agents.tool.ShellTool], [`ApplyPatchTool`][agents.tool.ApplyPatchTool]에서 사용할 수 있습니다. 로컬 MCP 서버도 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio], [`MCPServerSse`][agents.mcp.server.MCPServerSse], [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]의 `require_approval`를 통해 승인 기능을 지원합니다. 호스티드 MCP 서버는 `tool_config={"require_approval": "always"}` 및 선택적 `on_approval_request` 콜백과 함께 [`HostedMCPTool`][agents.tool.HostedMCPTool]을 통해 승인을 지원합니다. Shell 및 apply_patch 도구는 인터럽션을 노출하지 않고 자동 승인 또는 자동 거부를 하려는 경우 `on_approval` 콜백을 받을 수 있습니다.
+`needs_approval`은 [`function_tool`][agents.tool.function_tool], [`Agent.as_tool`][agents.agent.Agent.as_tool], [`ShellTool`][agents.tool.ShellTool], [`ApplyPatchTool`][agents.tool.ApplyPatchTool]에서 사용할 수 있습니다. 로컬 MCP 서버도 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio], [`MCPServerSse`][agents.mcp.server.MCPServerSse], [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]의 `require_approval`을 통해 승인을 지원합니다. 호스티드 MCP 서버는 [`HostedMCPTool`][agents.tool.HostedMCPTool]에서 `tool_config={"require_approval": "always"}`로 승인 기능을 지원하며, 선택적으로 `on_approval_request` 콜백을 사용할 수 있습니다. Shell 및 apply_patch 도구는 인터럽션을 노출하지 않고 자동 승인 또는 자동 거절하려는 경우 `on_approval` 콜백을 받을 수 있습니다.
 
-## 승인 흐름 동작 방식
+## 승인 흐름 작동 방식
 
-1. 모델이 도구 호출을 내보내면 runner가 `needs_approval`를 평가합니다.
-2. 해당 도구 호출에 대한 승인 결정이 이미 [`RunContextWrapper`][agents.run_context.RunContextWrapper]에 저장되어 있으면(예: `always_approve=True`에서) runner는 프롬프트 없이 진행합니다. 호출별 승인은 특정 호출 ID 범위로 제한됩니다. 향후 호출을 자동으로 허용하려면 `always_approve=True`를 사용하세요.
-3. 그렇지 않으면 실행이 일시 중지되고 `RunResult.interruptions`(또는 `RunResultStreaming.interruptions`)에 `agent.name`, `name`, `arguments` 등의 세부 정보를 포함한 `ToolApprovalItem` 항목이 들어갑니다.
-4. `result.to_state()`로 결과를 `RunState`로 변환하고, `state.approve(...)` 또는 `state.reject(...)`를 호출한 뒤(선택적으로 `always_approve` 또는 `always_reject` 전달) `Runner.run(agent, state)` 또는 `Runner.run_streamed(agent, state)`로 재개합니다.
-5. 재개된 실행은 중단된 지점부터 이어서 진행되며, 새로운 승인이 필요하면 이 흐름으로 다시 진입합니다.
+1. 모델이 도구 호출을 생성하면 runner가 `needs_approval`을 평가합니다
+2. 해당 도구 호출에 대한 승인 결정이 이미 [`RunContextWrapper`][agents.run_context.RunContextWrapper]에 저장되어 있으면(예: `always_approve=True`), runner는 추가 확인 없이 진행합니다. 호출별 승인은 특정 호출 ID 범위로 제한됩니다. 이후 호출도 자동 허용하려면 `always_approve=True`를 사용하세요
+3. 그렇지 않으면 실행이 일시 중지되고 `RunResult.interruptions`(또는 `RunResultStreaming.interruptions`)에 `agent.name`, `name`, `arguments` 같은 상세 정보를 포함한 `ToolApprovalItem` 항목이 들어갑니다
+4. `result.to_state()`로 결과를 `RunState`로 변환하고, `state.approve(...)` 또는 `state.reject(...)`를 호출한 뒤(`always_approve` 또는 `always_reject`를 선택적으로 전달), `Runner.run(agent, state)` 또는 `Runner.run_streamed(agent, state)`로 재개합니다
+5. 재개된 실행은 중단된 지점부터 계속되며, 새 승인이 필요하면 이 흐름으로 다시 진입합니다
 
-## 예: 일시 중지, 승인, 재개
+## 예시: 일시 중지, 승인, 재개
 
-아래 스니펫은 JavaScript HITL 가이드를 그대로 반영합니다. 도구가 승인을 필요로 하면 일시 중지하고, 상태를 디스크에 저장한 뒤, 다시 로드하여 결정을 수집한 후 재개합니다.
+아래 스니펫은 JavaScript HITL 가이드와 동일한 흐름입니다. 도구에 승인이 필요할 때 일시 중지하고, 상태를 디스크에 저장한 뒤, 다시 불러와 결정을 수집한 후 재개합니다.
 
 ```python
 import asyncio
@@ -3592,27 +3592,36 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-이 예제에서 `prompt_approval`는 `input()`을 사용하고 `run_in_executor(...)`로 실행되므로 동기식입니다. 승인 소스가 이미 비동기인 경우(예: HTTP 요청 또는 async 데이터베이스 쿼리) `async def` 함수를 사용하고 대신 직접 `await`할 수 있습니다.
+이 예시에서 `prompt_approval`은 `input()`을 사용하고 `run_in_executor(...)`로 실행되므로 동기 함수입니다. 승인 소스가 이미 비동기라면(예: HTTP 요청 또는 비동기 데이터베이스 쿼리) `async def` 함수를 사용해 직접 `await`할 수 있습니다.
 
-승인을 기다리는 동안 출력을 스트리밍하려면 `Runner.run_streamed`를 호출하고 완료될 때까지 `result.stream_events()`를 소비한 다음, 위에 표시된 것과 동일한 `result.to_state()` 및 재개 단계를 따르세요.
+승인 대기 중에도 출력을 스트리밍하려면 `Runner.run_streamed`를 호출하고, 완료될 때까지 `result.stream_events()`를 소비한 뒤, 위에 나온 동일한 `result.to_state()` 및 재개 단계를 따르세요.
 
 ## 리포지토리 패턴 및 코드 예제
 
-- **스트리밍 승인**: `examples/agent_patterns/human_in_the_loop_stream.py`는 `stream_events()`를 비운 뒤 대기 중인 도구 호출을 승인하고 `Runner.run_streamed(agent, state)`로 재개하는 방법을 보여줍니다.
-- **도구로서의 에이전트 승인**: `Agent.as_tool(..., needs_approval=...)`는 위임된 에이전트 작업에 검토가 필요할 때 동일한 인터럽션 흐름을 적용합니다.
-- **Shell 및 apply_patch 도구**: `ShellTool`과 `ApplyPatchTool`도 `needs_approval`를 지원합니다. `state.approve(interruption, always_approve=True)` 또는 `state.reject(..., always_reject=True)`를 사용해 향후 호출을 위한 결정을 캐시하세요. 자동 결정을 위해서는 `on_approval`를 제공하고(`examples/tools/shell.py` 참고), 수동 결정을 위해서는 인터럽션을 처리하세요(`examples/tools/shell_human_in_the_loop.py` 참고).
-- **로컬 MCP 서버**: `MCPServerStdio` / `MCPServerSse` / `MCPServerStreamableHttp`에서 `require_approval`를 사용해 MCP 도구 호출을 게이트하세요(`examples/mcp/get_all_mcp_tools_example/main.py` 및 `examples/mcp/tool_filter_example/main.py` 참고).
-- **호스티드 MCP 서버**: `HostedMCPTool`에서 `require_approval`를 `"always"`로 설정해 HITL을 강제하고, 선택적으로 `on_approval_request`를 제공해 자동 승인 또는 거부를 수행하세요(`examples/hosted_mcp/human_in_the_loop.py` 및 `examples/hosted_mcp/on_approval.py` 참고). 신뢰할 수 있는 서버에는 `"never"`를 사용하세요(`examples/hosted_mcp/simple.py`).
-- **세션 및 메모리**: `Runner.run`에 세션을 전달하면 승인과 대화 기록이 여러 턴에 걸쳐 유지됩니다. SQLite 및 OpenAI Conversations 세션 변형은 `examples/memory/memory_session_hitl_example.py` 및 `examples/memory/openai_session_hitl_example.py`에 있습니다.
-- **Realtime agents**: 실시간 데모는 `RealtimeSession`에서 `approve_tool_call` / `reject_tool_call`을 통해 도구 호출을 승인 또는 거부하는 WebSocket 메시지를 노출합니다(서버 측 핸들러는 `examples/realtime/app/server.py` 참고).
+- **스트리밍 승인**: `examples/agent_patterns/human_in_the_loop_stream.py`는 `stream_events()`를 소진한 뒤 대기 중인 도구 호출을 승인하고 `Runner.run_streamed(agent, state)`로 재개하는 방법을 보여줍니다
+- **에이전트를 도구로 사용하는 승인**: `Agent.as_tool(..., needs_approval=...)`는 위임된 에이전트 작업에 검토가 필요할 때 동일한 인터럽션 흐름을 적용합니다
+- **Shell 및 apply_patch 도구**: `ShellTool`과 `ApplyPatchTool`도 `needs_approval`을 지원합니다. 이후 호출에 대한 결정을 캐시하려면 `state.approve(interruption, always_approve=True)` 또는 `state.reject(..., always_reject=True)`를 사용하세요. 자동 결정을 위해서는 `on_approval`을 제공하고(`examples/tools/shell.py` 참고), 수동 결정을 위해서는 인터럽션을 처리하세요(`examples/tools/shell_human_in_the_loop.py` 참고)
+- **로컬 MCP 서버**: `MCPServerStdio` / `MCPServerSse` / `MCPServerStreamableHttp`의 `require_approval`을 사용해 MCP 도구 호출을 게이트할 수 있습니다(`examples/mcp/get_all_mcp_tools_example/main.py` 및 `examples/mcp/tool_filter_example/main.py` 참고)
+- **호스티드 MCP 서버**: HITL을 강제하려면 `HostedMCPTool`에서 `require_approval`을 `"always"`로 설정하세요. 선택적으로 `on_approval_request`를 제공해 자동 승인 또는 거절할 수 있습니다(`examples/hosted_mcp/human_in_the_loop.py` 및 `examples/hosted_mcp/on_approval.py` 참고). 신뢰하는 서버에는 `"never"`를 사용하세요(`examples/hosted_mcp/simple.py`)
+- **세션 및 메모리**: 여러 턴에 걸쳐 승인과 대화 기록을 유지하려면 `Runner.run`에 세션을 전달하세요. SQLite 및 OpenAI Conversations 세션 변형은 `examples/memory/memory_session_hitl_example.py`와 `examples/memory/openai_session_hitl_example.py`에 있습니다
+- **실시간 에이전트**: 실시간 데모는 `RealtimeSession`의 `approve_tool_call` / `reject_tool_call`을 통해 도구 호출을 승인 또는 거절하는 WebSocket 메시지를 노출합니다(서버 측 핸들러는 `examples/realtime/app/server.py` 참고)
 
-## 장시간 대기 승인
+## 장기 실행 승인
 
-`RunState`는 내구성을 갖도록 설계되었습니다. `state.to_json()` 또는 `state.to_string()`을 사용해 대기 중인 작업을 데이터베이스나 큐에 저장하고, 나중에 `RunState.from_json(...)` 또는 `RunState.from_string(...)`으로 다시 생성하세요. 직렬화된 페이로드에 민감한 컨텍스트 데이터를 저장하고 싶지 않다면 `context_override`를 전달하세요.
+`RunState`는 내구성을 고려해 설계되었습니다. `state.to_json()` 또는 `state.to_string()`을 사용해 대기 중인 작업을 데이터베이스나 큐에 저장하고, 이후 `RunState.from_json(...)` 또는 `RunState.from_string(...)`으로 다시 생성할 수 있습니다.
+
+유용한 직렬화 옵션:
+
+-   `context_serializer`: 매핑이 아닌 컨텍스트 객체를 직렬화하는 방식을 사용자 지정합니다
+-   `strict_context=True`: 컨텍스트가 이미 매핑이거나 적절한 serializer/deserializer를 제공하지 않으면 직렬화 또는 역직렬화를 실패시킵니다
+-   `context_override`: 상태를 로드할 때 직렬화된 컨텍스트를 교체합니다. 원래 컨텍스트 객체를 복원하고 싶지 않을 때 유용하지만, 이미 직렬화된 페이로드에서 해당 컨텍스트를 제거하지는 않습니다
+-   `include_tracing_api_key=True`: 재개된 작업이 동일한 자격 증명으로 트레이스를 계속 내보내야 할 때 직렬화된 트레이스 페이로드에 트레이싱 API 키를 포함합니다
+
+`RunState`는 트레이스 메타데이터와 서버 관리 대화 설정도 보존하므로, 재개된 실행이 동일한 트레이스와 동일한 `conversation_id` / `previous_response_id` 체인을 이어갈 수 있습니다.
 
 ## 대기 중 작업 버전 관리
 
-승인이 한동안 대기할 수 있다면, 직렬화된 state와 함께 에이전트 정의 또는 SDK에 대한 버전 마커를 저장하세요. 그러면 역직렬화를 해당 코드 경로로 라우팅하여 모델, 프롬프트 또는 도구 정의가 변경될 때 비호환성을 피할 수 있습니다.
+승인이 한동안 대기할 수 있다면, 직렬화된 상태와 함께 에이전트 정의 또는 SDK 버전 마커를 저장하세요. 그러면 모델, 프롬프트, 도구 정의가 변경될 때 비호환성을 피하기 위해 역직렬화를 일치하는 코드 경로로 라우팅할 수 있습니다.
 
 ================
 File: docs/ko/index.md
@@ -4521,60 +4530,64 @@ search:
 
 `Runner.run` 메서드를 호출하면 다음 중 하나를 받게 됩니다:
 
-- `run` 또는 `run_sync`를 호출하는 경우 [`RunResult`][agents.result.RunResult]
-- `run_streamed`를 호출하는 경우 [`RunResultStreaming`][agents.result.RunResultStreaming]
+-   `run` 또는 `run_sync`를 호출하면 [`RunResult`][agents.result.RunResult]
+-   `run_streamed`를 호출하면 [`RunResultStreaming`][agents.result.RunResultStreaming]
 
-이 둘은 모두 [`RunResultBase`][agents.result.RunResultBase]를 상속하며, 대부분의 유용한 정보가 여기에 포함되어 있습니다.
+이 둘은 모두 [`RunResultBase`][agents.result.RunResultBase]를 상속하며, 대부분의 유용한 정보는 여기에 있습니다
 
 ## 최종 출력
 
 [`final_output`][agents.result.RunResultBase.final_output] 속성에는 마지막으로 실행된 에이전트의 최종 출력이 들어 있습니다. 이는 다음 중 하나입니다:
 
-- 마지막 에이전트에 `output_type`이 정의되어 있지 않다면 `str`
-- 에이전트에 출력 타입이 정의되어 있다면 `last_agent.output_type` 타입의 객체
+-   마지막 에이전트에 `output_type`이 정의되지 않은 경우 `str`
+-   에이전트에 출력 타입이 정의된 경우 `last_agent.output_type` 타입의 객체
 
 !!! note
 
-    `final_output`의 타입은 `Any`입니다. 핸드오프 때문에 이를 정적으로 타입 지정할 수 없습니다. 핸드오프가 발생하면 어떤 Agent든 마지막 에이전트가 될 수 있으므로, 가능한 출력 타입의 집합을 정적으로 알 수 없습니다.
+    `final_output`의 타입은 `Any`입니다. 핸드오프 때문에 이를 정적으로 타입 지정할 수 없습니다. 핸드오프가 발생하면 어떤 Agent든 마지막 에이전트가 될 수 있으므로, 가능한 출력 타입 집합을 정적으로 알 수 없습니다
 
-## 다음 턴의 입력
+## 다음 턴을 위한 입력
 
-[`result.to_input_list()`][agents.result.RunResultBase.to_input_list]를 사용하면 결과를 입력 리스트로 변환할 수 있으며, 여기에는 사용자가 제공한 원래 입력에 더해 에이전트 실행 중 생성된 항목들이 이어 붙여집니다. 이를 통해 한 번의 에이전트 실행 출력들을 다음 실행의 입력으로 전달하거나, 루프로 실행하면서 매번 새로운 사용자 입력을 추가하기가 편리합니다.
+[`result.to_input_list()`][agents.result.RunResultBase.to_input_list]를 사용하면 결과를 입력 목록으로 변환할 수 있으며, 사용자가 제공한 원래 입력과 에이전트 실행 중 생성된 항목을 이어 붙입니다. 이를 통해 한 에이전트 실행의 출력을 다른 실행에 전달하거나, 루프에서 실행하면서 매번 새 사용자 입력을 추가하기 편리합니다
 
 ## 마지막 에이전트
 
-[`last_agent`][agents.result.RunResultBase.last_agent] 속성에는 마지막으로 실행된 에이전트가 들어 있습니다. 애플리케이션에 따라, 사용자가 다음에 무언가를 입력할 때 이를 활용하는 경우가 많습니다. 예를 들어, 최전선 트리아지 에이전트가 언어별 에이전트로 핸드오프하는 구조라면, 마지막 에이전트를 저장해 두었다가 사용자가 다음에 에이전트에게 메시지를 보낼 때 재사용할 수 있습니다.
+[`last_agent`][agents.result.RunResultBase.last_agent] 속성에는 마지막으로 실행된 에이전트가 들어 있습니다. 애플리케이션에 따라 이는 다음에 사용자가 입력할 때 유용한 경우가 많습니다. 예를 들어, 언어별 에이전트로 핸드오프하는 프런트라인 분류 에이전트가 있다면, 마지막 에이전트를 저장해 두고 사용자가 다음에 에이전트에 메시지를 보낼 때 재사용할 수 있습니다
 
 ## 새 항목
 
-[`new_items`][agents.result.RunResultBase.new_items] 속성에는 실행 중 생성된 새 항목들이 들어 있습니다. 항목들은 [`RunItem`][agents.items.RunItem]이며, 실행 항목은 LLM이 생성한 원문 항목을 감쌉니다.
+[`new_items`][agents.result.RunResultBase.new_items] 속성에는 실행 중 생성된 새 항목이 들어 있습니다. 항목은 [`RunItem`][agents.items.RunItem]입니다. run item은 LLM이 생성한 원문 항목을 감쌉니다
 
-- [`MessageOutputItem`][agents.items.MessageOutputItem]은 LLM의 메시지를 나타냅니다. 원문 항목은 생성된 메시지입니다.
-- [`HandoffCallItem`][agents.items.HandoffCallItem]은 LLM이 핸드오프 도구를 호출했음을 나타냅니다. 원문 항목은 LLM의 도구 호출 항목입니다.
-- [`HandoffOutputItem`][agents.items.HandoffOutputItem]은 핸드오프가 발생했음을 나타냅니다. 원문 항목은 핸드오프 도구 호출에 대한 도구 응답입니다. 또한 항목에서 소스/대상 에이전트에 접근할 수 있습니다.
-- [`ToolCallItem`][agents.items.ToolCallItem]은 LLM이 도구를 호출했음을 나타냅니다.
-- [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]은 도구가 호출되었음을 나타냅니다. 원문 항목은 도구 응답입니다. 또한 항목에서 도구 출력에 접근할 수 있습니다.
-- [`ReasoningItem`][agents.items.ReasoningItem]은 LLM의 추론 항목을 나타냅니다. 원문 항목은 생성된 추론입니다.
+-   [`MessageOutputItem`][agents.items.MessageOutputItem]은 LLM의 메시지를 나타냅니다. 원문 항목은 생성된 메시지입니다
+-   [`HandoffCallItem`][agents.items.HandoffCallItem]은 LLM이 핸드오프 도구를 호출했음을 나타냅니다. 원문 항목은 LLM의 도구 호출 항목입니다
+-   [`HandoffOutputItem`][agents.items.HandoffOutputItem]은 핸드오프가 발생했음을 나타냅니다. 원문 항목은 핸드오프 도구 호출에 대한 도구 응답입니다. 항목에서 소스/대상 에이전트에도 접근할 수 있습니다
+-   [`ToolCallItem`][agents.items.ToolCallItem]은 LLM이 도구를 호출했음을 나타냅니다
+-   [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]은 도구가 호출되었음을 나타냅니다. 원문 항목은 도구 응답입니다. 항목에서 도구 출력에도 접근할 수 있습니다
+-   [`ReasoningItem`][agents.items.ReasoningItem]은 LLM의 추론 항목을 나타냅니다. 원문 항목은 생성된 추론입니다
 
 ## 기타 정보
 
 ### 가드레일 결과
 
-[`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 및 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 속성에는(있는 경우) 가드레일의 결과가 포함됩니다. 가드레일 결과에는 때때로 로그로 남기거나 저장하고 싶은 유용한 정보가 들어 있을 수 있으므로, 이를 사용할 수 있게 제공합니다.
+[`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 및 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 속성에는 가드레일 결과가 있다면 그 결과가 포함됩니다. 가드레일 결과에는 로그로 남기거나 저장하고 싶은 유용한 정보가 포함되는 경우가 있으므로, 이를 사용할 수 있도록 제공합니다
 
-도구 가드레일 결과는 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 및 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results]로 별도로 제공됩니다. 이러한 가드레일은 도구에 부착할 수 있으며, 해당 도구 호출은 에이전트 워크플로우 동안 가드레일을 실행합니다.
+도구 가드레일 결과는 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 및 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results]로 별도로 제공됩니다. 이러한 가드레일은 도구에 연결할 수 있으며, 해당 도구 호출은 에이전트 워크플로 중에 가드레일을 실행합니다
 
 ### 원문 응답
 
-[`raw_responses`][agents.result.RunResultBase.raw_responses] 속성에는 LLM이 생성한 [`ModelResponse`][agents.items.ModelResponse]들이 들어 있습니다.
+[`raw_responses`][agents.result.RunResultBase.raw_responses] 속성에는 LLM이 생성한 [`ModelResponse`][agents.items.ModelResponse]가 포함됩니다
 
 ### 원래 입력
 
-[`input`][agents.result.RunResultBase.input] 속성에는 `run` 메서드에 제공한 원래 입력이 들어 있습니다. 대부분의 경우 필요하지 않지만, 필요한 경우를 위해 제공됩니다.
+[`input`][agents.result.RunResultBase.input] 속성에는 `run` 메서드에 사용자가 제공한 원래 입력이 포함됩니다. 대부분의 경우 필요하지 않지만, 필요할 때 사용할 수 있습니다
 
-### 인터럽션(중단 처리) 및 실행 재개
+### 인터럽션(중단 처리)과 실행 재개
 
-실행이 도구 승인 때문에 일시 중지되는 경우, 대기 중인 승인은 [`interruptions`][agents.result.RunResultBase.interruptions]에 노출됩니다. 결과를 `to_state()`로 [`RunState`][agents.run_state.RunState]로 변환하고, 인터럽션을 승인 또는 거부한 뒤, `Runner.run(...)` 또는 `Runner.run_streamed(...)`로 재개하세요.
+실행이 도구 승인 때문에 일시 중지되면, 대기 중인 승인 항목이
+[`RunResult.interruptions`][agents.result.RunResult.interruptions] 또는
+[`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]에 노출됩니다. 결과를
+`to_state()`로 [`RunState`][agents.run_state.RunState]로 변환하고 인터럽션(중단 처리)을 승인 또는 거부한 뒤,
+`Runner.run(...)` 또는 `Runner.run_streamed(...)`로 재개하세요
 
 ```python
 from agents import Agent, Runner
@@ -4589,15 +4602,17 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-[`RunResult`][agents.result.RunResult]와 [`RunResultStreaming`][agents.result.RunResultStreaming] 모두 `to_state()`를 지원합니다.
+[`RunResult`][agents.result.RunResult]와
+[`RunResultStreaming`][agents.result.RunResultStreaming] 모두 `to_state()`를 지원합니다. 내구성 있는
+승인 워크플로는 [휴먼인더루프 (HITL) 가이드](human_in_the_loop.md)를 참조하세요
 
 ### 편의 헬퍼
 
-`RunResultBase`에는 프로덕션 플로우에서 유용한 몇 가지 헬퍼 메서드/속성이 포함되어 있습니다:
+`RunResultBase`에는 프로덕션 흐름에서 유용한 몇 가지 헬퍼 메서드/속성이 포함되어 있습니다:
 
-- [`final_output_as(...)`][agents.result.RunResultBase.final_output_as]는 최종 출력을 특정 타입으로 캐스팅합니다(선택적으로 런타임 타입 검사 포함).
-- [`last_response_id`][agents.result.RunResultBase.last_response_id]는 최신 모델 응답 ID를 반환하며, 응답 체이닝에 유용합니다.
-- [`release_agents(...)`][agents.result.RunResultBase.release_agents]는 결과를 확인한 뒤 메모리 부담을 줄이고 싶을 때 에이전트에 대한 강한 참조를 해제합니다.
+- [`final_output_as(...)`][agents.result.RunResultBase.final_output_as]는 최종 출력을 특정 타입으로 캐스팅합니다(선택적으로 런타임 타입 검사 포함)
+- [`last_response_id`][agents.result.RunResultBase.last_response_id]는 최신 모델 응답 ID를 반환하며, 응답 체이닝에 유용합니다
+- [`release_agents(...)`][agents.result.RunResultBase.release_agents]는 결과를 확인한 뒤 메모리 압박을 줄이고 싶을 때 에이전트에 대한 강한 참조를 해제합니다
 
 ================
 File: docs/ko/running_agents.md
@@ -4612,7 +4627,7 @@ search:
 
 1. [`Runner.run()`][agents.run.Runner.run]: 비동기로 실행되며 [`RunResult`][agents.result.RunResult]를 반환합니다
 2. [`Runner.run_sync()`][agents.run.Runner.run_sync]: 동기 메서드이며 내부적으로 `.run()`을 실행합니다
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]을 반환합니다. LLM을 스트리밍 모드로 호출하고, 수신되는 대로 해당 이벤트를 스트리밍으로 전달합니다
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]: 비동기로 실행되며 [`RunResultStreaming`][agents.result.RunResultStreaming]을 반환합니다. LLM을 스트리밍 모드로 호출하고, 수신되는 이벤트를 그대로 스트리밍합니다
 
 ```python
 from agents import Agent, Runner
@@ -4627,17 +4642,21 @@ async def main():
     # Infinite loop's dance
 ```
 
-자세한 내용은 [결과 가이드](results.md)를 참고하세요.
+자세한 내용은 [결과 가이드](results.md)에서 확인하세요.
 
-## Runner 수명주기 및 구성
+## Runner 수명 주기 및 구성
 
 ### 에이전트 루프
 
-`Runner`에서 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 문자열(사용자 메시지로 간주) 또는 입력 항목 목록(OpenAI Responses API의 items)일 수 있습니다.
+`Runner`에서 run 메서드를 사용할 때 시작 에이전트와 입력을 전달합니다. 입력은 다음 중 하나일 수 있습니다:
 
-그 다음 runner는 루프를 실행합니다:
+-   문자열(사용자 메시지로 처리)
+-   OpenAI Responses API 형식의 입력 항목 목록
+-   중단된 실행을 재개할 때의 [`RunState`][agents.run_state.RunState]
 
-1. 현재 에이전트에 대해 현재 입력으로 LLM을 호출합니다
+이후 runner는 루프를 실행합니다:
+
+1. 현재 입력으로 현재 에이전트에 대해 LLM을 호출합니다
 2. LLM이 출력을 생성합니다
     1. LLM이 `final_output`을 반환하면 루프가 종료되고 결과를 반환합니다
     2. LLM이 핸드오프를 수행하면 현재 에이전트와 입력을 업데이트하고 루프를 다시 실행합니다
@@ -4646,21 +4665,21 @@ async def main():
 
 !!! note
 
-    LLM 출력이 "최종 출력(final output)"으로 간주되는 규칙은, 원하는 타입의 텍스트 출력을 생성하고 도구 호출이 없어야 한다는 점입니다.
+    LLM 출력이 "최종 출력"으로 간주되는 규칙은 원하는 타입의 텍스트 출력을 생성하고, 도구 호출이 없어야 한다는 것입니다
 
 ### 스트리밍
 
-스트리밍을 사용하면 LLM이 실행되는 동안 스트리밍 이벤트를 추가로 받을 수 있습니다. 스트림이 끝나면 [`RunResultStreaming`][agents.result.RunResultStreaming]에 생성된 모든 새 출력 등 실행에 대한 전체 정보가 담깁니다. 스트리밍 이벤트는 `.stream_events()`로 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)를 참고하세요.
+스트리밍을 사용하면 LLM 실행 중 스트리밍 이벤트를 추가로 받을 수 있습니다. 스트림이 끝나면 [`RunResultStreaming`][agents.result.RunResultStreaming]에는 생성된 모든 새 출력을 포함해 실행에 대한 전체 정보가 들어 있습니다. 스트리밍 이벤트는 `.stream_events()`로 받을 수 있습니다. 자세한 내용은 [스트리밍 가이드](streaming.md)에서 확인하세요.
 
 #### Responses WebSocket 전송(선택적 헬퍼)
 
-OpenAI Responses websocket 전송을 활성화하면 일반 `Runner` API를 그대로 사용할 수 있습니다. websocket 세션 헬퍼는 연결 재사용을 권장하지만 필수는 아닙니다.
+OpenAI Responses websocket 전송을 활성화하면 일반 `Runner` API를 계속 사용할 수 있습니다. websocket 세션 헬퍼는 연결 재사용에 권장되지만 필수는 아닙니다.
 
-이는 websocket 전송을 통한 Responses API이며, [Realtime API](realtime/guide.md)가 아닙니다.
+이것은 websocket 전송의 Responses API이며, [Realtime API](realtime/guide.md)가 아닙니다.
 
 ##### 패턴 1: 세션 헬퍼 없음(동작함)
 
-websocket 전송만 필요하고 SDK가 공유 provider/세션을 관리할 필요가 없을 때 사용하세요.
+websocket 전송만 원하고 SDK가 공유 provider/session을 관리할 필요가 없을 때 사용하세요.
 
 ```python
 import asyncio
@@ -4683,11 +4702,11 @@ async def main():
 asyncio.run(main())
 ```
 
-이 패턴은 단일 실행에는 충분합니다. `Runner.run()` / `Runner.run_streamed()`를 반복 호출하면, 같은 `RunConfig` / provider 인스턴스를 수동으로 재사용하지 않는 한 각 실행마다 재연결될 수 있습니다.
+이 패턴은 단일 실행에 적합합니다. `Runner.run()` / `Runner.run_streamed()`를 반복 호출하면 동일한 `RunConfig` / provider 인스턴스를 수동으로 재사용하지 않는 한 각 실행마다 재연결될 수 있습니다.
 
-##### 패턴 2: `responses_websocket_session()` 사용(멀티 턴 재사용에 권장)
+##### 패턴 2: `responses_websocket_session()` 사용(멀티턴 재사용에 권장)
 
-여러 실행(동일한 `run_config`를 상속하는 중첩 agent-as-tool 호출 포함)에 걸쳐 websocket 가능 provider와 `RunConfig`를 공유하려면 [`responses_websocket_session()`][agents.responses_websocket_session]을 사용하세요.
+여러 실행 간(동일 `run_config`를 상속하는 중첩 에이전트-as-tool 호출 포함) websocket 가능한 공유 provider와 `RunConfig`를 원할 때 [`responses_websocket_session()`][agents.responses_websocket_session]을 사용하세요.
 
 ```python
 import asyncio
@@ -4715,63 +4734,63 @@ async def main():
 asyncio.run(main())
 ```
 
-컨텍스트가 종료되기 전에 스트리밍 결과 소비를 완료하세요. websocket 요청이 아직 진행 중인 상태에서 컨텍스트를 종료하면 공유 연결이 강제로 닫힐 수 있습니다.
+컨텍스트가 종료되기 전에 스트리밍 결과 소비를 완료하세요. websocket 요청이 아직 진행 중일 때 컨텍스트를 종료하면 공유 연결이 강제로 닫힐 수 있습니다.
 
-### 실행 구성
+### Run config
 
-`run_config` 매개변수를 사용하면 에이전트 실행에 대한 일부 전역 설정을 구성할 수 있습니다:
+`run_config` 매개변수로 에이전트 실행의 전역 설정 일부를 구성할 수 있습니다:
 
-#### 공통 실행 구성 카테고리
+#### 공통 run config 카테고리
 
-`RunConfig`를 사용하면 각 에이전트 정의를 변경하지 않고도 단일 실행에 대한 동작을 재정의할 수 있습니다.
+각 에이전트 정의를 변경하지 않고 단일 실행의 동작을 재정의하려면 `RunConfig`를 사용하세요.
 
 ##### 모델, provider, 세션 기본값
 
--   [`model`][agents.run.RunConfig.model]: 각 Agent가 가진 `model`과 무관하게 전역 LLM 모델을 설정할 수 있습니다
--   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름을 조회하는 모델 provider이며 기본값은 OpenAI입니다
--   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 덮어씁니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
--   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 기록을 조회할 때의 세션 수준 기본값(예: `SessionSettings(limit=...)`)을 덮어씁니다
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions를 사용할 때 각 턴 전에 새 사용자 입력이 세션 기록과 어떻게 병합되는지 커스터마이즈합니다
+-   [`model`][agents.run.RunConfig.model]: 각 Agent의 `model`과 무관하게 사용할 전역 LLM 모델을 설정할 수 있습니다
+-   [`model_provider`][agents.run.RunConfig.model_provider]: 모델 이름 조회용 model provider이며 기본값은 OpenAI입니다
+-   [`model_settings`][agents.run.RunConfig.model_settings]: 에이전트별 설정을 재정의합니다. 예를 들어 전역 `temperature` 또는 `top_p`를 설정할 수 있습니다
+-   [`session_settings`][agents.run.RunConfig.session_settings]: 실행 중 히스토리를 가져올 때 세션 수준 기본값(예: `SessionSettings(limit=...)`)을 재정의합니다
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Sessions 사용 시 각 턴 전에 새 사용자 입력을 세션 히스토리와 병합하는 방식을 사용자 지정합니다. 콜백은 sync 또는 async일 수 있습니다
 
-##### 가드레일, 핸드오프, 모델 입력 셰이핑
+##### 가드레일, 핸드오프, 모델 입력 형태 구성
 
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력/출력 가드레일 목록입니다
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 입력 필터가 아직 없을 때 모든 핸드오프에 적용되는 전역 입력 필터입니다. 입력 필터를 사용하면 새 에이전트로 전송되는 입력을 편집할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트를 호출하기 전에 이전 대화를 단일 assistant 메시지로 접어 넣는 옵트인 베타 기능입니다. 중첩 핸드오프를 안정화하는 동안 기본값은 비활성화이며, 활성화하려면 `True`로 설정하거나 원문 대화를 그대로 전달하려면 `False`로 두세요. 모든 [Runner 메서드][agents.run.Runner]는 `RunConfig`를 전달하지 않으면 자동으로 생성하므로, 빠른 시작과 예제는 기본값(비활성화)을 유지하며 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속 이를 우선하여 덮어씁니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 통해 이 설정을 재정의할 수 있습니다
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 대화 기록(기록 + 핸드오프 항목)을 받는 선택적 callable입니다. 다음 에이전트로 전달할 정확한 입력 항목 목록을 반환해야 하며, 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 편집하는 훅입니다. 예: 기록을 자르거나 시스템 프롬프트를 주입
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]: 모든 실행에 포함할 입력 또는 출력 가드레일 목록
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]: 핸드오프에 이미 필터가 없는 경우 모든 핸드오프에 적용할 전역 입력 필터입니다. 입력 필터로 새 에이전트로 전송되는 입력을 수정할 수 있습니다. 자세한 내용은 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 문서를 참고하세요
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]: 다음 에이전트 호출 전에 이전 transcript를 단일 assistant 메시지로 축약하는 옵트인 베타 기능입니다. 중첩 핸드오프 안정화 동안 기본적으로 비활성화되어 있으며, 활성화하려면 `True`, 원문 transcript를 그대로 전달하려면 `False`로 두세요. [Runner 메서드][agents.run.Runner]는 전달하지 않으면 자동으로 `RunConfig`를 생성하므로 quickstart와 예제는 기본값(비활성화)을 유지하며, 명시적인 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 콜백은 계속 이를 우선 재정의합니다. 개별 핸드오프는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]로 이 설정을 재정의할 수 있습니다
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]: `nest_handoff_history`를 옵트인할 때마다 정규화된 transcript(히스토리 + 핸드오프 항목)를 받는 선택적 callable입니다. 다음 에이전트로 전달할 입력 항목의 정확한 목록을 반환해야 하며, 이를 통해 전체 핸드오프 필터를 작성하지 않고도 내장 요약을 대체할 수 있습니다
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]: 모델 호출 직전에 완전히 준비된 모델 입력(instructions 및 입력 항목)을 수정하는 훅입니다. 예를 들어 히스토리를 줄이거나 시스템 프롬프트를 주입할 수 있습니다
 -   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]: runner가 이전 출력을 다음 턴 모델 입력으로 변환할 때 reasoning item ID를 유지할지 생략할지 제어합니다
 
 ##### 트레이싱 및 관측성
 
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [tracing](tracing.md)을 비활성화할 수 있습니다
--   [`tracing`][agents.run.RunConfig.tracing]: 이 실행에 대해 exporter, 프로세서, 트레이싱 메타데이터를 재정의하려면 [`TracingConfig`][agents.tracing.TracingConfig]를 전달합니다
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력처럼 민감할 수 있는 데이터가 포함될지 설정합니다
--   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행의 트레이싱 워크플로 이름, trace ID, trace group ID를 설정합니다. 최소한 `workflow_name` 설정을 권장합니다. group ID는 여러 실행에 걸쳐 트레이스를 연결할 수 있게 하는 선택적 필드입니다
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터입니다
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]: 전체 실행에 대해 [트레이싱](tracing.md)을 비활성화할 수 있습니다
+-   [`tracing`][agents.run.RunConfig.tracing]: [`TracingConfig`][agents.tracing.TracingConfig]를 전달해 이 실행의 exporter, processor 또는 트레이싱 메타데이터를 재정의합니다
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]: 트레이스에 LLM 및 도구 호출 입력/출력 같은 잠재적 민감 데이터 포함 여부를 구성합니다
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]: 실행의 트레이싱 workflow 이름, trace ID, trace group ID를 설정합니다. 최소한 `workflow_name` 설정을 권장합니다. group ID는 여러 실행 간 트레이스를 연결할 수 있는 선택 필드입니다
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]: 모든 트레이스에 포함할 메타데이터
 
 ##### 도구 승인 및 도구 오류 동작
 
--   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 플로우 중 도구 호출이 거부될 때 모델에 보이는 메시지를 커스터마이즈합니다
+-   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]: 승인 흐름에서 도구 호출이 거부될 때 모델에 보이는 메시지를 사용자 지정합니다
 
-중첩 핸드오프는 옵트인 베타로 제공됩니다. `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정하여 대화 접기 동작을 활성화하세요. 원문 대화를 유지(기본값)하려면 플래그를 설정하지 않거나, 필요한 대로 대화를 정확히 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성된 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하세요(기본값으로 복원하려면 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
+중첩 핸드오프는 옵트인 베타로 제공됩니다. 축약 transcript 동작을 활성화하려면 `RunConfig(nest_handoff_history=True)`를 전달하거나 특정 핸드오프에 대해 `handoff(..., nest_handoff_history=True)`를 설정하세요. 원문 transcript(기본값)를 유지하려면 플래그를 설정하지 않거나, 필요한 대로 대화를 정확히 전달하는 `handoff_input_filter`(또는 `handoff_history_mapper`)를 제공하세요. 커스텀 mapper를 작성하지 않고 생성 요약에 사용되는 래퍼 텍스트를 변경하려면 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]를 호출하세요(기본값 복원은 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]).
 
-#### 실행 구성 상세
+#### Run config 상세
 
 ##### `tool_error_formatter`
 
-`tool_error_formatter`를 사용하면 승인 플로우에서 도구 호출이 거부될 때 모델에 반환되는 메시지를 커스터마이즈할 수 있습니다.
+승인 흐름에서 도구 호출이 거부될 때 모델로 반환되는 메시지를 사용자 지정하려면 `tool_error_formatter`를 사용하세요.
 
-formatter는 다음을 포함하는 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]를 받습니다:
+포매터는 다음을 포함한 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]를 받습니다:
 
--   `kind`: 오류 카테고리입니다. 현재는 `"approval_rejected"`입니다
--   `tool_type`: 도구 런타임(`"function"`, `"computer"`, `"shell"`, `"apply_patch"`)입니다
--   `tool_name`: 도구 이름입니다
--   `call_id`: 도구 호출 ID입니다
--   `default_message`: SDK 기본 모델 가시 메시지입니다
--   `run_context`: 활성 실행 컨텍스트 래퍼입니다
+-   `kind`: 오류 카테고리. 현재는 `"approval_rejected"`입니다
+-   `tool_type`: 도구 런타임(`"function"`, `"computer"`, `"shell"`, 또는 `"apply_patch"`)
+-   `tool_name`: 도구 이름
+-   `call_id`: 도구 호출 ID
+-   `default_message`: SDK 기본 모델 표시 메시지
+-   `run_context`: 활성 실행 컨텍스트 래퍼
 
-메시지를 대체할 문자열을 반환하거나, SDK 기본값을 사용하려면 `None`을 반환하세요.
+메시지를 대체할 문자열을 반환하거나 SDK 기본값을 사용하려면 `None`을 반환하세요.
 
 ```python
 from agents import Agent, RunConfig, Runner, ToolErrorFormatterArgs
@@ -4796,53 +4815,53 @@ result = Runner.run_sync(
 
 ##### `reasoning_item_id_policy`
 
-`reasoning_item_id_policy`는 runner가 기록을 앞으로 전달할 때(예: `RunResult.to_input_list()` 사용 또는 세션 기반 실행) reasoning item을 다음 턴 모델 입력으로 변환하는 방식을 제어합니다.
+`reasoning_item_id_policy`는 runner가 히스토리를 다음 턴으로 전달할 때(예: `RunResult.to_input_list()` 또는 세션 기반 실행 사용 시) reasoning item이 다음 턴 모델 입력으로 변환되는 방식을 제어합니다.
 
--   `None` 또는 `"preserve"`(기본값): reasoning item ID를 유지합니다
--   `"omit"`: 생성된 다음 턴 입력에서 reasoning item ID를 제거합니다
+-   `None` 또는 `"preserve"`(기본값): reasoning item ID 유지
+-   `"omit"`: 생성되는 다음 턴 입력에서 reasoning item ID 제거
 
-`"omit"`은 주로, 필요한 후속 항목 없이 `id`가 포함된 reasoning item이 전송될 때 발생하는 Responses API 400 오류(예: `Item 'rs_...' of type 'reasoning' was provided without its required following item.`)의 한 종류에 대한 옵트인 완화책으로 사용하세요.
+`"omit"`은 주로 Responses API 400 오류 유형(예: reasoning item이 `id`와 함께 전송되었지만 필수 후속 항목이 없는 경우, `Item 'rs_...' of type 'reasoning' was provided without its required following item.`)에 대한 옵트인 완화책으로 사용하세요.
 
-이는 멀티 턴 에이전트 실행에서 SDK가 이전 출력으로부터 후속 입력을 구성(세션 영속성, 서버 관리 대화 델타, 스트리밍/비스트리밍 후속 턴, 재개 경로 포함)할 때 reasoning item ID가 유지되지만, provider가 그 ID가 해당 후속 항목과 계속 짝지어져 있어야 한다고 요구하는 경우 발생할 수 있습니다.
+이는 멀티턴 에이전트 실행에서 SDK가 이전 출력(세션 저장, 서버 관리 대화 델타, 스트리밍/비스트리밍 후속 턴, 재개 경로 포함)으로부터 후속 입력을 구성할 때 발생할 수 있습니다. 이때 reasoning item ID가 유지되지만 provider가 해당 ID가 대응되는 후속 항목과 쌍으로 유지되기를 요구할 수 있습니다.
 
-`reasoning_item_id_policy="omit"`을 설정하면 reasoning 내용은 유지하되 reasoning item `id`를 제거하여, SDK가 생성한 후속 입력에서 해당 API 불변조건을 트리거하지 않게 합니다.
+`reasoning_item_id_policy="omit"`를 설정하면 reasoning 내용은 유지하면서 reasoning item `id`를 제거하므로 SDK 생성 후속 입력에서 해당 API 불변 조건을 트리거하지 않게 됩니다.
 
-범위 참고:
+적용 범위 참고:
 
--   이는 SDK가 후속 입력을 구성할 때 생성/전달하는 reasoning item에만 영향을 줍니다
+-   이는 SDK가 후속 입력을 만들 때 생성/전달하는 reasoning item에만 영향을 줍니다
 -   사용자가 제공한 초기 입력 항목은 다시 작성하지 않습니다
--   `call_model_input_filter`는 이 정책 적용 이후에도 의도적으로 reasoning ID를 다시 도입할 수 있습니다
+-   이 정책 적용 후에도 `call_model_input_filter`로 의도적으로 reasoning ID를 다시 도입할 수 있습니다
 
 ## 상태 및 대화 관리
 
-### 대화/채팅 스레드
+### 대화/chat 스레드
 
-어떤 run 메서드를 호출하든 하나 이상의 에이전트가 실행될 수 있으며(따라서 하나 이상의 LLM 호출이 발생), 이는 채팅 대화에서 단일 논리적 턴을 나타냅니다. 예:
+어떤 run 메서드를 호출하든 하나 이상의 에이전트 실행(따라서 하나 이상의 LLM 호출)이 발생할 수 있지만, 이는 채팅 대화에서 하나의 논리적 턴을 나타냅니다. 예:
 
-1. 사용자 턴: 사용자가 텍스트를 입력
-2. Runner 실행: 첫 에이전트가 LLM을 호출하고 도구를 실행한 뒤 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 더 많은 도구를 실행하고 출력을 생성
+1. 사용자 턴: 사용자가 텍스트 입력
+2. Runner 실행: 첫 번째 에이전트가 LLM 호출, 도구 실행, 두 번째 에이전트로 핸드오프, 두 번째 에이전트가 추가 도구 실행 후 출력 생성
 
-에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 새 항목을 사용자에게 보여줄 수도 있고 최종 출력만 보여줄 수도 있습니다. 어느 쪽이든 사용자가 후속 질문을 하면 run 메서드를 다시 호출할 수 있습니다.
+에이전트 실행이 끝나면 사용자에게 무엇을 보여줄지 선택할 수 있습니다. 예를 들어 에이전트가 생성한 모든 새 항목을 보여주거나 최종 출력만 보여줄 수 있습니다. 어느 쪽이든 사용자가 후속 질문을 하면 run 메서드를 다시 호출할 수 있습니다.
 
 #### 대화 상태 전략 선택
 
 실행마다 다음 접근 중 하나를 사용하세요:
 
-| 접근 | 적합한 경우 | 관리할 항목 |
+| 접근 방식 | 적합한 경우 | 관리해야 하는 것 |
 | --- | --- | --- |
-| 수동 (`result.to_input_list()`) | 기록 셰이핑에 대한 완전한 제어 | 이전 입력 항목을 구성하고 재전송 |
-| Sessions (`session=...`) | 앱이 관리하는 멀티 턴 채팅 상태 | SDK가 선택한 백엔드에 기록을 로드/저장 |
-| 서버 관리 (`conversation_id` / `previous_response_id`) | OpenAI가 턴 상태를 관리하도록 함 | ID만 저장; 서버가 대화 상태를 저장 |
+| 수동(`result.to_input_list()`) | 히스토리 형태 구성 완전 제어 | 이전 입력 항목을 직접 구성하고 재전송 |
+| Sessions(`session=...`) | 앱이 관리하는 멀티턴 채팅 상태 | SDK가 선택한 백엔드에 히스토리 로드/저장 |
+| 서버 관리(`conversation_id` / `previous_response_id`) | OpenAI가 턴 상태를 관리하도록 할 때 | ID만 저장, 대화 상태는 서버 저장 |
 
 !!! note
 
-    세션 영속성은 서버 관리 대화 설정
-    (`conversation_id`, `previous_response_id`, 또는 `auto_previous_response_id`)과
-    동일 실행에서 함께 사용할 수 없습니다. 호출마다 한 가지 접근을 선택하세요.
+    Session 영속성은 서버 관리 대화 설정
+    (`conversation_id`, `previous_response_id`, `auto_previous_response_id`)과
+    동일 실행에서 함께 사용할 수 없습니다. 호출마다 한 가지 접근만 선택하세요
 
 #### 수동 대화 관리
 
-[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴의 입력을 가져와 대화 기록을 수동으로 관리할 수 있습니다:
+다음 턴 입력을 얻기 위해 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드로 대화 히스토리를 수동 관리할 수 있습니다:
 
 ```python
 async def main():
@@ -4862,9 +4881,9 @@ async def main():
         # California
 ```
 
-#### Sessions로 자동 대화 관리
+#### Sessions를 사용한 자동 대화 관리
 
-더 간단한 접근으로, `.to_input_list()`를 수동으로 호출하지 않고도 대화 기록을 자동 처리하는 [Sessions](sessions/index.md)를 사용할 수 있습니다:
+더 단순한 접근을 위해 [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 수동 호출하지 않고 대화 히스토리를 자동 처리할 수 있습니다:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -4890,21 +4909,22 @@ async def main():
 
 Sessions는 자동으로 다음을 수행합니다:
 
--   각 실행 전에 대화 기록을 조회
--   각 실행 후 새 메시지를 저장
--   서로 다른 session ID에 대해 별도의 대화를 유지
+-   각 실행 전에 대화 히스토리 조회
+-   각 실행 후 새 메시지 저장
+-   서로 다른 세션 ID별로 분리된 대화 유지
 
 자세한 내용은 [Sessions 문서](sessions/index.md)를 참고하세요.
 
+
 #### 서버 관리 대화
 
-`to_input_list()` 또는 `Sessions`로 로컬에서 처리하는 대신, OpenAI 대화 상태 기능이 서버 측에서 대화 상태를 관리하도록 할 수도 있습니다. 이렇게 하면 과거 메시지를 모두 수동으로 재전송하지 않고도 대화 기록을 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state 가이드](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
+`to_input_list()` 또는 `Sessions`로 로컬에서 상태를 처리하는 대신, OpenAI 대화 상태 기능으로 서버 측에서 대화 상태를 관리할 수도 있습니다. 이를 통해 과거 메시지를 모두 수동 재전송하지 않고 대화 히스토리를 보존할 수 있습니다. 자세한 내용은 [OpenAI Conversation state guide](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)를 참고하세요.
 
-OpenAI는 턴 간 상태를 추적하는 두 가지 방법을 제공합니다:
+OpenAI는 턴 간 상태 추적을 위한 두 가지 방법을 제공합니다:
 
 ##### 1. `conversation_id` 사용
 
-OpenAI Conversations API로 먼저 대화를 생성한 뒤, 이후 모든 호출에서 해당 ID를 재사용합니다:
+먼저 OpenAI Conversations API로 대화를 생성한 다음, 이후 모든 호출에서 해당 ID를 재사용합니다:
 
 ```python
 from agents import Agent, Runner
@@ -4927,7 +4947,7 @@ async def main():
 
 ##### 2. `previous_response_id` 사용
 
-또 다른 옵션은 **응답 체이닝(response chaining)**으로, 각 턴이 이전 턴의 응답 ID에 명시적으로 연결됩니다.
+또 다른 옵션은 **응답 체이닝**으로, 각 턴이 이전 턴의 응답 ID에 명시적으로 연결됩니다.
 
 ```python
 from agents import Agent, Runner
@@ -4952,22 +4972,25 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
+실행이 승인 때문에 일시 중지되었다가 [`RunState`][agents.run_state.RunState]에서 재개되는 경우,
+SDK는 저장된 `conversation_id` / `previous_response_id` / `auto_previous_response_id`
+설정을 유지하므로 재개된 턴이 동일한 서버 관리 대화에서 계속됩니다.
+
 !!! note
 
-    SDK는 `conversation_locked` 오류를 백오프로 자동 재시도합니다. 서버 관리
-    대화 실행에서는 재시도 전에 내부 conversation-tracker 입력을 되감아
-    동일한 준비 항목을 깔끔하게 다시 전송할 수 있게 합니다.
+    SDK는 `conversation_locked` 오류를 백오프와 함께 자동 재시도합니다. 서버 관리
+    대화 실행에서는 재시도 전에 내부 대화 추적기 입력을 되감아 동일한 준비 항목을
+    깔끔하게 재전송할 수 있도록 합니다.
 
     로컬 세션 기반 실행(`conversation_id`,
-    `previous_response_id`, 또는 `auto_previous_response_id`와 함께 사용할 수 없음)에서도
-    SDK는 재시도 후 중복 기록 항목을 줄이기 위해 최근에 영속화된 입력 항목을
-    최선의 노력으로 롤백합니다.
+    `previous_response_id`, `auto_previous_response_id`와 함께 사용할 수 없음)에서도 SDK는 최선의 노력으로
+    최근 영속화된 입력 항목을 롤백하여 재시도 후 중복 히스토리 항목을 줄입니다.
 
-## 훅 및 커스터마이징
+## 훅 및 사용자 지정
 
-### Call model input filter
+### 모델 호출 입력 필터
 
-`call_model_input_filter`를 사용하면 모델 호출 직전에 모델 입력을 편집할 수 있습니다. 이 훅은 현재 에이전트, 컨텍스트, 결합된 입력 항목(세션 기록이 있으면 포함)을 받고 새로운 `ModelInputData`를 반환합니다.
+모델 호출 직전에 모델 입력을 수정하려면 `call_model_input_filter`를 사용하세요. 이 훅은 현재 에이전트, 컨텍스트, 결합된 입력 항목(세션 히스토리가 있으면 포함)을 받아 새 `ModelInputData`를 반환합니다.
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -4986,13 +5009,13 @@ result = Runner.run_sync(
 )
 ```
 
-민감 데이터 마스킹, 긴 기록 트리밍, 추가 시스템 가이던스 주입을 위해 `run_config`로 실행별로 훅을 설정하거나 `Runner`에 기본값으로 설정하세요.
+민감 데이터 마스킹, 긴 히스토리 축소, 추가 시스템 가이드 주입 등을 위해 `run_config`를 통해 실행별로 훅을 설정하세요.
 
 ## 오류 및 복구
 
 ### 오류 핸들러
 
-모든 `Runner` 엔트리 포인트는 오류 종류를 키로 하는 dict인 `error_handlers`를 받습니다. 현재 지원되는 키는 `"max_turns"`입니다. `MaxTurnsExceeded`를 발생시키는 대신 제어된 최종 출력을 반환하고 싶을 때 사용하세요.
+모든 `Runner` 진입점은 오류 종류를 키로 하는 dict인 `error_handlers`를 받습니다. 현재 지원되는 키는 `"max_turns"`입니다. `MaxTurnsExceeded`를 발생시키는 대신 제어된 최종 출력을 반환하려는 경우 사용하세요.
 
 ```python
 from agents import (
@@ -5021,38 +5044,38 @@ result = Runner.run_sync(
 print(result.final_output)
 ```
 
-대체 출력이 대화 기록에 추가되길 원하지 않으면 `include_in_history=False`를 설정하세요.
+대체 출력이 대화 히스토리에 추가되지 않게 하려면 `include_in_history=False`로 설정하세요.
 
-## 내구 실행 통합 및 휴먼인더루프
+## Durable 실행 통합 및 휴먼인더루프 (HITL)
 
-도구 승인 일시정지/재개 패턴은 전용 [Human-in-the-loop 가이드](human_in_the_loop.md)에서 시작하세요.
-아래 통합은 실행이 긴 대기, 재시도 또는 프로세스 재시작에 걸쳐 지속될 수 있는 내구 오케스트레이션을 위한 것입니다.
+도구 승인 pause/resume 패턴은 전용 [Human-in-the-loop guide](human_in_the_loop.md)부터 확인하세요.
+아래 통합은 실행이 긴 대기, 재시도, 또는 프로세스 재시작에 걸칠 수 있는 durable 오케스트레이션용입니다.
 
 ### Temporal
 
-Agents SDK의 [Temporal](https://temporal.io/) 통합을 사용하면 휴먼인더루프 작업을 포함한 내구적 장기 실행 워크플로를 실행할 수 있습니다. Temporal과 Agents SDK가 함께 장기 작업을 완료하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, 문서는 [여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 확인하세요. 
+Agents SDK [Temporal](https://temporal.io/) 통합을 사용해 휴먼인더루프 작업을 포함한 durable 장기 실행 워크플로를 실행할 수 있습니다. 장기 실행 작업 완료를 위해 Temporal과 Agents SDK가 함께 동작하는 데모는 [이 영상](https://www.youtube.com/watch?v=fFBZqzT4DD8)에서 확인할 수 있으며, [문서는 여기](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)에서 볼 수 있습니다
 
 ### Restate
 
-Agents SDK의 [Restate](https://restate.dev/) 통합을 사용하면 휴먼 승인, 핸드오프, 세션 관리를 포함한 가볍고 내구적인 에이전트를 사용할 수 있습니다. 이 통합은 의존성으로 Restate의 단일 바이너리 런타임이 필요하며, 프로세스/컨테이너 또는 서버리스 함수로 에이전트를 실행하는 것을 지원합니다.
-자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)를 읽거나 [문서](https://docs.restate.dev/ai)를 참고하세요.
+Agents SDK [Restate](https://restate.dev/) 통합을 사용해 휴먼 승인, 핸드오프, 세션 관리를 포함한 경량 durable 에이전트를 사용할 수 있습니다. 이 통합은 Restate의 단일 바이너리 런타임을 의존성으로 필요로 하며, 프로세스/컨테이너 또는 서버리스 함수로 에이전트 실행을 지원합니다.
+자세한 내용은 [개요](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk) 또는 [문서](https://docs.restate.dev/ai)를 참고하세요.
 
 ### DBOS
 
-Agents SDK의 [DBOS](https://dbos.dev/) 통합을 사용하면 장애 및 재시작에 걸쳐 진행 상황을 보존하는 신뢰할 수 있는 에이전트를 실행할 수 있습니다. 장기 실행 에이전트, 휴먼인더루프 워크플로, 핸드오프를 지원합니다. 동기 및 비동기 메서드를 모두 지원합니다. 이 통합은 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents)와 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
+Agents SDK [DBOS](https://dbos.dev/) 통합을 사용해 실패 및 재시작 간 진행 상태를 보존하는 신뢰성 높은 에이전트를 실행할 수 있습니다. 장기 실행 에이전트, 휴먼인더루프 워크플로, 핸드오프를 지원합니다. sync/async 메서드를 모두 지원합니다. 이 통합은 SQLite 또는 Postgres 데이터베이스만 필요합니다. 자세한 내용은 통합 [repo](https://github.com/dbos-inc/dbos-openai-agents) 및 [문서](https://docs.dbos.dev/integrations/openai-agents)를 참고하세요.
 
 ## 예외
 
-SDK는 특정 경우에 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다:
+SDK는 특정 경우 예외를 발생시킵니다. 전체 목록은 [`agents.exceptions`][]에 있습니다. 개요는 다음과 같습니다:
 
--   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내에서 발생하는 모든 예외의 베이스 클래스입니다. 다른 모든 구체적 예외가 파생되는 일반 타입 역할을 합니다
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: 에이전트 실행이 `Runner.run`, `Runner.run_sync`, 또는 `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 초과하면 발생합니다. 지정된 상호작용 턴 수 내에서 작업을 완료할 수 없었음을 나타냅니다
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 못하거나 유효하지 않은 출력을 생성할 때 발생합니다. 예:
-    -   잘못된 형식의 JSON: 특히 특정 `output_type`이 정의된 경우, 도구 호출 또는 직접 출력에서 잘못된 JSON 구조를 제공하는 경우
-    -   예기치 않은 도구 관련 실패: 모델이 예상된 방식으로 도구를 사용하지 못하는 경우
+-   [`AgentsException`][agents.exceptions.AgentsException]: SDK 내부에서 발생하는 모든 예외의 기본 클래스입니다. 다른 모든 구체적 예외가 파생되는 일반 타입 역할을 합니다
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]: `Runner.run`, `Runner.run_sync`, `Runner.run_streamed` 메서드에 전달된 `max_turns` 제한을 에이전트 실행이 초과하면 발생하는 예외입니다. 지정된 상호작용 턴 수 내에 작업을 완료하지 못했음을 의미합니다
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]: 기반 모델(LLM)이 예상치 못했거나 유효하지 않은 출력을 생성할 때 발생합니다. 예:
+    -   잘못된 JSON: 특히 특정 `output_type`이 정의된 경우, 도구 호출 또는 직접 출력에서 모델이 잘못된 JSON 구조를 제공할 때
+    -   예상치 못한 도구 관련 실패: 모델이 예상된 방식으로 도구를 사용하지 못할 때
 -   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]: 함수 도구 호출이 구성된 타임아웃을 초과하고 도구가 `timeout_behavior="raise_exception"`을 사용할 때 발생합니다
--   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK 사용 중 오류를 범했을 때 발생합니다. 일반적으로 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API 오용에서 비롯됩니다
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 각각 입력 가드레일 또는 출력 가드레일의 조건이 충족될 때 발생합니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 검사합니다
+-   [`UserError`][agents.exceptions.UserError]: SDK를 사용하는 코드 작성자(사용자)가 SDK 사용 중 오류를 낼 때 발생합니다. 일반적으로 잘못된 코드 구현, 유효하지 않은 구성, 또는 SDK API 오용에서 비롯됩니다
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]: 입력 가드레일 또는 출력 가드레일 조건이 각각 충족될 때 발생합니다. 입력 가드레일은 처리 전에 들어오는 메시지를 검사하고, 출력 가드레일은 전달 전에 에이전트의 최종 응답을 검사합니다
 
 ================
 File: docs/ko/streaming.md
@@ -5063,15 +5086,15 @@ search:
 ---
 # 스트리밍
 
-스트리밍을 사용하면 에이전트 실행이 진행되는 동안 업데이트를 구독할 수 있습니다. 이는 최종 사용자에게 진행 상태 업데이트와 부분 응답을 보여주는 데 유용합니다.
+스트리밍을 사용하면 에이전트 실행이 진행되는 동안 업데이트를 구독할 수 있습니다. 이는 최종 사용자에게 진행 상황 업데이트와 부분 응답을 보여주는 데 유용합니다
 
-스트리밍을 사용하려면 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 호출해 [`RunResultStreaming`][agents.result.RunResultStreaming]을 받으면 됩니다. `result.stream_events()`를 호출하면 아래에서 설명하는 [`StreamEvent`][agents.stream_events.StreamEvent] 객체의 비동기 스트림을 가져올 수 있습니다.
+스트리밍하려면 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 호출하면 [`RunResultStreaming`][agents.result.RunResultStreaming]을 받을 수 있습니다. `result.stream_events()`를 호출하면 아래에 설명된 [`StreamEvent`][agents.stream_events.StreamEvent] 객체의 비동기 스트림을 얻을 수 있습니다
 
 ## 원문 응답 이벤트
 
-[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent]는 LLM에서 직접 전달되는 원문 이벤트입니다. 이들은 OpenAI Responses API 형식이며, 각 이벤트에는 유형(예: `response.created`, `response.output_text.delta` 등)과 데이터가 있습니다. 생성된 응답 메시지를 즉시 사용자에게 스트리밍하려는 경우 유용합니다.
+[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent]는 LLM에서 직접 전달되는 원문 이벤트입니다. 이들은 OpenAI Responses API 형식이며, 각 이벤트는 타입(`response.created`, `response.output_text.delta` 등)과 데이터를 가집니다. 이러한 이벤트는 응답 메시지가 생성되는 즉시 사용자에게 스트리밍하려는 경우 유용합니다
 
-예를 들어, 다음은 LLM이 생성하는 텍스트를 토큰 단위로 출력합니다.
+예를 들어, 다음은 LLM이 생성한 텍스트를 토큰 단위로 출력합니다
 
 ```python
 import asyncio
@@ -5094,11 +5117,27 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## 실행 항목 이벤트와 에이전트 이벤트
+## 실행 항목 이벤트 및 에이전트 이벤트
 
-[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent]는 상위 수준의 이벤트입니다. 항목이 완전히 생성되었을 때를 알려줍니다. 이를 통해 각 토큰이 아니라 "메시지 생성됨", "도구 실행됨" 등의 수준에서 진행 상태 업데이트를 전달할 수 있습니다. 유사하게, [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent]는 현재 에이전트가 변경될 때(예: 핸드오프 결과) 업데이트를 제공합니다.
+[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent]는 더 상위 수준의 이벤트입니다. 항목이 완전히 생성되었을 때 이를 알려줍니다. 이를 통해 각 토큰 대신 "메시지 생성됨", "도구 실행됨" 등의 수준에서 진행 상황 업데이트를 전달할 수 있습니다. 마찬가지로, [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent]는 현재 에이전트가 변경될 때(예: 핸드오프 결과) 업데이트를 제공합니다
 
-예를 들어, 다음은 원문 이벤트를 무시하고 사용자에게 업데이트를 스트리밍합니다.
+### 실행 항목 이벤트 이름
+
+`RunItemStreamEvent.name`은 고정된 의미 기반 이벤트 이름 집합을 사용합니다
+
+-   `message_output_created`
+-   `handoff_requested`
+-   `handoff_occured`
+-   `tool_called`
+-   `tool_output`
+-   `reasoning_item_created`
+-   `mcp_approval_requested`
+-   `mcp_approval_response`
+-   `mcp_list_tools`
+
+`handoff_occured`는 하위 호환성을 위해 의도적으로 철자가 잘못되어 있습니다
+
+예를 들어, 다음은 원문 이벤트를 무시하고 사용자에게 업데이트를 스트리밍합니다
 
 ```python
 import asyncio
@@ -13154,13 +13193,13 @@ File: docs/zh/human_in_the_loop.md
 search:
   exclude: true
 ---
-# 人类在环
+# Human-in-the-loop
 
-使用人类在环（HITL）流程，在人员批准或拒绝敏感工具调用之前暂停智能体执行。工具会声明何时需要批准，运行结果会将待批准事项以中断的形式呈现，而 `RunState` 允许你在做出决定后序列化并恢复运行。
+使用 human-in-the-loop（HITL）流程，在人员批准或拒绝敏感工具调用之前暂停智能体执行。工具会声明何时需要批准，运行结果会将待批准项作为中断呈现，而 `RunState` 让你可以在做出决定后序列化并恢复运行。
 
-## 标记需要批准的工具
+## 需要批准的工具标记
 
-将 `needs_approval` 设置为 `True` 以始终要求批准，或提供一个按调用决定的异步函数。该可调用对象接收运行上下文、解析后的工具参数以及工具调用 ID。
+将 `needs_approval` 设为 `True` 可始终要求批准，或提供一个异步函数按每次调用决定。该可调用对象会接收运行上下文、解析后的工具参数以及工具调用 ID。
 
 ```python
 from agents import Agent, Runner, function_tool
@@ -13187,19 +13226,19 @@ agent = Agent(
 )
 ```
 
-`needs_approval` 可用于 [`function_tool`][agents.tool.function_tool]、[`Agent.as_tool`][agents.agent.Agent.as_tool]、[`ShellTool`][agents.tool.ShellTool] 和 [`ApplyPatchTool`][agents.tool.ApplyPatchTool]。本地 MCP 服务也通过 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]、[`MCPServerSse`][agents.mcp.server.MCPServerSse] 和 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 上的 `require_approval` 支持批准。托管的 MCP 服务通过 [`HostedMCPTool`][agents.tool.HostedMCPTool] 支持批准：使用 `tool_config={"require_approval": "always"}` 并可选提供 `on_approval_request` 回调。Shell 和 apply_patch 工具在你希望自动批准或自动拒绝且不展示中断时，接受一个 `on_approval` 回调。
+`needs_approval` 可用于 [`function_tool`][agents.tool.function_tool]、[`Agent.as_tool`][agents.agent.Agent.as_tool]、[`ShellTool`][agents.tool.ShellTool] 和 [`ApplyPatchTool`][agents.tool.ApplyPatchTool]。本地 MCP 服务也通过 [`MCPServerStdio`][agents.mcp.server.MCPServerStdio]、[`MCPServerSse`][agents.mcp.server.MCPServerSse] 和 [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp] 上的 `require_approval` 支持批准。托管 MCP 服务通过带有 `tool_config={"require_approval": "always"}` 的 [`HostedMCPTool`][agents.tool.HostedMCPTool] 支持批准，并可选提供 `on_approval_request` 回调。Shell 和 apply_patch 工具接受 `on_approval` 回调，如果你希望在不暴露中断的情况下自动批准或自动拒绝。
 
-## 批准流程的工作方式
+## 批准流程工作方式
 
 1. 当模型发出工具调用时，runner 会评估 `needs_approval`。
-2. 如果该工具调用的批准决定已存储在 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 中（例如来自 `always_approve=True`），runner 将在不提示的情况下继续。按调用的批准仅作用于特定的调用 ID；使用 `always_approve=True` 可自动允许未来调用。
-3. 否则，执行会暂停，且 `RunResult.interruptions`（或 `RunResultStreaming.interruptions`）会包含 `ToolApprovalItem` 条目，其中包含 `agent.name`、`name`、`arguments` 等详细信息。
-4. 使用 `result.to_state()` 将结果转换为 `RunState`，调用 `state.approve(...)` 或 `state.reject(...)`（可选传入 `always_approve` 或 `always_reject`），然后通过 `Runner.run(agent, state)` 或 `Runner.run_streamed(agent, state)` 恢复运行。
-5. 恢复后的运行将从中断处继续；如果需要新的批准，将再次进入该流程。
+2. 如果该工具调用的批准决定已存储在 [`RunContextWrapper`][agents.run_context.RunContextWrapper] 中（例如来自 `always_approve=True`），runner 会在不提示的情况下继续。按调用的批准仅作用于特定调用 ID；使用 `always_approve=True` 可自动允许后续调用。
+3. 否则，执行会暂停，且 `RunResult.interruptions`（或 `RunResultStreaming.interruptions`）会包含 `ToolApprovalItem` 条目，其中含有 `agent.name`、`name` 和 `arguments` 等详细信息。
+4. 使用 `result.to_state()` 将结果转换为 `RunState`，调用 `state.approve(...)` 或 `state.reject(...)`（可选传入 `always_approve` 或 `always_reject`），然后通过 `Runner.run(agent, state)` 或 `Runner.run_streamed(agent, state)` 恢复。
+5. 恢复后的运行会从中断处继续；如果需要新的批准，将再次进入此流程。
 
 ## 示例：暂停、批准、恢复
 
-下面的片段与 JavaScript HITL 指南一致：当工具需要批准时暂停，将状态持久化到磁盘，重新加载后在收集到决定后恢复。
+下面的代码片段与 JavaScript HITL 指南一致：当工具需要批准时暂停，将状态持久化到磁盘，重新加载后在收集到决定后恢复。
 
 ```python
 import asyncio
@@ -13263,27 +13302,36 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-在此示例中，`prompt_approval` 是同步的，因为它使用 `input()` 并通过 `run_in_executor(...)` 执行。如果你的批准来源本身已是异步的（例如 HTTP 请求或异步数据库查询），你可以使用 `async def` 函数并直接 `await`。
+在此示例中，`prompt_approval` 是同步的，因为它使用 `input()` 并通过 `run_in_executor(...)` 执行。如果你的批准来源本身已经是异步的（例如 HTTP 请求或异步数据库查询），你可以使用 `async def` 函数并直接 `await` 它。
 
-若要在等待批准时进行流式输出，调用 `Runner.run_streamed`，消费 `result.stream_events()` 直到完成，然后遵循上面展示的相同步骤：`result.to_state()` 并恢复运行。
+若要在等待批准时进行流式输出，请调用 `Runner.run_streamed`，消费 `result.stream_events()` 直到完成，然后按上文所示执行相同的 `result.to_state()` 与恢复步骤。
 
 ## 仓库模式与代码示例
 
-- **流式批准**：`examples/agent_patterns/human_in_the_loop_stream.py` 展示了如何耗尽 `stream_events()`，然后在使用 `Runner.run_streamed(agent, state)` 恢复之前批准待处理的工具调用。
-- **Agents as tools 批准**：`Agent.as_tool(..., needs_approval=...)` 在委托的智能体任务需要审查时，应用相同的中断流程。
-- **Shell 和 apply_patch 工具**：`ShellTool` 和 `ApplyPatchTool` 也支持 `needs_approval`。使用 `state.approve(interruption, always_approve=True)` 或 `state.reject(..., always_reject=True)` 将决定缓存用于未来调用。若要自动决策，提供 `on_approval`（参见 `examples/tools/shell.py`）；若要手动决策，处理 interruptions（参见 `examples/tools/shell_human_in_the_loop.py`）。
-- **本地 MCP 服务**：在 `MCPServerStdio` / `MCPServerSse` / `MCPServerStreamableHttp` 上使用 `require_approval` 来门控 MCP 工具调用（参见 `examples/mcp/get_all_mcp_tools_example/main.py` 与 `examples/mcp/tool_filter_example/main.py`）。
-- **托管 MCP 服务**：在 `HostedMCPTool` 上将 `require_approval` 设为 `"always"` 以强制 HITL，并可选提供 `on_approval_request` 以自动批准或拒绝（参见 `examples/hosted_mcp/human_in_the_loop.py` 与 `examples/hosted_mcp/on_approval.py`）。对可信服务使用 `"never"`（`examples/hosted_mcp/simple.py`）。
-- **会话与记忆**：将 session 传给 `Runner.run`，以便批准与对话历史在多个回合中保留。SQLite 和 OpenAI Conversations 的 session 变体见 `examples/memory/memory_session_hitl_example.py` 与 `examples/memory/openai_session_hitl_example.py`。
-- **Realtime 智能体**：Realtime 演示暴露了 WebSocket 消息，可通过 `RealtimeSession` 上的 `approve_tool_call` / `reject_tool_call` 批准或拒绝工具调用（服务端处理器见 `examples/realtime/app/server.py`）。
+- **流式批准**：`examples/agent_patterns/human_in_the_loop_stream.py` 展示了如何消费 `stream_events()`，然后在用 `Runner.run_streamed(agent, state)` 恢复前批准待处理工具调用。
+- **Agents as tools 批准**：当被委派的智能体任务需要审查时，`Agent.as_tool(..., needs_approval=...)` 应用相同的中断流程。
+- **Shell 与 apply_patch 工具**：`ShellTool` 和 `ApplyPatchTool` 同样支持 `needs_approval`。使用 `state.approve(interruption, always_approve=True)` 或 `state.reject(..., always_reject=True)` 可为后续调用缓存决定。对于自动决策，提供 `on_approval`（见 `examples/tools/shell.py`）；对于手动决策，处理中断（见 `examples/tools/shell_human_in_the_loop.py`）。
+- **本地 MCP 服务**：在 `MCPServerStdio` / `MCPServerSse` / `MCPServerStreamableHttp` 上使用 `require_approval` 来管控 MCP 工具调用（见 `examples/mcp/get_all_mcp_tools_example/main.py` 和 `examples/mcp/tool_filter_example/main.py`）。
+- **托管 MCP 服务**：在 `HostedMCPTool` 上将 `require_approval` 设为 `"always"` 以强制 HITL，并可选提供 `on_approval_request` 以自动批准或拒绝（见 `examples/hosted_mcp/human_in_the_loop.py` 和 `examples/hosted_mcp/on_approval.py`）。对可信服务使用 `"never"`（`examples/hosted_mcp/simple.py`）。
+- **会话与记忆**：将会话传给 `Runner.run`，使批准与对话历史可跨多轮保留。SQLite 和 OpenAI Conversations 会话变体位于 `examples/memory/memory_session_hitl_example.py` 和 `examples/memory/openai_session_hitl_example.py`。
+- **Realtime 智能体**：实时演示暴露了 WebSocket 消息，可通过 `RealtimeSession` 上的 `approve_tool_call` / `reject_tool_call` 批准或拒绝工具调用（服务端处理器见 `examples/realtime/app/server.py`）。
 
-## 长时间运行的批准
+## 长时间运行批准
 
-`RunState` 被设计为可持久化。使用 `state.to_json()` 或 `state.to_string()` 将待处理工作存入数据库或队列，并在之后通过 `RunState.from_json(...)` 或 `RunState.from_string(...)` 重新创建。如不希望在序列化负载中持久化敏感上下文数据，可传入 `context_override`。
+`RunState` 设计为可持久化。使用 `state.to_json()` 或 `state.to_string()` 将待处理工作存储到数据库或队列中，并在之后通过 `RunState.from_json(...)` 或 `RunState.from_string(...)` 重新创建。
 
-## 待处理任务的版本管理
+有用的序列化选项：
 
-如果批准可能会搁置一段时间，请在序列化状态旁存储你的智能体定义或 SDK 的版本标记。这样，当模型、提示词或工具定义发生变化时，你可以将反序列化路由到匹配的代码路径，以避免不兼容。
+-   `context_serializer`：自定义非映射上下文对象的序列化方式。
+-   `strict_context=True`：除非上下文已是映射，或你提供了合适的序列化器/反序列化器，否则在序列化或反序列化时失败。
+-   `context_override`：加载状态时替换已序列化的上下文。当你不想恢复原始上下文对象时这很有用，但它不会从已序列化的负载中移除该上下文。
+-   `include_tracing_api_key=True`：在你需要恢复后的工作继续使用相同凭据导出追踪时，在序列化的追踪负载中包含 tracing API key。
+
+`RunState` 还会保留追踪元数据和由服务端管理的会话设置，因此恢复后的运行可以继续同一条追踪以及同一 `conversation_id` / `previous_response_id` 链。
+
+## 待处理任务版本管理
+
+如果批准可能会搁置一段时间，请在序列化状态旁存储你的智能体定义或 SDK 的版本标记。这样你就可以将反序列化路由到匹配的代码路径，避免在模型、提示词或工具定义变化时出现不兼容。
 
 ================
 File: docs/zh/index.md
@@ -14185,48 +14233,48 @@ search:
 
 当你调用 `Runner.run` 方法时，你会得到以下之一：
 
--   如果你调用 `run` 或 `run_sync`，则得到 [`RunResult`][agents.result.RunResult]
--   如果你调用 `run_streamed`，则得到 [`RunResultStreaming`][agents.result.RunResultStreaming]
+-   如果你调用 `run` 或 `run_sync`，会得到 [`RunResult`][agents.result.RunResult]
+-   如果你调用 `run_streamed`，会得到 [`RunResultStreaming`][agents.result.RunResultStreaming]
 
-这两者都继承自 [`RunResultBase`][agents.result.RunResultBase]，大多数有用信息都在其中。
+这两者都继承自 [`RunResultBase`][agents.result.RunResultBase]，其中包含了大部分有用信息。
 
 ## 最终输出
 
-[`final_output`][agents.result.RunResultBase.final_output] 属性包含最后一个运行的智能体的最终输出。这可能是：
+[`final_output`][agents.result.RunResultBase.final_output] 属性包含最后一个运行的智能体的最终输出。它可能是：
 
 -   如果最后一个智能体未定义 `output_type`，则为 `str`
--   如果该智能体定义了输出类型，则为 `last_agent.output_type` 类型的对象
+-   如果该智能体定义了输出类型，则为 `last_agent.output_type` 类型的对象。
 
 !!! note
 
-    `final_output` 的类型是 `Any`。由于存在 handoffs，我们无法对其进行静态类型标注。如果发生 handoffs，这意味着任何 Agent 都可能是最后一个智能体，因此我们无法在静态层面知道可能的输出类型集合。
+    `final_output` 的类型是 `Any`。由于存在任务转移，我们无法对其进行静态类型标注。如果发生任务转移，这意味着任意 Agent 都可能是最后一个智能体，因此我们无法在静态阶段确定可能的输出类型集合。
 
 ## 下一轮的输入
 
-你可以使用 [`result.to_input_list()`][agents.result.RunResultBase.to_input_list] 将结果转换为一个输入列表，该列表会把你提供的原始输入与智能体运行期间生成的条目拼接起来。这使得将一次智能体运行的输出传入另一次运行更方便；也可以在循环中运行，并在每次追加新的用户输入。
+你可以使用 [`result.to_input_list()`][agents.result.RunResultBase.to_input_list] 将结果转换为输入列表，该列表会把你提供的原始输入与智能体运行期间生成的条目拼接在一起。这使得将一次智能体运行的输出传入下一次运行，或在循环中运行并每次追加新的用户输入都更加方便。
 
 ## 最后一个智能体
 
-[`last_agent`][agents.result.RunResultBase.last_agent] 属性包含最后一个运行的智能体。根据你的应用场景，这通常对下一次用户输入很有用。例如，如果你有一个前线分流智能体会任务转移到某个特定语言的智能体，你可以保存最后一个智能体，并在用户下一次给智能体发消息时复用它。
+[`last_agent`][agents.result.RunResultBase.last_agent] 属性包含最后一个运行的智能体。根据你的应用场景，这通常对用户下一次输入时很有帮助。例如，如果你有一个前线分流智能体会任务转移给特定语言的智能体，你可以保存最后一个智能体，并在用户下次向智能体发送消息时复用它。
 
 ## 新条目
 
-[`new_items`][agents.result.RunResultBase.new_items] 属性包含本次运行期间生成的新条目。这些条目是 [`RunItem`][agents.items.RunItem]。一个 run item 会封装由 LLM 生成的原始条目。
+[`new_items`][agents.result.RunResultBase.new_items] 属性包含本次运行期间生成的新条目。这些条目是 [`RunItem`][agents.items.RunItem]。运行条目封装了由 LLM 生成的原始条目。
 
--   [`MessageOutputItem`][agents.items.MessageOutputItem] 表示来自 LLM 的一条消息。原始条目为生成的消息。
--   [`HandoffCallItem`][agents.items.HandoffCallItem] 表示 LLM 调用了 handoff 工具。原始条目为 LLM 的工具调用条目。
--   [`HandoffOutputItem`][agents.items.HandoffOutputItem] 表示发生了任务转移。原始条目为对 handoff 工具调用的工具响应。你也可以从该条目中访问源/目标智能体。
--   [`ToolCallItem`][agents.items.ToolCallItem] 表示 LLM 调用了一个工具。
--   [`ToolCallOutputItem`][agents.items.ToolCallOutputItem] 表示某个工具被调用。原始条目为工具响应。你也可以从该条目中访问工具输出。
--   [`ReasoningItem`][agents.items.ReasoningItem] 表示来自 LLM 的一个推理条目。原始条目为生成的推理内容。
+-   [`MessageOutputItem`][agents.items.MessageOutputItem] 表示来自 LLM 的一条消息。原始条目是生成的消息。
+-   [`HandoffCallItem`][agents.items.HandoffCallItem] 表示 LLM 调用了任务转移工具。原始条目是来自 LLM 的工具调用条目。
+-   [`HandoffOutputItem`][agents.items.HandoffOutputItem] 表示发生了任务转移。原始条目是对任务转移工具调用的工具响应。你还可以从该条目访问源/目标智能体。
+-   [`ToolCallItem`][agents.items.ToolCallItem] 表示 LLM 调用了某个工具。
+-   [`ToolCallOutputItem`][agents.items.ToolCallOutputItem] 表示某个工具已被调用。原始条目是工具响应。你还可以从该条目访问工具输出。
+-   [`ReasoningItem`][agents.items.ReasoningItem] 表示来自 LLM 的推理条目。原始条目是生成的推理内容。
 
 ## 其他信息
 
 ### 安全防护措施结果
 
-如果存在安全防护措施，其结果包含在 [`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 和 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 属性中。安全防护措施结果有时会包含你想要记录或存储的有用信息，因此我们将其提供给你。
+[`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 和 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 属性包含安全防护措施的结果（如果有）。安全防护措施结果有时会包含你希望记录或存储的有用信息，因此我们将其提供给你。
 
-工具的安全防护措施结果会单独通过 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 和 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results] 提供。这些安全防护措施可以附加到工具上，这些工具调用会在智能体工作流中执行相应的安全防护措施。
+工具安全防护措施结果会单独提供为 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 和 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results]。这些安全防护措施可以附加到工具上，这些工具调用会在智能体工作流期间执行相应的安全防护措施。
 
 ### 原始响应
 
@@ -14234,11 +14282,15 @@ search:
 
 ### 原始输入
 
-[`input`][agents.result.RunResultBase.input] 属性包含你传给 `run` 方法的原始输入。大多数情况下你不需要它，但在需要时它可用。
+[`input`][agents.result.RunResultBase.input] 属性包含你提供给 `run` 方法的原始输入。大多数情况下你不需要它，但如果需要也可使用。
 
 ### 中断与恢复运行
 
-如果某次运行因工具审批而暂停，待审批项会在 [`interruptions`][agents.result.RunResultBase.interruptions] 中暴露出来。用 `to_state()` 将结果转换为 [`RunState`][agents.run_state.RunState]，批准或拒绝中断项，然后通过 `Runner.run(...)` 或 `Runner.run_streamed(...)` 恢复运行。
+如果一次运行因工具审批而暂停，待处理的审批会暴露在
+[`RunResult.interruptions`][agents.result.RunResult.interruptions] 或
+[`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions] 中。将
+结果通过 `to_state()` 转换为 [`RunState`][agents.run_state.RunState]，批准或拒绝这些
+中断，然后通过 `Runner.run(...)` 或 `Runner.run_streamed(...)` 恢复运行。
 
 ```python
 from agents import Agent, Runner
@@ -14253,15 +14305,17 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-[`RunResult`][agents.result.RunResult] 和 [`RunResultStreaming`][agents.result.RunResultStreaming] 都支持 `to_state()`。
+[`RunResult`][agents.result.RunResult] 和
+[`RunResultStreaming`][agents.result.RunResultStreaming] 都支持 `to_state()`。关于持久化的
+审批工作流，请参阅[人工参与指南](human_in_the_loop.md)。
 
 ### 便捷辅助功能
 
 `RunResultBase` 包含一些在生产流程中很有用的辅助方法/属性：
 
-- [`final_output_as(...)`][agents.result.RunResultBase.final_output_as] 将最终输出转换为指定类型（可选进行运行时类型检查）。
-- [`last_response_id`][agents.result.RunResultBase.last_response_id] 返回最新的模型响应 ID，用于响应串联。
-- [`release_agents(...)`][agents.result.RunResultBase.release_agents] 在你检查完结果后，如果希望降低内存压力，可用于丢弃对智能体的强引用。
+- [`final_output_as(...)`][agents.result.RunResultBase.final_output_as] 将最终输出转换为特定类型（可选运行时类型检查）。
+- [`last_response_id`][agents.result.RunResultBase.last_response_id] 返回最新的模型响应 ID，可用于响应链式衔接。
+- [`release_agents(...)`][agents.result.RunResultBase.release_agents] 在你检查完结果后，释放对智能体的强引用，以降低内存压力。
 
 ================
 File: docs/zh/running_agents.md
@@ -14272,11 +14326,11 @@ search:
 ---
 # 运行智能体
 
-你可以通过 [`Runner`][agents.run.Runner] 类运行智能体。你有 3 种选择：
+你可以通过 [`Runner`][agents.run.Runner] 类来运行智能体。你有 3 个选项：
 
-1. [`Runner.run()`][agents.run.Runner.run]：异步运行并返回 [`RunResult`][agents.result.RunResult]。
-2. [`Runner.run_sync()`][agents.run.Runner.run_sync]：同步方法，底层只是运行 `.run()`。
-3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]：异步运行并返回 [`RunResultStreaming`][agents.result.RunResultStreaming]。它以流式模式调用 LLM，并在接收到事件时将这些事件流式传回给你。
+1. [`Runner.run()`][agents.run.Runner.run]，异步运行并返回一个 [`RunResult`][agents.result.RunResult]。
+2. [`Runner.run_sync()`][agents.run.Runner.run_sync]，这是一个同步方法，底层只是运行 `.run()`。
+3. [`Runner.run_streamed()`][agents.run.Runner.run_streamed]，异步运行并返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。它会以流式模式调用 LLM，并在事件接收时将其流式传递给你。
 
 ```python
 from agents import Agent, Runner
@@ -14291,40 +14345,44 @@ async def main():
     # Infinite loop's dance
 ```
 
-更多内容请参阅[结果指南](results.md)。
+请在[结果指南](results.md)中了解更多信息。
 
 ## Runner 生命周期与配置
 
 ### 智能体循环
 
-当你在 `Runner` 中使用 run 方法时，你会传入一个起始智能体和输入。输入可以是字符串（会被视为一条用户消息），也可以是输入项列表，这些输入项对应 OpenAI Responses API 中的 items。
+当你在 `Runner` 中使用 run 方法时，你需要传入一个起始智能体和输入。输入可以是：
 
-随后 Runner 会运行一个循环：
+-   一个字符串（视为一条用户消息），
+-   OpenAI Responses API 格式的输入项列表，或
+-   在恢复中断运行时传入 [`RunState`][agents.run_state.RunState]。
 
-1. 我们为当前智能体使用当前输入调用 LLM。
+随后 runner 会运行一个循环：
+
+1. 我们针对当前智能体和当前输入调用 LLM。
 2. LLM 生成其输出。
     1. 如果 LLM 返回 `final_output`，循环结束并返回结果。
-    2. 如果 LLM 进行任务转移，我们更新当前智能体与输入，并重新运行循环。
-    3. 如果 LLM 生成工具调用，我们运行这些工具调用，追加结果，并重新运行循环。
+    2. 如果 LLM 执行了任务转移，我们会更新当前智能体和输入，并重新运行循环。
+    3. 如果 LLM 生成了工具调用，我们会执行这些工具调用，追加结果，并重新运行循环。
 3. 如果超过传入的 `max_turns`，我们会抛出 [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded] 异常。
 
 !!! note
 
-    判断 LLM 输出是否被视为“最终输出”的规则是：它生成了具有所需类型的文本输出，并且没有工具调用。
+    判断 LLM 输出是否为“final output”的规则是：它产出了所需类型的文本输出，且没有工具调用。
 
 ### 流式传输
 
-流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含本次运行的完整信息，包括产生的所有新输出。你可以调用 `.stream_events()` 获取流式事件。更多内容请参阅[流式传输指南](streaming.md)。
+流式传输允许你在 LLM 运行时额外接收流式事件。流结束后，[`RunResultStreaming`][agents.result.RunResultStreaming] 将包含关于本次运行的完整信息，包括所有新产生的输出。你可以调用 `.stream_events()` 获取流式事件。请在[流式传输指南](streaming.md)中了解更多信息。
 
 #### Responses WebSocket 传输（可选辅助）
 
-如果你启用 OpenAI Responses websocket 传输，你仍然可以继续使用常规的 `Runner` API。我们建议使用 websocket session helper 以复用连接，但这不是必需的。
+如果你启用了 OpenAI Responses websocket 传输，仍然可以继续使用常规的 `Runner` API。推荐使用 websocket 会话辅助以复用连接，但这不是必需的。
 
 这是通过 websocket 传输的 Responses API，而不是 [Realtime API](realtime/guide.md)。
 
-##### 模式 1：不使用 session helper（可用）
+##### 模式 1：不使用会话辅助（可行）
 
-当你只想使用 websocket 传输，而不需要 SDK 为你管理共享的 provider/session 时使用此模式。
+当你只想使用 websocket 传输且不需要 SDK 为你管理共享 provider/session 时，使用此模式。
 
 ```python
 import asyncio
@@ -14351,7 +14409,7 @@ asyncio.run(main())
 
 ##### 模式 2：使用 `responses_websocket_session()`（推荐用于多轮复用）
 
-当你希望跨多次运行共享支持 websocket 的 provider 和 `RunConfig`（包括继承同一 `run_config` 的嵌套 agents-as-tools 调用）时，使用 [`responses_websocket_session()`][agents.responses_websocket_session]。
+当你希望在多次运行之间共享具备 websocket 能力的 provider 和 `RunConfig`（包括继承同一 `run_config` 的嵌套 agent-as-tool 调用）时，请使用 [`responses_websocket_session()`][agents.responses_websocket_session]。
 
 ```python
 import asyncio
@@ -14379,63 +14437,63 @@ async def main():
 asyncio.run(main())
 ```
 
-在上下文退出前完成对流式结果的消费。如果在 websocket 请求仍在进行时退出上下文，可能会强制关闭共享连接。
+请在上下文退出前完成对流式结果的消费。如果在 websocket 请求仍在进行时退出上下文，可能会强制关闭共享连接。
 
-### Run config
+### 运行配置
 
-`run_config` 参数让你为智能体运行配置一些全局设置：
+`run_config` 参数允许你为智能体运行配置一些全局设置：
 
-#### 常见 run config 目录
+#### 常见运行配置目录
 
-使用 `RunConfig` 可在不更改每个智能体定义的情况下，为单次运行覆盖行为。
+使用 `RunConfig` 可在不修改每个智能体定义的情况下，覆盖单次运行的行为。
 
-##### 模型、provider 与会话默认值
+##### 模型、provider 和会话默认值
 
--   [`model`][agents.run.RunConfig.model]：允许设置全局 LLM 模型，而不受每个 Agent 上 `model` 的影响。
--   [`model_provider`][agents.run.RunConfig.model_provider]：用于查找模型名称的模型 provider，默认为 OpenAI。
--   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体级设置。例如，你可以设置全局 `temperature` 或 `top_p`。
--   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史记录时，覆盖会话级默认值（例如 `SessionSettings(limit=...)`）。
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义在每一轮前如何将新的用户输入与会话历史合并。
+-   [`model`][agents.run.RunConfig.model]：允许设置一个全局 LLM 模型，不受每个 Agent 自身 `model` 设置影响。
+-   [`model_provider`][agents.run.RunConfig.model_provider]：用于查找模型名称的模型 provider，默认是 OpenAI。
+-   [`model_settings`][agents.run.RunConfig.model_settings]：覆盖智能体特定设置。例如，你可以设置全局 `temperature` 或 `top_p`。
+-   [`session_settings`][agents.run.RunConfig.session_settings]：在运行期间检索历史时覆盖会话级默认值（例如 `SessionSettings(limit=...)`）。
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]：在使用 Sessions 时，自定义每轮前如何将新的用户输入与会话历史合并。该回调可为同步或异步。
 
-##### 安全防护措施、任务转移与模型输入塑形
+##### 安全防护措施、任务转移与模型输入整形
 
--   [`input_guardrails`][agents.run.RunConfig.input_guardrails]、[`output_guardrails`][agents.run.RunConfig.output_guardrails]：在所有运行中包含的输入或输出安全防护措施列表。
--   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（如果该任务转移本身尚未指定）。输入过滤器允许你编辑发送给新智能体的输入。更多详情请参阅 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 文档。
--   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选启用的 beta 功能，会在调用下一个智能体之前，将之前的对话记录折叠为一条 assistant 消息。在我们稳定嵌套任务转移期间，该功能默认禁用；设为 `True` 启用，或保持 `False` 以透传原始对话记录。当你不传入 `RunConfig` 时，所有 [Runner methods][agents.run.Runner] 都会自动创建一个 `RunConfig`，因此快速入门和示例会保持默认关闭，并且任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移可以通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
--   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选 callable：当你选择启用 `nest_handoff_history` 时，它会接收归一化后的对话记录（history + handoff items）。它必须返回要转发给下一个智能体的输入项列表，从而允许你在不编写完整任务转移过滤器的情况下替换内置摘要。
--   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：在模型调用前立刻编辑已完全准备好的模型输入（instructions 与 input items）的钩子，例如用于裁剪历史或注入系统提示词。
--   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]：控制 Runner 将先前输出转换为下一轮模型输入时，是否保留或省略 reasoning item ID。
+-   [`input_guardrails`][agents.run.RunConfig.input_guardrails], [`output_guardrails`][agents.run.RunConfig.output_guardrails]：在所有运行中包含的一组输入或输出安全防护措施。
+-   [`handoff_input_filter`][agents.run.RunConfig.handoff_input_filter]：应用于所有任务转移的全局输入过滤器（如果该任务转移尚未设置）。输入过滤器允许你编辑发送给新智能体的输入。更多细节见 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 文档。
+-   [`nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]：可选加入的 beta 功能，在调用下一个智能体前将先前转录折叠为单条 assistant 消息。为稳定嵌套任务转移，该功能默认关闭；设为 `True` 启用，保留 `False` 则透传原始转录。所有 [Runner 方法][agents.run.Runner] 在你未传入 `RunConfig` 时都会自动创建一个，因此 quickstart 和代码示例默认保持关闭，且任何显式的 [`Handoff.input_filter`][agents.handoffs.Handoff.input_filter] 回调仍会覆盖它。单个任务转移也可通过 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history] 覆盖此设置。
+-   [`handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]：可选可调用对象；当你启用 `nest_handoff_history` 时，它会接收标准化后的转录（历史 + 任务转移项）。它必须返回要转发给下一个智能体的精确输入项列表，使你无需编写完整任务转移过滤器即可替换内置摘要。
+-   [`call_model_input_filter`][agents.run.RunConfig.call_model_input_filter]：在模型调用前立即编辑已完整准备好的模型输入（instructions 和输入项）的 hook，例如裁剪历史或注入系统提示词。
+-   [`reasoning_item_id_policy`][agents.run.RunConfig.reasoning_item_id_policy]：控制 runner 在将先前输出转换为下一轮模型输入时，是否保留或省略 reasoning 项 ID。
 
 ##### 追踪与可观测性
 
--   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许为整个运行禁用[追踪](tracing.md)。
--   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig]，为本次运行覆盖 exporter、processor 或追踪元数据。
--   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪是否包含潜在敏感数据，例如 LLM 与工具调用的输入/输出。
--   [`workflow_name`][agents.run.RunConfig.workflow_name]、[`trace_id`][agents.run.RunConfig.trace_id]、[`group_id`][agents.run.RunConfig.group_id]：设置本次运行的追踪工作流名称、trace ID 与 trace group ID。我们建议至少设置 `workflow_name`。group ID 是可选字段，可让你跨多次运行关联 traces。
--   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：要包含在所有 traces 中的元数据。
+-   [`tracing_disabled`][agents.run.RunConfig.tracing_disabled]：允许你为整次运行禁用[追踪](tracing.md)。
+-   [`tracing`][agents.run.RunConfig.tracing]：传入 [`TracingConfig`][agents.tracing.TracingConfig] 以覆盖本次运行的导出器、进程或追踪元数据。
+-   [`trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]：配置追踪中是否包含潜在敏感数据，如 LLM 和工具调用输入/输出。
+-   [`workflow_name`][agents.run.RunConfig.workflow_name], [`trace_id`][agents.run.RunConfig.trace_id], [`group_id`][agents.run.RunConfig.group_id]：为本次运行设置追踪工作流名称、trace ID 和 trace group ID。我们建议至少设置 `workflow_name`。group ID 是可选字段，可用于关联多次运行间的追踪。
+-   [`trace_metadata`][agents.run.RunConfig.trace_metadata]：包含在所有追踪中的元数据。
 
 ##### 工具审批与工具错误行为
 
 -   [`tool_error_formatter`][agents.run.RunConfig.tool_error_formatter]：在审批流程中工具调用被拒绝时，自定义对模型可见的消息。
 
-嵌套任务转移以可选启用的 beta 形式提供。通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠对话记录行为，或对某个特定任务转移设置 `handoff(..., nest_handoff_history=True)` 以仅对该任务转移启用。如果你更倾向于保留原始对话记录（默认），请保持该标志未设置，或提供一个可按需精确转发对话的 `handoff_input_filter`（或 `handoff_history_mapper`）。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包裹文本，请调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并使用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
+嵌套任务转移作为可选加入的 beta 功能提供。可通过传入 `RunConfig(nest_handoff_history=True)` 启用折叠转录行为，或设置 `handoff(..., nest_handoff_history=True)` 仅对特定任务转移启用。如果你希望保留原始转录（默认行为），请保持该标志未设置，或提供 `handoff_input_filter`（或 `handoff_history_mapper`）以按需精确转发对话。若要在不编写自定义 mapper 的情况下更改生成摘要中使用的包装文本，可调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并使用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] 恢复默认值）。
 
-#### Run config 详情
+#### 运行配置细节
 
 ##### `tool_error_formatter`
 
-使用 `tool_error_formatter` 自定义在审批流程中工具调用被拒绝时返回给模型的消息。
+使用 `tool_error_formatter` 可在审批流程中工具调用被拒绝时，自定义返回给模型的消息。
 
-formatter 会接收 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]，其中包含：
+formatter 会接收包含以下字段的 [`ToolErrorFormatterArgs`][agents.run_config.ToolErrorFormatterArgs]：
 
--   `kind`：错误类别。目前为 `"approval_rejected"`。
+-   `kind`：错误目录。目前为 `"approval_rejected"`。
 -   `tool_type`：工具运行时（`"function"`、`"computer"`、`"shell"` 或 `"apply_patch"`）。
 -   `tool_name`：工具名称。
 -   `call_id`：工具调用 ID。
--   `default_message`：SDK 默认的对模型可见消息。
--   `run_context`：当前运行上下文包装器。
+-   `default_message`：SDK 默认的模型可见消息。
+-   `run_context`：活动运行上下文包装器。
 
-返回一个字符串以替换消息，或返回 `None` 以使用 SDK 默认值。
+返回字符串可替换该消息，返回 `None` 则使用 SDK 默认值。
 
 ```python
 from agents import Agent, RunConfig, Runner, ToolErrorFormatterArgs
@@ -14460,53 +14518,53 @@ result = Runner.run_sync(
 
 ##### `reasoning_item_id_policy`
 
-当 Runner 将历史向前携带时（例如使用 `RunResult.to_input_list()` 或基于 session 的运行），`reasoning_item_id_policy` 控制如何将 reasoning items 转换为下一轮模型输入。
+`reasoning_item_id_policy` 控制在 runner 前推历史时（例如使用 `RunResult.to_input_list()` 或基于会话的运行），如何将 reasoning 项转换为下一轮模型输入。
 
--   `None` 或 `"preserve"`（默认）：保留 reasoning item ID。
--   `"omit"`：从生成的下一轮输入中移除 reasoning item ID。
+-   `None` 或 `"preserve"`（默认）：保留 reasoning 项 ID。
+-   `"omit"`：从生成的下一轮输入中移除 reasoning 项 ID。
 
-使用 `"omit"` 主要作为一种可选缓解手段，用于处理一类 Responses API 400 错误：发送了带 `id` 的 reasoning item，但缺少其必需的后续 item（例如 `Item 'rs_...' of type 'reasoning' was provided without its required following item.`）。
+将 `"omit"` 主要作为可选加入的缓解措施，用于处理一类 Responses API 400 错误：发送了带 `id` 的 reasoning 项，但缺少其必需的后续项（例如 `Item 'rs_...' of type 'reasoning' was provided without its required following item.`）。
 
-这可能发生在多轮智能体运行中：当 SDK 基于先前输出构造后续输入（包括会话持久化、服务端管理的对话增量、流式/非流式后续轮次以及 resume 路径）时，如果保留了 reasoning item ID，但 provider 要求该 ID 必须与对应的后续 item 成对存在，就会触发该问题。
+这可能发生在多轮智能体运行中：SDK 从先前输出构造后续输入时（包括会话持久化、服务端管理的会话增量、流式/非流式后续轮次及恢复路径），保留了 reasoning 项 ID，但 provider 要求该 ID 必须与其对应后续项保持配对。
 
-设置 `reasoning_item_id_policy="omit"` 会保留 reasoning 内容，但移除 reasoning item 的 `id`，从而避免在 SDK 生成的后续输入中触发该 API 不变式。
+设置 `reasoning_item_id_policy="omit"` 会保留 reasoning 内容，但移除 reasoning 项 `id`，从而避免在 SDK 生成的后续输入中触发该 API 不变量约束。
 
 作用域说明：
 
--   这只会影响 SDK 在构建后续输入时生成/转发的 reasoning items。
--   不会改写用户提供的初始输入项。
--   `call_model_input_filter` 仍可在该策略应用后有意重新引入 reasoning IDs。
+-   这只会影响 SDK 在构建后续输入时生成/转发的 reasoning 项。
+-   它不会改写用户提供的初始输入项。
+-   即使应用了该策略，`call_model_input_filter` 仍可有意重新引入 reasoning ID。
 
 ## 状态与对话管理
 
 ### 对话/聊天线程
 
-调用任何一种 run 方法都可能导致一个或多个智能体运行（因此也可能进行一次或多次 LLM 调用），但它表示聊天对话中的一次逻辑轮次。例如：
+调用任意 run 方法都可能导致一个或多个智能体运行（因此有一次或多次 LLM 调用），但它在聊天对话中表示一个单一的逻辑轮次。例如：
 
 1. 用户轮次：用户输入文本
-2. Runner 运行：第一个智能体调用 LLM、运行工具、任务转移到第二个智能体，第二个智能体运行更多工具，然后生成输出。
+2. Runner 运行：第一个智能体调用 LLM、运行工具、任务转移给第二个智能体，第二个智能体运行更多工具，然后产出输出。
 
-在智能体运行结束时，你可以选择向用户展示什么。例如，你可以向用户展示智能体生成的每一个新 item，或只展示最终输出。无论哪种方式，用户随后都可能提出追问，此时你可以再次调用 run 方法。
+在智能体运行结束后，你可以选择向用户展示什么。例如，你可以向用户展示智能体生成的每个新项，或仅展示最终输出。无论哪种方式，用户都可能继续追问，此时你可以再次调用 run 方法。
 
-#### 选择对话状态策略
+#### 对话状态策略选择
 
-每次运行使用以下一种方式：
+每次运行可采用以下一种方式：
 
-| 方式 | 最适合 | 你需要管理的内容 |
+| Approach | Best for | What you manage |
 | --- | --- | --- |
-| 手动（`result.to_input_list()`） | 对历史塑形拥有完全控制 | 你构建并重新发送先前的输入项 |
-| Sessions（`session=...`） | 应用管理的多轮聊天状态 | SDK 在你选择的后端加载/保存历史 |
+| 手动（`result.to_input_list()`） | 对历史整形的完全控制 | 你构造并重新发送先前输入项 |
+| Sessions（`session=...`） | 应用管理的多轮聊天状态 | SDK 在你选择的后端中加载/保存历史 |
 | 服务端管理（`conversation_id` / `previous_response_id`） | 让 OpenAI 管理轮次状态 | 你只存储 ID；服务端存储对话状态 |
 
 !!! note
 
-    Session 持久化不能与服务端管理的对话设置
-    （`conversation_id`、`previous_response_id` 或 `auto_previous_response_id`）
-    在同一次运行中组合使用。每次调用请选择一种方式。
+    会话持久化不能与服务端管理的对话设置
+    （`conversation_id`、`previous_response_id` 或 `auto_previous_response_id`）在
+    同一次运行中组合使用。每次调用请选择一种方式。
 
 #### 手动对话管理
 
-你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 手动管理对话历史，以获取下一轮的输入：
+你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 方法手动管理对话历史，以获取下一轮输入：
 
 ```python
 async def main():
@@ -14526,9 +14584,9 @@ async def main():
         # California
 ```
 
-#### 使用 Sessions 自动管理对话
+#### 使用 Sessions 的自动对话管理
 
-更简单的方法是使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
+为了更简化，你可以使用 [Sessions](sessions/index.md) 自动处理对话历史，而无需手动调用 `.to_input_list()`：
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -14556,19 +14614,20 @@ Sessions 会自动：
 
 -   在每次运行前检索对话历史
 -   在每次运行后存储新消息
--   为不同的 session ID 维护彼此独立的对话
+-   为不同会话 ID 维护独立对话
 
-更多详情请参阅 [Sessions 文档](sessions/index.md)。
+更多细节请参见 [Sessions 文档](sessions/index.md)。
 
-#### 服务端管理的对话
 
-你也可以让 OpenAI 的对话状态功能在服务端管理对话状态，而不是在本地用 `to_input_list()` 或 `Sessions` 来处理。这使你能够在不手动重发所有历史消息的情况下保留对话历史。更多详情请参阅 [OpenAI 对话状态指南](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
+#### 服务端管理对话
 
-OpenAI 提供两种方式来跨轮次跟踪状态：
+你也可以让 OpenAI 对话状态功能在服务端管理对话状态，而不是在本地通过 `to_input_list()` 或 `Sessions` 处理。这样你就能在不手动重发所有历史消息的情况下保留对话历史。更多细节请参见 [OpenAI 对话状态指南](https://platform.openai.com/docs/guides/conversation-state?api-mode=responses)。
+
+OpenAI 提供两种跨轮次跟踪状态的方式：
 
 ##### 1. 使用 `conversation_id`
 
-你先使用 OpenAI Conversations API 创建一个对话，然后在后续每次调用中复用该 ID：
+你先通过 OpenAI Conversations API 创建一个对话，然后在每次后续调用中复用其 ID：
 
 ```python
 from agents import Agent, Runner
@@ -14591,7 +14650,7 @@ async def main():
 
 ##### 2. 使用 `previous_response_id`
 
-另一种方式是**响应链式连接（response chaining）**，其中每一轮都会显式链接到上一轮的 response ID。
+另一种方式是**响应链式关联**，其中每轮都显式关联到上一轮的 response ID。
 
 ```python
 from agents import Agent, Runner
@@ -14616,21 +14675,25 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
+如果某次运行因审批而暂停，且你从 [`RunState`][agents.run_state.RunState] 恢复，
+SDK 会保留已保存的 `conversation_id` / `previous_response_id` / `auto_previous_response_id`
+设置，以便恢复后的轮次继续在同一个服务端管理对话中进行。
+
 !!! note
 
-    SDK 会对 `conversation_locked` 错误自动进行带退避的重试。在服务端管理的
-    对话运行中，它会在重试前回退内部对话追踪器输入，从而可以干净地重新发送
-    同一批已准备好的 items。
+    SDK 会自动重试 `conversation_locked` 错误并进行退避。在服务端管理的
+    对话运行中，它会在重试前回退内部对话跟踪器输入，以便能干净地重新发送
+    同一批已准备项。
 
-    在本地基于 session 的运行中（不能与 `conversation_id`、
-    `previous_response_id` 或 `auto_previous_response_id` 组合使用），SDK 也会尽力
-    回滚最近持久化的输入项，以减少重试后产生的重复历史条目。
+    在本地基于会话的运行中（不能与 `conversation_id`、
+    `previous_response_id` 或 `auto_previous_response_id` 组合），SDK 也会尽力
+    回滚最近持久化的输入项，以减少重试后的重复历史条目。
 
-## 钩子与自定义
+## Hooks 与自定义
 
-### Call model input filter
+### 模型调用输入过滤器
 
-使用 `call_model_input_filter` 在模型调用前编辑模型输入。该钩子接收当前智能体、上下文以及合并后的输入项（若存在则包含会话历史），并返回新的 `ModelInputData`。
+使用 `call_model_input_filter` 可在模型调用前立即编辑模型输入。该 hook 会接收当前智能体、上下文以及合并后的输入项（存在会话历史时也包含在内），并返回新的 `ModelInputData`。
 
 ```python
 from agents import Agent, Runner, RunConfig
@@ -14649,13 +14712,13 @@ result = Runner.run_sync(
 )
 ```
 
-你可以通过 `run_config` 为单次运行设置该钩子，或在 `Runner` 上将其设为默认值，用于脱敏敏感数据、裁剪过长历史，或注入额外的系统引导。
+可通过 `run_config` 按每次运行设置该 hook，以脱敏敏感数据、裁剪过长历史或注入额外系统指导。
 
 ## 错误与恢复
 
 ### 错误处理器
 
-所有 `Runner` 入口点都接受 `error_handlers`，这是一个以错误类型为键的 dict。目前支持的键是 `"max_turns"`。当你希望返回可控的最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
+所有 `Runner` 入口点都接受 `error_handlers`，它是一个按错误类型键控的字典。目前支持的键是 `"max_turns"`。当你希望返回受控最终输出而不是抛出 `MaxTurnsExceeded` 时使用它。
 
 ```python
 from agents import (
@@ -14684,38 +14747,38 @@ result = Runner.run_sync(
 print(result.final_output)
 ```
 
-当你不希望将回退输出追加到对话历史时，设置 `include_in_history=False`。
+当你不希望回退输出被追加到对话历史中时，请设置 `include_in_history=False`。
 
-## 持久执行集成与人类在环
+## 持久化执行集成与 human-in-the-loop
 
-对于工具审批的暂停/恢复模式，请从专门的[人类在环指南](human_in_the_loop.md)开始。
-下面的集成面向持久编排：运行可能跨越长时间等待、重试或进程重启。
+针对工具审批的暂停/恢复模式，请先阅读专门的[Human-in-the-loop 指南](human_in_the_loop.md)。
+以下集成用于运行可能跨越长时间等待、重试或进程重启的持久化编排。
 
 ### Temporal
 
-你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行持久、长时间运行的工作流，包括人类在环任务。观看 Temporal 与 Agents SDK 协同完成长时间任务的演示视频请见[此视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并在[此处查看文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。 
+你可以使用 Agents SDK 的 [Temporal](https://temporal.io/) 集成来运行持久化、长时间运行的工作流，包括 human-in-the-loop 任务。查看 Temporal 与 Agents SDK 协同完成长时任务的演示[视频](https://www.youtube.com/watch?v=fFBZqzT4DD8)，并[在此查看文档](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents)。 
 
 ### Restate
 
-你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量级、可持久运行的智能体，包括人工审批、任务转移与会话管理。该集成依赖 Restate 的单二进制运行时，并支持将智能体作为进程/容器或无服务器函数运行。
-更多详情请阅读[概览](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)或查看[文档](https://docs.restate.dev/ai)。
+你可以使用 Agents SDK 的 [Restate](https://restate.dev/) 集成来构建轻量且持久化的智能体，支持人工审批、任务转移和会话管理。该集成依赖 Restate 的单二进制运行时，并支持将智能体作为进程/容器或无服务器函数运行。
+更多细节请阅读[概览](https://www.restate.dev/blog/durable-orchestration-for-ai-agents-with-restate-and-openai-sdk)或查看[文档](https://docs.restate.dev/ai)。
 
 ### DBOS
 
-你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠的智能体，在故障与重启中保留进度。它支持长时间运行的智能体、人类在环工作流以及任务转移。它同时支持同步与异步方法。该集成仅需要 SQLite 或 Postgres 数据库。更多详情请查看集成的 [repo](https://github.com/dbos-inc/dbos-openai-agents) 和[文档](https://docs.dbos.dev/integrations/openai-agents)。
+你可以使用 Agents SDK 的 [DBOS](https://dbos.dev/) 集成来运行可靠智能体，在故障和重启后仍可保留进度。它支持长时间运行的智能体、human-in-the-loop 工作流以及任务转移。它同时支持同步和异步方法。该集成仅需 SQLite 或 Postgres 数据库。更多细节请查看集成 [repo](https://github.com/dbos-inc/dbos-openai-agents) 与[文档](https://docs.dbos.dev/integrations/openai-agents)。
 
 ## 异常
 
-SDK 会在某些情况下抛出异常。完整列表见 [`agents.exceptions`][]. 概览如下：
+在某些情况下 SDK 会抛出异常。完整列表见 [`agents.exceptions`][]。概览如下：
 
--   [`AgentsException`][agents.exceptions.AgentsException]：SDK 内所有异常的基类。它作为通用类型，其他更具体的异常均派生自它。
--   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体运行超过传给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表示智能体无法在指定的交互轮次数内完成任务。
--   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。可能包括：
-    -   JSON 格式错误：当模型为工具调用或其直接输出提供了格式错误的 JSON 结构时，尤其是在定义了特定 `output_type` 的情况下。
+-   [`AgentsException`][agents.exceptions.AgentsException]：这是 SDK 内所有异常的基类。它作为通用类型，所有其他具体异常都从它派生。
+-   [`MaxTurnsExceeded`][agents.exceptions.MaxTurnsExceeded]：当智能体运行超过传给 `Runner.run`、`Runner.run_sync` 或 `Runner.run_streamed` 方法的 `max_turns` 限制时抛出。它表示智能体无法在指定交互轮次数内完成任务。
+-   [`ModelBehaviorError`][agents.exceptions.ModelBehaviorError]：当底层模型（LLM）产生意外或无效输出时发生。包括：
+    -   JSON 格式错误：当模型为工具调用或其直接输出提供了格式错误的 JSON 结构时，尤其是在定义了特定 `output_type` 时。
     -   与工具相关的意外失败：当模型未按预期方式使用工具时
--   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]：当某次工具调用超过其配置的超时时间，并且工具使用 `timeout_behavior="raise_exception"` 时抛出。
--   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出错会抛出。通常源于错误的代码实现、无效配置，或对 SDK API 的误用。
--   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered]、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的条件分别被满足时抛出。输入安全防护措施会在处理前检查传入消息；输出安全防护措施会在交付前检查智能体的最终响应。
+-   [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]：当工具调用超过其配置超时时间，且工具使用 `timeout_behavior="raise_exception"` 时抛出。
+-   [`UserError`][agents.exceptions.UserError]：当你（使用 SDK 编写代码的人）在使用 SDK 时出错而抛出。通常由代码实现错误、无效配置或误用 SDK API 导致。
+-   [`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered], [`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered]：当输入安全防护措施或输出安全防护措施的触发条件分别满足时抛出。输入安全防护措施会在处理前检查传入消息，输出安全防护措施会在交付前检查智能体最终响应。
 
 ================
 File: docs/zh/streaming.md
@@ -14726,15 +14789,15 @@ search:
 ---
 # 流式传输
 
-流式传输允许你在智能体运行过程中订阅其更新。这对于向终端用户展示进度更新和部分响应非常有用。
+流式传输让你可以在智能体运行过程中订阅其更新。这对于向最终用户展示进度更新和部分响应非常有用。
 
-要进行流式传输，你可以调用 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]，它会返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。调用 `result.stream_events()` 会返回一个由 [`StreamEvent`][agents.stream_events.StreamEvent] 对象组成的异步流，详见下文。
+要进行流式传输，你可以调用 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]，它会返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。调用 `result.stream_events()` 会为你提供一个由 [`StreamEvent`][agents.stream_events.StreamEvent] 对象组成的异步流，下面会进行说明。
 
 ## 原始响应事件
 
-[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] 是直接从 LLM 传递过来的原始事件。它们采用 OpenAI Responses API 格式，这意味着每个事件都有一个类型（如 `response.created`、`response.output_text.delta` 等）以及数据。如果你想在生成后立即将响应消息流式发送给用户，这些事件会很有用。
+[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] 是直接从 LLM 传递过来的原始事件。它们采用 OpenAI Responses API 格式，这意味着每个事件都有一个类型（如 `response.created`、`response.output_text.delta` 等）和数据。如果你希望在响应消息生成后立即流式传给用户，这些事件会很有用。
 
-例如，下面的示例会按 token 输出 LLM 生成的文本。
+例如，下面会按 token 逐个输出 LLM 生成的文本。
 
 ```python
 import asyncio
@@ -14759,9 +14822,25 @@ if __name__ == "__main__":
 
 ## 运行项事件与智能体事件
 
-[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 是更高层级的事件。它会在某个项完全生成时通知你。这样你可以在“消息已生成”“工具已运行”等层级上推送进度更新，而不是在每个 token 上。同样，[`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] 会在当前智能体发生变化时（例如由于任务转移）向你提供更新。
+[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 是更高层级的事件。它们会在某个项完全生成后通知你。这使你可以按“消息已生成”“工具已运行”等层级推送进度更新，而不是按每个 token 推送。类似地，[`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] 会在当前智能体发生变化时向你提供更新（例如由于任务转移）。
 
-例如，下面的示例会忽略原始事件，仅向用户流式传输更新。
+### 运行项事件名称
+
+`RunItemStreamEvent.name` 使用一组固定的语义事件名称：
+
+-   `message_output_created`
+-   `handoff_requested`
+-   `handoff_occured`
+-   `tool_called`
+-   `tool_output`
+-   `reasoning_item_created`
+-   `mcp_approval_requested`
+-   `mcp_approval_response`
+-   `mcp_list_tools`
+
+`handoff_occured` 为了向后兼容而有意保留了拼写错误。
+
+例如，下面会忽略原始事件，并向用户流式传输更新。
 
 ```python
 import asyncio
@@ -17125,7 +17204,21 @@ To stream output while waiting for approvals, call `Runner.run_streamed`, consum
 
 ## Long-running approvals
 
-`RunState` is designed to be durable. Use `state.to_json()` or `state.to_string()` to store pending work in a database or queue and recreate it later with `RunState.from_json(...)` or `RunState.from_string(...)`. Pass `context_override` if you do not want to persist sensitive context data in the serialized payload.
+`RunState` is designed to be durable. Use `state.to_json()` or `state.to_string()` to store pending work in a database or queue and recreate it later with `RunState.from_json(...)` or `RunState.from_string(...)`.
+
+Useful serialization options:
+
+-   `context_serializer`: Customize how non-mapping context objects are serialized.
+-   `strict_context=True`: Fail serialization or deserialization unless the context is already a
+    mapping or you provide the appropriate serializer/deserializer.
+-   `context_override`: Replace the serialized context when loading state. This is useful when you
+    do not want to restore the original context object, but it does not remove that context from an
+    already serialized payload.
+-   `include_tracing_api_key=True`: Include the tracing API key in the serialized trace payload
+    when you need resumed work to keep exporting traces with the same credentials.
+
+`RunState` also preserves trace metadata and server-managed conversation settings, so a resumed run
+can continue the same trace and the same `conversation_id` / `previous_response_id` chain.
 
 ## Versioning pending tasks
 
@@ -18079,7 +18172,11 @@ The [`input`][agents.result.RunResultBase.input] property contains the original 
 
 ### Interruptions and resuming runs
 
-If a run pauses for tool approval, pending approvals are exposed in [`interruptions`][agents.result.RunResultBase.interruptions]. Convert the result into a [`RunState`][agents.run_state.RunState] with `to_state()`, approve or reject the interruption(s), and resume with `Runner.run(...)` or `Runner.run_streamed(...)`.
+If a run pauses for tool approval, pending approvals are exposed in
+[`RunResult.interruptions`][agents.result.RunResult.interruptions] or
+[`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]. Convert the
+result into a [`RunState`][agents.run_state.RunState] with `to_state()`, approve or reject the
+interruption(s), and resume with `Runner.run(...)` or `Runner.run_streamed(...)`.
 
 ```python
 from agents import Agent, Runner
@@ -18094,7 +18191,9 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-Both [`RunResult`][agents.result.RunResult] and [`RunResultStreaming`][agents.result.RunResultStreaming] support `to_state()`.
+Both [`RunResult`][agents.result.RunResult] and
+[`RunResultStreaming`][agents.result.RunResultStreaming] support `to_state()`. For durable
+approval workflows, see the [human-in-the-loop guide](human_in_the_loop.md).
 
 ### Convenience helpers
 
@@ -18134,7 +18233,11 @@ Read more in the [results guide](results.md).
 
 ### The agent loop
 
-When you use the run method in `Runner`, you pass in a starting agent and input. The input can either be a string (which is considered a user message), or a list of input items, which are the items in the OpenAI Responses API.
+When you use the run method in `Runner`, you pass in a starting agent and input. The input can be:
+
+-   a string (treated as a user message),
+-   a list of input items in the OpenAI Responses API format, or
+-   a [`RunState`][agents.run_state.RunState] when resuming an interrupted run.
 
 The runner then runs a loop:
 
@@ -18232,7 +18335,7 @@ Use `RunConfig` to override behavior for a single run without changing each agen
 -   [`model_provider`][agents.run.RunConfig.model_provider]: A model provider for looking up model names, which defaults to OpenAI.
 -   [`model_settings`][agents.run.RunConfig.model_settings]: Overrides agent-specific settings. For example, you can set a global `temperature` or `top_p`.
 -   [`session_settings`][agents.run.RunConfig.session_settings]: Overrides session-level defaults (for example, `SessionSettings(limit=...)`) when retrieving history during a run.
--   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions.
+-   [`session_input_callback`][agents.run.RunConfig.session_input_callback]: Customize how new user input is merged with session history before each turn when using Sessions. The callback can be sync or async.
 
 ##### Guardrails, handoffs, and model input shaping
 
@@ -18454,6 +18557,10 @@ async def main():
         print(f"Assistant: {result.final_output}")
 ```
 
+If a run pauses for approval and you resume from a [`RunState`][agents.run_state.RunState], the
+SDK keeps the saved `conversation_id` / `previous_response_id` / `auto_previous_response_id`
+settings so the resumed turn continues in the same server-managed conversation.
+
 !!! note
 
     The SDK automatically retries `conversation_locked` errors with backoff. In server-managed
@@ -18487,7 +18594,7 @@ result = Runner.run_sync(
 )
 ```
 
-Set the hook per run via `run_config` or as a default on your `Runner` to redact sensitive data, trim long histories, or inject additional system guidance.
+Set the hook per run via `run_config` to redact sensitive data, trim long histories, or inject additional system guidance.
 
 ## Errors and recovery
 
@@ -18594,6 +18701,22 @@ if __name__ == "__main__":
 ## Run item events and agent events
 
 [`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent]s are higher level events. They inform you when an item has been fully generated. This allows you to push progress updates at the level of "message generated", "tool ran", etc, instead of each token. Similarly, [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] gives you updates when the current agent changes (e.g. as the result of a handoff).
+
+### Run item event names
+
+`RunItemStreamEvent.name` uses a fixed set of semantic event names:
+
+-   `message_output_created`
+-   `handoff_requested`
+-   `handoff_occured`
+-   `tool_called`
+-   `tool_output`
+-   `reasoning_item_created`
+-   `mcp_approval_requested`
+-   `mcp_approval_response`
+-   `mcp_list_tools`
+
+`handoff_occured` is intentionally misspelled for backward compatibility.
 
 For example, this will ignore raw events and stream updates to the user.
 
