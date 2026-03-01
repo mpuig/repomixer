@@ -3359,21 +3359,21 @@ search:
 ---
 # 핸드오프
 
-핸드오프를 사용하면 에이전트가 다른 에이전트에게 작업을 위임할 수 있습니다. 이는 서로 다른 에이전트가 각기 다른 영역에 특화된 시나리오에서 특히 유용합니다. 예를 들어 고객 지원 앱에는 주문 상태, 환불, FAQ 등과 같은 작업을 각각 전담하는 에이전트가 있을 수 있습니다.
+핸드오프를 사용하면 한 에이전트가 다른 에이전트에 작업을 위임할 수 있습니다. 이는 서로 다른 에이전트가 각기 다른 영역을 전문으로 다루는 시나리오에서 특히 유용합니다. 예를 들어 고객 지원 앱에서는 주문 상태, 환불, FAQ 등의 작업을 각각 전담하는 에이전트가 있을 수 있습니다
 
-핸드오프는 LLM에 도구로 표현됩니다. 따라서 `Refund Agent`라는 에이전트로 핸드오프가 있다면, 도구 이름은 `transfer_to_refund_agent`가 됩니다.
+핸드오프는 LLM에 도구로 표현됩니다. 따라서 `Refund Agent`라는 이름의 에이전트로 핸드오프가 있다면, 도구 이름은 `transfer_to_refund_agent`가 됩니다
 
 ## 핸드오프 생성
 
-모든 에이전트에는 [`handoffs`][agents.agent.Agent.handoffs] 매개변수가 있으며, 여기에 `Agent`를 직접 전달하거나 핸드오프를 커스터마이즈하는 `Handoff` 객체를 전달할 수 있습니다.
+모든 에이전트에는 [`handoffs`][agents.agent.Agent.handoffs] 매개변수가 있으며, 여기에 `Agent`를 직접 전달하거나 핸드오프를 커스터마이즈하는 `Handoff` 객체를 전달할 수 있습니다
 
-일반 `Agent` 인스턴스를 전달하면, 해당 에이전트의 [`handoff_description`][agents.agent.Agent.handoff_description](설정된 경우)이 기본 도구 설명에 추가됩니다. 전체 `handoff()` 객체를 작성하지 않고도, 모델이 언제 해당 핸드오프를 선택해야 하는지 힌트를 주는 데 사용할 수 있습니다.
+일반 `Agent` 인스턴스를 전달하면, 해당 에이전트의 [`handoff_description`][agents.agent.Agent.handoff_description] (설정된 경우)이 기본 도구 설명에 추가됩니다. 전체 `handoff()` 객체를 작성하지 않고도 모델이 해당 핸드오프를 선택해야 하는 시점을 힌트로 제공할 때 사용하세요
 
-Agents SDK에서 제공하는 [`handoff()`][agents.handoffs.handoff] 함수를 사용해 핸드오프를 생성할 수 있습니다. 이 함수로 핸드오프 대상 에이전트를 지정하고, 선택적으로 오버라이드와 입력 필터를 지정할 수 있습니다.
+Agents SDK에서 제공하는 [`handoff()`][agents.handoffs.handoff] 함수를 사용해 핸드오프를 만들 수 있습니다. 이 함수로 핸드오프 대상 에이전트와 선택적 오버라이드, 입력 필터를 지정할 수 있습니다
 
 ### 기본 사용법
 
-다음은 간단한 핸드오프를 만드는 방법입니다:
+다음은 간단한 핸드오프를 만드는 방법입니다
 
 ```python
 from agents import Agent, handoff
@@ -3385,19 +3385,20 @@ refund_agent = Agent(name="Refund agent")
 triage_agent = Agent(name="Triage agent", handoffs=[billing_agent, handoff(refund_agent)])
 ```
 
-1. 에이전트를 직접 사용할 수도 있고(`billing_agent`처럼), `handoff()` 함수를 사용할 수도 있습니다.
+1. 에이전트를 직접 사용할 수 있고(`billing_agent`처럼), 또는 `handoff()` 함수를 사용할 수 있습니다
 
 ### `handoff()` 함수를 통한 핸드오프 커스터마이즈
 
-[`handoff()`][agents.handoffs.handoff] 함수로 다양한 항목을 커스터마이즈할 수 있습니다.
+[`handoff()`][agents.handoffs.handoff] 함수로 여러 항목을 커스터마이즈할 수 있습니다
 
--   `agent`: 작업이 핸드오프될 대상 에이전트입니다.
--   `tool_name_override`: 기본값으로 `Handoff.default_tool_name()` 함수가 사용되며, 이는 `transfer_to_<agent_name>`으로 해석됩니다. 이를 오버라이드할 수 있습니다.
+-   `agent`: 핸드오프할 대상 에이전트입니다
+-   `tool_name_override`: 기본적으로 `Handoff.default_tool_name()` 함수가 사용되며, 이는 `transfer_to_<agent_name>`으로 해석됩니다. 이를 오버라이드할 수 있습니다
 -   `tool_description_override`: `Handoff.default_tool_description()`의 기본 도구 설명을 오버라이드합니다
--   `on_handoff`: 핸드오프가 호출될 때 실행되는 콜백 함수입니다. 핸드오프가 호출된다는 사실을 알자마자 데이터 페칭을 시작하는 등의 용도에 유용합니다. 이 함수는 에이전트 컨텍스트를 받으며, 선택적으로 LLM이 생성한 입력도 받을 수 있습니다. 입력 데이터는 `input_type` 매개변수로 제어됩니다.
--   `input_type`: 핸드오프가 기대하는 입력 타입(선택 사항)입니다.
--   `input_filter`: 다음 에이전트가 받는 입력을 필터링할 수 있습니다. 자세한 내용은 아래를 참고하세요.
--   `is_enabled`: 핸드오프 활성화 여부입니다. boolean 또는 boolean을 반환하는 함수가 될 수 있어, 런타임에 동적으로 핸드오프를 활성화/비활성화할 수 있습니다.
+-   `on_handoff`: 핸드오프가 호출될 때 실행되는 콜백 함수입니다. 핸드오프 호출이 확정되는 즉시 데이터 가져오기를 시작하는 등의 용도에 유용합니다. 이 함수는 에이전트 컨텍스트를 받고, 선택적으로 LLM이 생성한 입력도 받을 수 있습니다. 입력 데이터는 `input_type` 매개변수로 제어됩니다
+-   `input_type`: 핸드오프가 기대하는 입력 타입(선택 사항)입니다
+-   `input_filter`: 다음 에이전트가 받는 입력을 필터링할 수 있습니다. 자세한 내용은 아래를 참고하세요
+-   `is_enabled`: 핸드오프 활성화 여부입니다. 불리언 또는 불리언을 반환하는 함수를 사용할 수 있어 런타임에 동적으로 활성화/비활성화할 수 있습니다
+-   `nest_handoff_history`: RunConfig 수준 `nest_handoff_history` 설정에 대한 호출별 선택적 오버라이드입니다. `None`이면 대신 현재 활성 실행 구성에 정의된 값을 사용합니다
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -3417,7 +3418,7 @@ handoff_obj = handoff(
 
 ## 핸드오프 입력
 
-일부 상황에서는 LLM이 핸드오프를 호출할 때 특정 데이터를 제공하길 원할 수 있습니다. 예를 들어 "Escalation agent"로 핸드오프하는 상황을 생각해 보세요. 로그를 남길 수 있도록 사유가 함께 제공되길 원할 수 있습니다.
+특정 상황에서는 LLM이 핸드오프를 호출할 때 일부 데이터를 제공하도록 하고 싶을 수 있습니다. 예를 들어 "Escalation agent"로 핸드오프한다고 가정해 보겠습니다. 로깅할 수 있도록 사유를 제공받고 싶을 수 있습니다
 
 ```python
 from pydantic import BaseModel
@@ -3441,11 +3442,11 @@ handoff_obj = handoff(
 
 ## 입력 필터
 
-핸드오프가 발생하면 새 에이전트가 대화를 이어받아 이전의 전체 대화 기록을 볼 수 있는 것과 같습니다. 이를 변경하고 싶다면 [`input_filter`][agents.handoffs.Handoff.input_filter]를 설정할 수 있습니다. 입력 필터는 [`HandoffInputData`][agents.handoffs.HandoffInputData]를 통해 기존 입력을 받아, 새로운 `HandoffInputData`를 반환해야 하는 함수입니다.
+핸드오프가 발생하면 새 에이전트가 대화를 인계받아 이전 대화 기록 전체를 보게 되는 것과 같습니다. 이를 변경하려면 [`input_filter`][agents.handoffs.Handoff.input_filter]를 설정할 수 있습니다. 입력 필터는 [`HandoffInputData`][agents.handoffs.HandoffInputData]를 통해 기존 입력을 받아 새로운 `HandoffInputData`를 반환해야 하는 함수입니다
 
-중첩 핸드오프는 옵트인 베타로 제공되며, 안정화하는 동안 기본적으로 비활성화되어 있습니다. [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]를 활성화하면, 러너가 이전 대화 기록을 단일 어시스턴트 요약 메시지로 축약하고 `<CONVERSATION HISTORY>` 블록으로 감싸며, 동일한 실행 중 여러 핸드오프가 발생할 때 새로운 턴을 계속 덧붙입니다. 전체 `input_filter`를 작성하지 않고도 생성된 메시지를 대체하려면 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]를 통해 자체 매핑 함수를 제공할 수 있습니다. 이 옵트인은 핸드오프나 실행에서 명시적인 `input_filter`를 제공하지 않는 경우에만 적용되므로, 이미 페이로드를 커스터마이즈하는 기존 코드(이 저장소의 예제 포함)는 변경 없이 현재 동작을 유지합니다. 단일 핸드오프에 대해 중첩 동작을 오버라이드하려면 [`handoff(...)`][agents.handoffs.handoff]에 `nest_handoff_history=True` 또는 `False`를 전달하면 되며, 이는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 설정합니다. 생성된 요약의 래퍼 텍스트만 변경하면 된다면, 에이전트를 실행하기 전에 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers](그리고 선택적으로 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers])를 호출하세요.
+중첩 핸드오프는 옵트인 베타로 제공되며, 안정화 작업 중이므로 기본적으로 비활성화되어 있습니다. [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history]를 활성화하면, 러너는 이전 대화록을 단일 어시스턴트 요약 메시지로 축약하고 `<CONVERSATION HISTORY>` 블록으로 감쌉니다. 같은 실행 중 여러 핸드오프가 발생하면 이 블록에 새 턴이 계속 추가됩니다. 전체 `input_filter`를 작성하지 않고 생성된 메시지를 대체하려면 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper]를 통해 자체 매핑 함수를 제공할 수 있습니다. 이 옵트인은 핸드오프와 실행 모두에서 명시적 `input_filter`를 제공하지 않은 경우에만 적용되므로, 이미 페이로드를 커스터마이즈하는 기존 코드(이 저장소의 예제 포함)는 변경 없이 현재 동작을 유지합니다. [`handoff(...)`][agents.handoffs.handoff]에 `nest_handoff_history=True` 또는 `False`를 전달해 단일 핸드오프의 중첩 동작을 오버라이드할 수 있으며, 이는 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]를 설정합니다. 생성된 요약의 래퍼 텍스트만 변경하려면 에이전트를 실행하기 전에 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers](및 선택적으로 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers])를 호출하세요
 
-일부 공통 패턴(예: 기록에서 모든 도구 호출 제거)은 [`agents.extensions.handoff_filters`][]에 이미 구현되어 있습니다
+몇 가지 일반적인 패턴(예: 기록에서 모든 도구 호출 제거)은 [`agents.extensions.handoff_filters`][]에 구현되어 있습니다
 
 ```python
 from agents import Agent, handoff
@@ -3459,11 +3460,11 @@ handoff_obj = handoff(
 )
 ```
 
-1. 이는 `FAQ agent`가 호출될 때 기록에서 모든 도구를 자동으로 제거합니다.
+1. 이렇게 하면 `FAQ agent`가 호출될 때 기록에서 모든 도구가 자동으로 제거됩니다
 
 ## 권장 프롬프트
 
-LLM이 핸드오프를 올바르게 이해하도록 하려면, 에이전트에 핸드오프 관련 정보를 포함하는 것을 권장합니다. [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][]에 권장 프리픽스가 있으며, 또는 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][]를 호출해 권장 데이터를 프롬프트에 자동으로 추가할 수 있습니다.
+LLM이 핸드오프를 올바르게 이해하도록 하려면, 에이전트에 핸드오프 관련 정보를 포함하는 것을 권장합니다. [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][]에 권장 접두사가 있으며, [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][]를 호출해 프롬프트에 권장 데이터를 자동으로 추가할 수도 있습니다
 
 ```python
 from agents import Agent
@@ -13069,21 +13070,21 @@ search:
 ---
 # 任务转移
 
-任务转移允许一个智能体将任务委派给另一个智能体。这在不同智能体分别专精于不同领域的场景中特别有用。例如，一个客户支持应用可能包含多个智能体，分别专门处理订单状态、退款、常见问题解答等任务。
+任务转移允许一个智能体将任务委托给另一个智能体。这在不同智能体专注于不同领域的场景中特别有用。例如，一个客户支持应用可能会有多个智能体，分别专门处理订单状态、退款、常见问题等任务。
 
-任务转移会以工具的形式呈现给 LLM。因此，如果要任务转移到名为 `Refund Agent` 的智能体，该工具会被命名为 `transfer_to_refund_agent`。
+任务转移会作为工具呈现给 LLM。因此，如果有一个转移目标是名为 `Refund Agent` 的智能体，那么该工具会被命名为 `transfer_to_refund_agent`。
 
 ## 创建任务转移
 
 所有智能体都有一个 [`handoffs`][agents.agent.Agent.handoffs] 参数，它既可以直接接收一个 `Agent`，也可以接收一个用于自定义任务转移的 `Handoff` 对象。
 
-如果你传入的是普通的 `Agent` 实例，它们的 [`handoff_description`][agents.agent.Agent.handoff_description]（设置后）会被追加到默认的工具描述中。你可以用它来提示模型在何时应选择该任务转移，而无需编写完整的 `handoff()` 对象。
+如果你传入的是普通的 `Agent` 实例，它们的 [`handoff_description`][agents.agent.Agent.handoff_description]（设置后）会附加到默认工具描述中。你可以用它来提示模型何时应选择该任务转移，而无需编写完整的 `handoff()` 对象。
 
-你可以使用 Agents SDK 提供的 [`handoff()`][agents.handoffs.handoff] 函数来创建任务转移。该函数允许你指定要转移到的智能体，并提供可选的覆写项与输入过滤器。
+你可以使用 Agents SDK 提供的 [`handoff()`][agents.handoffs.handoff] 函数来创建任务转移。该函数允许你指定要转移到的智能体，以及可选的覆盖项和输入过滤器。
 
 ### 基本用法
 
-下面展示如何创建一个简单的任务转移：
+以下是创建一个简单任务转移的方式：
 
 ```python
 from agents import Agent, handoff
@@ -13099,15 +13100,16 @@ triage_agent = Agent(name="Triage agent", handoffs=[billing_agent, handoff(refun
 
 ### 通过 `handoff()` 函数自定义任务转移
 
-[`handoff()`][agents.handoffs.handoff] 函数允许你自定义相关内容。
+[`handoff()`][agents.handoffs.handoff] 函数可让你进行自定义。
 
--   `agent`：要将任务转移给的智能体。
--   `tool_name_override`：默认使用 `Handoff.default_tool_name()` 函数，解析为 `transfer_to_<agent_name>`。你可以覆写它。
--   `tool_description_override`：覆写 `Handoff.default_tool_description()` 的默认工具描述。
--   `on_handoff`：当任务转移被调用时执行的回调函数。这对在你确定将发生任务转移时立即触发数据拉取等操作很有用。该函数会接收智能体上下文，并且也可以选择接收由 LLM 生成的输入。输入数据由 `input_type` 参数控制。
+-   `agent`：这是任务将被转移到的智能体。
+-   `tool_name_override`：默认使用 `Handoff.default_tool_name()` 函数，解析为 `transfer_to_<agent_name>`。你可以覆盖它。
+-   `tool_description_override`：覆盖来自 `Handoff.default_tool_description()` 的默认工具描述
+-   `on_handoff`：当任务转移被调用时执行的回调函数。这对于在确认将触发任务转移时立即启动数据拉取等操作很有用。该函数接收智能体上下文，并且也可以选择接收由 LLM 生成的输入。输入数据由 `input_type` 参数控制。
 -   `input_type`：任务转移期望的输入类型（可选）。
--   `input_filter`：用于过滤下一个智能体接收到的输入。更多内容见下文。
--   `is_enabled`：任务转移是否启用。可以是布尔值，也可以是返回布尔值的函数，从而支持在运行时动态启用或禁用任务转移。
+-   `input_filter`：它可让你过滤下一个智能体接收到的输入。详见下文。
+-   `is_enabled`：任务转移是否启用。它可以是布尔值，也可以是返回布尔值的函数，从而允许你在运行时动态启用或禁用任务转移。
+-   `nest_handoff_history`：对 RunConfig 级别 `nest_handoff_history` 设置的可选单次调用覆盖项。如果为 `None`，则改用当前运行配置中定义的值。
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
@@ -13127,7 +13129,7 @@ handoff_obj = handoff(
 
 ## 任务转移输入
 
-在某些情况下，你希望 LLM 在调用任务转移时提供一些数据。例如，设想有一个转移到“升级处理智能体”的任务转移。你可能希望提供一个原因，以便记录日志。
+在某些情况下，你希望 LLM 在调用任务转移时提供一些数据。例如，设想一个转移到“升级处理智能体”的任务。你可能希望提供一个原因，以便记录日志。
 
 ```python
 from pydantic import BaseModel
@@ -13151,11 +13153,11 @@ handoff_obj = handoff(
 
 ## 输入过滤器
 
-当发生任务转移时，就像新的智能体接管了对话，并能看到此前的全部对话历史。如果你想改变这一点，可以设置一个 [`input_filter`][agents.handoffs.Handoff.input_filter]。输入过滤器是一个函数，它通过 [`HandoffInputData`][agents.handoffs.HandoffInputData] 接收现有输入，并必须返回一个新的 `HandoffInputData`。
+当任务转移发生时，就像新智能体接管了对话，并且可以看到完整的先前对话历史。如果你想改变这一点，可以设置 [`input_filter`][agents.handoffs.Handoff.input_filter]。输入过滤器是一个函数，它通过 [`HandoffInputData`][agents.handoffs.HandoffInputData] 接收现有输入，并且必须返回新的 `HandoffInputData`。
 
-嵌套任务转移以可选加入（opt-in）的 beta 形式提供；在我们稳定它们期间，默认是禁用的。当你启用 [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history] 时，runner 会将此前的对话记录折叠为一条 assistant 总结消息，并将其包裹在一个 `<CONVERSATION HISTORY>` 块中；当同一次运行期间发生多次任务转移时，该块会持续追加新的轮次。你可以通过 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] 提供自己的映射函数，以在不编写完整 `input_filter` 的情况下替换生成的消息。该 opt-in 仅在任务转移和运行都未提供显式 `input_filter` 时生效，因此现有已经自定义 payload 的代码（包括本仓库中的代码示例）无需修改即可保持当前行为。你可以通过在 [`handoff(...)`][agents.handoffs.handoff] 中传入 `nest_handoff_history=True` 或 `False` 来为单个任务转移覆写嵌套行为，这会设置 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]。如果你只需要修改生成总结的包装文本，请在运行智能体之前调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（并可选调用 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]）。
+嵌套任务转移作为可选加入的 beta 功能提供，当前默认禁用，我们正在稳定该功能。当你启用 [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history] 时，运行器会将之前的对话记录折叠为一条 assistant 摘要消息，并将其包裹在 `<CONVERSATION HISTORY>` 块中；在同一次运行中发生多次任务转移时，该块会持续追加新的轮次。你可以通过 [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] 提供自己的映射函数，以替换生成的消息，而无需编写完整的 `input_filter`。此可选加入机制仅在任务转移和运行都未提供显式 `input_filter` 时生效，因此已有自定义负载的现有代码（包括本仓库中的代码示例）无需更改即可保持当前行为。你还可以通过向 [`handoff(...)`][agents.handoffs.handoff] 传递 `nest_handoff_history=True` 或 `False` 来覆盖单个任务转移的嵌套行为，这会设置 [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]。如果你只需要更改生成摘要的包裹文本，可在运行智能体前调用 [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers]（以及可选的 [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers]）。
 
-有一些常见模式（例如从历史记录中移除所有工具调用），我们已在 [`agents.extensions.handoff_filters`][] 中为你实现。
+有一些常见模式（例如从历史中移除所有工具调用），我们已在 [`agents.extensions.handoff_filters`][] 中为你实现。
 
 ```python
 from agents import Agent, handoff
@@ -13169,11 +13171,11 @@ handoff_obj = handoff(
 )
 ```
 
-1. 当调用 `FAQ agent` 时，这会自动从历史记录中移除所有工具。
+1. 当调用 `FAQ agent` 时，这将自动从历史中移除所有工具。
 
 ## 推荐提示词
 
-为确保 LLM 正确理解任务转移，我们建议在你的智能体中包含有关任务转移的信息。我们在 [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] 中提供了建议的前缀；或者你可以调用 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][] 来自动将推荐数据添加到你的提示词中。
+为了确保 LLM 能正确理解任务转移，我们建议在你的智能体中加入有关任务转移的信息。我们在 [`agents.extensions.handoff_prompt.RECOMMENDED_PROMPT_PREFIX`][] 中提供了建议前缀，或者你可以调用 [`agents.extensions.handoff_prompt.prompt_with_handoff_instructions`][]，自动将推荐内容添加到你的提示词中。
 
 ```python
 from agents import Agent
@@ -16998,6 +17000,7 @@ The [`handoff()`][agents.handoffs.handoff] function lets you customize things.
 -   `input_type`: The type of input expected by the handoff (optional).
 -   `input_filter`: This lets you filter the input received by the next agent. See below for more.
 -   `is_enabled`: Whether the handoff is enabled. This can be a boolean or a function that returns a boolean, allowing you to dynamically enable or disable the handoff at runtime.
+-   `nest_handoff_history`: Optional per-call override for the RunConfig-level `nest_handoff_history` setting. If `None`, the value defined in the active run configuration is used instead.
 
 ```python
 from agents import Agent, handoff, RunContextWrapper
