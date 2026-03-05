@@ -1077,7 +1077,7 @@ public static LlmAgent createAgent() {
       .build();
 
   Claude claudeModel = new Claude(
-      "claude-3-7-sonnet-latest", anthropicClient
+      "claude-sonnet-4-6", anthropicClient
   );
 
   return LlmAgent.builder()
@@ -1113,7 +1113,7 @@ import com.anthropic.client.okhttp.AnthropicOkHttpClient; // From Anthropic's SD
 
 public class DirectAnthropicAgent {
 
-  private static final String CLAUDE_MODEL_ID = "claude-3-7-sonnet-latest"; // Or your preferred Claude model
+  private static final String CLAUDE_MODEL_ID = "claude-sonnet-4-6"; // Or your preferred Claude model
 
   public static LlmAgent createAgent() {
 
@@ -1872,7 +1872,7 @@ Ensure your environment is configured for Vertex AI:
 ## Model Garden Deployments
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 You can deploy various open and proprietary models from the
@@ -1881,28 +1881,55 @@ to an endpoint.
 
 **Example:**
 
-```python
-from google.adk.agents import LlmAgent
-from google.genai import types # For config objects
+=== "Python"
 
-# --- Example Agent using a Llama 3 model deployed from Model Garden ---
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.genai import types # For config objects
 
-# Replace with your actual Vertex AI Endpoint resource name
-llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
+    # --- Example Agent using a Llama 3 model deployed from Model Garden ---
 
-agent_llama3_vertex = LlmAgent(
-    model=llama3_endpoint,
-    name="llama3_vertex_agent",
-    instruction="You are a helpful assistant based on Llama 3, hosted on Vertex AI.",
-    generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
-    # ... other agent parameters
-)
-```
+    # Replace with your actual Vertex AI Endpoint resource name
+    llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
+
+    agent_llama3_vertex = LlmAgent(
+        model=llama3_endpoint,
+        name="llama3_vertex_agent",
+        instruction="You are a helpful assistant based on Llama 3, hosted on Vertex AI.",
+        generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
+        # ... other agent parameters
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+    import com.google.genai.types.GenerateContentConfig;
+
+    // ...
+
+    // Replace with your actual Vertex AI Endpoint resource name
+    String llama3Endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID";
+
+    LlmAgent agentLlama3Vertex = LlmAgent.builder()
+        .model(Gemini.builder()
+            .modelName(llama3Endpoint)
+            .build())
+        .name("llama3_vertex_agent")
+        .instruction("You are a helpful assistant based on Llama 3, hosted on Vertex AI.")
+        .generateContentConfig(GenerateContentConfig.builder()
+            .maxOutputTokens(2048)
+            .build())
+        // ... other agent parameters
+        .build();
+    ```
 
 ## Fine-tuned Model Endpoints
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Deploying your fine-tuned models (whether based on Gemini or other architectures
@@ -1910,21 +1937,44 @@ supported by Vertex AI) results in an endpoint that can be used directly.
 
 **Example:**
 
-```python
-from google.adk.agents import LlmAgent
+=== "Python"
 
-# --- Example Agent using a fine-tuned Gemini model endpoint ---
+    ```python
+    from google.adk.agents import LlmAgent
 
-# Replace with your fine-tuned model's endpoint resource name
-finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
+    # --- Example Agent using a fine-tuned Gemini model endpoint ---
 
-agent_finetuned_gemini = LlmAgent(
-    model=finetuned_gemini_endpoint,
-    name="finetuned_gemini_agent",
-    instruction="You are a specialized assistant trained on specific data.",
-    # ... other agent parameters
-)
-```
+    # Replace with your fine-tuned model's endpoint resource name
+    finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
+
+    agent_finetuned_gemini = LlmAgent(
+        model=finetuned_gemini_endpoint,
+        name="finetuned_gemini_agent",
+        instruction="You are a specialized assistant trained on specific data.",
+        # ... other agent parameters
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+
+    // ...
+
+    // Replace with your fine-tuned model's endpoint resource name
+    String finetunedGeminiEndpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID";
+
+    LlmAgent agentFinetunedGemini = LlmAgent.builder()
+        .model(Gemini.builder()
+            .modelName(finetunedGeminiEndpoint)
+            .build())
+        .name("finetuned_gemini_agent")
+        .instruction("You are a specialized assistant trained on specific data.")
+        // ... other agent parameters
+        .build();
+    ```
 
 ## Anthropic Claude on Vertex AI {#third-party-models-on-vertex-ai-eg-anthropic-claude}
 
@@ -1934,6 +1984,8 @@ agent_finetuned_gemini = LlmAgent(
 
 Some providers, like Anthropic, make their models available directly through
 Vertex AI.
+
+**Example:**
 
 === "Python"
 
@@ -1969,8 +2021,6 @@ Vertex AI.
 
         LLMRegistry.register(Claude)
         ```
-
-       **Example:**
 
        ```python
        from google.adk.agents import LlmAgent
@@ -2012,8 +2062,6 @@ Vertex AI.
 
     3.  **Instantiate and Configure the Model:**
         When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
-
-    **Example:**
 
     ```java
     import com.anthropic.client.AnthropicClient;
@@ -2070,7 +2118,7 @@ Vertex AI.
 ## Open Models on Vertex AI {#open-models}
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 Vertex AI offers a curated selection of open-source models, such as Meta Llama, through Model-as-a-Service (MaaS). These models are accessible via managed APIs, allowing you to deploy and scale without managing the underlying infrastructure. For a full list of available options, see the [Vertex AI open models for MaaS](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/use-open-models#open-models) documentation.
@@ -21704,15 +21752,41 @@ catalog_tags: ["code","google"]
 </div>
 
 The GKE Code Executor (`GkeCodeExecutor`) provides a secure and scalable method
-for running LLM-generated code by leveraging the GKE (Google Kubernetes Engine)
-Sandbox environment, which uses gVisor for workload isolation. For each code
-execution request, it dynamically creates an ephemeral, sandboxed Kubernetes Job
-with a hardened Pod configuration. You should use this executor for production
-environments on GKE where security and isolation are critical.
+for running LLM-generated code by leveraging Google Kubernetes Engine (GKE). You should use this executor for production environments on GKE where security and isolation are critical. It supports two execution modes:
 
-## How it Works
+1.  **Sandbox Mode (Recommended):** Utilizes the [Agent Sandbox](https://github.com/kubernetes-sigs/agent-sandbox) client to execute code within sandbox instances created on-demand from a template. This mode offers lower latency by using [pre-warmed sandboxes](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/agent-sandbox#create_a_sandboxtemplate_and_sandboxwarmpool) and supports more direct interaction with the sandbox environment.
+2.  **Job Mode:** Uses the GKE Sandbox environment with gVisor for workload isolation. For each code execution request, it dynamically creates an ephemeral, sandboxed Kubernetes Job with a hardened Pod configuration. This mode is provided for backward compatibility.
 
-When a request to execute code is made, the `GkeCodeExecutor` performs the following steps:
+
+## Execution Modes
+
+### Sandbox Mode (`executor_type="sandbox"`)
+
+This is the recommended mode. It uses the `k8s-agent-sandbox` client library to create and communicate with the Agent Sandbox in the GKE Cluster. When a request to execute code is made, it performs the following steps:
+
+1.  Creates a `SandboxClaim` using the specified template.
+2.  Waits for the sandbox instance to become ready.
+3.  Executes the code in the claimed sandbox.
+4.  Retrieves the standard output and error.
+5.  Deletes the `SandboxClaim`, which in turn cleans up the sandbox instance.
+
+This approach is faster than the Job mode as it leverages pre-warmed sandboxes and optimizes startup time provided by the Agent Sandbox controller.
+
+**Key Benefits:**
+
+In addition to all the benefits of the Job mode, Sandbox mode also offers the following features:
+
+*   **Lower Latency:** Aims to reduce startup time compared to creating full Kubernetes Jobs.
+*   **Managed Environment:** Leverages the Agent Sandbox framework for sandbox lifecycle management.
+
+**Prerequisites:**
+
+*   An existing Agent Sandbox deployment in your GKE cluster, including the sandbox controller and it's extensions (e.g., sandbox claim controller & sandbox warmpool controller), router, gateway and relevant `SandboxTemplate` resources (e.g., `python-sandbox-template`).
+*   The necessary RBAC permissions for the ADK agent to create and delete `SandboxClaim` resources.
+
+### Job Mode (`executor_type="job"`)
+
+This mode is provided for backward compatibility. When a request to execute code is made, the `GkeCodeExecutor` performs the following steps:
 
 1.  **Creates a ConfigMap:** A Kubernetes ConfigMap is created to store the Python code that needs to be executed.
 2.  **Creates a Sandboxed Pod:** A new Kubernetes Job is created, which in turn creates a Pod with a hardened security context and the gVisor runtime enabled. The code from the ConfigMap is mounted into this Pod.
@@ -21720,70 +21794,110 @@ When a request to execute code is made, the `GkeCodeExecutor` performs the follo
 4.  **Retrieves the Result:** The standard output and error streams from the execution are captured from the Pod's logs.
 5.  **Cleans Up Resources:** Once the execution is complete, the Job and the associated ConfigMap are automatically deleted, ensuring that no artifacts are left behind.
 
-## Key Benefits
+**Key Benefits:**
 
 *   **Enhanced Security:** Code is executed in a gVisor-sandboxed environment with kernel-level isolation.
 *   **Ephemeral Environments:** Each code execution runs in its own ephemeral Pod, to prevent state transfer between executions.
 *   **Resource Control:** You can configure CPU and memory limits for the execution Pods to prevent resource abuse.
 *   **Scalability:** Allows you to run a large number of code executions in parallel, with GKE handling the scheduling and scaling of the underlying nodes.
+*   **Minimal Setup:** Relies on standard GKE features and gVisor.
 
 ## System requirements
 
 The following requirements must be met to successfully deploy your ADK project
 with the GKE Code Executor tool:
 
-- GKE cluster with a **gVisor-enabled node pool**.
-- Agent's service account requires specific **RBAC permissions**, which allow it to:
-    - Create, watch, and delete **Jobs** for each execution request.
-    - Manage **ConfigMaps** to inject code into the Job's pod.
-    - List **Pods** and read their **logs** to retrieve the execution result
-- Install the client library with GKE extras: `pip install google-adk[gke]`
-
-For a complete, ready-to-use configuration, see the
+- GKE cluster with a **gVisor-enabled node pool** (required for both Job Mode's default image and typical Agent Sandbox templates).
+- Agent's service account requires specific **RBAC permissions**:
+    - **Job Mode:** Create, watch, and delete **Jobs**; Manage **ConfigMaps**; List **Pods** and read their **logs**. For a complete, ready-to-use configuration for Job Mode, see the
 [deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/gke_agent_sandbox/deployment_rbac.yaml)
-sample. For more information on deploying ADK workflows to GKE, see
-[Deploy to Google Kubernetes Engine (GKE)](/adk-docs/deploy/gke/).
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-    from google.adk.code_executors import GkeCodeExecutor
-
-    # Initialize the executor, targeting the namespace where its ServiceAccount
-    # has the required RBAC permissions.
-    # This example also sets a custom timeout and resource limits.
-    gke_executor = GkeCodeExecutor(
-        namespace="agent-sandbox",
-        timeout_seconds=600,
-        cpu_limit="1000m",  # 1 CPU core
-        mem_limit="1Gi",
-    )
-
-    # The agent now uses this executor for any code it generates.
-    gke_agent = LlmAgent(
-        name="gke_coding_agent",
-        model="gemini-2.0-flash",
-        instruction="You are a helpful AI agent that writes and executes Python code.",
-        code_executor=gke_executor,
-    )
-    ```
+sample.
+    - **Sandbox Mode:** Permissions to create, get, watch, and delete **SandboxClaim** and **Sandbox** resources within the namespace where the Agent Sandbox is deployed.
+- Install the client library with the appropriate extras: `pip install google-adk[gke]`
 
 ## Configuration parameters
 
 The `GkeCodeExecutor` can be configured with the following parameters:
 
-| Parameter            | Type   | Description                                                                             |
-| -------------------- | ------ | --------------------------------------------------------------------------------------- |
-| `namespace`          | `str`  | Kubernetes namespace where the execution Jobs will be created. Defaults to `"default"`. |
-| `image`              | `str`  | Container image to use for the execution Pod. Defaults to `"python:3.11-slim"`.         |
-| `timeout_seconds`    | `int`  | Timeout in seconds for the code execution. Defaults to `300`.                           |
-| `cpu_requested`      | `str`  | Amount of CPU to request for the execution Pod. Defaults to `"200m"`.                   |
-| `mem_requested`      | `str`  | Amount of memory to request for the execution Pod. Defaults to `"256Mi"`.               |
-| `cpu_limit`          | `str`  | Maximum amount of CPU the execution Pod can use. Defaults to `"500m"`.                  |
-| `mem_limit`          | `str`  | Maximum amount of memory the execution Pod can use. Defaults to `"512Mi"`.              |
-| `kubeconfig_path`    | `str`  | Path to a kubeconfig file to use for authentication. Falls back to in-cluster config or the default local kubeconfig. |
-| `kubeconfig_context` | `str`  | The `kubeconfig` context to use.  |
+| Parameter              | Type                          | Description                                                                                                                                                             |
+| ---------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `namespace`            | `str`                         | Kubernetes namespace where the execution resources (Jobs or SandboxClaims) will be created. Defaults to `"default"`.                                                  |
+| `executor_type`        | `Literal["job", "sandbox"]`     | Specifies the execution mode. Defaults to `"job"`.                                                                                                                      |
+| `image`                | `str`                         | (Job Mode) Container image to use for the execution Pod. Defaults to `"python:3.11-slim"`.                                                                                |
+| `timeout_seconds`      | `int`                         | (Job Mode) Timeout in seconds for the code execution. Defaults to `300`.                                                                                                |
+| `cpu_requested`        | `str`                         | (Job Mode) Amount of CPU to request for the execution Pod. Defaults to `"200m"`.                                                                                        |
+| `mem_requested`        | `str`                         | (Job Mode) Amount of memory to request for the execution Pod. Defaults to `"256Mi"`.                                                                                    |
+| `cpu_limit`            | `str`                         | (Job Mode) Maximum amount of CPU the execution Pod can use. Defaults to `"500m"`.                                                                                       |
+| `mem_limit`            | `str`                         | (Job Mode) Maximum amount of memory the execution Pod can use. Defaults to `"512Mi"`.                                                                                   |
+| `kubeconfig_path`      | `str`                         | Path to a kubeconfig file to use for authentication. Falls back to in-cluster config or the default local kubeconfig.                                                 |
+| `kubeconfig_context`   | `str`                         | The `kubeconfig` context to use.                                                                                                                                        |
+| `sandbox_gateway_name` | `str \| None`                 | (Sandbox Mode) The name of the sandbox gateway to use. Optional.                                                                                                        |
+| `sandbox_template`     | `str \| None`                 | (Sandbox Mode) The name of the `SandboxTemplate` to use. Defaults to `"python-sandbox-template"`.                                                                     |
+
+## Usage Examples
+
+=== "Python - Sandbox Mode (Recommended)"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.code_executors import GkeCodeExecutor
+    from google.adk.code_executors import CodeExecutionInput
+    from google.adk.agents.invocation_context import InvocationContext
+
+    # Initialize the executor for Sandbox Mode
+    # Namespace should have RBAC for SandboxClaims and Sandbox
+    gke_sandbox_executor = GkeCodeExecutor(
+        namespace="agent-sandbox-system",  # Typically where agent-sandbox is installed
+        executor_type="sandbox",
+        sandbox_template="python-sandbox-template",
+        sandbox_gateway_name="your-gateway-name", # Optional
+    )
+
+    # Example direct execution:
+    ctx = InvocationContext()
+    result = gke_sandbox_executor.execute_code(ctx, CodeExecutionInput(code="print('Hello from Sandbox Mode')"))
+    print(result.stdout)
+
+    # Example with an Agent:
+    gke_sandbox_agent = LlmAgent(
+        name="gke_sandbox_coding_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful AI agent that writes and executes Python code using sandboxes.",
+        code_executor=gke_sandbox_executor,
+    )
+    ```
+
+=== "Python - Job Mode"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.code_executors import GkeCodeExecutor
+    from google.adk.code_executors import CodeExecutionInput
+    from google.adk.agents.invocation_context import InvocationContext
+
+    # Initialize the executor for Job Mode
+    # Namespace should have RBAC for Jobs, ConfigMaps, Pods, Logs
+    gke_executor = GkeCodeExecutor(
+        namespace="agent-ns",
+        executor_type="job",
+        timeout_seconds=600,
+        cpu_limit="1000m",  # 1 CPU core
+        mem_limit="1Gi",
+    )
+
+    # Example direct execution:
+    ctx = InvocationContext()
+    result = gke_executor.execute_code(ctx, CodeExecutionInput(code="print('Hello from Job Mode')"))
+    print(result.stdout)
+
+    # Example with an Agent:
+    gke_agent = LlmAgent(
+        name="gke_coding_agent",
+        model="gemini-2.5-flash",
+        instruction="You are a helpful AI agent that writes and executes Python code.",
+        code_executor=gke_executor,
+    )
+    ```
 
 ================
 File: docs/integrations/goodmem.md
@@ -41122,7 +41236,7 @@ MODEL_GEMINI_2_5_FLASH = "gemini-2.5-flash"
 MODEL_GPT_4O = "openai/gpt-4.1" # You can also try: gpt-4.1-mini, gpt-4o etc.
 
 # More supported models can be referenced here: https://docs.litellm.ai/docs/providers/anthropic
-MODEL_CLAUDE_SONNET = "anthropic/claude-sonnet-4-20250514" # You can also try: claude-opus-4-20250514 , claude-3-7-sonnet-20250219 etc
+MODEL_CLAUDE_SONNET = "claude-sonnet-4-6" # You can also try: claude-opus-4-6, etc
 
 print("\nEnvironment configured.")
 ```
