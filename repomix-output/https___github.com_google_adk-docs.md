@@ -1563,6 +1563,7 @@ ADK primarily uses two mechanisms for model integration:
       *  [LiteLLM models](/adk-docs/agents/models/litellm/)
       *  [Ollama model hosting](/adk-docs/agents/models/ollama/)
       *  [vLLM model hosting](/adk-docs/agents/models/vllm/)
+      *  [LiteRT-LM model hosting](/adk-docs/agents/models/litert-lm/)
 
 ================
 File: docs/agents/models/litellm.md
@@ -1656,6 +1657,111 @@ agent_claude_direct = LlmAgent(
     instruction="You are an assistant powered by Claude Haiku.",
     # ... other agent parameters
 )
+```
+
+================
+File: docs/agents/models/litert-lm.md
+================
+# LiteRT-LM model host for ADK agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+[LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM) is a C++ library to
+efficiently run language models across edge platforms.
+On desktop (Linux, macOS, and Windows), ADK integrates with LiteRT-LM-hosted
+models through the LiteRT-LM server launched by the LiteRT-LM CLI `lit`.
+
+## Get started
+
+LiteRT-LM works with the `Gemini` class. You only have to set the `base_url` and
+`model` parameters.
+
+1.  Set `base_url` to the LiteRT-LM server URL, for example: `localhost:8001`.
+2.  Set `model` to the LiteRT-LM model name, for example: `gemma3n-e2b`.
+
+```py
+from google.adk.agents import Agent
+from google.adk.models import Gemini
+
+root_agent = Agent(
+    model=Gemini(
+        model="gemma3n-e2b",
+        base_url="http://localhost:8001",
+    ),
+    name="dice_agent",
+    description=(
+        "hello world agent that can roll a die of 8 sides and check prime"
+        " numbers."
+    ),
+    instruction="""
+      You roll dice and answer questions about the outcome of the dice rolls.
+    """,
+    tools=[
+        roll_die,
+        check_prime,
+    ],
+)
+```
+
+Then run the agent as usual:
+
+```bash
+adk web
+```
+
+## Running the LiteRT-LM Server
+
+The LiteRT-LM server is a separate process that serves LiteRT-LM models. It is
+started by the LiteRT-LM CLI tool `lit`.
+
+### Download the `lit` CLI tool
+
+Download the `lit` CLI tool by following these
+[instructions](https://github.com/google-ai-edge/LiteRT-LM?tab=readme-ov-file#desktop-cli-lit)
+in the LiteRT-LM GitHub repository.
+
+### Download a model
+
+Before you start the server, you need to download a model. You'll need a
+*Hugging Face* user access token to download a LiteRT-LM model using `lit`. You
+can get a token for your *Hugging Face* account
+[here](https://huggingface.co/settings/tokens).
+
+To see a list of models available for download, use the `lit list` command:
+
+```bash
+lit list --show_all
+```
+
+Download a model using the `lit pull` command:
+
+```bash
+export HUGGING_FACE_HUB_TOKEN="**your Hugging Face token**"
+lit pull gemma3n-e2b
+```
+
+### Run the server
+
+After downloading a model, start the LiteRT-LM server locally by running the
+following command:
+
+```bash
+lit serve --port 8001
+```
+
+!!! tip "Local Server Port Number"
+
+    You may choose any port number for the LiteRT-LM server as long as it matches the `base_url` you set in the `Gemini` class in your agent code.
+
+### Debugging
+
+To see incoming requests to the LiteRT-LM server and the exact input sent to the
+model, use the `--verbose` flag:
+
+```bash
+lit serve --port 8001 --verbose
 ```
 
 ================
@@ -6757,6 +6863,8 @@ These core concepts work together to provide a flexible system for managing bina
 
 The primary way you interact with artifacts within your agent's logic (specifically within callbacks or tools) is through methods provided by the `CallbackContext` and `ToolContext` objects. These methods abstract away the underlying storage details managed by the `ArtifactService`.
 
+*(Note: In TypeScript, `CallbackContext` and `ToolContext` are unified into a single `Context` type.)*
+
 ### Prerequisite: Configuring the `ArtifactService`
 
 Before you can use any artifact methods via the context objects, you **must** provide an instance of a [`BaseArtifactService` implementation](#available-implementations) (like [`InMemoryArtifactService`](#inmemoryartifactservice) or [`GcsArtifactService`](#gcsartifactservice)) when initializing your `Runner`.
@@ -6862,7 +6970,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
 
 ### Accessing Methods
 
-The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks). Remember that `ToolContext` inherits from `CallbackContext`.
+The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks) in Python, Go, and Java and available on the unified `Context` in TypeScript.
 
 #### Saving Artifacts
 
@@ -6905,9 +7013,9 @@ The artifact interaction methods are available directly on instances of `Callbac
         ```typescript
         import type { Part } from '@google/genai';
         import { createPartFromBase64 } from '@google/genai';
-        import { CallbackContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        async function saveGeneratedReport(context: CallbackContext, reportBytes: Uint8Array): Promise<void> {
+        async function saveGeneratedReport(context: Context, reportBytes: Uint8Array): Promise<void> {
             /**Saves generated PDF report bytes as an artifact.*/
             const reportArtifact: Part = createPartFromBase64(reportBytes.toString('base64'), "application/pdf");
 
@@ -7016,9 +7124,9 @@ The artifact interaction methods are available directly on instances of `Callbac
     === "Typescript"
 
         ```typescript
-        import { CallbackContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        async function processLatestReport(context: CallbackContext): Promise<void> {
+        async function processLatestReport(context: Context): Promise<void> {
             /**Loads the latest report artifact and processes its data.*/
             const filename = "generated_report.pdf";
             try {
@@ -7175,12 +7283,12 @@ The artifact interaction methods are available directly on instances of `Callbac
     === "Typescript"
 
         ```typescript
-        import { ToolContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        async function listUserFiles(toolContext: ToolContext): Promise<string> {
+        async function listUserFiles(context: Context): Promise<string> {
             /**Tool to list available artifacts for the user.*/
             try {
-                const availableFiles = await toolContext.listArtifacts();
+                const availableFiles = await context.listArtifacts();
                 if (!availableFiles || availableFiles.length === 0) {
                     return "You have no saved artifacts.";
                 } else {
@@ -8492,6 +8600,8 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
         *   **Mutable `state` Property:** Allows reading *and writing* to session state. Changes made here (`callback_context.state['key'] = value`) are tracked and associated with the event generated by the framework after the callback.
         *   **Artifact Methods:** `load_artifact(filename)` and `save_artifact(filename, part)` methods for interacting with the configured `artifact_service`.
         *   Direct `user_content` access.
+        
+    *(Note: In TypeScript, `CallbackContext` and `ToolContext` are unified into a single `Context` type.)*
 
     === "Python"
 
@@ -8516,18 +8626,18 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "TypeScript"
 
         ```typescript
-        // Pseudocode: Callback receiving CallbackContext
-        import { CallbackContext, LlmRequest } from '@google/adk';
+        // Pseudocode: Callback receiving Context
+        import { Context, LlmRequest } from '@google/adk';
         import { Content } from '@google/genai';
 
-        function myBeforeModelCb(callbackContext: CallbackContext, request: LlmRequest): Content | undefined {
+        function myBeforeModelCb(context: Context, request: LlmRequest): Content | undefined {
           // Read/Write state example
-          const callCount = (callbackContext.state.get('model_calls') as number) || 0;
-          callbackContext.state.set('model_calls', callCount + 1); // Modify state
+          const callCount = (context.state.get('model_calls') as number) || 0;
+          context.state.set('model_calls', callCount + 1); // Modify state
 
           // Optionally load an artifact
-          // const configPart = await callbackContext.loadArtifact('model_config.json');
-          console.log(`Preparing model call #${callCount + 1} for invocation ${callbackContext.invocationId}`);
+          // const configPart = await context.loadArtifact('model_config.json');
+          console.log(`Preparing model call #${callCount + 1} for invocation ${context.invocationId}`);
           return undefined; // Allow model call to proceed
         }
         ```
@@ -8605,28 +8715,28 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "TypeScript"
 
         ```typescript
-        // Pseudocode: Tool function receiving ToolContext
-        import { ToolContext } from '@google/adk';
+        // Pseudocode: Tool function receiving Context
+        import { Context } from '@google/adk';
 
         // __Assume this function is wrapped by a FunctionTool__
-        function searchExternalApi(query: string, toolContext: ToolContext): { [key: string]: string } {
-          const apiKey = toolContext.state.get('api_key') as string;
+        function searchExternalApi(query: string, context: Context): { [key: string]: string } {
+          const apiKey = context.state.get('api_key') as string;
           if (!apiKey) {
              // Define required auth config
              // const authConfig = new AuthConfig(...);
-             // toolContext.requestCredential(authConfig); // Request credentials
+             // context.requestCredential(authConfig); // Request credentials
              // The 'actions' property is now automatically updated by requestCredential
              return { status: 'Auth Required' };
           }
 
           // Use the API key...
-          console.log(`Tool executing for query '${query}' using API key. Invocation: ${toolContext.invocationId}`);
+          console.log(`Tool executing for query '${query}' using API key. Invocation: ${context.invocationId}`);
 
           // Optionally search memory or list artifacts
           // Note: accessing services like memory/artifacts is typically async in TS,
           // so you would need to mark this function 'async' if you reused them.
-          // toolContext.searchMemory(`info related to ${query}`).then(...)
-          // toolContext.listArtifacts().then(...)
+          // context.searchMemory(`info related to ${query}`).then(...)
+          // context.listArtifacts().then(...)
 
           return { result: `Data for ${query} fetched.` };
         }
@@ -8712,11 +8822,11 @@ You'll frequently need to read information stored within the context.
 
         ```typescript
         // Pseudocode: In a Tool function
-        import { ToolContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        async function myTool(toolContext: ToolContext) {
-          const userPref = toolContext.state.get('user_display_preference', 'default_mode');
-          const apiEndpoint = toolContext.state.get('app:api_endpoint'); // Read app-level state
+        async function myTool(context: Context) {
+          const userPref = context.state.get('user_display_preference', 'default_mode');
+          const apiEndpoint = context.state.get('app:api_endpoint'); // Read app-level state
 
           if (userPref === 'dark_mode') {
             // ... apply dark mode logic ...
@@ -8726,10 +8836,10 @@ You'll frequently need to read information stored within the context.
         }
 
         // Pseudocode: In a Callback function
-        import { CallbackContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        function myCallback(callbackContext: CallbackContext) {
-          const lastToolResult = callbackContext.state.get('temp:last_api_result'); // Read temporary state
+        function myCallback(context: Context) {
+          const lastToolResult = context.state.get('temp:last_api_result'); // Read temporary state
           if (lastToolResult) {
             console.log(`Found temporary result from last tool: ${lastToolResult}`);
           }
@@ -8801,13 +8911,13 @@ You'll frequently need to read information stored within the context.
     === "TypeScript"
 
         ```typescript
-        // Pseudocode: In any context (ToolContext shown)
-        import { ToolContext } from '@google/adk';
+        // Pseudocode: In any context
+        import { Context } from '@google/adk';
 
-        function logToolUsage(toolContext: ToolContext) {
-          const agentName = toolContext.agentName;
-          const invId = toolContext.invocationId;
-          const functionCallId = toolContext.functionCallId ?? 'N/A'; // Specific to ToolContext
+        function logToolUsage(context: Context) {
+          const agentName = context.agentName;
+          const invId = context.invocationId;
+          const functionCallId = context.functionCallId ?? 'N/A'; // Available when executing a tool
 
           console.log(`Log: Invocation=${invId}, Agent=${agentName}, FunctionCallID=${functionCallId} - Tool Executed.`);
         }
@@ -8862,11 +8972,11 @@ You'll frequently need to read information stored within the context.
 
         ```typescript
         // Pseudocode: In a Callback
-        import { CallbackContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        function checkInitialIntent(callbackContext: CallbackContext) {
+        function checkInitialIntent(context: Context) {
           let initialText = 'N/A';
-          const userContent = callbackContext.userContent;
+          const userContent = context.userContent;
           if (userContent?.parts?.length) {
             initialText = userContent.parts[0].text ?? 'Non-text input';
           }
@@ -8938,19 +9048,19 @@ State is crucial for memory and data flow. When you modify state using `Callback
 
         ```typescript
         // Pseudocode: Tool 1 - Fetches user ID
-        import { ToolContext } from '@google/adk';
+        import { Context } from '@google/adk';
         import { v4 as uuidv4 } from 'uuid';
 
-        function getUserProfile(toolContext: ToolContext): Record<string, string> {
+        function getUserProfile(context: Context): Record<string, string> {
           const userId = uuidv4(); // Simulate fetching ID
           // Save the ID to state for the next tool
-          toolContext.state.set('temp:current_user_id', userId);
+          context.state.set('temp:current_user_id', userId);
           return { profile_status: 'ID generated' };
         }
 
         // Pseudocode: Tool 2 - Uses user ID from state
-        function getUserOrders(toolContext: ToolContext): Record<string, string | string[]> {
-          const userId = toolContext.state.get('temp:current_user_id');
+        function getUserOrders(context: Context): Record<string, string | string[]> {
+          const userId = context.state.get('temp:current_user_id');
           if (!userId) {
             return { error: 'User ID not found in state' };
           }
@@ -9017,12 +9127,12 @@ State is crucial for memory and data flow. When you modify state using `Callback
 
         ```typescript
         // Pseudocode: Tool or Callback identifies a preference
-        import { ToolContext } from '@google/adk'; // Or CallbackContext
+        import { Context } from '@google/adk';
 
-        function setUserPreference(toolContext: ToolContext, preference: string, value: string): Record<string, string> {
+        function setUserPreference(context: Context, preference: string, value: string): Record<string, string> {
           // Use 'user:' prefix for user-level state (if using a persistent SessionService)
           const stateKey = `user:${preference}`;
-          toolContext.state.set(stateKey, value);
+          context.state.set(stateKey, value);
           console.log(`Set user preference '${preference}' to '${value}'`);
           return { status: 'Preference updated' };
         }
@@ -9090,10 +9200,10 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
                ```typescript
                // Pseudocode: In a callback or initial tool
-               import { CallbackContext } from '@google/adk'; // Or ToolContext
+               import { Context } from '@google/adk';
                import type { Part } from '@google/genai';
 
-               async function saveDocumentReference(context: CallbackContext, filePath: string) {
+               async function saveDocumentReference(context: Context, filePath: string) {
                  // Assume filePath is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
                  try {
                    // Create a Part containing the path/URI text
@@ -9108,7 +9218,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
                }
 
                // Example usage:
-               // saveDocumentReference(callbackContext, "gs://my-bucket/docs/report.pdf");
+               // saveDocumentReference(context, "gs://my-bucket/docs/report.pdf");
                ```
 
         === "Go"
@@ -9212,17 +9322,17 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
             ```typescript
             // Pseudocode: In the Summarizer tool function
-            import { ToolContext } from '@google/adk';
+            import { Context } from '@google/adk';
 
-            async function summarizeDocumentTool(toolContext: ToolContext): Promise<Record<string, string>> {
-              const artifactName = toolContext.state.get('temp:doc_artifact_name') as string;
+            async function summarizeDocumentTool(context: Context): Promise<Record<string, string>> {
+              const artifactName = context.state.get('temp:doc_artifact_name') as string;
               if (!artifactName) {
                 return { error: 'Document artifact name not found in state.' };
               }
 
               try {
                 // 1. Load the artifact part containing the path/URI
-                const artifactPart = await toolContext.loadArtifact(artifactName);
+                const artifactPart = await context.loadArtifact(artifactName);
                 if (!artifactPart?.text) {
                   return { error: `Could not load artifact or artifact has no text path: ${artifactName}` };
                 }
@@ -9344,11 +9454,11 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
         ```typescript
         // Pseudocode: In a tool function
-        import { ToolContext } from '@google/adk';
+        import { Context } from '@google/adk';
 
-        async function checkAvailableDocs(toolContext: ToolContext): Promise<Record<string, string[] | string>> {
+        async function checkAvailableDocs(context: Context): Promise<Record<string, string[] | string>> {
           try {
-            const artifactKeys = await toolContext.listArtifacts();
+            const artifactKeys = await context.listArtifacts();
             console.log(`Available artifacts: ${artifactKeys}`);
             return { available_docs: artifactKeys };
           } catch (e) {
@@ -9445,7 +9555,7 @@ Securely manage API keys or other credentials needed by tools.
 
     ```typescript
     // Pseudocode: Tool requiring auth
-    import { ToolContext } from '@google/adk'; // AuthConfig from ADK or custom
+    import { Context } from '@google/adk'; // AuthConfig from ADK or custom
 
     // Define a local AuthConfig interface as it's not publicly exported by ADK
     interface AuthConfig {
@@ -9461,15 +9571,15 @@ Securely manage API keys or other credentials needed by tools.
     };
     const AUTH_STATE_KEY = 'user:my_api_credential'; // Key to store retrieved credential
 
-    async function callSecureApi(toolContext: ToolContext, requestData: string): Promise<Record<string, string>> {
+    async function callSecureApi(context: Context, requestData: string): Promise<Record<string, string>> {
       // 1. Check if credential already exists in state
-      const credential = toolContext.state.get(AUTH_STATE_KEY);
+      const credential = context.state.get(AUTH_STATE_KEY);
 
       if (!credential) {
         // 2. If not, request it
         console.log('Credential not found, requesting...');
         try {
-          toolContext.requestCredential(MY_API_AUTH_CONFIG);
+          context.requestCredential(MY_API_AUTH_CONFIG);
           // The framework handles yielding the event. The tool execution stops here for this turn.
           return { status: 'Authentication required. Please provide credentials.' };
         } catch (e) {
@@ -9482,12 +9592,12 @@ Securely manage API keys or other credentials needed by tools.
       try {
         // Optionally, re-validate/retrieve if needed, or use directly
         // This might retrieve the credential if the external flow just completed
-        const authCredentialObj = toolContext.getAuthResponse(MY_API_AUTH_CONFIG);
+        const authCredentialObj = context.getAuthResponse(MY_API_AUTH_CONFIG);
         const apiKey = authCredentialObj?.apiKey; // Or accessToken, etc.
 
         // Store it back in state for future calls within the session
         // Note: In strict TS, might need to cast or serialize authCredentialObj
-        toolContext.state.set(AUTH_STATE_KEY, JSON.stringify(authCredentialObj));
+        context.state.set(AUTH_STATE_KEY, JSON.stringify(authCredentialObj));
 
         console.log(`Using retrieved credential to call API with data: ${requestData}`);
         // ... Make the actual API call using apiKey ...
@@ -9540,11 +9650,11 @@ Access relevant information from the past or external sources.
 
     ```typescript
     // Pseudocode: Tool using memory search
-    import { ToolContext } from '@google/adk';
+    import { Context } from '@google/adk';
 
-    async function findRelatedInfo(toolContext: ToolContext, topic: string): Promise<Record<string, string>> {
+    async function findRelatedInfo(context: Context, topic: string): Promise<Record<string, string>> {
       try {
-        const searchResults = await toolContext.searchMemory(`Information about ${topic}`);
+        const searchResults = await context.searchMemory(`Information about ${topic}`);
         if (searchResults.results?.length) {
           console.log(`Found ${searchResults.results.length} memory results for '${topic}'`);
           // Process searchResults.results
@@ -18874,7 +18984,7 @@ catalog_tags: ["observability", "google"]
 
 The BigQuery Agent Analytics Plugin significantly enhances the Agent Development Kit (ADK) by providing a robust solution for in-depth agent behavior analysis. Using the ADK Plugin architecture and the **BigQuery Storage Write API**, it captures and logs critical operational events directly into a Google BigQuery table, empowering you with advanced capabilities for debugging, real-time monitoring, and comprehensive offline performance evaluation.
 
-Version 1.26.0 adds **Auto Schema Upgrade** (safely add new columns to existing tables), **Tool Provenance** tracking (LOCAL, MCP, SUB_AGENT, A2A, TRANSFER_AGENT), and **HITL Event Tracing** for human-in-the-loop interactions.
+Version 1.26.0 adds **Auto Schema Upgrade** (safely add new columns to existing tables), **Tool Provenance** tracking (LOCAL, MCP, SUB_AGENT, A2A, TRANSFER_AGENT), and **HITL Event Tracing** for human-in-the-loop interactions. Version 1.27.0 adds **Automatic View Creation** (generate flat, query-friendly event views).
 
 !!! example "Preview release"
 
@@ -18899,6 +19009,7 @@ Version 1.26.0 adds **Auto Schema Upgrade** (safely add new columns to existing 
 -   **Distributed Tracing**: Built-in support for OpenTelemetry-style tracing (`trace_id`, `span_id`) to visualize agent execution flows.
 -   **Tool Provenance**: Track the origin of each tool call (local function, MCP server, sub-agent, A2A remote agent, or transfer agent).
 -   **Human-in-the-Loop (HITL) Tracing**: Dedicated event types for credential requests, confirmation prompts, and user input requests.
+-   **Queryable Event Views**: Automatically create flat, per-event-type BigQuery views (e.g., `v_llm_request`, `v_tool_completed`) to simplify downstream analytics by unnesting JSON payload data.
 
 The agent event data recorded varies based on the ADK event type. For more
 information, see [Event types and payloads](#event-types).
@@ -19051,6 +19162,7 @@ You can customize the plugin using `BigQueryLoggerConfig`.
 -   **`log_session_metadata`** (`bool`, default: `True`): If True, logs session information into the `attributes` column, including `session_id`, `app_name`, `user_id`, and the session `state` dictionary (e.g., custom state like gchat thread-id, customer_id).
 -   **`custom_tags`** (`Dict[str, Any]`, default: `{}`): A dictionary of static tags (e.g., `{"env": "prod", "version": "1.0"}`) to be included in the `attributes` column for every event.
 -   **`auto_schema_upgrade`** (`bool`, default: `True`): When enabled, the plugin automatically adds new columns to an existing table when the plugin schema evolves. Only additive changes are made (columns are never dropped or altered). A version label (`adk_schema_version`) on the table ensures the diff runs at most once per schema version. Safe to leave enabled.
+-   **`create_views`** (`bool`, default: `True`): Added in 1.27.0. When enabled, automatically generates per-event-type BigQuery views that unnest structured JSON data (such as `content` or `attributes`) into flat, typed columns, significantly simplifying SQL queries.
 
 
 The following code sample shows how to define a configuration for the
@@ -19092,6 +19204,7 @@ config = BigQueryLoggerConfig(
     content_formatter=redact_dollar_amounts, # Redact the dollar amounts in the logging content
     queue_max_size=10000, # Max events to hold in memory
     auto_schema_upgrade=True, # Automatically add new columns to existing tables
+    create_views=True, # Automatically create per-event-type views
     # retry_config=RetryConfig(max_retries=3), # Optional: Configure retries
 )
 
@@ -19165,6 +19278,20 @@ CREATE TABLE `your-gcp-project-id.adk_agent_logs.agent_events`
 PARTITION BY DATE(timestamp)
 CLUSTER BY event_type, agent, user_id;
 ```
+
+### Automatically Created Views (1.27.0+)
+
+When `create_views=True` (the default in 1.27.0 and higher), the plugin automatically generates views for each event type that unnest common JSON structures into flat, typed columns. This significantly simplifies SQL, eliminating the need to write complex `JSON_VALUE` or `JSON_QUERY` functions explicitly.
+
+For example, the view `v_llm_request` includes the following schema:
+
+| Field Name | Type | Description |
+|:---|:---|:---|
+| **(Common Columns)** | `VARIES` | Includes standard metadata: `timestamp`, `event_type`, `agent`, `session_id`, `invocation_id`, `user_id`, `trace_id`, `span_id`, `parent_span_id`, `status`, `error_message`, `is_truncated`. |
+| **model** | `STRING` | The name of the LLM model used for the request. |
+| **request_content** | `JSON` | The raw LLM request payload. |
+| **llm_config** | `JSON` | The configuration parameters passed to the LLM (temperature, top_p, etc.). |
+| **tools** | `JSON` | Array of tools available during the request. |
 
 ### Event types and payloads {#event-types}
 
@@ -19750,6 +19877,8 @@ These are a set of tools aimed to provide integration with Bigtable, namely:
 
 * **`list_instances`**: Fetches Bigtable instances in a Google Cloud project.
 * **`get_instance_info`**: Fetches metadata instance information in a Google Cloud project.
+* **`list_clusters`**: Fetches Bigtable clusters in a Bigtable instance in a Google Cloud project.
+* **`get_cluster_info`**: Fetches metadata cluster information in a Bigtable instance in a Google Cloud project.
 * **`list_tables`**: Fetches tables in a GCP Bigtable instance.
 * **`get_table_info`**: Fetches metadata table information in a GCP Bigtable.
 * **`execute_sql`**: Runs a SQL query in Bigtable table and fetch the result.
@@ -21439,6 +21568,154 @@ is a code example for executing a batch test on Freeplay with ADK.
 ## Sign up now
 
 Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
+
+================
+File: docs/integrations/galileo.md
+================
+---
+catalog_title: Galileo
+catalog_description: End-to-end tracing, evaluation, and monitoring for ADK agents
+catalog_icon: /adk-docs/integrations/assets/galileo.png
+catalog_tags: ["observability", "evaluation"]
+---
+
+# Agent Observability and Evaluation with Galileo
+
+[Galileo](https://app.galileo.ai/) is an
+AI evaluation and observability platform that delivers end-to-end tracing,
+evaluation, and monitoring for AI applications.
+Galileo supports direct OpenTelemetry (OTel)
+trace ingestion from ADK for agent runs,
+tool calls, and model requests.
+
+For more information, see Galileo’s
+[Google ADK integration](https://v2docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk)
+docs.
+
+## Prerequisites
+
+- A [Galileo API key](https://v2docs.galileo.ai/references/faqs/find-keys#galileo-api-key)
+- A Galileo Project and Log stream
+- A [Gemini API Key](https://aistudio.google.com/app/apikey)
+
+## Install dependencies
+
+```bash
+pip install google-adk openinference-instrumentation-google-adk python-dotenv galileo
+```
+
+Optionally, use the `requirements.txt` from the [completed example](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/google-adk).
+
+## Set environment variables
+
+Configure environment variables:
+
+```env title="my_agent/.env"
+# Gemini environment variables
+GOOGLE_GENAI_USE_VERTEXAI=0
+GOOGLE_API_KEY="YOUR_API_KEY"
+
+# Galileo environment variables
+GALILEO_API_KEY="YOUR_API_KEY"
+GALILEO_PROJECT="YOUR_PROJECT"
+GALILEO_LOG_STREAM="YOUR_LOG_STREAM"
+```
+
+## Configure OpenTelemetry (required)
+
+You must configure an OTLP exporter and set a global tracer provider before
+using any ADK components so that spans are emitted to Galileo.
+
+```python
+# my_agent/agent.py
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# OpenTelemetry imports
+from opentelemetry.sdk import trace as trace_sdk
+
+# Galileo span processor (auto-configures OTLP headers & endpoint from env vars)
+from galileo import otel
+
+# OpenInference instrumentation for ADK
+from openinference.instrumentation.google_adk import GoogleADKInstrumentor
+
+# Create tracer provider and register Galileo span processor
+tracer_provider = trace_sdk.TracerProvider()
+galileo_span_processor = otel.GalileoSpanProcessor()
+tracer_provider.add_span_processor(galileo_span_processor)
+
+# Instrument Google ADK with OpenInference (this captures inputs/outputs)
+GoogleADKInstrumentor().instrument(tracer_provider=tracer_provider)
+
+```
+
+## Example: Trace an ADK agent
+
+Now you can add the agent code for a simple current time agent, after the code that
+sets up the OTLP exporter and tracer provider:
+
+```python
+# my_agent/agent.py
+
+from google.adk.agents import Agent
+
+def get_current_time(city: str) -> dict:
+    """Returns the current time in a specified city."""
+    return {"status": "success", "city": city, "time": "10:30 AM"}
+
+
+root_agent = Agent(
+    model="gemini-3-flash-preview",
+    name="root_agent",
+    description="Tells the current time in a specified city.",
+    instruction=(
+        "You are a helpful assistant that tells the current time in cities. "
+        "Use the 'get_current_time' tool for this purpose."
+    ),
+    tools=[get_current_time],
+)
+
+```
+
+Run the agent with:
+
+```bash
+adk run my_agent
+```
+
+And ask it a question:
+
+```console
+What time is it in London?
+```
+
+```console
+[root_agent]: The current time in London is 10:30 AM.
+```
+
+See the full
+[Google ADK + OpenTelemetry Example Project](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/google-adk)
+for a completed example.
+
+## View traces in Galileo
+
+Select your Project and inspect the traces and spans in your Log Stream.
+
+![Galileo Traces](assets/galileo-log.png)
+
+## Resources
+
+- [Galileo Google ADK Integration Documentation](https://v2docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk):
+Official documentation for integrating a Google ADK project
+with Galileo using OpenTelemetry and OpenInference.
+- [Google ADK + OpenTelemetry Example Project](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/google-adk):
+This is an example project demonstrating how to use Galileo
+with the Google ADK. This example is a completed
+[Google ADK Python Quickstart](../get-started/python.md)
+with Galileo instrumented on top.
 
 ================
 File: docs/integrations/github.md
@@ -26578,7 +26855,7 @@ methods, as shown in the following code example:
 === "Typescript"
 
     ```typescript title="count_plugin.ts"
-    import { BaseAgent, BasePlugin, CallbackContext } from "@google/adk";
+    import { BaseAgent, BasePlugin, Context } from "@google/adk";
     import type { LlmRequest, LlmResponse } from "@google/adk";
     import type { Content } from "@google/genai";
 
@@ -26600,7 +26877,7 @@ methods, as shown in the following code example:
          */
         async beforeAgentCallback(
             agent: BaseAgent,
-            callbackContext: CallbackContext
+            context: Context
         ): Promise<Content | undefined> {
             this.agentCount++;
             console.log(`[Plugin] Agent run count: ${this.agentCount}`);
@@ -26611,13 +26888,53 @@ methods, as shown in the following code example:
          * Count LLM requests.
          */
         async beforeModelCallback(
-            callbackContext: CallbackContext,
+            context: Context,
             llmRequest: LlmRequest
         ): Promise<LlmResponse | undefined> {
             this.llmRequestCount++;
             console.log(`[Plugin] LLM request count: ${this.llmRequestCount}`);
             return undefined;
         }
+    }
+    ```
+
+=== "Java"
+
+    ```java title="CountInvocationPlugin.java"
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.CallbackContext;
+    import com.google.adk.models.LlmRequest;
+    import com.google.adk.models.LlmResponse;
+    import com.google.adk.plugins.BasePlugin;
+    import com.google.genai.types.Content;
+    import io.reactivex.rxjava3.core.Maybe;
+
+    /** A custom plugin that counts agent and tool invocations. */
+    public class CountInvocationPlugin extends BasePlugin {
+      public int agentCount = 0;
+      public int toolCount = 0;
+      public int llmRequestCount = 0;
+
+      public CountInvocationPlugin() {
+        super("count_invocation");
+      }
+
+      /** Count agent runs. */
+      @Override
+      public Maybe<Content> beforeAgentCallback(BaseAgent agent, CallbackContext callbackContext) {
+        agentCount++;
+        System.out.println("[Plugin] Agent run count: " + agentCount);
+        return Maybe.empty();
+      }
+
+      /** Count LLM requests. */
+      @Override
+      public Maybe<LlmResponse> beforeModelCallback(
+          CallbackContext callbackContext, LlmRequest.Builder llmRequest) {
+        llmRequestCount++;
+        System.out.println("[Plugin] LLM request count: " + llmRequestCount);
+        return Maybe.empty();
+      }
     }
     ```
 
@@ -26646,45 +26963,45 @@ a simple ADK agent.
     from .count_plugin import CountInvocationPlugin
 
     async def hello_world(tool_context: ToolContext, query: str):
-    print(f'Hello world: query is [{query}]')
+        print(f'Hello world: query is [{query}]')
 
-    root_agent = Agent(
-        model='gemini-2.0-flash',
-        name='hello_world',
-        description='Prints hello world with user query.',
-        instruction="""Use hello_world tool to print hello world and user query.
-        """,
-        tools=[hello_world],
-    )
+        root_agent = Agent(
+            model='gemini-2.0-flash',
+            name='hello_world',
+            description='Prints hello world with user query.',
+            instruction="""Use hello_world tool to print hello world and user query.
+            """,
+            tools=[hello_world],
+        )
 
     async def main():
-    """Main entry point for the agent."""
-    prompt = 'hello world'
-    runner = InMemoryRunner(
-        agent=root_agent,
-        app_name='test_app_with_plugin',
+        """Main entry point for the agent."""
+        prompt = 'hello world'
+        runner = InMemoryRunner(
+            agent=root_agent,
+            app_name='test_app_with_plugin',
 
-        # Add your plugin here. You can add multiple plugins.
-        plugins=[CountInvocationPlugin()],
-    )
-
-    # The rest is the same as starting a regular ADK runner.
-    session = await runner.session_service.create_session(
-        user_id='user',
-        app_name='test_app_with_plugin',
-    )
-
-    async for event in runner.run_async(
-        user_id='user',
-        session_id=session.id,
-        new_message=types.Content(
-            role='user', parts=[types.Part.from_text(text=prompt)]
+            # Add your plugin here. You can add multiple plugins.
+            plugins=[CountInvocationPlugin()],
         )
-    ):
-        print(f'** Got event from {event.author}')
+
+        # The rest is the same as starting a regular ADK runner.
+        session = await runner.session_service.create_session(
+            user_id='user',
+            app_name='test_app_with_plugin',
+        )
+
+        async for event in runner.run_async(
+            user_id='user',
+            session_id=session.id,
+            new_message=types.Content(
+                role='user', parts=[types.Part.from_text(text=prompt)]
+            )
+        ):
+            print(f'** Got event from {event.author}')
 
     if __name__ == "__main__":
-    asyncio.run(main())
+        asyncio.run(main())
     ```
 
 === "Typescript"
@@ -26761,6 +27078,76 @@ a simple ADK agent.
     main();
     ```
 
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.runner.InMemoryRunner;
+    import com.google.adk.sessions.Session;
+    import com.google.adk.tools.Annotations.Schema;
+    import com.google.adk.tools.FunctionTool;
+    import com.google.genai.types.Content;
+    import com.google.genai.types.Part;
+    import java.util.Collections;
+    import java.util.List;
+    import java.util.Map;
+
+    // Import the plugin.
+    // import com.example.CountInvocationPlugin;
+
+    public class Main {
+    
+      public static class HelloTool {
+        @Schema(name = "hello_world", description = "Prints hello world with user query.")
+        public static Map<String, Object> helloWorld(
+            @Schema(name = "query", description = "The query string to print.") String query) {
+          String output = "Hello world: query is [" + query + "]";
+          System.out.println(output);
+          return Map.of("result", output);
+        }
+      }
+
+      public static void main(String[] args) {
+        LlmAgent rootAgent = LlmAgent.builder()
+            .model("gemini-2.0-flash")
+            .name("hello_world")
+            .description("Prints hello world with user query.")
+            .instruction("Use hello_world tool to print hello world and user query.")
+            .tools(FunctionTool.create(HelloTool.class, "helloWorld"))
+            .build();
+
+        // Add your plugin here. You can add multiple plugins.
+        InMemoryRunner runner = new InMemoryRunner(
+            rootAgent,
+            "test_app_with_plugin",
+            Collections.singletonList(new CountInvocationPlugin())
+        );
+
+        // The rest is the same as starting a regular ADK runner.
+        Session session = runner.sessionService().createSession(
+            "test_app_with_plugin",
+            "user"
+        ).blockingGet();
+
+        String prompt = "hello world";
+        Content newContent = Content.builder()
+            .role("user")
+            .parts(List.of(Part.builder().text(prompt).build()))
+            .build();
+
+        runner.runAsync(
+            "user",
+            session.id(),
+            newContent
+        ).blockingForEach(event -> {
+             if (event.author() != null) {
+                System.out.println("** Got event from " + event.author());
+            }
+        });
+      }
+    }
+    ```
+
 ### Run the agent with the Plugin
 
 Run the plugin as you typically would. The following shows how to run the
@@ -26776,6 +27163,12 @@ command line:
 
     ```sh
     npx ts-node path.to.main.ts
+    ```
+
+=== "Java"
+
+    ```sh
+    ./mvnw -q clean compile exec:java -Dexec.mainClass="com.example.Main"
     ```
 
 The output of this previously described agent should look similar to the
@@ -26948,6 +27341,17 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Java"
+
+    ```java
+    @Override
+    public Maybe<Content> onUserMessageCallback(
+      InvocationContext invocationContext, Content userMessage) {
+      // Your implementation here
+      return Maybe.empty();
+    }
+    ```
+
 ### Runner start callbacks
 
 A *Runner start* callback (`before_run_callback`) happens when the `Runner`
@@ -26977,6 +27381,16 @@ The following code example shows the basic syntax of this callback:
     ```typescript
     async beforeRunCallback(invocationContext: InvocationContext): Promise<Content | undefined> {
       // Your implementation here
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Override
+    public Maybe<Content> beforeRunCallback(InvocationContext invocationContext) {
+      // Your implementation here
+      return Maybe.empty();
     }
     ```
 
@@ -27050,11 +27464,22 @@ The following code example shows the basic syntax of this callback:
 
     ```typescript
     async onModelErrorCallback(
-        callbackContext: CallbackContext,
+        context: Context,
         llmRequest: LlmRequest,
         error: Error
     ): Promise<LlmResponse | undefined> {
         // Your implementation here
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Override
+    public Maybe<LlmResponse> onModelErrorCallback(
+      CallbackContext callbackContext, LlmRequest.Builder llmRequest, Throwable error) {
+      // Your implementation here
+      return Maybe.empty();
     }
     ```
 
@@ -27113,10 +27538,21 @@ The following code example shows the basic syntax of this callback:
     async onToolErrorCallback(
         tool: BaseTool,
         toolArgs: { [key: string]: any },
-        toolContext: ToolContext,
+        context: Context,
         error: Error
     ): Promise<{ [key:string]: any } | undefined> {
         // Your implementation here
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Override
+    public Maybe<Map<String, Object>> onToolErrorCallback(
+      BaseTool tool, Map<String, Object> toolArgs, ToolContext toolContext, Throwable error) {
+      // Your implementation here
+      return Maybe.empty();
     }
     ```
 
@@ -27155,6 +27591,16 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Java"
+
+    ```java
+    @Override
+    public Maybe<Event> onEventCallback(InvocationContext invocationContext, Event event) {
+      // Your implementation here
+      return Maybe.empty();
+    }
+    ```
+
 ### Runner end callbacks
 
 The *Runner end* callback **(`after_run_callback`)** happens when the agent has
@@ -27184,6 +27630,16 @@ The following code example shows the basic syntax of this callback:
     ```typescript
     async afterRunCallback(invocationContext: InvocationContext): Promise<void> {
         // Your implementation here
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    @Override
+    public Completable afterRunCallback(InvocationContext invocationContext) {
+      // Your implementation here
+      return Completable.complete();
     }
     ```
 
@@ -29498,7 +29954,7 @@ Tools can be designed with security in mind: we can create tools that expose the
 
 In-tool guardrails is an approach to create common and re-usable tools that expose deterministic controls that can be used by developers to set limits on each tool instantiation.
 
-This approach relies on the fact that tools receive two types of input: arguments,  which are set by the model, and [**`Tool Context`**](../tools-custom/index.md#tool-context), which can be set deterministically by the agent developer. We can rely on the deterministically set information to validate that the model is behaving as-expected.
+This approach relies on the fact that tools receive two types of input: arguments,  which are set by the model, and [**`Tool Context`**](../tools-custom/index.md#tool-context), which can be set deterministically by the agent developer. We can rely on the deterministically set information to validate that the model is behaving as-expected. *(Note: In TypeScript, `Tool Context` corresponds to the unified `Context` type.)*
 
 For example, a query tool can be designed to expect a policy to be read from the Tool Context.
 
@@ -29528,13 +29984,13 @@ For example, a query tool can be designed to expect a policy to be read from the
     ```typescript
     // Conceptual example: Setting policy data intended for tool context
     // In a real ADK app, this might be set in InvocationContext.session.state
-    // or passed during tool initialization, then retrieved via ToolContext.
+    // or passed during tool initialization, then retrieved via Context.
 
     const policy: {[key: string]: any} = {}; // Assuming policy is an object
     policy['select_only'] = true;
     policy['tables'] = ['mytable1', 'mytable2'];
 
-    // Conceptual: Storing policy where the tool can access it via ToolContext later.
+    // Conceptual: Storing policy where the tool can access it via Context later.
     // This specific line might look different in practice.
     // For example, storing in session state:
     invocationContext.session.state["query_tool_policy"] = policy;
@@ -29589,7 +30045,7 @@ For example, a query tool can be designed to expect a policy to be read from the
     // For this example, we'll assume it gets stored somewhere accessible.
     ```
 
-During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-context) will be passed to the tool:
+During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-context) will be passed to the tool *(Note: In TypeScript, this is passed as the unified `Context` type)*:
 
 === "Python"
 
@@ -29619,9 +30075,9 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
 === "TypeScript"
 
     ```typescript
-    function query(query: string, toolContext: ToolContext): string | object {
+    function query(query: string, context: Context): string | object {
         // Assume 'policy' is retrieved from context, e.g., via session state:
-        const policy = toolContext.state.get('query_tool_policy', {}) as {[key: string]: any};
+        const policy = context.state.get('query_tool_policy', {}) as {[key: string]: any};
 
         // --- Placeholder Policy Enforcement ---
         const actual_tables = explainQuery(query); // Hypothetical function call
@@ -29811,7 +30267,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
         {tool, args, context}: {
             tool: BaseTool,
             args: {[key: string]: any},
-            context: ToolContext
+            context: Context
         }
     ): {[key: string]: any} | undefined {
         console.log(`Callback triggered for tool: ${tool.name}, args: ${JSON.stringify(args)}`);
@@ -30627,6 +31083,13 @@ The `InMemoryMemoryService` stores session information in the application's memo
     memoryService := memory.InMemoryService()
     ```
 
+=== "Java"
+    ```java
+    import com.google.adk.memory.InMemoryMemoryService;
+
+    InMemoryMemoryService memoryService = new InMemoryMemoryService();
+    ```
+
 
 **Example: Adding and Searching Memory**
 
@@ -30733,6 +31196,99 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
     --8<-- "examples/go/snippets/sessions/memory_example/memory_example.go:full_example"
     ```
 
+=== "Java"
+
+    ```java
+    package com.google.adk.examples.sessions;
+
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.memory.InMemoryMemoryService;
+    import com.google.adk.runner.Runner;
+    import com.google.adk.sessions.InMemorySessionService;
+    import com.google.adk.sessions.Session;
+    import com.google.adk.tools.LoadMemoryTool;
+    import com.google.genai.types.Content;
+    import com.google.genai.types.Part;
+    import java.util.Optional;
+
+    public class MemoryExample {
+
+      private static final String APP_NAME = "memory_example_app";
+      private static final String USER_ID = "mem_user";
+      private static final String MODEL = "gemini-2.0-flash";
+
+      public static void main(String[] args) {
+        // Services
+        InMemorySessionService sessionService = new InMemorySessionService();
+        InMemoryMemoryService memoryService = new InMemoryMemoryService();
+
+        // Agent 1: Capture
+        LlmAgent infoCaptureAgent = new LlmAgent.Builder()
+            .model(MODEL)
+            .name("InfoCaptureAgent")
+            .instruction("Acknowledge the user's statement.")
+            .build();
+
+        // Agent 2: Recall
+        LlmAgent memoryRecallAgent = new LlmAgent.Builder()
+            .model(MODEL)
+            .name("MemoryRecallAgent")
+            .instruction("Answer the user's question. Use the 'load_memory' tool if the answer might be in past conversations.")
+            .tools(new LoadMemoryTool())
+            .build();
+
+        // Turn 1
+        System.out.println("--- Turn 1: Capturing Information ---");
+        Runner runner1 = new Runner.Builder()
+            .agent(infoCaptureAgent)
+            .appName(APP_NAME)
+            .sessionService(sessionService)
+            .memoryService(memoryService)
+            .build();
+
+        String session1Id = "session_info";
+        // Create session
+        sessionService.createSession(APP_NAME, USER_ID, null, session1Id).blockingGet();
+
+        Content userInput1 = Content.fromParts(Part.fromText("My favorite project is Project Alpha."));
+
+        runner1.runAsync(USER_ID, session1Id, userInput1)
+            .blockingForEach(event -> {
+               if (event.finalResponse() && event.content().isPresent()) {
+                 System.out.println("Agent 1 Response: " + event.content().get().parts().get(0).text().get());
+               }
+            });
+
+        // Add to memory
+        System.out.println("\n--- Adding Session 1 to Memory ---");
+        Session completedSession1 = sessionService.getSession(APP_NAME, USER_ID, session1Id, Optional.empty()).blockingGet();
+        memoryService.addSessionToMemory(completedSession1).blockingAwait();
+        System.out.println("Session added to memory.");
+
+        // Turn 2
+        System.out.println("\n--- Turn 2: Recalling Information ---");
+        Runner runner2 = new Runner.Builder()
+            .agent(memoryRecallAgent)
+            .appName(APP_NAME)
+            .sessionService(sessionService)
+            .memoryService(memoryService)
+            .build();
+
+        String session2Id = "session_recall";
+        sessionService.createSession(APP_NAME, USER_ID, null, session2Id).blockingGet();
+
+        Content userInput2 = Content.fromParts(Part.fromText("What is my favorite project?"));
+
+        runner2.runAsync(USER_ID, session2Id, userInput2)
+            .blockingForEach(event -> {
+               if (event.finalResponse() && event.content().isPresent()) {
+                 System.out.println("Agent 2 Response: " + event.content().get().parts().get(0).text().get());
+               }
+            });
+      }
+    }
+    ```
+
 
 ### Searching Memory Within a Tool
 
@@ -30742,6 +31298,20 @@ You can also search memory from within a custom tool by using the `tool.Context`
 
     ```go
     --8<-- "examples/go/snippets/sessions/memory_example/memory_example.go:tool_search"
+    ```
+
+=== "Java"
+
+    ```java
+    // Within a tool implementation
+    public Single<ToolOutput> execute(ToolContext context) {
+      String query = ...; // get query from arguments
+      return context.searchMemory(query)
+          .map(response -> {
+              // process response
+              return new ToolOutput(response.memories().toString());
+          });
+    }
     ```
 
 ## Vertex AI Memory Bank
@@ -30822,6 +31392,19 @@ agent = Agent(
 )
 ```
 
+=== "Java"
+```java
+import com.google.adk.agents.LlmAgent;
+import com.google.adk.tools.LoadMemoryTool;
+
+LlmAgent agent = new LlmAgent.Builder()
+    .model(MODEL_ID)
+    .name("weather_sentiment_agent")
+    .instruction("...")
+    .tools(new LoadMemoryTool())
+    .build();
+```
+
 To extract memories from your session, you need to call `add_session_to_memory`. For example, you can automate this via a callback:
 
 === "Python"
@@ -30840,6 +31423,26 @@ agent = Agent(
     tools=[adk.tools.preload_memory_tool.PreloadMemoryTool()],
     after_agent_callback=auto_save_session_to_memory_callback,
 )
+```
+
+=== "Java"
+```java
+import com.google.adk.agents.LlmAgent;
+import com.google.adk.tools.LoadMemoryTool;
+import io.reactivex.rxjava3.core.Maybe;
+import java.util.Optional;
+
+LlmAgent agent = new LlmAgent.Builder()
+    .model(MODEL)
+    .name("Generic_QA_Agent")
+    .instruction("Answer the user's questions")
+    .tools(new LoadMemoryTool())
+    .afterAgentCallback((context) -> {
+        return context.invocationContext().memoryService()
+            .addSessionToMemory(context.invocationContext().session())
+            .andThen(Maybe.empty());
+    })
+    .build();
 ```
 
 ## Advanced Concepts
@@ -31380,6 +31983,8 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
 
 **3. Via `CallbackContext` or `ToolContext` (Recommended for Callbacks and Tools)**
 
+*(Note: In TypeScript, this is done via the unified `Context` type.)*
+
 Modifying state within agent callbacks (e.g., `on_before_agent_call`, `on_after_agent_call`) or tool functions is best done using the `state` attribute of the `CallbackContext` or `ToolContext` provided to your function.
 
 *   `callback_context.state['my_key'] = my_value`
@@ -31415,10 +32020,10 @@ For more comprehensive details on context objects, refer to the [Context documen
 
     ```typescript
     // In an agent callback or tool function
-    import { CallbackContext } from "@google/adk"; // or ToolContext
+    import { Context } from "@google/adk";
 
     function myCallbackOrToolFunction(
-        context: CallbackContext, // Or ToolContext
+        context: Context,
         // ... other parameters ...
     ) {
         // Update existing state
