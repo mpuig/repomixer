@@ -1441,37 +1441,89 @@ To mitigate this, you can do one of the following:
     You would use this option if you are instantiating this model adapter by
     yourself.
 
-    ```python
-    root_agent = Agent(
-        model='gemini-2.5-flash',
-        ...
-        generate_content_config=types.GenerateContentConfig(
-            ...
-            http_options=types.HttpOptions(
-                ...
-                retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
-                ...
-            ),
-            ...
-        )
-    ```
+    === "Python"
+
+        ```python
+        root_agent = Agent(
+            model='gemini-2.5-flash',
+            # ...
+            generate_content_config=types.GenerateContentConfig(
+                # ...
+                http_options=types.HttpOptions(
+                    # ...
+                    retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+                    # ...
+                ),
+                # ...
+            )
+        ```
+
+    === "Java"
+
+        ```java
+        import com.google.adk.agents.LlmAgent;
+        import com.google.genai.types.GenerateContentConfig;
+        import com.google.genai.types.HttpOptions;
+        import com.google.genai.types.HttpRetryOptions;
+
+        // ...
+
+        LlmAgent rootAgent = LlmAgent.builder()
+            .model("gemini-2.5-flash")
+            // ...
+            .generateContentConfig(GenerateContentConfig.builder()
+                // ...
+                .httpOptions(HttpOptions.builder()
+                    // ...
+                    .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                    // ...
+                    .build())
+                // ...
+                .build())
+            .build();
+        ```
 
     **Option 2:** Retry options on this model adapter.
 
     You would use this option if you were instantiating the instance of adapter
     by yourself.
 
-    ```python
-    from google.genai import types
+    === "Python"
 
-    # ...
+        ```python
+        from google.genai import types
 
-    agent = Agent(
-        model=Gemini(
-        retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+        # ...
+
+        agent = Agent(
+            model=Gemini(
+            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+            )
         )
-    )
-    ```
+        ```
+
+    === "Java"
+
+        ```java
+        import com.google.adk.agents.LlmAgent;
+        import com.google.adk.models.Gemini;
+        import com.google.genai.Client;
+        import com.google.genai.types.HttpOptions;
+        import com.google.genai.types.HttpRetryOptions;
+
+        // ...
+
+        LlmAgent agent = LlmAgent.builder()
+            .model(Gemini.builder()
+                .modelName("gemini-2.5-flash")
+                .apiClient(Client.builder()
+                    .httpOptions(HttpOptions.builder()
+                        .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                        .build())
+                    .build())
+                .build())
+            .build();
+        ```
 
 ## Gemini Interactions API {#interactions-api}
 
@@ -1489,23 +1541,45 @@ You can enable the Interactions API by setting the `use_interactions_api=True`
 parameter in the Gemini model configuration, as shown in the following code
 snippet:
 
-```python
-from google.adk.agents.llm_agent import Agent
-from google.adk.models.google_llm import Gemini
-from google.adk.tools.google_search_tool import GoogleSearchTool
+=== "Python"
 
-root_agent = Agent(
-    model=Gemini(
-        model="gemini-2.5-flash",
-        use_interactions_api=True,  # Enable Interactions API
-    ),
-    name="interactions_test_agent",
-    tools=[
-        GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
-        get_current_weather,  # Custom function tool
-    ],
-)
-```
+    ```python
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.models.google_llm import Gemini
+    from google.adk.tools.google_search_tool import GoogleSearchTool
+
+    root_agent = Agent(
+        model=Gemini(
+            model="gemini-2.5-flash",
+            use_interactions_api=True,  # Enable Interactions API
+        ),
+        name="interactions_test_agent",
+        tools=[
+            GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
+            get_current_weather,  # Custom function tool
+        ],
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+    import com.google.adk.tools.GoogleSearchTool;
+
+    // Note: Interactions API support in Java ADK is currently under development.
+    LlmAgent rootAgent = LlmAgent.builder()
+        .model(Gemini.builder()
+            .modelName("gemini-2.5-flash")
+            .build())
+        .name("interactions_test_agent")
+        .tools(
+            GoogleSearchTool.INSTANCE, // Search tool
+            getCurrentWeather // Custom function tool
+        )
+        .build();
+    ```
 
 For a complete code sample, see the
 [Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/interactions_api).
@@ -1519,10 +1593,20 @@ tool, within the same agent. You can work around this limitation by configuring 
 the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
 parameter:
 
-```python
-# Use bypass_multi_tools_limit=True to convert google_search to a function tool
-GoogleSearchTool(bypass_multi_tools_limit=True)
-```
+=== "Python"
+
+    ```python
+    # Use bypass_multi_tools_limit=True to convert google_search to a function tool
+    GoogleSearchTool(bypass_multi_tools_limit=True)
+    ```
+
+=== "Java"
+
+    ```java
+    // Note: bypassMultiToolsLimit is Python-specific.
+    // In Java, simply use the tool instance.
+    GoogleSearchTool.INSTANCE;
+    ```
 
 In this example, this option converts the built-in google_search to a function
 calling tool (via GoogleSearchAgentTool), which allows it to work alongside
@@ -2601,7 +2685,7 @@ File: docs/agents/config.md
 # Build agents with Agent Config
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 The ADK Agent Config feature lets you build an ADK workflow without writing
@@ -2609,7 +2693,7 @@ code. An Agent Config uses a YAML format text file with a brief description of
 the agent, allowing just about anyone to assemble and run an ADK agent. The
 following is a simple example of a basic Agent Config definition:
 
-```
+```yaml
 name: assistant_agent
 model: gemini-2.5-flash
 description: A helper agent that can answer users' questions.
@@ -2744,6 +2828,41 @@ topic in the
 For more information about the ADK command line options, see the
 [ADK CLI reference](/adk-docs/api-reference/cli/).
 
+### Run programmatically
+
+You can also bypass the CLI and dynamically load and execute a configuration-based agent directly in your code. The utility loads the configuration and instantiates the proper agent class (such as `LlmAgent`) transparently as a `BaseAgent` subclass.
+
+=== "Python"
+
+    ```python
+    import asyncio
+    from google.adk.agents import config_agent_utils
+    from google.adk.agents import Runner
+
+    async def main():
+        # Load the agent directly from the YAML config file
+        agent = config_agent_utils.from_config("my_agent/root_agent.yaml")
+        # ...
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.ConfigAgentUtils;
+
+    public class AgentApp {
+        public static void main(String[] args) throws Exception {
+            // Load the agent directly from the YAML config file
+            BaseAgent agent = ConfigAgentUtils.fromConfig("my_agent/root_agent.yaml");
+            // ...
+        }
+    }
+    ```
+
 ## Example configs
 
 This section shows examples of Agent Config files to get you started building
@@ -2843,7 +2962,7 @@ limitations:
 -   **Model support:** Only Gemini models are currently supported.
     Integration with third-party models is in progress.
 -   **Programming language:** The Agent Config feature currently supports
-    only Python code for tools and other functionality requiring programming code.
+    Python and Java code for tools and other functionality requiring programming code.
 -   **ADK Tool support:** The following ADK tools are supported by the Agent
     Config feature, but *not all tools are fully supported*:
     -   `google_search`
@@ -6343,7 +6462,7 @@ File: docs/apps/index.md
 # Apps: workflow management class
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The ***App*** class is a top-level container for an entire Agent Development Kit
@@ -6395,24 +6514,49 @@ Create a ***root agent*** for your workflow by creating a subclass from the
 the ***root agent*** object and optional features, as shown in the following
 sample code:
 
-```python title="agent.py"
-from google.adk.agents.llm_agent import Agent
-from google.adk.apps import App
+=== "Python"
 
-root_agent = Agent(
-    model='gemini-2.5-flash',
-    name='greeter_agent',
-    description='An agent that provides a friendly greeting.',
-    instruction='Reply with Hello, World!',
-)
+    ```python title="agent.py"
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.apps import App
+    
+    root_agent = Agent(
+        model='gemini-2.5-flash',
+        name='greeter_agent',
+        description='An agent that provides a friendly greeting.',
+        instruction='Reply with Hello, World!',
+    )
+    
+    app = App(
+        name="agents",
+        root_agent=root_agent,
+        # Optionally include App-level features:
+        # plugins, context_cache_config, resumability_config
+    )
+    ```
 
-app = App(
-    name="agents",
-    root_agent=root_agent,
-    # Optionally include App-level features:
-    # plugins, context_cache_config, resumability_config
-)
-```
+=== "Java"
+
+    ```java title="AgentConfiguration.java"
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.apps.App;
+    
+    LlmAgent rootAgent = LlmAgent.builder()
+        .model("gemini-2.5-flash")
+        .name("greeter_agent")
+        .description("An agent that provides a friendly greeting.")
+        .instruction("Reply with Hello, World!")
+        .build();
+
+    App app = App.builder()
+        .name("agents")
+        .rootAgent(rootAgent)
+        // Optionally include App-level features:
+        // .plugins(plugins)
+        // .contextCacheConfig(contextCacheConfig)
+        // .eventsCompactionConfig(eventsCompactionConfig)
+        .build();
+    ```
 
 !!! tip "Recommended: Use `app` variable name"
 
@@ -6424,27 +6568,53 @@ app = App(
 You can use the ***Runner*** class to run your agent workflow using the
 `app` parameter, as shown in the following code sample:
 
-```python title="main.py"
-import asyncio
-from dotenv import load_dotenv
-from google.adk.runners import InMemoryRunner
-from agent import app # import code from agent.py
+=== "Python"
 
-load_dotenv() # load API keys and settings
-# Set a Runner using the imported application object
-runner = InMemoryRunner(app=app)
+    ```python title="main.py"
+    import asyncio
+    from dotenv import load_dotenv
+    from google.adk.runners import InMemoryRunner
+    from agent import app # import code from agent.py
+    
+    load_dotenv() # load API keys and settings
+    # Set a Runner using the imported application object
+    runner = InMemoryRunner(app=app)
+    
+    async def main():
+        try:  # run_debug() requires ADK Python 1.18 or higher:
+            response = await runner.run_debug("Hello there!")
+            
+        except Exception as e:
+            print(f"An error occurred during agent execution: {e}")
+    
+    if __name__ == "__main__":
+        asyncio.run(main())
+    
+    ```
 
-async def main():
-    try:  # run_debug() requires ADK Python 1.18 or higher:
-        response = await runner.run_debug("Hello there!")
-        
-    except Exception as e:
-        print(f"An error occurred during agent execution: {e}")
+=== "Java"
 
-if __name__ == "__main__":
-    asyncio.run(main())
+    ```java title="AppMain.java"
+    import com.google.adk.agents.Content;
+    import com.google.adk.runner.Runner;
+    
+    public class AppMain {
+    
+      public static void main(String[] args) throws Exception {
+        // Set a Runner using the application object
 
-```
+        App app = ...;
+
+        Runner runner = Runner.builder()
+            .app(app) // Use the 'app' object defined previously
+            .build();
+    
+        runner.runAsync("user", "session-1", Content.fromParts(Part.fromText("Hello there!")))
+            .filter(event -> event.finalResponse() && event.content().isPresent())
+            .blockingSubscribe(event -> System.out.println("Response: " + event.stringifyContent()));
+      }
+    }
+    ```
 
 !!! note "Version requirement for `Runner.run_debug()` "
 
@@ -6452,11 +6622,21 @@ if __name__ == "__main__":
     You can also use `Runner.run()`, which requires more setup code. For
     more details, see the 
 
-Run your App agent with the `main.py` code using the following command:
+=== "Python"
 
-```console
-python main.py
-```
+    Run your App agent with the `main.py` code using the following command:
+    
+    ```console
+    python main.py
+    ```
+
+=== "Java"
+
+    Run your App agent with the `AppMain.java` code using your build tool (e.g. Gradle `application` plugin):
+    
+    ```console
+    ./gradlew run
+    ```
 
 ## Next steps
 
@@ -8117,7 +8297,7 @@ File: docs/context/caching.md
 # Context caching with Gemini
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.15.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.15.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 When working with agents to complete tasks, you may want to reuse extended
@@ -8137,26 +8317,48 @@ You configure the context caching feature at the ADK `App` object level,
 which wraps your agent. Use the `ContextCacheConfig` class to configure
 these settings, as shown in the following code sample:
 
-```python
-from google.adk import Agent
-from google.adk.apps.app import App
-from google.adk.agents.context_cache_config import ContextCacheConfig
+=== "Python"
 
-root_agent = Agent(
-  # configure an agent using Gemini 2.0 or higher
-)
+    ```python
+    from google.adk import Agent
+    from google.adk.apps.app import App
+    from google.adk.agents.context_cache_config import ContextCacheConfig
 
-# Create the app with context caching configuration
-app = App(
-    name='my-caching-agent-app',
-    root_agent=root_agent,
-    context_cache_config=ContextCacheConfig(
-        min_tokens=2048,    # Minimum tokens to trigger caching
-        ttl_seconds=600,    # Store for up to 10 minutes
-        cache_intervals=5,  # Refresh after 5 uses
-    ),
-)
-```
+    root_agent = Agent(
+      # configure an agent using Gemini 2.0 or higher
+    )
+
+    # Create the app with context caching configuration
+    app = App(
+        name='my-caching-agent-app',
+        root_agent=root_agent,
+        context_cache_config=ContextCacheConfig(
+            min_tokens=2048,    # Minimum tokens to trigger caching
+            ttl_seconds=600,    # Store for up to 10 minutes
+            cache_intervals=5,  # Refresh after 5 uses
+        ),
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.ContextCacheConfig;
+    import com.google.adk.apps.App;
+    import java.time.Duration;
+
+    // Create the app with context caching configuration
+    App app = App.builder()
+                 .name("my-caching-agent-app")
+                 .rootAgent(rootAgent)
+                 .contextCacheConfig(
+                     new ContextCacheConfig(
+                         5, /* cache_intervals (max invocations) */
+                         Duration.ofMinutes(10), /* ttl */
+                         2048 /* min_tokens */))
+                 .build();
+    ```
 
 ## Configuration settings
 
@@ -8315,7 +8517,7 @@ File: docs/context/index.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-In the Agent Development Kit (ADK), "context" refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
+In the Agent Development Kit (ADK), *context* refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
 
 Agents often need more than just the latest user message to perform well. Context is essential because it enables:
 
@@ -8334,30 +8536,28 @@ The central piece holding all this information together for a single, complete u
 === "Python"
 
     ```python
-    # Conceptual Pseudocode: How the framework provides context (Internal Logic)
+    # How the framework provides context
+    from google.adk import Runner
 
-    # runner = Runner(agent=my_root_agent, session_service=..., artifact_service=...)
-    # user_message = types.Content(...)
-    # session = session_service.get_session(...) # Or create new
+    # 1. You initialize a Runner with your agent and services
+    runner = Runner(
+        app_name="my_app",
+        agent=my_root_agent,
+        session_service=my_session_service,
+        artifact_service=my_artifact_service,
+    )
 
-    # --- Inside runner.run_async(...) ---
-    # 1. Framework creates the main context for this specific run
-    # invocation_context = InvocationContext(
-    #     invocation_id="unique-id-for-this-run",
-    #     session=session,
-    #     user_content=user_message,
-    #     agent=my_root_agent, # The starting agent
-    #     session_service=session_service,
-    #     artifact_service=artifact_service,
-    #     memory_service=memory_service,
-    #     # ... other necessary fields ...
-    # )
-    #
-    # 2. Framework calls the agent's run method, passing the context implicitly
-    #    (The agent's method signature will receive it, e.g., runAsyncImpl(InvocationContext invocationContext))
-    # await my_root_agent.run_async(invocation_context)
-    #   --- End Internal Logic ---
-    #
+    # 2. You call run_async with the user input
+    # Note: run_async is an asynchronous generator yielding Events.
+    # The framework internally creates an InvocationContext and passes it
+    # implicitly to your agent code, callbacks, and tools.
+    async for event in runner.run_async(
+        user_id="user123",
+        session_id="session456",
+        new_message=user_message
+    ):
+        print(event.stringify_content())
+
     # As a developer, you work with the context objects provided in method arguments.
     ```
 
@@ -8399,7 +8599,7 @@ The central piece holding all this information together for a single, complete u
 === "Java"
 
     ```java
-    /* Conceptual Pseudocode: How the framework provides context (Internal Logic) */
+    /* How the framework provides context */
     InMemoryRunner runner = new InMemoryRunner(agent);
     Session session = runner
         .sessionService()
@@ -8409,15 +8609,15 @@ The central piece holding all this information together for a single, complete u
     try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
       while (true) {
         System.out.print("\nYou > ");
+        String userInput = scanner.nextLine();
+        if ("quit".equalsIgnoreCase(userInput)) {
+          break;
+        }
+        Content userMsg = Content.fromParts(Part.fromText(userInput));
+        Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg);
+        System.out.print("\nAgent > ");
+        events.blockingForEach(event -> System.out.print(event.stringifyContent()));
       }
-      String userInput = scanner.nextLine();
-      if ("quit".equalsIgnoreCase(userInput)) {
-        break;
-      }
-      Content userMsg = Content.fromParts(Part.fromText(userInput));
-      Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg);
-      System.out.print("\nAgent > ");
-      events.blockingForEach(event -> System.out.print(event.stringifyContent()));
     }
     ```
 
@@ -8434,7 +8634,7 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Python"
 
         ```python
-        # Pseudocode: Agent implementation receiving InvocationContext
+        # Agent implementation receiving InvocationContext
         from google.adk.agents import BaseAgent
         from google.adk.agents.invocation_context import InvocationContext
         from google.adk.events import Event
@@ -8482,60 +8682,24 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Java"
 
         ```java
-        // Pseudocode: Agent implementation receiving InvocationContext
+        // Example: Agent implementation receiving InvocationContext
         import com.google.adk.agents.BaseAgent;
         import com.google.adk.agents.InvocationContext;
+        import com.google.adk.events.Event;
+        import io.reactivex.rxjava3.core.Flowable;
 
-            LlmAgent root_agent =
-                LlmAgent.builder()
-                    .model("gemini-***")
-                    .name("sample_agent")
-                    .description("Answers user questions.")
-                    .instruction(
-                        """
-                        provide instruction for the agent here.
-                        """
-                    )
-                    .tools(sampleTool)
-                    .outputKey("YOUR_KEY")
-                    .build();
-
-            ConcurrentMap<String, Object> initialState = new ConcurrentHashMap<>();
-            initialState.put("YOUR_KEY", "");
-
-            InMemoryRunner runner = new InMemoryRunner(agent);
-            Session session =
-                  runner
-                      .sessionService()
-                      .createSession(runner.appName(), USER_ID, initialState, SESSION_ID )
-                      .blockingGet();
-
-           try (Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8)) {
-                while (true) {
-                  System.out.print("\nYou > ");
-                  String userInput = scanner.nextLine();
-
-                  if ("quit".equalsIgnoreCase(userInput)) {
-                    break;
-                  }
-
-                  Content userMsg = Content.fromParts(Part.fromText(userInput));
-                  Flowable<Event> events =
-                          runner.runAsync(session.userId(), session.id(), userMsg);
-
-                  System.out.print("\nAgent > ");
-                  events.blockingForEach(event ->
-                          System.out.print(event.stringifyContent()));
-              }
-
+        public class MyAgent extends BaseAgent {
+            @Override
             protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
                 // Direct access example
-                String agentName = invocationContext.agent.name
-                String sessionId = invocationContext.session.id
-                String invocationId = invocationContext.invocationId
-                System.out.println("Agent " + agent_name + " running in session " + session_id + " for invocation " + invocationId)
-                // ... agent logic using ctx ...
+                String agentName = invocationContext.agent().name();
+                String sessionId = invocationContext.session().id();
+                String invocationId = invocationContext.invocationId();
+                System.out.println("Agent " + agentName + " running in session " + sessionId + " for invocation " + invocationId);
+                // ... agent logic using invocationContext ...
+                return Flowable.empty();
             }
+        }
         ```
 
 2.  **`ReadonlyContext`**
@@ -8546,13 +8710,14 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Python"
 
         ```python
-        # Pseudocode: Instruction provider receiving ReadonlyContext
+        # Example: Instruction provider receiving ReadonlyContext
         from google.adk.agents.readonly_context import ReadonlyContext
 
         def my_instruction_provider(context: ReadonlyContext) -> str:
             # Read-only access example
-            user_tier = context.state().get("user_tier", "standard") # Can read state
-            # context.state['new_key'] = 'value' # This would typically cause an error or be ineffective
+            # The state property provides a read-only MappingProxyType view of the state
+            user_tier = context.state.get("user_tier", "standard")
+            # context.state['new_key'] = 'value' # TypeError: 'mappingproxy' object does not support item assignment
             return f"Process the request for a {user_tier} user."
         ```
 
@@ -8582,14 +8747,15 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Java"
 
         ```java
-        // Pseudocode: Instruction provider receiving ReadonlyContext
+        // Example: Instruction provider receiving ReadonlyContext
         import com.google.adk.agents.ReadonlyContext;
 
-        public String myInstructionProvider(ReadonlyContext context){
+        public String myInstructionProvider(ReadonlyContext context) {
             // Read-only access example
-            String userTier = context.state().get("user_tier", "standard");
-            context.state().put('new_key', 'value'); //This would typically cause an error
-            return "Process the request for a " + userTier + " user."
+            // state() returns an unmodifiable view of the session state
+            String userTier = (String) context.state().getOrDefault("user_tier", "standard");
+            // context.state().put("new_key", "value"); // UnsupportedOperationException
+            return "Process the request for a " + userTier + " user.";
         }
         ```
 
@@ -8606,20 +8772,20 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Python"
 
         ```python
-        # Pseudocode: Callback receiving CallbackContext
-        from google.adk.agents.callback_context import CallbackContext
+        # Example: Callback receiving Context (CallbackContext is unified into Context)
+        from google.adk.agents.context import Context
         from google.adk.models import LlmRequest
         from google.genai import types
         from typing import Optional
 
-        def my_before_model_cb(callback_context: CallbackContext, request: LlmRequest) -> Optional[types.Content]:
+        def my_before_model_cb(context: Context, request: LlmRequest) -> Optional[types.Content]:
             # Read/Write state example
-            call_count = callback_context.state.get("model_calls", 0)
-            callback_context.state["model_calls"] = call_count + 1 # Modify state
+            call_count = context.state.get("model_calls", 0)
+            context.state["model_calls"] = call_count + 1 # Modify state (tracks delta)
 
             # Optionally load an artifact
-            # config_part = callback_context.load_artifact("model_config.json")
-            print(f"Preparing model call #{call_count + 1} for invocation {callback_context.invocation_id}")
+            # config_part = context.load_artifact("model_config.json")
+            print(f"Preparing model call #{call_count + 1} for invocation {context.invocation_id}")
             return None # Allow model call to proceed
         ```
 
@@ -8656,20 +8822,20 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Java"
 
         ```java
-        // Pseudocode: Callback receiving CallbackContext
+        // Example: Callback receiving CallbackContext
         import com.google.adk.agents.CallbackContext;
         import com.google.adk.models.LlmRequest;
-        import com.google.genai.types.Content;
-        import java.util.Optional;
+        import com.google.adk.models.LlmResponse;
+        import io.reactivex.rxjava3.core.Maybe;
 
-        public Maybe<LlmResponse> myBeforeModelCb(CallbackContext callbackContext, LlmRequest request){
+        public Maybe<LlmResponse> myBeforeModelCb(CallbackContext callbackContext, LlmRequest request) {
             // Read/Write state example
-            callCount = callbackContext.state().get("model_calls", 0)
-            callbackContext.state().put("model_calls") = callCount + 1 # Modify state
+            int callCount = (int) callbackContext.state().getOrDefault("model_calls", 0);
+            callbackContext.state().put("model_calls", callCount + 1); // Modify state (tracks delta)
 
             // Optionally load an artifact
             // Maybe<Part> configPart = callbackContext.loadArtifact("model_config.json");
-            System.out.println("Preparing model call " + callCount + 1);
+            System.out.println("Preparing model call " + (callCount + 1) + " for invocation " + callbackContext.invocationId());
             return Maybe.empty(); // Allow model call to proceed
         }
         ```
@@ -8687,7 +8853,7 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Python"
 
         ```python
-        # Pseudocode: Tool function receiving ToolContext
+        # Example: Tool function receiving ToolContext
         from google.adk.tools import ToolContext
         from typing import Dict, Any
 
@@ -8753,24 +8919,23 @@ While `InvocationContext` acts as the comprehensive internal container, ADK prov
     === "Java"
 
         ```java
-        // Pseudocode: Tool function receiving ToolContext
+        // Example: Tool function receiving ToolContext
         import com.google.adk.tools.ToolContext;
-        import java.util.HashMap;
         import java.util.Map;
 
         // Assume this function is wrapped by a FunctionTool
-        public Map<String, Object> searchExternalApi(String query, ToolContext toolContext){
-            String apiKey = toolContext.state.get("api_key");
-            if(apiKey.isEmpty()){
+        public Map<String, Object> searchExternalApi(String query, ToolContext toolContext) {
+            String apiKey = (String) toolContext.state().getOrDefault("api_key", "");
+            if (apiKey.isEmpty()) {
                 // Define required auth config
                 // authConfig = AuthConfig(...);
-                // toolContext.requestCredential(authConfig); # Request credentials
+                // toolContext.requestCredential(authConfig); // Request credentials
                 // Use the 'actions' property to signal the auth request has been made
-                ...
                 return Map.of("status", "Auth Required");
+            }
 
             // Use the API key...
-            System.out.println("Tool executing for query " + query + " using API key. ");
+            System.out.println("Tool executing for query " + query + " using API key.");
 
             // Optionally list artifacts
             // Single<List<String>> availableFiles = toolContext.listArtifacts();
@@ -8795,7 +8960,7 @@ You'll frequently need to read information stored within the context.
     === "Python"
 
         ```python
-        # Pseudocode: In a Tool function
+        # Example: In a Tool function
         from google.adk.tools import ToolContext
 
         def my_tool(tool_context: ToolContext, **kwargs):
@@ -8808,11 +8973,11 @@ You'll frequently need to read information stored within the context.
             print(f"Using API endpoint: {api_endpoint}")
             # ... rest of tool logic ...
 
-        # Pseudocode: In a Callback function
-        from google.adk.agents.callback_context import CallbackContext
+        # Example: In a Callback function
+        from google.adk.agents.context import Context
 
-        def my_callback(callback_context: CallbackContext, **kwargs):
-            last_tool_result = callback_context.state.get("temp:last_api_result") # Read temporary state
+        def my_callback(context: Context, **kwargs):
+            last_tool_result = context.state.get("temp:last_api_result") # Read temporary state
             if last_tool_result:
                 print(f"Found temporary result from last tool: {last_tool_result}")
             # ... callback logic ...
@@ -8865,31 +9030,31 @@ You'll frequently need to read information stored within the context.
     === "Java"
 
         ```java
-        // Pseudocode: In a Tool function
+        // Example: In a Tool function
         import com.google.adk.tools.ToolContext;
 
-        public void myTool(ToolContext toolContext){
-           String userPref = toolContext.state().get("user_display_preference");
-           String apiEndpoint = toolContext.state().get("app:api_endpoint"); // Read app-level state
-           if(userPref.equals("dark_mode")){
+        public void myTool(ToolContext toolContext) {
+            String userPref = (String) toolContext.state().getOrDefault("user_display_preference", "default_mode");
+            String apiEndpoint = (String) toolContext.state().get("app:api_endpoint"); // Read app-level state
+            
+            if ("dark_mode".equals(userPref)) {
                 // ... apply dark mode logic ...
-                pass
             }
-           System.out.println("Using API endpoint: " + api_endpoint);
-           // ... rest of tool logic ...
+            System.out.println("Using API endpoint: " + apiEndpoint);
+            // ... rest of tool logic ...
         }
 
-
-        // Pseudocode: In a Callback function
+        // Example: In a Callback function
         import com.google.adk.agents.CallbackContext;
 
-            public void myCallback(CallbackContext callbackContext){
-                String lastToolResult = (String) callbackContext.state().get("temp:last_api_result"); // Read temporary state
-            }
-            if(!(lastToolResult.isEmpty())){
+        public void myCallback(CallbackContext callbackContext) {
+            String lastToolResult = (String) callbackContext.state().get("temp:last_api_result"); // Read temporary state
+            
+            if (lastToolResult != null && !lastToolResult.isEmpty()) {
                 System.out.println("Found temporary result from last tool: " + lastToolResult);
             }
             // ... callback logic ...
+        }
         ```
 
 *   **Getting Current Identifiers:** Useful for logging or custom logic based on the current operation.
@@ -8897,7 +9062,7 @@ You'll frequently need to read information stored within the context.
     === "Python"
 
         ```python
-        # Pseudocode: In any context (ToolContext shown)
+        # Example: In any context (ToolContext shown)
         from google.adk.tools import ToolContext
 
         def log_tool_usage(tool_context: ToolContext, **kwargs):
@@ -8934,15 +9099,15 @@ You'll frequently need to read information stored within the context.
     === "Java"
 
         ```java
-        // Pseudocode: In any context (ToolContext shown)
-         import com.google.adk.tools.ToolContext;
+        // Example: In any context (ToolContext shown)
+        import com.google.adk.tools.ToolContext;
 
-         public void logToolUsage(ToolContext toolContext){
-                    String agentName = toolContext.agentName;
-                    String invId = toolContext.invocationId;
-                    String functionCallId = toolContext.functionCallId().get(); // Specific to ToolContext
-                    System.out.println("Log: Invocation= " + invId &+ " Agent= " + agentName);
-                }
+        public void logToolUsage(ToolContext toolContext) {
+            String agentName = toolContext.agentName();
+            String invId = toolContext.invocationId();
+            String functionCallId = toolContext.functionCallId().orElse("N/A"); // Specific to ToolContext
+            System.out.println("Log: Invocation= " + invId + " Agent= " + agentName + " FunctionCallID= " + functionCallId);
+        }
         ```
 
 *   **Accessing the Initial User Input:** Refer back to the message that started the current invocation.
@@ -8950,17 +9115,17 @@ You'll frequently need to read information stored within the context.
     === "Python"
 
         ```python
-        # Pseudocode: In a Callback
-        from google.adk.agents.callback_context import CallbackContext
+        # Example: In a Callback
+        from google.adk.agents.context import Context
 
-        def check_initial_intent(callback_context: CallbackContext, **kwargs):
+        def check_initial_intent(context: Context, **kwargs):
             initial_text = "N/A"
-            if callback_context.user_content and callback_context.user_content.parts:
-                initial_text = callback_context.user_content.parts[0].text or "Non-text input"
+            if context.user_content and context.user_content.parts:
+                initial_text = context.user_content.parts[0].text or "Non-text input"
 
             print(f"This invocation started with user input: '{initial_text}'")
 
-        # Pseudocode: In an Agent's _run_async_impl
+        # Example: In an Agent's _run_async_impl
         # async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         #     if ctx.user_content and ctx.user_content.parts:
         #         initial_text = ctx.user_content.parts[0].text
@@ -8999,15 +9164,16 @@ You'll frequently need to read information stored within the context.
     === "Java"
 
         ```java
-        // Pseudocode: In a Callback
+        // Example: In a Callback
         import com.google.adk.agents.CallbackContext;
+        import com.google.genai.types.Content;
 
-        public void checkInitialIntent(CallbackContext callbackContext){
+        public void checkInitialIntent(CallbackContext callbackContext) {
             String initialText = "N/A";
-            if((!(callbackContext.userContent().isEmpty())) && (!(callbackContext.userContent().parts.isEmpty()))){
-                initialText = cbx.userContent().get().parts().get().get(0).text().get();
-                ...
-                System.out.println("This invocation started with user input: " + initialText)
+            if (callbackContext.userContent().isPresent() && callbackContext.userContent().get().parts() != null && !callbackContext.userContent().get().parts().get().isEmpty()) {
+                initialText = callbackContext.userContent().get().parts().get().get(0).text().orElse("Non-text input");
+                // ...
+                System.out.println("This invocation started with user input: " + initialText);
             }
         }
         ```
@@ -9023,7 +9189,7 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Python"
 
         ```python
-        # Pseudocode: Tool 1 - Fetches user ID
+        # Example: Tool 1 - Fetches user ID
         from google.adk.tools import ToolContext
         import uuid
 
@@ -9033,7 +9199,7 @@ State is crucial for memory and data flow. When you modify state using `Callback
             tool_context.state["temp:current_user_id"] = user_id
             return {"profile_status": "ID generated"}
 
-        # Pseudocode: Tool 2 - Uses user ID from state
+        # Example: Tool 2 - Uses user ID from state
         def get_user_orders(tool_context: ToolContext) -> dict:
             user_id = tool_context.state.get("temp:current_user_id")
             if not user_id:
@@ -9084,25 +9250,26 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Java"
 
         ```java
-        // Pseudocode: Tool 1 - Fetches user ID
+        // Example: Tool 1 - Fetches user ID
         import com.google.adk.tools.ToolContext;
+        import java.util.Map;
         import java.util.UUID;
 
-        public Map<String, String> getUserProfile(ToolContext toolContext){
+        public Map<String, String> getUserProfile(ToolContext toolContext) {
             String userId = UUID.randomUUID().toString();
             // Save the ID to state for the next tool
-            toolContext.state().put("temp:current_user_id", user_id);
+            toolContext.state().put("temp:current_user_id", userId);
             return Map.of("profile_status", "ID generated");
         }
 
-        // Pseudocode: Tool 2 - Uses user ID from state
-        public  Map<String, String> getUserOrders(ToolContext toolContext){
-            String userId = toolContext.state().get("temp:current_user_id");
-            if(userId.isEmpty()){
+        // Example: Tool 2 - Uses user ID from state
+        public Map<String, String> getUserOrders(ToolContext toolContext) {
+            String userId = (String) toolContext.state().get("temp:current_user_id");
+            if (userId == null || userId.isEmpty()) {
                 return Map.of("error", "User ID not found in state");
             }
             System.out.println("Fetching orders for user id: " + userId);
-             // ... logic to fetch orders using user_id ...
+            // ... logic to fetch orders using userId ...
             return Map.of("orders", "order123");
         }
         ```
@@ -9112,8 +9279,8 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Python"
 
         ```python
-        # Pseudocode: Tool or Callback identifies a preference
-        from google.adk.tools import ToolContext # Or CallbackContext
+        # Example: Tool or Callback identifies a preference
+        from google.adk.tools import ToolContext # Or Context
 
         def set_user_preference(tool_context: ToolContext, preference: str, value: str) -> dict:
             # Use 'user:' prefix for user-level state (if using a persistent SessionService)
@@ -9149,10 +9316,10 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Java"
 
         ```java
-        // Pseudocode: Tool or Callback identifies a preference
+        // Example: Tool or Callback identifies a preference
         import com.google.adk.tools.ToolContext; // Or CallbackContext
 
-        public Map<String, String> setUserPreference(ToolContext toolContext, String preference, String value){
+        public Map<String, String> setUserPreference(ToolContext toolContext, String preference, String value) {
             // Use 'user:' prefix for user-level state (if using a persistent SessionService)
             String stateKey = "user:" + preference;
             toolContext.state().put(stateKey, value);
@@ -9174,15 +9341,15 @@ Use artifacts to handle files or large data blobs associated with the session. C
         === "Python"
 
                ```python
-               # Pseudocode: In a callback or initial tool
-               from google.adk.agents.callback_context import CallbackContext # Or ToolContext
+               # Example: In a callback or initial tool
+               from google.adk.agents.context import Context # Or ToolContext
                from google.genai import types
 
-               def save_document_reference(context: CallbackContext, file_path: str) -> None:
+               def save_document_reference(context: Context, file_path: str) -> None:
                    # Assume file_path is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
                    try:
                        # Create a Part containing the path/URI text
-                       artifact_part = types.Part(text=file_path)
+                       artifact_part = types.Part.from_text(file_path)
                        version = context.save_artifact("document_to_summarize.txt", artifact_part)
                        print(f"Saved document reference '{file_path}' as artifact version {version}")
                        # Store the filename in state if needed by other tools
@@ -9193,7 +9360,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
                        print(f"Unexpected error saving artifact reference: {e}")
 
                # Example usage:
-               # save_document_reference(callback_context, "gs://my-bucket/docs/report.pdf")
+               # save_document_reference(context, "gs://my-bucket/docs/report.pdf")
                ```
 
         === "TypeScript"
@@ -9235,22 +9402,22 @@ Use artifacts to handle files or large data blobs associated with the session. C
         === "Java"
 
                ```java
-               // Pseudocode: In a callback or initial tool
+               // Example: In a callback or initial tool
                import com.google.adk.agents.CallbackContext;
                import com.google.genai.types.Content;
                import com.google.genai.types.Part;
+               import java.util.Optional;
 
-
-               pubic void saveDocumentReference(CallbackContext context, String filePath){
+               public void saveDocumentReference(CallbackContext context, String filePath) {
                    // Assume file_path is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
-                   try{
+                   try {
                        // Create a Part containing the path/URI text
-                       Part artifactPart = types.Part(filePath)
-                       Optional<Integer> version = context.saveArtifact("document_to_summarize.txt", artifactPart)
-                       System.out.println("Saved document reference" + filePath + " as artifact version " + version);
+                       Part artifactPart = Part.fromText(filePath);
+                       Optional<Integer> version = context.saveArtifact("document_to_summarize.txt", artifactPart);
+                       System.out.println("Saved document reference" + filePath + " as artifact version " + version.orElse(-1));
                        // Store the filename in state if needed by other tools
                        context.state().put("temp:doc_artifact_name", "document_to_summarize.txt");
-                   } catch(Exception e){
+                   } catch (Exception e) {
                        System.out.println("Unexpected error saving artifact reference: " + e);
                    }
                }
@@ -9264,7 +9431,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
         === "Python"
 
             ```python
-            # Pseudocode: In the Summarizer tool function
+            # Example: In the Summarizer tool function
             from google.adk.tools import ToolContext
             from google.genai import types
             # Assume libraries like google.cloud.storage or built-in open are available
@@ -9289,10 +9456,6 @@ Use artifacts to handle files or large data blobs associated with the session. C
                     document_content = ""
                     if file_path.startswith("gs://"):
                         # Example: Use GCS client library to download/read
-                        # from google.cloud import storage
-                        # client = storage.Client()
-                        # blob = storage.Blob.from_string(file_path, client=client)
-                        # document_content = blob.download_as_text() # Or bytes depending on format
                         pass # Replace with actual GCS reading logic
                     elif file_path.startswith("/"):
                          # Example: Use local file system
@@ -9314,8 +9477,6 @@ Use artifacts to handle files or large data blobs associated with the session. C
                      return {"error": f"Artifact service error: {e}"}
                 except FileNotFoundError:
                      return {"error": f"Local file not found: {file_path}"}
-                # except Exception as e: # Catch specific exceptions for GCS etc.
-                #      return {"error": f"Error reading document {file_path}: {e}"}
             ```
 
         === "TypeScript"
@@ -9384,51 +9545,52 @@ Use artifacts to handle files or large data blobs associated with the session. C
         === "Java"
 
             ```java
-            // Pseudocode: In the Summarizer tool function
+            // Example: In the Summarizer tool function
             import com.google.adk.tools.ToolContext;
             import com.google.genai.types.Content;
             import com.google.genai.types.Part;
+            import java.util.Map;
+            import java.util.Optional;
+            import java.io.FileNotFoundException;
 
-            public Map<String, String> summarizeDocumentTool(ToolContext toolContext){
-                String artifactName = toolContext.state().get("temp:doc_artifact_name");
-                if(artifactName.isEmpty()){
+            public Map<String, String> summarizeDocumentTool(ToolContext toolContext) {
+                String artifactName = (String) toolContext.state().get("temp:doc_artifact_name");
+                if (artifactName == null || artifactName.isEmpty()) {
                     return Map.of("error", "Document artifact name not found in state.");
                 }
-                try{
+                try {
                     // 1. Load the artifact part containing the path/URI
-                    Maybe<Part> artifactPart = toolContext.loadArtifact(artifactName);
-                    if((artifactPart == null) || (artifactPart.text().isEmpty())){
+                    Optional<Part> artifactPart = toolContext.loadArtifact(artifactName);
+                    if (!artifactPart.isPresent() || !artifactPart.get().text().isPresent() || artifactPart.get().text().get().isEmpty()) {
                         return Map.of("error", "Could not load artifact or artifact has no text path: " + artifactName);
                     }
-                    filePath = artifactPart.text();
+                    String filePath = artifactPart.get().text().get();
                     System.out.println("Loaded document reference: " + filePath);
 
                     // 2. Read the actual document content (outside ADK context)
                     String documentContent = "";
-                    if(filePath.startsWith("gs://")){
+                    if (filePath.startsWith("gs://")) {
                         // Example: Use GCS client library to download/read into documentContent
-                        pass; // Replace with actual GCS reading logic
-                    } else if(){
+                        // Replace with actual GCS reading logic
+                    } else if (filePath.startsWith("/")) {
                         // Example: Use local file system to download/read into documentContent
-                    } else{
+                    } else {
                         return Map.of("error", "Unsupported file path scheme: " + filePath);
                     }
 
                     // 3. Summarize the content
-                    if(documentContent.isEmpty()){
+                    if (documentContent.isEmpty()) {
                         return Map.of("error", "Failed to read document content.");
                     }
 
                     // summary = summarizeText(documentContent) // Call your summarization logic
-                    summary = "Summary of content from " + filePath; // Placeholder
+                    String summary = "Summary of content from " + filePath; // Placeholder
 
                     return Map.of("summary", summary);
-                } catch(IllegalArgumentException e){
-                    return Map.of("error", "Artifact service error " + filePath + e);
-                } catch(FileNotFoundException e){
-                    return Map.of("error", "Local file not found " + filePath + e);
-                } catch(Exception e){
-                    return Map.of("error", "Error reading document " + filePath + e);
+                } catch (IllegalArgumentException e) {
+                    return Map.of("error", "Artifact service error " + e);
+                } catch (Exception e) {
+                    return Map.of("error", "Error reading document " + e);
                 }
             }
             ```
@@ -9438,7 +9600,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
     === "Python"
 
         ```python
-        # Pseudocode: In a tool function
+        # Example: In a tool function
         from google.adk.tools import ToolContext
 
         def check_available_docs(tool_context: ToolContext) -> dict:
@@ -9478,15 +9640,18 @@ Use artifacts to handle files or large data blobs associated with the session. C
     === "Java"
 
         ```java
-        // Pseudocode: In a tool function
+        // Example: In a tool function
         import com.google.adk.tools.ToolContext;
+        import io.reactivex.rxjava3.core.Single;
+        import java.util.List;
+        import java.util.Map;
 
-        public Map<String, String> checkAvailableDocs(ToolContext toolContext){
-            try{
+        public Map<String, Object> checkAvailableDocs(ToolContext toolContext) {
+            try {
                 Single<List<String>> artifactKeys = toolContext.listArtifacts();
-                System.out.println("Available artifacts" + artifactKeys.tostring());
-                return Map.of("availableDocs", "artifactKeys");
-            } catch(IllegalArgumentException e){
+                System.out.println("Available artifacts: " + artifactKeys.blockingGet().toString());
+                return Map.of("availableDocs", artifactKeys.blockingGet());
+            } catch (IllegalArgumentException e) {
                 return Map.of("error", "Artifact service error: " + e);
             }
         }
@@ -9495,7 +9660,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
 ### Handling Tool Authentication
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 Securely manage API keys or other credentials needed by tools.
@@ -9503,7 +9668,7 @@ Securely manage API keys or other credentials needed by tools.
 === "Python"
 
     ```python
-    # Pseudocode: Tool requiring auth
+    # Example: Tool requiring auth
     from google.adk.tools import ToolContext
     from google.adk.auth import AuthConfig # Assume appropriate AuthConfig is defined
 
@@ -9614,12 +9779,66 @@ Securely manage API keys or other credentials needed by tools.
     }
     ```
 
+=== "Java"
+
+    ```java
+    // Example: Tool requiring auth
+    import com.google.adk.tools.ToolContext;
+    import java.util.Map;
+
+    // Note: AuthConfig, requestCredential, and getAuthResponse are not yet 
+    // fully implemented in the Java ADK public API. 
+    // This example relies on external auth population into the session state.
+
+    public class SecureApiTool {
+      private static final String AUTH_STATE_KEY = "user:my_api_credential";
+
+      public Map<String, String> callSecureApi(ToolContext context, String requestData) {
+        // 1. Check if credential already exists in state
+        Object credential = context.state().get(AUTH_STATE_KEY);
+
+        if (credential == null) {
+          // 2. If not, request it
+          System.out.println("Credential not found, requesting...");
+          try {
+            // context.requestCredential(MY_API_AUTH_CONFIG); // Not yet implemented in Java ADK
+            // The framework handles yielding the event. The tool execution stops here for this turn.
+            return Map.of("status", "Authentication required. Please provide credentials.");
+          } catch (Exception e) {
+            return Map.of("error", "Auth or credential request error: " + e.getMessage());
+          }
+        }
+
+        // 3. If credential exists (might be from a previous turn after request)
+        //    or if this is a subsequent call after auth flow completed externally
+        try {
+          // Optionally, re-validate/retrieve if needed, or use directly
+          // String apiKey = context.getAuthResponse(MY_API_AUTH_CONFIG).getApiKey();
+          String apiKey = credential.toString(); // Simplified for example
+
+          // Store it back in state for future calls within the session
+          context.state().put(AUTH_STATE_KEY, apiKey);
+
+          System.out.println("Using retrieved credential to call API with data: " + requestData);
+          // ... Make the actual API call using apiKey ...
+          String apiResult = "API result for " + requestData;
+
+          return Map.of("result", apiResult);
+        } catch (Exception e) {
+          // Handle errors retrieving/using the credential
+          System.err.println("Error using credential: " + e.getMessage());
+          return Map.of("error", "Failed to use credential");
+        }
+      }
+    }
+    ```
+
 *Remember: `request_credential` pauses the tool and signals the need for authentication. The user/system provides credentials, and on a subsequent call, `get_auth_response` (or checking state again) allows the tool to proceed.* The `tool_context.function_call_id` is used implicitly by the framework to link the request and response.
 
 ### Leveraging Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 Access relevant information from the past or external sources.
@@ -9627,7 +9846,7 @@ Access relevant information from the past or external sources.
 === "Python"
 
     ```python
-    # Pseudocode: Tool using memory search
+    # Example: Tool using memory search
     from google.adk.tools import ToolContext
 
     def find_related_info(tool_context: ToolContext, topic: str) -> dict:
@@ -9669,10 +9888,37 @@ Access relevant information from the past or external sources.
     }
     ```
 
+=== "Java"
+
+    ```java
+    // Example: Tool using memory search
+    import com.google.adk.tools.ToolContext;
+    import com.google.adk.memory.SearchMemoryResponse;
+    import io.reactivex.rxjava3.core.Single;
+    import java.util.Map;
+
+    public class MemorySearchTool {
+      public Single<Map<String, String>> findRelatedInfo(ToolContext context, String topic) {
+        return context.searchMemory("Information about " + topic)
+            .map(searchResults -> {
+              if (searchResults != null && searchResults.results() != null && !searchResults.results().isEmpty()) {
+                System.out.println("Found " + searchResults.results().size() + " memory results for '" + topic + "'");
+                // Process searchResults.results
+                String topResultText = searchResults.results().get(0).text();
+                return Map.of("memory_snippet", topResultText);
+              } else {
+                return Map.of("message", "No relevant memories found.");
+              }
+            })
+            .onErrorReturnItem(Map.of("error", "Memory service error"));
+      }
+    }
+    ```
+
 ### Advanced: Direct `InvocationContext` Usage
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 While most interactions happen via `CallbackContext` or `ToolContext`, sometimes the agent's core logic (`_run_async_impl`/`_run_live_impl`) needs direct access.
@@ -9680,7 +9926,7 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
 === "Python"
 
     ```python
-    # Pseudocode: Inside agent's _run_async_impl
+    # Example: Inside agent's _run_async_impl
     from google.adk.agents import BaseAgent
     from google.adk.agents.invocation_context import InvocationContext
     from google.adk.events import Event
@@ -9734,6 +9980,50 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
 
         // ... Normal agent processing ...
         yield; // ... event ...
+      }
+    }
+    ```
+
+=== "Java"
+
+    ```java
+    // Example: Inside agent's runAsyncImpl
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.InvocationContext;
+    import com.google.adk.events.Event;
+    import com.google.genai.types.Content;
+    import com.google.genai.types.Part;
+    import io.reactivex.rxjava3.core.Flowable;
+    import java.util.List;
+
+    public class MyControllingAgent extends BaseAgent {
+
+      @Override
+      protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
+        // Example: Check if a specific service is available
+        if (ctx.memoryService() == null) {
+          System.out.println("Memory service is not available for this invocation.");
+          // Potentially change agent behavior
+        }
+
+        // Example: Early termination based on some condition
+        Boolean criticalError = (Boolean) ctx.session().state().getOrDefault("critical_error_flag", false);
+        if (criticalError != null && criticalError) {
+          System.out.println("Critical error detected, ending invocation.");
+          ctx.setEndInvocation(true); // Signal framework to stop processing
+          
+          Event errorEvent = Event.builder()
+              .author(name())
+              .invocationId(ctx.invocationId())
+              .content(Content.builder().parts(List.of(Part.builder().text("Stopping due to critical error.").build())).build())
+              .build();
+              
+          return Flowable.just(errorEvent); // Stop this agent's execution
+        }
+
+        // ... Normal agent processing ...
+        // return Flowable.just(normalEvent);
+        return Flowable.empty();
       }
     }
     ```
@@ -31638,6 +31928,22 @@ To inject a value from the session state, enclose the key of the desired state v
     --8<-- "examples/go/snippets/sessions/instruction_template/instruction_template_example.go:key_template"
     ```
 
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+
+    LlmAgent storyGenerator = LlmAgent.builder()
+        .name("StoryGenerator")
+        .model("gemini-2.5-flash")
+        .instruction("Write a short story about a cat, focusing on the theme: " + topic)
+        .build();
+
+    // Assuming session.state().put("topic", "friendship"), the LLM
+    // will receive the following instruction:
+    // "Write a short story about a cat, focusing on the theme: friendship."
+    ```
+
 #### Important Considerations
 
 * Key Existence: Ensure that the key you reference in the instruction string exists in the session.state. If the key is missing, the agent will throw an error. To use a key that may or may not be present, you can include a question mark (?) after the key (e.g. {topic?}).
@@ -31697,6 +32003,29 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
     --8<-- "examples/go/snippets/sessions/instruction_provider/instruction_provider_example.go:bypass_state_injection"
     ```
 
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.Instruction;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.ReadonlyContext;
+    import io.reactivex.rxjava3.core.Single;
+
+    // This is an Instruction.Provider
+    Instruction.Provider myInstructionProvider = new Instruction.Provider(
+        (ReadonlyContext context) -> {
+            // No state injection occurs — curly braces are treated as literal text.
+            return Single.just("Format your output as JSON: {\"city\": \"<name>\", \"population\": <number>}");
+        }
+    );
+
+    LlmAgent agent = LlmAgent.builder()
+        .model("gemini-2.5-flash")
+        .name("template_helper_agent")
+        .instruction(myInstructionProvider)
+        .build();
+    ```
+
 If you want to both use an `InstructionProvider` *and* inject state into your instructions, you can use the `inject_session_state` utility function. Only `{key}` placeholders matching valid state variable names will be replaced; other text (including curly braces that don't match valid identifiers) will be left as-is.
 
 === "Python"
@@ -31723,6 +32052,31 @@ If you want to both use an `InstructionProvider` *and* inject state into your in
 
     ```go
     --8<-- "examples/go/snippets/sessions/instruction_provider/instruction_provider_example.go:manual_state_injection"
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.Instruction;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.ReadonlyContext;
+    import com.google.adk.utils.InstructionUtils;
+    import io.reactivex.rxjava3.core.Single;
+
+    Instruction.Provider myDynamicInstructionProvider = new Instruction.Provider(
+        (ReadonlyContext context) -> {
+            String template = "This is a " + adjective + " instruction. Use JSON like: {\"key\": \"value\"}.";
+            // This will inject the 'adjective' state variable.
+            // The JSON braces are left alone because their content is not a valid identifier.
+            return InstructionUtils.injectSessionState(context.invocationContext(), template);
+        }
+    );
+
+    LlmAgent agent = LlmAgent.builder()
+        .model("gemini-2.5-flash")
+        .name("dynamic_template_helper_agent")
+        .instruction(myDynamicInstructionProvider)
+        .build();
     ```
 
 **Benefits of Direct Injection**
