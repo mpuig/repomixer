@@ -5121,86 +5121,88 @@ search:
 
 두 타입 모두 [`RunResultBase`][agents.result.RunResultBase]를 상속하며, `final_output`, `new_items`, `last_agent`, `raw_responses`, `to_state()` 같은 공통 결과 표면을 제공합니다
 
-`RunResultStreaming`은 [`stream_events()`][agents.result.RunResultStreaming.stream_events], [`current_agent`][agents.result.RunResultStreaming.current_agent], [`is_complete`][agents.result.RunResultStreaming.is_complete], [`cancel(...)`][agents.result.RunResultStreaming.cancel] 같은 스트리밍 전용 제어를 추가로 제공합니다
+`RunResultStreaming`은 [`stream_events()`][agents.result.RunResultStreaming.stream_events], [`current_agent`][agents.result.RunResultStreaming.current_agent], [`is_complete`][agents.result.RunResultStreaming.is_complete], [`cancel(...)`][agents.result.RunResultStreaming.cancel] 같은 스트리밍 전용 제어 기능을 추가로 제공합니다
 
 ## 올바른 결과 표면 선택
 
 대부분의 애플리케이션은 몇 가지 결과 속성이나 헬퍼만 필요합니다:
 
-| 다음이 필요하면... | 사용 |
+| 다음이 필요할 때... | 사용 |
 | --- | --- |
-| 사용자에게 보여줄 최종 답변 | `final_output` |
-| 전체 로컬 트랜스크립트를 포함한 재생 가능한 다음 턴 입력 목록 | `to_input_list()` |
-| 에이전트, 도구, 핸드오프, 승인 메타데이터가 포함된 풍부한 실행 항목 | `new_items` |
+| 사용자에게 보여줄 최종 응답 | `final_output` |
+| 전체 로컬 기록이 포함된, 재생 가능한 다음 턴 입력 목록 | `to_input_list()` |
+| 에이전트, 도구, 핸드오프, 승인 메타데이터가 포함된 풍부한 실행 아이템 | `new_items` |
 | 일반적으로 다음 사용자 턴을 처리해야 하는 에이전트 | `last_agent` |
 | `previous_response_id`를 사용하는 OpenAI Responses API 체이닝 | `last_response_id` |
-| 보류 중인 승인과 재개 가능한 스냅샷 | `interruptions` 및 `to_state()` |
+| 보류 중인 승인 및 재개 가능한 스냅샷 | `interruptions` 및 `to_state()` |
 | 현재 중첩된 `Agent.as_tool()` 호출에 대한 메타데이터 | `agent_tool_invocation` |
 | 원시 모델 호출 또는 가드레일 진단 | `raw_responses` 및 가드레일 결과 배열 |
 
 ## 최종 출력
 
-[`final_output`][agents.result.RunResultBase.final_output] 속성에는 마지막으로 실행된 에이전트의 최종 출력이 들어 있습니다. 이는 다음 중 하나입니다:
+[`final_output`][agents.result.RunResultBase.final_output] 속성은 마지막으로 실행된 에이전트의 최종 출력을 포함합니다. 이는 다음 중 하나입니다:
 
 -   마지막 에이전트에 `output_type`이 정의되지 않은 경우 `str`
--   마지막 에이전트에 출력 타입이 정의된 경우 `last_agent.output_type` 타입 객체
--   최종 출력이 생성되기 전에 실행이 중단된 경우 `None`(예: 승인 인터럽션(중단 처리)에서 일시 정지된 경우)
+-   마지막 에이전트에 출력 타입이 정의된 경우 `last_agent.output_type` 타입의 객체
+-   최종 출력이 생성되기 전에 실행이 중지된 경우 `None`(예: 승인 인터럽션(중단 처리)에서 일시 중지된 경우)
 
 !!! note
 
-    `final_output`의 타입은 `Any`입니다. 핸드오프는 실행을 완료하는 에이전트를 바꿀 수 있으므로 SDK는 가능한 출력 타입의 전체 집합을 정적으로 알 수 없습니다
+    `final_output`의 타입은 `Any`입니다. 핸드오프가 실행을 완료하는 에이전트를 변경할 수 있으므로, SDK는 가능한 출력 타입의 전체 집합을 정적으로 알 수 없습니다
 
-스트리밍 모드에서는 스트림 처리가 끝날 때까지 `final_output`이 `None`으로 유지됩니다. 이벤트 단위 흐름은 [Streaming](streaming.md)을 참조하세요
+스트리밍 모드에서는 스트림 처리가 끝날 때까지 `final_output`이 `None`으로 유지됩니다. 이벤트별 흐름은 [Streaming](streaming.md)을 참고하세요
 
-## 입력, 다음 턴 히스토리, 새 항목
+## 입력, 다음 턴 기록, 새 아이템
 
 이 표면들은 서로 다른 질문에 답합니다:
 
-| 속성 또는 헬퍼 | 포함 내용 | 가장 적합한 용도 |
+| 속성 또는 헬퍼 | 포함 내용 | 적합한 용도 |
 | --- | --- | --- |
-| [`input`][agents.result.RunResultBase.input] | 이 실행 구간의 기본 입력. 핸드오프 입력 필터가 히스토리를 다시 쓴 경우, 실행이 이어진 필터링된 입력이 반영됩니다 | 이 실행이 실제로 입력으로 사용한 내용을 감사 |
-| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | `input`과 이 실행에서 변환된 `new_items`로 구성된 재생 가능한 다음 턴 입력 목록 | 수동 채팅 루프 및 클라이언트 관리 대화 상태 |
+| [`input`][agents.result.RunResultBase.input] | 이 실행 세그먼트의 기본 입력. 핸드오프 입력 필터가 기록을 다시 쓴 경우, 실행이 이어진 필터링된 입력을 반영합니다 | 이 실행이 실제로 어떤 입력을 사용했는지 감사 |
+| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | 실행의 입력 아이템 뷰. 기본 `mode="preserve_all"`은 `new_items`에서 변환된 전체 기록을 유지하며, `mode="normalized"`는 핸드오프 필터링이 모델 기록을 다시 쓸 때 정규화된 연속 입력을 우선합니다 | 수동 채팅 루프, 클라이언트 관리 대화 상태, 일반 아이템 기록 점검 |
 | [`new_items`][agents.result.RunResultBase.new_items] | 에이전트, 도구, 핸드오프, 승인 메타데이터가 포함된 풍부한 [`RunItem`][agents.items.RunItem] 래퍼 | 로그, UI, 감사, 디버깅 |
-| [`raw_responses`][agents.result.RunResultBase.raw_responses] | 실행 중 각 모델 호출에서 얻은 원시 [`ModelResponse`][agents.items.ModelResponse] 객체 | 프로바이더 수준 진단 또는 원시 응답 점검 |
+| [`raw_responses`][agents.result.RunResultBase.raw_responses] | 실행의 각 모델 호출에서 나온 원시 [`ModelResponse`][agents.items.ModelResponse] 객체 | 제공자 수준 진단 또는 원시 응답 점검 |
 
-실무에서는:
+실제로는 다음과 같습니다:
 
--   애플리케이션이 전체 대화 트랜스크립트를 수동으로 유지할 때 `to_input_list()`를 사용하세요
--   SDK가 히스토리를 대신 로드/저장하게 하려면 [`session=...`](sessions/index.md)을 사용하세요
--   `conversation_id` 또는 `previous_response_id`로 OpenAI 서버 관리 상태를 사용 중이라면, 보통 `to_input_list()`를 다시 보내기보다 새 사용자 입력만 전달하고 저장된 ID를 재사용하세요
+-   실행의 일반 입력 아이템 뷰가 필요하면 `to_input_list()`를 사용하세요
+-   핸드오프 필터링 또는 중첩 핸드오프 기록 재작성 이후 다음 `Runner.run(..., input=...)` 호출에 사용할 정규화된 로컬 입력이 필요하면 `to_input_list(mode="normalized")`를 사용하세요
+-   SDK가 기록을 대신 로드/저장하도록 하려면 [`session=...`](sessions/index.md)을 사용하세요
+-   `conversation_id` 또는 `previous_response_id`로 OpenAI 서버 관리 상태를 사용하는 경우, 보통 `to_input_list()`를 다시 보내기보다 새 사용자 입력만 전달하고 저장된 ID를 재사용하세요
+-   로그, UI, 감사용으로 전체 변환 기록이 필요하면 기본 `to_input_list()` 모드 또는 `new_items`를 사용하세요
 
-JavaScript SDK와 달리 Python은 모델 형태 델타만 담은 별도 `output` 속성을 제공하지 않습니다. SDK 메타데이터가 필요하면 `new_items`를, 원시 모델 페이로드가 필요하면 `raw_responses`를 확인하세요
+JavaScript SDK와 달리 Python은 모델 형태 델타 전용의 별도 `output` 속성을 제공하지 않습니다. SDK 메타데이터가 필요하면 `new_items`를 사용하고, 원시 모델 페이로드가 필요하면 `raw_responses`를 확인하세요
 
-컴퓨터 도구 재생은 원시 Responses 페이로드 형태를 따릅니다. 프리뷰 모델의 `computer_call` 항목은 단일 `action`을 유지하며, `gpt-5.4` 컴퓨터 호출은 배치된 `actions[]`를 유지할 수 있습니다. [`to_input_list()`][agents.result.RunResultBase.to_input_list]와 [`RunState`][agents.run_state.RunState]는 모델이 생성한 형태를 그대로 유지하므로, 수동 재생, 일시정지/재개 흐름, 저장된 트랜스크립트가 프리뷰와 GA 컴퓨터 도구 호출 모두에서 계속 작동합니다. 로컬 실행 결과는 여전히 `new_items`에서 `computer_call_output` 항목으로 나타납니다
+컴퓨터 도구 재생은 원시 Responses 페이로드 형태를 따릅니다. 프리뷰 모델의 `computer_call` 아이템은 단일 `action`을 유지하고, `gpt-5.4` 컴퓨터 호출은 일괄 `actions[]`를 유지할 수 있습니다. [`to_input_list()`][agents.result.RunResultBase.to_input_list]와 [`RunState`][agents.run_state.RunState]는 모델이 생성한 형태를 그대로 유지하므로, 수동 재생, 일시 중지/재개 흐름, 저장된 기록이 프리뷰와 GA 컴퓨터 도구 호출 모두에서 계속 동작합니다. 로컬 실행 결과는 여전히 `new_items`의 `computer_call_output` 아이템으로 나타납니다
 
-### 새 항목
+### 새 아이템
 
-[`new_items`][agents.result.RunResultBase.new_items]는 실행 중 발생한 일을 가장 풍부하게 보여줍니다. 일반적인 항목 타입은 다음과 같습니다:
+[`new_items`][agents.result.RunResultBase.new_items]는 실행 중 발생한 일을 가장 풍부하게 보여줍니다. 일반적인 아이템 타입은 다음과 같습니다:
 
 -   어시스턴트 메시지용 [`MessageOutputItem`][agents.items.MessageOutputItem]
--   추론 항목용 [`ReasoningItem`][agents.items.ReasoningItem]
--   Responses 도구 검색 요청 및 로드된 도구 검색 결과용 [`ToolSearchCallItem`][agents.items.ToolSearchCallItem] 및 [`ToolSearchOutputItem`][agents.items.ToolSearchOutputItem]
--   도구 호출 및 결과용 [`ToolCallItem`][agents.items.ToolCallItem] 및 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]
--   승인을 위해 일시 정지된 도구 호출용 [`ToolApprovalItem`][agents.items.ToolApprovalItem]
--   핸드오프 요청 및 완료된 전송용 [`HandoffCallItem`][agents.items.HandoffCallItem] 및 [`HandoffOutputItem`][agents.items.HandoffOutputItem]
+-   추론 아이템용 [`ReasoningItem`][agents.items.ReasoningItem]
+-   Responses 도구 검색 요청과 로드된 도구 검색 결과용 [`ToolSearchCallItem`][agents.items.ToolSearchCallItem] 및 [`ToolSearchOutputItem`][agents.items.ToolSearchOutputItem]
+-   도구 호출과 그 결과용 [`ToolCallItem`][agents.items.ToolCallItem] 및 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]
+-   승인을 위해 일시 중지된 도구 호출용 [`ToolApprovalItem`][agents.items.ToolApprovalItem]
+-   핸드오프 요청과 완료된 전송용 [`HandoffCallItem`][agents.items.HandoffCallItem] 및 [`HandoffOutputItem`][agents.items.HandoffOutputItem]
 
-에이전트 연관, 도구 출력, 핸드오프 경계, 승인 경계가 필요할 때는 `to_input_list()`보다 `new_items`를 선택하세요
+에이전트 연관성, 도구 출력, 핸드오프 경계, 승인 경계가 필요할 때는 `to_input_list()`보다 `new_items`를 선택하세요
 
-호스티드 툴 검색을 사용할 때는 `ToolSearchCallItem.raw_item`에서 모델이 생성한 검색 요청을 확인하고, `ToolSearchOutputItem.raw_item`에서 해당 턴에 어떤 네임스페이스, 함수, 호스티드 MCP 서버가 로드되었는지 확인하세요
+호스티드 툴 검색을 사용할 때는 모델이 생성한 검색 요청을 보려면 `ToolSearchCallItem.raw_item`을, 해당 턴에서 어떤 네임스페이스, 함수, 또는 호스티드 MCP 서버가 로드되었는지 보려면 `ToolSearchOutputItem.raw_item`을 확인하세요
 
 ## 대화 계속 또는 재개
 
 ### 다음 턴 에이전트
 
-[`last_agent`][agents.result.RunResultBase.last_agent]에는 마지막으로 실행된 에이전트가 들어 있습니다. 핸드오프 이후 다음 사용자 턴에 재사용할 최적의 에이전트인 경우가 많습니다
+[`last_agent`][agents.result.RunResultBase.last_agent]에는 마지막으로 실행된 에이전트가 들어 있습니다. 핸드오프 이후 다음 사용자 턴에서 재사용할 최적의 에이전트인 경우가 많습니다
 
-스트리밍 모드에서는 [`RunResultStreaming.current_agent`][agents.result.RunResultStreaming.current_agent]가 실행 진행에 따라 갱신되므로, 스트림이 끝나기 전에 핸드오프를 관찰할 수 있습니다
+스트리밍 모드에서는 실행이 진행됨에 따라 [`RunResultStreaming.current_agent`][agents.result.RunResultStreaming.current_agent]가 업데이트되므로, 스트림이 끝나기 전에도 핸드오프를 관찰할 수 있습니다
 
 ### 인터럽션(중단 처리) 및 실행 상태
 
-도구에 승인이 필요하면 보류 중인 승인이 [`RunResult.interruptions`][agents.result.RunResult.interruptions] 또는 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]에 노출됩니다. 여기에는 직접 도구, 핸드오프 이후 도달한 도구, 중첩된 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 실행에서 발생한 승인이 포함될 수 있습니다
+도구에 승인이 필요하면 보류 중인 승인 항목이 [`RunResult.interruptions`][agents.result.RunResult.interruptions] 또는 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]에 노출됩니다. 여기에는 직접 도구에서 발생한 승인, 핸드오프 이후 도달한 도구에서 발생한 승인, 중첩된 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 실행에서 발생한 승인이 포함될 수 있습니다
 
-[`to_state()`][agents.result.RunResult.to_state]를 호출해 재개 가능한 [`RunState`][agents.run_state.RunState]를 캡처하고, 보류 항목을 승인 또는 거부한 뒤 `Runner.run(...)` 또는 `Runner.run_streamed(...)`로 재개하세요
+재개 가능한 [`RunState`][agents.run_state.RunState]를 캡처하려면 [`to_state()`][agents.result.RunResult.to_state]를 호출하고, 보류 중인 아이템을 승인 또는 거부한 다음, `Runner.run(...)` 또는 `Runner.run_streamed(...)`로 재개하세요
 
 ```python
 from agents import Agent, Runner
@@ -5215,7 +5217,7 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-스트리밍 실행의 경우 먼저 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 소비를 끝낸 다음 `result.interruptions`를 확인하고 `result.to_state()`에서 재개하세요. 전체 승인 흐름은 [Human-in-the-loop](human_in_the_loop.md)를 참조하세요
+스트리밍 실행의 경우 먼저 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 소비를 완료한 다음 `result.interruptions`를 확인하고 `result.to_state()`에서 재개하세요. 전체 승인 흐름은 [Human-in-the-loop](human_in_the_loop.md)를 참고하세요
 
 ### 서버 관리 연속 실행
 
@@ -5225,7 +5227,7 @@ if result.interruptions:
 
 ## Agent-as-tool 메타데이터
 
-결과가 중첩된 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 실행에서 나온 경우, [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]이 외부 도구 호출에 대한 불변 메타데이터를 제공합니다:
+결과가 중첩된 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 실행에서 온 경우, [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]은 바깥 도구 호출에 대한 불변 메타데이터를 제공합니다:
 
 -   `tool_name`
 -   `tool_call_id`
@@ -5233,44 +5235,44 @@ if result.interruptions:
 
 일반적인 최상위 실행에서는 `agent_tool_invocation`이 `None`입니다
 
-이는 특히 `custom_output_extractor` 내부에서 유용합니다. 중첩 결과를 후처리할 때 외부 도구 이름, 호출 ID, 원시 인자가 필요할 수 있기 때문입니다. 주변 `Agent.as_tool()` 패턴은 [Tools](tools.md)를 참조하세요
+이는 특히 `custom_output_extractor` 내부에서 유용합니다. 중첩 결과를 후처리하는 동안 바깥 도구 이름, 호출 ID, 또는 원시 인자가 필요할 수 있기 때문입니다. 주변 `Agent.as_tool()` 패턴은 [Tools](tools.md)를 참고하세요
 
-해당 중첩 실행의 파싱된 structured outputs 입력도 필요하면 `context_wrapper.tool_input`을 읽으세요. 이는 중첩 도구 입력에 대해 [`RunState`][agents.run_state.RunState]가 일반적으로 직렬화하는 필드이며, `agent_tool_invocation`은 현재 중첩 호출에 대한 실시간 결과 접근자입니다
+해당 중첩 실행의 파싱된 구조화 입력도 필요하다면 `context_wrapper.tool_input`을 읽으세요. 이는 중첩 도구 입력에 대해 [`RunState`][agents.run_state.RunState]가 일반적으로 직렬화하는 필드이며, `agent_tool_invocation`은 현재 중첩 호출을 위한 실시간 결과 접근자입니다
 
-## 스트리밍 수명주기 및 진단
+## 스트리밍 수명 주기 및 진단
 
-[`RunResultStreaming`][agents.result.RunResultStreaming]은 위와 같은 결과 표면을 상속하지만, 스트리밍 전용 제어를 추가합니다:
+[`RunResultStreaming`][agents.result.RunResultStreaming]은 위와 동일한 결과 표면을 상속하지만, 스트리밍 전용 제어 기능을 추가합니다:
 
--   의미론적 스트림 이벤트를 소비하는 [`stream_events()`][agents.result.RunResultStreaming.stream_events]
--   실행 중 활성 에이전트를 추적하는 [`current_agent`][agents.result.RunResultStreaming.current_agent]
--   스트리밍 실행이 완전히 종료되었는지 확인하는 [`is_complete`][agents.result.RunResultStreaming.is_complete]
--   즉시 또는 현재 턴 이후 실행을 중지하는 [`cancel(...)`][agents.result.RunResultStreaming.cancel]
+-   의미 단위 스트림 이벤트 소비용 [`stream_events()`][agents.result.RunResultStreaming.stream_events]
+-   실행 중 활성 에이전트 추적용 [`current_agent`][agents.result.RunResultStreaming.current_agent]
+-   스트리밍 실행의 완전 종료 여부 확인용 [`is_complete`][agents.result.RunResultStreaming.is_complete]
+-   즉시 또는 현재 턴 이후 실행 중지용 [`cancel(...)`][agents.result.RunResultStreaming.cancel]
 
-비동기 반복자가 끝날 때까지 `stream_events()` 소비를 계속하세요. 스트리밍 실행은 해당 반복자가 종료되어야 완료되며, 마지막으로 보이는 토큰이 도착한 뒤에도 `final_output`, `interruptions`, `raw_responses`, 세션 지속성 부작용 같은 요약 속성이 아직 정리 중일 수 있습니다
+비동기 이터레이터가 끝날 때까지 `stream_events()` 소비를 계속하세요. 스트리밍 실행은 해당 이터레이터가 종료되어야 완료되며, 마지막으로 보이는 토큰이 도착한 뒤에도 `final_output`, `interruptions`, `raw_responses`, 세션 영속화 부작용 같은 요약 속성은 아직 정리 중일 수 있습니다
 
 `cancel()`을 호출한 경우에도 취소 및 정리가 올바르게 완료되도록 `stream_events()` 소비를 계속하세요
 
-Python은 별도의 스트리밍 `completed` promise나 `error` 속성을 노출하지 않습니다. 최종 스트리밍 실패는 `stream_events()`에서 예외를 발생시키는 방식으로 전달되며, `is_complete`는 실행이 종단 상태에 도달했는지 반영합니다
+Python은 별도의 스트리밍 `completed` promise나 `error` 속성을 제공하지 않습니다. 최종 스트리밍 실패는 `stream_events()`에서 예외를 발생시키는 방식으로 표면화되며, `is_complete`는 실행이 최종 상태에 도달했는지를 반영합니다
 
 ### 원시 응답
 
-[`raw_responses`][agents.result.RunResultBase.raw_responses]에는 실행 중 수집된 원시 모델 응답이 담깁니다. 다단계 실행에서는 핸드오프나 반복 모델/도구/모델 사이클 등으로 인해 응답이 하나보다 많을 수 있습니다
+[`raw_responses`][agents.result.RunResultBase.raw_responses]에는 실행 중 수집된 원시 모델 응답이 포함됩니다. 다단계 실행에서는 예를 들어 핸드오프 또는 반복적인 모델/도구/모델 사이클 전반에 걸쳐 둘 이상의 응답이 생성될 수 있습니다
 
 [`last_response_id`][agents.result.RunResultBase.last_response_id]는 `raw_responses`의 마지막 항목 ID일 뿐입니다
 
 ### 가드레일 결과
 
-에이전트 수준 가드레일은 [`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 및 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results]로 노출됩니다
+에이전트 수준 가드레일은 [`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results]와 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results]로 노출됩니다
 
-도구 가드레일은 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 및 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results]로 별도 노출됩니다
+도구 가드레일은 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results]와 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results]로 별도로 노출됩니다
 
-이 배열들은 실행 전반에 걸쳐 누적되므로, 결정 로깅, 추가 가드레일 메타데이터 저장, 실행이 차단된 이유 디버깅에 유용합니다
+이 배열들은 실행 전반에 걸쳐 누적되므로, 결정 사항 로깅, 추가 가드레일 메타데이터 저장, 또는 실행이 차단된 이유 디버깅에 유용합니다
 
 ### 컨텍스트 및 사용량
 
-[`context_wrapper`][agents.result.RunResultBase.context_wrapper]는 앱 컨텍스트와 함께 승인, 사용량, 중첩 `tool_input` 같은 SDK 관리 런타임 메타데이터를 노출합니다
+[`context_wrapper`][agents.result.RunResultBase.context_wrapper]는 승인, 사용량, 중첩 `tool_input` 같은 SDK 관리 런타임 메타데이터와 함께 앱 컨텍스트를 제공합니다
 
-사용량은 `context_wrapper.usage`에서 추적됩니다. 스트리밍 실행의 경우 스트림 최종 청크가 처리될 때까지 사용량 합계가 지연될 수 있습니다. 전체 래퍼 형태와 지속성 주의사항은 [Context management](context.md)를 참조하세요
+사용량은 `context_wrapper.usage`에서 추적됩니다. 스트리밍 실행에서는 스트림의 최종 청크가 처리될 때까지 사용량 합계가 지연될 수 있습니다. 전체 래퍼 형태와 영속성 주의사항은 [Context management](context.md)를 참고하세요
 
 ================
 File: docs/ko/running_agents.md
@@ -15953,7 +15955,7 @@ search:
 -   来自 `Runner.run(...)` 或 `Runner.run_sync(...)` 的 [`RunResult`][agents.result.RunResult]
 -   来自 `Runner.run_streamed(...)` 的 [`RunResultStreaming`][agents.result.RunResultStreaming]
 
-两者都继承自 [`RunResultBase`][agents.result.RunResultBase]，它公开了共享的结果接口，例如 `final_output`、`new_items`、`last_agent`、`raw_responses` 和 `to_state()`。
+两者都继承自 [`RunResultBase`][agents.result.RunResultBase]，后者提供共享的结果接口，例如 `final_output`、`new_items`、`last_agent`、`raw_responses` 和 `to_state()`。
 
 `RunResultStreaming` 增加了流式传输专用控制项，例如 [`stream_events()`][agents.result.RunResultStreaming.stream_events]、[`current_agent`][agents.result.RunResultStreaming.current_agent]、[`is_complete`][agents.result.RunResultStreaming.is_complete] 和 [`cancel(...)`][agents.result.RunResultStreaming.cancel]。
 
@@ -15964,17 +15966,17 @@ search:
 | 如果你需要... | 使用 |
 | --- | --- |
 | 展示给用户的最终答案 | `final_output` |
-| 可重放的下一轮输入列表（包含完整本地转录） | `to_input_list()` |
-| 包含智能体、工具、任务转移和审批元数据的丰富运行条目 | `new_items` |
+| 可重放下一轮输入列表，包含完整本地转录 | `to_input_list()` |
+| 包含智能体、工具调用、任务转移和审批元数据的丰富运行项 | `new_items` |
 | 通常应处理下一轮用户输入的智能体 | `last_agent` |
-| 使用 `previous_response_id` 的 OpenAI Responses API 链式调用 | `last_response_id` |
-| 待处理审批与可恢复快照 | `interruptions` 和 `to_state()` |
+| 使用 `previous_response_id` 进行 OpenAI Responses API 链式调用 | `last_response_id` |
+| 待处理审批和可恢复快照 | `interruptions` 和 `to_state()` |
 | 当前嵌套 `Agent.as_tool()` 调用的元数据 | `agent_tool_invocation` |
-| 原始模型调用或安全防护措施诊断信息 | `raw_responses` 和 guardrail 结果数组 |
+| 原始模型调用或安全防护措施诊断 | `raw_responses` 和安全防护措施结果数组 |
 
 ## 最终输出
 
-[`final_output`][agents.result.RunResultBase.final_output] 属性包含最后一个运行智能体的最终输出。它可以是：
+[`final_output`][agents.result.RunResultBase.final_output] 属性包含最后一个运行的智能体的最终输出。它可能是：
 
 -   `str`，如果最后一个智能体未定义 `output_type`
 -   `last_agent.output_type` 类型的对象，如果最后一个智能体定义了输出类型
@@ -15982,59 +15984,61 @@ search:
 
 !!! note
 
-    `final_output` 的类型标注为 `Any`。任务转移可能会改变由哪个智能体完成运行，因此 SDK 无法在静态层面知道所有可能输出类型的完整集合。
+    `final_output` 的类型是 `Any`。任务转移可能改变哪个智能体完成运行，因此 SDK 无法在静态层面知道所有可能的输出类型集合。
 
-在流式模式下，`final_output` 会在流处理完成前一直保持为 `None`。关于逐事件流程，参见[流式传输](streaming.md)。
+在流式模式下，`final_output` 在流处理完成前会一直保持为 `None`。事件级流程请参见 [流式传输](streaming.md)。
 
-## 输入、下一轮历史与新条目
+## 输入、下一轮历史与新项
 
 这些接口回答的是不同问题：
 
 | 属性或辅助方法 | 包含内容 | 最适用场景 |
 | --- | --- | --- |
-| [`input`][agents.result.RunResultBase.input] | 此运行片段的基础输入。如果任务转移输入过滤器重写了历史，这里反映的是运行继续时使用的过滤后输入。 | 审计此运行实际使用了什么输入 |
-| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | 基于 `input` 加上此运行中转换后的 `new_items` 构建的、可重放的下一轮输入列表。 | 手动聊天循环和客户端管理的会话状态 |
-| [`new_items`][agents.result.RunResultBase.new_items] | 带有智能体、工具、任务转移和审批元数据的丰富 [`RunItem`][agents.items.RunItem] 包装。 | 日志、UI、审计和调试 |
-| [`raw_responses`][agents.result.RunResultBase.raw_responses] | 运行中每次模型调用产生的原始 [`ModelResponse`][agents.items.ModelResponse] 对象。 | 提供方级诊断或原始响应检查 |
+| [`input`][agents.result.RunResultBase.input] | 此运行片段的基础输入。如果任务转移输入过滤器重写了历史，这里反映的是运行继续使用的过滤后输入。 | 审计本次运行实际使用的输入 |
+| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | 运行的输入项视图。默认 `mode="preserve_all"` 会保留来自 `new_items` 的完整转换历史；`mode="normalized"` 在任务转移过滤重写模型历史时优先使用规范化续接输入。 | 手动聊天循环、客户端管理会话状态、纯输入项历史检查 |
+| [`new_items`][agents.result.RunResultBase.new_items] | 带智能体、工具调用、任务转移和审批元数据的丰富 [`RunItem`][agents.items.RunItem] 包装器。 | 日志、UI、审计与调试 |
+| [`raw_responses`][agents.result.RunResultBase.raw_responses] | 本次运行中每次模型调用的原始 [`ModelResponse`][agents.items.ModelResponse] 对象。 | 提供方级诊断或原始响应检查 |
 
 在实践中：
 
--   当你的应用手动维护完整对话转录时，使用 `to_input_list()`。
+-   当你需要运行的纯输入项视图时，使用 `to_input_list()`。
+-   当你在任务转移过滤或嵌套任务转移历史重写后，希望获得下一次 `Runner.run(..., input=...)` 调用的规范本地输入时，使用 `to_input_list(mode="normalized")`。
 -   当你希望 SDK 为你加载和保存历史时，使用 [`session=...`](sessions/index.md)。
--   如果你使用 OpenAI 服务端托管状态（`conversation_id` 或 `previous_response_id`），通常只需传入新的用户输入并复用已存储 ID，而不是重新发送 `to_input_list()`。
+-   如果你在使用基于 `conversation_id` 或 `previous_response_id` 的 OpenAI 服务端托管状态，通常只需传入新的用户输入并复用已存储 ID，而不是重新发送 `to_input_list()`。
+-   当你需要用于日志、UI 或审计的完整转换历史时，使用默认 `to_input_list()` 模式或 `new_items`。
 
-与 JavaScript SDK 不同，Python 不提供单独的 `output` 属性来仅表示模型形状增量。需要 SDK 元数据时使用 `new_items`，需要原始模型负载时检查 `raw_responses`。
+不同于 JavaScript SDK，Python 不会单独暴露仅包含模型形态增量的 `output` 属性。需要 SDK 元数据时使用 `new_items`，需要原始模型负载时检查 `raw_responses`。
 
-计算机工具重放遵循原始 Responses 负载结构。预览模型的 `computer_call` 条目保留单个 `action`，而 `gpt-5.4` 的计算机调用可保留批量 `actions[]`。[`to_input_list()`][agents.result.RunResultBase.to_input_list] 和 [`RunState`][agents.run_state.RunState] 会保持模型产出的结构，因此手动重放、暂停/恢复流程和存储转录在预览版与 GA 计算机工具调用之间都可继续工作。本地执行结果仍会以 `computer_call_output` 条目形式出现在 `new_items` 中。
+计算机工具重放遵循原始 Responses 负载结构。预览模型的 `computer_call` 项会保留单个 `action`，而 `gpt-5.4` 计算机调用可保留批量 `actions[]`。[`to_input_list()`][agents.result.RunResultBase.to_input_list] 和 [`RunState`][agents.run_state.RunState] 会保留模型产生的任一结构，因此手动重放、暂停/恢复流程与存储转录在预览版和 GA 计算机工具调用之间都可持续工作。本地执行结果仍会作为 `computer_call_output` 项出现在 `new_items` 中。
 
-### 新条目
+### 新项
 
-[`new_items`][agents.result.RunResultBase.new_items] 为你提供运行期间发生情况的最丰富视图。常见条目类型有：
+[`new_items`][agents.result.RunResultBase.new_items] 可为你提供此次运行中发生内容的最丰富视图。常见项类型包括：
 
--   用于助手消息的 [`MessageOutputItem`][agents.items.MessageOutputItem]
--   用于推理条目的 [`ReasoningItem`][agents.items.ReasoningItem]
--   用于 Responses 工具搜索请求及已加载工具检索结果的 [`ToolSearchCallItem`][agents.items.ToolSearchCallItem] 和 [`ToolSearchOutputItem`][agents.items.ToolSearchOutputItem]
--   用于工具调用及其结果的 [`ToolCallItem`][agents.items.ToolCallItem] 和 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]
--   用于因审批而暂停的工具调用的 [`ToolApprovalItem`][agents.items.ToolApprovalItem]
--   用于任务转移请求与已完成转移的 [`HandoffCallItem`][agents.items.HandoffCallItem] 和 [`HandoffOutputItem`][agents.items.HandoffOutputItem]
+-   助手消息的 [`MessageOutputItem`][agents.items.MessageOutputItem]
+-   推理项的 [`ReasoningItem`][agents.items.ReasoningItem]
+-   Responses 工具检索请求与已加载工具检索结果的 [`ToolSearchCallItem`][agents.items.ToolSearchCallItem] 和 [`ToolSearchOutputItem`][agents.items.ToolSearchOutputItem]
+-   工具调用及其结果的 [`ToolCallItem`][agents.items.ToolCallItem] 和 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]
+-   因审批而暂停的工具调用的 [`ToolApprovalItem`][agents.items.ToolApprovalItem]
+-   任务转移请求与已完成转移的 [`HandoffCallItem`][agents.items.HandoffCallItem] 和 [`HandoffOutputItem`][agents.items.HandoffOutputItem]
 
-当你需要智能体关联、工具输出、任务转移边界或审批边界时，应优先使用 `new_items` 而不是 `to_input_list()`。
+当你需要智能体关联、工具输出、任务转移边界或审批边界时，应优先选择 `new_items` 而不是 `to_input_list()`。
 
-使用托管工具检索时，可检查 `ToolSearchCallItem.raw_item` 以查看模型发出的检索请求，并检查 `ToolSearchOutputItem.raw_item` 以查看该轮加载了哪些命名空间、函数或托管 MCP 服务。
+当你使用托管工具检索时，检查 `ToolSearchCallItem.raw_item` 可查看模型发出的检索请求，检查 `ToolSearchOutputItem.raw_item` 可查看该轮加载了哪些命名空间、函数或托管 MCP 服务。
 
-## 对话继续或恢复
+## 会话续接或恢复
 
 ### 下一轮智能体
 
-[`last_agent`][agents.result.RunResultBase.last_agent] 包含最后一个运行的智能体。在任务转移后，这通常是下一轮用户输入最适合复用的智能体。
+[`last_agent`][agents.result.RunResultBase.last_agent] 包含最后一个运行的智能体。在任务转移之后，这通常是下一轮用户输入最适合复用的智能体。
 
-在流式模式中，[`RunResultStreaming.current_agent`][agents.result.RunResultStreaming.current_agent] 会随着运行推进而更新，因此你可以在流结束前观察任务转移。
+在流式模式下，[`RunResultStreaming.current_agent`][agents.result.RunResultStreaming.current_agent] 会随着运行进展更新，因此你可以在流结束前观察任务转移。
 
 ### 中断与运行状态
 
-如果工具需要审批，待处理审批会暴露在 [`RunResult.interruptions`][agents.result.RunResult.interruptions] 或 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions] 中。这可能包含由直接工具、任务转移后到达的工具，或嵌套 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 运行触发的审批。
+如果某个工具需要审批，待处理审批会暴露在 [`RunResult.interruptions`][agents.result.RunResult.interruptions] 或 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions] 中。这可能包括由直接工具、任务转移后到达的工具，或嵌套 [`Agent.as_tool()`][agents.agent.Agent.as_tool] 运行触发的审批。
 
-调用 [`to_state()`][agents.result.RunResult.to_state] 以捕获可恢复的 [`RunState`][agents.run_state.RunState]，审批或拒绝待处理条目，然后通过 `Runner.run(...)` 或 `Runner.run_streamed(...)` 恢复运行。
+调用 [`to_state()`][agents.result.RunResult.to_state] 可捕获可恢复的 [`RunState`][agents.run_state.RunState]，对待处理项执行批准或拒绝，然后通过 `Runner.run(...)` 或 `Runner.run_streamed(...)` 恢复运行。
 
 ```python
 from agents import Agent, Runner
@@ -16049,13 +16053,13 @@ if result.interruptions:
     result = await Runner.run(agent, state)
 ```
 
-对于流式运行，先完成对 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 的消费，再检查 `result.interruptions` 并从 `result.to_state()` 恢复。完整审批流程请参见[人类参与](human_in_the_loop.md)。
+对于流式运行，先完成对 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 的消费，再检查 `result.interruptions` 并从 `result.to_state()` 恢复。完整审批流程请参见 [Human-in-the-loop](human_in_the_loop.md)。
 
 ### 服务端托管续接
 
-[`last_response_id`][agents.result.RunResultBase.last_response_id] 是该运行中最新模型响应 ID。若要在下一轮继续 OpenAI Responses API 链，可将其作为 `previous_response_id` 传回。
+[`last_response_id`][agents.result.RunResultBase.last_response_id] 是此次运行中最新的模型响应 ID。当你希望续接 OpenAI Responses API 链时，在下一轮将其作为 `previous_response_id` 传回。
 
-如果你已经通过 `to_input_list()`、`session` 或 `conversation_id` 继续对话，通常不需要 `last_response_id`。若你需要多步骤运行中的每个模型响应，请改为检查 `raw_responses`。
+如果你已经通过 `to_input_list()`、`session` 或 `conversation_id` 续接会话，通常不需要 `last_response_id`。如果你需要多步骤运行中的每个模型响应，请改为检查 `raw_responses`。
 
 ## Agent-as-tool 元数据
 
@@ -16067,44 +16071,44 @@ if result.interruptions:
 
 对于普通顶层运行，`agent_tool_invocation` 为 `None`。
 
-这在 `custom_output_extractor` 中尤其有用，此时你可能需要在对嵌套结果做后处理时使用外层工具名、调用 ID 或原始参数。有关周边 `Agent.as_tool()` 模式，参见[工具](tools.md)。
+这在 `custom_output_extractor` 中尤其有用，你可能需要在后处理嵌套结果时访问外层工具名、调用 ID 或原始参数。有关周边 `Agent.as_tool()` 模式，请参见 [工具](tools.md)。
 
-如果你还需要该嵌套运行的已解析结构化输入，请读取 `context_wrapper.tool_input`。这是 [`RunState`][agents.run_state.RunState] 为嵌套工具输入做通用序列化时使用的字段，而 `agent_tool_invocation` 是当前嵌套调用的实时结果访问器。
+如果你还需要该嵌套运行已解析的结构化输入，请读取 `context_wrapper.tool_input`。这是 [`RunState`][agents.run_state.RunState] 用于泛化序列化嵌套工具输入的字段，而 `agent_tool_invocation` 是当前嵌套调用的实时结果访问器。
 
-## 流式生命周期与诊断
+## 流式传输生命周期与诊断
 
-[`RunResultStreaming`][agents.result.RunResultStreaming] 继承了上述相同结果接口，但增加了流式传输专用控制项：
+[`RunResultStreaming`][agents.result.RunResultStreaming] 继承了上述相同结果接口，并增加流式传输专用控制项：
 
--   使用 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 消费语义化流事件
--   使用 [`current_agent`][agents.result.RunResultStreaming.current_agent] 跟踪运行中当前活跃智能体
+-   使用 [`stream_events()`][agents.result.RunResultStreaming.stream_events] 消费语义流事件
+-   使用 [`current_agent`][agents.result.RunResultStreaming.current_agent] 在运行中跟踪当前活跃智能体
 -   使用 [`is_complete`][agents.result.RunResultStreaming.is_complete] 查看流式运行是否已完全结束
 -   使用 [`cancel(...)`][agents.result.RunResultStreaming.cancel] 立即停止运行或在当前轮次后停止
 
-持续消费 `stream_events()`，直到异步迭代器结束。只有当该迭代器结束后，流式运行才算完成；而 `final_output`、`interruptions`、`raw_responses` 以及会话持久化副作用等汇总属性，在最后一个可见 token 到达后仍可能继续收敛。
+持续消费 `stream_events()`，直到异步迭代器结束。只有当该迭代器结束时，流式运行才算完成；像 `final_output`、`interruptions`、`raw_responses` 以及会话持久化副作用等汇总属性，在最后一个可见 token 到达后仍可能处于收敛过程中。
 
-如果你调用了 `cancel()`，请继续消费 `stream_events()`，以便正确完成取消和清理。
+如果你调用了 `cancel()`，请继续消费 `stream_events()`，以便取消与清理流程正确完成。
 
-Python 不提供单独的流式 `completed` promise 或 `error` 属性。终止性的流式失败会通过 `stream_events()` 抛出异常体现，而 `is_complete` 反映运行是否已到达终态。
+Python 不会单独暴露流式 `completed` promise 或 `error` 属性。终态流式失败会通过 `stream_events()` 抛出异常，`is_complete` 则反映运行是否已到达终态。
 
 ### 原始响应
 
-[`raw_responses`][agents.result.RunResultBase.raw_responses] 包含运行期间收集的原始模型响应。多步骤运行可能产生多个响应，例如跨任务转移或重复的 模型/工具/模型 循环。
+[`raw_responses`][agents.result.RunResultBase.raw_responses] 包含运行期间收集的原始模型响应。多步骤运行可能产生多个响应，例如在任务转移或重复的模型/工具/模型循环中。
 
-[`last_response_id`][agents.result.RunResultBase.last_response_id] 只是 `raw_responses` 最后一项中的 ID。
+[`last_response_id`][agents.result.RunResultBase.last_response_id] 仅是 `raw_responses` 最后一项的 ID。
 
 ### 安全防护措施结果
 
-智能体级安全防护措施结果通过 [`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 和 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 暴露。
+智能体级安全防护措施通过 [`input_guardrail_results`][agents.result.RunResultBase.input_guardrail_results] 和 [`output_guardrail_results`][agents.result.RunResultBase.output_guardrail_results] 暴露。
 
-工具级安全防护措施结果则单独通过 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 和 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results] 暴露。
+工具级安全防护措施则通过 [`tool_input_guardrail_results`][agents.result.RunResultBase.tool_input_guardrail_results] 和 [`tool_output_guardrail_results`][agents.result.RunResultBase.tool_output_guardrail_results] 单独暴露。
 
-这些数组会在整个运行过程中持续累积，因此非常适合用于记录决策、存储额外的安全防护措施元数据，或调试运行被拦截的原因。
+这些数组会在整个运行中持续累积，因此适合用于记录决策、存储额外的安全防护措施元数据，或调试运行被阻止的原因。
 
 ### 上下文与用量
 
-[`context_wrapper`][agents.result.RunResultBase.context_wrapper] 会暴露你的应用上下文以及由 SDK 管理的运行时元数据，例如审批、用量和嵌套 `tool_input`。
+[`context_wrapper`][agents.result.RunResultBase.context_wrapper] 会暴露你的应用上下文，以及由 SDK 管理的运行时元数据（如审批、用量和嵌套 `tool_input`）。
 
-用量记录在 `context_wrapper.usage` 上。对于流式运行，用量总计可能会滞后，直到流的最终分块被处理完成。完整包装结构和持久化注意事项请参见[上下文管理](context.md)。
+用量记录在 `context_wrapper.usage` 上。对于流式运行，用量总计可能会滞后，直到流的最终分块处理完毕。完整包装器结构及持久化注意事项请参见 [上下文管理](context.md)。
 
 ================
 File: docs/zh/running_agents.md
@@ -20368,15 +20372,17 @@ These surfaces answer different questions:
 | Property or helper | What it contains | Best for |
 | --- | --- | --- |
 | [`input`][agents.result.RunResultBase.input] | The base input for this run segment. If a handoff input filter rewrote the history, this reflects the filtered input the run continued with. | Auditing what this run actually used as input |
-| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | A replay-ready next-turn input list built from `input` plus the converted `new_items` from this run. | Manual chat loops and client-managed conversation state |
+| [`to_input_list()`][agents.result.RunResultBase.to_input_list] | An input-item view of the run. The default `mode="preserve_all"` keeps the full converted history from `new_items`; `mode="normalized"` prefers canonical continuation input when handoff filtering rewrites model history. | Manual chat loops, client-managed conversation state, and plain-item history inspection |
 | [`new_items`][agents.result.RunResultBase.new_items] | Rich [`RunItem`][agents.items.RunItem] wrappers with agent, tool, handoff, and approval metadata. | Logs, UIs, audits, and debugging |
 | [`raw_responses`][agents.result.RunResultBase.raw_responses] | Raw [`ModelResponse`][agents.items.ModelResponse] objects from each model call in the run. | Provider-level diagnostics or raw response inspection |
 
 In practice:
 
--   Use `to_input_list()` when your application manually carries the entire conversation transcript.
+-   Use `to_input_list()` when you want a plain input-item view of the run.
+-   Use `to_input_list(mode="normalized")` when you want the canonical local input for the next `Runner.run(..., input=...)` call after handoff filtering or nested handoff history rewrites.
 -   Use [`session=...`](sessions/index.md) when you want the SDK to load and save history for you.
 -   If you are using OpenAI server-managed state with `conversation_id` or `previous_response_id`, usually pass only the new user input and reuse the stored ID instead of resending `to_input_list()`.
+-   Use the default `to_input_list()` mode or `new_items` when you need the full converted history for logs, UIs, or audits.
 
 Unlike the JavaScript SDK, Python does not expose a separate `output` property for the model-shaped delta only. Use `new_items` when you need SDK metadata, or inspect `raw_responses` when you need the raw model payloads.
 
