@@ -3998,7 +3998,7 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
             // ... name, model, description
             .instruction(
                     "You are a Capital Information Agent. Given a country, respond ONLY with a JSON object containing the capital. Format: {\"capital\": \"capital_name\"}")
-            .outputSchema(capitalOutput) // Enforce JSON output
+            .outputSchema(CAPITAL_OUTPUT) // Enforce JSON output
             .outputKey("found_capital") // Store result in state.get("found_capital")
             // Cannot use tools(getCapitalCity) effectively here
             .build();
@@ -19919,7 +19919,7 @@ LIMIT 10;
 
 ## Advanced analysis queries
 
-**Trace a specific conversation turn using trace_id**
+### Trace a specific conversation turn using trace_id
 
 ```sql
 SELECT timestamp, event_type, agent, JSON_VALUE(content, '$.response') as summary
@@ -19928,7 +19928,7 @@ WHERE trace_id = 'your-trace-id'
 ORDER BY timestamp ASC;
 ```
 
-**Token usage analysis (accessing JSON fields)**
+### Token usage analysis (accessing JSON fields)
 
 ```sql
 SELECT
@@ -19937,7 +19937,7 @@ FROM `your-gcp-project-id.your-dataset-id.agent_events`
 WHERE event_type = 'LLM_RESPONSE';
 ```
 
-**Querying Multimodal Content (using content_parts and ObjectRef)**
+### Querying Multimodal Content (using content_parts and ObjectRef)
 
 ```sql
 SELECT
@@ -19950,7 +19950,7 @@ WHERE part.mime_type LIKE 'image/%'
 ORDER BY timestamp DESC;
 ```
 
-**Analyze Multimodal Content with BigQuery Remote Model (Gemini)**
+### Analyze Multimodal Content with BigQuery Remote Model (Gemini)
 
 ```sql
 SELECT
@@ -19970,7 +19970,7 @@ ORDER BY logs.timestamp DESC
 LIMIT 1;
 ```
 
-**Latency Analysis (LLM & Tools)**
+### Latency Analysis (LLM & Tools)
 
 ```sql
 SELECT
@@ -19981,7 +19981,7 @@ WHERE event_type IN ('LLM_RESPONSE', 'TOOL_COMPLETED')
 GROUP BY event_type;
 ```
 
-**Span Hierarchy & Duration Analysis**
+### Span Hierarchy & Duration Analysis
 
 ```sql
 SELECT
@@ -20002,7 +20002,7 @@ WHERE trace_id = 'your-trace-id'
 ORDER BY timestamp ASC;
 ```
 
-**Error Analysis (LLM & Tool Errors)**
+### Error Analysis (LLM & Tool Errors)
 
 ```sql
 SELECT
@@ -20018,7 +20018,7 @@ ORDER BY timestamp DESC
 LIMIT 20;
 ```
 
-**Tool Provenance Analysis**
+### Tool Provenance Analysis
 
 ```sql
 SELECT
@@ -20032,7 +20032,7 @@ GROUP BY tool_origin, tool_name
 ORDER BY call_count DESC;
 ```
 
-**HITL Interaction Analysis**
+### HITL Interaction Analysis
 
 ```sql
 SELECT
@@ -20048,7 +20048,7 @@ LIMIT 20;
 ```
 
 
-### 7. AI-Powered Root Cause Analysis (Agent Ops)
+### AI-Powered Root Cause Analysis (Agent Ops)
 
 Automatically analyze failed sessions to determine the root cause of errors using BigQuery ML and Gemini.
 
@@ -20077,7 +20077,6 @@ SELECT
     session_id,
     AI.GENERATE(
         ('Analyze this conversation log and explain the root cause of the failure. Log: ', full_history),
-        connection_id => 'your-gcp-project-id.us.my-connection',
         endpoint => 'gemini-2.5-flash'
     ).result AS root_cause_explanation
 FROM SessionContext;
