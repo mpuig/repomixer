@@ -3,6 +3,71 @@ Files
 ================================================================
 
 ================
+File: docs/a2a/a2a-extension.md
+================
+# A2A extension for improved reliabilty
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python 1.27.0</span>
+</div>
+
+ADK provides an extension for Agent2Agent (A2A) support to improved message and data handling as part of
+an updated [A2aAgentExecutor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py)
+class. The updated version includes updates to architectural changes to the core agent execution logic
+and extensions for A2A to improve data handling, while also providing backward compatibility with 
+existing A2A agents.
+
+Activating the A2A extension option instructs the server to use the updated agent executor implementation.
+While this update offers several general advantages, it primarily resolves critical limitations found in
+the legacy A2A-ADK implementation when both A2A and ADK operate in streaming mode. The new implementation 
+addresses the following issues:
+
+-   **Message duplication:** Prevents user messages from being duplicated in the task history.
+-   **Output misclassification:** Stops remote agent ADK outputs from being incorrectly converted into
+    event thoughts.
+-   **Sub-agent data loss:** Ensures ADK outputs from remote agents are reliably preserved, eliminating
+    data loss when multiple agents are nested within the remote agent's sub-agent tree.
+
+## Client-side extension activation
+
+Clients indicate their desire to use this extension by specifying it via the transport-defined [A2A extension](https://a2a-protocol.org/latest/topics/extensions/) activation mechanism.
+For JSON-RPC and HTTP transports, this is indicated via the X-A2A-Extensions HTTP header.
+For gRPC, this is indicated via the X-A2A-Extensions metadata value.
+
+To activate the extension, the client can instantiate the `RemoteA2aAgent` with `use_legacy=False`. This will add `https://google.github.io/adk-docs/a2a/a2a-extension/` among the requested extensions of the sent request.
+Activating this extension implies that the server will use the new agent executor implementation.
+
+```python
+from google.adk.agents import RemoteA2aAgent
+
+remote_agent = RemoteA2aAgent(
+    name="remote_agent",
+    url="http://localhost:8000/a2a/remote_agent",
+    use_legacy=False,
+)
+```
+
+The `A2aAgentExecutor` uses by default the new implementation, if the a2a extension is detected in the request.
+To opt-out the new agent executor implementation, the client can simply not send this extension (instantiating the `RemoteA2aAgent` with `use_legacy=True`) or the server's `A2aAgentExecutor` can be instantiated with `use_legacy=True`.
+
+## How it Works
+
+Upon receiving the request, the [A2aAgentExecutor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor.py) detects the extension. It understands that the client is requesting to use the new agent executor logic and routes the request to the new implementation accordingly. To confirm that the request was honored, it is then included in the "activated extensions" list within the response metadata sent back to the client, as well as in the metadata of the A2A Events.
+
+## Agent Card definition
+
+Agents advertise this extension capability in their AgentCard within the AgentCapabilities.extensions list.
+
+Example AgentExtension block:
+```json
+{
+  "uri": "https://google.github.io/adk-docs/a2a/a2a-extension/",
+  "description": "Ability to use the new agent executor implementation",
+  "required": false
+}
+```
+
+================
 File: docs/a2a/index.md
 ================
 # ADK with Agent2Agent (A2A) Protocol
@@ -25,6 +90,7 @@ Navigate through the guides below to learn about ADK's A2A capabilities:
   These guides show you how to allow your agent to use another, remote agent using A2A protocol:
 
   *   **[A2A Quickstart (Consuming) for Python](./quickstart-consuming.md)**
+      * **[A2A Extension - V2 Implementation](./a2a-extension.md)**
   *   **[A2A Quickstart (Consuming) for Go](./quickstart-consuming-go.md)**
 
 
@@ -613,10 +679,14 @@ prime_agent = RemoteA2aAgent(
     agent_card=(
         f"http://localhost:8001/a2a/check_prime_agent{AGENT_CARD_WELL_KNOWN_PATH}"
     ),
+    use_legacy=False,
 )
 
 <...code truncated>
 ```
+
+!!! note "Using the new A2A integration"
+    By setting `use_legacy=False`, the agent will use the new ADK-A2A integration, as it will send the [A2A extension](a2a-extension.md) to the remote agent.
 
 Then, you can simply use the `RemoteA2aAgent` in your agent. In this case, `prime_agent` is used as one of the sub-agents in the `root_agent` below:
 
@@ -651,6 +721,62 @@ root_agent = Agent(
     ),
 )
 ```
+
+### Advanced Configuration: Custom Converters and Interceptors
+
+Internally, the `RemoteA2aAgent` translates between the A2A protocol format and the ADK's native `Event` system. You can customize this behaviour by passing an [`A2aRemoteAgentConfig`](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/agent/config.py) object via the `config` parameter to `RemoteA2aAgent`.
+
+This allows you to define custom type mappings, inject request parameters, and intercept requests or responses.
+
+#### Converters
+
+Converters handle the translation of incoming A2A responses into native ADK objects. You can provide your own mapping functions for the following hooks:
+
+*   **`a2a_message_converter`**: Converts standard A2A Messages into ADK `Event` objects.
+*   **`a2a_task_converter`**: Converts an A2A Task into an ADK `Event`.
+*   **`a2a_status_update_converter`**: Converts A2A `TaskStatusUpdateEvent`s into ADK `Event` objects.
+*   **`a2a_artifact_update_converter`**: Converts A2A `TaskArtifactUpdateEvent`s into ADK `Event` objects.
+*   **`a2a_part_converter`**: A foundational low-level hook utilized internally by other converters to convert individual A2A Message Parts into GenAI `Part` objects.
+
+!!! note
+    These custom client converters are used only when the response is coming from the new implementation of the [agent executor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py). For more details, see the [A2A extension](a2a-extension.md).
+
+#### Request Interceptors
+
+You can inject a list of `request_interceptors` to add middleware logic to A2A requests:
+
+*   **`before_request`**: Executed before the agent starts processing. You can modify the `A2AMessage`, or return an ADK `Event` to immediately abort the request and return that event to the caller.
+*   **`after_request`**: Executed after the agent has processed the request. You can modify the resulting ADK `Event`, or return `None` to filter out and drop the event entirely.
+
+#### Request Parameters Configuration
+
+Through interceptors, you can also modify the `ParametersConfig` for the A2A request to inject:
+
+*   **`request_metadata`**: Pass custom metadata dictionaries into the request headers.
+*   **`client_call_context`**: Inject specific client call contexts for the underlying transport.
+
+```python
+<...code truncated...>
+
+from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+
+prime_agent = RemoteA2aAgent(
+    name="prime_agent",
+    description="Agent that handles checking if numbers are prime.",
+    agent_card=(
+        f"http://localhost:8001/a2a/check_prime_agent{AGENT_CARD_WELL_KNOWN_PATH}"
+    ),
+    use_legacy=False,
+    config=A2aRemoteAgentConfig(
+        a2a_message_converter=my_a2a_message_converter,
+        request_interceptors=[my_request_interceptor],
+    ),
+)
+
+<...code truncated>
+```
+
 
 ## Example Interactions
 
@@ -925,6 +1051,15 @@ from google.adk.a2a.utils.agent_to_a2a import to_a2a
 a2a_app = to_a2a(root_agent, port=8001, agent_card="/path/to/your/agent-card.json")
 ```
 
+### Under the hood: to_a2a() method
+
+When you call `to_a2a()`, the ADK automatically handles several setup steps to expose your agent:
+
+* **`A2aAgentExecutor` setup:** An `A2aAgentExecutor` is initialized to act as the bridge between the A2A protocol and your ADK agent. If you don't provide a custom `Runner`, it automatically creates a default one backed by in-memory services (for artifacts, sessions, memory, and credentials).
+* **State Management:** It creates an `InMemoryTaskStore` to track A2A tasks and an `InMemoryPushNotificationConfigStore` for handling push notifications.
+* **Request Handling:** A `DefaultRequestHandler` is created to route incoming A2A HTTP requests to the `A2aAgentExecutor` and the state stores.
+* **Starlette App & Agent Card:** It creates a Starlette application. During the application's startup phase, it either loads your provided Agent Card or automatically builds one from your agent's configuration using an `AgentCardBuilder`. It then mounts all the necessary A2A API routes.
+
 Now let's dive into the sample code.
 
 ### 1. Getting the Sample Code { #getting-the-sample-code }
@@ -1039,6 +1174,43 @@ This interaction uses both the local Roll Agent and the remote Prime Agent:
 User: Roll a 10-sided die and check if it's prime
 Bot: I rolled an 8 for you.
 Bot: 8 is not a prime number.
+```
+
+## Advanced Configuration: Custom Converters and Interceptors
+
+In scenarios where you want more granular control than what `to_a2a()` provides, you may instantiate and pass an [`A2aAgentExecutorConfig`](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/config.py) directly to the `A2aAgentExecutor`. This allows you to override default data converters and inject execution middleware.
+
+### Converters
+
+Converters handle the bidirectional translation between A2A protocol payloads and ADK's native `Event` or `Part` objects. You can provide your own mapping functions for the following hooks:
+
+*   **`a2a_part_converter`**: Converts A2A Message Parts into ADK `Part` objects.
+*   **`gen_ai_part_converter`**: Converts native ADK `Part` objects into A2A Message Parts.
+*   **`request_converter`**: Converts an incoming A2A request into an ADK `RunRequest`.
+*   **`event_converter`**: *(Legacy)* Converts an ADK Event into an A2A Event, used by the legacy executor implementation.
+*   **`adk_event_converter`**: *(New)* Converts an ADK Event into an A2A Event, used by the new, updated executor implementation.
+
+### Execute Interceptors
+
+You can inject a list of `execute_interceptors` to add middleware logic to the `A2aAgentExecutor` payload processing:
+
+*   **`before_agent`**: Executed before the agent starts processing the request. It allows you to inspect or modify the incoming `RequestContext`.
+*   **`after_event`**: Executed *after* an ADK event is converted to an A2A event. Allows you to mutate the outgoing event before it is enqueued, or return `None` to filter out and drop the event entirely.
+*   **`after_agent`**: Executed after the agent finishes and the final event is prepared. Use this to inspect or modify the terminal status event (e.g., `completed` or `failed`) before it is sent.
+
+## Agent Executor V2
+
+The new version of the [agent executor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py) is typically enabled when a client sends the required [A2A extension](a2a-extension.md).
+
+However, you can also bypass the extension and force the server to use the new executor version by setting the `force_new_version=True` flag when instantiating the `A2aAgentExecutor`. This allows you to use the new executor logic without needing to modify existing clients to send the extension.
+
+```python
+from google.adk.a2a.executor import A2aAgentExecutor
+
+executor = A2aAgentExecutor(
+            ...,
+            force_new_version=True
+        )
 ```
 
 ## Next Steps
@@ -15547,6 +15719,8 @@ set up and running a simple agent in less than 20 minutes.
 
     [:octicons-arrow-right-24: Start with TypeScript](typescript.md) <br>
 </div>
+
+To get started with a technical overview check this [link](about.md).
 
 ================
 File: docs/get-started/installation.md
