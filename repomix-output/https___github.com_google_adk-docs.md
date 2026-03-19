@@ -3,6 +3,129 @@ Files
 ================================================================
 
 ================
+File: docs/2.0/index.md
+================
+# Welcome to ADK 2.0 Alpha
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+ADK 2.0 introduces powerful tools for building sophisticated AI agents, and
+helps you structure agents to execute challenging tasks with more control,
+predictability, and reliability. ADK 2.0 is available as an Alpha release for
+Python and includes the following key features:
+
+-   [**Graph-based workflows**](/adk-docs/workflows/): Build deterministic agent
+    workflows with more control over how tasks are routed and executed.
+
+-   [**Collaborative agents**](/adk-docs/workflows/collaboration/):
+    Build complex agent architectures with coordinator agents and multiple
+    subagents working together.
+
+-   [**Dynamic workflows**](/adk-docs/workflows/dynamic/):
+    Use code-based logic for building more complex workflows including
+    iterative loops and complex decision-based branching.
+
+Check out the linked topics above for more information, and try out the new way
+to build agents with ADK 2.0!
+
+## ADK 1.0 compatibility
+
+ADK 2.0 is designed to be compatible with agents developed with ADK 1.x
+releases. However, given the number and diversity of agents built with ADK 1.x,
+we expect that some agent implementations, particularly advanced and
+feature-rich agents, will uncover incompatibilities in ADK 2.0. During the
+current pre-GA release period, we ask your assistance helping us identify these
+issues so we have a chance to address them. Report any ADK 1.0 to ADK 2.0
+incompatibilities you encounter through our
+[issue tracker](https://github.com/google/adk-python/issues/new?template=bug_report.md&labels=v2).
+
+!!! danger "WARNING: DO NOT MIX ADK 2.0 and ADK 1.0 data storage systems"
+
+    If you use persistent storage for ADK 2.0 projects, **DO NOT allow ADK 2.0
+    projects to share storage with ADK 1.0 projects**, including, but not limited to,
+    session storage, memory systems, and evaluation data. Doing so may result in
+    loss of data or make the data unusable in ADK 1.0 projects.
+
+## Install ADK 2.0 {#install}
+
+While ADK 2.0 is available as a pre-GA release, it is not installed automatically.
+You must select it as an installation option. This version has the following
+system requirements:
+
+*   **Python 3.11** or later
+*   `pip` for installing packages
+
+To install ADK 2.0, follow these steps:
+
+1.  Enable a Python virtual environment. See below for instructions.
+
+1.  Install the package using pip using `--pre` to select the current,
+    pre-GA version of ADK 2.0:
+
+    ```bash
+    pip install google-adk --pre
+    ```
+
+??? tip "Recommended: Create and activate a Python virtual environment"
+
+    Create a Python virtual environment:
+
+    ```shell
+    python -m venv .venv
+    ```
+
+    Activate the Python virtual environment:
+
+    === "Windows CMD"
+
+        ```console
+        .venv\Scripts\activate.bat
+        ```
+
+    === "Windows Powershell"
+
+        ```console
+        .venv\Scripts\Activate.ps1
+        ```
+
+    === "MacOS / Linux"
+
+        ```bash
+        source .venv/bin/activate
+        ```
+
+!!! note "Note: Updating existing ADK 1.0 projects"
+
+    The `--pre` option does not install the ADK 2.0 libraries if you already have
+    ADK 1.0 libraries installed in a Python environment. You can force installation
+    of the ADK 2.0 library by adding the `--force` option to the install command
+    shown above. Remember to use Python virtual environments for ADK 2.0, and
+    **ensure you have backups of ADK 1.0 projects *before* updating them to
+    use ADK 2.0 libraries.**
+
+## Next steps
+
+Read the developer guides for building agents with ADK 2.0 features:
+
+-   [**Graph-based workflows**](/adk-docs/workflows/)
+-   [**Collaborative agents**](/adk-docs/workflows/collaboration/)
+-   [**Dynamic workflows**](/adk-docs/workflows/dynamic/)
+
+Check out these ADK 2.0 code samples for testing and inspiration:
+
+-   [**Workflow samples**](https://github.com/google/adk-python/tree/v2/contributing/workflow_samples)
+-   [**Collaborative task samples**](https://github.com/google/adk-python/tree/v2/contributing/task_samples)
+
+Thanks for checking out ADK 2.0! We look forward to your
+[feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+================
 File: docs/a2a/a2a-extension.md
 ================
 # A2A extension for improved reliabilty
@@ -23069,6 +23192,7 @@ File: docs/integrations/index.md
 ================
 ---
 hide:
+  - navigation
   - toc
 ---
 
@@ -23077,7 +23201,7 @@ hide:
 Check out the following pre-built tools and integrations that you can use with
 ADK agents. For information on building custom tools, see
 [Custom Tools](/adk-docs/tools-custom/). For information on submitting
-integrations to the catalog, see the
+integrations to this catalog, see the
 [Contribution Guide for Integrations](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md#integrations).
 
 {{$ render_catalog('integrations/*.md') $}}
@@ -44459,6 +44583,1422 @@ and the available options:
 *   [Agent Config YAML schema](/adk-docs/api-reference/agentconfig/)
 
 ================
+File: docs/workflows/collaboration.md
+================
+# Build collaborative agent teams
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+Some complex tasks may require multiple agents with specific responsibilities
+and benefit from less structured procedures, particularly for iterative
+processes with several, substantial sub-tasks. In a collaborative agent team in
+ADK, a coordinator agent handles delegation of tasks to one or more subagents.
+This approach makes it easier to build complex, self-managing agent systems,
+with subagents defined to handle specific tasks, and automatic return to the
+parent after completing a task.
+
+When using this self-managed agent team approach, the subagents are assigned an
+operating ***mode*** to manage their behavior and limit their scope of work.
+These ***modes*** set general behavior guidelines for subagents and create more
+predictable and reliable mulit-agent workflows. The following settings are
+available for collaboration modes:
+
+-   ***Chat***: Full user interaction, manual return to parent agent
+    (default, current behavior)
+-   ***Task***: User interaction for clarifications with automatic return to
+    parent agent
+-   ***Single-turn:*** No user interaction with automatic return and can be
+    run in parallel
+
+This guide covers how to use modes for your subagents and how these modes impact
+agent behavior.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+## Get started
+
+The following code example shows how to set operating modes modes for
+a small team of subagents and assign them to a coordinator agent:
+
+```python
+from google.adk.workflow.agents.llm_agent import Agent
+
+weather_agent = Agent(
+    name="weather_checker",
+    mode="single_turn",         # no user interaction
+    tools=[get_weather, user_info, geocode_address],
+)
+flight_agent = Agent(
+    name="flight_booker",
+    mode="task",                # can ask user questions
+    input_schema=FlightInput,
+    output_schema=FlightResult,
+    tools=[search_flights, book_flight],
+)
+root = Agent(
+    name="travel_planner",      # coordinator agent
+    sub_agents=[weather_agent, flight_agent],
+    # Auto-injects: request_task_weather_checker, request_task_flight_booker
+)
+```
+
+When you run this workflow, the `travel_planner` coordinator agent automatically
+identifies and assigns tasks to the subagents. When a subagent completes
+a task, it automatically returns to the coordinator agent.
+For more information about structuring data using ***input_schema*** and
+***output_schema*** with agents, subagents, and workflow nodes, see
+[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+
+## Mode configuration and behaviors
+
+Each collaboration mode has specific behaviors and limitations associated with
+it. The following table compares the attributes of a subagent configured with
+each mode:
+
+!!! warning "Caution: Mode only for subagents"
+
+    The ***mode*** setting is intended specifically for use with subagents invoked
+    by a coordinator parent agent. Do not configure a root agent with the mode
+    setting.
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Topic \ Mode</strong></th>
+      <th><code>chat</code> (default)</th>
+      <th><code>task</code></th>
+      <th><code>single_turn</code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Human in the Loop</strong></td>
+      <td>Full interaction</td>
+      <td>For clarification only</td>
+      <td>Disallowed</td>
+    </tr>
+    <tr>
+      <td><strong>User interaction</strong></td>
+      <td>User chats freely with agent</td>
+      <td>Agent asks questions as needed</td>
+      <td>No user interaction</td>
+    </tr>
+    <tr>
+      <td><strong>Control flow</strong></td>
+      <td>Agent controls until manual handoff</td>
+      <td>Agent controls until task complete</td>
+      <td>Returns immediately after task</td>
+    </tr>
+    <tr>
+      <td><strong>Parallel execution</strong></td>
+      <td>Not supported</td>
+      <td>Not supported</td>
+      <td>Multiple tasks can run in parallel</td>
+    </tr>
+    <tr>
+      <td><strong>Return to parent</strong></td>
+      <td>Manual (via transfer)</td>
+      <td>Automatic (via <code>complete_task</code>)</td>
+      <td>Automatic (with result)</td>
+    </tr>
+  </tbody>
+</table>
+
+**Table 1.** Comparison of ADK Collaboration agent ***mode*** behavior and
+limitations.
+
+## Operating considerations
+
+When using collaboration agent modes, there are a few control transfer and
+context management considerations to consider, as described in the following
+sections.
+
+### Workflow Node and Agent transfers
+
+Agents configured with ***task*** or ***single-turn*** modes can be used as
+Workflow Agent graph nodes, and with ***LlmAgent*** instances. However the
+execution transfer behavior is different depending on the calling, or parent,
+agent:
+
+**As a workflow graph node:** When a task agent is placed within a workflow
+graph, such as ***SequentialAgent***, ***ParallelAgent***, the agent executes
+its task. Upon completion, control automatically advances to the next node based
+on the logic of the workflow agent's graph.
+
+**As a transferee from an LlmAgent:** When a parent ***LlmAgent*** transfers
+control to a task agent via `request_task`, the task agent executes until it
+calls `complete_task`. At that point, control automatically returns to the
+originating agent that initiated the transfer. This behavior differs from
+default, chat ***mode*** agents, which require explicit `transfer_to_agent`
+calls to hand back control.
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Invocation Context</strong></th>
+      <th><strong>After Task Completion</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Workflow node</td>
+      <td>Advances to next node in the graph</td>
+    </tr>
+    <tr>
+      <td>Transfer from LlmAgent</td>
+      <td>Returns control to the originating agent</td>
+    </tr>
+  </tbody>
+</table>
+
+This distinction allows the same task agent to be reused in both contexts
+without modification. The runtime determines the appropriate control flow based
+on how the agent was invoked.
+
+### Agent context isolation
+
+Each ***task*** or ***single-turn*** mode agent operates in its own isolated
+session branch. When these agents operate in parallel, each agent only sees
+events from its own branch when building context for AI model calls, and cannot
+see what its peer agents are doing. Once all parallel branches complete, the
+parent agent receives the collected results and can proceed.
+
+## Known limitations
+
+There are some known limitations with agent collaboration modes:
+
+-   ***Task* mode agents** must be leaf agents and cannot have subagents.
+
+================
+File: docs/workflows/data-handling.md
+================
+# Data handling for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+Structuring and managing data between agents and graph-based notes is critical
+for building reliable processes with ADK. This guide explains data handling
+within graph-based workflows and collaboration agents, including how information
+is transmitted and received between graph nodes using ***Events***. It covers
+the essential parameters for events, data, content, and state, and explains how
+to implement structured data transfer for both function and agent nodes using
+data format schemas and specific instruction syntax.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+!!! danger "WARNING: DO NOT MIX ADK 2.0 and ADK 1.0 data storage systems"
+
+    If you use persistent storage for ADK 2.0 projects, **DO NOT allow ADK 2.0
+    projects to share storage with ADK 1.0 projects**, including, but not limited to,
+    session storage, memory systems, and evaluation data. Doing so may result in
+    loss of data or make the data unusable in ADK 1.0 projects.
+
+## Workflow graph Events
+
+Within a graph-based workflow, you pass data using ***Events***. All execution
+*nodes* in a workflow graph consume and emit Events. This section covers the
+basics of transmitting and receiving data between nodes in a ***Workflow***.
+Events have specific parameters for transmitting different types of data between
+nodes. The key parameters for node data handling are as follows:
+
+-   **`output`**: Parameter for passing information between *nodes*.
+-   **`message`**: Data intended as a response to a user.
+-   **`state`**: Data automatically persisted across nodes via ***Events***
+    throughout an ADK session.
+
+Events also carry additional information about the workflow, including the
+source node of the Event.
+
+### Node input and output with Events
+
+Each node in a graph receives and transmits data through the ***Event*** class.
+Use the ***yield*** syntax to hand off data to the next node, as shown in the
+following code snippet:
+
+```python
+from google.adk import Event
+
+def my_function_node(node_input: str):
+    output_value = node_input.upper()
+    return Event(output=output_value) # "THE RESULT"
+```
+
+Use the ***return*** syntax when outputting ***Event*** data that does not
+require additional processing. When emitting data that requires additional
+processing, or if you are generating more than one data item, you can use more
+than one ***yield*** command. Each ***yield*** call adds to a list of data
+objects on the Event which is passed to the next node of a graph. A ***return***
+or ***yield*** command without a parameter passes a `None` value to the next
+node.
+
+### Event `output` parameter
+
+The ***output*** parameter of an ***Event*** is the standard way to pass data to
+the next node of a graph. The next node receives a ***node input*** object
+containing the data, as shown in the following code sample:
+
+```python
+def my_function_node_1():
+    return Event(output="The Result")
+
+def my_function_node_2(node_input: Content):
+    output_value = node_input.parts[0].text.lower()
+    return Event(output=output_value) # "the result"
+```
+
+You can pass longer, structured data in a serializable format, as shown in this
+code sample:
+
+```python
+def my_function_node_3():
+    yield Event(
+        output={
+            "city_name": "Paris",
+            "city_time": "10:10 AM",
+        },
+    )
+```
+
+!!! warning "Caution: Event.output limitation"
+
+    Nodes are only allowed to emit a single ***Event.output*** data payload
+    per execution. This limitation means that while you can more than one
+    ***yield*** in a node, having two or more ***yield*** commands with an
+    ***Event.output*** results in a runtime error.
+
+### Event `message` parameter
+
+The ***message*** parameter of an ***Event*** is used to pass data intended as
+a user response. In general, you should not use the ***message*** parameter in
+your agent code unless it is specifically to provide information to a user or
+request information from a user. The following code example show how to provide
+information to a user during workflow execution:
+
+```python
+async def user_message(node_input: str):
+  """Tell user research process is starting."""
+  yield Event(message="Beginning research process...")
+```
+
+### Event `state` parameter
+
+The ***state*** parameter of an ***Event*** is used to maintain a small set of
+data values during an entire ADK session. Values in the state parameter
+automatically persist between Nodes and are meant for guiding the execution of
+more complex workflows. Nodes can modify state values, and the modified state
+values are available to downstream Nodes.The following code example shows how
+state is persisted across nodes:
+
+```python
+async def init_state_node(attempts: int = 0):
+  yield Event(
+      state={
+          "attempts": attempts,
+      },
+  )
+
+async def task_attempt_node(node_input: Content, attempts: int):
+  yield Event(
+      state={
+          "attempts": attempts + 1,
+      },
+  )
+
+async def read_state_node(ctx: WorkflowContext):
+  print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", init_state_node, task_attempt_node, read_state_node)],
+)
+```
+
+!!! warning "Caution: `state` property data limitations"
+
+    The state parameter *should not be used to persist large amounts of data* between
+    nodes. Use artifacts or other data persistence mechanisms, such as database
+    Tools, to persist large data resources during the life cycle of a Workflow.
+
+## Constrain node data input and output with schemas
+
+You can set input and output data schemas to constrain the input and output data
+formats of any node, including ***FunctionNodes*** and **Agents**. The following
+parameters are optional settings for any node. You can set both or either one of
+these parameters on any workflow node as required by your agent project.
+
+-   **`input_schema`**: Set the expected input schema using a class that
+    extends ***BaseModel***.
+-   **`output_schema`**: Set the required output schema using a class that
+    extends ***BaseModel***.
+
+The code example below shows how to set both input and output schemas for a
+subagent.
+
+```python
+from google.adk import Agent
+from pydantic import BaseModel
+
+class FlightSearchInput(BaseModel):
+    origin: str           # Airport code "SFO"
+    destination: str      # Airport code "CDG"
+    departure_date: date  # date(2026, 3, 15)
+    passengers: int = 1   # Number of passengers
+
+class FlightSearchOutput(BaseModel):
+    flights: list[Flight]
+    cheapest_price: float
+
+flight_searcher = Agent(
+    name="flight_searcher",
+    instruction="Search for available flights.",
+    input_schema=FlightSearchInput,
+    output_schema=FlightSearchOutput,
+    tools=[search_flights_api],
+    mode="single-turn",
+    ...
+)
+
+assistant = Agent(
+    name="assistant",
+    instruction="You help users plan trips.",
+    sub_agents=[flight_searcher],
+    ...
+)
+```
+
+## Access structured data in agents
+
+When you pass structured data into an agent from subagent or a workflow node,
+such as a Function Node, you can use specific syntax to add that data into the
+agent's instructions. Specifically, you can use the curly braces `{ }` to select
+the input schema properties, or `< >` to specify the input schema properties,
+the `from` keyword, and the name of the node providing the data. The following
+code snippet shows two ways to include data passed through an agent
+***input schema***:
+
+```python
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+def lookup_time_function(city: str):
+    """Simulate returning the current time in the specified city."""
+    return Event(output=CityTime(time_info='10:10 AM', city=city))
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-2.5-flash",
+    input_schema=CityTime,
+
+    # data selection based on class and parameter
+    # instruction="""
+    #     Return a sentence in the following format:
+    #     It is {CityTime.time_info} in {CityTime.city} right now.
+    # """,
+
+    # more restrictive data selection based on source node name
+    instruction="""
+        Return a sentence in the following format:
+        It is <CityTime.time_info from lookup_time_function> in
+        <CityTime.city from lookup_time_function> right now.
+    """,
+)
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[
+        (START, city_generator_agent, lookup_time_function, city_report_agent)
+    ],
+)
+```
+
+For a complete, but simplified version of this workflow, see
+[Graph-based agent workflows](/adk-docs/workflows/#get-started).
+
+================
+File: docs/workflows/dynamic.md
+================
+# Dynamic workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+The ADK framework provides a programmatic way to define workflows as a more
+flexible and powerful alternative to [graph-based workflows](/adk-docs/workflows/).
+Using a graph-based approach provides a convenient way to compose multi-step,
+static process structures with workflow nodes. However, if the logic path for
+your workflow is more complex, with iterative loops or complex branching logic,
+a graph-based approach may not suit your needs, or may become too unwieldy to
+manage.
+
+Dynamic workflows in ADK allow you to put aside graph-based path structures and
+use the full power of your chosen programming language to build workflows. With
+Dynamic workflows, you can create workflows with simple decorators, invoke
+workflow nodes as functions, and build complex routing logic. Here are some of
+the benefits of dynamic workflows in ADK:
+
+-   **Flexible Control Flow:** Define execution order dynamically using
+    loops, conditionals, and recursion which are difficult or impossible to
+    represent in static graphs.
+-   **Programmatic Experience:** Use familiar constructs like `while` loops
+    and `async/await` instead of graph-based routing.
+-   **Automatic Checkpointing:** Dynamic workflows track each node
+    execution. Successful sub-nodes are automatically skipped when resuming the
+    workflow, making complex logic durable and resumable by default.
+-   **Encapsulation:** Wrap business logic into *parent* nodes that
+    internally compose lower-level nodes, keeping the overall workflow graph
+    clean and manageable.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+For information on installing ADK 2.0 to test this feature, see
+[Welcome to ADK 2.0](/adk-docs/2.0/).
+
+## Get started
+
+The following dynamic workflow code example shows how to define a basic
+workflow containing a single node with a function:
+
+```python
+from google.adk import Workflow
+from google.adk import Event
+from google.adk import Context
+from typing import Any
+
+@node(name="hello_node")
+def my_node(node_input: Any):
+    return "Hello World"
+
+# define a dynamic workflow node
+@node(rerun_on_resume=True)
+async def my_workflow(ctx: Context, node_input: str) -> str:
+    # run_node executes a node and returns its output
+    result = await ctx.run_node(my_node, input_data="hello")
+    return result
+
+# Run the workflow
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", my_workflow)],
+)
+```
+
+This example uses the [***@node***](#node) annotation for convenience and to
+keep the written code as simple as possible. This annotation generates wrappers
+that allow the code to be run in the context of an ADK dynamic workflow.
+
+## Building blocks: nodes and workflows
+
+Nodes and workflows represent the basic building blocks of ADK's dynamic
+workflows. These classes provide the functionality required to wrap your code so
+it can be integrated into code-based workflows in ADK.
+
+### Nodes and @node {#node}
+
+A dynamic workflow in ADK is composed of *nodes*, which are classes derived
+from ***BaseNode***. A simple version of a usable workflow node is a
+***FunctionNode***, which allows you to wrap code with functionality required to
+run within a ***Workflow***. For convenience, the ADK framework provides the
+***@node*** annotation which generates the node wrapper, keeping boilerplate
+wrapper code to a minimum:
+
+```python
+@node(name="hello_node")
+def my_function_node(node_input: Any):
+    return "Hello World"
+```
+
+The following code snippet shows the equivalent code *without* the
+***@node*** annotation:
+
+```python
+# base function
+def my_function_node(node_input: Any):
+    return "Hello World"
+
+# FunctionNode wrapper with options
+success_node = FunctionNode(
+    my_function_node,
+    name="hello",
+    rerun_on_resume=True,
+)
+```
+
+Creating the node wrapper code yourself can be useful if you are wrapping
+functions from an external library, need to create multiple nodes from the same
+function with different configurations, or if you are managing node references
+in a registry for advanced orchestration.
+
+### Workflows
+
+In an ADK dynamic workflow, you use the ***Workflow*** class as a primary
+container for orchestrating nodes. You use a node to define a dynamic workflow
+with code that manages running nodes and the execution logic (order and paths)
+for those nodes, as shown in the following code sample:
+
+```python
+@node(rerun_on_resume=True)
+async def my_workflow(ctx):
+    # run_node executes a node and returns its output
+    result = await ctx.run_node(my_function_node, input_data="Hello")
+    result_formatted = await ctx.run_node(my_formatting_node, input_data=result)
+    return result_formatted
+
+# Run the workflow
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", my_workflow)],
+)
+```
+
+## Data handling
+
+When using dynamic workflows with ADK, passing data is simpler than
+[graph-based workflows](/adk-docs/workflows/) because, with a workflow,
+the ***Context*** class's ***run_node()*** method returns the node's output
+directly. This eliminates the need to directly handle session state or complex
+routing outputs for data transfer. The following code example shows how you can
+pass string data between an agent node and a function node:
+
+```python
+from google.adk import Context
+
+@node(rerun_on_resume=True)
+async def editorial_workflow(ctx: Context, user_request: str):
+    # Agent Node generates output
+    raw_draft = await ctx.run_node(draft_agent, user_request)
+
+    # Function Node formats text
+    formatted_text = await ctx.run_node(format_function_node, raw_draft)
+
+    return formatted_text
+```
+
+You can also pass specific data schemas using defined class and configure input
+and output schemas, similar to graph-based workflow nodes, as shown in the
+following code example:
+
+```python
+from google.adk import Agent
+from google.adk import Context
+from pydantic import BaseModel
+
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+@node
+def city_time_function(city: str):
+    """Simulate returning the current time in a specified city."""
+    return CityTime(time_info="10:10 AM", city=city)
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-2.5-flash",
+    input_schema=CityTime,
+    instruction="""output the data provided by the previous node.""",
+)
+
+@node # workflow node
+async def city_workflow(ctx: Context):
+    city_time = await ctx.run_node(city_time_function, "Paris")
+    report_text = await ctx.run_node(city_report_agent, city_time)
+
+    return report_text
+```
+
+For more information on data handling between workflow nodes, see
+[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+
+## Workflow routes
+
+Dynamic workflows in ADK provide more flexibility in terms of routing logic
+compared to [graph-based workflows](/adk-docs/workflows/), including
+iterative loops or more complex branching logic. This section describes some of
+the techniques that you can use for routing.
+
+### Sequence route
+
+You can create sequential task processing with dynamic workflows in ADK, just
+as you can with graph-based workflows. The following code snippet shows a
+dynamic workflow with an agent, a function node, and a second agent:
+
+```python
+@node # workflow node
+async def city_workflow(ctx: Context):
+    city = await ctx.run_node(city_generator_agent)
+    city_time = await ctx.run_node(city_time_function, city)
+    report_text = await ctx.run_node(city_report_agent, city_time)
+
+    return report_text
+```
+
+### Loop route
+
+For workflows where you want to use an iterative loop for a task, dynamic
+workflows offer much more flexibility to define the routing logic you need. The
+following code example shows how to use dynamic workflows to construct a
+workflow loop for generating, reviewing, and updating code:
+
+```python
+coder_agent = LlmAgent(
+    name="generator_agent",
+    model="gemini-2.5-flash",
+    instruction="Write python code for user request.",
+    output_schema=str,
+)
+
+@node(name="lint_reviewer")
+compile_lint_check = ApiNode()
+
+fixer_agent = LlmAgent(
+    name="generator_agent",
+    model="gemini-2.5-flash",
+    instruction="""Refactor current code {code}.
+        Based on compile & lint review: {findings}""",
+    output_schema=str,
+)
+
+@node # workflow node
+async def code_workflow(ctx):
+  code = await ctx.run_node(coder_agent)
+  check_resp = await ctx.run_node(compile_lint_check, code)
+
+  while check_resp.findings:
+    yield Event(state={"code": code, "findings": check_resp.findings})
+    code = await ctx.run_node(fixer_agent)
+
+    check_resp = await ctx.run_node(compile_lint_check, code)
+
+  return code
+```
+
+### Parallel execution routes
+
+Dynamic workflows in ADK can support parallel execution, and you can use
+standard asynchronous libraries, such as the `asyncio`, to build this
+functionality. The following code example shows how to build a workflow node
+that supports parallel execution, which can then be integrated into a larger
+workflow:
+
+```python
+from google.adk.workflow import BaseNode
+from google.adk import Context
+from typing import Any
+import asyncio
+
+class ParallelNode(BaseNode):
+    """A supervisor node that runs a worker node in parallel."""
+    real_node: BaseNode
+
+    async def run(self, ctx: Context, node_input: list[Any]):
+        tasks = []
+
+        # Dynamically schedule worker nodes for each item in the input list
+        for item in node_input:
+            # ctx.run_node returns an awaitable future for the ephemeral node
+            tasks.append(ctx.run_node(self.real_node, item))
+
+        # Use asyncio to gather results in parallel
+        results = await asyncio.gather(*tasks)
+
+        return results
+```
+
+!!! tip "Tip: Resuming parallel nodes"
+
+    The workflow framework ensures that if a dynamic workflow is resumed, only
+    failed or interrupted worker nodes are re-executed, including parallel worker
+    nodes.
+
+## Human input
+
+Dynamic workflows in ADK can also include human input or human in the loop
+(HITL) steps. You build human input into workflows by creating a ***BaseNode***
+subclass that interrupts the workflow, combined with a ***RequestInput***
+instance for providing a request to the user and retrieving the response. The
+following code example shows how to build a human input node and include it in a
+workflow:
+
+```python
+from google.adk.workflow import BaseNode
+from google.adk import Context
+from google.adk.events import RequestInput
+from typing import Any, AsyncGenerator
+
+class GetInput(BaseNode):
+    """A node that pauses execution and waits for human input."""
+    rerun_on_resume = False  # Ensure the response is yielded as output on resume
+
+    def __init__(self, request: RequestInput, name: str):
+        self.request = request
+        self.name = name
+
+    def get_name(self) -> str:
+        return self.name
+
+    async def run(self) -> AsyncGenerator[Any, None]:
+        # Yielding the request tells the workflow to pause and wait for input
+        yield self.request
+
+async def approval_process_node(ctx: Context, node_input: Any):
+    """A parent node that coordinates a human approval step."""
+
+    # Define the request for the user
+    request = RequestInput(message="Please approve this request (Yes/No)")
+
+    # Invoke the HITL node dynamically. The workflow pauses here.
+    user_response = await ctx.run_node(GetInput(request, name="approval_step"))
+
+    if user_response.lower() == "yes":
+        return "Request Approved"
+    else:
+        return "Request Denied"
+```
+
+## Advanced features
+
+Dynamic workflows offer some advanced features designed to handle more complex
+development scenarios. These capabilities allow for finer control over execution
+and better integration with existing technical infrastructure.
+
+### Execution IDs
+
+The ADK framework generates a deterministic identifier (ID) for child node
+executions based on the parent ID and a counter. ADK workflows use deterministic
+IDs for each scheduled node to identify previous results. These IDs are
+generated based on the order of dynamic node schedules, and are used for
+checkpointing and to re-run tasks in the correct order in the case of a resumed
+or re-run workflow.
+
+#### Custom execution IDs
+
+In some rare cases, you may need to have stable identifiers, such as when
+processing a reorderable list, you can supply a custom ID when running a node.
+In general, you should avoid this due to the impacts to workflow task retries
+and process resumes. Specifically, these IDs are used to check node states and
+skip execution if a node was already run. If you provide custom IDs, make sure
+they are deterministic for workflow re-runs and logically remain the same for
+the input. The following example code shows how to add such an identifier when
+executing node in a workflow:
+
+!!! warning "Warning: Custom execution IDs"
+
+    Avoid creating custom execution IDs. Since execution IDs are used to determine
+    the execution order of nodes, custom execution IDs can cause problems when the
+    system attempts to re-run those nodes in your workflow.
+
+```python
+class Order(BaseModel):
+  order_id: str
+  cart_items: list[Product]
+
+def shorten_link(ctx, node_input: str):
+
+  orders = await get_orders()
+
+  process_tasks = []
+  for i, order in enumerate(orders):
+    task = ctx.run_node(process_order, order, name=order.order_id))
+
+    process_tasks.append(task)
+
+  result = asyncio.gather(*process_tasks)
+
+  yield result
+```
+
+================
+File: docs/workflows/graph-routes.md
+================
+# Build graph routes for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+Graph-based workflows in ADK define agent logic as a graph of execution nodes
+and edges, allowing you to build more reliable processes that combine artificial
+intelligence (AI) reasoning and code logic. These workflows allow you to create
+logical routes of execution nodes that can encapsulate code functions,
+AI-powered agents, Tools, and human input. By explicitly mapping out routing
+logic, this approach allows you to define a specific, step-wise process workflow
+in code, providing improved precision and reliability over purely prompt-based
+agents.
+
+![Graph-based flight upgrade agent](/adk-docs/assets/graph-workflow-router.svg)
+
+```python
+root_agent = Workflow(
+  name="routing_workflow",
+  edges=[
+    ("START", process_message, router),
+    (router,
+      {
+        "output-1": response_1,
+        "output-2": response_2,
+        "output-3": response_3,
+      },
+    ),
+  ],
+)
+```
+
+**Figure 1.** Visualization of a task graph and the ***Workflow*** code to
+implement it.
+
+The advantage of using a graph-based agent workflow is the significant increase
+in control, predictability, and reliability over prompt-based agents. By
+defining the overall process workflow in code, you gain more control over how
+tasks are routed and executed. This structured node definition improves the
+predictability of agents and enhances reliability for complex tasks that require
+defined steps and process management.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+Get started with graph-based workflows in ADK by checking out
+[Graph-based agent workflows](/adk-docs/workflows/).
+
+## Nodes
+
+A graph is composed of execution nodes. These *nodes* can be ***Agents***, ADK
+***Tools***, human input tasks, or code functions you write. Nodes can take
+inputs from previously executed nodes, and emit data through ***Event***
+objects. The following shows a simple ***FunctionNode*** that handles text
+inputs and sends a text output:
+
+```python
+from google.adk import Event
+
+def my_function_node(node_input: str):
+    input_text_modified = node_input.upper()
+    return Event(output=input_text_modified)
+```
+
+For more information about transferring data between nodes, see .
+[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+
+## Workflow graphs syntax
+
+You define a graph by creating an ***edges*** array, which defines a logical
+execution path of *nodes* and conditions to be followed. This section
+provides an overview of graph syntax in an ***edges*** array. The following code
+example shows a basic workflow with two nodes to be executed in order:
+
+```python
+from google.adk import Workflow
+
+root_agent = Workflow(
+    name="sequential_workflow",
+    edges=[("START", task_A_node, task_B_node)],
+)
+```
+
+!!! caution "Caution: Workflows and agent limitations"
+
+    You can add ***Agents***, or ***LlmAgents***, to graph-based workflows,
+    however they must be set to a task or single-turn mode. For more
+    information about agent modes, see
+    [Build collaborative agent teams](/adk-docs/workflows/collaboration/#mode-configuration-and-behaviors).
+
+### Route sequences
+
+The ***edges*** array executes nodes based on the order or nodes presented in
+the array, starting with the first row and proceeding through the subsequent
+rows until execution is complete. The first row of the ***edges*** array uses
+the ***START*** keyword to indicate the beginning of a graph execution, with
+each listed node executed in sequence, as shown in the following code
+snippets:
+
+```python
+edges=[("START", task_A_node)]  # single node run
+edges=[("START",
+        task_A_node,
+        task_B_node,
+        task_C_node)]           # 3 nodes run in order
+```
+
+You can also use ***START*** more than once to initiate parallel tasks at the
+beginning of a workflow graph, as shown in the following code snippet:
+
+```python
+edges=[
+    ("START", parallel_task_A),
+    ("START", parallel_task_B),
+    ("START", parallel_task_C),
+]
+```
+
+!!! warning "Caution: Limitations on parallel nodes"
+
+    Not all workflow nodes or subagents can be run in parallel. In particular,
+    you cannot run multiple interactive chat sessions within the same agent
+    session.
+
+### Route branches
+
+The subsequent rows of the ***edges*** arrays after the START keyword define
+additional execution logic for nodes. For branching paths, you define a node,
+usually a ***FunctionNode***, that outputs a ***route*** with one or more route
+values. In the edges graph, you define the execution logic with route values and
+target nodes, as shown in the following code example:
+
+```python
+def router(node_input: str):
+    """Simulate a routing decision"""
+    return Event(route="RUN_TASK_C")
+
+root_agent = Workflow(
+    name="routing_workflow",
+    edges=[
+        ("START", task_A_node, router),
+        (router,
+          {
+            # "route value": node_to_run
+            "RUN_TASK_B": task_B_node,
+            "RUN_TASK_C": task_C_node,
+          },
+        ),
+    ],
+)
+```
+
+## Parallel tasks: fan out and join paths
+
+You can create graphs that split execution across multiple, parallel nodes, and
+typically you need to assemble the output of each node for further processing.
+You accomplish this by using a ***JoinNode*** object, which waits for each
+parallel task to complete and then passes the collection of outputs from these
+nodes to the next node.
+
+![Tasks connecting to a JoinNode](/adk-docs/assets/graph-joinnode.svg)
+
+**Figure 2.** The output of parallel task nodes can be assembled using a
+JoinNode object.
+
+The following code snippet shows how to implement a basic ***JoinNode*** object
+and use it to assemble output of all the nodes:
+
+```python
+​​from google.adk.workflow import JoinNode
+
+my_join_node = JoinNode(name="my_join_node")
+
+edges=[
+    ("START", parallel_task_A, my_join_node),
+    ("START", parallel_task_B, my_join_node),
+    ("START", parallel_task_C, my_join_node),
+    (my_join_node, final_task_D),
+]
+```
+
+!!! warning "Caution: Stuck JoinNode from incomplete nodes"
+
+    The ***JoinNode*** object proceeds only after all its upstream nodes have
+    provided an Event output. If one of the upstream nodes fails to provide output,
+    the JoinNode is stuck and workflow execution stops. Make sure to include
+    failsafe output from any node that outputs to a ***JoinNode***.
+
+## Nested workflows
+
+When building more complex workflows, you may want to encapsulate the
+functionality for specific tasks into reusable workflows. One or more
+***Workflow*** objects can be used as a node within the graph of another
+workflow agent to accomplish this goal.
+
+![Nested Workflows inside a parent Workflow](/adk-docs/assets/graph-workflow-nodes.svg)
+
+**Figure 3.** Nested ***Workflows*** as nodes inside a parent ***Workflow***.
+
+The following code snippet shows how to implement a workflow agent with two
+nested more ***Workflow*** objects (workflow_B, workflow_C) as nodes in the
+graph:
+
+```python
+from google.adk import Workflow
+
+root_agent = Workflow(
+    name="parent_workflow",
+    edges=[
+       ("START", task_A1, router),
+       (router, {
+            "RUN_WORKFLOW_B": workflow_B,
+            "RUN_WORKFLOW_C": workflow_C,
+            },
+       ),
+    ],
+)
+```
+
+### Nested workflow data output
+
+Output for nested Workflow objects works slightly differently from individual
+nodes. When the nested workflow completes one of its nodes, it transmits data
+to the next node in the nested workflow's graph *and* the system bubbles up the
+Event for that node to the parent workflow for process traceability. When the
+nested workflow completes the last node in its process, the parent node extracts
+data from the final leaf nodes and emits it as the output of the nested
+workflow.
+
+================
+File: docs/workflows/human-input.md
+================
+# Human input for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+Being able to request human input for data input, decision verification, or
+action permission is an important part of many agent-powered workflows.
+Graph-based workflows in ADK can include human in the loop (HITL) nodes
+specifically built for obtaining input from humans as part of a workflow. These
+nodes do not require artificial intelligence (AI) models to run, which can make
+the input process more predictable and reliable.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+
+## Get started
+
+You can implement a human input node in a graph using the ***RequestInput***
+class and a text prompt for the user. The following code example shows how to
+add a human input node to an Workflow graph:
+
+```python
+from google.adk.events import RequestInput
+from google.adk import Workflow
+
+def step1(): # Human input step
+  yield RequestInput(message="Enter a number:")
+
+def step2(node_input):
+  return node_input * 2
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[('START', step1, step2)],
+)
+```
+
+In this code example, `step1` pauses the execution of the agent until the
+system receives an input from a user. Once the system receives input from the
+user, that input is passed to the next node.
+
+## Configuration options
+
+Human input nodes can use the ***RequestInput*** class with the following
+configuration options:
+
+-   **`message`:** Text provided to the user to explain the human input
+    request.
+-   **`payload`:** Structured data to be used as part of the human input
+    request.
+-   **`response_schema`:** A data structure the human response must conform to.
+
+!!! note "Note: Response schema input limitations"
+
+    For the **response_schema** setting, the ***RequestInput*** class does not
+    automatically reformat human responses to fit a specified data structure. The
+    human response must be provided in the specified format. For a better user
+    experience, consider providing a user interface to collect structured data
+    or use an Agent node to conform unstructured data to the format required.
+
+## Human input examples
+
+The following code examples demonstrate more detailed human input requests,
+including the use of ***message***, ***payload*** and ***response schema***
+parameters.
+
+### Request input with response schema
+
+The following code sample shows how to construct a ***RequestInput*** object in
+a workflow node, including a ***response schema***:
+
+```python
+async def initial_prompt(ctx: Context):
+   """Ask the user for itinerary information"""
+   input_message = """
+       This is an interactive concierge workflow tasked with making you a great
+       itinerary for you in your city of choice. If you give some details about
+       yourself or what you are generally looking for I can better personalize
+       your itinerary.
+       For example, input your:
+           City (Required),
+           Age,
+           Hobby,
+           Example of attraction you liked
+   """
+   resp = {"user_response": str}
+
+   yield RequestInput(message=input_message, response_schema=resp)
+```
+
+### Request input with data payload
+
+The following code sample shows how to construct a ***RequestInput*** object in
+a workflow node, including a ***payload*** and ***response schema***. In this
+example, the `ActivitiesList` is expected to be completed by an agent node that
+composes a list of activities, and the `get_user_feedback()` node requests
+feedback for the user.
+
+```python
+class ActivitiesList(BaseModel):
+   """Itinerary should be a list of dictionaries for each activity. Each
+   activity has a name and a description"""
+   itinerary: List[Dict[str, str]]
+
+async def get_user_feedback(node_input: ActivitiesList):
+   """
+   Retrieves the user's thoughts on the agents initial itinerary in order to
+   either expand on, change the list, or exit the loop
+   """
+   message = (
+       f"""
+       Here is your recommended base itinerary:\n{node_input}\n\n
+       Which of these items appeal to you (if any)?
+       """
+   )
+
+   yield RequestInput(
+       message=message,
+       payload=node_input,
+       response_schema={"user":"response"}
+   )
+```
+
+================
+File: docs/workflows/index.md
+================
+# Graph-based agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+</div>
+
+Graph-based workflows in ADK let you build agents with more precise control,
+creating deterministic processes that combine code logic and AI reasoning
+capabilities. Graph-based workflows allow you to define your agent logic as a
+graph of execution nodes and edges, combining AI-powered agents with
+deterministic tools and code.
+
+![Graph-based flight upgrade agent](/adk-docs/assets/workflow-design.svg)
+
+**Figure 1.** A graph-based agent design for flight upgrades, combining workflow
+nodes of different types, including Functions, human input, Tools, and LLM
+capabilities.
+
+Prebuilt ADK [workflow agents](/adk-docs/agents/workflow-agents/),
+such as [Sequential Agents](/adk-docs/agents/workflow-agents/sequential-agents/),
+provide a defined process flow control only across a set of agents. You can continue to
+build standard ADK agents with long prompts, tools, and use them in graph-based
+workflow agents. When you need more precise control, workflow agent graphs give
+you more flexibility over how tasks are routed and executed. Graph-based workflows
+provide the following advantages:
+
+-   **Define precise logic:** Explicitly map out routing logic to manage
+    transitions between different nodes.
+-   **Implement complex structures:** Build agent workflows that support
+    branching and state management.
+-   **Run chains of functions without AI:** Call agent tools and your own
+    code without invoking a generative AI model.
+-   **Enhance reliability:** Improve the predictability of your agents by
+    relying on structured node definitions rather than prompts alone.
+
+!!! example "Alpha Release"
+
+    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
+    as in production environments. We encourage you to test this release and we
+    welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+
+Follow the instructions for [installing ADK 2.0](/adk-docs/2.0/#install) and then
+check out the instructions below to get started with graph-based workflows.
+
+## Get started
+
+This section describes how to get started with graph-based agents. The following
+example shows how to create a sequential graph-based agent workflow that
+generates a city name, looks up the current time in that city with code
+function, and the final agent reports the information.
+
+```python
+from google.adk import Agent
+from google.adk import Workflow
+from google.adk import Event
+from pydantic import BaseModel
+
+city_generator_agent = Agent(
+    name="city_generator_agent",
+    model="gemini-2.5-flash",
+    instruction="""Return the name of a random city.
+      Return only the name, nothing else.""",
+    output_schema=str,
+)
+
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+def lookup_time_function(node_input: str):
+    """Simulate returning the current time in the specified city."""
+    return CityTime(time_info="10:10 AM", city=node_input)
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-2.5-flash",
+    input_schema=CityTime,
+    instruction="""Output following line:
+    It is {CityTime.time_info} in {CityTime.city} right now.""",
+    output_schema=str,
+)
+
+def completed_message_function(node_input: str):
+    return Event(
+        message=f"{node_input}\n WORKFLOW COMPLETED.",
+    )
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[
+        ("START", city_generator_agent, lookup_time_function,
+          city_report_agent, completed_message_function)
+    ],
+)
+```
+
+This sample code demonstrates how you can use the ***Workflow*** class to
+assemble a simple, sequential workflow and alternate between AI agent processing
+and code execution. While you could perform these steps using a single agent
+with a longer prompt and a tool call, the graph-based approach gives you precise
+control over the task execution order and the data output from each step.
+
+For more information about data handling with graph-based workflows, see
+[Data handling with workflow nodes and agents](/adk-docs/workflows/data-handling/).
+
+## Build processes with graphs
+
+You can use prompt-based agents to define multiple step processes with
+descriptions of tasks and procedures using the instructions field of an ADK
+agent. However, as your instructions and procedures become longer and more
+complicated, making sure that the agent is following each step and guideline
+becomes more complicated and less reliable.
+
+Graph-based workflow agents provide a significant advantage over prompt-based
+agents by allowing you to specifically define the overall process workflow in
+code. With graph-based agent workflows, each step of the process can be defined
+as an execution ***Node*** in a graph and each node can be an AI agent, Tool, or
+your programmed code. The following diagram illustrates how a simple
+prompt-based agent would translate into a workflow agent graph:
+
+![Prompt-based agent to graph-based workflow](/adk-docs/assets/prompts-to-graphs.svg)
+
+**Figure 2.** Structure of prompt-based agent instructions translated into a
+graph-based workflow.
+
+Moving from prompt-based agents to graph-based workflow agents allows you to
+explicitly break out the tasks of a procedure to define a specific execution
+flow. Once defined, the agent application flows the steps in the graph,
+switching between non-deterministic AI-powered agents and deterministic code as
+needed.
+
+The following code sample shows how the workflow graph in Figure 2 could be
+translated into a graph-based agent using the ***Workflow*** class:
+
+```python
+process_message = Agent(
+    name="process_message",
+    model="gemini-2.5-flash",
+    instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
+      or "LOGISTICS". If you think a message applies to more than one category,
+      reply with a comma separated list of categories.
+   """,
+    output_schema=str,
+)
+
+def router(node_input: str):
+    routes = node_input.split(",")
+    routes = [route.strip() for route in routes]
+    return Event(route=routes)
+
+def response_1_bug():
+    return Event(message="Handling bug...")
+
+def response_2_support():
+    return Event(message="Handling customer support...")
+
+def response_3_logistics():
+    return Event(message="Handling logistics...")
+
+root_agent = Workflow(
+   name="routing_workflow",
+   edges=[
+       ("START", process_message, router),
+       ( router,
+           {
+               "BUG": response_1_bug,
+               "CUSTOMER_SUPPORT": response_2_support,
+               "LOGISTICS": response_3_logistics,
+           }
+       )
+   ],
+)
+```
+
+This sample code demonstrates how you can use an ***edges*** array to define a
+graph with routes between a set of *nodes*, which are discrete tasks that can
+include agents, Tools, your code, and even additional ***Workflows***. For
+information about building advanced graphs for workflows, see
+[Build graph routes for workflow agents](/adk-docs/workflows/graph-routes/).
+
+## Known limitations {#known-limitations}
+
+There are some known limitations with graph-based workflows. They
+are *not compatible* with the following ADK features:
+
+-   **Live Streaming** functionality is not compatible with graph-based
+    workflows.
+-   **Integrations:** Some third-party
+    [Integrations](/adk-docs/integrations/) may not be
+    compatible with graph-based workflows.
+
+================
 File: docs/community.md
 ================
 # Community Resources
@@ -44884,6 +46424,7 @@ File: docs/index.md
 ================
 ---
 hide:
+  - navigation
   - toc
 ---
 
@@ -44901,6 +46442,12 @@ ADK is **model-agnostic**, **deployment-agnostic**, and is built for
 development feel more like software development, to make it easier for
 developers to create, deploy, and orchestrate agentic architectures that range
 from simple tasks to complex workflows.
+
+??? warning "News: ADK Python 2.0 Alpha with graph-based workflows!"
+
+    ADK 2.0 Alpha release provides a huge orchestration upgrade for agents with
+    support for graph-based workflows. Download the Alpha release and
+    [try out ADK 2.0](/adk-docs/2.0/).
 
 ??? tip "News: ADK Python Skills released!"
 
