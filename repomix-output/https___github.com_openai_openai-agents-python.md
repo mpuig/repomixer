@@ -492,59 +492,59 @@ search:
 ---
 # 실시간 에이전트 가이드
 
-이 가이드는 OpenAI Agents SDK 의 실시간 레이어가 OpenAI Realtime API 에 어떻게 매핑되는지와, 그 위에 Python SDK 가 추가하는 동작을 설명합니다
+이 가이드는 OpenAI Agents SDK의 실시간 레이어가 OpenAI Realtime API에 어떻게 매핑되는지, 그리고 Python SDK가 그 위에 어떤 추가 동작을 제공하는지 설명합니다
 
 !!! warning "베타 기능"
 
-    실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
+    실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다
 
-!!! note "여기서 시작"
+!!! note "시작 지점"
 
-    기본 Python 경로를 원하시면 먼저 [quickstart](quickstart.md)를 읽어보세요. 앱에서 서버 측 WebSocket 또는 SIP 중 무엇을 사용할지 결정 중이라면 [Realtime transport](transport.md)를 읽어보세요. 브라우저 WebRTC 전송은 Python SDK 범위에 포함되지 않습니다.
+    기본 Python 경로를 원하시면 먼저 [빠른 시작](quickstart.md)을 읽어보세요. 앱이 서버 측 WebSocket 또는 SIP를 사용해야 하는지 결정 중이라면 [실시간 전송](transport.md)을 읽어보세요. 브라우저 WebRTC 전송은 Python SDK에 포함되지 않습니다
 
 ## 개요
 
-실시간 에이전트는 Realtime API 와의 장기 연결을 유지하여, 모델이 텍스트와 오디오를 점진적으로 처리하고, 오디오 출력을 스트리밍하고, 도구를 호출하고, 매 턴마다 새 요청을 다시 시작하지 않고 인터럽션(중단 처리)을 처리할 수 있게 합니다.
+실시간 에이전트는 Realtime API에 대한 장기 연결을 유지하여 모델이 텍스트와 오디오를 점진적으로 처리하고, 오디오 출력을 스트리밍하고, 도구를 호출하고, 매 턴마다 새 요청을 다시 시작하지 않고 인터럽션(중단 처리)을 처리할 수 있게 합니다
 
 주요 SDK 구성 요소는 다음과 같습니다:
 
--   **RealtimeAgent**: 하나의 실시간 전문 에이전트에 대한 instructions, tools, 출력 가드레일, 핸드오프
+-   **RealtimeAgent**: 하나의 실시간 전문 에이전트를 위한 instructions, tools, 출력 가드레일, 핸드오프
 -   **RealtimeRunner**: 시작 에이전트를 실시간 전송에 연결하는 세션 팩토리
--   **RealtimeSession**: 입력을 전송하고, 이벤트를 수신하고, 히스토리를 추적하고, 도구를 실행하는 라이브 세션
--   **RealtimeModel**: 전송 추상화입니다. 기본값은 OpenAI 의 서버 측 WebSocket 구현입니다.
+-   **RealtimeSession**: 입력 전송, 이벤트 수신, 히스토리 추적, 도구 실행을 수행하는 라이브 세션
+-   **RealtimeModel**: 전송 추상화 계층. 기본값은 OpenAI의 서버 측 WebSocket 구현입니다
 
 ## 세션 수명 주기
 
 일반적인 실시간 세션은 다음과 같습니다:
 
-1. 하나 이상의 `RealtimeAgent`를 생성합니다.
-2. 시작 에이전트로 `RealtimeRunner`를 생성합니다.
-3. `await runner.run()`을 호출하여 `RealtimeSession`을 가져옵니다.
-4. `async with session:` 또는 `await session.enter()`로 세션에 진입합니다.
-5. `send_message()` 또는 `send_audio()`로 사용자 입력을 전송합니다.
-6. 대화가 끝날 때까지 세션 이벤트를 순회합니다.
+1. 하나 이상의 `RealtimeAgent`를 생성합니다
+2. 시작 에이전트로 `RealtimeRunner`를 생성합니다
+3. `await runner.run()`을 호출해 `RealtimeSession`을 가져옵니다
+4. `async with session:` 또는 `await session.enter()`로 세션에 진입합니다
+5. `send_message()` 또는 `send_audio()`로 사용자 입력을 전송합니다
+6. 대화가 끝날 때까지 세션 이벤트를 반복 처리합니다
 
-텍스트 전용 실행과 달리 `runner.run()`은 즉시 최종 결과를 생성하지 않습니다. 대신 전송 레이어와 동기화된 로컬 히스토리, 백그라운드 도구 실행, 가드레일 상태, 활성 에이전트 구성을 유지하는 라이브 세션 객체를 반환합니다.
+텍스트 전용 실행과 달리 `runner.run()`은 즉시 최종 결과를 생성하지 않습니다. 대신 전송 레이어와 동기화된 로컬 히스토리, 백그라운드 도구 실행, 가드레일 상태, 활성 에이전트 구성을 유지하는 라이브 세션 객체를 반환합니다
 
-기본적으로 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용하므로, 기본 Python 경로는 Realtime API 에 대한 서버 측 WebSocket 연결입니다. 다른 `RealtimeModel`을 전달해도 동일한 세션 수명 주기와 에이전트 기능이 적용되며, 연결 메커니즘만 달라질 수 있습니다.
+기본적으로 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용하므로, 기본 Python 경로는 Realtime API로의 서버 측 WebSocket 연결입니다. 다른 `RealtimeModel`을 전달해도 동일한 세션 수명 주기와 에이전트 기능이 적용되며, 연결 메커니즘만 달라질 수 있습니다
 
 ## 에이전트 및 세션 구성
 
-`RealtimeAgent`는 일반 `Agent` 타입보다 의도적으로 범위가 좁습니다:
+`RealtimeAgent`는 의도적으로 일반 `Agent` 타입보다 범위가 좁습니다:
 
--   모델 선택은 에이전트별이 아니라 세션 수준에서 구성됩니다.
--   structured outputs는 지원되지 않습니다.
--   음성은 구성할 수 있지만, 세션이 이미 음성 오디오를 생성한 이후에는 변경할 수 없습니다.
--   instructions, 함수 도구, 핸드오프, 훅, 출력 가드레일은 모두 계속 동작합니다.
+-   모델 선택은 에이전트별이 아니라 세션 수준에서 구성됩니다
+-   structured outputs는 지원되지 않습니다
+-   음성은 구성할 수 있지만, 세션이 이미 음성 오디오를 생성한 뒤에는 변경할 수 없습니다
+-   Instructions, 함수 도구, 핸드오프, 훅, 출력 가드레일은 모두 계속 동작합니다
 
-`RealtimeSessionModelSettings`는 더 새로운 중첩형 `audio` 구성과 이전의 평면 별칭을 모두 지원합니다. 새 코드에서는 중첩형을 권장합니다:
+`RealtimeSessionModelSettings`는 최신 중첩 `audio` 구성과 이전 평면 별칭을 모두 지원합니다. 새 코드에서는 중첩 형태를 권장하며, 새 실시간 에이전트는 `gpt-realtime-1.5`로 시작하세요:
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -579,13 +579,13 @@ runner = RealtimeRunner(
 -   `tool_error_formatter`
 -   `tracing_disabled`
 
-전체 타입 표면은 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요.
+전체 타입 표면은 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요
 
-## 입력 및 출력
+## 입력과 출력
 
 ### 텍스트 및 구조화된 사용자 메시지
 
-일반 텍스트 또는 구조화된 실시간 메시지에는 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message]를 사용하세요.
+일반 텍스트 또는 구조화된 실시간 메시지에는 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message]를 사용하세요
 
 ```python
 from agents.realtime import RealtimeUserInputMessage
@@ -603,11 +603,11 @@ message: RealtimeUserInputMessage = {
 await session.send_message(message)
 ```
 
-구조화된 메시지는 실시간 대화에 이미지 입력을 포함하는 주요 방법입니다. [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)의 예제 웹 데모는 이 방식으로 `input_image` 메시지를 전달합니다.
+구조화된 메시지는 실시간 대화에 이미지 입력을 포함하는 주요 방법입니다. [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)의 웹 데모 예제는 `input_image` 메시지를 이 방식으로 전달합니다
 
 ### 오디오 입력
 
-원시 오디오 바이트를 스트리밍하려면 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]를 사용하세요:
+원문 오디오 바이트를 스트리밍하려면 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]를 사용하세요:
 
 ```python
 await session.send_audio(audio_bytes)
@@ -619,15 +619,15 @@ await session.send_audio(audio_bytes)
 await session.send_audio(audio_bytes, commit=True)
 ```
 
-더 낮은 수준의 제어가 필요하면, 기본 모델 전송을 통해 `input_audio_buffer.commit` 같은 원시 클라이언트 이벤트를 보낼 수도 있습니다.
+더 낮은 수준의 제어가 필요하면, 기본 모델 전송을 통해 `input_audio_buffer.commit` 같은 원문 클라이언트 이벤트도 보낼 수 있습니다
 
 ### 수동 응답 제어
 
-`session.send_message()`는 고수준 경로를 사용해 사용자 입력을 전송하고 응답을 자동으로 시작합니다. 원시 오디오 버퍼링은 모든 구성에서 동일하게 자동 처리되지는 **않습니다**.
+`session.send_message()`는 고수준 경로로 사용자 입력을 전송하고 응답을 자동으로 시작합니다. 원문 오디오 버퍼링은 모든 구성에서 **항상** 동일하게 자동 동작하지는 않습니다
 
-Realtime API 수준에서 수동 턴 제어는 원시 `session.update`로 `turn_detection`을 비운 다음, `input_audio_buffer.commit`과 `response.create`를 직접 보내는 것을 의미합니다.
+Realtime API 수준에서 수동 턴 제어는 원문 `session.update`로 `turn_detection`을 비운 뒤, `input_audio_buffer.commit`과 `response.create`를 직접 전송하는 것을 의미합니다
 
-턴을 수동으로 관리하는 경우, 모델 전송을 통해 원시 클라이언트 이벤트를 전송할 수 있습니다:
+수동으로 턴을 관리하는 경우, 모델 전송을 통해 원문 클라이언트 이벤트를 보낼 수 있습니다:
 
 ```python
 from agents.realtime.model_inputs import RealtimeModelSendRawMessage
@@ -641,17 +641,17 @@ await session.model.send_event(
 )
 ```
 
-이 패턴은 다음과 같은 경우에 유용합니다:
+이 패턴은 다음과 같은 경우 유용합니다:
 
--   `turn_detection`이 비활성화되어 있고 모델이 언제 응답할지 직접 결정하고 싶은 경우
--   응답 트리거 전에 사용자 입력을 검사하거나 제한하고 싶은 경우
--   대역 외 응답에 사용자 지정 프롬프트가 필요한 경우
+-   `turn_detection`이 비활성화되어 있고 모델이 응답할 시점을 직접 결정하고 싶은 경우
+-   응답 트리거 전에 사용자 입력을 검사하거나 게이트 처리하고 싶은 경우
+-   대역 외 응답을 위한 사용자 지정 프롬프트가 필요한 경우
 
-[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)의 SIP 예제는 시작 인사를 강제로 보내기 위해 원시 `response.create`를 사용합니다.
+[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)의 SIP 예제는 원문 `response.create`를 사용해 시작 인사말을 강제로 보냅니다
 
-## 이벤트, 히스토리 및 인터럽션(중단 처리)
+## 이벤트, 히스토리, 인터럽션(중단 처리)
 
-`RealtimeSession`은 고수준 SDK 이벤트를 내보내면서, 필요할 때 원시 모델 이벤트도 계속 전달합니다.
+`RealtimeSession`은 필요 시 원문 모델 이벤트를 그대로 전달하면서도 더 높은 수준의 SDK 이벤트를 방출합니다
 
 가치가 높은 세션 이벤트는 다음과 같습니다:
 
@@ -665,17 +665,17 @@ await session.model.send_event(
 -   `error`
 -   `raw_model_event`
 
-UI 상태에 가장 유용한 이벤트는 보통 `history_added`와 `history_updated`입니다. 이 이벤트는 사용자 메시지, 어시스턴트 메시지, 도구 호출을 포함한 세션의 로컬 히스토리를 `RealtimeItem` 객체로 노출합니다.
+UI 상태에 가장 유용한 이벤트는 보통 `history_added`와 `history_updated`입니다. 이 이벤트들은 사용자 메시지, 어시스턴트 메시지, 도구 호출을 포함한 세션의 로컬 히스토리를 `RealtimeItem` 객체로 노출합니다
 
 ### 인터럽션(중단 처리) 및 재생 추적
 
-사용자가 어시스턴트를 중단하면 세션은 `audio_interrupted`를 내보내고, 사용자가 실제로 들은 내용과 서버 측 대화가 정렬되도록 히스토리를 업데이트합니다.
+사용자가 어시스턴트를 인터럽트하면 세션은 `audio_interrupted`를 방출하고 히스토리를 업데이트하여, 서버 측 대화가 사용자가 실제로 들은 내용과 일치하도록 유지합니다
 
-저지연 로컬 재생에서는 기본 재생 추적기만으로 충분한 경우가 많습니다. 원격 또는 지연 재생 시나리오, 특히 전화 통신에서는 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]를 사용하세요. 이렇게 하면 모든 생성 오디오가 이미 재생되었다고 가정하는 대신 실제 재생 진행 상황을 기준으로 인터럽션 절단이 수행됩니다.
+지연이 낮은 로컬 재생에서는 기본 재생 추적기로 충분한 경우가 많습니다. 원격 또는 지연 재생 시나리오, 특히 전화 통신에서는 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]를 사용해 인터럽션 절단이 생성된 오디오를 모두 이미 들었다고 가정하지 않고 실제 재생 진행률에 기반하도록 하세요
 
-[`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py)의 Twilio 예제가 이 패턴을 보여줍니다.
+[`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py)의 Twilio 예제가 이 패턴을 보여줍니다
 
-## 도구, 승인, 핸드오프 및 가드레일
+## 도구, 승인, 핸드오프, 가드레일
 
 ### 함수 도구
 
@@ -700,7 +700,7 @@ agent = RealtimeAgent(
 
 ### 도구 승인
 
-함수 도구는 실행 전에 사람의 승인을 요구할 수 있습니다. 이 경우 세션은 `tool_approval_required`를 내보내고, `approve_tool_call()` 또는 `reject_tool_call()`을 호출할 때까지 도구 실행을 일시 중지합니다.
+함수 도구는 실행 전에 사람의 승인을 요구할 수 있습니다. 이 경우 세션은 `tool_approval_required`를 방출하고 `approve_tool_call()` 또는 `reject_tool_call()`을 호출할 때까지 도구 실행을 일시 중지합니다
 
 ```python
 async for event in session:
@@ -708,11 +708,11 @@ async for event in session:
         await session.approve_tool_call(event.call_id)
 ```
 
-구체적인 서버 측 승인 루프는 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)를 참고하세요. 휴먼인더루프 (HITL) 문서도 [Human in the loop](../human_in_the_loop.md)에서 이 흐름을 다시 안내합니다.
+구체적인 서버 측 승인 루프는 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)를 참고하세요. 휴먼인더루프 (HITL) 문서도 [Human in the loop](../human_in_the_loop.md)에서 이 흐름을 다시 안내합니다
 
 ### 핸드오프
 
-실시간 핸드오프를 사용하면 한 에이전트가 라이브 대화를 다른 전문 에이전트로 넘길 수 있습니다:
+실시간 핸드오프를 사용하면 한 에이전트가 라이브 대화를 다른 전문 에이전트로 전환할 수 있습니다:
 
 ```python
 from agents.realtime import RealtimeAgent, realtime_handoff
@@ -729,11 +729,11 @@ main_agent = RealtimeAgent(
 )
 ```
 
-기본 `RealtimeAgent` 핸드오프는 자동 래핑되며, `realtime_handoff(...)`를 사용하면 이름, 설명, 검증, 콜백, 가용성을 사용자 지정할 수 있습니다. 실시간 핸드오프는 일반 핸드오프의 `input_filter`를 지원하지 **않습니다**.
+기본 `RealtimeAgent` 핸드오프는 자동으로 래핑되며, `realtime_handoff(...)`를 사용하면 이름, 설명, 검증, 콜백, 가용성을 사용자 지정할 수 있습니다. 실시간 핸드오프는 일반 핸드오프의 `input_filter`를 지원하지 **않습니다**
 
 ### 가드레일
 
-실시간 에이전트에서는 출력 가드레일만 지원됩니다. 이 가드레일은 매 부분 토큰마다가 아니라 디바운스된 전사 누적 기준으로 실행되며, 예외를 발생시키는 대신 `guardrail_tripped`를 내보냅니다.
+실시간 에이전트에서는 출력 가드레일만 지원됩니다. 이는 부분 토큰마다가 아니라 디바운스된 전사 누적값에 대해 실행되며, 예외를 발생시키는 대신 `guardrail_tripped`를 방출합니다
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -755,9 +755,9 @@ agent = RealtimeAgent(
 
 ## SIP 및 전화 통신
 
-Python SDK 는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]을 통한 일급 SIP 연결 플로우를 포함합니다.
+Python SDK에는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]을 통한 일급 SIP 연결 흐름이 포함되어 있습니다
 
-Realtime Calls API 를 통해 통화가 들어오고, 결과 `call_id`에 에이전트 세션을 연결하려는 경우 이를 사용하세요:
+Realtime Calls API를 통해 통화가 도착했고, 결과 `call_id`에 에이전트 세션을 연결하려면 이를 사용하세요:
 
 ```python
 from agents.realtime import RealtimeRunner
@@ -774,18 +774,18 @@ async with await runner.run(
         ...
 ```
 
-먼저 통화를 수락해야 하고, 수락 페이로드를 에이전트 파생 세션 구성과 일치시키려면 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`를 사용하세요. 전체 플로우는 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)에 나와 있습니다.
+먼저 통화를 수락해야 하고 수락 payload를 에이전트 기반 세션 구성과 일치시키고 싶다면 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`를 사용하세요. 전체 흐름은 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)에 나와 있습니다
 
 ## 저수준 접근 및 사용자 지정 엔드포인트
 
-`session.model`을 통해 기본 전송 객체에 접근할 수 있습니다.
+`session.model`을 통해 기본 전송 객체에 접근할 수 있습니다
 
-다음이 필요한 경우 이 방법을 사용하세요:
+다음이 필요할 때 사용하세요:
 
 -   `session.model.add_listener(...)`를 통한 사용자 지정 리스너
--   `response.create` 또는 `session.update` 같은 원시 클라이언트 이벤트
+-   `response.create` 또는 `session.update` 같은 원문 클라이언트 이벤트
 -   `model_config`를 통한 사용자 지정 `url`, `headers`, `api_key` 처리
--   기존 실시간 통화에 `call_id` 연결
+-   기존 실시간 통화에 대한 `call_id` 연결
 
 `RealtimeModelConfig`는 다음을 지원합니다:
 
@@ -796,9 +796,9 @@ async with await runner.run(
 -   `playback_tracker`
 -   `call_id`
 
-이 리포지토리에 포함된 `call_id` 예제는 SIP 입니다. 더 넓은 Realtime API 에서도 일부 서버 측 제어 플로우에 `call_id`를 사용하지만, 여기에는 Python 예제로 패키징되어 있지 않습니다.
+이 저장소에서 제공되는 `call_id` 예제는 SIP입니다. 더 넓은 Realtime API에서도 일부 서버 측 제어 흐름에 `call_id`를 사용하지만, 여기서는 Python 예제로 제공되지 않습니다
 
-Azure OpenAI 에 연결할 때는 GA Realtime 엔드포인트 URL 과 명시적 헤더를 전달하세요. 예:
+Azure OpenAI에 연결할 때는 GA Realtime 엔드포인트 URL과 명시적 헤더를 전달하세요. 예를 들면 다음과 같습니다:
 
 ```python
 session = await runner.run(
@@ -820,14 +820,14 @@ session = await runner.run(
 )
 ```
 
-`headers`를 전달하면 SDK 는 `Authorization`을 자동으로 추가하지 않습니다. 실시간 에이전트에서는 레거시 베타 경로(`/openai/realtime?api-version=...`)를 피하세요.
+`headers`를 전달하면 SDK가 `Authorization`을 자동으로 추가하지 않습니다. 실시간 에이전트에서는 레거시 베타 경로(`/openai/realtime?api-version=...`)를 피하세요
 
 ## 추가 읽을거리
 
--   [Realtime transport](transport.md)
--   [Quickstart](quickstart.md)
--   [OpenAI Realtime conversations](https://developers.openai.com/api/docs/guides/realtime-conversations/)
--   [OpenAI Realtime server-side controls](https://developers.openai.com/api/docs/guides/realtime-server-controls/)
+-   [실시간 전송](transport.md)
+-   [빠른 시작](quickstart.md)
+-   [OpenAI Realtime 대화](https://developers.openai.com/api/docs/guides/realtime-conversations/)
+-   [OpenAI Realtime 서버 측 제어](https://developers.openai.com/api/docs/guides/realtime-server-controls/)
 -   [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)
 
 ================
@@ -843,17 +843,17 @@ Python SDK 의 실시간 에이전트는 WebSocket 전송을 통해 OpenAI Realt
 
 !!! warning "베타 기능"
 
-    실시간 에이전트는 베타입니다. 구현이 개선되는 동안 일부 호환성이 깨지는 변경이 있을 수 있습니다
+    실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
 
 !!! note "Python SDK 범위"
 
-    Python SDK 는 브라우저 WebRTC 전송을 **제공하지 않습니다**. 이 페이지는 서버 측 WebSocket 을 통한 Python 관리 실시간 세션만 다룹니다. 이 SDK 는 서버 측 오케스트레이션, 도구, 승인, 전화 통합에 사용하세요. [실시간 전송](transport.md)도 참고하세요
+    Python SDK 는 브라우저 WebRTC 전송을 제공하지 **않습니다**. 이 페이지는 서버 측 WebSocket 을 통한 Python 관리 실시간 세션만 다룹니다. 이 SDK 는 서버 측 오케스트레이션, 도구, 승인, 전화 연동에 사용하세요. [실시간 전송](transport.md)도 참고하세요.
 
 ## 사전 요구 사항
 
 -   Python 3.10 이상
 -   OpenAI API 키
--   OpenAI Agents SDK 기본 사용 경험
+-   OpenAI Agents SDK 에 대한 기본적인 이해
 
 ## 설치
 
@@ -882,16 +882,16 @@ agent = RealtimeAgent(
 )
 ```
 
-### 3. 러너 구성
+### 3. runner 구성
 
-새 코드에서는 중첩된 `audio.input` / `audio.output` 세션 설정 형식을 권장합니다
+새 코드에서는 중첩된 `audio.input` / `audio.output` 세션 설정 형태를 권장합니다. 새 실시간 에이전트는 `gpt-realtime-1.5`로 시작하세요.
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -913,7 +913,7 @@ runner = RealtimeRunner(
 
 ### 4. 세션 시작 및 입력 전송
 
-`runner.run()` 은 `RealtimeSession` 을 반환합니다. 세션 컨텍스트에 진입하면 연결이 열립니다
+`runner.run()`은 `RealtimeSession`을 반환합니다. 세션 컨텍스트에 들어가면 연결이 열립니다.
 
 ```python
 async def main() -> None:
@@ -939,12 +939,12 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-`session.send_message()` 는 일반 문자열 또는 구조화된 실시간 메시지를 받을 수 있습니다. 원문 오디오 청크에는 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]를 사용하세요
+`session.send_message()`는 일반 문자열 또는 구조화된 실시간 메시지를 받습니다. 원문 오디오 청크에는 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]를 사용하세요.
 
-## 이 빠른 시작에 포함되지 않는 내용
+## 이 빠른 시작에 포함되지 않은 내용
 
--   마이크 캡처 및 스피커 재생 코드. [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)의 실시간 예제를 참고하세요
--   SIP / 전화 연결 플로우. [실시간 전송](transport.md) 및 [SIP 섹션](guide.md#sip-and-telephony)을 참고하세요
+-   마이크 캡처 및 스피커 재생 코드. [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)의 실시간 코드 예제를 참고하세요.
+-   SIP / 전화 연동 attach 흐름. [실시간 전송](transport.md) 및 [SIP 섹션](guide.md#sip-and-telephony)을 참고하세요.
 
 ## 주요 설정
 
@@ -959,11 +959,11 @@ if __name__ == "__main__":
 -   `tool_choice`, `prompt`, `tracing`
 -   `async_tool_calls`, `guardrails_settings.debounce_text_length`, `tool_error_formatter`
 
-`input_audio_format`, `output_audio_format`, `input_audio_transcription`, `turn_detection` 같은 이전 평면 별칭도 여전히 동작하지만, 새 코드에서는 중첩된 `audio` 설정을 권장합니다
+`input_audio_format`, `output_audio_format`, `input_audio_transcription`, `turn_detection` 같은 기존의 평면 별칭도 여전히 동작하지만, 새 코드에서는 중첩 `audio` 설정이 권장됩니다.
 
-수동 턴 제어에는 [실시간 에이전트 가이드](guide.md#manual-response-control)에 설명된 원문 `session.update` / `input_audio_buffer.commit` / `response.create` 플로우를 사용하세요
+수동 턴 제어의 경우 [실시간 에이전트 가이드](guide.md#manual-response-control)에 설명된 대로 원문 `session.update` / `input_audio_buffer.commit` / `response.create` 흐름을 사용하세요.
 
-전체 스키마는 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요
+전체 스키마는 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요.
 
 ## 연결 옵션
 
@@ -979,22 +979,22 @@ export OPENAI_API_KEY="your-api-key-here"
 session = await runner.run(model_config={"api_key": "your-api-key"})
 ```
 
-`model_config` 는 다음도 지원합니다:
+`model_config`는 다음도 지원합니다:
 
 -   `url`: 사용자 지정 WebSocket 엔드포인트
 -   `headers`: 사용자 지정 요청 헤더
--   `call_id`: 기존 실시간 호출에 연결. 이 리포지토리에서 문서화된 연결 플로우는 SIP 입니다
--   `playback_tracker`: 사용자가 실제로 들은 오디오 양을 보고
+-   `call_id`: 기존 실시간 통화에 attach. 이 저장소에서 문서화된 attach 흐름은 SIP 입니다.
+-   `playback_tracker`: 사용자가 실제로 들은 오디오 양 보고
 
-`headers` 를 명시적으로 전달하면 SDK 는 `Authorization` 헤더를 **자동으로 주입하지 않습니다**
+`headers`를 명시적으로 전달하면 SDK 는 `Authorization` 헤더를 자동으로 주입하지 **않습니다**.
 
-Azure OpenAI 에 연결할 때는 `model_config["url"]` 에 GA Realtime 엔드포인트 URL 과 명시적 헤더를 전달하세요. 실시간 에이전트에서는 레거시 베타 경로(`/openai/realtime?api-version=...`)를 피하세요. 자세한 내용은 [실시간 에이전트 가이드](guide.md#low-level-access-and-custom-endpoints)를 참고하세요
+Azure OpenAI 에 연결할 때는 `model_config["url"]`에 GA Realtime 엔드포인트 URL 을 전달하고 명시적 헤더를 사용하세요. 실시간 에이전트에서는 레거시 베타 경로(`/openai/realtime?api-version=...`)를 피하세요. 자세한 내용은 [실시간 에이전트 가이드](guide.md#low-level-access-and-custom-endpoints)를 참고하세요.
 
 ## 다음 단계
 
--   서버 측 WebSocket 과 SIP 중 선택하려면 [실시간 전송](transport.md)을 읽어보세요
--   라이프사이클, 구조화된 입력, 승인, 핸드오프, 가드레일, 저수준 제어는 [실시간 에이전트 가이드](guide.md)를 읽어보세요
--   [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)의 예제를 살펴보세요
+-   서버 측 WebSocket 과 SIP 중에서 선택하려면 [실시간 전송](transport.md)을 읽어보세요.
+-   수명 주기, 구조화된 입력, 승인, 핸드오프, 가드레일, 저수준 제어는 [실시간 에이전트 가이드](guide.md)를 읽어보세요.
+-   [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)의 예제를 살펴보세요.
 
 ================
 File: docs/ko/realtime/transport.md
@@ -4091,33 +4091,33 @@ search:
 ---
 # OpenAI Agents SDK
 
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)는 매우 적은 추상화로 구성된 가볍고 사용하기 쉬운 패키지에서 에이전트형 AI 앱을 구축할 수 있게 해줍니다. 이는 이전의 에이전트 실험인 [Swarm](https://github.com/openai/swarm/tree/main)을 프로덕션 준비 수준으로 업그레이드한 것입니다. Agents SDK는 매우 작은 기본 구성요소 집합을 제공합니다
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)는 매우 적은 추상화로, 가볍고 사용하기 쉬운 패키지에서 agentic AI 앱을 구축할 수 있게 해줍니다. 이는 에이전트에 대한 이전 실험인 [Swarm](https://github.com/openai/swarm/tree/main)의 프로덕션 준비 버전 업그레이드입니다. Agents SDK는 매우 작은 기본 구성 요소 세트를 제공합니다
 
 -   **에이전트**: instructions와 tools를 갖춘 LLM
--   **Agents as tools / 핸드오프**: 특정 작업을 위해 에이전트가 다른 에이전트에게 위임할 수 있게 하는 기능
--   **가드레일**: 에이전트 입력 및 출력 검증을 가능하게 하는 기능
+-   **Agents as tools / 핸드오프**: 에이전트가 특정 작업을 위해 다른 에이전트에 위임할 수 있도록 함
+-   **가드레일**: 에이전트 입력과 출력의 유효성 검사를 가능하게 함
 
-파이썬과 결합하면, 이러한 기본 구성요소는 도구와 에이전트 간의 복잡한 관계를 표현할 만큼 강력하며, 가파른 학습 곡선 없이 실제 애플리케이션을 구축할 수 있게 해줍니다. 또한 SDK에는 에이전트형 흐름을 시각화하고 디버그할 수 있으며, 평가하고 애플리케이션에 맞게 모델을 파인튜닝할 수 있도록 하는 내장 **트레이싱**이 포함되어 있습니다.
+Python과 결합하면, 이러한 기본 구성 요소는 도구와 에이전트 사이의 복잡한 관계를 표현할 만큼 강력하며, 가파른 학습 곡선 없이 실제 애플리케이션을 구축할 수 있게 해줍니다. 또한 SDK에는 agentic 흐름을 시각화하고 디버깅할 수 있게 해주는 내장 **트레이싱**이 포함되어 있으며, 이를 평가하고 애플리케이션에 맞게 모델을 파인튜닝하는 것까지 가능합니다.
 
 ## Agents SDK 사용 이유
 
 SDK에는 두 가지 핵심 설계 원칙이 있습니다
 
-1. 사용할 가치가 있을 만큼 충분한 기능을 제공하되, 빠르게 학습할 수 있을 만큼 기본 구성요소는 적게 유지합니다.
-2. 기본 설정만으로도 훌륭하게 동작하지만, 어떤 일이 일어나는지 정확히 원하는 대로 사용자 지정할 수 있습니다.
+1. 사용할 가치가 있을 만큼 충분한 기능을 제공하되, 빠르게 학습할 수 있을 만큼 기본 구성 요소는 적게 유지
+2. 기본 상태로도 훌륭하게 동작하지만, 정확히 어떤 일이 일어날지 원하는 대로 사용자 지정 가능
 
 다음은 SDK의 주요 기능입니다
 
 -   **에이전트 루프**: 도구 호출을 처리하고, 결과를 LLM으로 다시 보내며, 작업이 완료될 때까지 계속하는 내장 에이전트 루프
 -   **파이썬 우선**: 새로운 추상화를 배울 필요 없이, 내장 언어 기능으로 에이전트를 오케스트레이션하고 체이닝
--   **Agents as tools / 핸드오프**: 여러 에이전트 간 작업을 조정하고 위임하는 강력한 메커니즘
--   **가드레일**: 에이전트 실행과 병렬로 입력 검증 및 안전성 검사를 수행하고, 검사를 통과하지 못하면 빠르게 실패 처리
--   **함수 도구**: 자동 스키마 생성 및 Pydantic 기반 검증으로 모든 파이썬 함수를 도구로 변환
+-   **Agents as tools / 핸드오프**: 여러 에이전트 간 작업을 조율하고 위임하는 강력한 메커니즘
+-   **가드레일**: 에이전트 실행과 병렬로 입력 유효성 검사 및 안전성 점검을 수행하고, 점검을 통과하지 못하면 빠르게 실패 처리
+-   **함수 도구**: 자동 스키마 생성과 Pydantic 기반 유효성 검사를 통해 모든 Python 함수를 도구로 변환
 -   **MCP 서버 도구 호출**: 함수 도구와 동일한 방식으로 동작하는 내장 MCP 서버 도구 통합
--   **세션**: 에이전트 루프 내 작업 컨텍스트 유지를 위한 지속형 메모리 계층
--   **휴먼인더루프 (HITL)**: 에이전트 실행 전반에 사람을 참여시키는 내장 메커니즘
--   **트레이싱**: 워크플로 시각화, 디버깅, 모니터링을 위한 내장 트레이싱과 OpenAI 평가, 파인튜닝, 증류 도구 모음 지원
--   **실시간 에이전트**: 자동 인터럽션(중단 처리) 감지, 컨텍스트 관리, 가드레일 등의 기능으로 강력한 음성 에이전트 구축
+-   **세션**: 에이전트 루프 내 작업 컨텍스트를 유지하기 위한 지속 메모리 계층
+-   **휴먼인더루프 (HITL)**: 에이전트 실행 전반에 사람을 참여시키기 위한 내장 메커니즘
+-   **트레이싱**: 워크플로를 시각화, 디버깅, 모니터링하기 위한 내장 트레이싱과 OpenAI 평가, 파인튜닝, 증류 도구 모음 지원
+-   **실시간 에이전트**: `gpt-realtime-1.5`, 자동 인터럽션(중단 처리) 감지, 컨텍스트 관리, 가드레일 등을 사용해 강력한 음성 에이전트 구축
 
 ## 설치
 
@@ -4125,7 +4125,7 @@ SDK에는 두 가지 핵심 설계 원칙이 있습니다
 pip install openai-agents
 ```
 
-## Hello World 예제
+## Hello world 예제
 
 ```python
 from agents import Agent, Runner
@@ -4148,24 +4148,24 @@ export OPENAI_API_KEY=sk-...
 
 ## 시작 지점
 
--   [Quickstart](quickstart.md)로 첫 텍스트 기반 에이전트를 만들어 보세요
--   그런 다음 [Running agents](running_agents.md#choose-a-memory-strategy)에서 턴 간 상태를 유지할 방법을 결정하세요
--   핸드오프와 매니저 스타일 오케스트레이션 중에서 고민 중이라면 [Agent orchestration](multi_agent.md)을 읽어보세요
+-   [Quickstart](quickstart.md)로 첫 텍스트 기반 에이전트를 구축하세요
+-   그다음 [에이전트 실행](running_agents.md#choose-a-memory-strategy)에서 턴 간 상태를 유지할 방법을 결정하세요
+-   핸드오프와 매니저 스타일 오케스트레이션 중에서 고민 중이라면 [에이전트 오케스트레이션](multi_agent.md)을 읽어보세요
 
 ## 경로 선택
 
-수행하려는 작업은 알지만 이를 설명하는 페이지를 모를 때 이 표를 사용하세요.
+하고 싶은 작업은 알지만 어떤 페이지에서 설명하는지 모를 때 이 표를 사용하세요
 
-| 목표 | 시작 지점 |
+| 목표 | 여기서 시작 |
 | --- | --- |
-| 첫 텍스트 에이전트를 만들고 하나의 전체 실행 보기 | [Quickstart](quickstart.md) |
-| 함수 도구, 호스티드 툴 또는 Agents as tools 추가 | [Tools](tools.md) |
-| 핸드오프와 매니저 스타일 오케스트레이션 중 결정 | [Agent orchestration](multi_agent.md) |
-| 턴 간 메모리 유지 | [Running agents](running_agents.md#choose-a-memory-strategy) 및 [Sessions](sessions/index.md) |
-| OpenAI 모델, websocket 전송 또는 비OpenAI 제공자 사용 | [Models](models/index.md) |
-| 출력, run 항목, 인터럽션(중단 처리), 상태 재개 검토 | [Results](results.md) |
-| 저지연 음성 에이전트 구축 | [Realtime agents quickstart](realtime/quickstart.md) 및 [Realtime transport](realtime/transport.md) |
-| speech-to-text / 에이전트 / text-to-speech 파이프라인 구축 | [Voice pipeline quickstart](voice/quickstart.md) |
+| 첫 텍스트 에이전트를 만들고 완전한 한 번의 실행 보기 | [Quickstart](quickstart.md) |
+| 함수 도구, 호스티드 툴 또는 Agents as tools 추가 | [도구](tools.md) |
+| 핸드오프와 매니저 스타일 오케스트레이션 중 결정 | [에이전트 오케스트레이션](multi_agent.md) |
+| 턴 간 메모리 유지 | [에이전트 실행](running_agents.md#choose-a-memory-strategy) 및 [세션](sessions/index.md) |
+| OpenAI 모델, websocket 전송 또는 OpenAI 이외 제공자 사용 | [모델](models/index.md) |
+| 출력, 실행 항목, 인터럽션(중단 처리), 상태 재개 검토 | [결과](results.md) |
+| `gpt-realtime-1.5`로 저지연 음성 에이전트 구축 | [실시간 에이전트 빠른 시작](realtime/quickstart.md) 및 [실시간 전송](realtime/transport.md) |
+| speech-to-text / 에이전트 / text-to-speech 파이프라인 구축 | [음성 파이프라인 빠른 시작](voice/quickstart.md) |
 
 ================
 File: docs/ko/mcp.md
@@ -6677,31 +6677,31 @@ search:
 ---
 # 트레이싱
 
-Agents SDK에는 내장 트레이싱이 포함되어 있으며, 에이전트 실행 중 발생하는 이벤트(LLM 생성, 도구 호출, 핸드오프, 가드레일, 사용자 정의 이벤트 포함)의 포괄적인 기록을 수집합니다. [Traces dashboard](https://platform.openai.com/traces)를 사용하면 개발 중과 프로덕션에서 워크플로를 디버그, 시각화, 모니터링할 수 있습니다.
+Agents SDK에는 기본 제공 트레이싱이 포함되어 있어 에이전트 실행 중 발생하는 이벤트의 포괄적인 기록을 수집합니다: LLM 생성, 도구 호출, 핸드오프, 가드레일, 그리고 발생하는 사용자 지정 이벤트까지 포함됩니다. [Traces 대시보드](https://platform.openai.com/traces)를 사용하면 개발 중과 프로덕션에서 워크플로를 디버그하고, 시각화하고, 모니터링할 수 있습니다.
 
 !!!note
 
-    트레이싱은 기본적으로 활성화되어 있습니다. 일반적으로 다음 세 가지 방법으로 비활성화할 수 있습니다:
+    트레이싱은 기본적으로 활성화되어 있습니다. 다음 세 가지 일반적인 방법으로 비활성화할 수 있습니다:
 
-    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1`을 설정하여 전역적으로 트레이싱을 비활성화할 수 있습니다
-    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]를 사용해 전역적으로 트레이싱을 비활성화할 수 있습니다
+    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1`을 설정하여 전역으로 트레이싱을 비활성화할 수 있습니다
+    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]로 전역으로 트레이싱을 비활성화할 수 있습니다
     3. 단일 실행에 대해 [`agents.run.RunConfig.tracing_disabled`][]를 `True`로 설정하여 트레이싱을 비활성화할 수 있습니다
 
-***OpenAI API를 사용하면서 Zero Data Retention(ZDR) 정책을 적용하는 조직의 경우, 트레이싱을 사용할 수 없습니다.***
+***OpenAI API를 사용하며 Zero Data Retention (ZDR) 정책 하에서 운영하는 조직에서는 트레이싱을 사용할 수 없습니다.***
 
 ## 트레이스와 스팬
 
--   **Traces**는 하나의 "워크플로"에 대한 단일 종단 간 작업을 나타냅니다. Traces는 Spans로 구성됩니다. Traces에는 다음 속성이 있습니다:
-    -   `workflow_name`: 논리적 워크플로나 앱입니다. 예: "Code generation", "Customer service"
+-   **트레이스**는 "워크플로"의 단일 end-to-end 작업을 나타냅니다. 트레이스는 스팬으로 구성됩니다. 트레이스에는 다음 속성이 있습니다:
+    -   `workflow_name`: 논리적 워크플로 또는 앱입니다. 예: "Code generation" 또는 "Customer service"
     -   `trace_id`: 트레이스의 고유 ID입니다. 전달하지 않으면 자동 생성됩니다. 형식은 `trace_<32_alphanumeric>`이어야 합니다
-    -   `group_id`: 선택적 그룹 ID로, 동일한 대화의 여러 트레이스를 연결합니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다
+    -   `group_id`: 선택적 그룹 ID로, 같은 대화의 여러 트레이스를 연결하는 데 사용합니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다
     -   `disabled`: True이면 트레이스가 기록되지 않습니다
-    -   `metadata`: 트레이스용 선택적 메타데이터입니다
--   **Spans**는 시작 시점과 종료 시점이 있는 작업을 나타냅니다. Spans에는 다음이 있습니다:
+    -   `metadata`: 트레이스의 선택적 메타데이터입니다
+-   **스팬**은 시작 시간과 종료 시간을 가진 작업을 나타냅니다. 스팬에는 다음이 있습니다:
     -   `started_at` 및 `ended_at` 타임스탬프
-    -   `trace_id`: 해당 스팬이 속한 트레이스를 나타냅니다
-    -   `parent_id`: 이 스팬의 상위 스팬(있는 경우)을 가리킵니다
-    -   `span_data`: 스팬 관련 정보입니다. 예를 들어 `AgentSpanData`는 Agent 정보를, `GenerationSpanData`는 LLM 생성 정보를 포함합니다
+    -   `trace_id`: 소속된 트레이스를 나타냅니다
+    -   `parent_id`: 이 스팬의 상위 스팬을 가리킵니다(있는 경우)
+    -   `span_data`: 스팬에 대한 정보입니다. 예를 들어 `AgentSpanData`는 Agent 정보를, `GenerationSpanData`는 LLM 생성 정보를 포함합니다
 
 ## 기본 트레이싱
 
@@ -6715,15 +6715,15 @@ Agents SDK에는 내장 트레이싱이 포함되어 있으며, 에이전트 실
 -   핸드오프는 `handoff_span()`으로 감싸집니다
 -   오디오 입력(음성-텍스트)은 `transcription_span()`으로 감싸집니다
 -   오디오 출력(텍스트-음성)은 `speech_span()`으로 감싸집니다
--   관련 오디오 스팬은 `speech_group_span()` 하위로 중첩될 수 있습니다
+-   관련 오디오 스팬은 `speech_group_span()` 하위로 부모 지정될 수 있습니다
 
-기본적으로 트레이스 이름은 "Agent workflow"입니다. `trace`를 사용하면 이 이름을 설정할 수 있고, [`RunConfig`][agents.run.RunConfig]로 이름 및 기타 속성을 구성할 수도 있습니다.
+기본적으로 트레이스 이름은 "Agent workflow"입니다. `trace`를 사용할 때 이 이름을 설정할 수 있으며, [`RunConfig`][agents.run.RunConfig]로 이름 및 기타 속성을 구성할 수도 있습니다.
 
-또한 [사용자 정의 트레이스 프로세서](#custom-tracing-processors)를 설정하여 트레이스를 다른 대상으로 전송할 수 있습니다(대체 또는 보조 대상).
+또한 [사용자 지정 트레이스 프로세서](#custom-tracing-processors)를 설정해 트레이스를 다른 대상으로 전송할 수 있습니다(대체 또는 보조 대상).
 
 ## 상위 수준 트레이스
 
-경우에 따라 여러 `run()` 호출을 단일 트레이스의 일부로 만들고 싶을 수 있습니다. 이때 전체 코드를 `trace()`로 감싸면 됩니다.
+경우에 따라 여러 번의 `run()` 호출을 하나의 트레이스에 포함하고 싶을 수 있습니다. 이 경우 전체 코드를 `trace()`로 감싸면 됩니다.
 
 ```python
 from agents import Agent, Runner, trace
@@ -6738,49 +6738,49 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 두 번의 `Runner.run` 호출이 `with trace()`로 감싸져 있으므로, 각각의 실행은 별도 트레이스 2개를 만드는 대신 전체 트레이스의 일부가 됩니다
+1. 두 번의 `Runner.run` 호출이 `with trace()`로 감싸져 있으므로, 개별 실행은 각각 두 개의 트레이스를 생성하는 대신 전체 트레이스의 일부가 됩니다
 
 ## 트레이스 생성
 
 [`trace()`][agents.tracing.trace] 함수를 사용해 트레이스를 생성할 수 있습니다. 트레이스는 시작과 종료가 필요합니다. 방법은 두 가지입니다:
 
-1. **권장**: `with trace(...) as my_trace`처럼 컨텍스트 매니저로 사용합니다. 이렇게 하면 적절한 시점에 트레이스가 자동으로 시작/종료됩니다
+1. **권장**: 트레이스를 컨텍스트 매니저로 사용합니다. 즉, `with trace(...) as my_trace` 형태입니다. 이렇게 하면 적절한 시점에 트레이스가 자동으로 시작되고 종료됩니다
 2. [`trace.start()`][agents.tracing.Trace.start] 및 [`trace.finish()`][agents.tracing.Trace.finish]를 수동으로 호출할 수도 있습니다
 
-현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)로 추적됩니다. 즉, 동시성 환경에서도 자동으로 동작합니다. 트레이스를 수동 시작/종료하는 경우 현재 트레이스를 갱신하려면 `start()`/`finish()`에 `mark_as_current`와 `reset_current`를 전달해야 합니다.
+현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적됩니다. 이는 동시성 환경에서도 자동으로 작동함을 의미합니다. 트레이스를 수동으로 시작/종료하는 경우 현재 트레이스를 업데이트하려면 `start()`/`finish()`에 `mark_as_current`와 `reset_current`를 전달해야 합니다.
 
 ## 스팬 생성
 
-다양한 [`*_span()`][agents.tracing.create] 메서드를 사용해 스팬을 생성할 수 있습니다. 일반적으로 스팬을 수동 생성할 필요는 없습니다. 사용자 정의 스팬 정보 추적을 위해 [`custom_span()`][agents.tracing.custom_span] 함수가 제공됩니다.
+다양한 [`*_span()`][agents.tracing.create] 메서드를 사용해 스팬을 생성할 수 있습니다. 일반적으로 스팬을 수동으로 생성할 필요는 없습니다. 사용자 지정 스팬 정보를 추적하기 위한 [`custom_span()`][agents.tracing.custom_span] 함수도 제공됩니다.
 
-스팬은 자동으로 현재 트레이스에 포함되며, Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)로 추적되는 가장 가까운 현재 스팬 아래에 중첩됩니다.
+스팬은 자동으로 현재 트레이스의 일부가 되며, Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)로 추적되는 가장 가까운 현재 스팬 아래에 중첩됩니다.
 
-## 민감한 데이터
+## 민감 데이터
 
 일부 스팬은 잠재적으로 민감한 데이터를 캡처할 수 있습니다.
 
-`generation_span()`은 LLM 생성의 입력/출력을 저장하고, `function_span()`은 함수 호출의 입력/출력을 저장합니다. 여기에 민감한 데이터가 포함될 수 있으므로 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터 캡처를 비활성화할 수 있습니다.
+`generation_span()`은 LLM 생성의 입력/출력을 저장하고, `function_span()`은 함수 호출의 입력/출력을 저장합니다. 여기에는 민감한 데이터가 포함될 수 있으므로 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터 캡처를 비활성화할 수 있습니다.
 
-마찬가지로 오디오 스팬에는 기본적으로 입력 및 출력 오디오에 대한 base64 인코딩 PCM 데이터가 포함됩니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성하여 이 오디오 데이터 캡처를 비활성화할 수 있습니다.
+마찬가지로 Audio 스팬은 기본적으로 입력 및 출력 오디오에 대한 base64 인코딩 PCM 데이터를 포함합니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성해 이 오디오 데이터 캡처를 비활성화할 수 있습니다.
 
-기본적으로 `trace_include_sensitive_data`는 `True`입니다. 앱 실행 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`으로 설정해 코드 변경 없이 기본값을 지정할 수 있습니다.
+기본적으로 `trace_include_sensitive_data`는 `True`입니다. 앱 실행 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`으로 export하여 코드 변경 없이 기본값을 설정할 수 있습니다.
 
-## 사용자 정의 트레이싱 프로세서
+## 사용자 지정 트레이싱 프로세서
 
 트레이싱의 상위 수준 아키텍처는 다음과 같습니다:
 
--   초기화 시 트레이스를 생성하는 역할을 하는 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]를 생성합니다
--   `TraceProvider`를 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 구성하고, 이는 트레이스/스팬을 배치로 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]에 전송하며, 해당 Exporter는 스팬과 트레이스를 배치로 OpenAI 백엔드로 내보냅니다
+-   초기화 시 트레이스 생성을 담당하는 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]를 생성합니다
+-   `TraceProvider`를 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 구성하며, 이 프로세서는 트레이스/스팬을 배치로 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]에 전송합니다. `BackendSpanExporter`는 스팬과 트레이스를 배치로 OpenAI 백엔드에 내보냅니다
 
-기본 설정을 사용자화하여 트레이스를 대체 또는 추가 백엔드로 전송하거나 exporter 동작을 수정하려면 두 가지 방법이 있습니다:
+이 기본 설정을 사용자 지정하여 트레이스를 대체 또는 추가 백엔드로 전송하거나 exporter 동작을 수정하려면 두 가지 옵션이 있습니다:
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 준비되는 즉시 트레이스와 스팬을 받는 **추가** 트레이스 프로세서를 더할 수 있습니다. 이를 통해 OpenAI 백엔드 전송과 별도로 자체 처리를 수행할 수 있습니다
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 사용자 정의 트레이스 프로세서로 **대체**할 수 있습니다. 이 경우 해당 작업을 수행하는 `TracingProcessor`를 포함하지 않으면 트레이스는 OpenAI 백엔드로 전송되지 않습니다
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 준비되는 즉시 트레이스와 스팬을 받는 **추가** 트레이스 프로세서를 더할 수 있습니다. 이를 통해 OpenAI 백엔드로 전송하는 것과 별도로 자체 처리를 수행할 수 있습니다
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 사용자 지정 트레이스 프로세서로 **대체**할 수 있습니다. 이 경우 해당 기능을 수행하는 `TracingProcessor`를 포함하지 않으면 트레이스가 OpenAI 백엔드로 전송되지 않습니다
 
 
-## 비 OpenAI 모델에서의 트레이싱
+## OpenAI가 아닌 모델에서의 트레이싱
 
-비 OpenAI 모델에서도 OpenAI API 키를 사용해 트레이싱 비활성화 없이 OpenAI Traces dashboard에서 무료 트레이싱을 활성화할 수 있습니다.
+트레이싱을 비활성화할 필요 없이 OpenAI Traces 대시보드에서 무료 트레이싱을 활성화하기 위해 OpenAI API 키를 OpenAI가 아닌 모델과 함께 사용할 수 있습니다.
 
 ```python
 import os
@@ -6801,7 +6801,7 @@ agent = Agent(
 )
 ```
 
-단일 실행에 대해서만 다른 트레이싱 키가 필요하다면, 전역 exporter를 변경하는 대신 `RunConfig`를 통해 전달하세요.
+단일 실행에만 다른 트레이싱 키가 필요하다면 전역 exporter를 변경하는 대신 `RunConfig`를 통해 전달하세요.
 
 ```python
 from agents import Runner, RunConfig
@@ -6814,7 +6814,7 @@ await Runner.run(
 ```
 
 ## 추가 참고 사항
-- Openai Traces dashboard에서 무료 트레이스를 확인하세요
+- Openai Traces 대시보드에서 무료 트레이스를 확인하세요
 
 
 ## 에코시스템 통합
@@ -6845,6 +6845,7 @@ await Runner.run(
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
 -   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
+-   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 
 ================
 File: docs/ko/usage.md
@@ -7582,14 +7583,14 @@ By default, `RealtimeRunner` uses `OpenAIRealtimeWebSocketModel`, so the default
 -   Voice can be configured, but it cannot change after the session has already produced spoken audio.
 -   Instructions, function tools, handoffs, hooks, and output guardrails all still work.
 
-`RealtimeSessionModelSettings` supports both a newer nested `audio` config and older flat aliases. Prefer the nested shape for new code:
+`RealtimeSessionModelSettings` supports both a newer nested `audio` config and older flat aliases. Prefer the nested shape for new code, and start with `gpt-realtime-1.5` for new realtime agents:
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -7925,14 +7926,14 @@ agent = RealtimeAgent(
 
 ### 3. Configure the runner
 
-Prefer the nested `audio.input` / `audio.output` session settings shape for new code.
+Prefer the nested `audio.input` / `audio.output` session settings shape for new code. For new realtime agents, start with `gpt-realtime-1.5`.
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -11203,61 +11204,61 @@ File: docs/zh/realtime/guide.md
 search:
   exclude: true
 ---
-# Realtime 智能体指南
+# Realtime智能体指南
 
-本指南说明 OpenAI Agents SDK 的实时层如何映射到 OpenAI Realtime API，以及 Python SDK 在其之上增加了哪些额外行为。
+本指南解释 OpenAI Agents SDK 的 realtime 层如何映射到 OpenAI Realtime API，以及 Python SDK 在其之上增加了哪些额外行为。
 
 !!! warning "Beta 功能"
 
-    Realtime 智能体处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
+    Realtime智能体目前处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
 
-!!! note "从这里开始"
+!!! note "起始位置"
 
-    如果你想走默认的 Python 路径，请先阅读[快速开始](quickstart.md)。如果你在决定应用应使用服务端 WebSocket 还是 SIP，请阅读[Realtime 传输](transport.md)。浏览器 WebRTC 传输不属于 Python SDK 的一部分。
+    如果你想使用默认的 Python 路径，请先阅读[快速开始](quickstart.md)。如果你正在决定应用应使用服务端 WebSocket 还是 SIP，请阅读[Realtime 传输](transport.md)。浏览器 WebRTC 传输不属于 Python SDK 的一部分。
 
 ## 概览
 
-Realtime 智能体会保持与 Realtime API 的长连接，使模型能够增量处理文本和音频、流式传输音频输出、调用工具，并在不中断每轮都重新发起新请求的情况下处理打断。
+Realtime智能体会与 Realtime API 保持长连接，以便模型可以增量处理文本和音频、流式输出音频、调用工具，并在不中断每轮都重启新请求的情况下处理打断。
 
-SDK 的主要组件有：
+SDK 的主要组件包括：
 
--   **RealtimeAgent**：一个实时专用智能体的 instructions、tools、输出安全防护措施和任务转移
--   **RealtimeRunner**：会话工厂，将起始智能体连接到实时传输
--   **RealtimeSession**：实时会话，发送输入、接收事件、追踪历史并执行工具
+-   **RealtimeAgent**：一个 Realtime 专家智能体的 instructions、tools、输出安全防护措施和任务转移
+-   **RealtimeRunner**：会话工厂，将起始智能体连接到 Realtime 传输层
+-   **RealtimeSession**：一个实时会话，用于发送输入、接收事件、跟踪历史并执行工具
 -   **RealtimeModel**：传输抽象。默认是 OpenAI 的服务端 WebSocket 实现。
 
 ## 会话生命周期
 
-一个典型的实时会话如下：
+一个典型的 Realtime 会话如下：
 
 1. 创建一个或多个 `RealtimeAgent`。
 2. 使用起始智能体创建 `RealtimeRunner`。
 3. 调用 `await runner.run()` 获取 `RealtimeSession`。
 4. 通过 `async with session:` 或 `await session.enter()` 进入会话。
 5. 使用 `send_message()` 或 `send_audio()` 发送用户输入。
-6. 迭代处理会话事件，直到对话结束。
+6. 迭代会话事件直到对话结束。
 
-与纯文本运行不同，`runner.run()` 不会立即产生最终结果。它会返回一个实时会话对象，该对象会让本地历史、后台工具执行、安全防护状态以及活动智能体配置与传输层保持同步。
+不同于纯文本运行，`runner.run()` 不会立即产出最终结果。它返回一个实时会话对象，在本地历史、后台工具执行、安全防护措施状态和活动智能体配置与传输层之间保持同步。
 
-默认情况下，`RealtimeRunner` 使用 `OpenAIRealtimeWebSocketModel`，因此默认 Python 路径是到 Realtime API 的服务端 WebSocket 连接。如果你传入不同的 `RealtimeModel`，相同的会话生命周期和智能体功能仍然适用，但连接机制可发生变化。
+默认情况下，`RealtimeRunner` 使用 `OpenAIRealtimeWebSocketModel`，因此默认 Python 路径是通过服务端 WebSocket 连接到 Realtime API。如果你传入不同的 `RealtimeModel`，相同的会话生命周期和智能体特性仍然适用，但连接机制可能变化。
 
 ## 智能体与会话配置
 
 `RealtimeAgent` 有意比常规 `Agent` 类型更精简：
 
--   模型选择在会话级配置，而不是每个智能体配置。
+-   模型选择在会话级别配置，而非每个智能体单独配置。
 -   不支持 structured outputs。
--   可以配置语音，但会话一旦已经产生语音输出后就不能再更改。
--   instructions、工具调用、任务转移、hooks 和输出安全防护措施仍然可用。
+-   可以配置语音，但会话一旦已经产出语音音频后就不能再更改。
+-   instructions、工具调用、任务转移、hooks 和输出安全防护措施仍然都可用。
 
-`RealtimeSessionModelSettings` 同时支持较新的嵌套 `audio` 配置和较旧的扁平别名。新代码优先使用嵌套结构：
+`RealtimeSessionModelSettings` 同时支持较新的嵌套 `audio` 配置和较旧的扁平别名。新代码建议优先使用嵌套结构，并为新的 Realtime智能体从 `gpt-realtime-1.5` 开始：
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -11298,7 +11299,7 @@ runner = RealtimeRunner(
 
 ### 文本与结构化用户消息
 
-对纯文本或结构化实时消息，使用 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message]。
+对纯文本或结构化 Realtime 消息，使用 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message]。
 
 ```python
 from agents.realtime import RealtimeUserInputMessage
@@ -11316,11 +11317,11 @@ message: RealtimeUserInputMessage = {
 await session.send_message(message)
 ```
 
-结构化消息是在实时对话中包含图像输入的主要方式。[`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py) 中的示例 Web 演示就是通过这种方式转发 `input_image` 消息的。
+结构化消息是在 Realtime 对话中包含图像输入的主要方式。示例 Web 演示 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py) 就是通过这种方式转发 `input_image` 消息。
 
 ### 音频输入
 
-使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio] 流式发送原始音频字节：
+使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio] 流式传输原始音频字节：
 
 ```python
 await session.send_audio(audio_bytes)
@@ -11336,9 +11337,9 @@ await session.send_audio(audio_bytes, commit=True)
 
 ### 手动响应控制
 
-`session.send_message()` 通过高层路径发送用户输入，并为你启动响应。原始音频缓冲在所有配置下都**不会**自动执行同样的操作。
+`session.send_message()` 通过高层路径发送用户输入，并会为你启动响应。原始音频缓冲在所有配置中**不会**自动执行同样行为。
 
-在 Realtime API 层面，手动回合控制意味着通过原始 `session.update` 清空 `turn_detection`，然后自行发送 `input_audio_buffer.commit` 和 `response.create`。
+在 Realtime API 层面，手动回合控制意味着先通过原始 `session.update` 清空 `turn_detection`，然后自行发送 `input_audio_buffer.commit` 和 `response.create`。
 
 如果你在手动管理回合，可以通过模型传输发送原始客户端事件：
 
@@ -11354,17 +11355,17 @@ await session.model.send_event(
 )
 ```
 
-该模式适用于以下情况：
+该模式适用于：
 
--   `turn_detection` 已禁用，且你希望自行决定何时让模型响应
--   你希望在触发响应前检查或拦截用户输入
--   你需要为带外响应使用自定义提示词
+-   `turn_detection` 已禁用且你希望自行决定模型何时响应
+-   你希望在触发响应前检查或控制用户输入
+-   你需要为带外响应提供自定义提示词
 
-[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py) 中的 SIP 示例使用了原始 `response.create` 来强制发送开场问候。
+SIP 示例 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py) 使用了原始 `response.create` 来强制发送开场问候。
 
 ## 事件、历史与打断
 
-`RealtimeSession` 会发出更高层的 SDK 事件，同时在你需要时仍会转发原始模型事件。
+`RealtimeSession` 会发出更高层的 SDK 事件，同时在你需要时仍转发原始模型事件。
 
 高价值会话事件包括：
 
@@ -11378,21 +11379,21 @@ await session.model.send_event(
 -   `error`
 -   `raw_model_event`
 
-对 UI 状态最有用的事件通常是 `history_added` 和 `history_updated`。它们会以 `RealtimeItem` 对象暴露会话的本地历史，包括用户消息、助手消息和工具调用。
+对 UI 状态最有用的事件通常是 `history_added` 和 `history_updated`。它们以 `RealtimeItem` 对象暴露会话本地历史，包括用户消息、助手消息和工具调用。
 
-### 打断与播放追踪
+### 打断与播放跟踪
 
-当用户打断助手时，会话会发出 `audio_interrupted`，并更新历史，使服务端对话与用户实际听到的内容保持一致。
+当用户打断助手时，会话会发出 `audio_interrupted`，并更新历史，以便服务端对话与用户实际听到的内容保持一致。
 
-在低延迟本地播放中，默认播放追踪器通常已足够。在远程或延迟播放场景（尤其是电话场景）中，请使用 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]，这样打断截断会基于实际播放进度，而不是假设所有生成音频都已被听到。
+在低延迟本地播放中，默认播放跟踪器通常已足够。在远程或延迟播放场景，尤其是电话场景中，请使用 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]，这样打断截断会基于实际播放进度，而不是假设所有已生成音频都已被听到。
 
-[`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py) 的 Twilio 示例展示了这种模式。
+Twilio 示例 [`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py) 展示了这种模式。
 
 ## 工具、审批、任务转移与安全防护措施
 
 ### 工具调用
 
-Realtime 智能体支持在实时对话中使用工具调用：
+Realtime智能体支持在实时对话中使用工具调用：
 
 ```python
 from agents import function_tool
@@ -11413,7 +11414,7 @@ agent = RealtimeAgent(
 
 ### 工具审批
 
-工具调用可在执行前要求人工审批。发生这种情况时，会话会发出 `tool_approval_required`，并暂停工具运行，直到你调用 `approve_tool_call()` 或 `reject_tool_call()`。
+工具调用在执行前可以要求人工审批。发生这种情况时，会话会发出 `tool_approval_required`，并暂停工具运行，直到你调用 `approve_tool_call()` 或 `reject_tool_call()`。
 
 ```python
 async for event in session:
@@ -11421,11 +11422,11 @@ async for event in session:
         await session.approve_tool_call(event.call_id)
 ```
 
-一个具体的服务端审批循环请参见 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)。human-in-the-loop 文档也在[Human in the loop](../human_in_the_loop.md)中回指这一流程。
+关于具体的服务端审批循环，请参见 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)。human-in-the-loop 文档也在[Human in the loop](../human_in_the_loop.md)中回指了此流程。
 
 ### 任务转移
 
-Realtime 任务转移允许一个智能体将实时对话转交给另一个专长智能体：
+Realtime 任务转移允许一个智能体将实时对话转移给另一个专家智能体：
 
 ```python
 from agents.realtime import RealtimeAgent, realtime_handoff
@@ -11442,11 +11443,11 @@ main_agent = RealtimeAgent(
 )
 ```
 
-裸 `RealtimeAgent` 任务转移会自动包装，而 `realtime_handoff(...)` 可让你自定义名称、描述、校验、回调和可用性。Realtime 任务转移**不**支持常规任务转移的 `input_filter`。
+裸 `RealtimeAgent` 任务转移会被自动包装，`realtime_handoff(...)` 则允许你自定义名称、描述、校验、回调和可用性。Realtime 任务转移**不**支持常规任务转移的 `input_filter`。
 
 ### 安全防护措施
 
-Realtime 智能体仅支持输出安全防护措施。它们基于去抖后的转录累积运行，而不是对每个部分 token 运行，并且会发出 `guardrail_tripped` 而不是抛出异常。
+Realtime智能体仅支持输出安全防护措施。它们基于防抖后的转录累计内容运行，而不是对每个部分 token 运行；触发时会发出 `guardrail_tripped`，而不是抛出异常。
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -11466,11 +11467,11 @@ agent = RealtimeAgent(
 )
 ```
 
-## SIP 与电话通信
+## SIP 与电话
 
-Python SDK 通过 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 提供一流的 SIP 附加流程。
+Python SDK 通过 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 提供了一流的 SIP 附加流程。
 
-当来电通过 Realtime Calls API 到达，且你希望将智能体会话附加到生成的 `call_id` 时使用它：
+当来电通过 Realtime Calls API 到达，且你希望将智能体会话附加到对应 `call_id` 时，请使用它：
 
 ```python
 from agents.realtime import RealtimeRunner
@@ -11487,18 +11488,18 @@ async with await runner.run(
         ...
 ```
 
-如果你需要先接听电话，并希望接听载荷与智能体派生的会话配置一致，请使用 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`。完整流程见 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)。
+如果你需要先接听来电，并希望接听载荷与智能体推导出的会话配置一致，可使用 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`。完整流程见 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)。
 
 ## 底层访问与自定义端点
 
 你可以通过 `session.model` 访问底层传输对象。
 
-在以下情况使用：
+在以下场景使用它：
 
 -   通过 `session.model.add_listener(...)` 添加自定义监听器
--   发送原始客户端事件，如 `response.create` 或 `session.update`
--   通过 `model_config` 处理自定义 `url`、`headers` 或 `api_key`
--   通过 `call_id` 附加到现有实时通话
+-   发送原始客户端事件，例如 `response.create` 或 `session.update`
+-   通过 `model_config` 自定义 `url`、`headers` 或 `api_key` 处理
+-   使用 `call_id` 附加到已有 realtime 通话
 
 `RealtimeModelConfig` 支持：
 
@@ -11509,9 +11510,9 @@ async with await runner.run(
 -   `playback_tracker`
 -   `call_id`
 
-本仓库内置的 `call_id` 示例是 SIP。更广泛的 Realtime API 也会在某些服务端控制流程中使用 `call_id`，但这里未将其打包为 Python 示例。
+本仓库内置的 `call_id` 示例是 SIP。更广义的 Realtime API 也会在某些服务端控制流程中使用 `call_id`，但这里未将这些流程打包为 Python 示例。
 
-连接到 Azure OpenAI 时，请传入 GA Realtime 端点 URL 和显式 headers。例如：
+连接 Azure OpenAI 时，请传入 GA Realtime 端点 URL 和显式 headers。例如：
 
 ```python
 session = await runner.run(
@@ -11533,7 +11534,7 @@ session = await runner.run(
 )
 ```
 
-如果你传入 `headers`，SDK 不会自动添加 `Authorization`。在 realtime 智能体中避免使用旧版 beta 路径（`/openai/realtime?api-version=...`）。
+如果你传入 `headers`，SDK 不会自动添加 `Authorization`。在 Realtime智能体中请避免使用旧的 beta 路径（`/openai/realtime?api-version=...`）。
 
 ## 延伸阅读
 
@@ -11554,23 +11555,23 @@ search:
 
 Python SDK 中的实时智能体是服务端、低延迟的智能体，基于 OpenAI Realtime API 并通过 WebSocket 传输构建。
 
-!!! warning "测试版功能"
+!!! warning "Beta 功能"
 
-    实时智能体目前处于测试版。随着我们改进实现，预计会有一些破坏性变更。
+    实时智能体目前处于 beta 阶段。随着我们改进实现，预计会有一些破坏性变更。
 
 !!! note "Python SDK 边界"
 
-    Python SDK **不**提供浏览器 WebRTC 传输。本页仅涵盖由 Python 管理的、基于服务端 WebSocket 的实时会话。可使用此 SDK 进行服务端编排、工具、审批和电话集成。另请参阅[实时传输](transport.md)。
+    Python SDK **不**提供浏览器 WebRTC 传输。本页仅涵盖由 Python 管理、基于服务端 WebSockets 的实时会话。可使用此 SDK 进行服务端编排、工具调用、审批和电话集成。另请参见[Realtime transport](transport.md)。
 
 ## 前提条件
 
 -   Python 3.10 或更高版本
--   OpenAI API key
+-   OpenAI API 密钥
 -   对 OpenAI Agents SDK 的基本了解
 
 ## 安装
 
-如果你还没有安装，请先安装 OpenAI Agents SDK：
+如果你尚未安装，请安装 OpenAI Agents SDK：
 
 ```bash
 pip install openai-agents
@@ -11597,14 +11598,14 @@ agent = RealtimeAgent(
 
 ### 3. 配置运行器
 
-对于新代码，优先使用嵌套的 `audio.input` / `audio.output` 会话设置结构。
+新代码推荐使用嵌套的 `audio.input` / `audio.output` 会话设置结构。对于新的实时智能体，建议从 `gpt-realtime-1.5` 开始。
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime",
+            "model_name": "gpt-realtime-1.5",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -11652,16 +11653,16 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-`session.send_message()` 既可接受普通字符串，也可接受结构化实时消息。对于原始音频分片，请使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]。
+`session.send_message()` 既可接收纯字符串，也可接收结构化的实时消息。对于原始音频块，请使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio]。
 
 ## 本快速入门未包含的内容
 
 -   麦克风采集和扬声器播放代码。请参阅 [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 中的实时示例。
--   SIP / 电话附加流程。请参阅[实时传输](transport.md)和 [SIP 部分](guide.md#sip-and-telephony)。
+-   SIP / 电话接入流程。请参阅 [Realtime transport](transport.md) 和 [SIP 部分](guide.md#sip-and-telephony)。
 
 ## 关键设置
 
-当基础会话可用后，大多数人下一步会用到的设置有：
+当基础会话可用后，大多数人接下来会用到这些设置：
 
 -   `model_name`
 -   `audio.input.format`, `audio.output.format`
@@ -11672,15 +11673,15 @@ if __name__ == "__main__":
 -   `tool_choice`, `prompt`, `tracing`
 -   `async_tool_calls`, `guardrails_settings.debounce_text_length`, `tool_error_formatter`
 
-较旧的扁平别名（例如 `input_audio_format`、`output_audio_format`、`input_audio_transcription` 和 `turn_detection`）仍可使用，但对于新代码更推荐使用嵌套的 `audio` 设置。
+较旧的扁平别名（如 `input_audio_format`、`output_audio_format`、`input_audio_transcription` 和 `turn_detection`）仍可使用，但新代码更推荐使用嵌套 `audio` 设置。
 
-对于手动轮次控制，请使用原始的 `session.update` / `input_audio_buffer.commit` / `response.create` 流程，详见[实时智能体指南](guide.md#manual-response-control)。
+对于手动轮次控制，请使用原始 `session.update` / `input_audio_buffer.commit` / `response.create` 流程，如[Realtime agents guide](guide.md#manual-response-control)所述。
 
-完整 schema 请参阅 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 和 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]。
+完整模式请参阅 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 和 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]。
 
 ## 连接选项
 
-在环境中设置你的 API key：
+在环境中设置 API 密钥：
 
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
@@ -11696,17 +11697,17 @@ session = await runner.run(model_config={"api_key": "your-api-key"})
 
 -   `url`：自定义 WebSocket 端点
 -   `headers`：自定义请求头
--   `call_id`：附加到现有实时通话。在此仓库中，文档说明的附加流程是 SIP。
--   `playback_tracker`：报告用户实际已听到的音频量
+-   `call_id`：附加到现有实时通话。在本仓库中，文档化的附加流程是 SIP。
+-   `playback_tracker`：报告用户实际听到了多少音频
 
 如果你显式传入 `headers`，SDK 将**不会**为你注入 `Authorization` 请求头。
 
-连接 Azure OpenAI 时，请在 `model_config["url"]` 中传入 GA Realtime 端点 URL，并显式传入请求头。对于实时智能体，避免使用旧版 beta 路径（`/openai/realtime?api-version=...`）。详情请参阅[实时智能体指南](guide.md#low-level-access-and-custom-endpoints)。
+连接 Azure OpenAI 时，请在 `model_config["url"]` 中传入 GA Realtime 端点 URL，并显式设置请求头。避免在实时智能体中使用旧版 beta 路径（`/openai/realtime?api-version=...`）。详见[Realtime agents guide](guide.md#low-level-access-and-custom-endpoints)。
 
 ## 后续步骤
 
--   阅读[实时传输](transport.md)，在服务端 WebSocket 和 SIP 之间进行选择。
--   阅读[实时智能体指南](guide.md)，了解生命周期、结构化输入、审批、任务转移、安全防护措施和底层控制。
+-   阅读 [Realtime transport](transport.md)，在服务端 WebSocket 和 SIP 之间进行选择。
+-   阅读 [Realtime agents guide](guide.md)，了解生命周期、结构化输入、审批、任务转移、安全防护措施和底层控制。
 -   浏览 [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime) 中的示例。
 
 ================
@@ -14803,33 +14804,33 @@ search:
 ---
 # OpenAI Agents SDK
 
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) 让你能够以一个轻量、易用且抽象极少的软件包构建智能体式 AI 应用。它是我们此前用于智能体实验项目 [Swarm](https://github.com/openai/swarm/tree/main) 的生产级升级版本。Agents SDK 拥有一组非常小的基本组件：
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)使你能够以轻量、易用且抽象极少的方式构建智能体 AI 应用。它是在我们此前面向智能体的实验项目[Swarm](https://github.com/openai/swarm/tree/main)基础上的生产就绪升级版。Agents SDK 只有一小组基本组件：
 
 -   **智能体**，即配备了指令和工具的 LLM
 -   **Agents as tools / 任务转移**，允许智能体将特定任务委派给其他智能体
--   **安全防护措施**，可对智能体输入和输出进行验证
+-   **安全防护措施**，用于验证智能体的输入和输出
 
-结合 Python，这些基本组件足以表达工具与智能体之间的复杂关系，并让你无需陡峭的学习曲线即可构建真实世界应用。此外，SDK 内置了**追踪**功能，可让你可视化并调试智能体流程，还能对其进行评估，甚至为你的应用微调模型。
+结合 Python，这些基本组件足以表达工具与智能体之间的复杂关系，并让你无需陡峭的学习曲线即可构建真实世界应用。此外，SDK 内置了**追踪**功能，可帮助你可视化并调试智能体流程，同时还能进行评估，甚至为你的应用微调模型。
 
 ## 使用 Agents SDK 的原因
 
 SDK 有两个核心设计原则：
 
-1. 功能足够丰富，值得使用；但基本组件足够少，学习速度快。
-2. 开箱即用效果出色，同时你也可以精确自定义每一步行为。
+1. 功能足够实用，同时基本组件足够少，便于快速上手。
+2. 开箱即用效果出色，同时你也可以精确自定义其行为。
 
 以下是 SDK 的主要特性：
 
--   **智能体循环**：内置智能体循环，可处理工具调用、将结果回传给 LLM，并持续执行直到任务完成。
--   **Python 优先**：使用内置语言特性进行智能体编排与链式调用，而无需学习新的抽象概念。
+-   **智能体循环**：内置智能体循环，处理工具调用、将结果回传给 LLM，并持续执行直到任务完成。
+-   **Python 优先**：使用语言内置能力来编排和串联智能体，而不必学习新的抽象。
 -   **Agents as tools / 任务转移**：用于在多个智能体之间协调与委派工作的强大机制。
--   **安全防护措施**：与智能体执行并行运行输入验证和安全检查，并在检查未通过时快速失败。
+-   **安全防护措施**：在智能体执行的同时并行运行输入验证和安全检查，并在检查未通过时快速失败。
 -   **工具调用**：将任意 Python 函数转换为工具，并自动生成 schema 与基于 Pydantic 的验证。
 -   **MCP 服务工具调用**：内置 MCP 服务工具集成，使用方式与工具调用相同。
--   **会话**：用于在智能体循环中维护工作上下文的持久化记忆层。
--   **人在回路**：内置机制，可在人机协作中跨智能体运行引入人工参与。
--   **追踪**：内置追踪能力，用于工作流可视化、调试与监控，并支持 OpenAI 全套评估、微调与蒸馏工具。
--   **实时智能体**：构建强大的语音智能体，支持自动打断检测、上下文管理、安全防护措施等功能。
+-   **会话**：持久化记忆层，用于在智能体循环中维护工作上下文。
+-   **人类参与循环**：内置机制，支持在人机协作中跨智能体运行引入人工参与。
+-   **追踪**：内置追踪能力，用于工作流可视化、调试与监控，并支持 OpenAI 的评估、微调与蒸馏工具套件。
+-   **Realtime 智能体**：使用 `gpt-realtime-1.5` 构建强大的语音智能体，支持自动打断检测、上下文管理、安全防护措施等。
 
 ## 安装
 
@@ -14858,25 +14859,25 @@ print(result.final_output)
 export OPENAI_API_KEY=sk-...
 ```
 
-## 从这里开始
+## 起步路径
 
--   通过 [Quickstart](quickstart.md) 构建你的第一个基于文本的智能体。
--   然后在 [运行智能体](running_agents.md#choose-a-memory-strategy) 中决定如何在多轮之间保持状态。
--   如果你在任务转移与管理器式编排之间做选择，请阅读 [智能体编排](multi_agent.md)。
+-   通过[快速开始](quickstart.md)构建你的第一个基于文本的智能体。
+-   然后在[运行智能体](running_agents.md#choose-a-memory-strategy)中决定如何在多轮之间传递状态。
+-   如果你正在比较任务转移与管理器式编排，请阅读[智能体编排](multi_agent.md)。
 
 ## 路径选择
 
-当你知道要完成的工作、但不确定该看哪一页说明时，请使用下表。
+当你知道要做什么，但不确定该看哪一页时，请使用下表。
 
 | 目标 | 从这里开始 |
 | --- | --- |
-| 构建第一个文本智能体并查看一次完整运行 | [Quickstart](quickstart.md) |
+| 构建第一个文本智能体并查看一次完整运行 | [快速开始](quickstart.md) |
 | 添加工具调用、托管工具或 Agents as tools | [工具](tools.md) |
 | 在任务转移与管理器式编排之间做选择 | [智能体编排](multi_agent.md) |
 | 在多轮之间保留记忆 | [运行智能体](running_agents.md#choose-a-memory-strategy) 和 [会话](sessions/index.md) |
 | 使用 OpenAI 模型、websocket 传输或非 OpenAI 提供方 | [模型](models/index.md) |
 | 查看输出、运行项、中断与恢复状态 | [结果](results.md) |
-| 构建低延迟语音智能体 | [实时智能体快速开始](realtime/quickstart.md) 和 [实时传输](realtime/transport.md) |
+| 使用 `gpt-realtime-1.5` 构建低延迟语音智能体 | [Realtime 智能体快速开始](realtime/quickstart.md) 和 [Realtime 传输](realtime/transport.md) |
 | 构建语音转文本 / 智能体 / 文本转语音流水线 | [语音流水线快速开始](voice/quickstart.md) |
 
 ================
@@ -17380,53 +17381,53 @@ search:
 ---
 # 追踪
 
-Agents SDK 内置了追踪功能，可收集智能体运行期间事件的完整记录：LLM 生成、工具调用、任务转移、安全防护措施，甚至包括发生的自定义事件。通过使用[追踪仪表盘](https://platform.openai.com/traces)，你可以在开发和生产环境中调试、可视化并监控工作流。
+Agents SDK 内置了追踪功能，可在智能体运行期间收集完整的事件记录：LLM 生成、工具调用、任务转移、安全防护措施，甚至发生的自定义事件。使用[Traces 仪表板](https://platform.openai.com/traces)，你可以在开发和生产中调试、可视化并监控你的工作流。
 
 !!!note
 
-    追踪默认启用。你可以通过以下三种常见方式将其禁用：
+    默认启用追踪。你可以通过三种常见方式禁用它：
 
     1. 你可以通过设置环境变量 `OPENAI_AGENTS_DISABLE_TRACING=1` 全局禁用追踪
     2. 你可以在代码中通过 [`set_tracing_disabled(True)`][agents.set_tracing_disabled] 全局禁用追踪
-    3. 你可以通过将 [`agents.run.RunConfig.tracing_disabled`][] 设为 `True` 来为单次运行禁用追踪
+    3. 你可以通过将 [`agents.run.RunConfig.tracing_disabled`][] 设为 `True` 来禁用单次运行的追踪
 
-***对于在使用 OpenAI API 时采用零数据保留（ZDR）策略的组织，追踪功能不可用。***
+***对于在 OpenAI API 下使用零数据保留（ZDR）策略的组织，追踪不可用。***
 
-## 追踪与跨度
+## Trace 与 Span
 
--   **追踪**表示“工作流”的一次端到端操作。它由多个跨度组成。追踪具有以下属性：
-    -   `workflow_name`：逻辑工作流或应用。例如“代码生成”或“客户服务”。
-    -   `trace_id`：追踪的唯一 ID。如果你未传入则会自动生成。格式必须为 `trace_<32_alphanumeric>`。
-    -   `group_id`：可选分组 ID，用于关联同一会话中的多个追踪。例如，你可以使用聊天线程 ID。
-    -   `disabled`：若为 True，则不会记录该追踪。
-    -   `metadata`：追踪的可选元数据。
--   **跨度**表示具有开始和结束时间的操作。跨度具有：
+-   **Traces** 表示一个“工作流”的单次端到端操作。它们由 Spans 组成。Traces 具有以下属性：
+    -   `workflow_name`：逻辑工作流或应用名称。例如“代码生成”或“客户服务”。
+    -   `trace_id`：Trace 的唯一 ID。如果你不传入会自动生成。格式必须为 `trace_<32_alphanumeric>`。
+    -   `group_id`：可选分组 ID，用于关联同一会话中的多个 Trace。例如，你可以使用聊天线程 ID。
+    -   `disabled`：若为 True，则不会记录该 Trace。
+    -   `metadata`：Trace 的可选元数据。
+-   **Spans** 表示具有开始和结束时间的操作。Span 具有：
     -   `started_at` 和 `ended_at` 时间戳。
-    -   `trace_id`，表示其所属追踪
-    -   `parent_id`，指向该跨度的父跨度（如有）
-    -   `span_data`，即跨度信息。例如，`AgentSpanData` 包含智能体信息，`GenerationSpanData` 包含 LLM 生成信息，等等。
+    -   `trace_id`，表示它们所属的 Trace
+    -   `parent_id`，指向该 Span 的父 Span（如果有）
+    -   `span_data`，即关于 Span 的信息。例如，`AgentSpanData` 包含智能体信息，`GenerationSpanData` 包含 LLM 生成信息，等等。
 
 ## 默认追踪
 
 默认情况下，SDK 会追踪以下内容：
 
--   整个 `Runner.{run, run_sync, run_streamed}()` 会被包装在 `trace()` 中。
--   每次智能体运行时，都会包装在 `agent_span()` 中
--   LLM 生成会包装在 `generation_span()` 中
--   每次函数工具调用都会分别包装在 `function_span()` 中
--   安全防护措施会包装在 `guardrail_span()` 中
--   任务转移会包装在 `handoff_span()` 中
--   音频输入（语音转文本）会包装在 `transcription_span()` 中
--   音频输出（文本转语音）会包装在 `speech_span()` 中
--   相关音频跨度可能会作为 `speech_group_span()` 的子级
+-   整个 `Runner.{run, run_sync, run_streamed}()` 会包裹在 `trace()` 中。
+-   每次智能体运行都会包裹在 `agent_span()` 中
+-   LLM 生成会包裹在 `generation_span()` 中
+-   每次函数工具调用都会包裹在 `function_span()` 中
+-   安全防护措施会包裹在 `guardrail_span()` 中
+-   任务转移会包裹在 `handoff_span()` 中
+-   音频输入（语音转文本）会包裹在 `transcription_span()` 中
+-   音频输出（文本转语音）会包裹在 `speech_span()` 中
+-   相关音频 Span 可能会作为子级归入 `speech_group_span()` 下
 
-默认情况下，追踪名称为“Agent workflow”。如果你使用 `trace`，可以设置此名称；你也可以通过 [`RunConfig`][agents.run.RunConfig] 配置名称和其他属性。
+默认情况下，Trace 名称为“Agent workflow”。如果你使用 `trace`，可以设置此名称；也可以通过 [`RunConfig`][agents.run.RunConfig] 配置名称和其他属性。
 
-此外，你还可以设置[自定义追踪处理器](#custom-tracing-processors)，将追踪推送到其他目标（作为替代目标或次要目标）。
+此外，你还可以设置[自定义追踪进程](#custom-tracing-processors)，将 Trace 推送到其他目标（作为替代或辅助目标）。
 
-## 更高层级追踪
+## 更高层级的 Trace
 
-有时，你可能希望多次调用 `run()` 都属于同一条追踪。你可以通过将整段代码包裹在 `trace()` 中来实现。
+有时，你可能希望多次对 `run()` 的调用都属于同一个 Trace。你可以通过将整段代码包裹在 `trace()` 中来实现。
 
 ```python
 from agents import Agent, Runner, trace
@@ -17441,49 +17442,49 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 由于对 `Runner.run` 的两次调用都被包裹在 `with trace()` 中，因此这些单独运行会成为整体追踪的一部分，而不是创建两条追踪。
+1. 因为两次对 `Runner.run` 的调用都包裹在 `with trace()` 中，所以这些单独运行会属于同一个总体 Trace，而不是创建两个 Trace。
 
-## 创建追踪
+## 创建 Trace
 
-你可以使用 [`trace()`][agents.tracing.trace] 函数创建追踪。追踪需要被启动和结束。你有两种方式：
+你可以使用 [`trace()`][agents.tracing.trace] 函数来创建 Trace。Trace 需要开始和结束。你有两种方式：
 
-1. **推荐**：将 trace 用作上下文管理器，即 `with trace(...) as my_trace`。这样会在正确时间自动启动并结束追踪。
+1. **推荐**：将 trace 用作上下文管理器，即 `with trace(...) as my_trace`。这会在正确的时间自动开始和结束 Trace。
 2. 你也可以手动调用 [`trace.start()`][agents.tracing.Trace.start] 和 [`trace.finish()`][agents.tracing.Trace.finish]。
 
-当前追踪通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 跟踪。这意味着它可自动适配并发。如果你手动启动/结束追踪，则需要向 `start()`/`finish()` 传递 `mark_as_current` 和 `reset_current` 来更新当前追踪。
+当前 Trace 通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 跟踪。这意味着它可自动适配并发。如果你手动开始/结束 Trace，需要向 `start()`/`finish()` 传递 `mark_as_current` 和 `reset_current` 来更新当前 Trace。
 
-## 创建跨度
+## 创建 Span
 
-你可以使用各种 [`*_span()`][agents.tracing.create] 方法创建跨度。通常你无需手动创建跨度。可使用 [`custom_span()`][agents.tracing.custom_span] 函数来追踪自定义跨度信息。
+你可以使用各种 [`*_span()`][agents.tracing.create] 方法来创建 Span。通常你不需要手动创建 Span。可使用 [`custom_span()`][agents.tracing.custom_span] 函数来跟踪自定义 Span 信息。
 
-跨度会自动归属于当前追踪，并嵌套在最近的当前跨度下；这通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。
+Span 会自动归属于当前 Trace，并嵌套在最近的当前 Span 下；这同样通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 跟踪。
 
 ## 敏感数据
 
-某些跨度可能会捕获潜在敏感数据。
+某些 Span 可能会捕获潜在的敏感数据。
 
-`generation_span()` 会存储 LLM 生成的输入/输出，`function_span()` 会存储函数调用的输入/输出。这些内容可能包含敏感数据，因此你可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁用这类数据的捕获。
+`generation_span()` 会存储 LLM 生成的输入/输出，`function_span()` 会存储函数调用的输入/输出。这些可能包含敏感数据，因此你可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁用此类数据的捕获。
 
-类似地，音频跨度默认包含输入和输出音频的 base64 编码 PCM 数据。你可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 禁用该音频数据的捕获。
+类似地，默认情况下，音频 Span 会包含输入和输出音频的 base64 编码 PCM 数据。你可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 来禁用此音频数据的捕获。
 
-默认情况下，`trace_include_sensitive_data` 为 `True`。你也可以在不改代码的情况下，在运行应用前导出 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量并设为 `true/1` 或 `false/0` 来设置默认值。
+默认情况下，`trace_include_sensitive_data` 为 `True`。你也可以在不改代码的情况下，通过在运行应用前导出 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量为 `true/1` 或 `false/0` 来设置默认值。
 
-## 自定义追踪处理器
+## 自定义追踪进程
 
-追踪的高层架构如下：
+追踪的高层架构为：
 
--   在初始化时，我们会创建一个全局 [`TraceProvider`][agents.tracing.setup.TraceProvider]，负责创建追踪。
--   我们会为 `TraceProvider` 配置一个 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]，它会将追踪/跨度按批次发送到 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者会将跨度和追踪按批次导出到 OpenAI 后端。
+-   初始化时，我们会创建一个全局 [`TraceProvider`][agents.tracing.setup.TraceProvider]，负责创建 Trace。
+-   我们使用 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 配置 `TraceProvider`，它会将 Trace/Span 批量发送到 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者会将 Span 和 Trace 批量导出到 OpenAI 后端。
 
-要自定义这套默认配置，以将追踪发送到替代或额外后端，或修改导出器行为，你有两个选项：
+若要自定义此默认设置，将 Trace 发送到替代或附加后端，或修改导出器行为，你有两种选择：
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 允许你添加一个**额外**的追踪处理器，它会在追踪和跨度就绪时接收数据。这样你可以在将追踪发送到 OpenAI 后端之外执行自己的处理。
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 允许你用自己的追踪处理器**替换**默认处理器。这意味着除非你包含一个执行该操作的 `TracingProcessor`，否则追踪不会发送到 OpenAI 后端。
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 允许你添加一个**额外的**追踪进程，在 Trace 和 Span 就绪时接收它们。这使你可以在发送到 OpenAI 后端之外执行自己的处理。
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 允许你用自己的追踪进程**替换**默认进程。这意味着除非你包含一个会执行该发送的 `TracingProcessor`，否则 Trace 不会发送到 OpenAI 后端。
 
 
 ## 使用非 OpenAI 模型进行追踪
 
-你可以将 OpenAI API 密钥与非 OpenAI 模型一起使用，以在 OpenAI 追踪仪表盘中启用免费追踪，而无需禁用追踪。
+你可以在非 OpenAI 模型中使用 OpenAI API key，在无需禁用追踪的情况下，于 OpenAI Traces 仪表板启用免费追踪。
 
 ```python
 import os
@@ -17504,7 +17505,7 @@ agent = Agent(
 )
 ```
 
-如果你只需要为单次运行使用不同的追踪密钥，请通过 `RunConfig` 传入，而不是更改全局导出器。
+如果你只需为单次运行使用不同的追踪 key，请通过 `RunConfig` 传入，而不是更改全局导出器。
 
 ```python
 from agents import Runner, RunConfig
@@ -17517,19 +17518,19 @@ await Runner.run(
 ```
 
 ## 附加说明
-- 在 Openai 追踪仪表盘查看免费追踪。
+- 在 Openai Traces 仪表板查看免费 Trace。
 
 
 ## 生态系统集成
 
-以下社区和供应商集成支持 OpenAI Agents SDK 的追踪能力。
+以下社区和供应商集成支持 OpenAI Agents SDK 追踪接口。
 
-### 外部追踪处理器列表
+### 外部追踪进程列表
 
 -   [Weights & Biases](https://weave-docs.wandb.ai/guides/integrations/openai_agents)
 -   [Arize-Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)
 -   [Future AGI](https://docs.futureagi.com/future-agi/products/observability/auto-instrumentation/openai_agents)
--   [MLflow（自托管/开源）](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
+-   [MLflow（self-hosted/OSS）](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
 -   [MLflow（Databricks 托管）](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
 -   [Braintrust](https://braintrust.dev/docs/guides/traces/integrations#openai-agents-sdk)
 -   [Pydantic Logfire](https://logfire.pydantic.dev/docs/integrations/llms/openai/#openai-agents)
@@ -17548,6 +17549,7 @@ await Runner.run(
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
 -   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
+-   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 
 ================
 File: docs/zh/usage.md
@@ -19217,7 +19219,7 @@ Here are the main features of the SDK:
 -   **Sessions**: A persistent memory layer for maintaining working context within an agent loop.
 -   **Human in the loop**: Built-in mechanisms for involving humans across agent runs.
 -   **Tracing**: Built-in tracing for visualizing, debugging, and monitoring workflows, with support for the OpenAI suite of evaluation, fine-tuning, and distillation tools.
--   **Realtime Agents**: Build powerful voice agents with features such as automatic interruption detection, context management, guardrails, and more.
+-   **Realtime Agents**: Build powerful voice agents with `gpt-realtime-1.5`, automatic interruption detection, context management, guardrails, and more.
 
 ## Installation
 
@@ -19264,7 +19266,7 @@ Use this table when you know the job you want to do, but not which page explains
 | Keep memory across turns | [Running agents](running_agents.md#choose-a-memory-strategy) and [Sessions](sessions/index.md) |
 | Use OpenAI models, websocket transport, or non-OpenAI providers | [Models](models/index.md) |
 | Review outputs, run items, interruptions, and resume state | [Results](results.md) |
-| Build a low-latency voice agent | [Realtime agents quickstart](realtime/quickstart.md) and [Realtime transport](realtime/transport.md) |
+| Build a low-latency voice agent with `gpt-realtime-1.5` | [Realtime agents quickstart](realtime/quickstart.md) and [Realtime transport](realtime/transport.md) |
 | Build a speech-to-text / agent / text-to-speech pipeline | [Voice pipeline quickstart](voice/quickstart.md) |
 
 ================
@@ -21909,6 +21911,7 @@ The following community and vendor integrations support the OpenAI Agents SDK tr
 -   [Agenta](https://docs.agenta.ai/observability/integrations/openai-agents)
 -   [PostHog](https://posthog.com/docs/llm-analytics/installation/openai-agents)
 -   [Traccia](https://traccia.ai/docs/integrations/openai-agents)
+-   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 
 ================
 File: docs/usage.md
