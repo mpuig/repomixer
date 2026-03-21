@@ -5701,17 +5701,17 @@ search:
 
 스트리밍을 사용하면 에이전트 실행이 진행되는 동안 업데이트를 구독할 수 있습니다. 이는 최종 사용자에게 진행 상황 업데이트와 부분 응답을 보여주는 데 유용합니다
 
-스트리밍하려면 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 호출하면 되고, 그러면 [`RunResultStreaming`][agents.result.RunResultStreaming]이 반환됩니다. `result.stream_events()`를 호출하면 아래에 설명된 [`StreamEvent`][agents.stream_events.StreamEvent] 객체의 비동기 스트림을 받을 수 있습니다
+스트리밍하려면 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 호출하면 되며, 그러면 [`RunResultStreaming`][agents.result.RunResultStreaming]이 반환됩니다. `result.stream_events()`를 호출하면 아래에서 설명하는 [`StreamEvent`][agents.stream_events.StreamEvent] 객체의 비동기 스트림을 받을 수 있습니다
 
-비동기 이터레이터가 끝날 때까지 `result.stream_events()`를 계속 소비하세요. 스트리밍 실행은 이터레이터가 종료되기 전까지 완료되지 않으며, 세션 지속성, 승인 기록 정리, 히스토리 압축 같은 후처리는 마지막으로 보이는 토큰이 도착한 뒤에 완료될 수 있습니다. 루프가 종료되면 `result.is_complete`가 최종 실행 상태를 반영합니다
+비동기 이터레이터가 끝날 때까지 `result.stream_events()`를 계속 소비하세요. 스트리밍 실행은 이터레이터가 종료될 때까지 완료되지 않으며, 세션 영속성, 승인 기록 관리, 히스토리 압축 같은 후처리는 마지막으로 보이는 토큰이 도착한 뒤에 완료될 수 있습니다. 루프가 종료되면 `result.is_complete`에 최종 실행 상태가 반영됩니다
 
-## 원문 응답 이벤트
+## 원시 응답 이벤트
 
-[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent]는 LLM에서 직접 전달되는 원문 이벤트입니다. OpenAI Responses API 형식이므로 각 이벤트에는 타입(`response.created`, `response.output_text.delta` 등)과 데이터가 있습니다. 이 이벤트는 응답 메시지가 생성되는 즉시 사용자에게 스트리밍하려는 경우 유용합니다
+[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent]는 LLM에서 직접 전달되는 원시 이벤트입니다. OpenAI Responses API 형식이므로, 각 이벤트에는 타입(`response.created`, `response.output_text.delta` 등)과 데이터가 있습니다. 이 이벤트는 생성되는 즉시 응답 메시지를 사용자에게 스트리밍하고 싶을 때 유용합니다
 
-컴퓨터 도구 원문 이벤트는 저장된 결과와 동일하게 preview와 GA의 구분을 유지합니다. Preview 흐름은 하나의 `action`이 있는 `computer_call` 항목을 스트리밍하고, `gpt-5.4`는 배치된 `actions[]`가 있는 `computer_call` 항목을 스트리밍할 수 있습니다. 더 높은 수준의 [`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 표면은 이를 위해 컴퓨터 전용 이벤트 이름을 별도로 추가하지 않습니다. 두 형태 모두 여전히 `tool_called`로 표시되며, 스크린샷 결과는 `computer_call_output` 항목을 감싼 `tool_output`으로 반환됩니다
+컴퓨터 도구 원시 이벤트는 저장된 결과와 동일하게 preview 대 GA 구분을 유지합니다. Preview 흐름은 하나의 `action`이 있는 `computer_call` 항목을 스트리밍하고, `gpt-5.4`는 배치된 `actions[]`가 있는 `computer_call` 항목을 스트리밍할 수 있습니다. 상위 수준의 [`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 표면에서는 이를 위한 컴퓨터 전용 특별 이벤트 이름을 추가하지 않습니다. 두 형태 모두 여전히 `tool_called`로 표면화되며, 스크린샷 결과는 `computer_call_output` 항목을 감싼 `tool_output`으로 반환됩니다
 
-예를 들어, 아래 코드는 LLM이 생성한 텍스트를 토큰 단위로 출력합니다
+예를 들어, 다음은 LLM이 생성한 텍스트를 토큰 단위로 출력합니다
 
 ```python
 import asyncio
@@ -5736,7 +5736,7 @@ if __name__ == "__main__":
 
 ## 스트리밍과 승인
 
-스트리밍은 도구 승인을 위해 일시 중지되는 실행과 호환됩니다. 도구에 승인이 필요하면 `result.stream_events()`가 종료되고, 대기 중인 승인은 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]에 노출됩니다. `result.to_state()`로 결과를 [`RunState`][agents.run_state.RunState]로 변환한 뒤 인터럽션(중단 처리)을 승인하거나 거부하고, `Runner.run_streamed(...)`로 재개하세요
+스트리밍은 도구 승인을 위해 일시 중지되는 실행과도 호환됩니다. 도구에 승인이 필요하면 `result.stream_events()`가 종료되고, 대기 중인 승인 항목은 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions]에 노출됩니다. `result.to_state()`로 결과를 [`RunState`][agents.run_state.RunState]로 변환하고, 인터럽션(중단 처리)을 승인 또는 거부한 뒤 `Runner.run_streamed(...)`로 재개하세요
 
 ```python
 result = Runner.run_streamed(agent, "Delete temporary files if they are no longer needed.")
@@ -5754,31 +5754,41 @@ if result.interruptions:
 
 전체 일시 중지/재개 흐름은 [휴먼인더루프 (HITL) 가이드](human_in_the_loop.md)를 참고하세요
 
+## 현재 턴 이후 스트리밍 취소
+
+중간에 스트리밍 실행을 중지해야 한다면 [`result.cancel()`][agents.result.RunResultStreaming.cancel]을 호출하세요. 기본적으로는 즉시 실행을 중지합니다. 중지 전에 현재 턴을 깔끔하게 마무리하려면 대신 `result.cancel(mode="after_turn")`를 호출하세요
+
+스트리밍 실행은 `result.stream_events()`가 끝날 때까지 완료되지 않습니다. SDK는 마지막으로 보이는 토큰 이후에도 세션 항목 영속화, 승인 상태 마무리, 히스토리 압축을 계속 수행할 수 있습니다
+
+[`result.to_input_list(mode="normalized")`][agents.result.RunResultBase.to_input_list]에서 수동으로 이어서 진행하는 경우, `cancel(mode="after_turn")`가 도구 턴 이후 중지되었다면 새로운 사용자 턴을 바로 추가하지 말고 해당 정규화 입력으로 `result.last_agent`를 다시 실행해 미완료 턴을 이어가세요
+- 스트리밍 실행이 도구 승인 때문에 중지되었다면 이를 새 턴으로 처리하지 마세요. 스트림 소비를 끝까지 완료하고 `result.interruptions`를 확인한 뒤 `result.to_state()`에서 재개하세요
+- 다음 모델 호출 전에 조회된 세션 히스토리와 새 사용자 입력을 어떻게 병합할지 사용자 지정하려면 [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback]을 사용하세요. 그곳에서 새 턴 항목을 다시 작성하면, 해당 턴에는 다시 작성된 버전이 영속화됩니다
+
 ## 실행 항목 이벤트와 에이전트 이벤트
 
-[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent]는 더 높은 수준의 이벤트입니다. 항목이 완전히 생성되었을 때 이를 알려줍니다. 이를 통해 각 토큰이 아니라 "메시지 생성됨", "도구 실행됨" 같은 수준으로 진행 상황 업데이트를 전달할 수 있습니다. 마찬가지로 [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent]는 현재 에이전트가 변경될 때(예: 핸드오프 결과) 업데이트를 제공합니다
+[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent]는 더 상위 수준의 이벤트입니다. 항목이 완전히 생성되었을 때 알려줍니다. 이를 통해 각 토큰이 아니라 "메시지 생성됨", "도구 실행됨" 수준으로 진행 업데이트를 푸시할 수 있습니다. 마찬가지로, [`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent]는 현재 에이전트가 변경될 때(예: 핸드오프로 인한 경우) 업데이트를 제공합니다
 
 ### 실행 항목 이벤트 이름
 
-`RunItemStreamEvent.name`은 고정된 의미 기반 이벤트 이름 집합을 사용합니다
+`RunItemStreamEvent.name`은 고정된 의미론적 이벤트 이름 집합을 사용합니다
 
--   `message_output_created`
--   `handoff_requested`
--   `handoff_occured`
--   `tool_called`
--   `tool_search_called`
--   `tool_search_output_created`
--   `tool_output`
--   `reasoning_item_created`
--   `mcp_approval_requested`
--   `mcp_approval_response`
--   `mcp_list_tools`
+- `message_output_created`
+- `handoff_requested`
+- `handoff_occured`
+- `tool_called`
+- `tool_search_called`
+- `tool_search_output_created`
+- `tool_output`
+- `reasoning_item_created`
+- `mcp_approval_requested`
+- `mcp_approval_response`
+- `mcp_list_tools`
 
 `handoff_occured`는 하위 호환성을 위해 의도적으로 철자가 잘못되어 있습니다
 
-호스티드 툴 검색을 사용하는 경우, 모델이 도구 검색 요청을 발행할 때 `tool_search_called`이 발생하고 Responses API가 로드된 하위 집합을 반환할 때 `tool_search_output_created`이 발생합니다
+호스티드 툴 검색을 사용할 때, 모델이 도구 검색 요청을 발행하면 `tool_search_called`이 발생하고 Responses API가 로드된 하위 집합을 반환하면 `tool_search_output_created`이 발생합니다
 
-예를 들어, 아래 코드는 원문 이벤트를 무시하고 사용자에게 업데이트를 스트리밍합니다
+예를 들어, 다음은 원시 이벤트를 무시하고 사용자에게 업데이트를 스트리밍합니다
 
 ```python
 import asyncio
@@ -16403,19 +16413,19 @@ search:
 ---
 # 流式传输
 
-流式传输让你可以在智能体运行过程中订阅其更新。这对于向最终用户展示进度更新和部分响应非常有用。
+流式传输让你可以在智能体运行过程中订阅其更新。这对于向终端用户展示进度更新和部分响应很有帮助。
 
 要进行流式传输，你可以调用 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]，它会返回一个 [`RunResultStreaming`][agents.result.RunResultStreaming]。调用 `result.stream_events()` 会得到一个由 [`StreamEvent`][agents.stream_events.StreamEvent] 对象组成的异步流，下面会进行说明。
 
-持续消费 `result.stream_events()`，直到异步迭代器结束。流式运行在迭代器结束前都不算完成，而且会话持久化、审批记录或历史压缩等后处理可能会在最后一个可见 token 到达后才完成。当循环退出时，`result.is_complete` 会反映最终运行状态。
+持续消费 `result.stream_events()`，直到异步迭代器结束。流式运行在迭代器结束前都不算完成，而且诸如会话持久化、审批记录或历史压缩等后处理，可能会在最后一个可见 token 到达后才完成。循环退出时，`result.is_complete` 会反映最终运行状态。
 
 ## 原始响应事件
 
-[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] 是直接从 LLM 传递过来的原始事件。它们采用 OpenAI Responses API 格式，这意味着每个事件都有一个类型（如 `response.created`、`response.output_text.delta` 等）和数据。如果你希望在响应消息生成后立即流式传输给用户，这些事件会很有用。
+[`RawResponsesStreamEvent`][agents.stream_events.RawResponsesStreamEvent] 是直接从 LLM 透传的原始事件。它们采用 OpenAI Responses API 格式，这意味着每个事件都有类型（如 `response.created`、`response.output_text.delta` 等）和数据。如果你希望在响应消息生成后立即流式发送给用户，这些事件会很有用。
 
-计算机工具原始事件与存储结果一样，保留了 preview 与 GA 的区分。Preview 流会流式传输带有单个 `action` 的 `computer_call` 项，而 `gpt-5.4` 可以流式传输带有批量 `actions[]` 的 `computer_call` 项。更高层的 [`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 接口不会为此新增计算机专用事件名：这两种形态仍都会显示为 `tool_called`，而截图结果会作为封装了 `computer_call_output` 项的 `tool_output` 返回。
+计算机工具原始事件与存储结果一样，保持 preview 与 GA 的区分。Preview 流会流式返回带有单个 `action` 的 `computer_call` 项，而 `gpt-5.4` 可以流式返回带有批量 `actions[]` 的 `computer_call` 项。更高层的 [`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 接口不会为此增加专用的计算机事件名：这两种形态仍都会以 `tool_called` 呈现，而截图结果会以封装了 `computer_call_output` 项的 `tool_output` 返回。
 
-例如，下面会逐 token 输出 LLM 生成的文本。
+例如，下面将按 token 逐个输出 LLM 生成的文本。
 
 ```python
 import asyncio
@@ -16440,7 +16450,7 @@ if __name__ == "__main__":
 
 ## 流式传输与审批
 
-流式传输与会因工具审批而暂停的运行兼容。如果某个工具需要审批，`result.stream_events()` 会结束，待处理审批会在 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions] 中暴露。使用 `result.to_state()` 将结果转换为 [`RunState`][agents.run_state.RunState]，批准或拒绝中断，然后通过 `Runner.run_streamed(...)` 恢复运行。
+流式传输与因工具审批而暂停的运行兼容。如果某个工具需要审批，`result.stream_events()` 会结束，待处理的审批会暴露在 [`RunResultStreaming.interruptions`][agents.result.RunResultStreaming.interruptions] 中。将结果通过 `result.to_state()` 转换为 [`RunState`][agents.run_state.RunState]，批准或拒绝该中断，然后使用 `Runner.run_streamed(...)` 恢复运行。
 
 ```python
 result = Runner.run_streamed(agent, "Delete temporary files if they are no longer needed.")
@@ -16456,11 +16466,21 @@ if result.interruptions:
         pass
 ```
 
-完整的暂停/恢复演练请参见[人类参与（human-in-the-loop）指南](human_in_the_loop.md)。
+完整的暂停/恢复流程请参见[人类参与指南](human_in_the_loop.md)。
+
+## 在当前轮次后取消流式传输
+
+如果你需要在中途停止一次流式运行，调用 [`result.cancel()`][agents.result.RunResultStreaming.cancel]。默认会立即停止运行。若想在停止前让当前轮次完整结束，请改用 `result.cancel(mode="after_turn")`。
+
+在 `result.stream_events()` 结束前，流式运行都不算完成。SDK 可能仍在最后一个可见 token 之后持久化会话项、完成审批状态收尾或压缩历史。
+
+如果你是基于 [`result.to_input_list(mode="normalized")`][agents.result.RunResultBase.to_input_list] 手动继续，且 `cancel(mode="after_turn")` 在工具轮次后停止，请用该 normalized 输入重新运行 `result.last_agent` 以继续未完成轮次，而不是立即追加新的用户轮次。
+-   如果一次流式运行因工具审批而停止，不要将其视为新轮次。先完成流的消费，检查 `result.interruptions`，然后改为从 `result.to_state()` 恢复。
+-   使用 [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] 自定义在下一次模型调用前，如何合并检索到的会话历史与新的用户输入。如果你在其中改写了新轮次项，被改写后的版本将作为该轮次的持久化内容。
 
 ## 运行项事件与智能体事件
 
-[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 是更高层级的事件。它们会在某个项完全生成后通知你。这使你可以按“消息已生成”“工具已运行”等层级推送进度更新，而不是按每个 token。类似地，[`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] 会在当前智能体发生变化时提供更新（例如作为任务转移的结果）。
+[`RunItemStreamEvent`][agents.stream_events.RunItemStreamEvent] 是更高层级的事件。它会在某个项完整生成后通知你。这样你就可以在“消息已生成”“工具已运行”等层级推送进度更新，而不是按 token 推送。类似地，[`AgentUpdatedStreamEvent`][agents.stream_events.AgentUpdatedStreamEvent] 会在当前智能体发生变化时提供更新（例如因任务转移导致的变化）。
 
 ### 运行项事件名称
 
@@ -16478,11 +16498,11 @@ if result.interruptions:
 -   `mcp_approval_response`
 -   `mcp_list_tools`
 
-`handoff_occured` 的拼写错误是有意保留的，以实现向后兼容。
+出于向后兼容考虑，`handoff_occured` 保留了故意的拼写错误。
 
-当你使用托管工具搜索时，模型发出工具搜索请求时会发出 `tool_search_called`，而当 Responses API 返回已加载子集时会发出 `tool_search_output_created`。
+当你使用托管工具搜索时，模型发出工具搜索请求会触发 `tool_search_called`，Responses API 返回已加载子集时会触发 `tool_search_output_created`。
 
-例如，下面会忽略原始事件并向用户流式传输更新。
+例如，下面会忽略原始事件，并向用户流式推送更新。
 
 ```python
 import asyncio
@@ -20827,6 +20847,16 @@ if result.interruptions:
 ```
 
 For a full pause/resume walkthrough, see the [human-in-the-loop guide](human_in_the_loop.md).
+
+## Cancel streaming after the current turn
+
+If you need to stop a streaming run in the middle, call [`result.cancel()`][agents.result.RunResultStreaming.cancel]. By default this stops the run immediately. To let the current turn finish cleanly before stopping, call `result.cancel(mode="after_turn")` instead.
+
+A streamed run is not complete until `result.stream_events()` finishes. The SDK may still be persisting session items, finalizing approval state, or compacting history after the last visible token.
+
+If you are manually continuing from [`result.to_input_list(mode="normalized")`][agents.result.RunResultBase.to_input_list], and `cancel(mode="after_turn")` stops after a tool turn, continue that unfinished turn by rerunning `result.last_agent` with that normalized input instead of appending a fresh user turn right away.
+-   If a streamed run stopped for tool approval, do not treat that as a new turn. Finish draining the stream, inspect `result.interruptions`, and resume from `result.to_state()` instead.
+-   Use [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] to customize how retrieved session history and the new user input are merged before the next model call. If you rewrite new-turn items there, the rewritten version is what gets persisted for that turn.
 
 ## Run item events and agent events
 
