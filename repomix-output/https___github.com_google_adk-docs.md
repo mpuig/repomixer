@@ -1687,7 +1687,7 @@ For scalable and production-oriented use cases, Vertex AI is the recommended pla
 1.  **Sign up for Express Mode** to get your API key.
 2.  **Set environment variables:**
     ```shell
-    export GOOGLE_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
+    export GOOGLE_GENAI_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
     export GOOGLE_GENAI_USE_VERTEXAI=TRUE
     ```
 
@@ -8696,7 +8696,7 @@ File: docs/context/compaction.md
 # Compress agent context for performance
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 As an ADK agent runs it collects *context* information, including user
@@ -8720,19 +8720,37 @@ Configuration setting to the App object of your workflow. As part of the
 configuration, you must specify a compaction interval and overlap size, as shown
 in the following sample code:
 
-```python
-from google.adk.apps.app import App
-from google.adk.apps.app import EventsCompactionConfig
+=== "Python"
 
-app = App(
-    name='my-agent',
-    root_agent=root_agent,
-    events_compaction_config=EventsCompactionConfig(
-        compaction_interval=3,  # Trigger compaction every 3 new invocations.
-        overlap_size=1          # Include last invocation from the previous window.
-    ),
-)
-```
+    ```python
+    from google.adk.apps.app import App
+    from google.adk.apps.app import EventsCompactionConfig
+    
+    app = App(
+        name='my-agent',
+        root_agent=root_agent,
+        events_compaction_config=EventsCompactionConfig(
+            compaction_interval=3,  # Trigger compaction every 3 new invocations.
+            overlap_size=1          # Include last invocation from the previous window.
+        ),
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.apps.App;
+    import com.google.adk.summarizer.EventsCompactionConfig;
+    
+    App app = App.builder()
+        .name("my-agent")
+        .rootAgent(rootAgent)
+        .eventsCompactionConfig(EventsCompactionConfig.builder()
+            .compactionInterval(3)  // Trigger compaction every 3 new invocations.
+            .overlapSize(1)         // Include last invocation from the previous window.
+            .build())
+        .build();
+    ```
 
 Once configured, the ADK `Runner` handles the compaction process in the
 background each time the session reaches the interval.
@@ -8775,28 +8793,58 @@ You can customize the process of context compression by defining a summarizer.
 The LlmEventSummarizer class allows you to specify a particular model for summarization.
 The following code example demonstrates how to define and configure a custom summarizer:
 
-```python
-from google.adk.apps.app import App, EventsCompactionConfig
-from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
-from google.adk.models import Gemini
+=== "Python"
 
-# Define the AI model to be used for summarization:
-summarization_llm = Gemini(model="gemini-2.5-flash")
+    ```python
+    from google.adk.apps.app import App, EventsCompactionConfig
+    from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
+    from google.adk.models import Gemini
+    
+    # Define the AI model to be used for summarization:
+    summarization_llm = Gemini(model="gemini-2.5-flash")
+    
+    # Create the summarizer with the custom model:
+    my_summarizer = LlmEventSummarizer(llm=summarization_llm)
+    
+    # Configure the App with the custom summarizer and compaction settings:
+    app = App(
+        name='my-agent',
+        root_agent=root_agent,
+        events_compaction_config=EventsCompactionConfig(
+            compaction_interval=3,
+            overlap_size=1,
+            summarizer=my_summarizer,
+        ),
+    )
+    ```
 
-# Create the summarizer with the custom model:
-my_summarizer = LlmEventSummarizer(llm=summarization_llm)
+=== "Java"
 
-# Configure the App with the custom summarizer and compaction settings:
-app = App(
-    name='my-agent',
-    root_agent=root_agent,
-    events_compaction_config=EventsCompactionConfig(
-        compaction_interval=3,
-        overlap_size=1,
-        summarizer=my_summarizer,
-    ),
-)
-```
+    ```java
+    import com.google.adk.apps.App;
+    import com.google.adk.models.Gemini;
+    import com.google.adk.summarizer.EventsCompactionConfig;
+    import com.google.adk.summarizer.LlmEventSummarizer;
+    
+    // Define the AI model to be used for summarization:
+    Gemini summarizationLlm = Gemini.builder()
+        .model("gemini-2.5-flash")
+        .build();
+    
+    // Create the summarizer with the custom model:
+    LlmEventSummarizer mySummarizer = new LlmEventSummarizer(summarizationLlm);
+    
+    // Configure the App with the custom summarizer and compaction settings:
+    App app = App.builder()
+        .name("my-agent")
+        .rootAgent(rootAgent)
+        .eventsCompactionConfig(EventsCompactionConfig.builder()
+            .compactionInterval(3)
+            .overlapSize(1)
+            .summarizer(mySummarizer)
+            .build())
+        .build();
+    ```
 
 You can further refine the operation of the `SlidingWindowCompactor`
 by modifying its summarizer class `LlmEventSummarizer` including changing
@@ -15690,7 +15738,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	model, err := gemini.NewModel(ctx, "gemini-3-pro-preview", &genai.ClientConfig{
+	model, err := gemini.NewModel(ctx, "gemini-2.5-flash-lite", &genai.ClientConfig{
 		APIKey: os.Getenv("GOOGLE_API_KEY"),
 	})
 	if err != nil {
@@ -17202,104 +17250,18 @@ File: docs/grounding/google_search_grounding.md
 # Google Search Grounding for agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Google Search Grounding tool](/adk-docs/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that enables AI agents to access real-time, authoritative information from the web. By connecting your agents to Google Search, you can provide users with up-to-date answers backed by reliable sources.
+[Google Search Grounding tool](/adk-docs/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that connects your AI agents directly to Google Search. By giving your agents access to real-time, authoritative information from the web, they can answer questions about recent events, current weather, stock prices, or any other dynamic data that falls outside the model's training window. The agent automatically decides when to search and seamlessly incorporates the results into its responses with proper citations.
 
-This feature is particularly valuable for queries requiring current information like weather updates, news events, stock prices, or any facts that may have changed since the model's training data cutoff. When your agent determines that external information is needed, it automatically performs web searches and incorporates the results into its response with proper attribution.
+## Creating a Grounded Agent
 
-## What You'll Learn
-
-In this guide, you'll discover:
-
-- **Quick Setup**: How to create and run a Google Search-enabled agent from scratch
-- **Grounding Architecture**: The data flow and technical process behind web grounding
-- **Response Structure**: How to interpret grounded responses and their metadata
-- **Best Practices**: Guidelines for displaying search results and citations to users
-
-### Additional resource
-
-As an additional resource, the [Deep Search Agent Development Kit (ADK) Quickstart](https://github.com/google/adk-samples/tree/main/python/agents/deep-search) has a practical use of the Google Search grounding as a full stack application example.
-
-## Google Search Grounding Quickstart
-
-This quickstart guides you through creating an ADK agent with Google Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.10+ and terminal access.
-
-### 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
-
-Below are the steps for setting up your environment and installing the ADK for both Python and TypeScript projects.
+To enable Google Search Grounding, you include the search tool in your agent definition.
 
 === "Python"
 
-    Create & Activate Virtual Environment:
-
-    ```bash
-    # Create
-    python -m venv .venv
-
-    # Activate (each new terminal)
-    # macOS/Linux: source .venv/bin/activate
-    # Windows CMD: .venv\Scripts\activate.bat
-    # Windows PowerShell: .venv\Scripts\Activate.ps1
-    ```
-
-    Install ADK:
-
-    ```bash
-    pip install google-adk
-    ```
-
-=== "TypeScript"
-
-    Create a new Node.js project:
-    ```bash
-    npm init -y
-    ```
-
-    Install ADK:
-    ```bash
-    npm install @google/adk
-    ```
-
-### 2. Create Agent Project { #create-agent-project }
-
-Under a project directory, run the following commands:
-
-=== "OS X &amp; Linux"
-    ```bash
-    # Step 1: Create a new directory for your agent
-    mkdir google_search_agent
-
-    # Step 2: Create __init__.py for the agent
-    echo "from . import agent" > google_search_agent/__init__.py
-
-    # Step 3: Create an agent.py (the agent definition) and .env (Gemini authentication config)
-    touch google_search_agent/agent.py .env
-    ```
-
-=== "Windows"
-    ```shell
-    # Step 1: Create a new directory for your agent
-    mkdir google_search_agent
-
-    # Step 2: Create __init__.py for the agent
-    echo "from . import agent" > google_search_agent/__init__.py
-
-    # Step 3: Create an agent.py (the agent definition) and .env (Gemini authentication config)
-    type nul > google_search_agent\agent.py
-    type nul > google_search_agent\.env
-    ```
-
-
-
-#### Edit `agent.py` or `agent.ts`
-
-Copy and paste the following code into `agent.py` or `agent.ts`:
-
-=== "Python"
-
-    ```python title="google_search_agent/agent.py"
+    ```python
     from google.adk.agents import Agent
     from google.adk.tools import google_search
 
@@ -17314,7 +17276,7 @@ Copy and paste the following code into `agent.py` or `agent.ts`:
 
 === "TypeScript"
 
-    ```typescript title="google_search_agent/agent.ts"
+    ```typescript
     import { LlmAgent, GOOGLE_SEARCH } from '@google/adk';
 
     const rootAgent = new LlmAgent({
@@ -17326,152 +17288,54 @@ Copy and paste the following code into `agent.py` or `agent.ts`:
     });
     ```
 
-Now you would have the following directory structure:
+=== "Java"
 
-=== "Python"
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.GoogleSearchTool;
 
-    ```console
-    my_project/
-        google_search_agent/
-            __init__.py
-            agent.py
-        .env
+    LlmAgent rootAgent = LlmAgent.builder()
+        .name("google_search_agent")
+        .model("gemini-2.5-flash")
+        .instruction("Answer questions using Google Search when needed. Always cite sources.")
+        .description("Professional search assistant with Google Search capabilities")
+        .tools(GoogleSearchTool.INSTANCE)
+        .build();
     ```
-
-=== "TypeScript"
-
-    ```console
-    my_project/
-        google_search_agent/
-            agent.ts
-        package.json
-        tsconfig.json
-        .env
-    ```
-
-### 3. Choose a platform { #choose-a-platform }
-
-To run the agent, you need to select a platform that the agent will use for calling the Gemini model. Choose one from Google AI Studio or Vertex AI:
-
-=== "Gemini - Google AI Studio"
-    1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).
-    2. When using Python, open the **`.env`** file and copy-paste the following code.
-
-        ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
-        ```
-
-    3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
-
-=== "Gemini - Google Cloud Vertex AI"
-    1. You need an existing
-    [Google Cloud](https://cloud.google.com/?e=48754805&hl=en) account and a
-    project.
-        * Set up a
-          [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp)
-        * Set up the
-          [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
-        * Authenticate to Google Cloud, from the terminal by running
-          `gcloud auth login`.
-        * [Enable the Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
-    2. When using Python, open the **`.env`** file and copy-paste the following code and update the project ID and location.
-
-        ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-        GOOGLE_CLOUD_LOCATION=LOCATION
-        ```
-
-### 4. Run Your Agent { #run-your-agent }
-
-There are multiple ways to interact with your agent:
-
-=== "Dev UI (adk web)"
-    Run the following command to launch the **dev UI**.
-
-    ```shell
-    adk web
-    ```
-
-    !!!info "Note for Windows users"
-
-        When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
-
-
-    **Step 1:** Open the URL provided (usually `http://localhost:8000` or
-    `http://127.0.0.1:8000`) directly in your browser.
-
-    **Step 2.** In the top-left corner of the UI, you can select your agent in
-    the dropdown. Select "google_search_agent".
-
-    !!!note "Troubleshooting"
-
-        If you do not see "google_search_agent" in the dropdown menu, make sure you
-        are running `adk web` in the **parent folder** of your agent folder
-        (i.e. the parent folder of google_search_agent).
-
-    **Step 3.** Now you can chat with your agent using the textbox.
-
-=== "Terminal (adk run)"
-
-    Run the following command, to chat with your Weather agent.
-
-    ```
-    adk run google_search_agent
-    ```
-    To exit, use Cmd/Ctrl+C.
-
-### Example prompts to try
-
-With those questions, you can confirm that the agent is actually calling Google Search
-to get the latest weather and time.
-
-* What is the weather in New York?
-* What is the time in New York?
-* What is the weather in Paris?
-* What is the time in Paris?
-
-![Try the agent with adk web](../assets/google_search_grd_adk_web.png)
-
-You've successfully created and interacted with your Google Search agent using ADK!
 
 ## How grounding with Google Search works
 
-Grounding is the process that connects your agent to real-time information from the web, allowing it to generate more accurate and current responses. When a user's prompt requires information that the model was not trained on, or that is time-sensitive, the agent's underlying Large Language Model intelligently decides to invoke the google\_search tool to find the relevant facts
+Grounding is the process that connects your agent to real-time information from the web, allowing it to generate more accurate and current responses. When a user's prompt requires information that the model was not trained on, or that is time-sensitive, the agent's underlying Large Language Model intelligently decides to invoke the `google_search` tool to find the relevant facts.
 
-### **Data Flow Diagram**
+### Data Flow Diagram
 
 This diagram illustrates the step-by-step process of how a user query results in a grounded response.
 
 ![](../assets/google_search_grd_dataflow.png)
 
-### **Detailed Description**
+### Detailed Description
 
 The grounding agent uses the data flow described in the diagram to retrieve, process, and incorporate external information into the final answer presented to the user.
 
 1. **User Query**: An end-user interacts with your agent by asking a question or giving a command.
-2. **ADK Orchestration** : The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.
-3. **LLM Analysis and Tool-Calling** : The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that external, up-to-date information is required, it triggers the grounding mechanism by calling the
-    google\_search tool. This is ideal for answering queries about recent news, weather, or facts not present in the model's training data.
-4. **Grounding Service Interaction** : The google\_search tool interacts with an internal grounding service that formulates and sends one or more queries to the Google Search Index.
-5. **Context Injection**: The grounding service retrieves the relevant web pages and snippets. It then integrates these search results into the model's context
-    before the final response is generated. This crucial step allows the model to "reason" over factual, real-time data.
+2. **ADK Orchestration**: The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.
+3. **LLM Analysis and Tool-Calling**: The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that external, up-to-date information is required, it triggers the grounding mechanism by calling the `google search` tool. This is ideal for answering queries about recent news, weather, or facts not present in the model's training data.
+4. **Grounding Service Interaction**: The `google search` tool interacts with an internal grounding service that formulates and sends one or more queries to the Google Search Index.
+5. **Context Injection**: The grounding service retrieves the relevant web pages and snippets. It then integrates these search results into the model's context before the final response is generated. This crucial step allows the model to "reason" over factual, real-time data.
 6. **Grounded Response Generation**: The LLM, now informed by the fresh search results, generates a response that incorporates the retrieved information.
-7. **Response Presentation with Sources** : The ADK receives the final grounded response, which includes the necessary source URLs and
-   groundingMetadata, and presents it to the user with attribution. This allows end-users to verify the information and builds trust in the agent's answers.
+7. **Response Presentation with Sources**: The ADK receives the final grounded response, which includes the necessary source URLs and `groundingMetadata`, and presents it to the user with attribution. This allows end-users to verify the information and builds trust in the agent's answers.
 
-### Understanding grounding with Google Search response
+### Understanding the Error Response and Grounding Metadata
 
 When the agent uses Google Search to ground a response, it returns a detailed set of information that includes not only the final text answer but also the sources it used to generate that answer. This metadata is crucial for verifying the response and for providing attribution to the original sources.
 
-#### **Example of a Grounded Response**
+#### Example of a Grounded Response
 
 The following is an example of the content object returned by the model after a grounded query.
 
 **Final Answer Text:**
 
-```
+```text
 "Yes, Inter Miami won their last game in the FIFA Club World Cup. They defeated FC Porto 2-1 in their second group stage match. Their first game in the tournament was a 0-0 draw against Al Ahly FC. Inter Miami is scheduled to play their third group stage match against Palmeiras on Monday, June 23, 2025."
 ```
 
@@ -17512,42 +17376,28 @@ The following is an example of the content object returned by the model after a 
   ],
   "searchEntryPoint": { ... }
 }
-
 ```
 
-#### **How to Interpret the Response**
+#### How to Interpret the Response
 
 The metadata provides a link between the text generated by the model and the sources that support it. Here is a step-by-step breakdown:
 
-1. **groundingChunks**: This is a list of the web pages the model consulted. Each chunk contains the title of the webpage and a uri that links to the source.
-2. **groundingSupports**: This list connects specific sentences in the final answer back to the groundingChunks.
-   * **segment**: This object identifies a specific portion of the final text answer, defined by its startIndex, endIndex, and the text itself.
-   * **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the groundingChunks. For example, the sentence "They defeated FC Porto 2-1..." is supported by information from groundingChunks at index 0 and 1 (both from mlssoccer.com and intermiamicf.com).
+1. **groundingChunks**: This is a list of the web pages the model consulted. Each chunk contains the title of the webpage and a `uri` that links to the source.
+2. **groundingSupports**: This list connects specific sentences in the final answer back to the `groundingChunks`.
+   * **segment**: This object identifies a specific portion of the final text answer, defined by its `startIndex`, `endIndex`, and the text itself.
+   * **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the `groundingChunks`. For example, the sentence "They defeated FC Porto 2-1..." is supported by information from `groundingChunks` at index 0 and 1.
 
 ### How to display grounding responses with Google Search
 
 A critical part of using grounding is to correctly display the information, including citations and search suggestions, to the end-user. This builds trust and allows users to verify the information.
 
-![Responnses from Google Search](../assets/google_search_grd_resp.png)
+#### Displaying Search Suggestions
 
-#### **Displaying Search Suggestions**
+The `searchEntryPoint` object in the `groundingMetadata` contains pre-formatted HTML for displaying search query suggestions. These are typically rendered as clickable chips that allow the user to explore related topics.
 
-The `searchEntryPoint` object in the `groundingMetadata` contains pre-formatted HTML for displaying search query suggestions. As seen in the example image, these are typically rendered as clickable chips that allow the user to explore related topics.
-
-**Rendered HTML from searchEntryPoint:** The metadata provides the necessary HTML and CSS to render the search suggestions bar, which includes the Google logo and chips for related queries like "When is the next FIFA Club World Cup" and "Inter Miami FIFA Club World Cup history". Integrating this HTML directly into your application's front end will display the suggestions as intended.
+**Rendered HTML from searchEntryPoint:** The metadata provides the necessary HTML and CSS to render the search suggestions bar, which includes the Google logo and chips for related queries. Integrating this HTML directly into your application's front end will display the suggestions as intended.
 
 For more information, consult [using Google Search Suggestions](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions) in Vertex AI documentation.
-
-## Summary
-
-Google Search Grounding transforms AI agents from static knowledge repositories into dynamic, web-connected assistants capable of providing real-time, accurate information. By integrating this feature into your ADK agents, you enable them to:
-
-- Access current information beyond their training data
-- Provide source attribution for transparency and trust
-- Deliver comprehensive answers with verifiable facts
-- Enhance user experience with relevant search suggestions
-
-The grounding process seamlessly connects user queries to Google's vast search index, enriching responses with up-to-date context while maintaining the conversational flow. With proper implementation and display of grounded responses, your agents become powerful tools for information discovery and decision-making.
 
 ================
 File: docs/grounding/index.md
@@ -17620,226 +17470,94 @@ File: docs/grounding/vertex_ai_search_grounding.md
 # Vertex AI Search Grounding for agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 [Vertex AI Search](/adk-docs/tools/google-cloud/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
 This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
 
-## What You'll Learn
+## Preparing Vertex AI Search
 
-In this guide, you'll discover:
+Before creating a grounded agent, you must have an existing Vertex AI Search Data Store. If you don't have one, follow the instructions in [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) to create one. You will need your `Data store ID` (e.g., `projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID`) to configure the agent.
 
-- **Quick Setup**: How to create and run a Vertex AI Search-enabled agent from scratch
-- **Grounding Architecture**: The data flow and technical process behind enterprise document grounding
-- **Response Structure**: How to interpret grounded responses and their metadata
-- **Best Practices**: Guidelines for displaying citations and document references to users
-
-## Vertex AI Search Grounding Quickstart
-
-This quickstart guides you through creating an ADK agent with Vertex AI Search grounding feature. This quickstart assumes a local IDE (VS Code or PyCharm, etc.) with Python 3.10+ and terminal access.
-
-### 1. Prepare Vertex AI Search { #prepare-vertex-ai-search }
-
-If you already have a Vertex AI Search Data Store and its Data Store ID, you can skip this section. If not, follow the instruction in the [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) until the end of [Create a data store](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#create_a_data_store), with selecting the `Unstructured data` tab. With this instruction, you will build a sample Data Store with earning report PDFs from the [Alphabet investor site](https://abc.xyz/).
-
-After finishing the Create a data store section, open the [Data Stores](https://console.cloud.google.com/gen-app-builder/data-stores/) and select the data store you created, and find the `Data store ID`:
-
-![Vertex AI Search Data Store](../assets/vertex_ai_search_grd_data_store.png)
-
-Note this `Data store ID` as we will use this later.
-
-### 2. Set up Environment & Install ADK { #set-up-environment-install-adk }
-
-Below are the steps for setting up your environment and installing the ADK for both Python and TypeScript projects.
-
-=== "Python"
-
-    Create & Activate Virtual Environment:
-
-    ```bash
-    # Create
-    python -m venv .venv
-
-    # Activate (each new terminal)
-    # macOS/Linux: source .venv/bin/activate
-    # Windows CMD: .venv\\Scripts\\activate.bat
-    # Windows PowerShell: .venv\\Scripts\\Activate.ps1
-    ```
-
-    Install ADK:
-
-    ```bash
-    pip install google-adk
-    ```
-
-=== "TypeScript"
-
-    Create a new Node.js project:
-    ```bash
-    npm init -y
-    ```
-
-    Install ADK:
-    ```bash
-    npm install @google/adk
-    ```
-
-### 3. Create Agent Project { #create-agent-project }
-
-Under a project directory, run the following commands:
-
-=== "OS X &amp; Linux"
-    ```bash
-    # Step 1: Create a new directory for your agent
-    mkdir vertex_search_agent
-
-    # Step 2: Create __init__.py for the agent
-    echo "from . import agent" > vertex_search_agent/__init__.py
-
-    # Step 3: Create an agent.py (the agent definition) and .env (authentication config)
-    touch vertex_search_agent/agent.py .env
-    ```
-
-=== "Windows"
-    ```shell
-    # Step 1: Create a new directory for your agent
-    mkdir vertex_search_agent
-
-    # Step 2: Create __init__.py for the agent
-    echo "from . import agent" > vertex_search_agent/__init__.py
-
-    # Step 3: Create an agent.py (the agent definition) and .env (authentication config)
-    type nul > vertex_search_agent\agent.py
-    type nul > google_search_agent\.env
-    ```
-
-#### Edit `agent.py`
-
-Copy and paste the following code into `agent.py`, and replace `YOUR_PROJECT_ID` and `YOUR_DATASTORE_ID` at the `Configuration` part with your project ID and Data Store ID accordingly:
-
-```python title="vertex_search_agent/agent.py"
-from google.adk.agents import Agent
-from google.adk.tools import VertexAiSearchTool
-
-# Configuration
-DATASTORE_ID = "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID"
-
-root_agent = Agent(
-    name="vertex_search_agent",
-    model="gemini-2.5-flash",
-    instruction="Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.",
-    description="Enterprise document search assistant with Vertex AI Search capabilities",
-    tools=[VertexAiSearchTool(data_store_id=DATASTORE_ID)]
-)
-```
-
-Now you would have the following directory structure:
-
-```console
-my_project/
-    vertex_search_agent/
-        __init__.py
-        agent.py
-    .env
-```
-
-### 4. Authentication Setup { #authentication-setup }
+## Authentication Setup
 
 **Note: Vertex AI Search requires Google Cloud Platform (Vertex AI) authentication. Google AI Studio is not supported for this tool.**
 
-  * Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
-  * Authenticate to Google Cloud, from the terminal by running `gcloud auth login`.
-  * Open the **`.env`** file and copy-paste the following code and update the project ID and location.
+* Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
+* Authenticate to Google Cloud, from the terminal by running `gcloud auth login`.
+* For Python, open the **`.env`** file and specify your project ID and location. 
+* For Java, ensure your application environment has Google Cloud default credentials configured (`GOOGLE_APPLICATION_CREDENTIALS`).
 
-    ```env title=".env"
-    GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-    GOOGLE_CLOUD_LOCATION=LOCATION
+```env title=".env"
+GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
+GOOGLE_CLOUD_LOCATION=LOCATION
+```
+
+## Creating a Grounded Agent
+
+To enable Vertex AI Search Grounding, you include the search tool in your agent definition, providing the `data_store_id`.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools import VertexAiSearchTool
+    
+    # Configuration
+    DATASTORE_ID = "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID"
+    
+    root_agent = Agent(
+        name="vertex_search_agent",
+        model="gemini-2.5-flash",
+        instruction="Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.",
+        description="Enterprise document search assistant with Vertex AI Search capabilities",
+        tools=[VertexAiSearchTool(data_store_id=DATASTORE_ID)]
+    )
     ```
 
+=== "Java"
 
-### 5. Run Your Agent { #run-your-agent }
-
-There are multiple ways to interact with your agent:
-
-=== "Dev UI (adk web)"
-    Run the following command to launch the **dev UI**.
-
-    ```shell
-    adk web
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.VertexAiSearchTool;
+    
+    // Configuration
+    String DATASTORE_ID = "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID";
+    
+    LlmAgent rootAgent = LlmAgent.builder()
+        .name("vertex_search_agent")
+        .model("gemini-2.5-flash")
+        .instruction("Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.")
+        .description("Enterprise document search assistant with Vertex AI Search capabilities")
+        .tools(VertexAiSearchTool.builder().dataStoreId(DATASTORE_ID).build())
+        .build();
     ```
-
-    !!!info "Note for Windows users"
-
-        When hitting the `_make_subprocess_transport NotImplementedError`, consider using `adk web --no-reload` instead.
-
-
-    **Step 1:** Open the URL provided (usually `http://localhost:8000` or
-    `http://127.0.0.1:8000`) directly in your browser.
-
-    **Step 2.** In the top-left corner of the UI, you can select your agent in
-    the dropdown. Select "vertex_search_agent".
-
-    !!!note "Troubleshooting"
-
-        If you do not see "vertex_search_agent" in the dropdown menu, make sure you
-        are running `adk web` in the **parent folder** of your agent folder
-        (i.e. the parent folder of vertex_search_agent).
-
-    **Step 3.** Now you can chat with your agent using the textbox.
-
-=== "Terminal (adk run)"
-
-    Run the following command, to chat with your Vertex AI Search agent.
-
-    ```
-    adk run vertex_search_agent
-    ```
-    To exit, use Cmd/Ctrl+C.
-
-### Example prompts to try
-
-With those questions, you can confirm that the agent is actually calling Vertex AI Search
-to get information from the Alphabet reports:
-
-* What is the revenue of Google Cloud in 2022 Q1?
-* What about YouTube?
-
-![Vertex AI Search Grounding Data Flow](../assets/vertex_ai_search_grd_adk_web.png)
-
-You've successfully created and interacted with your Vertex AI Search agent using ADK!
 
 ## How grounding with Vertex AI Search works
 
 Grounding with Vertex AI Search is the process that connects your agent to your organization's indexed documents and data, allowing it to generate accurate responses based on private enterprise content. When a user's prompt requires information from your internal knowledge base, the agent's underlying LLM intelligently decides to invoke the `VertexAiSearchTool` to find relevant facts from your indexed documents.
 
-### **Data Flow Diagram**
+### Data Flow Diagram
 
 This diagram illustrates the step-by-step process of how a user query results in a grounded response.
 
 ![Vertex AI Search Grounding Data Flow](../assets/vertex_ai_search_grd_dataflow.png)
 
-### **Detailed Description**
+### Detailed Description
 
 The grounding agent uses the data flow described in the diagram to retrieve, process, and incorporate enterprise information into the final answer presented to the user.
 
 1. **User Query**: An end-user interacts with your agent by asking a question about internal documents or enterprise data.
-
 2. **ADK Orchestration**: The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.
-
-3. **LLM Analysis and Tool-Calling**: The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that information from your indexed documents is required, it triggers the grounding mechanism by calling the VertexAiSearchTool. This is ideal for answering queries about company policies, technical documentation, or proprietary research.
-
-4. **Vertex AI Search Service Interaction**: The VertexAiSearchTool interacts with your configured Vertex AI Search datastore, which contains your indexed enterprise documents. The service formulates and executes search queries against your private content.
-
+3. **LLM Analysis and Tool-Calling**: The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that information from your indexed documents is required, it triggers the grounding mechanism by calling the `VertexAiSearchTool`. This is ideal for answering queries about company policies, technical documentation, or proprietary research.
+4. **Vertex AI Search Service Interaction**: The `VertexAiSearchTool` interacts with your configured Vertex AI Search datastore, which contains your indexed enterprise documents. The service formulates and executes search queries against your private content.
 5. **Document Retrieval & Ranking**: Vertex AI Search retrieves and ranks the most relevant document chunks from your datastore based on semantic similarity and relevance scoring.
-
 6. **Context Injection**: The search service integrates the retrieved document snippets into the model's context before the final response is generated. This crucial step allows the model to "reason" over your organization's factual data.
-
 7. **Grounded Response Generation**: The LLM, now informed by relevant enterprise content, generates a response that incorporates the retrieved information from your documents.
-
-8. **Response Presentation with Sources**: The ADK receives the final grounded response, which includes the necessary source document references and groundingMetadata, and presents it to the user with attribution. This allows end-users to verify the information against your enterprise sources.
+8. **Response Presentation with Sources**: The ADK receives the final grounded response, which includes the necessary source document references and `groundingMetadata`, and presents it to the user with attribution. This allows end-users to verify the information against your enterprise sources.
 
 ## Understanding grounding with Vertex AI Search response
 
@@ -17851,13 +17569,11 @@ The following is an example of the content object returned by the model after a 
 
 **Final Answer Text:**
 
-```
+```text
 "Developing models for a medical scribe presents several significant challenges, primarily due to the complex nature of medical documentation, the sensitive data involved, and the demanding requirements of clinical workflows. Key challenges include: **Accuracy and Reliability:** Medical documentation requires extremely high levels of accuracy, as errors can lead to misdiagnoses, incorrect treatments, and legal repercussions. Ensuring that AI models can reliably capture nuanced medical language, distinguish between subjective and objective information, and accurately transcribe physician-patient interactions is a major hurdle. **Natural Language Understanding (NLU) and Speech Recognition:** Medical conversations are often rapid, involve highly specialized jargon, acronyms, and abbreviations, and can be spoken by individuals with diverse accents or speech patterns... [response continues with detailed analysis of privacy, integration, and technical challenges]"
 ```
 
 **Grounding Metadata Snippet:**
-
-This is the grounding metadata you will receive. On `adk web`, you can find this on the `Response` tab:
 
 ```json
 {
@@ -17877,7 +17593,6 @@ This is the grounding metadata you will receive. On `adk web`, you can find this
           "id": "doc-ai-healthcare-ethics"
         }
       }
-      // ... additional documents
     ],
     "groundingSupports": [
       {
@@ -17888,13 +17603,11 @@ This is the grounding metadata you will receive. On `adk web`, you can find this
           "text": "Ensuring that AI models can reliably capture nuanced medical language..."
         }
       }
-      // ... additional supports linking text segments to source documents
     ],
     "retrievalQueries": [
       "challenges in natural language processing medical domain",
       "AI medical scribe challenges",
       "difficulties in developing AI for medical scribes"
-      // ... additional search queries executed
     ]
   }
 }
@@ -17904,14 +17617,10 @@ This is the grounding metadata you will receive. On `adk web`, you can find this
 
 The metadata provides a link between the text generated by the model and the enterprise documents that support it. Here is a step-by-step breakdown:
 
-- **groundingChunks**: This is a list of the enterprise documents the model consulted. Each chunk contains the document title, uri (document path), and id.
-
+- **groundingChunks**: This is a list of the enterprise documents the model consulted. Each chunk contains the document `title`, `uri` (document path), and `id`.
 - **groundingSupports**: This list connects specific sentences in the final answer back to the `groundingChunks`.
-
 - **segment**: This object identifies a specific portion of the final text answer, defined by its `startIndex`, `endIndex`, and the `text` itself.
-
 - **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the `groundingChunks`. For example, the text about "HIPAA compliance" is supported by information from `groundingChunks` at index 1 (the "Regulatory and Ethical Hurdles" document).
-
 - **retrievalQueries**: This array shows the specific search queries that were executed against your datastore to find relevant information.
 
 ## How to display grounding responses with Vertex AI Search
@@ -17924,15 +17633,32 @@ Since grounding metadata is provided, you can choose to implement citation displ
 
 **Simple Text Display (Minimal Implementation):**
 
-```python
-for event in events:
-    if event.is_final_response():
-        print(event.content.parts[0].text)
+=== "Python"
 
-        # Optional: Show source count
-        if event.grounding_metadata:
-            print(f"\nBased on {len(event.grounding_metadata.grounding_chunks)} documents")
-```
+    ```python
+    for event in events:
+        if event.is_final_response():
+            print(event.content.parts[0].text)
+            
+            # Optional: Show source count
+            if event.grounding_metadata:
+                print(f"\nBased on {len(event.grounding_metadata.grounding_chunks)} documents")
+    ```
+
+=== "Java"
+
+    ```java
+    for (Event event : events) {
+        if (event.finalResponse()) {
+            System.out.println(event.content().parts().get(0).text());
+            
+            // Optional: Show source count
+            if (event.groundingMetadata().isPresent()) {
+                System.out.println("\nBased on " + event.groundingMetadata().get().groundingChunks().size() + " documents");
+            }
+        }
+    }
+    ```
 
 **Enhanced Citation Display (Optional):** You can implement interactive citations that show which documents support each statement. The grounding metadata provides all necessary information to map text segments to source documents.
 
@@ -17944,18 +17670,246 @@ When implementing Vertex AI Search grounding displays:
 2. **Simple Integration**: Basic text output requires no additional display logic
 3. **Optional Enhancements**: Add citations only if your use case benefits from source attribution
 4. **Document Links**: Convert document URIs to accessible internal links when needed
-5. **Search Queries**: The retrievalQueries array shows what searches were performed against your datastore
+5. **Search Queries**: The `retrievalQueries` array shows what searches were performed against your datastore
 
-## Summary
+================
+File: docs/integrations/a2ui.md
+================
+---
+catalog_title: A2UI
+catalog_description: Generate rich, structured UIs from your agents using the Agent-to-UI protocol
+catalog_icon: /adk-docs/integrations/assets/a2ui.svg
+---
 
-Vertex AI Search Grounding transforms AI agents from general-purpose assistants into enterprise-specific knowledge systems capable of providing accurate, source-attributed information from your organization's private documents. By integrating this feature into your ADK agents, you enable them to:
+# A2UI — Agent-to-UI for ADK
 
-- Access proprietary information from your indexed document repositories
-- Provide source attribution for transparency and trust
-- Deliver comprehensive answers with verifiable enterprise facts
-- Maintain data privacy within your Google Cloud environment
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
 
-The grounding process seamlessly connects user queries to your organization's knowledge base, enriching responses with relevant context from your private documents while maintaining the conversational flow. With proper implementation, your agents become powerful tools for enterprise information discovery and decision-making.
+A2UI lets your agent generate **real UI** — cards, forms, charts, tables — not
+just text. Your agent outputs structured JSON, and a renderer on the client
+turns it into interactive components.
+
+It's transport-agnostic: A2UI payloads work over A2A, MCP, REST, WebSockets,
+or any other protocol. The agent describes *what* to show; the client decides
+*how* to render it.
+
+!!! info "Learn more about A2UI"
+    [a2ui.org](https://a2ui.org/) has the full specification, component
+    gallery, catalog reference, and renderer documentation.
+
+## Quickstart
+
+### Install the SDK
+
+```bash
+pip install a2ui
+```
+
+### 1. Set up the Schema Manager
+
+The `A2uiSchemaManager` loads component catalogs and generates system prompts
+that teach the LLM how to produce valid A2UI JSON.
+
+```python
+from a2ui.core.schema.manager import A2uiSchemaManager
+from a2ui.basic_catalog.provider import BasicCatalog
+
+schema_manager = A2uiSchemaManager(
+    catalogs=[
+        BasicCatalog.get_config(
+            examples_path="examples",
+        ),
+    ],
+)
+```
+
+!!! note
+    The schema manager will automatically detect the A2UI version from
+    incoming client requests. You can also set a version explicitly by
+    passing `version=VERSION_0_9` if needed.
+
+!!! tip
+    If you omit the `catalogs` parameter, the schema manager uses the
+    [Basic Catalog](https://a2ui.org/latest/catalogs/) maintained by the
+    A2UI team, which includes common components like Text, Card, Button,
+    Image, and more. You can also create [custom catalogs](#custom-catalogs)
+    with domain-specific components, or mix the basic catalog with your own
+    — see [Advanced patterns](#advanced-patterns) below.
+
+### 2. Generate the system prompt
+
+The `generate_system_prompt` method combines your agent's role description with
+the A2UI JSON schema and few-shot examples, so the LLM knows exactly how to
+format its output.
+
+```python
+instruction = schema_manager.generate_system_prompt(
+    role_description="You are a helpful assistant that presents information with rich UI.",
+    workflow_description="Analyze the user's request and return structured UI when appropriate.",
+    ui_description="Use cards for summaries, tables for comparisons, and forms for user input.",
+    include_schema=True,
+    include_examples=True,
+    allowed_components=["Heading", "Text", "Card", "Button", "Table"],
+)
+```
+
+### 3. Create your ADK agent
+
+Use the generated instruction as the agent's system prompt:
+
+```python
+from google.adk.agents.llm_agent import LlmAgent
+
+agent = LlmAgent(
+    model="gemini-flash-latest",
+    name="ui_agent",
+    description="An agent that generates rich UI responses.",
+    instruction=instruction,
+)
+```
+
+### 4. Validate and stream A2UI output
+
+Always validate the LLM's JSON output before sending it to the client. The SDK
+provides parsing, fixing, and validation utilities:
+
+```python
+from a2ui.core.parser.parser import parse_response
+from a2ui.a2a import parse_response_to_parts
+
+# Get the active catalog's validator
+selected_catalog = schema_manager.get_selected_catalog()
+
+# Option A: Manual parse + validate
+response_parts = parse_response(llm_output_text)
+for part in response_parts:
+    if part.a2ui_json:
+        selected_catalog.validator.validate(part.a2ui_json)
+
+# Option B: One-liner that returns A2A Parts
+parts = parse_response_to_parts(
+    llm_output_text,
+    validator=selected_catalog.validator,
+    fallback_text="Here's what I found.",
+)
+```
+
+A2UI payloads are wrapped in A2A `DataPart` with the MIME type
+`application/json+a2ui` so renderers can identify them:
+
+```python
+from a2ui.a2a import create_a2ui_part
+
+part = create_a2ui_part({"type": "Card", "props": {"title": "Hello"}})
+# → DataPart(data={...}, metadata={"mimeType": "application/json+a2ui"})
+```
+
+## Advanced patterns
+
+### Dynamic catalogs
+
+For agents that need different UI components depending on context (e.g., charts
+for data queries, forms for configuration), resolve the catalog at runtime and
+store it in session state:
+
+```python
+async def _prepare_session(self, context, run_request, runner):
+    session = await super()._prepare_session(context, run_request, runner)
+
+    # Determine client capabilities from request metadata
+    capabilities = context.message.metadata.get("a2ui_client_capabilities")
+
+    # Select the right catalog
+    a2ui_catalog = self.schema_manager.get_selected_catalog(
+        client_ui_capabilities=capabilities
+    )
+    examples = self.schema_manager.load_examples(a2ui_catalog, validate=True)
+
+    # Store in session state for tool access
+    await runner.session_service.append_event(
+        session,
+        Event(
+            actions=EventActions(
+                state_delta={
+                    "system:a2ui_enabled": True,
+                    "system:a2ui_catalog": a2ui_catalog,
+                    "system:a2ui_examples": examples,
+                }
+            ),
+        ),
+    )
+    return session
+```
+
+### Custom catalogs
+
+You can define your own component catalogs for domain-specific UI:
+
+```python
+from a2ui.core.schema.manager import CatalogConfig
+
+schema_manager = A2uiSchemaManager(
+    catalogs=[
+        BasicCatalog.get_config(),
+        CatalogConfig.from_path(
+            name="my_dashboard_catalog",
+            catalog_path="catalogs/dashboard.json",
+            examples_path="catalogs/dashboard_examples",
+        ),
+    ],
+)
+```
+
+### Multi-agent orchestration
+
+Orchestrator agents can aggregate A2UI capabilities from sub-agents and
+advertise them in the agent card:
+
+```python
+from a2ui.a2a import get_a2ui_agent_extension
+
+# Collect catalog IDs from sub-agents
+supported_catalog_ids = set()
+for subagent in subagents:
+    for extension in subagent_card.capabilities.extensions:
+        if extension.uri == "https://a2ui.org/a2a-extension/a2ui/v0.9":
+            supported_catalog_ids.update(
+                extension.params.get("supportedCatalogIds") or []
+            )
+
+# Advertise in the orchestrator's AgentCard
+agent_card = AgentCard(
+    capabilities=AgentCapabilities(
+        extensions=[
+            get_a2ui_agent_extension(
+                supported_catalog_ids=list(supported_catalog_ids),
+            )
+        ]
+    )
+)
+```
+
+## Samples
+
+The A2UI repository includes ADK sample agents you can run immediately:
+
+| Sample | Description |
+|---|---|
+| [contact_lookup](https://github.com/google/A2UI/tree/main/samples/agent/adk/contact_lookup) | Simple agent with static schema — looks up contacts and displays results as cards |
+| [restaurant_finder](https://github.com/google/A2UI/tree/main/samples/agent/adk/restaurant_finder) | Static schema agent for searching and displaying restaurant information |
+| [rizzcharts](https://github.com/google/A2UI/tree/main/samples/agent/adk/rizzcharts) | Dynamic catalog agent that selects chart components based on context |
+| [orchestrator](https://github.com/google/A2UI/tree/main/samples/agent/adk/orchestrator) | Multi-agent setup that delegates to sub-agents and aggregates UI capabilities |
+
+## Resources
+
+- [A2UI specification](https://a2ui.org/)
+- [A2UI GitHub repository](https://github.com/google/A2UI)
+- [A2UI Python SDK (`a2ui`)](https://pypi.org/project/a2ui/)
+- [Agent development guide](https://github.com/google/A2UI/blob/main/agent_sdks/python/agent_development.md)
+- [Component gallery](https://a2ui.org/latest/reference/components/)
+- [A2A protocol](https://google.github.io/A2A/)
 
 ================
 File: docs/integrations/ag-ui.md
@@ -23207,6 +23161,185 @@ integrations to this catalog, see the
 {{$ render_catalog('integrations/*.md') $}}
 
 ================
+File: docs/integrations/langwatch.md
+================
+---
+catalog_title: LangWatch
+catalog_description: Observability, tracing, evaluation, and prompt optimization for ADK agents
+catalog_icon: /adk-docs/integrations/assets/langwatch.png
+catalog_tags: ["observability", "evaluation"]
+---
+
+# LangWatch observability for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[LangWatch](https://langwatch.ai) is an open-source LLMOps platform for
+observability, evaluation, and prompt optimization. It provides comprehensive
+tracing for ADK agents using [OpenInference
+instrumentation](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk),
+allowing you to monitor, debug, and improve your agents in development and
+production.
+
+## Overview
+
+LangWatch captures traces from ADK using its built-in OpenTelemetry support, giving you:
+
+- **Automatic tracing** - Capture every agent run, tool call, and model request with full context
+- **Online evaluation** - Continuously score production traffic for quality and safety
+- **Guardrails** - Block or modify harmful responses in real-time
+- **Prompt management** - Version, test, and optimize prompts with built-in A/B testing
+- **Datasets and experiments** - Build evaluation sets from real traces and run batch experiments
+
+## Installation
+
+Install the required packages:
+
+```bash
+pip install langwatch openinference-instrumentation-google-adk google-adk
+```
+
+## Setup
+
+Sign up at [langwatch.ai](https://langwatch.ai) or
+[self-host](https://langwatch.ai/docs/self-hosting/overview) the platform, then
+set your API key:
+
+```bash
+export LANGWATCH_API_KEY="your-langwatch-api-key"
+export GOOGLE_API_KEY="your-gemini-api-key"
+```
+
+Initialize tracing:
+
+```python
+import langwatch
+from openinference.instrumentation.google_adk import GoogleADKInstrumentor
+
+langwatch.setup(
+    instrumentors=[GoogleADKInstrumentor()]
+)
+```
+
+That's it. All ADK agent activity will now be traced and sent to your LangWatch
+dashboard automatically.
+
+## Observe
+
+With tracing initialized, run your ADK agent as usual and all interactions will
+appear in LangWatch:
+
+```python
+import langwatch
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from openinference.instrumentation.google_adk import GoogleADKInstrumentor
+
+langwatch.setup(
+    instrumentors=[GoogleADKInstrumentor()]
+)
+
+# Define a tool
+def get_weather(city: str) -> dict:
+    """Retrieves the current weather report for a specified city.
+
+    Args:
+        city (str): The name of the city.
+
+    Returns:
+        dict: status and result or error msg.
+    """
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": (
+                "The weather in New York is sunny with a temperature of 25 degrees"
+                " Celsius (77 degrees Fahrenheit)."
+            ),
+        }
+    else:
+        return {
+            "status": "error",
+            "error_message": f"Weather information for '{city}' is not available.",
+        }
+
+# Create an agent with tools
+agent = Agent(
+    name="weather_agent",
+    model="gemini-2.0-flash",
+    description="Agent to answer questions about the weather.",
+    instruction="You must use the available tools to find an answer.",
+    tools=[get_weather],
+)
+
+app_name = "weather_app"
+user_id = "test_user"
+session_id = "test_session"
+runner = InMemoryRunner(agent=agent, app_name=app_name)
+session_service = runner.session_service
+
+await session_service.create_session(
+    app_name=app_name,
+    user_id=user_id,
+    session_id=session_id,
+)
+
+# Run the agent — all interactions will be traced
+async for event in runner.run_async(
+    user_id=user_id,
+    session_id=session_id,
+    new_message=types.Content(
+        role="user",
+        parts=[types.Part(text="What is the weather in New York?")],
+    ),
+):
+    if event.is_final_response():
+        print(event.content.parts[0].text.strip())
+```
+
+## Adding Custom Metadata
+
+Use the `@langwatch.trace()` decorator to attach additional context to your
+traces:
+
+```python
+@langwatch.trace(name="ADK Weather Agent")
+def run_agent(user_message: str):
+    current_trace = langwatch.get_current_trace()
+    if current_trace:
+        current_trace.update(
+            metadata={
+                "user_id": "user_123",
+                "agent_name": "weather_agent",
+                "environment": "production",
+            }
+        )
+
+    user_msg = types.Content(
+        role="user", parts=[types.Part(text=user_message)]
+    )
+    for event in runner.run(
+        user_id="demo-user",
+        session_id="demo-session",
+        new_message=user_msg,
+    ):
+        if event.is_final_response():
+            return event.content.parts[0].text
+
+    return "No response generated"
+```
+
+## Support and Resources
+
+- [LangWatch Documentation](https://langwatch.ai/docs)
+- [ADK Integration Guide](https://langwatch.ai/docs/integration/python/integrations/google-ai)
+- [LangWatch Repository on GitHub](https://github.com/langwatch/langwatch)
+- [Community Discord](https://discord.gg/langwatch)
+
+================
 File: docs/integrations/linear.md
 ================
 ---
@@ -25839,7 +25972,7 @@ catalog_tags: ["google"]
 # Reflect and Retry plugin for ADK
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-go">Go v0.5.0</span>
 </div>
 
 The Reflect and Retry plugin can help your agent recover from error
@@ -25859,18 +25992,44 @@ agent workflows, including the following capabilities:
 Add this plugin to your ADK workflow by adding it to the plugins setting of your
 ADK project's App object, as shown below:
 
-```python
-from google.adk.apps.app import App
-from google.adk.plugins import ReflectAndRetryToolPlugin
 
-app = App(
-    name="my_app",
-    root_agent=root_agent,
-    plugins=[
-        ReflectAndRetryToolPlugin(max_retries=3),
-    ],
-)
-```
+=== "Python"
+
+    ```python
+    from google.adk.apps.app import App
+    from google.adk.plugins import ReflectAndRetryToolPlugin
+
+    app = App(
+        name="my_app",
+        root_agent=root_agent,
+        plugins=[
+            ReflectAndRetryToolPlugin(max_retries=3),
+        ],
+    )
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+    	"google.golang.org/adk/plugin/retryandreflect"
+    	"google.golang.org/adk/runner"
+    )
+
+    // ... create rootAgent and sessionService ...
+
+    r, err := runner.New(runner.Config{
+    	AppName:        "my_app",
+    	Agent:          rootAgent,
+    	SessionService: sessionService,
+    	PluginConfig: runner.PluginConfig{
+    		Plugins: []*plugin.Plugin{
+    			retryandreflect.MustNew(retryandreflect.WithMaxRetries(3)),
+    		},
+    	},
+    })
+    ```
+
 
 With this configuration, if any tool called by an agent returns an error, the
 request is updated and tried again, up to a maximum of 3 attempts, per tool.
@@ -27599,7 +27758,7 @@ File: docs/plugins/index.md
 # Plugins
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.7.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.7.0</span><span class="lst-typescript">TypeScript v0.2.5</span><span class="lst-go">Go v0.4.0</span><span class="lst-java">Java v0.3.0</span>
 </div>
 
 A Plugin in Agent Development Kit (ADK) is a custom code module that can be
@@ -27797,6 +27956,58 @@ methods, as shown in the following code example:
         System.out.println("[Plugin] LLM request count: " + llmRequestCount);
         return Maybe.empty();
       }
+    }
+    ```
+
+=== "Go"
+
+    ```go title="count_plugin.go"
+    package main
+
+    import (
+    	"fmt"
+
+    	"google.golang.org/adk/agent"
+    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/adk/model"
+    	"google.golang.org/adk/plugin"
+        "google.golang.org/genai"
+    )
+
+    /**
+     * A custom plugin that counts agent and tool invocations.
+     */
+    type CountInvocationPlugin struct {
+    	AgentCount      int
+    	ToolCount       int
+    	LlmRequestCount int
+    }
+
+    func NewCountInvocationPlugin() (*plugin.Plugin, error) {
+    	p := &CountInvocationPlugin{}
+    	return plugin.New(plugin.Config{
+    		Name:                "count_invocation",
+    		BeforeAgentCallback: p.BeforeAgentCallback,
+    		BeforeModelCallback: p.BeforeModelCallback,
+    	})
+    }
+
+    /**
+     * Count agent runs.
+     */
+    func (p *CountInvocationPlugin) BeforeAgentCallback(ctx agent.CallbackContext) (*genai.Content, error) {
+    	p.AgentCount++
+    	fmt.Printf("[Plugin] Agent run count: %d\n", p.AgentCount)
+    	return nil, nil
+    }
+
+    /**
+     * Count LLM requests.
+     */
+    func (p *CountInvocationPlugin) BeforeModelCallback(ctx agent.CallbackContext, req *model.LLMRequest) (*model.LLMResponse, error) {
+    	p.LlmRequestCount++
+    	fmt.Printf("[Plugin] LLM request count: %d\n", p.LlmRequestCount)
+    	return nil, nil
     }
     ```
 
@@ -28010,6 +28221,112 @@ a simple ADK agent.
     }
     ```
 
+=== "Go"
+
+    ```go
+    package main
+
+    import (
+    	"context"
+    	"fmt"
+    	"log"
+
+    	"google.golang.org/adk/agent"
+    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/adk/model/gemini"
+    	"google.golang.org/adk/plugin"
+    	"google.golang.org/adk/runner"
+    	"google.golang.org/adk/session"
+    	"google.golang.org/adk/tool"
+    	"google.golang.org/adk/tool/functiontool"
+    	"google.golang.org/genai"
+    )
+
+    type helloWorldArgs struct {
+    	Query string `json:"query"`
+    }
+
+    type helloWorldResult struct {
+    	Result string `json:"result"`
+    }
+
+    func helloWorld(ctx tool.Context, args helloWorldArgs) (helloWorldResult, error) {
+    	output := fmt.Sprintf("Hello world: query is [%s]", args.Query)
+    	fmt.Println(output)
+    	return helloWorldResult{Result: output}, nil
+    }
+
+    func main() {
+    	ctx := context.Background()
+    	model, err := gemini.NewModel(ctx, "gemini-2.0-flash", &genai.ClientConfig{})
+    	if err != nil {
+    		log.Fatalf("failed to create model: %v", err)
+    	}
+
+    	helloWorldTool, err := functiontool.New(functiontool.Config{
+    		Name:        "hello_world",
+    		Description: "Prints hello world with user query.",
+    	}, helloWorld)
+    	if err != nil {
+    		log.Fatalf("failed to create tool: %v", err)
+    	}
+
+    	rootAgent, err := llmagent.New(llmagent.Config{
+    		Model:       model,
+    		Name:        "hello_world",
+    		Description: "Prints hello world with user query.",
+    		Instruction: "Use hello_world tool to print hello world and user query.",
+    		Tools:       []tool.Tool{helloWorldTool},
+    	})
+    	if err != nil {
+    		log.Fatalf("failed to create agent: %v", err)
+    	}
+
+    	// Create your plugin.
+    	countPlugin, err := NewCountInvocationPlugin()
+    	if err != nil {
+    		log.Fatalf("failed to create plugin: %v", err)
+    	}
+
+    	sessionService := session.InMemoryService()
+    	// Add your plugin here. You can add multiple plugins.
+    	r, err := runner.New(runner.Config{
+    		AppName:        "test_app_with_plugin",
+    		Agent:          rootAgent,
+    		SessionService: sessionService,
+    		PluginConfig: runner.PluginConfig{
+    			Plugins: []*plugin.Plugin{countPlugin},
+    		},
+    	})
+    	if err != nil {
+    		log.Fatalf("failed to create runner: %v", err)
+    	}
+
+    	// The rest is the same as starting a regular ADK runner.
+    	sessResp, err := sessionService.Create(ctx, &session.CreateRequest{
+    		AppName: "test_app_with_plugin",
+    		UserID:  "user",
+    	})
+    	if err != nil {
+    		log.Fatalf("failed to create session: %v", err)
+    	}
+    	sess := sessResp.Session
+
+    	prompt := "hello world"
+    	input := genai.NewContentFromText(prompt, genai.RoleUser)
+
+    	for event, err := range r.Run(ctx, "user", sess.ID(), input, agent.RunConfig{}) {
+    		if err != nil {
+    			log.Printf("AGENT_ERROR: %v", err)
+    			continue
+    		}
+    		if event.Author != "" {
+    			fmt.Printf("** Got event from %s\n", event.Author)
+    		}
+    	}
+    }
+    ```
+
 ### Run the agent with the Plugin
 
 Run the plugin as you typically would. The following shows how to run the
@@ -28031,6 +28348,12 @@ command line:
 
     ```sh
     ./mvnw -q clean compile exec:java -Dexec.mainClass="com.example.Main"
+    ```
+
+=== "Go"
+
+    ```sh
+    go run path/to/main.go
     ```
 
 The output of this previously described agent should look similar to the
@@ -28214,6 +28537,15 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) OnUserMessageCallback(ctx agent.InvocationContext, msg *genai.Content) (*genai.Content, error) {
+      // Your implementation here
+      return nil, nil
+    }
+    ```
+
 ### Runner start callbacks
 
 A *Runner start* callback (`before_run_callback`) happens when the `Runner`
@@ -28253,6 +28585,15 @@ The following code example shows the basic syntax of this callback:
     public Maybe<Content> beforeRunCallback(InvocationContext invocationContext) {
       // Your implementation here
       return Maybe.empty();
+    }
+    ```
+
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) BeforeRunCallback(ctx agent.InvocationContext) (*genai.Content, error) {
+      // Your implementation here
+      return nil, nil
     }
     ```
 
@@ -28345,6 +28686,15 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) OnModelErrorCallback(ctx agent.CallbackContext, req *model.LLMRequest, err error) (*model.LLMResponse, error) {
+      // Your implementation here
+      return nil, nil
+    }
+    ```
+
 ### Tool callbacks
 
 Tool callbacks **(`before_tool`, `after_tool`, `on_tool_error`)** for Plugins
@@ -28418,6 +28768,15 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) OnToolErrorCallback(ctx tool.Context, t tool.Tool, args map[string]any, err error) (map[string]any, error) {
+      // Your implementation here
+      return nil, nil
+    }
+    ```
+
 ### Event callbacks
 
 An *Event callback* (`on_event_callback`) happens when an agent produces
@@ -28463,6 +28822,15 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) OnEventCallback(ctx agent.InvocationContext, event *session.Event) (*session.Event, error) {
+      // Your implementation here
+      return nil, nil
+    }
+    ```
+
 ### Runner end callbacks
 
 The *Runner end* callback **(`after_run_callback`)** happens when the agent has
@@ -28505,13 +28873,21 @@ The following code example shows the basic syntax of this callback:
     }
     ```
 
+=== "Go"
+
+    ```go
+    func (p *MyPlugin) AfterRunCallback(ctx agent.InvocationContext) {
+      // Your implementation here
+    }
+    ```
+
 ## Next steps
 
 Check out these resources for developing and applying Plugins to your ADK
 projects:
 
 -   For more ADK Plugin code examples, see the
-    [ADK Python repository](https://github.com/google/adk-python/tree/main/src/google/adk/plugins).
+    [ADK Samples repository](https://github.com/google/adk-samples).
 -   For information on applying Plugins for security purposes, see
     [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
 
@@ -39752,23 +40128,38 @@ example, if you have a tool called `reimburse`, you can enable a confirmation
 step by wrapping it with the `FunctionTool` class and setting the
 `require_confirmation` parameter to `True`, as shown in the following example:
 
-```
-# From agent.py
-root_agent = Agent(
-   ...
-   tools=[
-        # Set require_confirmation to True to require user confirmation
-        # for the tool call.
-        FunctionTool(reimburse, require_confirmation=True),
-    ],
-...
-```
+=== "Python"
 
-This implementation method requires minimal code, but is limited to simple
-approvals from the user or confirming system. For a complete example of this
-approach, see the
-[human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
-code sample.
+    ```python
+    root_agent = Agent(
+        # ...
+        tools = [
+            # Set require_confirmation to True to require user confirmation
+            # for the tool call.
+            FunctionTool(reimburse, require_confirmation=True),
+        ],
+        # ...
+    )
+
+    # This implementation method requires minimal code, but is limited to simple
+    # approvals from the user or confirming system. For a complete example of this
+    # approach, see the following code sample for a more detailed example:
+    # https://github.com/google/adk-python/blob/main/contributing/samples/human_tool_confirmation/agent.py
+    ```
+
+=== "Java"
+
+    ```java
+    LlmAgent rootAgent = LlmAgent.builder()
+        // ...
+        .tools(
+            // Set requireConfirmation to true to require user confirmation
+            // for the tool call.
+            FunctionTool.create(myClassInstance, "reimburse", true)
+        )
+        // ...
+        .build();
+    ```
 
 ### Require confirmation function
 
@@ -39776,30 +40167,58 @@ You can modify the behavior `require_confirmation` response by replacing its
 input value with a function that returns a boolean response. The following
 example shows a function for determining if a confirmation is required:
 
-```
-async def confirmation_threshold(
-    amount: int, tool_context: ToolContext
-) -> bool:
-  """Returns true if the amount is greater than 1000."""
-  return amount > 1000
-```
+=== "Python"
 
-This function than then be set as the parameter value for the
-`require_confirmation` parameter:
+    ```python
+    async def confirmation_threshold(
+        amount: int, tool_context: ToolContext
+    ) -> bool:
+      """Returns true if the amount is greater than 1000."""
+      return amount > 1000
 
-```
-root_agent = Agent(
-   ...
-   tools=[
-        # Set require_confirmation to True to require user confirmation
-        FunctionTool(reimburse, require_confirmation=confirmation_threshold),
-    ],
-...
-```
+    root_agent = Agent(
+        # ...
+        tools = [
+            # Pass the threshold function to dynamically require confirmation
+            FunctionTool(reimburse, require_confirmation=confirmation_threshold),
+        ],
+        # ...
+    )
+    ```
 
-For a complete example of this implementation, see the
-[human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
-code sample.
+=== "Java"
+
+    ```java
+    // In ADK Java, dynamic threshold confirmation logic is evaluated directly 
+    // inside the tool logic using the ToolContext rather than via a lambda parameter.
+    public Map<String, Object> reimburse(
+        @Schema(name="amount") int amount, ToolContext toolContext) {
+      
+      // 1. Dynamic threshold check
+      if (amount > 1000) { 
+        Optional<ToolConfirmation> toolConfirmation = toolContext.toolConfirmation();
+        if (toolConfirmation.isEmpty()) {
+           toolContext.requestConfirmation("Amount > 1000 requires approval.");
+           return Map.of("status", "Pending manager approval.");
+        } else if (!toolConfirmation.get().confirmed()) {
+           return Map.of("status", "Reimbursement rejected.");
+        }
+      }
+      
+      // 2. Proceed with actual tool logic
+      return Map.of("status", "ok", "reimbursedAmount", amount);
+    }
+
+    LlmAgent rootAgent = LlmAgent.builder()
+        // ...
+        .tools(
+            // No requireConfirmation flag is set because the custom threshold
+            // logic is already handled inside the method!
+            FunctionTool.create(this, "reimburse")
+        )
+        // ...
+        .build();    
+    ```
 
 ## Advanced confirmation {#advanced-confirmation}
 
@@ -39829,35 +40248,73 @@ tool_confirmation object, the `tool_context.request_confirmation()` method with
 The following code shows an example implementation for a tool that processes
 time off requests for an employee:
 
-```
-def request_time_off(days: int, tool_context: ToolContext):
-  """Request day off for the employee."""
-  ...
-  tool_confirmation = tool_context.tool_confirmation
-  if not tool_confirmation:
-    tool_context.request_confirmation(
-        hint=(
-            'Please approve or reject the tool call request_time_off() by'
-            ' responding with a FunctionResponse with an expected'
-            ' ToolConfirmation payload.'
-        ),
-        payload={
-            'approved_days': 0,
-        },
-    )
-    # Return intermediate status indicating that the tool is waiting for
-    # a confirmation response:
-    return {'status': 'Manager approval is required.'}
+=== "Python"
 
-  approved_days = tool_confirmation.payload['approved_days']
-  approved_days = min(approved_days, days)
-  if approved_days == 0:
-    return {'status': 'The time off request is rejected.', 'approved_days': 0}
-  return {
-      'status': 'ok',
-      'approved_days': approved_days,
-  }
-```
+    ```python
+    def request_time_off(days: int, tool_context: ToolContext):
+        """Request day off for the employee."""
+        # ...
+        tool_confirmation = tool_context.tool_confirmation
+        if not tool_confirmation:
+            tool_context.request_confirmation(
+                hint=(
+                    'Please approve or reject the tool call request_time_off() by'
+                    ' responding with a FunctionResponse with an expected'
+                    ' ToolConfirmation payload.'
+                ),
+                payload={
+                    'approved_days': 0,
+                },
+            )
+            # Return intermediate status indicating that the tool is waiting for
+            # a confirmation response:
+            return {'status': 'Manager approval is required.'}
+
+        approved_days = tool_confirmation.payload['approved_days']
+        approved_days = min(approved_days, days)
+        if approved_days == 0:
+            return {'status': 'The time off request is rejected.', 'approved_days': 0}
+        return {
+            'status': 'ok',
+            'approved_days': approved_days,
+        }
+    ```
+
+=== "Java"
+
+    ```java
+    public Map<String, Object> requestTimeOff(
+        @Schema(name="days") int days, 
+        ToolContext toolContext) {
+        // Request day off for the employee.
+        // ...
+        Optional<ToolConfirmation> toolConfirmation = toolContext.toolConfirmation();
+        if (toolConfirmation.isEmpty()) {
+            toolContext.requestConfirmation(
+                "Please approve or reject the tool call requestTimeOff() by " +
+                "responding with a FunctionResponse with an expected " +
+                "ToolConfirmation payload.",
+                Map.of("approved_days", 0)
+            );
+            // Return intermediate status indicating that the tool is waiting for
+            // a confirmation response:
+            return Map.of("status", "Manager approval is required.");
+        }
+
+        Map<String, Object> payload = (Map<String, Object>) toolConfirmation.get().payload();
+        int approvedDays = (int) payload.get("approved_days");
+        approvedDays = Math.min(approvedDays, days);
+        
+        if (approvedDays == 0) {
+            return Map.of("status", "The time off request is rejected.", "approved_days", 0);
+        }
+        
+        return Map.of(
+            "status", "ok",
+            "approved_days", approvedDays
+        );
+    }
+    ```
 
 For a complete example of this approach, see the
 [human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
@@ -39878,7 +40335,7 @@ You can send the request to the ADK API server's `/run` or `/run_sse` endpoint,
 or directly to the ADK runner. The following example uses a  `curl` command to
 send the confirmation to the  `/run_sse` endpoint:
 
-```
+```bash
  curl -X POST http://localhost:8000/run_sse \
  -H "Content-Type: application/json" \
  -d '{
@@ -40012,6 +40469,27 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         ```
     In this example, both `location` and `unit` are mandatory.
 
+=== "Java"
+    In Java, primitive types (e.g., `int`, `double`, `boolean`) are inherently **required** because they cannot be null. For object types (like `String` or `Integer`), they are typically considered required unless explicitly marked as optional.
+
+    The `@Schema` annotation is used to provide the argument's description and can explicitly define parameter properties. This is crucial for the LLM to understand what the argument is for.
+
+    ???+ "Example: Required Parameters"
+        ```java
+        // The @Schema annotation on the parameter provides the description.
+        public static Map<String, Object> getWeather(
+            @Schema(description = "The city and state, e.g., San Francisco, CA", name = "location")
+            String location,
+            
+            @Schema(description = "The temperature unit, either 'Celsius' or 'Fahrenheit'", name = "unit")
+            String unit) {
+            
+            // ... function logic ...
+            return Map.of("status", "success", "report", "Weather for " + location + " is sunny.");
+        }
+        ```
+    In this example, both `location` and `unit` are mandatory.
+
 ##### Optional Parameters
 
 === "Python"
@@ -40054,6 +40532,34 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         ```
     Here, `unit` and `days` are optional. The LLM can choose to provide them, but they are not required.
 
+=== "Java"
+    A parameter can be considered **optional** in Java by using object types that allow `null` values (such as `Integer` instead of `int`), or by explicitly defining it as optional using `java.util.Optional`.
+
+    ???+ "Example: Optional Parameters"
+        ```java
+        import java.util.Map;
+        import java.util.Optional;
+
+        public static Map<String, Object> searchFlights(
+            @Schema(description = "The destination city.", name = "destination")
+            String destination,
+            
+            @Schema(description = "The desired departure date.", name = "departureDate")
+            String departureDate,
+            
+            @Schema(description = "Number of flexible days for the search. Defaults to 0.", name = "flexibleDays")
+            Optional<Integer> flexibleDays) {
+            
+            // ... function logic ...
+            int days = flexibleDays.orElse(0);
+            if (days > 0) {
+                return Map.of("status", "success", "report", "Found flexible flights to " + destination + ".");
+            }
+            return Map.of("status", "success", "report", "Found flights to " + destination + " on " + departureDate + ".");
+        }
+        ```
+    Here, `flexibleDays` is optional. The LLM can choose to provide it, but it's not required.
+
 ##### Optional Parameters with `typing.Optional`
 You can also mark a parameter as optional using `typing.Optional[SomeType]` or the `| None` syntax (Python 3.10+). This signals that the parameter can be `None`. When combined with a default value of `None`, it behaves as a standard optional parameter.
 
@@ -40081,13 +40587,13 @@ While you can include `*args` (variable positional arguments) and `**kwargs` (va
 
 #### Return Type
 
-The preferred return type for a Function Tool is a **dictionary** in Python, a **Map** in Java, or an **object** in TypeScript. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary, the framework automatically wraps it into a dictionary with a single key named **"result"**.
+The preferred return type for a Function Tool is a **dictionary** in Python, a **Map** or custom **Record or POJO** in Java, or an **object** in TypeScript. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary or map, the framework automatically wraps it into a dictionary with a single key named **"result"**.
 
 Strive to make your return values as descriptive as possible. *For example,* instead of returning a numeric error code, return a dictionary with an "error_message" key containing a human-readable explanation. **Remember that the LLM**, not a piece of code, needs to understand the result. As a best practice, include a "status" key in your return dictionary to indicate the overall outcome (e.g., "success", "error", "pending"), providing the LLM with a clear signal about the operation's state.
 
 #### Docstrings
 
-The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values.
+The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values. In Java, you can use Javadoc comments or the `@Schema(description="...")` annotation on your method to serve as this description.
 
 ### Passing Data Between Tools
 
