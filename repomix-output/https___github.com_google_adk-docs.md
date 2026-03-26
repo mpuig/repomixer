@@ -21445,6 +21445,217 @@ For a complete code example, see the
 agent sample project.
 
 ================
+File: docs/integrations/couchbase.md
+================
+---
+catalog_title: Couchbase
+catalog_description: Query collections, explore schemas, and run SQL++ queries
+catalog_icon: /adk-docs/integrations/assets/couchbase.png
+catalog_tags: ["data", "mcp"]
+---
+
+# Couchbase MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Couchbase MCP Server](https://github.com/Couchbase-Ecosystem/mcp-server-couchbase)
+connects your ADK agent to [Couchbase](https://www.couchbase.com/) clusters. This
+integration gives your agent the ability to explore Couchbase data using natural
+language, including exploring data, running queries, and analyzing performance
+issues.
+
+## Use cases
+
+- **Data Exploration**: Discover buckets, scopes, collections, and document
+  schemas, query data using natural language queries.
+
+- **Database Administration**: Monitor cluster health, check running services,
+  and manage bucket, scope, and collection structures through conversational
+  commands.
+
+- **Query Performance Analysis**: Get index recommendations, analyze query
+  plans, and investigate slow or non-selective queries to optimize performance.
+
+## Prerequisites
+
+- A running Couchbase cluster. You can:
+    - Use [Couchbase Capella](https://cloud.couchbase.com/) (managed cloud service)
+    - Run Couchbase Server 7.x+ locally or self-hosted
+- Connection string and credentials (username/password or client certificate
+  for mTLS) for the cluster
+- [`uv`](https://docs.astral.sh/uv/) package manager installed (for the `uvx`
+  command)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        CB_CONNECTION_STRING = "couchbase://localhost"
+        CB_USERNAME = "Administrator"
+        CB_PASSWORD = "password"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="couchbase_agent",
+            instruction="Help users explore and query Couchbase databases",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="uvx",
+                            args=["couchbase-mcp-server"],
+                            env={
+                                "CB_CONNECTION_STRING": CB_CONNECTION_STRING,
+                                "CB_USERNAME": CB_USERNAME,
+                                "CB_PASSWORD": CB_PASSWORD,
+                                "CB_MCP_READ_ONLY_MODE": "true",  # Prevents write operations
+                            },
+                        ),
+                        timeout=60,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const CB_CONNECTION_STRING = "couchbase://localhost";
+        const CB_USERNAME = "Administrator";
+        const CB_PASSWORD = "password";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "couchbase_agent",
+            instruction: "Help users explore and query Couchbase databases",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "uvx",
+                        args: ["couchbase-mcp-server"],
+                        env: {
+                            CB_CONNECTION_STRING: CB_CONNECTION_STRING,
+                            CB_USERNAME: CB_USERNAME,
+                            CB_PASSWORD: CB_PASSWORD,
+                            CB_MCP_READ_ONLY_MODE: "true", // Prevents write operations
+                        },
+                    },
+                })
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Available tools
+
+### Cluster setup and health tools
+
+Tool | Description
+---- | -----------
+`get_server_configuration_status` | Get the status of the MCP server
+`test_cluster_connection` | Check the cluster credentials by connecting to the cluster
+`get_cluster_health_and_services` | Get cluster health status and list of all running services
+
+### Data model and schema discovery tools
+
+Tool | Description
+---- | -----------
+`get_buckets_in_cluster` | Get a list of all the buckets in the cluster
+`get_scopes_in_bucket` | Get a list of all the scopes in the specified bucket
+`get_collections_in_scope` | Get a list of all the collections in a specified scope and bucket
+`get_scopes_and_collections_in_bucket` | Get a list of all the scopes and collections in the specified bucket
+`get_schema_for_collection` | Get the structure for a collection
+
+### Document KV operations tools
+
+Tool | Description
+---- | -----------
+`get_document_by_id` | Get a document by ID from a specified scope and collection
+`upsert_document_by_id` | Upsert a document by ID to a specified scope and collection. **Disabled when `CB_MCP_READ_ONLY_MODE=true`.**
+`insert_document_by_id` | Insert a new document by ID (fails if document exists). **Disabled when `CB_MCP_READ_ONLY_MODE=true`.**
+`replace_document_by_id` | Replace an existing document by ID (fails if document doesn't exist). **Disabled when `CB_MCP_READ_ONLY_MODE=true`.**
+`delete_document_by_id` | Delete a document by ID from a specified scope and collection. **Disabled when `CB_MCP_READ_ONLY_MODE=true`.**
+
+### Query and indexing tools
+
+Tool | Description
+---- | -----------
+`run_sql_plus_plus_query` | Run a [SQL++ query](https://www.couchbase.com/sqlplusplus/) on a specified scope
+`list_indexes` | List all indexes in the cluster with their definitions, with optional filtering by bucket, scope, collection and index name
+`get_index_advisor_recommendations` | Get index recommendations from Couchbase Index Advisor for a given SQL++ query to optimize query performance
+
+### Query performance analysis tools
+
+Tool | Description
+---- | -----------
+`get_longest_running_queries` | Get longest running queries by average service time
+`get_most_frequent_queries` | Get most frequently executed queries
+`get_queries_with_largest_response_sizes` | Get queries with the largest response sizes
+`get_queries_with_large_result_count` | Get queries with the largest result counts
+`get_queries_using_primary_index` | Get queries that use a primary index (potential performance concern)
+`get_queries_not_using_covering_index` | Get queries that don't use a covering index
+`get_queries_not_selective` | Get queries that are not selective (index scans return many more documents than final result)
+
+## Configuration
+
+### Environment variables
+
+Variable | Description | Default
+-------- | ----------- | -------
+`CB_CONNECTION_STRING` | Connection string to the Couchbase cluster | Required
+`CB_USERNAME` | Username for basic authentication | Required (or client certificate for mTLS)
+`CB_PASSWORD` | Password for basic authentication | Required (or client certificate for mTLS)
+`CB_CLIENT_CERT_PATH` | Path to the client certificate file for mTLS authentication | None
+`CB_CLIENT_KEY_PATH` | Path to the client key file for mTLS authentication | None
+`CB_CA_CERT_PATH` | Path to server root certificate for TLS (not required for Capella) | None
+`CB_MCP_READ_ONLY_MODE` | Prevent all data modifications (KV and query) | `true`
+`CB_MCP_DISABLED_TOOLS` | Comma-separated list of tools to disable | None
+
+### Read-only mode
+
+The `CB_MCP_READ_ONLY_MODE` setting (enabled by default) restricts the server to
+read-only operations. When enabled, KV write tools (`upsert_document_by_id`,
+`insert_document_by_id`, `replace_document_by_id`, `delete_document_by_id`) are
+not loaded, and SQL++ queries that modify data are blocked. This makes it safe
+for data exploration without risk of accidental modifications.
+
+### Disabling tools
+
+You can disable specific tools using `CB_MCP_DISABLED_TOOLS`:
+
+```python
+env={
+    "CB_CONNECTION_STRING": "couchbase://localhost",
+    "CB_USERNAME": "Administrator",
+    "CB_PASSWORD": "password",
+    "CB_MCP_DISABLED_TOOLS": "get_index_advisor_recommendations,get_queries_not_selective",
+}
+```
+
+## Additional resources
+
+- [Couchbase MCP Server Repository](https://github.com/Couchbase-Ecosystem/mcp-server-couchbase)
+- [Couchbase Documentation](https://docs.couchbase.com/)
+- [Couchbase Capella](https://cloud.couchbase.com/)
+
+================
 File: docs/integrations/data-agent.md
 ================
 ---
@@ -22116,7 +22327,7 @@ File: docs/integrations/galileo.md
 catalog_title: Galileo
 catalog_description: End-to-end tracing, evaluation, and monitoring for ADK agents
 catalog_icon: /adk-docs/integrations/assets/galileo.png
-catalog_tags: ["observability", "evaluation"]
+catalog_tags: ["observability"]
 ---
 
 # Agent Observability and Evaluation with Galileo
@@ -22303,7 +22514,7 @@ automate workflows using natural language.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
 
@@ -22313,7 +22524,7 @@ automate workflows using natural language.
             instruction="Help users get information from GitHub",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://api.githubcopilot.com/mcp/",
                         headers={
                             "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -22877,6 +23088,121 @@ If no space is configured, one is auto-created per user:
 - [GoodMem ADK on PyPI](https://pypi.org/project/goodmem-adk/)
 
 ================
+File: docs/integrations/google-developer-knowledge.md
+================
+---
+catalog_title: Google Developer Knowledge
+catalog_description: Search Google's official developer documentation for code and guidance
+catalog_icon: /adk-docs/integrations/assets/google-developer-knowledge.png
+catalog_tags: ["mcp"]
+---
+
+# Google Developer Knowledge MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Google Developer Knowledge MCP
+server](https://developers.google.com/knowledge/mcp) provides programmatic
+access to Google's public developer documentation, enabling you to integrate
+this knowledge base into your own applications and workflows. By connecting your
+ADK agent to Google's official library of documentation, it ensures the code and
+guidance you receive are up-to-date and based on authoritative context.
+
+## Use cases
+
+- **Implementation guidance**: Ask for the best way to implement specific features (e.g., push notifications using Firebase Cloud Messaging).
+- **Code generation and explanation**: Search documentation for code examples, such as listing all buckets in a Cloud Storage project in Python.
+- **Troubleshooting and debugging**: Query error messages or API key watermarks to quickly resolve issues.
+- **Comparative analysis and summarization**: Create comparisons between services like Cloud Run and Cloud Functions.
+
+## Prerequisites
+
+- A [Google Cloud project](https://developers.google.com/workspace/guides/create-project)
+- [Developer Knowledge API enabled](https://console.cloud.google.com/start/api?id=developerknowledge.googleapis.com)
+- Completed [Authentication Configuration](https://developers.google.com/knowledge/mcp#authentication) (OAuth or API Key)
+
+## Installation
+
+You must enable the Developer Knowledge MCP server in your Google Cloud Project.
+Please refer to the official [Installation
+Guide](https://developers.google.com/knowledge/mcp#installation) for the precise
+`gcloud` command and instructions.
+
+## Use with agent
+
+=== "Python"
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+        DEVELOPER_KNOWLEDGE_API_KEY = "YOUR_DEVELOPER_KNOWLEDGE_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="google_knowledge_agent",
+            instruction="Search Google developer documentation for implementation guidance.",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPConnectionParams(
+                        url="https://developerknowledge.googleapis.com/mcp",
+                        headers={"X-Goog-Api-Key": DEVELOPER_KNOWLEDGE_API_KEY},
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const DEVELOPER_KNOWLEDGE_API_KEY = "YOUR_DEVELOPER_KNOWLEDGE_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "google_knowledge_agent",
+            instruction: "Search Google developer documentation for implementation guidance.",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://developerknowledge.googleapis.com/mcp",
+                    transportOptions: {
+                        requestInit: {
+                            headers: {
+                                "X-Goog-Api-Key": DEVELOPER_KNOWLEDGE_API_KEY,
+                            },
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Available tools
+
+| Tool name | Description |
+|---|---|
+| `search_documents` | Searches Google's developer documentation to find relevant pages and snippets for your query |
+| `get_documents` | Retrieves the full page content of multiple documents using the parent reference from search results |
+
+## Additional resources
+
+- [Developer Knowledge MCP Documentation](https://developers.google.com/knowledge/mcp)
+- [Developer Knowledge API Reference](https://developers.google.com/knowledge/api)
+- [Corpus Reference](https://developers.google.com/knowledge/reference/corpus-reference)
+
+================
 File: docs/integrations/google-search.md
 ================
 ---
@@ -23016,7 +23342,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
 
@@ -23026,7 +23352,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
             instruction="Help users get information from Hugging Face",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://huggingface.co/mcp",
                         headers={
                             "Authorization": f"Bearer {HUGGING_FACE_TOKEN}",
@@ -23427,7 +23753,7 @@ project cycles, and automate development workflows using natural language.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
 
@@ -23437,7 +23763,7 @@ project cycles, and automate development workflows using natural language.
             instruction="Help users manage issues, projects, and cycles in Linear",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://mcp.linear.app/mcp",
                         headers={
                             "Authorization": f"Bearer {LINEAR_API_KEY}",
@@ -24728,7 +25054,7 @@ for detailed setup instructions.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         N8N_INSTANCE_URL = "https://localhost:5678"
         N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
@@ -24739,7 +25065,7 @@ for detailed setup instructions.
             instruction="Help users manage and execute workflows in n8n",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url=f"{N8N_INSTANCE_URL}/mcp-server/http",
                         headers={
                             "Authorization": f"Bearer {N8N_MCP_TOKEN}",
@@ -25623,7 +25949,7 @@ natural language interactions.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
 
@@ -25633,7 +25959,7 @@ natural language interactions.
             instruction="Help users manage their Postman workspaces and collections",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://mcp.postman.com/mcp",
                         # (Optional) Use "/minimal" for essential tools only
                         # (Optional) Use "/code" for code generation tools
@@ -25966,7 +26292,7 @@ File: docs/integrations/reflect-and-retry.md
 catalog_title: Reflect and Retry Plugin
 catalog_description: Automatically retry tool calls that fail
 catalog_icon: /adk-docs/integrations/assets/adk.png
-catalog_tags: ["google"]
+catalog_tags: ["google", "resilience"]
 ---
 
 # Reflect and Retry plugin for ADK
@@ -26071,7 +26397,7 @@ error_handling_plugin = CustomRetryPlugin(max_retries=5)
 
 ## Next steps
 
-For complete code samples using the Reflect and Retry plugin, see the following: 
+For complete code samples using the Reflect and Retry plugin, see the following:
 
 *   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/basic)
     code sample
@@ -26085,6 +26411,7 @@ File: docs/integrations/restate.md
 catalog_title: Restate
 catalog_description: Resilient agent execution and orchestration with durable sessions and human approvals
 catalog_icon: /adk-docs/integrations/assets/restate.svg
+catalog_tags: ["resilience"]
 ---
 
 # Restate plugin for ADK
@@ -26597,7 +26924,7 @@ operations.
         ```python
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
 
@@ -26607,7 +26934,7 @@ operations.
             instruction="Help users manage their Stripe account",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://mcp.stripe.com",
                         headers={
                             "Authorization": f"Bearer {STRIPE_SECRET_KEY}",
@@ -26868,6 +27195,7 @@ File: docs/integrations/temporal.md
 catalog_title: Temporal
 catalog_description: Resilient, scalable agents, long-running agents and tools, human approvals, and safe versioning
 catalog_icon: /adk-docs/integrations/assets/temporal.png
+catalog_tags: ["resilience"]
 ---
 
 # Temporal plugin for ADK
@@ -27396,7 +27724,7 @@ business data using natural language, without writing SQL or custom scripts.
         import os
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPServerParams
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
         # Required for recursive $ref in MCP schema (https://github.com/google/adk-python/issues/3870)
         os.environ["ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL"] = "1"
@@ -27409,7 +27737,7 @@ business data using natural language, without writing SQL or custom scripts.
             instruction="Help users analyze their marketing and business data.",
             tools=[
                 McpToolset(
-                    connection_params=StreamableHTTPServerParams(
+                    connection_params=StreamableHTTPConnectionParams(
                         url="https://mcp.windsor.ai",
                         headers={
                             "Authorization": f"Bearer {WINDSOR_API_KEY}",
@@ -38858,10 +39186,10 @@ In this part, you learned how to implement multimodal features in ADK Gemini Liv
 ================
 File: docs/streaming/configuration.md
 ================
-# Configuring streaming behaviour
+# Configuring streaming behavior
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 There are some configurations you can set for live(streaming) agents. 
@@ -38870,20 +39198,42 @@ It's set by [RunConfig](https://github.com/google/adk-python/blob/main/src/googl
 
 For example, if you want to set voice config, you can leverage speech_config. 
 
-```python
-voice_config = genai_types.VoiceConfig(
-    prebuilt_voice_config=genai_types.PrebuiltVoiceConfigDict(
-        voice_name='Aoede'
-    )
-)
-speech_config = genai_types.SpeechConfig(voice_config=voice_config)
-run_config = RunConfig(speech_config=speech_config)
+=== "Python"
 
-runner.run_live(
-    ...,
-    run_config=run_config,
-)
-```
+    ```python
+    voice_config = genai_types.VoiceConfig(
+        prebuilt_voice_config=genai_types.PrebuiltVoiceConfigDict(
+            voice_name='Aoede'
+        )
+    )
+    speech_config = genai_types.SpeechConfig(voice_config=voice_config)
+    run_config = RunConfig(speech_config=speech_config)
+
+    runner.run_live(
+        # ...,
+        run_config=run_config,
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.RunConfig;
+    import com.google.genai.types.PrebuiltVoiceConfig;
+    import com.google.genai.types.SpeechConfig;
+    import com.google.genai.types.VoiceConfig;
+
+    VoiceConfig voiceConfig =
+        VoiceConfig.builder()
+            .prebuiltVoiceConfig(PrebuiltVoiceConfig.builder().voiceName("Aoede").build())
+            .build();
+    SpeechConfig speechConfig = SpeechConfig.builder().voiceConfig(voiceConfig).build();
+    RunConfig runConfig = RunConfig.builder().setSpeechConfig(speechConfig).build();
+
+    runner.runLive(
+        // ...,
+        runConfig);
+    ```
 
 ================
 File: docs/streaming/index.md
@@ -38989,7 +39339,7 @@ File: docs/streaming/streaming-tools.md
 # Streaming Tools
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 Streaming tools allows tools(functions) to stream intermediate results back to agents and agents can respond to those intermediate results. 
@@ -39011,134 +39361,232 @@ We support two types of streaming tools:
 
 Now let's define an agent that can monitor stock price changes and monitor the video stream changes. 
 
-```python
-import asyncio
-from typing import AsyncGenerator
+=== "Python"
 
-from google.adk.agents import LiveRequestQueue
-from google.adk.agents.llm_agent import Agent
-from google.adk.tools.function_tool import FunctionTool
-from google.genai import Client
-from google.genai import types as genai_types
+    ```python
+    import asyncio
+    from typing import AsyncGenerator
 
-
-async def monitor_stock_price(stock_symbol: str) -> AsyncGenerator[str, None]:
-  """This function will monitor the price for the given stock_symbol in a continuous, streaming and asynchronously way."""
-  print(f"Start monitor stock price for {stock_symbol}!")
-
-  # Let's mock stock price change.
-  await asyncio.sleep(4)
-  price_alert1 = f"the price for {stock_symbol} is 300"
-  yield price_alert1
-  print(price_alert1)
-
-  await asyncio.sleep(4)
-  price_alert1 = f"the price for {stock_symbol} is 400"
-  yield price_alert1
-  print(price_alert1)
-
-  await asyncio.sleep(20)
-  price_alert1 = f"the price for {stock_symbol} is 900"
-  yield price_alert1
-  print(price_alert1)
-
-  await asyncio.sleep(20)
-  price_alert1 = f"the price for {stock_symbol} is 500"
-  yield price_alert1
-  print(price_alert1)
+    from google.adk.agents import LiveRequestQueue
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.tools.function_tool import FunctionTool
+    from google.genai import Client
+    from google.genai import types as genai_types
 
 
-# for video streaming, `input_stream: LiveRequestQueue` is required and reserved key parameter for ADK to pass the video streams in.
-async def monitor_video_stream(
-    input_stream: LiveRequestQueue,
-) -> AsyncGenerator[str, None]:
-  """Monitor how many people are in the video streams."""
-  print("start monitor_video_stream!")
-  client = Client(vertexai=False)
-  prompt_text = (
-      "Count the number of people in this image. Just respond with a numeric"
-      " number."
-  )
-  last_count = None
-  while True:
-    last_valid_req = None
-    print("Start monitoring loop")
+    async def monitor_stock_price(stock_symbol: str) -> AsyncGenerator[str, None]:
+      """This function will monitor the price for the given stock_symbol in a continuous, streaming and asynchronously way."""
+      print(f"Start monitor stock price for {stock_symbol}!")
 
-    # use this loop to pull the latest images and discard the old ones
-    while input_stream._queue.qsize() != 0:
-      live_req = await input_stream.get()
+      # Let's mock stock price change.
+      await asyncio.sleep(4)
+      price_alert1 = f"the price for {stock_symbol} is 300"
+      yield price_alert1
+      print(price_alert1)
 
-      if live_req.blob is not None and live_req.blob.mime_type == "image/jpeg":
-        last_valid_req = live_req
+      await asyncio.sleep(4)
+      price_alert1 = f"the price for {stock_symbol} is 400"
+      yield price_alert1
+      print(price_alert1)
 
-    # If we found a valid image, process it
-    if last_valid_req is not None:
-      print("Processing the most recent frame from the queue")
+      await asyncio.sleep(20)
+      price_alert1 = f"the price for {stock_symbol} is 900"
+      yield price_alert1
+      print(price_alert1)
 
-      # Create an image part using the blob's data and mime type
-      image_part = genai_types.Part.from_bytes(
-          data=last_valid_req.blob.data, mime_type=last_valid_req.blob.mime_type
+      await asyncio.sleep(20)
+      price_alert1 = f"the price for {stock_symbol} is 500"
+      yield price_alert1
+      print(price_alert1)
+
+
+    # for video streaming, `input_stream: LiveRequestQueue` is required and reserved key parameter for ADK to pass the video streams in.
+    async def monitor_video_stream(
+        input_stream: LiveRequestQueue,
+    ) -> AsyncGenerator[str, None]:
+      """Monitor how many people are in the video streams."""
+      print("start monitor_video_stream!")
+      client = Client(vertexai=False)
+      prompt_text = (
+          "Count the number of people in this image. Just respond with a numeric"
+          " number."
       )
+      last_count = None
+      while True:
+        last_valid_req = None
+        print("Start monitoring loop")
 
-      contents = genai_types.Content(
-          role="user",
-          parts=[image_part, genai_types.Part.from_text(prompt_text)],
-      )
+        # use this loop to pull the latest images and discard the old ones
+        while input_stream._queue.qsize() != 0:
+          live_req = await input_stream.get()
 
-      # Call the model to generate content based on the provided image and prompt
-      response = client.models.generate_content(
-          model="gemini-2.0-flash-exp",
-          contents=contents,
-          config=genai_types.GenerateContentConfig(
-              system_instruction=(
-                  "You are a helpful video analysis assistant. You can count"
-                  " the number of people in this image or video. Just respond"
-                  " with a numeric number."
-              )
-          ),
-      )
-      if not last_count:
-        last_count = response.candidates[0].content.parts[0].text
-      elif last_count != response.candidates[0].content.parts[0].text:
-        last_count = response.candidates[0].content.parts[0].text
-        yield response
-        print("response:", response)
+          if live_req.blob is not None and live_req.blob.mime_type == "image/jpeg":
+            last_valid_req = live_req
 
-    # Wait before checking for new images
-    await asyncio.sleep(0.5)
+        # If we found a valid image, process it
+        if last_valid_req is not None:
+          print("Processing the most recent frame from the queue")
+
+          # Create an image part using the blob's data and mime type
+          image_part = genai_types.Part.from_bytes(
+              data=last_valid_req.blob.data, mime_type=last_valid_req.blob.mime_type
+          )
+
+          contents = genai_types.Content(
+              role="user",
+              parts=[image_part, genai_types.Part.from_text(prompt_text)],
+          )
+
+          # Call the model to generate content based on the provided image and prompt
+          response = client.models.generate_content(
+              model="gemini-2.0-flash-exp",
+              contents=contents,
+              config=genai_types.GenerateContentConfig(
+                  system_instruction=(
+                      "You are a helpful video analysis assistant. You can count"
+                      " the number of people in this image or video. Just respond"
+                      " with a numeric number."
+                  )
+              ),
+          )
+          if not last_count:
+            last_count = response.candidates[0].content.parts[0].text
+          elif last_count != response.candidates[0].content.parts[0].text:
+            last_count = response.candidates[0].content.parts[0].text
+            yield response
+            print("response:", response)
+
+        # Wait before checking for new images
+        await asyncio.sleep(0.5)
 
 
-# Use this exact function to help ADK stop your streaming tools when requested.
-# for example, if we want to stop `monitor_stock_price`, then the agent will
-# invoke this function with stop_streaming(function_name=monitor_stock_price).
-def stop_streaming(function_name: str):
-  """Stop the streaming
+    # Use this exact function to help ADK stop your streaming tools when requested.
+    # for example, if we want to stop `monitor_stock_price`, then the agent will
+    # invoke this function with stop_streaming(function_name=monitor_stock_price).
+    def stop_streaming(function_name: str):
+      """Stop the streaming
 
-  Args:
-    function_name: The name of the streaming function to stop.
-  """
-  pass
+      Args:
+        function_name: The name of the streaming function to stop.
+      """
+      pass
 
 
-root_agent = Agent(
-    model="gemini-2.0-flash-exp",
-    name="video_streaming_agent",
-    instruction="""
-      You are a monitoring agent. You can do video monitoring and stock price monitoring
-      using the provided tools/functions.
-      When users want to monitor a video stream,
-      You can use monitor_video_stream function to do that. When monitor_video_stream
-      returns the alert, you should tell the users.
-      When users want to monitor a stock price, you can use monitor_stock_price.
-      Don't ask too many questions. Don't be too talkative.
-    """,
-    tools=[
-        monitor_video_stream,
-        monitor_stock_price,
-        FunctionTool(stop_streaming),
-    ]
-)
-```
+    root_agent = Agent(
+        model="gemini-2.0-flash-exp",
+        name="video_streaming_agent",
+        instruction="""
+          You are a monitoring agent. You can do video monitoring and stock price monitoring
+          using the provided tools/functions.
+          When users want to monitor a video stream,
+          You can use monitor_video_stream function to do that. When monitor_video_stream
+          returns the alert, you should tell the users.
+          When users want to monitor a stock price, you can use monitor_stock_price.
+          Don't ask too many questions. Don't be too talkative.
+        """,
+        tools=[
+            monitor_video_stream,
+            monitor_stock_price,
+            FunctionTool(stop_streaming),
+        ]
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LiveRequestQueue;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.Annotations.Schema;
+    import com.google.adk.tools.FunctionTool;
+    import com.google.genai.Client;
+    import com.google.genai.types.Content;
+    import com.google.genai.types.GenerateContentConfig;
+    import com.google.genai.types.GenerateContentResponse;
+    import com.google.genai.types.Part;
+    import io.reactivex.rxjava3.core.Flowable;
+    import java.util.Arrays;
+    import java.util.Collections;
+    import java.util.Map;
+    import java.util.concurrent.TimeUnit;
+
+    public class StreamingTools {
+
+      @Schema(description = "This function will monitor the price for the given stock_symbol in a continuous, streaming and asynchronously way.")
+      public static Flowable<Map<String, Object>> monitorStockPrice(@Schema(name = "stockSymbol") String stockSymbol) {
+        System.out.println("Start monitor stock price for " + stockSymbol + "!");
+
+        return Flowable.concat(
+            Flowable.<Map<String, Object>>just(Collections.singletonMap("result", "the price for " + stockSymbol + " is 300")).delay(4, TimeUnit.SECONDS),
+            Flowable.<Map<String, Object>>just(Collections.singletonMap("result", "the price for " + stockSymbol + " is 400")).delay(4, TimeUnit.SECONDS),
+            Flowable.<Map<String, Object>>just(Collections.singletonMap("result", "the price for " + stockSymbol + " is 900")).delay(20, TimeUnit.SECONDS),
+            Flowable.<Map<String, Object>>just(Collections.singletonMap("result", "the price for " + stockSymbol + " is 500")).delay(20, TimeUnit.SECONDS)
+        );
+      }
+
+      // for video streaming, `inputStream` is required and reserved parameter for ADK to pass the video streams in.
+      @Schema(description = "Monitor how many people are in the video streams.")
+      public static Flowable<Map<String, Object>> monitorVideoStream(@Schema(name = "inputStream") LiveRequestQueue inputStream) {
+        System.out.println("start monitor_video_stream!");
+        Client client = Client.builder().build();
+        String promptText = "Count the number of people in this image. Just respond with a numeric number.";
+        
+        // We use RxJava to process the stream
+        return inputStream.get()
+            .filter(req -> req.blob().isPresent() && "image/jpeg".equals(req.blob().get().mimeType()))
+            .sample(500, TimeUnit.MILLISECONDS) // Process one frame every 0.5 seconds
+            .map(req -> {
+              System.out.println("Processing the most recent frame from the queue");
+              Part imagePart = Part.builder().inlineData(req.blob().get()).build();
+              Content contents = Content.builder()
+                  .role("user")
+                  .parts(Arrays.asList(imagePart, Part.fromText(promptText)))
+                  .build();
+
+              GenerateContentResponse response = client.models().generateContent(
+                  "gemini-2.5-flash",
+                  contents,
+                  GenerateContentConfig.builder()
+                      .systemInstruction(Content.builder().parts(Arrays.asList(
+                          Part.fromText("You are a helpful video analysis assistant. You can count the number of people in this image or video. Just respond with a numeric number.")
+                      )).build())
+                      .build()
+              );
+              return (Map<String, Object>) Collections.<String, Object>singletonMap("result", response.text());
+            })
+            .distinctUntilChanged()
+            .doOnNext(res -> System.out.println("response: " + res));
+      }
+
+      // Use this exact function to help ADK stop your streaming tools when requested.
+      @Schema(description = "Stop the streaming")
+      public static void stopStreaming(
+          @Schema(name = "functionName", description = "The name of the streaming function to stop.") String functionName) {
+        // Stop the streaming logic
+      }
+
+      public static void main(String[] args) {
+        LlmAgent rootAgent = LlmAgent.builder()
+            .model("gemini-2.0-flash-exp")
+            .name("video_streaming_agent")
+            .instruction(
+                "You are a monitoring agent. You can do video monitoring and stock price monitoring\n" +
+                "using the provided tools/functions.\n" +
+                "When users want to monitor a video stream,\n" +
+                "You can use monitorVideoStream function to do that. When monitorVideoStream\n" +
+                "returns the alert, you should tell the users.\n" +
+                "When users want to monitor a stock price, you can use monitorStockPrice.\n" +
+                "Don't ask too many questions. Don't be too talkative."
+            )
+            .tools(Arrays.asList(
+                FunctionTool.create(StreamingTools.class, "monitorVideoStream"),
+                FunctionTool.create(StreamingTools.class, "monitorStockPrice"),
+                FunctionTool.create(StreamingTools.class, "stopStreaming")
+            ))
+            .build();
+      }
+    }
+    ```
 
 Here are some sample queries to test:
 - Help me monitor the stock price for $XYZ stock.
@@ -46842,6 +47290,16 @@ Development Kit community.
     See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
 
 <div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/bPngDY7EuOQ/maxresdefault.jpg" alt="ADK Community Call Mar 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Mar 2026 Recording</h3>
+      <p>Discussions include the ADK 2.0 alpha release, Workflows for graph-based agent composition, Agent Modes for structured multi-agent coordination, and a community spotlight on Restate durable agents.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=cXDr4RYJxK0" class="resource-card">
     <div class="card-image-wrapper">
       <img src="https://img.youtube.com/vi/cXDr4RYJxK0/maxresdefault.jpg" alt="ADK Community Call Feb 2026">
@@ -46860,16 +47318,6 @@ Development Kit community.
       <div class="type">Community Call</div>
       <h3>📞 Jan 2026 Recording</h3>
       <p>Discussions include Session Service schema for cross-language support, TypeScript multi-agent demo, API Registry for MCP servers, and third-party tool integrations.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=cNVWhrbdn-E" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/cNVWhrbdn-E/maxresdefault.jpg" alt="ADK Community Call Dec 2025">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Dec 2025 Recording</h3>
-      <p>Discussions include the ADK TypeScript launch, Gemini 3 Flash support, bidirectional streaming for voice agents, and the Visual Builder UI.</p>
     </div>
   </a>
 
