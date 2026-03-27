@@ -1159,9 +1159,9 @@ my_agent_card = AgentCard(
     version="1.0.0",
     capabilities={},
     skills=[],
-    defaultInputModes=["text/plain"],
-    defaultOutputModes=["text/plain"],
-    supportsAuthenticatedExtendedCard=False,
+    default_input_modes=["text/plain"],
+    default_output_modes=["text/plain"],
+    supports_authenticated_extended_card=False,
 )
 a2a_app = to_a2a(root_agent, port=8001, agent_card=my_agent_card)
 ```
@@ -1952,6 +1952,17 @@ File: docs/agents/models/litellm.md
 <div class="language-support-tag">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
 </div>
+
+??? danger "ADK Python Security Advisory: LiteLLM supply chain compromise"
+
+    Unauthorized code was identified in LiteLLM versions 1.82.7 and 1.82.8 on
+    PyPI on March 24, 2026. If you use ADK Python with the `eval` or
+    `extensions` extras, update to the latest version of ADK Python immediately.
+    If you installed or upgraded LiteLLM during this period, rotate all secrets
+    and credentials. For details and required actions, refer to the [ADK
+    security advisory](https://github.com/google/adk-python/issues/5005) and
+    [LiteLLM's Security Update: Suspected Supply Chain
+    Incident](https://docs.litellm.ai/blog/security-update-march-2026).
 
 [LiteLLM](https://docs.litellm.ai/) is a Python library that acts as a
 translation layer for models and model hosting services, providing a
@@ -3132,7 +3143,7 @@ You can also bypass the CLI and dynamically load and execute a configuration-bas
     ```python
     import asyncio
     from google.adk.agents import config_agent_utils
-    from google.adk.agents import Runner
+    from google.adk.runners import Runner
 
     async def main():
         # Load the agent directly from the YAML config file
@@ -10394,20 +10405,15 @@ File: docs/deploy/agent-engine/asp.md
 
 This deployment procedure describes how to perform a deployment using the
 [Agent Starter Pack](https://github.com/GoogleCloudPlatform/agent-starter-pack)
-(ASP) and the ADK command line interface (CLI) tool. Using ASP for deployment to
-the Agent Engine runtime is an accelerated path, and you should use it for
-_*development and testing*_ only. The ASP tool configures Google Cloud resources
-that are not strictly necessary for running an ADK agent workflow, and you
-should thoroughly review that configuration before using it in a production
-deployment.
+(ASP) and the ADK command line interface (CLI) tool. Deploying to the Agent Engine runtime via ASP provides an accelerated path to a production-ready environment. ASP automatically configures Google Cloud resources, CI/CD pipelines, and Infrastructure-as-Code (Terraform) to support the entire development lifecycle. As a best practice, always ensure you review the generated configurations to align with your organization’s security and compliance standards before production deployment.
 
 This deployment guide uses the ASP tool to apply a project template to your
 existing project, add deployment artifacts, and prepare your agent project for
 deployment. These instructions show you how to use ASP to provision a Google
 Cloud project with services needed for deploying your ADK project, as follows:
 
--   [Prerequisites](#prerequisites-ad): Setup Google Cloud
-    account, a project, and install required software.
+-   [Prerequisites](#prerequisites-ad): Set up Google Cloud
+    project, IAM permissions, and install required software.
 -   [Prepare your ADK project](#prepare-ad): Modify your
     existing ADK project files to get ready for deployment.
 -   [Connect to your Google Cloud project](#connect-ad):
@@ -10427,11 +10433,15 @@ and
 
 You need the following resources configured to use this deployment path:
 
--   **Google Cloud account**: with administrator access to the following:
-    -   **Google Cloud Project**: An empty Google Cloud project with
-        [billing enabled](https://cloud.google.com/billing/docs/how-to/modify-project).
-        For information on creating projects, see
-        [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
+-   **Google Cloud Project and Permissions**: A Google Cloud project with [billing enabled](https://cloud.google.com/billing/docs/how-to/modify-project).
+    You can use an existing project or create a new one. You must have one of the following IAM roles assigned within this project:
+    -   **Vertex AI User role** — sufficient to deploy an agent to Agent Engine.
+    -   **Owner role** — required for the full production setup (Terraform infrastructure provisioning, CI/CD pipelines, IAM configuration).    
+
+!!! tip "Note"
+    An empty project is recommended to avoid conflicts with existing resources.
+    For new projects, see [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
+
 -   **Python Environment**: A Python version supported by the
     [ASP project](https://googlecloudplatform.github.io/agent-starter-pack/guide/getting-started.html).
 -   **uv Tool:** Manage Python development environment and running ASP
@@ -10845,19 +10855,19 @@ This guide includes the following deployment paths, which serve different
 purposes:
 
 *   **[Standard deployment](/adk-docs/deploy/agent-engine/deploy/)**: Follow
-    this standard deployment path if you have an existing Google Cloud project
-    and if you want to carefully manage deploying an ADK agent to the Agent
+    this standard deployment path if you want to carefully manage deploying an ADK agent to the Agent
     Engine runtime. This deployment path uses Cloud Console, ADK command line
     interface, and provides step-by-step instructions. This path is recommended
     for users who are already familiar with configuring Google Cloud projects,
     and users preparing for production deployments.
 
 *   **[Agent Starter Pack deployment](/adk-docs/deploy/agent-engine/asp/)**:
-    Follow this accelerated deployment path if you do not have an existing
-    Google Cloud project and are creating a project specifically for development
-    and testing. The Agent Starter Pack (ASP) helps you deploy ADK projects
-    quickly and it configures Google Cloud services that are not strictly
-    necessary for running an ADK agent with the Agent Engine runtime.
+    Follow this accelerated deployment path to set up a fully configured Google 
+    Cloud environment with CI/CD, infrastructure-as-code, and deployment pipelines 
+    for your ADK agent. You need a Google Cloud project with billing enabled.
+    The Agent Starter Pack (ASP) helps you deploy ADK projects quickly and it 
+    includes advanced service configurations that extend the core capabilities of 
+    the Agent Engine runtime for more mature use cases.
 
 !!! note "Agent Engine service on Google Cloud"
 
@@ -13118,6 +13128,265 @@ turns in which the user simulator's response was judged to be valid according to
 the conversation scenario. A score of 1.0 indicates that the simulator behaved
 as expected in all turns, while a score closer to 0.0 indicates that the
 simulator deviated in many turns. Higher values are better.
+
+================
+File: docs/evaluate/custom_metrics.md
+================
+## Custom Metrics for Agent Evaluation
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span>
+</div>
+
+If you require specialized metrics tailored to your specific use cases or
+domains that are not covered by built-in options, you can define your own
+custom metrics.
+
+## Define a Custom Metric
+
+A custom metric is a Python function that evaluates an agent's performance on a
+given evaluation case and returns an
+[`EvaluationResult`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/evaluator.py).
+The function receives the [`EvalMetric`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_metrics.py),
+the list of [`Invocation`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py)
+objects produced by the agent during the evaluation run, and optionally, a list
+of expected invocations or a
+[`ConversationScenario`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py)
+as defined in the eval case.
+
+Each `Invocation` object represents a single turn of interaction between the
+user and the agent, and contains information such as tool trajectory,
+intermediate responses, and final response for that turn.
+
+Your custom metric function must have the following signature:
+
+```python
+from typing import Optional
+from google.adk.evaluation.eval_case import Invocation
+from google.adk.evaluation.eval_metrics import EvalMetric
+from google.adk.evaluation.conversation_scenarios import ConversationScenario
+from google.adk.evaluation.evaluator import EvaluationResult
+
+def my_custom_metric_function(
+    eval_metric: EvalMetric,
+    actual_invocations: list[Invocation],
+    expected_invocations: Optional[list[Invocation]],
+    conversation_scenario: Optional[ConversationScenario],
+) -> EvaluationResult:
+  ...
+```
+
+The function should return an `EvaluationResult` object with the
+`overall_score`, `overall_eval_status`, and `per_invocation_results` fields
+populated.
+
+### Example
+
+Here is a simple example of a custom metric that checks if the agent's final
+response in each turn matches the expected final response exactly.
+
+```python
+import statistics
+from typing import Optional
+
+from google.adk.evaluation.conversation_scenarios import ConversationScenario
+from google.adk.evaluation.eval_case import Invocation
+from google.adk.evaluation.eval_metrics import EvalMetric
+from google.adk.evaluation.eval_metrics import EvalStatus
+from google.adk.evaluation.evaluator import EvaluationResult, PerInvocationResult
+
+def check_final_response_exact_match(
+    eval_metric: EvalMetric,
+    actual_invocations: list[Invocation],
+    expected_invocations: Optional[list[Invocation]],
+    conversation_scenario: Optional[ConversationScenario],
+) -> EvaluationResult:
+  """Checks if the final response of the first turn matches the expected
+  response."""
+  if not expected_invocations:
+    return EvaluationResult(overall_score=0.0, overall_eval_status=EvalStatus.NOT_EVALUATED)
+
+  per_invocation_results = []
+
+  for actual, expected in zip(actual_invocations, expected_invocations):
+    actual_final_response = "".join([part.text for part in actual.final_response.parts])
+    expected_final_response = "".join([part.text for part in expected.final_response.parts])
+    score = 1.0 if actual_final_response == expected_final_response else 0.0
+    eval_status = EvalStatus.PASSED if score else EvalStatus.FAILED
+    invocation_result = PerInvocationResult(
+        actual_invocation=actual,
+        expected_invocation=expected,
+        score=score,
+        eval_status=eval_status
+    )
+    per_invocation_results.append(invocation_result)
+
+  average_score = statistics.mean(result.score for result in per_invocation_results)
+
+  threshold = eval_metric.criterion.threshold
+  overall_eval_status = (
+    EvalStatus.PASSED if average_score >= threshold else EvalStatus.FAILED
+  )
+  return EvaluationResult(
+      overall_score=average_score,
+      overall_eval_status=overall_eval_status,
+      per_invocation_results=per_invocation_results,
+  )
+```
+
+#### Async Metric
+
+If your custom metric needs to make asynchronous calls, such as calling an API,
+you can define it as an `async` function.
+
+The following is an example of a custom metric function that uses a fake async
+profanity checker API to check if the agent response contains profanity.
+
+```python
+import asyncio
+import statistics
+from typing import Optional
+
+from google.adk.evaluation.conversation_scenarios import ConversationScenario
+from google.adk.evaluation.eval_case import Invocation
+from google.adk.evaluation.eval_metrics import EvalMetric
+from google.adk.evaluation.eval_metrics import EvalStatus
+from google.adk.evaluation.evaluator import EvaluationResult, PerInvocationResult
+
+class ProfanityChecker:
+  """A fake profanity checker that mimics an async API."""
+
+  async def check(self, text: str) -> bool:
+    """Returns True if profanity is detected, False otherwise."""
+    await asyncio.sleep(0.01)
+    return "profanity" in text.lower()
+
+profanity_checker = ProfanityChecker()
+
+async def check_for_profanity(
+    eval_metric: EvalMetric,
+    actual_invocations: list[Invocation],
+    expected_invocations: Optional[list[Invocation]],
+    conversation_scenario: Optional[ConversationScenario],
+) -> EvaluationResult:
+  """Checks if the agent response contains profanity using a fake async API."""
+  per_invocation_results = []
+
+  for invocation in actual_invocations:
+    agent_response = "".join(part.text for part in invocation.final_response.parts)
+    has_profanity = await profanity_checker.check(agent_response)
+    score = 0.0 if has_profanity else 1.0
+    eval_status = EvalStatus.FAILED if has_profanity else EvalStatus.PASSED
+
+    invocation_result = PerInvocationResult(
+        actual_invocation=invocation,
+        score=score,
+        eval_status=eval_status
+    )
+    per_invocation_results.append(invocation_result)
+
+  scores = [
+      result.score
+      for result in per_invocation_results
+      if result.eval_status != EvalStatus.NOT_EVALUATED
+  ]
+
+  average_score = statistics.mean(scores)
+
+  threshold = eval_metric.criterion.threshold
+  overall_eval_status = (
+      EvalStatus.PASSED if average_score >= threshold else EvalStatus.FAILED
+  )
+  return EvaluationResult(
+      overall_score=average_score,
+      overall_eval_status=overall_eval_status,
+      per_invocation_results=per_invocation_results,
+  )
+```
+
+## Use a Custom Metric
+
+To use your custom metric in an evaluation run with `adk eval`, you need to
+specify it in your `EvalConfig` JSON file.
+
+1.  Add your custom metric as one of the eval `criteria`. The key is your metric
+    name, and the value is the passing threshold.
+2.  Add a `custom_metrics` object to `EvalConfig`. Inside this object, add an
+    entry for each custom metric, where the key is the metric name (matching the
+    one in `criteria`) and the value is an object containing `code_config`.
+3.  The `code_config` object should contain a `name` field with a string
+    representing the Python import path to your custom metric function, in the
+    format `my.module.my_function`.
+
+### Example `EvalConfig`
+
+Assuming your `check_final_response_match` function is defined in
+`my_agent.metrics.py`, your `EvalConfig` might look like this:
+
+```json
+{
+  "criteria": {
+    "my_check_final_response_exact_match": {
+      "threshold": 0.8
+    },
+    "tool_trajectory_avg_score": {
+      "threshold": 1.0
+    }
+  },
+  "custom_metrics": {
+    "my_check_final_response_exact_match": {
+      "code_config": {
+        "name": "my_agent.metrics.check_final_response_exact_match"
+      }
+    }
+  }
+}
+```
+
+With this configuration, when you run
+`adk eval --config_file_path=<path_to_this_config>`, ADK will execute
+`check_final_response_exact_match` for each eval case, and check if the returned
+score is >= 0.8 to mark the `response_match` criterion as passed or failed.
+
+### Providing Metric Information
+
+You can optionally provide metadata about your custom metric, such as its
+description and value range, by adding a [`MetricInfo`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_metrics.py#L369) object within your
+custom metric definition in `EvalConfig`. If `metric_info` is not provided,
+ADK will use default values (`min_value`=0.0, `max_value`=1.0).
+
+This information can be used by ADK tools for display and result aggregation
+purposes.
+
+Here is an example of providing `metric_info` for a custom metric that returns
+a score between -1.0 and 1.0:
+
+```json
+{
+  "criteria": {
+    "my_metric": {
+      "threshold": 0.5
+    }
+  },
+  "custom_metrics": {
+    "my_metric": {
+      "code_config": {
+        "name": "my_agent.metrics.my_metric_function"
+      },
+      "metric_info": {
+        "metric_name": "my_metric",
+        "description": "This metric evaluates XYZ and returns a score between -1.0 and 1.0.",
+        "metric_value_info": {
+          "interval": {
+            "min_value": -1.0,
+            "max_value": 1.0
+          }
+        }
+      }
+    }
+  }
+}
+```
 
 ================
 File: docs/evaluate/index.md
@@ -20385,15 +20654,108 @@ These are a set of tools aimed to provide integration with BigQuery, namely:
 * **`get_dataset_info`**: Fetches metadata about a BigQuery dataset.
 * **`list_table_ids`**: Fetches table ids present in a BigQuery dataset.
 * **`get_table_info`**: Fetches metadata about a BigQuery table.
+* **`get_job_info`**: Fetches metadata information about a BigQuery job (slot usage, configuration, statistics, status, etc.).
 * **`execute_sql`**: Runs a SQL query in BigQuery and fetch the result.
 * **`forecast`**: Runs a BigQuery AI time series forecast using the `AI.FORECAST` function.
+* **`analyze_contribution`**: Performs BigQuery ML contribution analysis to understand what drives changes in a metric.
+* **`detect_anomalies`**: Trains an ARIMA_PLUS model and detects anomalies in time series data.
 * **`ask_data_insights`**: Answers questions about data in BigQuery tables using natural language.
+* **`search_catalog`**: Finds BigQuery datasets and tables using natural language semantic search via Dataplex.
 
 They are packaged in the toolset `BigQueryToolset`.
+
+## Authentication
+
+The `BigQueryToolset` supports several authentication mechanisms through `BigQueryCredentialsConfig`.
+
+### Application Default Credentials
+
+You should use this approach for local development and running on Google Cloud services, such as Cloud Run and GKE.
+
+```python
+import google.auth
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# Load Application Default Credentials
+credentials, project_id = google.auth.default()
+
+# Configure the toolset
+credentials_config = BigQueryCredentialsConfig(credentials=credentials)
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
+```
+
+### Service Account
+
+You can explicitly provide a service account file or info.
+
+```python
+from google.oauth2 import service_account
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# Load Service Account credentials
+credentials = service_account.Credentials.from_service_account_file('path/to/key.json')
+
+# Configure the toolset
+credentials_config = BigQueryCredentialsConfig(credentials=credentials)
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
+```
+
+### External Access Token
+
+For applications that need to act on behalf of an end-user, you can pass user credentials directly instantiated from an access token, such as from an OAuth2 flow or an external IDP.
+
+```python
+from google.oauth2.credentials import Credentials
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# Assume 'user_token' is obtained via an external OAuth flow
+credentials = Credentials(token=user_token)
+
+# Configure the toolset
+credentials_config = BigQueryCredentialsConfig(credentials=credentials)
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
+```
+
+### External Auth Providers
+
+If you are integrating with an external authentication provider where the token is managed by the platform, such as Gemini Enterprise, use `external_access_token_key`.
+
+```python
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# The key used to look up the access token in the session state
+credentials_config = BigQueryCredentialsConfig(
+    external_access_token_key="YOUR_AUTH_ID"
+)
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
+```
+
+### Interactive Auth (ADK Web)
+
+When using the `adk web` interface for interactive sessions, you can provide OAuth 2.0 client credentials to trigger a login flow. This mechanism works for both local development and when your ADK agent is deployed to environments like Cloud Run.
+
+```python
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# Provide OAuth 2.0 Client ID and Secret
+credentials_config = BigQueryCredentialsConfig(
+    client_id="YOUR_CLIENT_ID",
+    client_secret="YOUR_CLIENT_SECRET"
+)
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
+```
+
+## Sample Code
+
+The following sample code demonstrates how to use the `BigQueryToolset` in an ADK agent using Application Default Credentials (ADC).
 
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/bigquery.py"
 ```
+
+## Sample Agent
+
+For a complete, ready-to-run sample of a BigQuery-powered agent with detailed authentication examples, see the [BigQuery Sample Agent](https://github.com/google/adk-python/tree/main/contributing/samples/bigquery) on GitHub.
 
 Note: If you want to access a BigQuery data agent as a tool, see [Data Agents tools for ADK](data-agent.md).
 
@@ -28079,6 +28441,445 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     -   How long it takes for the model to respond?
 
 This detailed output allows you to diagnose a wide range of issues, from incorrect prompt engineering to problems with tool definitions, directly from the log files.
+
+================
+File: docs/optimize/index.md
+================
+# Optimize agents
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.24.0</span>
+</div>
+
+ADK provides an extendable framework for automated agent optimization based on
+evaluation results.
+Out of the box, you can use the `adk optimize` command to quickly optimize
+simple agents based on ADK evaluation results using the default optimizer.
+For more complex use cases, you can develop samplers that use data from custom
+evals, or you can implement new optimization strategies.
+
+### Definitions
+
+* **Sampler**: A sampler allows the agent optimizer to evaluate candidate
+optimized agents.
+When requested, the sampler provides the optimizer with detailed evaluation
+results that are useful for eval-guided agent optimization.
+* **Agent Optimizer**: An agent optimizer reviews the evaluation results from
+the sampler and uses them to improve the agent.
+
+## Example - Optimize a Simple Agent with `adk optimize` {#example}
+
+In this example, we will use the `adk optimize` command to update the
+instructions of the
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+sample agent based on evaluation results over a small eval set.
+
+### Step 1: Specify the Example Dataset {#exampledataset}
+
+The default `hello_world` agent instructions describe how to determine whether a
+number is prime.
+The eval set for this example adds another aspect that the agent does not have
+instructions for: numbers can be "good" or "bad" depending on their primality.
+The optimizer is expected to derive this new rule and add it to the agent
+instructions.
+
+Create a file `train_eval_set.evalset.json` in
+[`contributing/samples/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+with the following contents:
+
+```json
+{
+  "eval_set_id": "train_eval_set",
+  "name": "train_eval_set",
+  "eval_cases": [
+    {
+      "eval_id": "simple",
+      "conversation": [
+        {
+          "invocation_id": "inv1",
+          "user_content": {
+            "parts": [ {"text": "Is 7 prime?"} ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [ {"text": "7 is a prime number."} ],
+            "role": "model"
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "hello_world",
+        "user_id": "user"
+      }
+    },
+    {
+      "eval_id": "is_good",
+      "conversation": [
+        {
+          "invocation_id": "inv1",
+          "user_content": {
+            "parts": [ {"text": "Is 4 a bad number?"} ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [ {"text": "4 is not prime so it is a good number."} ],
+            "role": "model"
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "hello_world",
+        "user_id": "user"
+      }
+    },
+    {
+      "eval_id": "is_bad",
+      "conversation": [
+        {
+          "invocation_id": "inv1",
+          "user_content": {
+            "parts": [ {"text": "Is 5 a bad number?"} ],
+            "role": "user"
+          },
+          "final_response": {
+            "parts": [ {"text": "5 is prime so it is a bad number."} ],
+            "role": "model"
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "hello_world",
+        "user_id": "user"
+      }
+    }
+  ]
+}
+```
+
+### Step 2: Define a Sampler Config
+
+The sampler config controls the process for evaluating candidate optimized
+agents.
+For example, it specifies the correctness criterion for the agent output and
+also specifies the eval set to use for optimizing the agent.
+
+The full list of configuration options is available [below](#localevalsampler);
+for now, simply create a file `sampler_config.json` in
+[`contributing/samples/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+with the following contents:
+
+```json
+{
+  "eval_config": {
+    "criteria": {
+      "response_match_score": 0.75
+    }
+  },
+  "app_name": "hello_world",
+  "train_eval_set": "train_eval_set"
+}
+```
+
+### Step 3: Run the Optimization Job
+
+Run the `adk optimize` command, pointing it to the `hello_world` agent's
+directory and passing the configuration file created above.
+
+```bash
+adk optimize contributing/samples/hello_world \
+--sampler_config_file_path contributing/samples/hello_world/sampler_config.json
+```
+
+The final output varies, but might look similar to the following:
+
+```text
+<logs and intermediate output>
+================================================================================
+Optimized root agent instructions:
+--------------------------------------------------------------------------------
+<existing unmodified instructions omitted for brevity>
+
+**Special Rules for "Good" and "Bad" Numbers:**
+*   A "bad number" is defined as a prime number.
+*   A "good number" is defined as a non-prime number (i.e., a composite number or 1).
+*   If a user asks if a number is "good" or "bad", you must always use the `check_prime` tool to determine its primality first.
+*   After determining primality with the tool, respond according to the definitions above. Questions about "good" or "bad" numbers, when referring to primality, are objective and you are fully capable of answering them. Do not state you cannot answer such questions.
+================================================================================
+```
+
+## Using the `adk optimize` Command
+
+```bash
+adk optimize [OPTIONS] AGENT_MODULE_FILE_PATH
+```
+
+* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a
+module by the name `agent`.
+The `agent` module must contain a `root_agent`.
+For an example of a valid setup, examine the
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+agent.
+* `--sampler_config_file_path PATH`: The path to the config for the sampler.
+The sampler implementation and config format are described
+[below](#localevalsampler).
+* `--optimizer_config_file_path PATH` (optional): The path to the config for the
+agent optimizer.
+If not provided, the default config will be used.
+The optimizer implementation, config format, and default config are described
+[below](#geparootagentpromptoptimizer).
+* `--print_detailed_results` (optional): Enables printing some detailed metrics
+measured by the agent optimizer.
+* `--log_level` (optional): Set the logging level.
+Default is `INFO`.
+Valid options are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
+
+## Available Samplers and Agent Optimizers
+
+The following samplers and agent optimizers are provided with ADK.
+The `adk optimize` command uses the `LocalEvalSampler` and
+`GEPARootAgentPromptOptimizer` described below.
+You can also use these samplers and agent optimizers in your own scripts.
+
+### `LocalEvalSampler` {#localevalsampler}
+
+The
+[`LocalEvalSampler`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/local_eval_sampler.py)
+evaluates candidate agents using the ADK's
+[`LocalEvalService`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/local_eval_service.py).
+It provides eval results as an [`UnstructuredSamplingResult`](#sampler-results).
+You can configure the `LocalEvalSampler` with a `LocalEvalSamplerConfig` that
+contains the following fields:
+
+* `eval_config`: An
+[`EvalConfig`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_config.py)
+which provides the evaluation criteria and user simulation options.
+* `app_name`: The app name to use for evaluation.
+* `train_eval_set`: The name of the eval set to use for optimization.
+* `train_eval_case_ids` (optional): The ids of the eval cases (examples) to use
+for optimization.
+If not provided, all eval cases in `train_eval_set` are used.
+* `validation_eval_set` (optional): The name of the eval set to use for
+validating the optimized agent.
+If not provided, `train_eval_set` is reused.
+* `validation_eval_case_ids` (optional): The ids of the eval cases (examples) to
+use for validating the optimized agent.
+If not provided, all eval cases in `validation_eval_set` are used.
+If `validation_eval_set` is also not provided, the effective train eval cases
+are reused.
+
+While initializing the `LocalEvalSampler`, you must also provide an
+[`EvalSetsManager`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_sets_manager.py)
+that can access the train and validation eval sets specified in the
+`LocalEvalSamplerConfig`.
+
+### `GEPARootAgentPromptOptimizer` {#geparootagentpromptoptimizer}
+
+The
+[`GEPARootAgentPromptOptimizer`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/gepa_root_agent_prompt_optimizer.py)
+improves the instructions of the root agent
+using the [GEPA](https://gepa-ai.github.io/gepa/) optimizer.
+It expects the sampler to provide eval results as an
+[`UnstructuredSamplingResult`](#sampler-results).
+Its output is a subclass of [`OptimizerResult`](#agent-optimizer-results) which
+specifies a list of [optimized agents with scores](#agent-optimizer-results) and
+additional metrics collected during optimization.
+
+Note: The `GEPARootAgentPromptOptimizer` does not improve any sub-agents, agent
+tools, skills, or any other aspect of the root agent.
+
+You can configure the `GEPARootAgentPromptOptimizer` with a
+`GEPARootAgentPromptOptimizerConfig` that contains the following fields:
+
+* `optimizer_model` (optional): The model used to analyze evaluation results and
+optimize the agent.
+Defaults to `"gemini-2.5-flash"`.
+* `model_configuration` (optional): The configuration for the optimizer model.
+Defaults to a config with a 10K token thinking budget.
+* `max_metric_calls` (optional): The maximum number of evaluations to run during
+optimization.
+Defaults to 100.
+* `reflection_minibatch_size` (optional): The number of examples to use at a
+time to update the agent instructions.
+Defaults to 3.
+* `run_dir` (optional): The directory to save intermediate and final
+optimization results if desired.
+Facilitates warm starts.
+
+## Key Data Types
+
+ADK defines several base data types in
+[`optimization/data_types.py`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/data_types.py)
+to regulate the transfer of eval data from the sampler to the optimizer and the
+output of the optimizer.
+These data types are designed for extensibility to accommodate custom evals and
+optimization strategies.
+
+### Sampler Results {#sampler-results}
+
+* [`SamplingResult`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/data_types.py):
+The foundational class for the output of a sampler.
+  * Must include a `scores` dictionary that maps an example UID to the agent's
+  overall score on that example.
+* [`UnstructuredSamplingResult`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/data_types.py):
+A built-in subclass of `SamplingResult` that adds an optional `data` field to
+hold unstructured, per-example, JSON-serializable evaluation data (such as
+trajectories, intermediate outputs, and sub-metrics).
+
+You can use the `UnstructuredSamplingResult` for most use cases.
+Alternatively, you can create your own subclass of `SamplingResult` to return
+additional evaluation data in a more structured format.
+However, you must make sure that both the sampler and the optimizer support your
+format.
+
+### Agent Optimizer Results {#agent-optimizer-results}
+
+* [`AgentWithScores`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/data_types.py):
+Represents a single optimized agent along with its overall score.
+  * Must include the `optimized_agent` (the updated
+  [`Agent`](https://github.com/google/adk-python/blob/main/src/google/adk/agents/llm_agent.py)
+  object).
+  * Can include the `overall_score` of the agent (typically on the validation
+  set).
+* [`OptimizerResult`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/data_types.py):
+Represents the final output of an optimization process.
+  * Must include a list of `optimized_agents` (which are objects of
+  `AgentWithScores` or its subclasses).
+  When measuring agent optimality over multiple metrics, multiple entries may
+  be needed to represent the Pareto frontier.
+
+You can create your own subclass of `AgentWithScores` to expose fine-grained
+metrics about the candidate optimized agent.
+For example, you might want to separately score the agent on accuracy, safety,
+alignment, etc.
+Similarly, you can create your own subclass of `OptimizerResult` to expose
+overall metrics about the optimization process for your optimizer (number of
+candidates evaluated, total number of evaluations, etc.).
+
+## Creating and Using new Samplers and Agent Optimizers
+
+If your use case requires complex sampling and evaluation logic or a custom
+agent optimization strategy, you can create custom implementations of the
+`Sampler` and `AgentOptimizer` abstract classes described below.
+By adhering to this API, you can mix and match ADK-provided samplers and agent
+optimizers with your custom implementations.
+
+### Creating a New Sampler
+
+To create a new sampler for custom evaluations, you must create a class that
+extends the
+[`Sampler`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/sampler.py) base
+class.
+You must also specify the subclass of [`SamplingResult`](#sampler-results) that
+your sampler will use to return eval results.
+The sampler must implement the following abstract methods:
+
+* `get_train_example_ids(self)`: Returns the list of example UIDs
+to use for optimization.
+* `get_validation_example_ids(self)`: Returns the list of example
+UIDs to use for validating the optimized agent.
+<!-- disableFinding(LINE_OVER_80) -->
+* `sample_and_score(self, candidate, example_set, batch, capture_full_eval_data)`:
+Evaluates the `candidate` agent on a `batch` of examples from the specified
+`example_set` (`"train"` or `"validation"`).
+It should return a [`SamplingResult`](#sampler-results) subclass containing the
+calculated per-example scores and, if `capture_full_eval_data` is `True`, any
+additional data required for eval-guided agent optimization.
+You can choose a format for the additional eval data based on your needs by
+subclassing `SamplingResult`.
+However, the agent optimizer must also support the same subclass of
+`SamplingResult`.
+The [`UnstructuredSamplingResult`](#sampler-results) implements the simplest
+case in which the additional data is stored in a per-example unstructured
+dictionary.
+<!-- enableFinding(LINE_OVER_80) -->
+
+### Creating a New Agent Optimizer
+
+To create a custom agent optimizer, you must create a class that extends the
+[`AgentOptimizer`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/agent_optimizer.py)
+base class.
+You must also specify the subclass of [`SamplingResult`](#sampler-results) that
+it will accept for eval results and the subclass of
+[`AgentWithScores`](#agent-optimizer-results) it will use to represent each
+optimized agent and its scores/metrics.
+The optimizer must implement the following abstract method:
+
+* `optimize(self, initial_agent, sampler)`: This method orchestrates the
+optimization process.
+It takes an `initial_agent` to improve and a `sampler` to use for evaluating
+candidates.
+It should return an [`OptimizerResult`](#agent-optimizer-results) subclass
+containing a list of candidate optimized agents along with their scores/metrics
+and any overall metrics related to the optimization process.
+You can choose a format for the per-candidate scores/metrics based on your needs
+by subclassing `AgentWithScores`.
+Alternatively you can simply use `AgentWithScores` which allows specifying a
+single overall score for each candidate optimized agent.
+
+### Optimizing an Agent Programmatically
+
+The `adk optimize` command uses the [`LocalEvalSampler`](#localevalsampler) and
+the [`GEPARootAgentPromptOptimizer`](#geparootagentpromptoptimizer).
+When using custom samplers and agent optimizers, you will have to optimize the
+agent programmatically.
+The following reference code replicates the functionality of the `adk optimize`
+command for the above [example](#example).
+To use it, create the [dataset](#exampledataset) as shown in the example and run
+this code from a Python script within the
+[same directory](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world):
+
+```python
+import asyncio
+import logging
+import os
+
+import agent  # the hello_world agent
+from google.adk.cli.utils import envs
+from google.adk.cli.utils import logs
+from google.adk.evaluation.eval_config import EvalConfig
+from google.adk.evaluation.local_eval_sets_manager import LocalEvalSetsManager
+from google.adk.optimization.gepa_root_agent_prompt_optimizer import GEPARootAgentPromptOptimizer
+from google.adk.optimization.gepa_root_agent_prompt_optimizer import GEPARootAgentPromptOptimizerConfig
+from google.adk.optimization.local_eval_sampler import LocalEvalSampler
+from google.adk.optimization.local_eval_sampler import LocalEvalSamplerConfig
+
+# setup environment variables (API keys, etc.) and logging
+envs.load_dotenv_for_agent(".", ".")
+logs.setup_adk_logger(logging.INFO)
+
+# create the sampler
+sampler_config = LocalEvalSamplerConfig(
+    eval_config=EvalConfig(criteria={"response_match_score": 0.75}),
+    app_name="hello_world",  # typically the name of the directory containing the agent
+    train_eval_set="train_eval_set",  # from the example
+)
+eval_sets_manager = LocalEvalSetsManager(
+    agents_dir=os.path.dirname(os.getcwd()),
+)
+sampler = LocalEvalSampler(sampler_config, eval_sets_manager)
+
+# create the optimizer
+opt_config = GEPARootAgentPromptOptimizerConfig()
+optimizer = GEPARootAgentPromptOptimizer(config=opt_config)
+
+# optimize the root agent
+initial_agent = agent.root_agent
+result = asyncio.run(
+    optimizer.optimize(initial_agent, sampler)
+)
+
+# show the results
+best_idx = result.gepa_result["best_idx"]
+print(
+    "Validation score:",
+    result.optimized_agents[best_idx].overall_score,
+    "Optimized prompt:",
+    result.optimized_agents[best_idx].optimized_agent.instruction,
+    "GEPA metrics:",
+    result.gepa_result,
+    sep="\n",
+)
+```
 
 ================
 File: docs/plugins/index.md
@@ -42023,11 +42824,21 @@ Before you begin, ensure you have the following set up:
 * **Setup Node.js and npx:** **(Python only)** Many community MCP servers are distributed as Node.js packages and run using `npx`. Install Node.js (which includes npx) if you haven't already. For details, see [https://nodejs.org/en](https://nodejs.org/en).
 * **Verify Installations:** **(Python only)** Confirm `adk` and `npx` are in your PATH within the activated virtual environment:
 
-```shell
-# Both commands should print the path to the executables.
-which adk
-which npx
-```
+=== "MacOS / Linux"
+
+  ```shell
+  # Both commands should print the path to the executables.
+  which adk
+  which npx
+  ```
+
+=== "Windows"
+
+  ```shell
+  # Both commands should print the path to the executables.
+  Get-Command adk
+  Get-Command npx
+  ```
 
 ## 1. Using MCP servers with ADK agents (ADK as an MCP client) in `adk web`
 
@@ -42074,7 +42885,7 @@ TARGET_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "/
 # If you created ./adk_agent_samples/mcp_agent/your_folder,
 
 root_agent = LlmAgent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='filesystem_assistant_agent',
     instruction='Help the user manage their files. You can list files, read files, etc.',
     tools=[
@@ -42144,19 +42955,15 @@ For Java, refer to the following sample to define an agent that initializes the 
 ```java
 package agents;
 
-import com.google.adk.JsonBaseModel;
 import com.google.adk.agents.LlmAgent;
-import com.google.adk.agents.RunConfig;
 import com.google.adk.runner.InMemoryRunner;
-import com.google.adk.tools.mcp.McpTool;
+import com.google.adk.sessions.SessionKey;
 import com.google.adk.tools.mcp.McpToolset;
-import com.google.adk.tools.mcp.McpToolset.McpToolsAndToolsetResult;
+import com.google.adk.tools.mcp.StdioServerParameters;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
-import io.modelcontextprotocol.client.transport.ServerParameters;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public class McpAgentCreator {
 
@@ -42170,7 +42977,8 @@ public class McpAgentCreator {
         //Note: you may have permissions issues if the folder is outside home
         String yourFolderPath = "~/path/to/folder";
 
-        ServerParameters connectionParams = ServerParameters.builder("npx")
+        StdioServerParameters serverParams = StdioServerParameters.builder()
+                .command("npx")
                 .args(List.of(
                         "-y",
                         "@modelcontextprotocol/server-filesystem",
@@ -42178,52 +42986,36 @@ public class McpAgentCreator {
                 ))
                 .build();
 
-        try {
-            CompletableFuture<McpToolsAndToolsetResult> futureResult =
-                    McpToolset.fromServer(connectionParams, JsonBaseModel.getMapper());
+        try (McpToolset toolset = new McpToolset(serverParams.toServerParameters())) {
+            LlmAgent agent = LlmAgent.builder()
+                    .model("gemini-2.5-flash")
+                    .name("enterprise_assistant")
+                    .description("An agent to help users access their file systems")
+                    .instruction(
+                            "Help user accessing their file systems. You can list files in a directory."
+                    )
+                    .tools(toolset)
+                    .build();
 
-            McpToolsAndToolsetResult result = futureResult.join();
+            System.out.println("Agent created: " + agent.name());
 
-            try (McpToolset toolset = result.getToolset()) {
-                List<McpTool> tools = result.getTools();
+            InMemoryRunner runner = new InMemoryRunner(agent);
+            String userId = "user123";
+            String sessionId = "1234";
+            String promptText = "Which files are in this directory - " + yourFolderPath + "?";
 
-                LlmAgent agent = LlmAgent.builder()
-                        .model("gemini-2.0-flash")
-                        .name("enterprise_assistant")
-                        .description("An agent to help users access their file systems")
-                        .instruction(
-                                "Help user accessing their file systems. You can list files in a directory."
-                        )
-                        .tools(tools)
-                        .build();
+            // Explicitly create the session first
+            SessionKey sessionKey = runner.sessionService().createSession(runner.appName(), userId, null, sessionId).blockingGet().sessionKey();
+            System.out.println("Session created: " + sessionId + " for user: " + userId);
 
-                System.out.println("Agent created: " + agent.name());
+            Content promptContent = Content.fromParts(Part.fromText(promptText));
 
-                InMemoryRunner runner = new InMemoryRunner(agent);
-                String userId = "user123";
-                String sessionId = "1234";
-                String promptText = "Which files are in this directory - " + yourFolderPath + "?";
+            System.out.println("\nSending prompt: \"" + promptText + "\" to agent...\n");
 
-                // Explicitly create the session first
-                try {
-                    // appName for InMemoryRunner defaults to agent.name() if not specified in constructor
-                    runner.sessionService().createSession(runner.appName(), userId, null, sessionId).blockingGet();
-                    System.out.println("Session created: " + sessionId + " for user: " + userId);
-                } catch (Exception sessionCreationException) {
-                    System.err.println("Failed to create session: " + sessionCreationException.getMessage());
-                    sessionCreationException.printStackTrace();
-                    return;
-                }
-
-                Content promptContent = Content.fromParts(Part.fromText(promptText));
-
-                System.out.println("\nSending prompt: \"" + promptText + "\" to agent...\n");
-
-                runner.runAsync(userId, sessionId, promptContent, RunConfig.builder().build())
-                        .blockingForEach(event -> {
-                            System.out.println("Event received: " + event.toJson());
-                        });
-            }
+            runner.runAsync(sessionKey, promptContent)
+                    .blockingForEach(event -> {
+                        System.out.println("Event received: " + event.toJson());
+                    });
         } catch (Exception e) {
             System.err.println("An error occurred: " + e.getMessage());
             e.printStackTrace();
@@ -42320,7 +43112,7 @@ if not google_maps_api_key:
         # You might want to raise an error or exit if the key is crucial and not found.
 
 root_agent = LlmAgent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='maps_assistant_agent',
     instruction='Help the user with mapping, directions, and finding places using Google Maps tools.',
     tools=[
@@ -42388,26 +43180,18 @@ For Java, refer to the following sample to define an agent that initializes the 
 ```java
 package agents;
 
-import com.google.adk.JsonBaseModel;
 import com.google.adk.agents.LlmAgent;
-import com.google.adk.agents.RunConfig;
 import com.google.adk.runner.InMemoryRunner;
-import com.google.adk.tools.mcp.McpTool;
+import com.google.adk.sessions.SessionKey;
 import com.google.adk.tools.mcp.McpToolset;
-import com.google.adk.tools.mcp.McpToolset.McpToolsAndToolsetResult;
-
-
+import com.google.adk.tools.mcp.StdioServerParameters;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 
-import io.modelcontextprotocol.client.transport.ServerParameters;
-
-import java.util.List;
-import java.util.Map;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class MapsAgentCreator {
 
@@ -42423,57 +43207,44 @@ public class MapsAgentCreator {
         Map<String, String> envVariables = new HashMap<>();
         envVariables.put("GOOGLE_MAPS_API_KEY", googleMapsApiKey);
 
-        ServerParameters connectionParams = ServerParameters.builder("npx")
+        StdioServerParameters serverParams = StdioServerParameters.builder()
+                .command("npx")
                 .args(List.of(
                         "-y",
                         "@modelcontextprotocol/server-google-maps"
                 ))
-                .env(Collections.unmodifiableMap(envVariables))
+                .env(envVariables)
                 .build();
 
-        try {
-            CompletableFuture<McpToolsAndToolsetResult> futureResult =
-                    McpToolset.fromServer(connectionParams, JsonBaseModel.getMapper());
+        try (McpToolset toolset = new McpToolset(serverParams.toServerParameters())) {
+            LlmAgent agent = LlmAgent.builder()
+                    .model("gemini-2.5-flash")
+                    .name("maps_assistant")
+                    .description("Maps assistant")
+                    .instruction("Help user with mapping and directions using available tools.")
+                    .tools(toolset)
+                    .build();
 
-            McpToolsAndToolsetResult result = futureResult.join();
+            System.out.println("Agent created: " + agent.name());
 
-            try (McpToolset toolset = result.getToolset()) {
-                List<McpTool> tools = result.getTools();
+            InMemoryRunner runner = new InMemoryRunner(agent);
+            String userId = "maps-user-" + System.currentTimeMillis();
+            String sessionId = "maps-session-" + System.currentTimeMillis();
 
-                LlmAgent agent = LlmAgent.builder()
-                        .model("gemini-2.0-flash")
-                        .name("maps_assistant")
-                        .description("Maps assistant")
-                        .instruction("Help user with mapping and directions using available tools.")
-                        .tools(tools)
-                        .build();
+            String promptText = "Please give me directions to the nearest pharmacy to Madison Square Garden.";
 
-                System.out.println("Agent created: " + agent.name());
+            // Explicitly create the session first
+            SessionKey sessionKey = runner.sessionService().createSession(runner.appName(), userId, null, sessionId).blockingGet().sessionKey();
+            System.out.println("Session created: " + sessionId + " for user: " + userId);
 
-                InMemoryRunner runner = new InMemoryRunner(agent);
-                String userId = "maps-user-" + System.currentTimeMillis();
-                String sessionId = "maps-session-" + System.currentTimeMillis();
+            Content promptContent = Content.fromParts(Part.fromText(promptText));
 
-                String promptText = "Please give me directions to the nearest pharmacy to Madison Square Garden.";
+            System.out.println("\nSending prompt: \"" + promptText + "\" to agent...\n");
 
-                try {
-                    runner.sessionService().createSession(runner.appName(), userId, null, sessionId).blockingGet();
-                    System.out.println("Session created: " + sessionId + " for user: " + userId);
-                } catch (Exception sessionCreationException) {
-                    System.err.println("Failed to create session: " + sessionCreationException.getMessage());
-                    sessionCreationException.printStackTrace();
-                    return;
-                }
-
-                Content promptContent = Content.fromParts(Part.fromText(promptText))
-
-                System.out.println("\nSending prompt: \"" + promptText + "\" to agent...\n");
-
-                runner.runAsync(userId, sessionId, promptContent, RunConfig.builder().build())
-                        .blockingForEach(event -> {
-                            System.out.println("Event received: " + event.toJson());
-                        });
-            }
+            runner.runAsync(sessionKey, promptContent)
+                    .blockingForEach(event -> {
+                        System.out.println("Event received: " + event.toJson());
+                    });
         } catch (Exception e) {
             System.err.println("An error occurred: " + e.getMessage());
             e.printStackTrace();
@@ -42707,7 +43478,7 @@ if PATH_TO_YOUR_MCP_SERVER_SCRIPT == "/path/to/your/my_adk_mcp_server.py":
     # Optionally, raise an error if the path is critical
 
 root_agent = LlmAgent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='web_reader_mcp_client_agent',
     instruction="Use the 'load_web_page' tool to fetch content from a URL provided by the user.",
     tools=[
@@ -42816,7 +43587,7 @@ async def get_agent_async():
 
   # Use in an agent
   root_agent = LlmAgent(
-      model='gemini-2.0-flash', # Adjust model name if needed based on availability
+      model='gemini-2.5-flash', # Adjust model name if needed based on availability
       name='enterprise_assistant',
       instruction='Help user accessing their file systems',
       tools=[toolset], # Provide the MCP tools to the ADK agent
@@ -42907,7 +43678,7 @@ from mcp import StdioServerParameters
 _allowed_path = os.path.dirname(os.path.abspath(__file__))
 
 root_agent = LlmAgent(
-    model='gemini-2.0-flash',
+    model='gemini-2.5-flash',
     name='enterprise_assistant',
     instruction=f'Help user accessing their file systems. Allowed directory: {_allowed_path}',
     tools=[
@@ -43104,15 +43875,34 @@ if __name__ == "__main__":
 ```
 
 **Agent Configuration for Remote MCP:**
-```python
-# Your ADK agent connects to the remote MCP service via Streamable HTTP
-McpToolset(
-    connection_params=StreamableHTTPConnectionParams(
-        url="https://your-mcp-server-url.run.app/mcp",
-        headers={"Authorization": "Bearer your-auth-token"}
-    ),
-)
-```
+
+=== "Python"
+
+    ```python
+    # Your ADK agent connects to the remote MCP service via Streamable HTTP
+    McpToolset(
+        connection_params=StreamableHTTPConnectionParams(
+            url="https://your-mcp-server-url.run.app/mcp",
+            headers={"Authorization": "Bearer your-auth-token"}
+        ),
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import java.util.Map;
+    import com.google.adk.tools.mcp.StreamableHttpServerParameters;
+    import com.google.adk.tools.mcp.McpToolset;
+
+    // Your ADK agent connects to the remote MCP service via Streamable HTTP
+    StreamableHttpServerParameters streamableParams = StreamableHttpServerParameters.builder()
+            .url("https://your-mcp-server-url.run.app/mcp")
+            .headers(Map.of("Authorization", "Bearer your-auth-token"))
+            .build();
+
+    McpToolset toolset = new McpToolset(streamableParams);
+    ```
 
 #### Pattern 3: Sidecar MCP Servers (GKE)
 
@@ -47677,6 +48467,18 @@ ADK is **model-agnostic**, **deployment-agnostic**, and is built for
 development feel more like software development, to make it easier for
 developers to create, deploy, and orchestrate agentic architectures that range
 from simple tasks to complex workflows.
+
+??? danger "ADK Python Security Advisory: LiteLLM supply chain compromise"
+
+    Unauthorized code was identified in LiteLLM versions 1.82.7 and 1.82.8 on
+    PyPI on March 24, 2026. If you use ADK Python with the `eval` or
+    `extensions` extras, update to the latest version of ADK Python immediately.
+    If you installed or upgraded LiteLLM during this period, rotate all secrets
+    and credentials. For details and required actions, refer to the [ADK
+    security advisory](https://github.com/google/adk-python/issues/5005) and
+    [LiteLLM's Security Update: Suspected Supply Chain
+    Incident](https://docs.litellm.ai/blog/security-update-march-2026).
+
 
 ??? warning "News: ADK Python 2.0 Alpha with graph-based workflows!"
 
