@@ -3171,7 +3171,7 @@ File: docs/agents/config.md
 # Build agents with Agent Config
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 The ADK Agent Config feature lets you build an ADK workflow without writing
@@ -3452,6 +3452,7 @@ limitations:
 -   **ADK Tool support:** The following ADK tools are supported by the Agent
     Config feature, but *not all tools are fully supported*:
     -   `google_search`
+    -   `google_maps_grounding`
     -   `load_artifacts`
     -   `url_context`
     -   `exit_loop`
@@ -3460,13 +3461,14 @@ limitations:
     -   `enterprise_web_search`
     -   `load_web_page`: Requires a fully-qualified path to access web
         pages.
+    -   `AgentTool`: Allows an agent to call another agent.
+    -   `LongRunningFunctionTool`: Supports long-running functions.
+    -   `McpToolset`: Connects to Model Context Protocol (MCP) servers.
+    -   `ExampleTool`: Provides example-based few-shot learning for tools.
 -   **Agent Type Support:** The `LangGraphAgent` and `A2aAgent` types are
     not yet supported.
-    -   `AgentTool`
-    -   `LongRunningFunctionTool`
-    -   `VertexAiSearchTool`
-    -   `McpToolset`
-    -   `ExampleTool`
+-   **Vertex AI Search:** The `VertexAiSearchTool` is currently supported in
+    Python and Java Agent Configs.
 
 ## Next steps
 
@@ -11835,12 +11837,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>0.6.0</version>
+             <version>1.0.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>0.6.0</version>
+             <version>1.0.0</version>
           </dependency>
         </dependencies>
 
@@ -16371,13 +16373,13 @@ File: docs/get-started/installation.md
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>0.6.0</version>
+                <version>1.0.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>0.6.0</version>
+                <version>1.0.0</version>
             </dependency>
         </dependencies>
 
@@ -16390,8 +16392,8 @@ File: docs/get-started/installation.md
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:0.6.0'
-        implementation 'com.google.adk:google-adk-dev:0.6.0'
+        implementation 'com.google.adk:google-adk:1.0.0'
+        implementation 'com.google.adk:google-adk-dev:1.0.0'
     }
     ```
 
@@ -16509,7 +16511,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>0.6.0</version>
+        <version>1.0.0</version>
     </dependency>
 </dependencies>
 ```
@@ -16544,13 +16546,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>0.6.0</version>
+                <version>1.0.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>0.6.0</version>
+                <version>1.0.0</version>
             </dependency>
         </dependencies>
 
@@ -21379,22 +21381,22 @@ catalog_tags: ["observability", "google"]
 # Google Cloud Trace observability for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
-With ADK, you’ve already capable of inspecting and observing your agent interaction locally utilizing the powerful web development UI discussed in [here](https://google.github.io/adk-docs/evaluate/#debugging-with-the-trace-view). However, if we aim for cloud deployment, we will need a centralized dashboard to observe real traffic.
+With ADK, you can already inspect and observe your agent interaction locally utilizing the powerful web development UI discussed in [here](https://google.github.io/adk-docs/evaluate/#debugging-with-the-trace-view). However, for cloud deployment, you will need a centralized dashboard to observe real traffic.
 
 Cloud Trace is a component of Google Cloud Observability. It is a powerful tool for monitoring, debugging, and improving the performance of your applications by focusing specifically on tracing capabilities. For Agent Development Kit (ADK) applications, Cloud Trace enables comprehensive tracing, helping you understand how requests flow through your agent's interactions and identify performance bottlenecks or errors within your AI agents.
 
 ## Overview
 
-Cloud Trace is built on [OpenTelemetry](https://opentelemetry.io/), an open-source standard that supports many languages and ingestion methods for generating trace data. This aligns with observability practices for ADK applications, which also leverage OpenTelemetry-compatible instrumentation, allowing you to :
+Cloud Trace is built on [OpenTelemetry](https://opentelemetry.io/), an open-source standard that supports many languages and ingestion methods for generating trace data. This aligns with observability practices for ADK applications, which also leverage OpenTelemetry-compatible instrumentation, allowing you to:
 
-- Trace agent interactions : Cloud Trace continuously gathers and analyzes trace data from your project, enabling you to rapidly diagnose latency issues and errors within your ADK applications. This automatic data collection simplifies the process of identifying problems in complex agent workflows.
-- Debug issues : Quickly diagnose latency issues and errors by analyzing detailed traces. Crucial for understanding issues that manifest as increased communication latency across different services or during specific agent actions like tool calls.
-- In-depth Analysis and Visualization: Trace Explorer is the primary tool for analyzing traces, offering visual aids like heatmaps for span duration and line charts for request/error rates. It also provides a spans table, groupable by service and operation, which gives one-click access to representative traces and a waterfall view to easily identify bottlenecks and sources of errors within your agent's execution path
+- **Trace agent interactions**: Cloud Trace continuously gathers and analyzes trace data from your project, enabling you to rapidly diagnose latency issues and errors within your ADK applications.
+- **Debug issues**: Quickly diagnose latency issues and errors by analyzing detailed traces. This is crucial for understanding issues that manifest as increased communication latency across different services or during specific agent actions like tool calls.
+- **In-depth Analysis and Visualization**: Trace Explorer is the primary tool for analyzing traces, offering visual aids like heatmaps for span duration and waterfall views to easily identify bottlenecks and sources of errors within your agent's execution path.
 
-The following example will assume the following agent directory structure
+The following example will assume the following agent directory structure:
 
 ```
 working_dir/
@@ -21406,240 +21408,177 @@ working_dir/
 └── agent_runner.py
 ```
 
-```python
-# weather_agent/agent.py
+=== "Python"
+    ```python
+    # weather_agent/agent.py
 
-import os
-from google.adk.agents import Agent
+    import os
+    from google.adk.agents import Agent
 
-os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "{your-project-id}")
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
-os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
-
-
-# Define a tool function
-def get_weather(city: str) -> dict:
-    """Retrieves the current weather report for a specified city.
-
-    Args:
-        city (str): The name of the city for which to retrieve the weather report.
-
-    Returns:
-        dict: status and result or error msg.
-    """
-    if city.lower() == "new york":
-        return {
-            "status": "success",
-            "report": (
-                "The weather in New York is sunny with a temperature of 25 degrees"
-                " Celsius (77 degrees Fahrenheit)."
-            ),
-        }
-    else:
-        return {
-            "status": "error",
-            "error_message": f"Weather information for '{city}' is not available.",
-        }
+    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "{your-project-id}")
+    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
+    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 
-# Create an agent with tools
-root_agent = Agent(
-    name="weather_agent",
-    model="gemini-2.5-flash",
-    description="Agent to answer questions using weather tools.",
-    instruction="You must use the available tools to find an answer.",
-    tools=[get_weather],
-)
-```
+    # Define a tool function
+    def get_weather(city: str) -> dict:
+        """Retrieves the current weather report for a specified city.
+
+        Args:
+            city (str): The name of the city for which to retrieve the weather report.
+
+        Returns:
+            dict: status and result or error msg.
+        """
+        if city.lower() == "new york":
+            return {
+                "status": "success",
+                "report": (
+                    "The weather in New York is sunny with a temperature of 25 degrees"
+                    " Celsius (77 degrees Fahrenheit)."
+                ),
+            }
+        else:
+            return {
+                "status": "error",
+                "error_message": f"Weather information for '{city}' is not available.",
+            }
+
+
+    # Create an agent with tools
+    root_agent = Agent(
+        name="weather_agent",
+        model="gemini-2.5-flash",
+        description="Agent to answer questions using weather tools.",
+        instruction="You must use the available tools to find an answer.",
+        tools=[get_weather],
+    )
+    ```
 
 ## Cloud Trace Setup
 
-### Setup for Agent Engine Deployment
+### Using the ADK CLI
 
-#### Agent Engine Deployment - from ADK CLI
+You can enable cloud tracing by adding a flag when deploying or running your agent using the ADK CLI.
 
-You can enable cloud tracing by adding `--trace_to_cloud` flag when deploying your agent using `adk deploy agent_engine` command for agent engine deployment.
+=== "Python"
+    When deploying your agent using the `adk deploy` command:
+    ```bash
+    adk deploy agent_engine \
+        --project=$GOOGLE_CLOUD_PROJECT \
+        --region=$GOOGLE_CLOUD_LOCATION \
+        --trace_to_cloud \
+        $AGENT_PATH
+    ```
 
-```bash
-adk deploy agent_engine \
-    --project=$GOOGLE_CLOUD_PROJECT \
-    --region=$GOOGLE_CLOUD_LOCATION \
-    --staging_bucket=$STAGING_BUCKET \
-    --trace_to_cloud \
-    $AGENT_PATH
-```
+=== "Go"
+    When running your agent built with the ADK Go launcher:
+    ```bash
+    adkgo web -otel_to_cloud
+    ```
 
-#### Agent Engine Deployment - from Python SDK
+### Programmatic Setup
 
-If you prefer using Python SDK, you can enable cloud tracing by adding `enable_tracing=True` when initialize the `AdkApp` object
+#### Using ADK App abstractions
 
-```python
-# deploy_agent_engine.py
+=== "Python"
+    If you are using the `AdkApp` abstraction, you can enable cloud tracing by adding `enable_tracing=True`:
+    ```python
+    from google.adk.apps import AdkApp
 
-from vertexai.preview import reasoning_engines
-from vertexai import agent_engines
-from weather_agent.agent import root_agent
-
-import vertexai
-
-PROJECT_ID = "{your-project-id}"
-LOCATION = "{your-preferred-location}"
-STAGING_BUCKET = "{your-staging-bucket}"
-
-vertexai.init(
-    project=PROJECT_ID,
-    location=LOCATION,
-    staging_bucket=STAGING_BUCKET,
-)
-
-adk_app = reasoning_engines.AdkApp(
-    agent=root_agent,
-    enable_tracing=True,
-)
-
-
-remote_app = agent_engines.create(
-    agent_engine=adk_app,
-    extra_packages=[
-        "./weather_agent",
-    ],
-    requirements=[
-        "google-cloud-aiplatform[adk,agent_engines]",
-    ],
-)
-```
-
-### Setup for Cloud Run Deployment
-
-#### Cloud Run Deployment - from ADK CLI
-
-You can enable cloud tracing by adding `--trace_to_cloud` flag when deploying your agent using `adk deploy cloud_run` command for cloud run deployment.
-
-```bash
-adk deploy cloud_run \
-    --project=$GOOGLE_CLOUD_PROJECT \
-    --region=$GOOGLE_CLOUD_LOCATION \
-    --trace_to_cloud \
-    $AGENT_PATH
-```
-
-If you want to enable cloud tracing and using a customized agent service deployment on Cloud Run, you can refer to the [Setup for Customized Deployment](#setup-for-customized-deployment) section below
-
-### Setup for Customized Deployment
-
-#### From Built-in `get_fast_api_app` Module
-
-If you want to customize your own agent service, you can enable cloud tracing by initialize the FastAPI app using built-in `get_fast_api_app` module and set `trace_to_cloud=True`
-
-```python
-# deploy_fast_api_app.py
-
-import os
-from google.adk.cli.fast_api import get_fast_api_app
-from fastapi import FastAPI
-
-# Set GOOGLE_CLOUD_PROJECT environment variable for cloud tracing
-os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "alvin-exploratory-2")
-
-# Discover the `weather_agent` directory in current working dir
-AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Create FastAPI app with enabled cloud tracing
-app: FastAPI = get_fast_api_app(
-    agents_dir=AGENT_DIR,
-    web=True,
-    trace_to_cloud=True,
-)
-
-app.title = "weather-agent"
-app.description = "API for interacting with the Agent weather-agent"
-
-
-# Main execution
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8080)
-```
-
-
-#### From Customized Agent Runner
-
-If you want to fully customize your ADK agent runtime, you can enable cloud tracing by using `CloudTraceSpanExporter` module from Opentelemetry.
-
-```python
-# agent_runner.py
-
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from weather_agent.agent import root_agent as weather_agent
-from google.genai.types import Content, Part
-from opentelemetry import trace
-from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.sdk.trace import export
-from opentelemetry.sdk.trace import TracerProvider
-
-APP_NAME = "weather_agent"
-USER_ID = "u_123"
-SESSION_ID = "s_123"
-
-provider = TracerProvider()
-processor = export.BatchSpanProcessor(
-    CloudTraceSpanExporter(project_id="{your-project-id}")
-)
-provider.add_span_processor(processor)
-trace.set_tracer_provider(provider)
-
-session_service = InMemorySessionService()
-runner = Runner(agent=weather_agent, app_name=APP_NAME, session_service=session_service)
-
-
-async def main():
-    session = await session_service.get_session(
-        app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+    adk_app = AdkApp(
+        agent=root_agent,
+        enable_tracing=True,
     )
-    if session is None:
-        session = await session_service.create_session(
-            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
-        )
+    ```
 
-    user_content = Content(
-        role="user", parts=[Part(text="what's weather in paris?")]
+#### Using Telemetry modules
+
+For fully customized agent runtimes, you can enable cloud tracing by using the built-in telemetry modules.
+
+=== "Python"
+    ```python
+    from google.adk import telemetry
+    from google.adk.telemetry import google_cloud
+
+    # Get GCP exporters configuration
+    hooks = google_cloud.get_gcp_exporters(enable_cloud_tracing=True)
+
+    # Initialize and set global OTel providers
+    telemetry.maybe_set_otel_providers(otel_hooks_to_setup=[hooks])
+    ```
+
+=== "TypeScript"
+    ```typescript
+    import { getGcpExporters, maybeSetOtelProviders } from '@google/adk';
+
+    // Get GCP exporters configuration
+    const gcpExporters = await getGcpExporters({
+      enableTracing: true,
+    });
+
+    // Initialize and set global OTel providers
+    maybeSetOtelProviders([gcpExporters]);
+
+    // ... your agent code ...
+    ```
+
+=== "Go"
+    ```go
+    import (
+    	"context"
+    	"log"
+    	"time"
+
+    	"google.golang.org/adk/telemetry"
     )
 
-    final_response_content = "No response"
-    async for event in runner.run_async(
-        user_id=USER_ID, session_id=SESSION_ID, new_message=user_content
-    ):
-        if event.is_final_response() and event.content and event.content.parts:
-            final_response_content = event.content.parts[0].text
+    func main() {
+    	ctx := context.Background()
 
-    print(final_response_content)
+    	// Initialize telemetry with cloud export enabled.
+    	// By default, the GCP project ID is read from the GOOGLE_CLOUD_PROJECT environment variable.
+    	// You can also specify it explicitly using telemetry.WithGcpResourceProject("my-project").
+    	telemetryProviders, err := telemetry.New(ctx,
+    		telemetry.WithOtelToCloud(true),
+    		// telemetry.WithGcpResourceProject("your-project-id"),
+    	)
+    	if err != nil {
+    		log.Fatalf("failed to initialize telemetry: %v", err)
+    	}
+    	defer func() {
+    		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    		defer cancel()
+    		if err := telemetryProviders.Shutdown(shutdownCtx); err != nil {
+    			log.Printf("failed to shutdown telemetry: %v", err)
+    		}
+    	}()
 
+    	// Register as global OTel providers
+    	telemetryProviders.SetGlobalOtelProviders()
 
-if __name__ == "__main__":
-    import asyncio
-
-    asyncio.run(main())
-```
+    	// ... your agent code ...
+    }
+    ```
 
 ## Inspect Cloud Traces
 
-After the setup is complete, whenever you interact with the agent it will automatically send trace data to Cloud Trace. You can inspect the traces by going to [console.cloud.google.com](https://console.cloud.google.com) and visit the Trace Explorer on the configured Google Cloud Project
+After the setup is complete, whenever you interact with the agent, it will automatically send trace data to Cloud Trace. You can inspect the traces by visiting the **Trace Explorer** in the [Google Cloud Console](https://console.cloud.google.com).
 
 ![cloud-trace](../assets/cloud-trace1.png)
 
-And then you will see all available traces produced by ADK agent which configured in several span names such as `invocation` , `agent_run` . `call_llm` and `execute_tool`
+You will see all available traces produced by the ADK agent, with span names such as `invoke_agent`, `generate_content`, `call_llm`, and `execute_tool`.
 
 ![cloud-trace](../assets/cloud-trace2.png)
 
-If you click on one of the traces, you will see the waterfall view of the detailed process, similar to what we see in the web development UI with `adk web` command.
+If you click on one of the traces, you will see a waterfall view of the detailed process, similar to the trace view in the local ADK web UI.
 
 ![cloud-trace](../assets/cloud-trace3.png)
 
 ## Resources
 
 - [Google Cloud Trace Documentation](https://cloud.google.com/trace)
+- [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 
 ================
 File: docs/integrations/code-exec-agent-engine.md
@@ -28505,19 +28444,21 @@ File: docs/observability/logging.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-Agent Development Kit (ADK) uses Python's standard `logging` module to provide flexible and powerful logging capabilities. Understanding how to configure and interpret these logs is crucial for monitoring agent behavior and debugging issues effectively.
+Agent Development Kit (ADK) provides flexible and powerful logging capabilities to monitor agent behavior and debug issues effectively. Understanding how to configure and interpret these logs is crucial for monitoring agent behavior and debugging issues effectively.
 
 ## Logging Philosophy
 
 ADK's approach to logging is to provide detailed diagnostic information without being overly verbose by default. It is designed to be configured by the application developer, allowing you to tailor the log output to your specific needs, whether in a development or production environment.
 
-- **Standard Library:** It uses the standard `logging` library, so any configuration or handler that works with it will work with ADK.
-- **Hierarchical Loggers:** Loggers are named hierarchically based on the module path (e.g., `google_adk.google.adk.agents.llm_agent`), allowing for fine-grained control over which parts of the framework produce logs.
-- **User-Configured:** The framework does not configure logging itself. It is the responsibility of the developer using the framework to set up the desired logging configuration in their application's entry point.
+- **Standard Library Integration:** ADK uses the standard logging facilities of the host language (e.g., Python's `logging` module, Go's `log` package).
+- **Structured GenAI Logging:** ADK uses OpenTelemetry to log structured events for GenAI requests and responses, allowing for advanced monitoring and debugging in cloud environments.
+- **User-Configured:** While ADK provides defaults and integration with its CLI tools, it is ultimately the responsibility of the application developer to configure logging to suit their specific environment.
 
-## How to Configure Logging
+---
 
-You can configure logging in your main application script (e.g., `main.py`) before you initialize and run your agent. The simplest way is to use `logging.basicConfig`.
+## Configuring Logging in Python
+
+In Python, ADK uses the standard `logging` module.
 
 ### Example Configuration
 
@@ -28530,21 +28471,11 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 )
-
-# Your ADK agent code follows...
-# from google.adk.agents import LlmAgent
-# ...
 ```
 
-### Configuring Logging with the ADK CLI
+### Configuring Logging with the ADK CLI (Python)
 
-When running agents using the ADK's built-in web or API servers, you can easily control the log verbosity directly from the command line. The `adk web`, `adk api_server`, and `adk deploy cloud_run` commands all accept a `--log_level` option.
-
-This provides a convenient way to set the logging level without modifying your agent's source code.
-
-> **Note:** The command-line setting always takes precedence over the programmatic configuration (like `logging.basicConfig`) for ADK's loggers. It's recommended to use `INFO` or `WARNING` in production and enable `DEBUG` only when troubleshooting.
-
-**Example using `adk web`:**
+When running Python agents using the ADK's built-in web or API servers, you can easily control the log verbosity directly from the command line. The `adk web`, `adk api_server`, and `adk deploy cloud_run` commands all accept a `--log_level` option.
 
 To start the web server with `DEBUG` level logging, run:
 
@@ -28560,15 +28491,7 @@ The available log levels for the `--log_level` option are:
 - `ERROR`
 - `CRITICAL`
 
-> You can also use `-v` or `--verbose` as a shortcut for `--log_level DEBUG`.
->
-> ```bash
-> adk web -v path/to/your/agents_dir
-> ```
-
-### Log Levels
-
-ADK uses standard log levels to categorize messages. The configured level determines what information gets logged.
+### Log Levels (Python)
 
 | Level | Description | Type of Information Logged  |
 | :--- | :--- | :--- |
@@ -28577,46 +28500,99 @@ ADK uses standard log levels to categorize messages. The configured level determ
 | **`WARNING`** | Indicates a potential issue or deprecated feature use. The agent continues to function, but attention may be required. | <ul><li>Use of deprecated methods or parameters.</li><li>Non-critical errors that the system recovered from.</li></ul> |
 | **`ERROR`** | A serious error that prevented an operation from completing. | <ul><li>Failed API calls to external services (e.g., LLM, Session Service).</li><li>Unhandled exceptions during agent execution.</li><li>Configuration errors.</li></ul> |
 
-> **Note:** It is recommended to use `INFO` or `WARNING` in production environments. Only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
+**Note:** It is recommended to use `INFO` or `WARNING` in production environments. Only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
+---
+
+## Configuring Logging in Go
+
+In Go, ADK uses the standard `log` package for general events and OpenTelemetry for GenAI activity logging.
+
+### OpenTelemetry Logging
+
+ADK Go uses OpenTelemetry (OTel) to log GenAI requests and responses. By default, prompt content is elided in logs for security. You can enable prompt logging using environment variables or programmatic configuration.
+
+#### Enabling Prompt Logging
+
+Set the following environment variable to `true` to include full prompts in your OTel logs:
+
+```bash
+export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true
+```
+
+#### Programmatic Configuration
+
+You can configure telemetry providers using the `google.golang.org/adk/telemetry` package.
+
+```go
+import (
+	"context"
+	"google.golang.org/adk/telemetry"
+)
+
+func main() {
+	ctx := context.Background()
+	
+	// Initialize telemetry with prompt content logging enabled
+	tp, err := telemetry.New(ctx, 
+		telemetry.WithGenAICaptureMessageContent(true),
+		// Add other options like WithOtelToCloud(true) for GCP export
+	)
+	if err != nil {
+		// handle error
+	}
+	defer tp.Shutdown(ctx)
+	
+	// Register as global OTel providers
+	tp.SetGlobalOtelProviders()
+	
+	// Your ADK agent code follows...
+}
+```
+
+### General Logging
+
+General events (like server startup or HTTP requests) are logged using the standard Go `log` package. These logs are written to `stderr` by default.
+
+### Configuring Logging with the ADK Go Launcher
+
+When using the ADK Go `full.Launcher` or `prod.Launcher`, telemetry is automatically initialized. You can enable GCP export using the `-otel_to_cloud` flag:
+
+```bash
+go run main.go web -otel_to_cloud a2a
+```
+
+---
 
 ## Reading and Understanding the Logs
 
-The `format` string in the `basicConfig` example determines the structure of each log message.
+The structure of logs depends on your configuration. Structured GenAI logs emitted via OpenTelemetry follow the [Semantic Conventions for GenAI](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-events.md).
 
-Here’s a sample log entry:
+### Sample Python Log Entry
 
 ```text
-2025-07-08 11:22:33,456 - DEBUG - google_adk.google.adk.models.google_llm - LLM Request: contents { ... }
+2025-07-08 11:22:33,456 - DEBUG - google_adk.models.google_llm - LLM Request: contents { ... }
 ```
-
 | Log Segment                     | Format Specifier | Meaning                                        |
 | ------------------------------- | ---------------- | ---------------------------------------------- |
 | `2025-07-08 11:22:33,456`       | `%(asctime)s`    | Timestamp                                      |
 | `DEBUG`                         | `%(levelname)s`  | Severity level                                 |
 | `google_adk.models.google_llm`  | `%(name)s`       | Logger name (the module that produced the log) |
 | `LLM Request: contents { ... }` | `%(message)s`    | The actual log message                         |
-
 By reading the logger name, you can immediately pinpoint the source of the log and understand its context within the agent's architecture.
 
-## Debugging with Logs: A Practical Example
+### Debugging with Logs: A Practical Example (Python)
 
-**Scenario:** Your agent is not producing the expected output, and you suspect the prompt being sent to the LLM is incorrect or missing information.
-
+**Scenario:** Your agent is not producing the expected output, and you suspect the prompt being sent to the LLM is incorrect.
 **Steps:**
-
 1.  **Enable DEBUG Logging:** In your `main.py`, set the logging level to `DEBUG` as shown in the configuration example.
-
     ```python
     logging.basicConfig(
         level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
     )
     ```
-
 2.  **Run Your Agent:** Execute your agent's task as you normally would.
-
 3.  **Inspect the Logs:** Look through the console output for a message from the `google.adk.models.google_llm` logger that starts with `LLM Request:`.
-
     ```log
     ...
     2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.GEMINI_API, stream: False
@@ -28624,7 +28600,6 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     LLM Request:
     -----------------------------------------------------------
     System Instruction:
-
           You roll dice and answer questions about the outcome of the dice rolls.
           You can roll dice of different sizes.
           You can use multiple tools in parallel by calling functions in parallel(in one request and in one round).
@@ -28640,10 +28615,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
           3. When you respond, you must include the roll_die result from step 1.
           You should always perform the previous 3 steps when asking for a roll and checking prime numbers.
           You should not rely on the previous history on prime results.
-
-
     You are an agent. Your internal name is "hello_world_agent".
-
     The description about you is "hello world agent that can roll a dice of 8 sides and check prime numbers."
     -----------------------------------------------------------
     Contents:
@@ -28655,7 +28627,6 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     roll_die: {'sides': {'type': <Type.INTEGER: 'INTEGER'>}}
     check_prime: {'nums': {'items': {'type': <Type.INTEGER: 'INTEGER'>}, 'type': <Type.ARRAY: 'ARRAY'>}}
     -----------------------------------------------------------
-
     2025-07-10 15:26:13,779 - INFO - google_genai.models - AFC is enabled with max remote calls: 10.
     2025-07-10 15:26:14,309 - INFO - google_adk.google.adk.models.google_llm -
     LLM Response:
@@ -28664,7 +28635,6 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     I have rolled a 6 sided die, and the result is 2.
     ...
     ```
-
 4.  **Analyze the Prompt:** By examining the `System Instruction`, `contents`, `functions` sections of the logged request, you can verify:
     -   Is the system instruction correct?
     -   Is the conversation history (`user` and `model` turns) accurate?
@@ -32607,7 +32577,7 @@ For example, a query tool can be designed to expect a policy to be read from the
     // In a real ADK app, this might be set using the session state service.
     // `ctx` is an `agent.Context` available in callbacks or custom agents.
 
-    policy := map[string]interface{}{
+    policy := map[string]any{
     	"select_only": true,
     	"tables":      []string{"mytable1", "mytable2"},
     }
@@ -32688,7 +32658,7 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
         if (!isSubset) {
             // Return an error message for the model
             const allowed = (policy['tables'] || ['(None defined)']).join(', ');
-            return `Error: Query targets unauthorized tables. Allowed: ${allowed}`;
+            return `Error: Query targets unauthorized tables. Allowed: {allowed}`;
         }
 
         if (policy['select_only']) {
@@ -32713,13 +32683,14 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
     	"google.golang.org/adk/tool"
     )
 
-    func query(query string, toolContext *tool.Context) (any, error) {
+    func query(ctx tool.Context, args QueryArgs) (map[string]any, error) {
     	// Assume 'policy' is retrieved from context, e.g., via session state:
-    	policyAny, err := toolContext.State().Get("query_tool_policy")
+    	policyAny, err := ctx.Session().State().Get("query_tool_policy")
     	if err != nil {
     		return nil, fmt.Errorf("could not retrieve policy: %w", err)
-    	}    	policy, _ := policyAny.(map[string]interface{})
-    	actualTables := explainQuery(query) // Hypothetical function call
+    	}
+    	policy, _ := policyAny.(map[string]any)
+    	actualTables := explainQuery(args.Query) // Hypothetical function call
 
     	// --- Placeholder Policy Enforcement ---
     	if tables, ok := policy["tables"].([]string); ok {
@@ -32734,14 +32705,14 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
     	}
 
     	if selectOnly, _ := policy["select_only"].(bool); selectOnly {
-    		if !strings.HasPrefix(strings.ToUpper(strings.TrimSpace(query)), "SELECT") {
+    		if !strings.HasPrefix(strings.ToUpper(strings.TrimSpace(args.Query)), "SELECT") {
     			return nil, fmt.Errorf("policy restricts queries to SELECT statements only")
     		}
     	}
     	// --- End Policy Enforcement ---
 
-    	fmt.Printf("Executing validated query (hypothetical): %s\n", query)
-    	return map[string]interface{}{"status": "success", "results": []string{"..."}}, nil
+    	fmt.Printf("Executing validated query (hypothetical): %s\n", args.Query)
+    	return map[string]any{"status": "success", "results": []string{"..."}}, nil
     }
 
     // Helper function to check if a is a subset of b
@@ -32808,8 +32779,49 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
 Gemini models come with in-built safety mechanisms that can be leveraged to improve content and brand safety.
 
 * **Content safety filters**:  [Content filters](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes) can help block the output of harmful content. They function independently from Gemini models as part of a layered defense against threat actors who attempt to jailbreak the model. Gemini models on Vertex AI use two types of content filters:
-* **Non-configurable safety filters** automatically block outputs containing prohibited content, such as child sexual abuse material (CSAM) and personally identifiable information (PII).
-* **Configurable content filters** allow you to define blocking thresholds in four harm categories (hate speech, harassment, sexually explicit, and dangerous content,) based on probability and severity scores. These filters are default off but you can configure them according to your needs.
+    * **Non-configurable safety filters** automatically block outputs containing prohibited content, such as child sexual abuse material (CSAM) and personally identifiable information (PII).
+    * **Configurable content filters** allow you to define blocking thresholds in four harm categories (hate speech, harassment, sexually explicit, and dangerous content,) based on probability and severity scores. These filters are default off but you can configure them according to your needs.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.genai import types
+
+    agent = Agent(
+        # ...
+        generate_content_config=types.GenerateContentConfig(
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=types.HarmBlockThreshold.OFF,
+                ),
+            ],
+        ),
+    )
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/genai"
+    )
+
+    agent, _ := llmagent.New(llmagent.Config{
+    	// ...
+    	GenerateContentConfig: &genai.GenerateContentConfig{
+    		SafetySettings: []*genai.SafetySetting{
+    			{
+    				Category:  genai.HarmCategoryHateSpeech,
+    				Threshold: genai.HarmBlockThresholdBlockLowAndAbove,
+    			},
+    		},
+    	},
+    })
+    ```
+
 * **System instructions for safety**: [System instructions](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/safety-system-instructions) for Gemini models in Vertex AI provide direct guidance to the model on how to behave and what type of content to generate. By providing specific instructions, you can proactively steer the model away from generating undesirable content to meet your organization’s unique needs. You can craft system instructions to define content safety guidelines, such as prohibited and sensitive topics, and disclaimer language, as well as brand safety guidelines to ensure the model's outputs align with your brand's voice, tone, values, and target audience.
 
 While these measures are robust against content safety, you need additional checks to reduce agent misalignment, unsafe actions, and brand safety risks.
@@ -32848,7 +32860,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
 
     # Hypothetical Agent setup
     root_agent = LlmAgent( # Use specific agent type
-        model='gemini-2.0-flash',
+        model='gemini-2.5-flash',
         name='root_agent',
         instruction="...",
         before_tool_callback=validate_tool_params, # Assign the callback
@@ -32905,7 +32917,6 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     ```go
     import (
     	"fmt"
-    	"reflect"
 
     	"google.golang.org/adk/agent/llmagent"
     	"google.golang.org/adk/tool"
@@ -32920,49 +32931,31 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     	fmt.Printf("Callback triggered for tool: %s, args: %v\n", t.Name(), args)
 
     	// Example validation: Check if a required user ID from state matches an arg
-    	expectedUserID, err := ctx.State().Get("session_user_id")
+    	expectedUserIDVal, err := ctx.Session().State().Get("session_user_id")
     	if err != nil {
-    		// This is an unexpected failure, return an error.
-    		return nil, fmt.Errorf("internal error: session_user_id not found in state: %w", err)
-    	}
-    	    	expectedUserID, ok := expectedUserIDVal.(string)
-    	if !ok {
-    		return nil, fmt.Errorf("internal error: session_user_id in state is not a string, got %T", expectedUserIDVal)
-    	}
-
-    	actualUserIDInArgs, exists := args["user_id_param"]
-    	if !exists {
-    		// Handle case where user_id_param is not in args
-    		fmt.Println("Validation Failed: user_id_param missing from arguments!")
-    		return map[string]any{"error": "Tool call blocked: user_id_param missing from arguments."}, nil
-    	}
-
-    	actualUserID, ok := actualUserIDInArgs.(string)
-    	if !ok {
-    		// Handle case where user_id_param is not a string
-    		fmt.Println("Validation Failed: user_id_param is not a string!")
-    		return map[string]any{"error": "Tool call blocked: user_id_param is not a string."}, nil
-    	}
-
-    	if actualUserID != expectedUserID {
-    		fmt.Println("Validation Failed: User ID mismatch!")
     		// Return a map to prevent tool execution and provide feedback to the model.
-    		// This is not a Go error, but a message for the agent.
+    		return map[string]any{"error": "Tool call blocked: User ID not found."}, nil
+    	}
+    	expectedUserID, _ := expectedUserIDVal.(string)
+
+    	actualUserID, ok := args["user_id_param"].(string)
+    	if !ok || actualUserID != expectedUserID {
+    		fmt.Println("Validation Failed: User ID mismatch!")
     		return map[string]any{"error": "Tool call blocked: User ID mismatch."}, nil
     	}
+
     	// Return nil, nil to allow the tool call to proceed if validation passes
     	fmt.Println("Callback validation passed.")
     	return nil, nil
     }
 
     // Hypothetical Agent setup
-    // rootAgent, err := llmagent.New(llmagent.Config{
-    // 	Model: "gemini-2.0-flash",
+    // agent, _ := llmagent.New(llmagent.Config{
+    // 	Model: "gemini-2.5-flash",
     // 	Name: "root_agent",
     // 	Instruction: "...",
     // 	BeforeToolCallbacks: []llmagent.BeforeToolCallback{validateToolParams},
     // 	Tools: []tool.Tool{queryToolInstance},
-    // })
     ```
 
 === "Java"
@@ -32996,7 +32989,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     public void runAgent() {
     LlmAgent agent =
         LlmAgent.builder()
-            .model("gemini-2.0-flash")
+            .model("gemini-2.5-flash")
             .name("AgentWithBeforeToolCallback")
             .instruction("...")
             .beforeToolCallback(this::validateToolParams) // Assign the callback
@@ -41584,7 +41577,7 @@ File: docs/tools-custom/confirmation.md
 # Get action confirmation for ADK Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 Some agent workflows require confirmation for decision making, verification,
@@ -41596,10 +41589,10 @@ to gather structured data before proceeding. You can use Tool Confirmation with
 an ADK Tool in the following ways:
 
 -   **[Boolean Confirmation](#boolean-confirmation):** You can
-    configure a FunctionTool with a `require_confirmation` parameter. This
+    configure a tool with a confirmation flag or provider. This
     option pauses the tool for a yes or no confirmation response.
 -   **[Advanced Confirmation](#advanced-confirmation):** For scenarios requiring
-    structured data responses, you can configure a `FunctionTool` with a text
+    structured data responses, you can configure a tool with a text
     prompt to explain the confirmation and an expected response.
 
 !!! example "Experimental"
@@ -41654,6 +41647,26 @@ step by wrapping it with the `FunctionTool` class and setting the
     # https://github.com/google/adk-python/blob/main/contributing/samples/human_tool_confirmation/agent.py
     ```
 
+=== "Go"
+
+    ```go
+    reimburseTool, _ := functiontool.New(functiontool.Config{
+        Name:        "reimburse",
+        Description: "Reimburse an amount",
+        // Set RequireConfirmation to true to require user confirmation
+        // for the tool call.
+        RequireConfirmation: true,
+    }, func(ctx tool.Context, args ReimburseArgs) (ReimburseResult, error) {
+        // actual implementation
+        return ReimburseResult{Status: "ok"}, nil
+    })
+
+    rootAgent, _ := llmagent.New(llmagent.Config{
+        // ...
+        Tools: []tool.Tool{reimburseTool},
+    })
+    ```
+
 === "Java"
 
     ```java
@@ -41670,9 +41683,7 @@ step by wrapping it with the `FunctionTool` class and setting the
 
 ### Require confirmation function
 
-You can modify the behavior `require_confirmation` response by replacing its
-input value with a function that returns a boolean response. The following
-example shows a function for determining if a confirmation is required:
+You can modify the behavior of the confirmation requirement by using a function that returns a boolean response based on the tool's input.
 
 === "Python"
 
@@ -41691,6 +41702,23 @@ example shows a function for determining if a confirmation is required:
         ],
         # ...
     )
+    ```
+
+=== "Go"
+
+    ```go
+    reimburseTool, _ := functiontool.New(functiontool.Config{
+        Name:        "reimburse",
+        Description: "Reimburse an amount",
+        // RequireConfirmationProvider allows for dynamic determination 
+        // of whether user confirmation is needed.
+        RequireConfirmationProvider: func(args ReimburseArgs) bool {
+            return args.Amount > 1000
+        },
+    }, func(ctx tool.Context, args ReimburseArgs) (ReimburseResult, error) {
+        // actual implementation
+        return ReimburseResult{Status: "ok"}, nil
+    })
     ```
 
 === "Java"
@@ -41742,15 +41770,17 @@ and processes the returned data.
 
 ### Confirmation definition
 
-When creating a Tool with an advanced confirmation, create a function that
-includes a ToolContext object. Then define the confirmation using a
-tool_confirmation object, the `tool_context.request_confirmation()` method with
-`hint` and `payload` parameters. These properties are used as follows:
+When creating a Tool with advanced confirmation, use the `Tool Context Request Confirmation` method with `hint` and `payload` parameters:
 
 -   `hint`: Descriptive message that explains what is needed from the user.
--   `payload`: The structure of the data you expect in return. This data
-    type is Any and must be serializable into a JSON-formatted string, such as
-    a dictionary or pydantic model.
+-   `payload`: The structure of the data you expect in return. This must be serializable into a JSON-formatted string.
+
+For a complete example of this approach, see the
+[human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
+code sample. Keep in mind that the agent workflow tool execution pauses while a
+confirmation is obtained. After confirmation is received, you can access the
+confirmation response in the `tool_confirmation.payload` object and then proceed
+with the execution of the workflow.
 
 The following code shows an example implementation for a tool that processes
 time off requests for an employee:
@@ -41785,6 +41815,37 @@ time off requests for an employee:
             'status': 'ok',
             'approved_days': approved_days,
         }
+    ```
+
+=== "Go"
+
+    ```go
+    func requestTimeOff(ctx tool.Context, args RequestTimeOffArgs) (map[string]any, error) {
+        confirmation := ctx.ToolConfirmation()
+        if confirmation == nil {
+            ctx.RequestConfirmation(
+                "Please approve or reject the tool call requestTimeOff() by "+
+                "responding with a FunctionResponse with an expected "+
+                "ToolConfirmation payload.",
+                map[string]any{"approved_days": 0},
+            )
+            return map[string]any{"status": "Manager approval is required."}, nil
+        }
+
+        payload := confirmation.Payload.(map[string]any)
+        // Values in map[string]any from JSON are float64 by default in Go
+        approvedDays := int(payload["approved_days"].(float64))
+        approvedDays = min(approvedDays, args.Days)
+        
+        if approvedDays == 0 {
+            return map[string]any{"status": "The time off request is rejected.", "approved_days": 0}, nil
+        }
+        
+        return map[string]any{
+            "status": "ok",
+            "approved_days": approvedDays,
+        }, nil
+    }
     ```
 
 === "Java"
@@ -41823,13 +41884,6 @@ time off requests for an employee:
     }
     ```
 
-For a complete example of this approach, see the
-[human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
-code sample. Keep in mind that the agent workflow tool execution pauses while a
-confirmation is obtained. After confirmation is received, you can access the
-confirmation response in the `tool_confirmation.payload` object and then proceed
-with the execution of the workflow.
-
 ## Remote confirmation with REST API {#remote-response}
 
 If there is no active user interface for a human confirmation of an agent
@@ -41841,6 +41895,7 @@ the tool call, the user or calling application needs to send a
 You can send the request to the ADK API server's `/run` or `/run_sse` endpoint,
 or directly to the ADK runner. The following example uses a  `curl` command to
 send the confirmation to the  `/run_sse` endpoint:
+
 
 ```bash
  curl -X POST http://localhost:8000/run_sse \
@@ -41856,7 +41911,10 @@ send the confirmation to the  `/run_sse` endpoint:
                     "id": "adk-13b84a8c-c95c-4d66-b006-d72b30447e35",
                     "name": "adk_request_confirmation",
                     "response": {
-                        "confirmed": true
+                        "confirmed": true,
+                        "payload": {
+                            "approved_days": 5
+                        }
                     }
                 }
             }
@@ -41870,12 +41928,12 @@ A REST-based response for a confirmation must meet the following
 requirements:
 
 -   The `id` in the `function_response` should match the `function_call_id`
-    from the `RequestConfirmation` `FunctionCall` event.
+    from the `adk_request_confirmation` `FunctionCall` event.
 -   The `name` should be `adk_request_confirmation`.
--   The `response` object contains the confirmation status and any
-    additional payload data required by the tool.
+-   The `response` object contains the `confirmed` status and any
+    additional `payload` data.
 
-!!! note "Note: Confirmation with Resume feature"
+    !!! note "Note: Confirmation with Resume feature"
 
     If your ADK agent workflow is configured with the 
     [Resume](/adk-docs/runtime/resume/) feature, you also must include
@@ -48726,6 +48784,21 @@ development feel more like software development, to make it easier for
 developers to create, deploy, and orchestrate agentic architectures that range
 from simple tasks to complex workflows.
 
+??? tip "News: ADK Go 1.0.0 released!"
+
+    ADK Go 1.0.0 release adds several major features, including a replay plugin, 
+    model support through Apigee, improved parallel function call execution, and
+    simplified agent execution. For more details on this release, see the
+    [ADK Go v1.0.0 release notes](https://github.com/google/adk-go/releases/tag/v1.0.0).
+
+??? tip "News: ADK Java 1.0.0 released!"
+
+    ADK Java 1.0.0 is now available! This release includes several 
+    bug fixes and enhancements. Read more about it in the 
+    [blog announcement](https://developers.googleblog.com/announcing-adk-for-java-100-building-the-future-of-ai-agents-in-java/). 
+    Upgrade to ADK Java 1.0.0 to take advantage of these enhancements 
+    and ensure optimal performance in your applications.
+
 ??? danger "ADK Python Security Advisory: LiteLLM supply chain compromise"
 
     Unauthorized code was identified in LiteLLM versions 1.82.7 and 1.82.8 on
@@ -48736,21 +48809,6 @@ from simple tasks to complex workflows.
     security advisory](https://github.com/google/adk-python/issues/5005) and
     [LiteLLM's Security Update: Suspected Supply Chain
     Incident](https://docs.litellm.ai/blog/security-update-march-2026).
-
-
-??? warning "News: ADK Python 2.0 Alpha with graph-based workflows!"
-
-    ADK 2.0 Alpha release provides a huge orchestration upgrade for agents with
-    support for graph-based workflows. Download the Alpha release and
-    [try out ADK 2.0](/adk-docs/2.0/).
-
-??? tip "News: ADK Python Skills released!"
-
-    ADK Python development [Agent Skills](https://agentskills.io/)
-    allow you to code ADK agents quickly and more effectively with
-    AI-powered development environments. For more details, check out
-    the [Coding with AI](/adk-docs/tutorials/coding-with-ai/#adk-skills),
-    ADK Skills docs.
 
 <div id="centered-install-tabs" class="install-command-container" markdown="1">
 
@@ -48780,13 +48838,13 @@ from simple tasks to complex workflows.
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>0.6.0</version>
+        <version>1.0.0</version>
     </dependency>
     ```
 
     ```gradle title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:0.6.0'
+        implementation 'com.google.adk:google-adk:1.0.0'
     }
     ```
 
