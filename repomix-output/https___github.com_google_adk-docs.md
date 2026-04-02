@@ -20,14 +20,14 @@ helps you structure agents to execute challenging tasks with more control,
 predictability, and reliability. ADK 2.0 is available as an Alpha release for
 Python and includes the following key features:
 
--   [**Graph-based workflows**](/adk-docs/workflows/): Build deterministic agent
+-   [**Graph-based workflows**](/workflows/): Build deterministic agent
     workflows with more control over how tasks are routed and executed.
 
--   [**Collaborative agents**](/adk-docs/workflows/collaboration/):
+-   [**Collaborative agents**](/workflows/collaboration/):
     Build complex agent architectures with coordinator agents and multiple
     subagents working together.
 
--   [**Dynamic workflows**](/adk-docs/workflows/dynamic/):
+-   [**Dynamic workflows**](/workflows/dynamic/):
     Use code-based logic for building more complex workflows including
     iterative loops and complex decision-based branching.
 
@@ -113,9 +113,9 @@ To install ADK 2.0, follow these steps:
 
 Read the developer guides for building agents with ADK 2.0 features:
 
--   [**Graph-based workflows**](/adk-docs/workflows/)
--   [**Collaborative agents**](/adk-docs/workflows/collaboration/)
--   [**Dynamic workflows**](/adk-docs/workflows/dynamic/)
+-   [**Graph-based workflows**](/workflows/)
+-   [**Collaborative agents**](/workflows/collaboration/)
+-   [**Dynamic workflows**](/workflows/dynamic/)
 
 Check out these ADK 2.0 code samples for testing and inspiration:
 
@@ -128,7 +128,7 @@ Thanks for checking out ADK 2.0! We look forward to your
 ================
 File: docs/a2a/a2a-extension.md
 ================
-# A2A extension for improved reliabilty
+# A2A extension for improved reliability
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python 1.27.0</span>
@@ -137,12 +137,12 @@ File: docs/a2a/a2a-extension.md
 ADK provides an extension for Agent2Agent (A2A) support to improved message and data handling as part of
 an updated [A2aAgentExecutor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py)
 class. The updated version includes updates to architectural changes to the core agent execution logic
-and extensions for A2A to improve data handling, while also providing backward compatibility with 
+and extensions for A2A to improve data handling, while also providing backward compatibility with
 existing A2A agents.
 
 Activating the A2A extension option instructs the server to use the updated agent executor implementation.
 While this update offers several general advantages, it primarily resolves critical limitations found in
-the legacy A2A-ADK implementation when both A2A and ADK operate in streaming mode. The new implementation 
+the legacy A2A-ADK implementation when both A2A and ADK operate in streaming mode. The new implementation
 addresses the following issues:
 
 -   **Message duplication:** Prevents user messages from being duplicated in the task history.
@@ -1535,9 +1535,9 @@ You can integrate Anthropic's Claude models directly using an Anthropic API key
 or from a Vertex AI backend into your Java ADK applications by using the ADK's
 `Claude` wrapper class. You can also access Anthropic models through
 Google Cloud Vertex AI services. For more information, see the
-[Third-Party Models on Vertex AI](/adk-docs/agents/models/vertex/#third-party-models-on-vertex-ai-eg-anthropic-claude)
+[Third-Party Models on Vertex AI](/agents/models/vertex/#third-party-models-on-vertex-ai-eg-anthropic-claude)
 section. You can also use Anthropic models through the
-[LiteLLM](/adk-docs/agents/models/litellm/) library for Python.
+[LiteLLM](/agents/models/litellm/) library for Python.
 
 ## Get started
 
@@ -1723,10 +1723,10 @@ File: docs/agents/models/google-gemini.md
 ADK supports the Google Gemini family of generative AI models that provide a
 powerful set of models with a wide range of features. ADK provides support for many
 Gemini features, including
-[Code Execution](/adk-docs/tools/gemini-api/code-execution/),
-[Google Search](/adk-docs/tools/gemini-api/google-search/),
-[Context caching](/adk-docs/context/caching/),
-[Computer use](/adk-docs/tools/gemini-api/computer-use/)
+[Code Execution](/tools/gemini-api/code-execution/),
+[Google Search](/tools/gemini-api/google-search/),
+[Context caching](/context/caching/),
+[Computer use](/tools/gemini-api/computer-use/)
 and the [Interactions API](#interactions-api).
 
 ## Get started
@@ -2063,7 +2063,7 @@ For a complete code sample, see the
 
 The Interactions API **does not** support mixing custom function calling tools with
 built-in tools, such as the
-[Google Search](/adk-docs/tools/built-in-tools/#google-search),
+[Google Search](/tools/built-in-tools/#google-search),
 tool, within the same agent. You can work around this limitation by configuring the
 the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
 parameter:
@@ -2108,9 +2108,9 @@ ADK primarily uses two mechanisms for model integration:
    hosted on Vertex AI endpoints. You access these models by providing the model name or endpoint resource string and ADK's internal registry
    resolves this string to the appropriate backend client.
 
-      *  [Gemini models](/adk-docs/agents/models/google-gemini/)
-      *  [Claude models](/adk-docs/agents/models/anthropic/)
-      *  [Vertex AI hosted models](/adk-docs/agents/models/vertex/)
+      *  [Gemini models](/agents/models/google-gemini/)
+      *  [Claude models](/agents/models/anthropic/)
+      *  [Vertex AI hosted models](/agents/models/vertex/)
 
 2. **Model connectors:** For broader compatibility, especially models
    outside the Google ecosystem or those requiring specific client
@@ -2118,11 +2118,11 @@ ADK primarily uses two mechanisms for model integration:
    `LiteLlm`, and pass this object as the `model` parameter
    to your `LlmAgent`.
 
-      *  [Apigee models](/adk-docs/agents/models/apigee/)
-      *  [LiteLLM models](/adk-docs/agents/models/litellm/)
-      *  [Ollama model hosting](/adk-docs/agents/models/ollama/)
-      *  [vLLM model hosting](/adk-docs/agents/models/vllm/)
-      *  [LiteRT-LM model hosting](/adk-docs/agents/models/litert-lm/)
+      *  [Apigee models](/agents/models/apigee/)
+      *  [LiteLLM models](/agents/models/litellm/)
+      *  [Ollama model hosting](/agents/models/ollama/)
+      *  [vLLM model hosting](/agents/models/vllm/)
+      *  [LiteRT-LM model hosting](/agents/models/litert-lm/)
 
 ================
 File: docs/agents/models/litellm.md
@@ -2159,8 +2159,8 @@ You can use the LiteLLM library to access remote or locally hosted AI models:
     as the `model` parameter of `LlmAgent`.
 *   **Local model host:** Use the `LiteLlm` wrapper class configured to
     point to your local model server. For examples of local model hosting
-    solutions, see the [Ollama](/adk-docs/agents/models/ollama/)
-    or [vLLM](/adk-docs/agents/models/vllm/) documentation.
+    solutions, see the [Ollama](/agents/models/ollama/)
+    or [vLLM](/agents/models/vllm/) documentation.
 
 ??? warning "Windows Encoding with LiteLLM"
 
@@ -2345,7 +2345,7 @@ File: docs/agents/models/ollama.md
 
 [Ollama](https://ollama.com/) is a tool that allows you to host and run
 open-source models locally. ADK integrates with Ollama-hosted models through the
-[LiteLLM](/adk-docs/agents/models/litellm/) model connector library.
+[LiteLLM](/agents/models/litellm/) model connector library.
 
 ## Get started
 
@@ -2804,7 +2804,7 @@ Vertex AI offers a curated selection of open-source models, such as Meta Llama, 
     You can use the [LiteLLM](https://docs.litellm.ai/) library to access open models like Meta's Llama on VertexAI MaaS
 
     **Integration Method:** Use the `LiteLlm` wrapper class and set it
-    as the `model` parameter of `LlmAgent`. Make sure you go through the [LiteLLM model connector for ADK agents](/adk-docs/agents/models/litellm/#litellm-model-connector-for-adk-agents) documentation on how to use LiteLLM in ADK
+    as the `model` parameter of `LlmAgent`. Make sure you go through the [LiteLLM model connector for ADK agents](/agents/models/litellm/#litellm-model-connector-for-adk-agents) documentation on how to use LiteLLM in ADK
 
     **Setup:**
 
@@ -2815,7 +2815,7 @@ Vertex AI offers a curated selection of open-source models, such as Meta Llama, 
             ```shell
             pip install litellm
             ```
-    
+
     **Example:**
 
     ```python
@@ -2843,7 +2843,7 @@ File: docs/agents/models/vllm.md
 
 Tools such as [vLLM](https://github.com/vllm-project/vllm) allow you to host
 models efficiently and serve them as an OpenAI-compatible API endpoint. You can
-use vLLM models through the [LiteLLM](/adk-docs/agents/models/litellm/) library
+use vLLM models through the [LiteLLM](/agents/models/litellm/) library
 for Python.
 
 ## Setup
@@ -3191,7 +3191,7 @@ incorporate Functions, Tools, Sub-Agents, and more. This page describes how to
 build and run ADK workflows with the Agent Config feature. For detailed
 information on the syntax and settings supported by the Agent Config format,
 see the
-[Agent Config syntax reference](/adk-docs/api-reference/agentconfig/).
+[Agent Config syntax reference](/api-reference/agentconfig/).
 
 !!! example "Experimental"
     The Agent Config feature is experimental and has some
@@ -3219,7 +3219,7 @@ the Agent Config files.
 To set up ADK for use with Agent Config:
 
 1.  Install the ADK Python libraries by following the
-    [Installation](/adk-docs/get-started/installation/#python)
+    [Installation](/get-started/installation/#python)
     instructions. *Python is currently required.* For more information, see the
     [Known limitations](#known-limitations).
 1.  Verify that ADK is installed by running the following command in your
@@ -3233,7 +3233,7 @@ To set up ADK for use with Agent Config:
     If the `adk` command fails to run and the version is not listed in step 2, make
     sure your Python environment is active. Execute `source .venv/bin/activate` in
     your terminal on Mac and Linux. For other platform commands, see the
-    [Installation](/adk-docs/get-started/installation/#python)
+    [Installation](/get-started/installation/#python)
     page.
 
 ### Build an agent
@@ -3289,7 +3289,7 @@ You can discover more configuration options for your `root_agent.yaml` agent
 configuration file by referring to the ADK
 [samples repository](https://github.com/search?q=repo%3Agoogle%2Fadk-python+path%3A%2F%5Econtributing%5C%2Fsamples%5C%2F%2F+.yaml&type=code)
 or the
-[Agent Config syntax](/adk-docs/api-reference/agentconfig/)
+[Agent Config syntax](/api-reference/agentconfig/)
 reference.
 
 ### Run the agent
@@ -3310,9 +3310,9 @@ To run your Agent Config-defined agent:
 
 For more information on the ways to run your agent, see the *Run Your Agent*
 topic in the
-[Quickstart](/adk-docs/get-started/quickstart/#run-your-agent).
+[Quickstart](/get-started/quickstart/#run-your-agent).
 For more information about the ADK command line options, see the
-[ADK CLI reference](/adk-docs/api-reference/cli/).
+[ADK CLI reference](/api-reference/cli/).
 
 ### Run programmatically
 
@@ -3432,12 +3432,12 @@ For more details, see the full code for this sample in the
 ## Deploy agent configs
 
 You can deploy Agent Config agents with
-[Cloud Run](/adk-docs/deploy/cloud-run/) and
-[Agent Engine](/adk-docs/deploy/agent-engine/),
+[Cloud Run](/deploy/cloud-run/) and
+[Agent Engine](/deploy/agent-engine/),
 using the same procedure as code-based agents. For more information on how
 to prepare and deploy Agent Config-based agents, see the
-[Cloud Run](/adk-docs/deploy/cloud-run/) and
-[Agent Engine](/adk-docs/deploy/agent-engine/)
+[Cloud Run](/deploy/cloud-run/) and
+[Agent Engine](/deploy/agent-engine/)
 deployment guides.
 
 ## Known limitations {#known-limitations}
@@ -3477,7 +3477,7 @@ agent definitions in the ADK
 [adk-samples](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C//+root_agent.yaml&type=code)
 repository. For detailed information on the syntax and settings supported by
 the Agent Config format, see the
-[Agent Config syntax reference](/adk-docs/api-reference/agentconfig/).
+[Agent Config syntax reference](/api-reference/agentconfig/).
 
 ================
 File: docs/agents/custom-agents.md
@@ -3968,33 +3968,33 @@ Understanding these core types is the first step toward building sophisticated, 
 Beyond the core agent types, ADK allows you to significantly expand what your
 agents can do through several key mechanisms:
 
-*   [**AI Models**](/adk-docs/agents/models/):
+*   [**AI Models**](/agents/models/):
     Swap the underlying intelligence of your agents by integrating with
     different generative AI models from Google and other providers.
 
-*   [**Artifacts**](/adk-docs/artifacts/):
+*   [**Artifacts**](/artifacts/):
     Enable agents to create and manage persistent outputs like files, code, or
     documents that exist beyond the conversation lifecycle.
 
-*   [**Pre-built tools and integrations**](/adk-docs/integrations/):
+*   [**Pre-built tools and integrations**](/integrations/):
     Equip your agents with a wide array tools, plugins, and other integrations
     to interact with the world, including web sites, MCP tools, applications,
     databases, programming interfaces, and more.
 
-*   [**Custom tools**](/adk-docs/tools-custom/):
+*   [**Custom tools**](/tools-custom/):
     Create your own, task-specific tools for solving specific problems with
     precision and control.
 
-*   [**Plugins**](/adk-docs/plugins/):
+*   [**Plugins**](/plugins/):
     Integrate complex, pre-packaged behaviors and third-party services directly
     into your agent's workflow.
 
-*   [**Skills**](/adk-docs/skills/):
+*   [**Skills**](/skills/):
     Use prebuilt or custom [Agent Skills](https://agentskills.io/) to extend
     agent capabilities in a way that works efficiently inside AI context window
     limits.
 
-*   [**Callbacks**](/adk-docs/callbacks/):
+*   [**Callbacks**](/callbacks/):
     Hook into specific events during an agent's execution lifecycle to add
     logging, monitoring, or custom side-effects without altering core agent
     logic.
@@ -4008,7 +4008,7 @@ Now that you have an overview of the different agent types available in ADK, div
 * [**Workflow Agents:**](workflow-agents/index.md) Learn how to orchestrate tasks using `SequentialAgent`, `ParallelAgent`, and `LoopAgent` for structured and predictable processes.
 * [**Custom Agents:**](custom-agents.md) Discover the principles of extending `BaseAgent` to build agents with unique logic and integrations tailored to your specific needs.
 * [**Multi-Agents:**](multi-agents.md) Understand how to combine different agent types to create sophisticated, collaborative systems capable of tackling complex problems.
-* [**Models:**](/adk-docs/agents/models/) Learn about the different LLM integrations available and how to select the right model for your agents.
+* [**Models:**](/agents/models/) Learn about the different LLM integrations available and how to select the right model for your agents.
 
 ================
 File: docs/agents/llm-agents.md
@@ -4058,7 +4058,7 @@ First, you need to establish what the agent *is* and what it's *for*.
 * **`model` (Required):** Specify the underlying LLM that will power this
   agent's reasoning. This is a string identifier like `"gemini-2.5-flash"`. The
   choice of model impacts the agent's capabilities, cost, and performance. See
-  the [Models](/adk-docs/agents/models/) page for available options and considerations.
+  the [Models](/agents/models/) page for available options and considerations.
 
 === "Python"
 
@@ -4317,7 +4317,7 @@ on the conversation and its instructions.
             .build();
     ```
 
-Learn more about Tools in [Custom Tools](/adk-docs/tools-custom/).
+Learn more about Tools in [Custom Tools](/tools-custom/).
 
 ## Advanced Configuration & Control
 
@@ -4725,7 +4725,7 @@ call_agent("If it's raining in New York right now, what is the current temperatu
 
 - **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow
   the agent to execute code blocks found in the LLM's response. For more
-  information, see [Code Execution with Gemini API](/adk-docs/tools/gemini-api/code-execution/).
+  information, see [Code Execution with Gemini API](/tools/gemini-api/code-execution/).
 
 === "Python"
 
@@ -5179,7 +5179,7 @@ Agents within a system often need to exchange data or trigger actions in one ano
 
 #### a) Shared Session State (`session.state`)
 
-The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](/adk-docs/sessions/session/) object via the `InvocationContext`) to communicate passively.
+The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](/sessions/session/) object via the `InvocationContext`) to communicate passively.
 
 * **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). State changes are tracked via [`CallbackContext`](../callbacks/index.md).
 * **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
@@ -5360,8 +5360,8 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
 
 #### c) Explicit Invocation (`AgentTool`)
 
-Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a callable function or 
-[Tool](/adk-docs/tools-custom/).
+Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a callable function or
+[Tool](/tools-custom/).
 
 * **Mechanism:** Wrap the target agent instance in `AgentTool` and include it in the parent `LlmAgent`'s `tools` list. `AgentTool` generates a corresponding function declaration for the LLM.
 * **Handling:** When the parent LLM generates a function call targeting the `AgentTool`, the framework executes `AgentTool.run_async`. This method runs the target agent, captures its final response, forwards any state/artifact changes back to the parent's context, and returns the response as the tool's result.
@@ -6882,16 +6882,16 @@ The ***App*** class is a top-level container for an entire Agent Development Kit
 (ADK) agent workflow. It is designed to manage the lifecycle, configuration, and
 state for a collection of agents grouped by a ***root agent***. The **App** class
 separates the concerns of an agent workflow's overall operational infrastructure
-from individual agents' task-oriented reasoning. 
+from individual agents' task-oriented reasoning.
 
 Defining an ***App*** object in your ADK workflow is optional and changes how you
 organize your agent code and run your agents. From a practical perspective, you
 use the ***App*** class to configure the following features for your agent workflow:
 
-*   [**Context caching**](/adk-docs/context/caching/)
-*   [**Context compression**](/adk-docs/context/compaction/)
-*   [**Agent resume**](/adk-docs/runtime/resume/)
-*   [**Plugins**](/adk-docs/plugins/)
+*   [**Context caching**](/context/caching/)
+*   [**Context compression**](/context/compaction/)
+*   [**Agent resume**](/runtime/resume/)
+*   [**Plugins**](/plugins/)
 
 This guide explains how to use the App class for configuring and managing your
 ADK agent workflows.
@@ -6918,7 +6918,7 @@ building complex agentic systems:
 
 The ***App*** class is used as the primary container of your agent workflow and
 contains the root agent of the project. The ***root agent*** is the container
-for the primary controller agent and any additional sub-agents. 
+for the primary controller agent and any additional sub-agents.
 
 ### Define app with root agent
 
@@ -6932,14 +6932,14 @@ sample code:
     ```python title="agent.py"
     from google.adk.agents.llm_agent import Agent
     from google.adk.apps import App
-    
+
     root_agent = Agent(
         model='gemini-2.5-flash',
         name='greeter_agent',
         description='An agent that provides a friendly greeting.',
         instruction='Reply with Hello, World!',
     )
-    
+
     app = App(
         name="agents",
         root_agent=root_agent,
@@ -6953,7 +6953,7 @@ sample code:
     ```java title="AgentConfiguration.java"
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.apps.App;
-    
+
     LlmAgent rootAgent = LlmAgent.builder()
         .model("gemini-2.5-flash")
         .name("greeter_agent")
@@ -6974,7 +6974,7 @@ sample code:
 !!! tip "Recommended: Use `app` variable name"
 
     In your agent project code, set your ***App*** object to the variable name
-    `app` so it is compatible with the ADK command line interface runner tools. 
+    `app` so it is compatible with the ADK command line interface runner tools.
 
 ### Run your App agent
 
@@ -6988,21 +6988,21 @@ You can use the ***Runner*** class to run your agent workflow using the
     from dotenv import load_dotenv
     from google.adk.runners import InMemoryRunner
     from agent import app # import code from agent.py
-    
+
     load_dotenv() # load API keys and settings
     # Set a Runner using the imported application object
     runner = InMemoryRunner(app=app)
-    
+
     async def main():
         try:  # run_debug() requires ADK Python 1.18 or higher:
             response = await runner.run_debug("Hello there!")
-            
+
         except Exception as e:
             print(f"An error occurred during agent execution: {e}")
-    
+
     if __name__ == "__main__":
         asyncio.run(main())
-    
+
     ```
 
 === "Java"
@@ -7010,9 +7010,9 @@ You can use the ***Runner*** class to run your agent workflow using the
     ```java title="AppMain.java"
     import com.google.adk.agents.Content;
     import com.google.adk.runner.Runner;
-    
+
     public class AppMain {
-    
+
       public static void main(String[] args) throws Exception {
         // Set a Runner using the application object
 
@@ -7021,7 +7021,7 @@ You can use the ***Runner*** class to run your agent workflow using the
         Runner runner = Runner.builder()
             .app(app) // Use the 'app' object defined previously
             .build();
-    
+
         runner.runAsync("user", "session-1", Content.fromParts(Part.fromText("Hello there!")))
             .filter(event -> event.finalResponse() && event.content().isPresent())
             .blockingSubscribe(event -> System.out.println("Response: " + event.stringifyContent()));
@@ -7033,12 +7033,12 @@ You can use the ***Runner*** class to run your agent workflow using the
 
     The `Runner.run_debug()` command requires ADK Python v1.18.0 or higher.
     You can also use `Runner.run()`, which requires more setup code. For
-    more details, see the 
+    more details, see the
 
 === "Python"
 
     Run your App agent with the `main.py` code using the following command:
-    
+
     ```console
     python main.py
     ```
@@ -7046,7 +7046,7 @@ You can use the ***Runner*** class to run your agent workflow using the
 === "Java"
 
     Run your App agent with the `AppMain.java` code using your build tool (e.g. Gradle `application` plugin):
-    
+
     ```console
     ./gradlew run
     ```
@@ -8347,7 +8347,7 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
 !!! tip
     When implementing security guardrails and policies, use ADK Plugins for
     better modularity and flexibility than Callbacks. For more details, see
-    [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
+    [Callbacks and Plugins for Security Guardrails](/safety/#callbacks-and-plugins-for-security-guardrails).
 
 **How are they added:**
 
@@ -8363,7 +8363,7 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/callback_basic.ts:callback_basic"
         ```
-    
+
     === "Go"
 
         ```go
@@ -8705,6 +8705,427 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         ```
 
 ================
+File: docs/community/contributing-guide.md
+================
+Thank you for your interest in contributing to Agent Development Kit (ADK)! We
+welcome contributions to the core frameworks, documentation, and related
+components, which are listed below.
+
+This guide provides information on how to get involved.
+
+## Preparing to contribute
+
+### Choose the right repository
+
+The ADK project is split across several repositories. Find the right one for
+your contribution:
+
+Repository | Description | Detailed Guide
+--- | --- | ---
+[`google/adk-python`](https://github.com/google/adk-python) | Contains the core Python library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-python/blob/main/CONTRIBUTING.md)
+[`google/adk-python-community`](https://github.com/google/adk-python-community) | Contains community-contributed tools, integrations, and scripts | [`CONTRIBUTING.md`](https://github.com/google/adk-python-community/blob/main/CONTRIBUTING.md)
+[`google/adk-js`](https://github.com/google/adk-js) | Contains the core JavaScript library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-js/blob/main/CONTRIBUTING.md)
+[`google/adk-go`](https://github.com/google/adk-go) | Contains the core Go library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-go/blob/main/CONTRIBUTING.md)
+[`google/adk-java`](https://github.com/google/adk-java) | Contains the core Java library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-java/blob/main/CONTRIBUTING.md)
+[`google/adk-docs`](https://github.com/google/adk-docs) | Contains the source for the documentation site you are currently reading | [`CONTRIBUTING.md`](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md)
+[`google/adk-samples`](https://github.com/google/adk-samples) | Contains sample agents for ADK | [`CONTRIBUTING.md`](https://github.com/google/adk-samples/blob/main/CONTRIBUTING.md)
+[`google/adk-web`](https://github.com/google/adk-web) | Contains the source for the `adk web` dev UI |
+
+These repositories typically include a `CONTRIBUTING.md` file in the root of
+their repository with more detailed information on requirements, testing, code
+review processes, etc. for that particular component.
+
+### Sign a CLA
+
+Contributions to this project must be accompanied by a
+[Contributor License Agreement](https://cla.developers.google.com/about) (CLA).
+You (or your employer) retain the copyright to your contribution; this simply
+gives us permission to use and redistribute your contributions as part of the
+project.
+
+If you or your current employer have already signed the Google CLA (even if it
+was for a different project), you probably don't need to do it again.
+
+Visit <https://cla.developers.google.com/> to see your current agreements or to
+sign a new one.
+
+### Review community guidelines
+
+This project follows
+[Google's Open Source Community Guidelines](https://opensource.google/conduct/).
+
+## Join the discussion
+
+Have questions, want to share ideas, or discuss how you're using ADK? Head over
+to our **[Python](https://github.com/google/adk-python/discussions)**,
+**[TypeScript](https://github.com/google/adk-js/discussions)**,
+**[Go](https://github.com/google/adk-go/discussions)**, or
+**[Java](https://github.com/google/adk-java/discussions)** Discussions!
+
+This is the primary place for:
+
+* Asking questions and getting help from the community and maintainers.
+* Sharing your projects or use cases (`Show and Tell`).
+* Discussing potential features or improvements before creating a formal issue.
+* General conversation about ADK.
+
+## How to contribute
+
+There are several ways you can contribute to ADK:
+
+### Reporting issues { #reporting-issues-bugs-errors }
+
+If you find a bug in the framework or an error in the documentation:
+
+* **Framework Bugs:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
+[`google/adk-js`](https://github.com/google/adk-js/issues/new),
+[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
+[`google/adk-java`](https://github.com/google/adk-java/issues/new)
+* **Documentation Errors:** [Open an issue in `google/adk-docs` (use bug template)](https://github.com/google/adk-docs/issues/new?template=bug_report.md)
+
+### Suggesting enhancements { #suggesting-enhancements }
+
+Have an idea for a new feature or an improvement to an existing one?
+
+* **Framework Enhancements:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
+[`google/adk-js`](https://github.com/google/adk-js/issues/new),
+[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
+[`google/adk-java`](https://github.com/google/adk-java/issues/new)
+* **Documentation Enhancements:** [Open an issue in `google/adk-docs`](https://github.com/google/adk-docs/issues/new)
+
+### Improving documentation { #improving-documentation }
+
+Found a typo, unclear explanation, or missing information? Submit your changes directly:
+
+* **How:** Submit a Pull Request (PR) with your suggested improvements.
+* **Where:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
+
+### Writing code { #writing-code }
+
+Help fix bugs, implement new features or contribute code samples for the documentation:
+
+**How:** Submit a Pull Request (PR) with your code changes.
+
+* **Python Framework:** [Create a Pull Request in `google/adk-python`](https://github.com/google/adk-python/pulls)
+* **TypeScript Framework:** [Create a Pull Request in `google/adk-js`](https://github.com/google/adk-js/pulls)
+* **Go Framework:** [Create a Pull Request in `google/adk-go`](https://github.com/google/adk-go/pulls)
+* **Java Framework:** [Create a Pull Request in `google/adk-java`](https://github.com/google/adk-java/pulls)
+* **Documentation:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
+
+### Code reviews
+
+* All contributions, including those from project members, undergo a review
+  process.
+
+* We use GitHub Pull Requests (PRs) for code submission and review. Please
+  ensure your PR clearly describes the changes you are making.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the
+project's
+[Apache 2.0 License](https://github.com/google/adk-docs/blob/main/LICENSE).
+
+## Questions?
+
+If you get stuck or have questions, feel free to open an issue on the relevant
+repository's issue tracker.
+
+================
+File: docs/community/index.md
+================
+# Community Resources
+
+Welcome! This page highlights resources built and maintained by the Agent
+Development Kit community.
+
+!!! info
+
+    Google and the ADK team do not provide support for the content linked in
+    these external community resources.
+
+## Getting Started
+
+<div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=zgrOwow_uTQ" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-agent-development-kit.jpg" alt="Introducing Agent Development Kit">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Demo</div>
+      <h3>📺 Introducing Agent Development Kit</h3>
+      <p>A demo of building a multi-agent travel planner, showcasing core design principles.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=44C8u0CDtSo" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-building-your-first-agent.jpg" alt="Building your first agent with ADK">
+    </div>
+    <div class="card-content">
+      <div class="type">Video</div>
+      <h3>📺 Getting started with Agent Development Kit</h3>
+      <p>Learn the fundamentals of agent definition and how to run and debug your first agent.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=5ZmaWY7UX6k" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-agent-tools-101.jpg" alt="ADK Agent Tools 101">
+    </div>
+    <div class="card-content">
+      <div class="type">Video</div>
+      <h3>📺 Getting Started with ADK Tools</h3>
+      <p>A guide to building a software bug assistant using tools like MCP and Google Search.</p>
+    </div>
+  </a>
+</div>
+
+## ADK Community Calls
+
+!!! tip "Stay Connected"
+
+    Join the [ADK Community Google Group](https://groups.google.com/g/adk-community) for updates, calendar invites, and to connect with the ADK community.
+
+    See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
+
+<div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/bPngDY7EuOQ/maxresdefault.jpg" alt="ADK Community Call Mar 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Mar 2026 Recording</h3>
+      <p>Discussions include the ADK 2.0 alpha release, Workflows for graph-based agent composition, Agent Modes for structured multi-agent coordination, and a community spotlight on Restate durable agents.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=cXDr4RYJxK0" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/cXDr4RYJxK0/maxresdefault.jpg" alt="ADK Community Call Feb 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Feb 2026 Recording</h3>
+      <p>Discussions include ADK evaluations with built-in metrics, token-based context compaction, the BigQuery observability plugin, and a community spotlight on Redis integration.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=h9Lueiqo89E" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/h9Lueiqo89E/maxresdefault.jpg" alt="ADK Community Call Jan 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 Jan 2026 Recording</h3>
+      <p>Discussions include Session Service schema for cross-language support, TypeScript multi-agent demo, API Registry for MCP servers, and third-party tool integrations.</p>
+    </div>
+  </a>
+
+</div>
+
+## Courses & Deep Dives
+
+<div class="resource-grid">
+  <a href="https://www.kaggle.com/learn-guide/5-day-agents" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://storage.googleapis.com/kaggle-media/Images/AI%20AGENT%20COURSE%20ILLUSTRATION.png" alt="ADK Masterclass Thumbnail">
+    </div>
+    <div class="card-content">
+      <div class="type">Online Course</div>
+      <h3>🎓 5-Day AI Agents Intensive Course with Google</h3>
+      <p>Build with core ADK agent components including, models, tools, memory, evaluation, and deployment.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=P4VFL9nIaIA" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-masterclass.jpg" alt="ADK Masterclass Thumbnail">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Course</div>
+      <h3>🎓 ADK Masterclass: Build AI Agents & Automate Workflows</h3>
+      <p>A complete crash course that takes you from beginner to expert with 12 hands-on examples.</p>
+    </div>
+  </a>
+  <a href="https://raphaelmansuy.github.io/adk_training/" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-training-hub.png" alt="ADK Training Hub Banner">
+    </div>
+    <div class="card-content">
+      <div class="type">Website</div>
+      <h3>🎓 ADK Training Hub</h3>
+      <p>Master ADK from first principles to production with comprehensive tutorials and examples.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/playlist?list=PLLrA_pU9-Gz2HwepRUVpq1TEPuYWo_fSi" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-master-agentic-ai-with-adk.jpg" alt="Master Agentic AI with ADK">
+    </div>
+    <div class="card-content">
+      <div class="type">YouTube Playlist</div>
+      <h3>🎓 Master Agentic AI with ADK</h3>
+      <p>A step-by-step playlist covering everything from setup to deploying and scaling agents.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/playlist?list=PL6tW9BrhiPTAZts0W5nQS9dbW6VMnLKab" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-course.jpg" alt="ADK Course">
+    </div>
+    <div class="card-content">
+      <div class="type">YouTube Playlist</div>
+      <h3>🎓 Google ADK End-to-end Course</h3>
+      <p>Build, deploy, and scale production-ready agents with this in-depth course series.</p>
+    </div>
+  </a>
+  <a href="https://iamulya.one/tags/building-intelligent-agents-with-google-adk/" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-building-intelligent-agents-with-adk.jpg" alt="Building intelligent agents with ADK">
+    </div>
+    <div class="card-content">
+      <div class="type">Blog Series</div>
+      <h3>🎓 Building Intelligent Agents with Google ADK</h3>
+      <p>A developer's guide to building intelligent agents with Google's code-first Python toolkit.</p>
+    </div>
+  </a>
+  <a href="https://github.com/arjunprabhulal/google-adk-masterclass" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-masterclass-hands-on.png" alt="Google ADK Masterclass Hands-on Series">
+    </div>
+    <div class="card-content">
+      <div class="type">Online Course</div>
+      <h3>🎓 Google ADK Masterclass: Hands-on Series</h3>
+      <p>Build production-ready AI agents with 20 modules covering agents, workflows, tools, memory, and MCP integrations.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/playlist?list=PL0Zc2RFDZsM_MkHOzWNJpaT4EH5fQxA8n" class="resource-card">
+      <div class="card-image-wrapper">
+        <img src="../assets/community-adk-news-jp.jpg" alt="ADK News">
+      </div>
+      <div class="card-content">
+        <div class="type">YouTube Playlist</div>
+        <h3>📻️ ADK News - ADK Podcast in Japanese</h3>
+        <p>An auto-generated Japanese podcast about ADK, created by an ADK agent that covers commit logs, release notes, and blog posts.</p>
+      </div>
+    </a>
+</div>
+
+## Agent Tutorials and Demos
+
+<div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=efcUXoMX818" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-data-science-agent.jpg" alt="Building a data science agent with ADK">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Tutorial</div>
+      <h3>📖 How to Build a Data Science Agent with ADK</h3>
+      <p>A deep dive into building a multi-agent system for database queries, Python analysis, and BigQuery ML.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=hPzjkQFV5yI" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-brand-search-optimization-agent.jpg" alt="Building a brand search optimization agent with ADK">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Tutorial</div>
+      <h3>📖 Build a Browser Use Agent with ADK and Selenium</h3>
+      <p>Learn to build an agent that enhances a retail website's product data by filling in missing information.</p>
+    </div>
+  </a>
+  <a href="https://github.com/google/adk-docs/blob/main/examples/python/notebooks/shop_agent.ipynb" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-shoppers-concierge-demo.jpg" alt="ADK Shopper's Concierge Demo">
+    </div>
+    <div class="card-content">
+      <div class="type">Jupyter Notebook</div>
+      <h3>📖 Build an E-commerce Recommendation Agent</h3>
+      <p>A tutorial on creating a simple multi-agent system for generative e-commerce recommendations.</p>
+    </div>
+  </a>
+  <a href="https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-adk-vertex-ai-live-api.png" alt="ADK + Vertex AI Live API">
+    </div>
+    <div class="card-content">
+      <div class="type">Blog Post</div>
+      <h3>📖 Google ADK + Vertex AI Live API</h3>
+      <p>Go beyond the ADK CLI by building real-time, streaming experiences with the Live API.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/watch?v=LwHPYyw7u6U" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-shoppers-concierge-demo.jpg" alt="ADK Shopper's Concierge Demo">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Demo</div>
+      <h3>📺 Shopper's Concierge Demo</h3>
+      <p>See how AI agents can revolutionize shopping with personalized, real-time recommendations.</p>
+    </div>
+  </a>
+  <a href="https://agentdirectory.folch.ai/" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-agent-directory.png" alt="ADK Agent Directory">
+    </div>
+    <div class="card-content">
+      <div class="type">Gallery</div>
+      <h3>📖 ADK Agent Directory</h3>
+      <p>Discover and test production-ready ADK agents for web search, image generation, research, and more.</p>
+    </div>
+  </a>
+</div>
+
+## ADK for Java
+
+<div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=L6V6aQixOZU" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-discover-adk-java.jpg" alt="Discover ADK Java for Building AI Agents">
+    </div>
+    <div class="card-content">
+      <div class="type">Video Talk</div>
+      <h3>☕ Discover ADK Java for Building AI Agents</h3>
+      <p>A presentation to help you build your first AI agents in Java.</p>
+    </div>
+  </a>
+  <a href="https://www.youtube.com/playlist?list=PLLMxXO6kMiNhP87WYQ8CeC3xpV3EnF9cu" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-google-adk-for-java-experiments.jpg" alt="ADK for Java (Experiments)">
+    </div>
+    <div class="card-content">
+      <div class="type">YouTube Playlist</div>
+      <h3>☕ Google ADK for Java Tutorials</h3>
+      <p>Step-by-step tutorials covering A2A, MCP, multi-agent systems, and callbacks in Java.</p>
+    </div>
+  </a>
+  <a href="https://codelabs.developers.google.com/adk-java-getting-started" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="../assets/community-build-ai-agents-with-adk-for-java.png" alt="Build AI Agents with ADK for Java">
+    </div>
+    <div class="card-content">
+      <div class="type">Codelab</div>
+      <h3>☕ Build AI Agents with ADK for Java</h3>
+      <p>Move beyond simple LLM calls to create autonomous Java agents that reason, plan, and use tools.</p>
+    </div>
+  </a>
+</div>
+
+## Translations
+
+Community-provided translations of the ADK documentation.
+
+<ul class="translation-list">
+  <li><a href="https://adk.wiki/">🇨🇳 Chinese (中文) Documentation</a></li>
+  <li><a href="https://adk-labs.github.io/adk-docs/ko/">🇰🇷 Korean (한국어) Documentation</a></li>
+  <li><a href="https://adk-labs.github.io/adk-docs/ja/">🇯🇵 Japanese (日本語) Documentation</a></li>
+  <li><a href="https://adk-es.fabian-castro-c.dev/">🇪🇸 Spanish (Español) Documentation</a></li>
+</ul>
+
+## Contributing Your Resource
+
+Have an ADK resource to share (tutorial, translation, tool, video, or example)?
+
+Refer to the steps in the **[Contributing Guide](/community/contributing-guide/)** for more information on how to get involved!
+
+Thank you for your contributions to Agent Development Kit! ❤️
+
+================
 File: docs/context/caching.md
 ================
 # Context caching with Gemini
@@ -8827,7 +9248,7 @@ is running by summarizing older parts of the agent workflow event history.
 
 The Context Compaction feature uses a *sliding window* approach for collecting
 and summarizing agent workflow event data within a
-[Session](/adk-docs/sessions/session/). When you configure this feature in your
+[Session](/sessions/session/). When you configure this feature in your
 agent, it summarizes data from older events once it reaches a threshold of a
 specific number of workflow events, or invocations, with the current Session.
 
@@ -8843,7 +9264,7 @@ in the following sample code:
     ```python
     from google.adk.apps.app import App
     from google.adk.apps.app import EventsCompactionConfig
-    
+
     app = App(
         name='my-agent',
         root_agent=root_agent,
@@ -8859,7 +9280,7 @@ in the following sample code:
     ```java
     import com.google.adk.apps.App;
     import com.google.adk.summarizer.EventsCompactionConfig;
-    
+
     App app = App.builder()
         .name("my-agent")
         .rootAgent(rootAgent)
@@ -8880,7 +9301,7 @@ compressed upon completion of events 3, 6, 9, and so on. The overlap setting
 increases size of the second summary compression, and each summary afterwards,
 as shown in Figure 1.
 
-![Context compaction example illustration](/adk-docs/assets/context-compaction.svg)
+![Context compaction example illustration](/assets/context-compaction.svg)
 **Figure 1.** Illustration of event compaction configuration with an interval of 3
 and overlap of 1.
 
@@ -8917,13 +9338,13 @@ The following code example demonstrates how to define and configure a custom sum
     from google.adk.apps.app import App, EventsCompactionConfig
     from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
     from google.adk.models import Gemini
-    
+
     # Define the AI model to be used for summarization:
     summarization_llm = Gemini(model="gemini-2.5-flash")
-    
+
     # Create the summarizer with the custom model:
     my_summarizer = LlmEventSummarizer(llm=summarization_llm)
-    
+
     # Configure the App with the custom summarizer and compaction settings:
     app = App(
         name='my-agent',
@@ -8943,15 +9364,15 @@ The following code example demonstrates how to define and configure a custom sum
     import com.google.adk.models.Gemini;
     import com.google.adk.summarizer.EventsCompactionConfig;
     import com.google.adk.summarizer.LlmEventSummarizer;
-    
+
     // Define the AI model to be used for summarization:
     Gemini summarizationLlm = Gemini.builder()
         .model("gemini-2.5-flash")
         .build();
-    
+
     // Create the summarizer with the custom model:
     LlmEventSummarizer mySummarizer = new LlmEventSummarizer(summarizationLlm);
-    
+
     // Configure the App with the custom summarizer and compaction settings:
     App app = App.builder()
         .name("my-agent")
@@ -10543,7 +10964,7 @@ You need the following resources configured to use this deployment path:
 -   **Google Cloud Project and Permissions**: A Google Cloud project with [billing enabled](https://cloud.google.com/billing/docs/how-to/modify-project).
     You can use an existing project or create a new one. You must have one of the following IAM roles assigned within this project:
     -   **Vertex AI User role** — sufficient to deploy an agent to Agent Engine.
-    -   **Owner role** — required for the full production setup (Terraform infrastructure provisioning, CI/CD pipelines, IAM configuration).    
+    -   **Owner role** — required for the full production setup (Terraform infrastructure provisioning, CI/CD pipelines, IAM configuration).
 
 !!! tip "Note"
     An empty project is recommended to avoid conflicts with existing resources.
@@ -10570,7 +10991,7 @@ project and then adds files to your project for deployment purposes.
 These instructions assume you have an existing ADK project that you are modifying
 for deployment. If you do not have an ADK project, or want to use a test
 project, complete the Python
-[Quickstart](/adk-docs/get-started/quickstart/) guide,
+[Quickstart](/get-started/quickstart/) guide,
 which creates a
 [multi_tool_agent](https://github.com/google/adk-docs/tree/main/examples/python/snippets/get-started/multi_tool_agent)
 project. The following instructions use the `multi_tool_agent` project as an
@@ -10678,7 +11099,7 @@ development environment, by running the following ASP make command:
 Once this process completes successfully, you should be able to interact with
 the agent running on Google Cloud Agent Engine. For details on testing the
 deployed agent, see
-[Test deployed agent](/adk-docs/deploy/agent-engine/test/).
+[Test deployed agent](/deploy/agent-engine/test/).
 
 ### Changes to your ADK project {#adk-asp-changes}
 
@@ -10723,7 +11144,7 @@ For more information on using Agent Starter Pack, see the
 After completing deployment of your ADK agent you should test the workflow in
 its new hosted environment. For more information on testing an ADK agent
 deployed to Agent Engine, see
-[Test deployed agents in Agent Engine](/adk-docs/deploy/agent-engine/test/).
+[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
 
 ================
 File: docs/deploy/agent-engine/deploy.md
@@ -10784,7 +11205,7 @@ To deploy your agent to Agent Engine, you need a Google Cloud project:
       homepage. Make sure to note the Project ID (alphanumeric with hyphens),
       _not_ the project number (numeric).
 
-    <img src="/adk-docs/assets/project-id.png" alt="Google Cloud Project ID">
+    <img src="/assets/project-id.png" alt="Google Cloud Project ID">
 
 4. **Enable Vertex AI in your project**
     * To use Agent Engine, you need to [enable the Vertex AI API](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com). Click on the "Enable" button to enable the API. Once enabled, it
@@ -10874,7 +11295,7 @@ adk deploy agent_engine \
 For `region`, you can find a list of the supported regions on the
 [Vertex AI Agent Builder locations page](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine).
 To learn about the CLI options for the `adk deploy agent_engine` command, see the
-[ADK CLI Reference](https://google.github.io/adk-docs/api-reference/cli/cli.html#adk-deploy-agent-engine).
+[ADK CLI Reference](/api-reference/cli/cli.html#adk-deploy-agent-engine).
 
 ### Deploy command output
 
@@ -10921,7 +11342,7 @@ on how to make requests, see the instructions in the Agent Engine documentation
 You can also check the Agent Engine documentation to learn about how to manage your
 [deployed agent](https://docs.cloud.google.com/agent-builder/agent-engine/manage/overview).
 For more information on testing and interacting with a deployed agent, see
-[Test deployed agents in Agent Engine](/adk-docs/deploy/agent-engine/test/).
+[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
 
 ### Monitoring and verification
 
@@ -10938,7 +11359,7 @@ For more information on testing and interacting with a deployed agent, see
 After completing deployment of your ADK agent you should test the workflow in
 its new hosted environment. For more information on testing an ADK agent
 deployed to Agent Engine, see
-[Test deployed agents in Agent Engine](/adk-docs/deploy/agent-engine/test/).
+[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
 
 ================
 File: docs/deploy/agent-engine/index.md
@@ -10961,19 +11382,19 @@ of agent services provided by the Agent Engine product.
 This guide includes the following deployment paths, which serve different
 purposes:
 
-*   **[Standard deployment](/adk-docs/deploy/agent-engine/deploy/)**: Follow
+*   **[Standard deployment](/deploy/agent-engine/deploy/)**: Follow
     this standard deployment path if you want to carefully manage deploying an ADK agent to the Agent
     Engine runtime. This deployment path uses Cloud Console, ADK command line
     interface, and provides step-by-step instructions. This path is recommended
     for users who are already familiar with configuring Google Cloud projects,
     and users preparing for production deployments.
 
-*   **[Agent Starter Pack deployment](/adk-docs/deploy/agent-engine/asp/)**:
-    Follow this accelerated deployment path to set up a fully configured Google 
-    Cloud environment with CI/CD, infrastructure-as-code, and deployment pipelines 
+*   **[Agent Starter Pack deployment](/deploy/agent-engine/asp/)**:
+    Follow this accelerated deployment path to set up a fully configured Google
+    Cloud environment with CI/CD, infrastructure-as-code, and deployment pipelines
     for your ADK agent. You need a Google Cloud project with billing enabled.
-    The Agent Starter Pack (ASP) helps you deploy ADK projects quickly and it 
-    includes advanced service configurations that extend the core capabilities of 
+    The Agent Starter Pack (ASP) helps you deploy ADK projects quickly and it
+    includes advanced service configurations that extend the core capabilities of
     the Agent Engine runtime for more mature use cases.
 
 !!! note "Agent Engine service on Google Cloud"
@@ -11003,7 +11424,7 @@ These instructions explain how to test an ADK agent deployed to the
 [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 runtime environment. Before using these instructions, you need to have completed
 the deployment of your agent to the Agent Engine runtime environment using one
-of the [available methods](/adk-docs/deploy/agent-engine/). This guide shows you
+of the [available methods](/deploy/agent-engine/). This guide shows you
 how to view, interact, and test your deployed agent through the Google Cloud
 Console, and interact with the agent using REST API calls or the Vertex AI SDK
 for Python.
@@ -15251,7 +15672,7 @@ public class ScienceTeacherAgent {
   public static final BaseAgent ROOT_AGENT = initAgent();
 
   // Please fill in the latest model id that supports live API from
-  // https://google.github.io/adk-docs/get-started/streaming/quickstart-streaming/#supported-models
+  // https://adk.dev/get-started/streaming/quickstart-streaming/#supported-models
   public static BaseAgent initAgent() {
     return LlmAgent.builder()
         .name("science-app")
@@ -15814,7 +16235,7 @@ root_agent = Agent(
    name="basic_search_agent",
    # The Large Language Model (LLM) that agent will use.
    # Please fill in the latest model id that supports live from
-   # https://google.github.io/adk-docs/get-started/streaming/quickstart-streaming/#supported-models
+   # https://adk.dev/get-started/streaming/quickstart-streaming/#supported-models
    model="...",
    # A short description of the agent's purpose.
    description="Agent to answer questions using Google Search.",
@@ -16090,7 +16511,7 @@ my_agent/
 ### Define the agent code
 
 Create the code for a basic agent that uses the built-in
-[Google Search tool](/adk-docs/tools/built-in-tools/#google-search). Add the
+[Google Search tool](/tools/built-in-tools/#google-search). Add the
 following code to the `my_agent/agent.go` file in your project directory:
 
 ```go title="my_agent/agent.go"
@@ -16179,7 +16600,7 @@ your project to set environment variables:
 ??? tip "Using other AI models with ADK"
     ADK supports the use of many generative AI models. For more
     information on configuring other models in ADK agents, see
-    [Models & Authentication](/adk-docs/agents/models).
+    [Models & Authentication](/agents/models).
 
 
 ## Run your agent
@@ -16198,7 +16619,7 @@ Run your agent using the following Go command:
 go run agent.go
 ```
 
-![adk-run.png](/adk-docs/assets/adk-run.png)
+![adk-run.png](/assets/adk-run.png)
 
 ### Run with web interface
 
@@ -16213,7 +16634,7 @@ This command starts a web server with a chat interface for your agent. You can
 access the web interface at (http://localhost:8080). Select your agent at the
 upper left corner and type a request.
 
-![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
 
 !!! warning "Caution: ADK Web for development only"
 
@@ -16225,7 +16646,7 @@ upper left corner and type a request.
 Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
-*  [Build your agent](/adk-docs/tutorials/)
+*  [Build your agent](/tutorials/)
 
 ================
 File: docs/get-started/index.md
@@ -16451,7 +16872,7 @@ my_agent/
 ### Define the agent code
 
 Create the code for a basic agent, including a simple implementation of an ADK
-[Function Tool](/adk-docs/tools-custom/function-tools/), called `getCurrentTime()`.
+[Function Tool](/tools-custom/function-tools/), called `getCurrentTime()`.
 Add the following code to the `HelloTimeAgent.java` file in your project
 directory:
 
@@ -16583,7 +17004,7 @@ to set environment variables:
 ??? tip "Using other AI models with ADK"
     ADK supports the use of many generative AI models. For more
     information on configuring other models in ADK agents, see
-    [Models & Authentication](/adk-docs/agents/models).
+    [Models & Authentication](/agents/models).
 
 ### Create an agent command-line interface
 
@@ -16657,7 +17078,7 @@ using the following Maven command:
 mvn compile exec:java -Dexec.mainClass="com.example.agent.AgentCliRunner"
 ```
 
-![adk-run.png](/adk-docs/assets/adk-run.png)
+![adk-run.png](/assets/adk-run.png)
 
 ### Run with web interface
 
@@ -16674,7 +17095,7 @@ This command starts a web server with a chat interface for your agent. You can
 access the web interface at (http://localhost:8000). Select your agent at the
 upper left corner and type a request.
 
-![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
 
 !!! warning "Caution: ADK Web for development only"
 
@@ -16686,7 +17107,7 @@ upper left corner and type a request.
 Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
-*  [Build your agent](/adk-docs/tutorials/)
+*  [Build your agent](/tutorials/)
 
 ================
 File: docs/get-started/python.md
@@ -16794,7 +17215,7 @@ echo 'GOOGLE_API_KEY="YOUR_API_KEY"' > .env
 ??? tip "Using other AI models with ADK"
     ADK supports the use of many generative AI models. For more
     information on configuring other models in ADK agents, see
-    [Models & Authentication](/adk-docs/agents/models).
+    [Models & Authentication](/agents/models).
 
 ## Run your agent
 
@@ -16811,7 +17232,7 @@ Run your agent using the `adk run` command-line tool.
 adk run my_agent
 ```
 
-![adk-run.png](/adk-docs/assets/adk-run.png)
+![adk-run.png](/assets/adk-run.png)
 
 ### Run with web interface
 
@@ -16832,7 +17253,7 @@ This command starts a web server with a chat interface for your agent. You can
 access the web interface at (http://localhost:8000). Select the agent at the
 upper left corner and type a request.
 
-![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
 
 !!! warning "Caution: ADK Web for development only"
 
@@ -16844,7 +17265,7 @@ upper left corner and type a request.
 Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
-*  [Build your agent](/adk-docs/tutorials/)
+*  [Build your agent](/tutorials/)
 
 ================
 File: docs/get-started/quickstart.md
@@ -17145,7 +17566,7 @@ valid authentication, the LLM service will deny the agent's requests, and the
 agent will be unable to function.
 
 !!!tip "Model Authentication guide"
-    For a detailed guide on authenticating to different models, see the [Authentication guide](/adk-docs/agents/models/google-gemini#google-ai-studio).
+    For a detailed guide on authenticating to different models, see the [Authentication guide](/agents/models/google-gemini#google-ai-studio).
     This is a critical step to ensure your agent can make calls to the LLM service.
 
 === "Gemini - Google AI Studio"
@@ -17374,7 +17795,7 @@ agent will be unable to function.
         ![adk-api-server.png](../assets/adk-api-server.png)
 
         To learn how to use `adk api_server` for testing, refer to the
-        [documentation on using the API server](/adk-docs/runtime/api-server/).
+        [documentation on using the API server](/runtime/api-server/).
 
 === "TypeScript"
 
@@ -17444,7 +17865,7 @@ agent will be unable to function.
         ![adk-api-server.png](../assets/adk-api-server.png)
 
         To learn how to use `api_server` for testing, refer to the
-        [documentation on testing](/adk-docs/runtime/api-server/).
+        [documentation on testing](/runtime/api-server/).
 
 === "Go"
 
@@ -17657,7 +18078,7 @@ npm install -D @google/adk-devtools
 ### Define the agent code
 
 Create the code for a basic agent, including a simple implementation of an ADK
-[Function Tool](/adk-docs/tools/function-tools/), called `getCurrentTime`.
+[Function Tool](/tools/function-tools/), called `getCurrentTime`.
 Create an `agent.ts` file in your project directory and add the following code:
 
 ```typescript title="my-agent/agent.ts"
@@ -17702,7 +18123,7 @@ echo 'GEMINI_API_KEY="YOUR_API_KEY"' > .env
 ??? tip "Using other AI models with ADK"
     ADK supports the use of many generative AI models. For more
     information on configuring other models in ADK agents, see
-    [Models & Authentication](/adk-docs/agents/models).
+    [Models & Authentication](/agents/models).
 
 ## Run your agent
 
@@ -17720,7 +18141,7 @@ using the following command:
 npx adk run agent.ts
 ```
 
-![adk-run.png](/adk-docs/assets/adk-run.png)
+![adk-run.png](/assets/adk-run.png)
 
 ### Run with web interface
 
@@ -17734,7 +18155,7 @@ This command starts a web server with a chat interface for your agent. You can
 access the web interface at (http://localhost:8000). Select your agent at the
 upper right corner and type a request.
 
-![adk-web-dev-ui-chat.png](/adk-docs/assets/adk-web-dev-ui-chat.png)
+![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
 
 !!! warning "Caution: ADK Web for development only"
 
@@ -17746,7 +18167,7 @@ upper right corner and type a request.
 Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
-*  [Build your agent](/adk-docs/tutorials/)
+*  [Build your agent](/tutorials/)
 
 ================
 File: docs/grounding/google_search_grounding.md
@@ -17757,7 +18178,7 @@ File: docs/grounding/google_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Google Search Grounding tool](/adk-docs/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that connects your AI agents directly to Google Search. By giving your agents access to real-time, authoritative information from the web, they can answer questions about recent events, current weather, stock prices, or any other dynamic data that falls outside the model's training window. The agent automatically decides when to search and seamlessly incorporates the results into its responses with proper citations.
+[Google Search Grounding tool](/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that connects your AI agents directly to Google Search. By giving your agents access to real-time, authoritative information from the web, they can answer questions about recent events, current weather, stock prices, or any other dynamic data that falls outside the model's training window. The agent automatically decides when to search and seamlessly incorporates the results into its responses with proper citations.
 
 ## Creating a Grounded Agent
 
@@ -17977,7 +18398,7 @@ File: docs/grounding/vertex_ai_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Vertex AI Search](/adk-docs/tools/google-cloud/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
+[Vertex AI Search](/tools/google-cloud/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
 This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
 
@@ -17991,7 +18412,7 @@ Before creating a grounded agent, you must have an existing Vertex AI Search Dat
 
 * Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
 * Authenticate to Google Cloud, from the terminal by running `gcloud auth login`.
-* For Python, open the **`.env`** file and specify your project ID and location. 
+* For Python, open the **`.env`** file and specify your project ID and location.
 * For Java, ensure your application environment has Google Cloud default credentials configured (`GOOGLE_APPLICATION_CREDENTIALS`).
 
 ```env title=".env"
@@ -18009,10 +18430,10 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
     ```python
     from google.adk.agents import Agent
     from google.adk.tools import VertexAiSearchTool
-    
+
     # Configuration
     DATASTORE_ID = "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID"
-    
+
     root_agent = Agent(
         name="vertex_search_agent",
         model="gemini-2.5-flash",
@@ -18027,10 +18448,10 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
     ```java
     import com.google.adk.agents.LlmAgent;
     import com.google.adk.tools.VertexAiSearchTool;
-    
+
     // Configuration
     String DATASTORE_ID = "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID";
-    
+
     LlmAgent rootAgent = LlmAgent.builder()
         .name("vertex_search_agent")
         .model("gemini-2.5-flash")
@@ -18143,7 +18564,7 @@ Since grounding metadata is provided, you can choose to implement citation displ
     for event in events:
         if event.is_final_response():
             print(event.content.parts[0].text)
-            
+
             # Optional: Show source count
             if event.grounding_metadata:
                 print(f"\nBased on {len(event.grounding_metadata.grounding_chunks)} documents")
@@ -18155,7 +18576,7 @@ Since grounding metadata is provided, you can choose to implement citation displ
     for (Event event : events) {
         if (event.finalResponse()) {
             System.out.println(event.content().parts().get(0).text());
-            
+
             // Optional: Show source count
             if (event.groundingMetadata().isPresent()) {
                 System.out.println("\nBased on " + event.groundingMetadata().get().groundingChunks().size() + " documents");
@@ -18182,7 +18603,7 @@ File: docs/integrations/a2ui.md
 ---
 catalog_title: A2UI
 catalog_description: Generate rich, structured UIs from your agents using the Agent-to-UI protocol
-catalog_icon: /adk-docs/integrations/assets/a2ui.svg
+catalog_icon: /integrations/assets/a2ui.svg
 ---
 
 # A2UI — Agent-to-UI for ADK
@@ -18208,7 +18629,7 @@ or any other protocol. The agent describes *what* to show; the client decides
 ### Install the SDK
 
 ```bash
-pip install a2ui
+pip install a2ui-agent-sdk
 ```
 
 ### 1. Set up the Schema Manager
@@ -18410,7 +18831,7 @@ The A2UI repository includes ADK sample agents you can run immediately:
 
 - [A2UI specification](https://a2ui.org/)
 - [A2UI GitHub repository](https://github.com/google/A2UI)
-- [A2UI Python SDK (`a2ui`)](https://pypi.org/project/a2ui/)
+- [A2UI Python SDK (`a2ui-agent-sdk`)](https://pypi.org/project/a2ui-agent-sdk/)
 - [Agent development guide](https://github.com/google/A2UI/blob/main/agent_sdks/python/agent_development.md)
 - [Component gallery](https://a2ui.org/latest/reference/components/)
 - [A2A protocol](https://google.github.io/A2A/)
@@ -18421,7 +18842,7 @@ File: docs/integrations/ag-ui.md
 ---
 catalog_title: AG-UI
 catalog_description: Build interactive chat UIs with streaming, state sync, and agentic actions
-catalog_icon: /adk-docs/integrations/assets/ag-ui.png
+catalog_icon: /integrations/assets/ag-ui.png
 ---
 
 # AG-UI user interface for ADK
@@ -18565,7 +18986,7 @@ File: docs/integrations/agentmail.md
 ---
 catalog_title: AgentMail
 catalog_description: Create email inboxes for AI agents to send, receive, and manage messages
-catalog_icon: /adk-docs/integrations/assets/agentmail.png
+catalog_icon: /integrations/assets/agentmail.png
 catalog_tags: ["mcp"]
 ---
 
@@ -18709,7 +19130,7 @@ File: docs/integrations/agentops.md
 ---
 catalog_title: AgentOps
 catalog_description: Session replays, metrics, and monitoring for ADK agents
-catalog_icon: /adk-docs/integrations/assets/agentops.png
+catalog_icon: /integrations/assets/agentops.png
 catalog_tags: ["observability"]
 ---
 
@@ -18859,7 +19280,7 @@ File: docs/integrations/api-registry.md
 ---
 catalog_title: Google Cloud API Registry
 catalog_description: Connect with Google Cloud services as MCP tools
-catalog_icon: /adk-docs/integrations/assets/developer-tools-color.svg
+catalog_icon: /integrations/assets/developer-tools-color.svg
 catalog_tags: ["google", "mcp", "connectors"]
 ---
 
@@ -19047,7 +19468,7 @@ File: docs/integrations/apigee-api-hub.md
 ---
 catalog_title: Apigee API Hub
 catalog_description: Turn any documented API from Apigee API hub into a tool
-catalog_icon: /adk-docs/integrations/assets/apigee.png
+catalog_icon: /integrations/assets/apigee.png
 catalog_tags: ["connectors", "google"]
 ---
 
@@ -19064,7 +19485,7 @@ APIs.
 
 **Prerequisites**
 
-1. [Install ADK](/adk-docs/get-started/installation/)
+1. [Install ADK](/get-started/installation/)
 2. Install the
    [Google Cloud CLI](https://cloud.google.com/sdk/docs/install?db=bigtable-docs#installation_instructions).
 3. [Apigee API hub](https://cloud.google.com/apigee/docs/apihub/what-is-api-hub)
@@ -19178,7 +19599,7 @@ File: docs/integrations/application-integration.md
 ---
 catalog_title: Application Integration
 catalog_description: Link your agents to enterprise apps using Integration Connectors
-catalog_icon: /adk-docs/integrations/assets/apigee-integration.png
+catalog_icon: /integrations/assets/apigee-integration.png
 catalog_tags: ["google", "connectors"]
 ---
 
@@ -19209,7 +19630,7 @@ multiple enterprise applications and data sources simultaneously.
 ### 1. Install ADK
 
 Install Agent Development Kit following the steps in the
-[installation guide](/adk-docs/get-started/installation/).
+[installation guide](/get-started/installation/).
 
 ### 2. Install CLI
 
@@ -19300,7 +19721,7 @@ Connect your agent to enterprise applications using
 1. To use a connector from Integration Connectors, click **QUICK SETUP** and [provision](https://console.cloud.google.com/integrations)
    Application Integration in the same region as your connection.
 
-   ![Google Cloud Tools](/adk-docs/assets/application-integration-overview.png)
+   ![Google Cloud Tools](/assets/application-integration-overview.png)
 
 
 
@@ -19308,7 +19729,7 @@ Connect your agent to enterprise applications using
    template in the template library and click **USE TEMPLATE**.
 
 
-    ![Google Cloud Tools](/adk-docs/assets/use-connection-tool-template.png)
+    ![Google Cloud Tools](/assets/use-connection-tool-template.png)
 
 3. Enter the Integration Name as *ExecuteConnection* (it is mandatory to use this exact integration name only).
    Then, select the region to match your connection region and click **CREATE**.
@@ -19316,7 +19737,7 @@ Connect your agent to enterprise applications using
 4. Click **PUBLISH** to publish the integration in the <i>Application Integration</i> editor.
 
 
-    ![Google Cloud Tools](/adk-docs/assets/publish-integration.png)
+    ![Google Cloud Tools](/assets/publish-integration.png)
 
 
 ### Create an Application Integration Toolset
@@ -19597,7 +20018,7 @@ File: docs/integrations/arize-ax.md
 ---
 catalog_title: Arize AX
 catalog_description: Production-grade observability, debugging, and improvement of LLM applications
-catalog_icon: /adk-docs/integrations/assets/arize.png
+catalog_icon: /integrations/assets/arize.png
 catalog_tags: ["observability"]
 ---
 
@@ -19739,7 +20160,7 @@ File: docs/integrations/asana.md
 ---
 catalog_title: Asana
 catalog_description: Manage projects, tasks, and goals for team collaboration
-catalog_icon: /adk-docs/integrations/assets/asana.png
+catalog_icon: /integrations/assets/asana.png
 catalog_tags: ["mcp"]
 ---
 
@@ -19843,7 +20264,7 @@ tasks, goals, and team collaboration using natural language.
 
 Asana's MCP server includes 30+ tools organized by category. Tools are
 automatically discovered when your agent connects. Use the
-[ADK Web UI](/adk-docs/runtime/web-interface/) to view available tools in the
+[ADK Web UI](/runtime/web-interface/) to view available tools in the
 trace graph after running your agent.
 
 Category | Description
@@ -19866,7 +20287,7 @@ File: docs/integrations/atlassian.md
 ---
 catalog_title: Atlassian
 catalog_description: Manage issues, search pages, and update team content
-catalog_icon: /adk-docs/integrations/assets/atlassian.png
+catalog_icon: /integrations/assets/atlassian.png
 catalog_tags: ["mcp"]
 ---
 
@@ -20013,7 +20434,7 @@ File: docs/integrations/bigquery-agent-analytics.md
 ---
 catalog_title: BigQuery Agent Analytics Plugin
 catalog_description: In-depth agent analytics for behavior analysis and logging
-catalog_icon: /adk-docs/integrations/assets/bigquery.png
+catalog_icon: /integrations/assets/bigquery.png
 catalog_tags: ["observability", "google"]
 ---
 
@@ -20873,7 +21294,7 @@ File: docs/integrations/bigquery.md
 ---
 catalog_title: BigQuery Tools
 catalog_description: Connect with BigQuery to retrieve data and perform analysis
-catalog_icon: /adk-docs/integrations/assets/bigquery.png
+catalog_icon: /integrations/assets/bigquery.png
 catalog_tags: ["data", "google"]
 ---
 
@@ -21000,7 +21421,7 @@ File: docs/integrations/bigtable.md
 ---
 catalog_title: Bigtable Tools
 catalog_description: Interact with Bigtable to retrieve data and execute SQL
-catalog_icon: /adk-docs/integrations/assets/bigtable.png
+catalog_icon: /integrations/assets/bigtable.png
 catalog_tags: ["data", "google"]
 ---
 
@@ -21032,7 +21453,7 @@ File: docs/integrations/cartesia.md
 ---
 catalog_title: Cartesia
 catalog_description: Generate speech, localize voices, and create audio content
-catalog_icon: /adk-docs/integrations/assets/cartesia.png
+catalog_icon: /integrations/assets/cartesia.png
 catalog_tags: ["mcp"]
 ---
 
@@ -21171,7 +21592,7 @@ File: docs/integrations/chroma.md
 ---
 catalog_title: Chroma
 catalog_description: Store and retrieve information using semantic vector search
-catalog_icon: /adk-docs/integrations/assets/chroma.png
+catalog_icon: /integrations/assets/chroma.png
 catalog_tags: ["data","mcp"]
 ---
 
@@ -21374,7 +21795,7 @@ File: docs/integrations/cloud-trace.md
 ---
 catalog_title: Google Cloud Trace
 catalog_description: Monitor, debug, and trace ADK agent interactions
-catalog_icon: /adk-docs/integrations/assets/cloud-trace.svg
+catalog_icon: /integrations/assets/cloud-trace.svg
 catalog_tags: ["observability", "google"]
 ---
 
@@ -21384,7 +21805,7 @@ catalog_tags: ["observability", "google"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
-With ADK, you can already inspect and observe your agent interaction locally utilizing the powerful web development UI discussed in [here](https://google.github.io/adk-docs/evaluate/#debugging-with-the-trace-view). However, for cloud deployment, you will need a centralized dashboard to observe real traffic.
+With ADK, you can already inspect and observe your agent interaction locally utilizing the powerful web development UI discussed in [here](/evaluate/#debugging-with-the-trace-view). However, for cloud deployment, you will need a centralized dashboard to observe real traffic.
 
 Cloud Trace is a component of Google Cloud Observability. It is a powerful tool for monitoring, debugging, and improving the performance of your applications by focusing specifically on tracing capabilities. For Agent Development Kit (ADK) applications, Cloud Trace enables comprehensive tracing, helping you understand how requests flow through your agent's interactions and identify performance bottlenecks or errors within your AI agents.
 
@@ -21586,7 +22007,7 @@ File: docs/integrations/code-exec-agent-engine.md
 ---
 catalog_title: Code Execution Tool with Agent Engine
 catalog_description: Run AI-generated code in a secure and scalable GKE environment
-catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/vertex-ai.png
 catalog_tags: ["code", "google"]
 ---
 
@@ -21600,8 +22021,8 @@ The Agent Engine Code Execution ADK Tool provides a low-latency, highly
 efficient method for running AI-generated code using the
 [Google Cloud Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 service. This tool is designed for fast execution, tailored for agentic workflows,
-and uses sandboxed environments for improved security. The Code Execution tool 
-allows code and data to persist over multiple requests, enabling complex, 
+and uses sandboxed environments for improved security. The Code Execution tool
+allows code and data to persist over multiple requests, enabling complex,
 multi-step coding tasks, including:
 
 -   **Code development and debugging:** Create agent tasks that test and
@@ -21631,7 +22052,7 @@ To use the Code Execution tool with your ADK agent:
 1.  Create an ADK agent with settings to access the Google Cloud project
     where you created the sandbox environment.
 1.  The following code example shows an agent configured to use the Code
-    Executor tool. Replace `SANDBOX_RESOURCE_NAME` with the sandbox environment 
+    Executor tool. Replace `SANDBOX_RESOURCE_NAME` with the sandbox environment
     resource name you created.
 
 ```python
@@ -21652,7 +22073,7 @@ For details on the expected format of the `sandbox_resource_name` value, and the
 alternative `agent_engine_resource_name` parameter, see [Configuration
 parameters](#config-parameters). For a more advanced example, including
 recommended system instructions for the tool, see the [Advanced
-example](#advanced-example) or the full 
+example](#advanced-example) or the full
 [agent code example](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
 
 ## How it works
@@ -21711,7 +22132,7 @@ one of the following resource parameters:
 string format is as follows:
     ```
     projects/{$PROJECT_ID}/locations/{$LOCATION_ID}/reasoningEngines/{$REASONING_ENGINE_ID}/sandboxEnvironments/{$SANDBOX_ENVIRONMENT_ID}
-    
+
     # Example:
     projects/my-vertex-agent-project/locations/us-central1/reasoningEngines/6842888880301111172/sandboxEnvironments/6545148888889161728
     ```
@@ -21719,7 +22140,7 @@ string format is as follows:
 creates a sandbox environment. The expected string format is as follows:
     ```
     projects/{$PROJECT_ID}/locations/{$LOCATION_ID}/reasoningEngines/{$REASONING_ENGINE_ID}
-    
+
     # Example:
     projects/my-vertex-agent-project/locations/us-central1/reasoningEngines/6842888880301111172
     ```
@@ -21830,7 +22251,7 @@ File: docs/integrations/code-execution.md
 ---
 catalog_title: Code Execution
 catalog_description: Execute code and debug using Gemini models
-catalog_icon: /adk-docs/integrations/assets/gemini-spark.svg
+catalog_icon: /integrations/assets/gemini-spark.svg
 catalog_tags: ["code", "google"]
 ---
 
@@ -21848,7 +22269,7 @@ perform tasks like calculations, data manipulation, or running small scripts.
 
     This tool can only be used ***by itself*** within an agent instance.
     For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+    [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
 
 === "Python"
 
@@ -21868,7 +22289,7 @@ File: docs/integrations/computer-use.md
 ---
 catalog_title: Computer Use
 catalog_description: Operate computer user interfaces using Gemini models
-catalog_icon: /adk-docs/integrations/assets/gemini-spark.svg
+catalog_icon: /integrations/assets/gemini-spark.svg
 catalog_tags: ["google"]
 ---
 
@@ -21984,7 +22405,7 @@ File: docs/integrations/couchbase.md
 ---
 catalog_title: Couchbase
 catalog_description: Query collections, explore schemas, and run SQL++ queries
-catalog_icon: /adk-docs/integrations/assets/couchbase.png
+catalog_icon: /integrations/assets/couchbase.png
 catalog_tags: ["data", "mcp"]
 ---
 
@@ -22195,7 +22616,7 @@ File: docs/integrations/data-agent.md
 ---
 catalog_title: Data Agents
 catalog_description: Analyze data with AI-powered agents
-catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/vertex-ai.png
 catalog_tags: ["data", "google"]
 ---
 
@@ -22235,7 +22656,7 @@ File: docs/integrations/daytona.md
 ---
 catalog_title: Daytona
 catalog_description: Execute code, run shell commands, and manage files in secure sandboxes
-catalog_icon: /adk-docs/integrations/assets/daytona.png
+catalog_icon: /integrations/assets/daytona.png
 catalog_tags: ["code"]
 ---
 
@@ -22320,7 +22741,7 @@ File: docs/integrations/elevenlabs.md
 ---
 catalog_title: ElevenLabs
 catalog_description: Generate speech, clone voices, transcribe audio, and create sound effects
-catalog_icon: /adk-docs/integrations/assets/elevenlabs.png
+catalog_icon: /integrations/assets/elevenlabs.png
 catalog_tags: ["mcp"]
 ---
 
@@ -22503,7 +22924,7 @@ File: docs/integrations/express-mode.md
 ---
 catalog_title: Vertex AI express mode
 catalog_description: Try development with Vertex AI services at no cost
-catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/vertex-ai.png
 catalog_tags: ["google"]
 ---
 
@@ -22585,7 +23006,7 @@ Next, create your Agent Engine instance using the Vertex AI SDK.
 
 ## Manage Sessions with `VertexAiSessionService` {#vertex-ai-session-service}
 
-[`VertexAiSessionService`](/adk-docs/sessions/session.md#sessionservice-implementations)
+[`VertexAiSessionService`](/sessions/session.md#sessionservice-implementations)
 is compatible with Vertex AI express mode API Keys. You can instead initialize
 the session object without any project or location.
 
@@ -22614,7 +23035,7 @@ session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 
 ## Manage Memory with `VertexAiMemoryBankService` {#vertex-ai-memory-bank}
 
-[`VertexAiMemoryBankService`](/adk-docs/sessions/memory.md#vertex-ai-memory-bank)
+[`VertexAiMemoryBankService`](/sessions/memory.md#vertex-ai-memory-bank)
 is compatible with Vertex AI express mode API Keys. You can instead initialize
 the memory object without any project or location.
 
@@ -22656,7 +23077,7 @@ File: docs/integrations/freeplay.md
 ---
 catalog_title: Freeplay
 catalog_description: Use Freeplay to build, optimize, and evaluate AI agents with end-to-end observability
-catalog_icon: /adk-docs/integrations/assets/freeplay.png
+catalog_icon: /integrations/assets/freeplay.png
 catalog_tags: ["observability"]
 ---
 
@@ -22860,7 +23281,7 @@ File: docs/integrations/galileo.md
 ---
 catalog_title: Galileo
 catalog_description: End-to-end tracing, evaluation, and monitoring for ADK agents
-catalog_icon: /adk-docs/integrations/assets/galileo.png
+catalog_icon: /integrations/assets/galileo.png
 catalog_tags: ["observability"]
 ---
 
@@ -23008,7 +23429,7 @@ File: docs/integrations/github.md
 ---
 catalog_title: GitHub
 catalog_description: Analyze code, manage issues and PRs, and automate workflows
-catalog_icon: /adk-docs/integrations/assets/github.png
+catalog_icon: /integrations/assets/github.png
 catalog_tags: ["code", "mcp"]
 ---
 
@@ -23158,7 +23579,7 @@ File: docs/integrations/gitlab.md
 ---
 catalog_title: GitLab
 catalog_description: Perform semantic code search, inspect pipelines, manage merge requests
-catalog_icon: /adk-docs/integrations/assets/gitlab.png
+catalog_icon: /integrations/assets/gitlab.png
 catalog_tags: ["code", "mcp"]
 ---
 
@@ -23303,7 +23724,7 @@ File: docs/integrations/gke-code-executor.md
 ---
 catalog_title: GKE Code Executor
 catalog_description: Run AI-generated code in a secure and scalable GKE environment
-catalog_icon: /adk-docs/integrations/assets/gke.png
+catalog_icon: /integrations/assets/gke.png
 catalog_tags: ["code","google"]
 ---
 
@@ -23467,7 +23888,7 @@ File: docs/integrations/goodmem.md
 ---
 catalog_title: GoodMem
 catalog_description: Add persistent semantic memory to agents across conversations
-catalog_icon: /adk-docs/integrations/assets/goodmem.svg
+catalog_icon: /integrations/assets/goodmem.svg
 catalog_tags: ["data"]
 ---
 
@@ -23627,7 +24048,7 @@ File: docs/integrations/google-developer-knowledge.md
 ---
 catalog_title: Google Developer Knowledge
 catalog_description: Search Google's official developer documentation for code and guidance
-catalog_icon: /adk-docs/integrations/assets/google-developer-knowledge.png
+catalog_icon: /integrations/assets/google-developer-knowledge.png
 catalog_tags: ["mcp"]
 ---
 
@@ -23742,7 +24163,7 @@ File: docs/integrations/google-search.md
 ---
 catalog_title: Google Search
 catalog_description: Perform web searches using Google Search with Gemini
-catalog_icon: /adk-docs/integrations/assets/google-search.png
+catalog_icon: /integrations/assets/google-search.png
 catalog_tags: ["search","google"]
 ---
 
@@ -23752,7 +24173,7 @@ catalog_tags: ["search","google"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](/adk-docs/grounding/google_search_grounding/).
+The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](/grounding/google_search_grounding/).
 
 !!! warning "Additional requirements when using the `google_search` tool"
     When you use grounding with Google Search, and you receive Search suggestions in your response, you must display the Search suggestions in production and in your applications.
@@ -23762,7 +24183,7 @@ The `google_search` tool allows the agent to perform web searches using Google S
 
     This tool can only be used ***by itself*** within an agent instance.
     For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+    [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
 
 === "Python"
 
@@ -23804,7 +24225,7 @@ File: docs/integrations/hugging-face.md
 ---
 catalog_title: Hugging Face
 catalog_description: Access models, datasets, research papers, and AI tools
-catalog_icon: /adk-docs/integrations/assets/hugging-face.png
+catalog_icon: /integrations/assets/hugging-face.png
 catalog_tags: ["mcp"]
 ---
 
@@ -24014,7 +24435,7 @@ hide:
 
 Check out the following pre-built tools and integrations that you can use with
 ADK agents. For information on building custom tools, see
-[Custom Tools](/adk-docs/tools-custom/). For information on submitting
+[Custom Tools](/tools-custom/). For information on submitting
 integrations to this catalog, see the
 [Contribution Guide for Integrations](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md#integrations).
 
@@ -24026,8 +24447,8 @@ File: docs/integrations/langwatch.md
 ---
 catalog_title: LangWatch
 catalog_description: Observability, tracing, evaluation, and prompt optimization for ADK agents
-catalog_icon: /adk-docs/integrations/assets/langwatch.png
-catalog_tags: ["observability", "evaluation"]
+catalog_icon: /integrations/assets/langwatch.png
+catalog_tags: ["observability"]
 ---
 
 # LangWatch observability for ADK
@@ -24205,7 +24626,7 @@ File: docs/integrations/linear.md
 ---
 catalog_title: Linear
 catalog_description: Manage issues, track projects, and streamline development
-catalog_icon: /adk-docs/integrations/assets/linear.png
+catalog_icon: /integrations/assets/linear.png
 catalog_tags: ["mcp"]
 ---
 
@@ -24420,7 +24841,7 @@ File: docs/integrations/mailgun.md
 ---
 catalog_title: Mailgun
 catalog_description: Send emails, track delivery metrics, and manage mailing lists
-catalog_icon: /adk-docs/integrations/assets/mailgun.png
+catalog_icon: /integrations/assets/mailgun.png
 catalog_tags: ["mcp"]
 ---
 
@@ -24621,7 +25042,7 @@ File: docs/integrations/mcp-toolbox-for-databases.md
 ---
 catalog_title: MCP Toolbox for Databases
 catalog_description: Connect over 30 different data sources to your agents
-catalog_icon: /adk-docs/integrations/assets/mcp-toolbox-for-databases.png
+catalog_icon: /integrations/assets/mcp-toolbox-for-databases.png
 catalog_tags: ["mcp","data","google"]
 ---
 
@@ -24644,7 +25065,7 @@ information on
 MCP Toolbox, see the
 [documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/).
 
-![MCP Toolbox for Databases](/adk-docs/integrations/assets/mcp-db-toolbox.png)
+![MCP Toolbox for Databases](/integrations/assets/mcp-db-toolbox.png)
 
 ## Supported Data Sources
 
@@ -24911,7 +25332,7 @@ File: docs/integrations/mlflow.md
 ---
 catalog_title: MLflow
 catalog_description: Ingest OpenTelemetry traces for agent runs, tool calls, and model requests
-catalog_icon: /adk-docs/integrations/assets/mlflow.png
+catalog_icon: /integrations/assets/mlflow.png
 catalog_tags: ["observability"]
 ---
 
@@ -25057,7 +25478,7 @@ File: docs/integrations/mongodb.md
 ---
 catalog_title: MongoDB
 catalog_description: Query collections, manage databases, and analyze schemas
-catalog_icon: /adk-docs/integrations/assets/mongodb.png
+catalog_icon: /integrations/assets/mongodb.png
 catalog_tags: ["data","mcp"]
 ---
 
@@ -25271,7 +25692,7 @@ File: docs/integrations/monocle.md
 ---
 catalog_title: Monocle
 catalog_description: Open-source observability, tracing, and debugging of LLM applications
-catalog_icon: /adk-docs/integrations/assets/monocle.png
+catalog_icon: /integrations/assets/monocle.png
 catalog_tags: ["observability"]
 ---
 
@@ -25492,7 +25913,7 @@ File: docs/integrations/n8n.md
 ---
 catalog_title: n8n
 catalog_description: Trigger automated workflows, connect apps, and process data
-catalog_icon: /adk-docs/integrations/assets/n8n.png
+catalog_icon: /integrations/assets/n8n.png
 catalog_tags: ["mcp", "connectors"]
 ---
 
@@ -25706,7 +26127,7 @@ File: docs/integrations/notion.md
 ---
 catalog_title: Notion
 catalog_description: Search workspaces, create pages, and manage tasks and databases
-catalog_icon: /adk-docs/integrations/assets/notion.png
+catalog_icon: /integrations/assets/notion.png
 catalog_tags: ["mcp"]
 ---
 
@@ -25846,7 +26267,7 @@ File: docs/integrations/paypal.md
 ---
 catalog_title: Paypal
 catalog_description: Manage payments, send invoices, and handle subscriptions
-catalog_icon: /adk-docs/integrations/assets/paypal.png
+catalog_icon: /integrations/assets/paypal.png
 catalog_tags: ["mcp"]
 ---
 
@@ -26114,7 +26535,7 @@ File: docs/integrations/phoenix.md
 ---
 catalog_title: Phoenix
 catalog_description: Open-source, self-hosted observability, tracing, and evaluation of LLM applications
-catalog_icon: /adk-docs/integrations/assets/phoenix.png
+catalog_icon: /integrations/assets/phoenix.png
 catalog_tags: ["observability"]
 ---
 
@@ -26124,7 +26545,7 @@ catalog_tags: ["observability"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[Phoenix](https://arize.com/docs/phoenix) is an open-source, self-hosted observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://phoenix.arize.com/). 
+[Phoenix](https://arize.com/docs/phoenix) is an open-source, self-hosted observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://phoenix.arize.com/).
 
 
 ## Overview
@@ -26148,9 +26569,9 @@ pip install openinference-instrumentation-google-adk google-adk arize-phoenix-ot
 
 ### 1. Launch Phoenix { #launch-phoenix }
 
-These instructions show you how to use Phoenix Cloud. You can also [launch Phoenix](https://arize.com/docs/phoenix/integrations/llm-providers/google-gen-ai/google-adk-tracing) in a notebook, from your terminal, or self-host it using a container. 
+These instructions show you how to use Phoenix Cloud. You can also [launch Phoenix](https://arize.com/docs/phoenix/integrations/llm-providers/google-gen-ai/google-adk-tracing) in a notebook, from your terminal, or self-host it using a container.
 
-1. Sign up for a [free Phoenix account](https://phoenix.arize.com/). 
+1. Sign up for a [free Phoenix account](https://phoenix.arize.com/).
 2. From the Settings page of your new Phoenix Space, create your API key
 3. Copy your endpoint which should look like: https://app.phoenix.arize.com/s/[your-space-name]
 
@@ -26258,7 +26679,7 @@ File: docs/integrations/pinecone.md
 ---
 catalog_title: Pinecone
 catalog_description: Store data, perform semantic search, and rerank results
-catalog_icon: /adk-docs/integrations/assets/pinecone.png
+catalog_icon: /integrations/assets/pinecone.png
 catalog_tags: ["data","mcp"]
 ---
 
@@ -26402,7 +26823,7 @@ File: docs/integrations/postman.md
 ---
 catalog_title: Postman
 catalog_description: Manage API collections, workspaces, and generate client code
-catalog_icon: /adk-docs/integrations/assets/postman.png
+catalog_icon: /integrations/assets/postman.png
 catalog_tags: ["mcp"]
 ---
 
@@ -26605,7 +27026,7 @@ File: docs/integrations/pubsub.md
 ---
 catalog_title: Pub/Sub Tools
 catalog_description: Publish, pull, and acknowledge messages from Google Cloud Pub/Sub
-catalog_icon: /adk-docs/integrations/assets/pubsub.png
+catalog_icon: /integrations/assets/pubsub.png
 catalog_tags: ["google"]
 ---
 
@@ -26673,7 +27094,7 @@ File: docs/integrations/qdrant.md
 ---
 catalog_title: Qdrant
 catalog_description: Store and retrieve information using semantic vector search
-catalog_icon: /adk-docs/integrations/assets/qdrant.png
+catalog_icon: /integrations/assets/qdrant.png
 catalog_tags: ["data","mcp"]
 ---
 
@@ -26825,7 +27246,7 @@ File: docs/integrations/reflect-and-retry.md
 ---
 catalog_title: Reflect and Retry Plugin
 catalog_description: Automatically retry tool calls that fail
-catalog_icon: /adk-docs/integrations/assets/adk.png
+catalog_icon: /integrations/assets/adk.png
 catalog_tags: ["google", "resilience"]
 ---
 
@@ -26836,7 +27257,7 @@ catalog_tags: ["google", "resilience"]
 </div>
 
 The Reflect and Retry plugin can help your agent recover from error
-responses from ADK [Tools](/adk-docs/tools-custom/) and automatically retry the
+responses from ADK [Tools](/tools-custom/) and automatically retry the
 tool request. This plugin intercepts tool failures, provides structured guidance
 to the AI model for reflection and correction, and retries the operation up to a
 configurable limit. This plugin can help you build more resilience into your
@@ -26944,7 +27365,7 @@ File: docs/integrations/restate.md
 ---
 catalog_title: Restate
 catalog_description: Resilient agent execution and orchestration with durable sessions and human approvals
-catalog_icon: /adk-docs/integrations/assets/restate.svg
+catalog_icon: /integrations/assets/restate.svg
 catalog_tags: ["resilience"]
 ---
 
@@ -27102,7 +27523,7 @@ File: docs/integrations/spanner.md
 ---
 catalog_title: Spanner Tools
 catalog_description: Interact with Spanner to retrieve data, search, and execute SQL
-catalog_icon: /adk-docs/integrations/assets/spanner.png
+catalog_icon: /integrations/assets/spanner.png
 catalog_tags: ["data","google"]
 ---
 
@@ -27134,7 +27555,7 @@ File: docs/integrations/stackone.md
 ---
 catalog_title: StackOne
 catalog_description: Connect agents to 200+ SaaS providers
-catalog_icon: /adk-docs/integrations/assets/stackone.png
+catalog_icon: /integrations/assets/stackone.png
 catalog_tags: ["connectors"]
 ---
 
@@ -27379,7 +27800,7 @@ File: docs/integrations/stripe.md
 ---
 catalog_title: Stripe
 catalog_description: Manage payments, customers, subscriptions, and invoices
-catalog_icon: /adk-docs/integrations/assets/stripe.png
+catalog_icon: /integrations/assets/stripe.png
 catalog_tags: ["mcp"]
 ---
 
@@ -27593,7 +28014,7 @@ File: docs/integrations/supermetrics.md
 ---
 catalog_title: Supermetrics
 catalog_description: Consume and analyze your real-time marketing, advertising, and CRM data
-catalog_icon: /adk-docs/integrations/assets/supermetrics.png
+catalog_icon: /integrations/assets/supermetrics.png
 catalog_tags: ["mcp", "data"]
 ---
 
@@ -27728,7 +28149,7 @@ File: docs/integrations/temporal.md
 ---
 catalog_title: Temporal
 catalog_description: Resilient, scalable agents, long-running agents and tools, human approvals, and safe versioning
-catalog_icon: /adk-docs/integrations/assets/temporal.png
+catalog_icon: /integrations/assets/temporal.png
 catalog_tags: ["resilience"]
 ---
 
@@ -27750,7 +28171,7 @@ The Temporal plugin gives your agents:
 
 - **Durable execution**: Never lose progress. If your agent crashes or stalls,
   Temporal automatically recovers from the last successful step - no manual
-  [session resumption](/adk-docs/runtime/resume/#resume-a-stopped-workflow)
+  [session resumption](/runtime/resume/#resume-a-stopped-workflow)
   required.
 - **Built-in retries and rate limiting**: Configurable
   [retry policies](https://docs.temporal.io/encyclopedia/retry-policies) with
@@ -27769,7 +28190,7 @@ The Temporal plugin gives your agents:
 
 - Python 3.10+
 - A [Gemini API key](https://aistudio.google.com/app/api-keys) (or any
-  [supported model](/adk-docs/agents/models/))
+  [supported model](/agents/models/))
 - A running Temporal server
   ([local dev server](https://docs.temporal.io/cli#start-dev-server),
   [self-hosted](https://docs.temporal.io/self-hosted-guide), or
@@ -27916,7 +28337,7 @@ asyncio.run(start())
 
 ### Using MCP tools
 
-Execute [MCP](/adk-docs/mcp/) tools as Temporal
+Execute [MCP](/mcp/) tools as Temporal
 Activities:
 
 ```python
@@ -28004,7 +28425,7 @@ File: docs/integrations/vertex-ai-rag-engine.md
 ---
 catalog_title: Vertex AI RAG Engine
 catalog_description: Perform private data retrieval using Vertex AI RAG Engine
-catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/vertex-ai.png
 catalog_tags: ["data","google"]
 ---
 
@@ -28024,7 +28445,7 @@ Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples
 
     This tool can only be used ***by itself*** within an agent instance.
     For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/adk-docs/tools/limitations/).
+    [Limitations for ADK tools](/tools/limitations/).
 
 === "Python"
 
@@ -28038,7 +28459,7 @@ File: docs/integrations/vertex-ai-search.md
 ---
 catalog_title: Vertex AI Search
 catalog_description: Search across your private, configured data stores in Vertex AI Search
-catalog_icon: /adk-docs/integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/vertex-ai.png
 catalog_tags: ["search","google"]
 ---
 
@@ -28053,13 +28474,13 @@ agent to search across your private, configured data stores (e.g., internal
 documents, company policies, knowledge bases). This built-in tool requires you
 to provide the specific data store ID during configuration. For further details
 of the tool, see
-[Understanding Vertex AI Search grounding](/adk-docs/grounding/vertex_ai_search_grounding/).
+[Understanding Vertex AI Search grounding](/grounding/vertex_ai_search_grounding/).
 
 !!! warning "Warning: Single tool per agent limitation"
 
     This tool can only be used ***by itself*** within an agent instance.
     For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/adk-docs/tools/limitations/#one-tool-one-agent).
+    [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
 
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/vertexai_search.py"
@@ -28071,7 +28492,7 @@ File: docs/integrations/weave.md
 ---
 catalog_title: W&B Weave
 catalog_description: Log, visualize, and analyze model calls and agent performance
-catalog_icon: /adk-docs/integrations/assets/weave.png
+catalog_icon: /integrations/assets/weave.png
 catalog_tags: ["observability"]
 ---
 
@@ -28213,7 +28634,7 @@ File: docs/integrations/windsor-ai.md
 ---
 catalog_title: Windsor.ai
 catalog_description: Query and analyze marketing, sales, and customer data from 325+ platforms
-catalog_icon: /adk-docs/integrations/assets/windsor-ai.png
+catalog_icon: /integrations/assets/windsor-ai.png
 catalog_tags: ["mcp", "data"]
 ---
 
@@ -28363,7 +28784,7 @@ obtain context, execute actions, and interact with various systems.
 
 !!! tip "MCP tools for ADK"
     For a list of pre-built MCP tools for ADK, see
-    [Tools and Integrations](/adk-docs/integrations/?topic=mcp).
+    [Tools and Integrations](/integrations/?topic=mcp).
 
 ## How does MCP work?
 
@@ -28378,9 +28799,9 @@ ADK helps you both use and consume MCP tools in your agents, whether you're
 trying to build a tool to call an MCP service, or exposing an MCP server for
 other developers or agents to interact with your tools.
 
-See [Tools and Integrations](/adk-docs/integrations/) for pre-built
+See [Tools and Integrations](/integrations/) for pre-built
 MCP tools you can use in your agents. Refer to the
-[MCP Tools documentation](/adk-docs/tools-custom/mcp-tools/) for code samples
+[MCP Tools documentation](/tools-custom/mcp-tools/) for code samples
 and design patterns that help you use ADK together with MCP servers, including:
 
 - **Using Existing MCP Servers within ADK**: An ADK agent can act as an MCP
@@ -28394,7 +28815,7 @@ complex MCP protocol details and server management, so you can focus on
 building great tools. It's designed to be high-level and Pythonic; in most
 cases, decorating a function is all you need.
 
-Refer to the [MCP Tools](/adk-docs/tools-custom/mcp-tools/) documentation on
+Refer to the [MCP Tools](/tools-custom/mcp-tools/) documentation on
 how you can use ADK together with the FastMCP server running on Cloud Run.
 
 ## MCP Servers for Google Cloud Genmedia
@@ -28425,15 +28846,15 @@ in-process behavior. Basic input and output monitoring is typically
 insufficient for agents with any significant level of complexity.
 
 Agent Development Kit (ADK) provides configurable
-[logging](/adk-docs/observability/logging/)
+[logging](/observability/logging/)
 functionality for monitoring and debugging agents. However, you may
 need to consider more advanced
-[observability ADK Integrations](/adk-docs/integrations/?topic=observability)
+[observability ADK Integrations](/integrations/?topic=observability)
 for monitoring and analysis.
 
 !!! tip "ADK Integrations for observability"
     For a list of pre-built observability libraries for ADK, see
-    [Tools and Integrations](/adk-docs/integrations/?topic=observability).
+    [Tools and Integrations](/integrations/?topic=observability).
 
 ================
 File: docs/observability/logging.md
@@ -29117,11 +29538,11 @@ Some typical applications of Plugins are as follows:
 !!! tip "Tip: Use Plugins for safety features"
     When implementing security guardrails and policies, use ADK Plugins for
     better modularity and flexibility than Callbacks. For more details, see
-    [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
+    [Callbacks and Plugins for Security Guardrails](/safety/#callbacks-and-plugins-for-security-guardrails).
 
 !!! tip "Tip: ADK Integrations"
     For a list of pre-built plugins and other integrations for ADK, see
-    [Tools and Integrations](/adk-docs/integrations/).
+    [Tools and Integrations](/integrations/).
 
 ## How do Plugins work?
 
@@ -29147,9 +29568,9 @@ agent application.
 ADK includes several plugins that you can add to your agent workflows
 immediately:
 
-*   [**Reflect and Retry Tools**](/adk-docs/plugins/reflect-and-retry/):
+*   [**Reflect and Retry Tools**](/plugins/reflect-and-retry/):
     Tracks tool failures and intelligently retries tool requests.
-*   [**BigQuery Analytics**](/adk-docs/observability/bigquery-agent-analytics/):
+*   [**BigQuery Analytics**](/observability/bigquery-agent-analytics/):
     Enables agent logging and analysis with BigQuery.
 *   [**Context Filter**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/context_filter_plugin.py):
     Filters the generative AI context to reduce its size.
@@ -29501,7 +29922,7 @@ a simple ADK agent.
     // import com.example.CountInvocationPlugin;
 
     public class Main {
-    
+
       public static class HelloTool {
         @Schema(name = "hello_world", description = "Prints hello world with user query.")
         public static Map<String, Object> helloWorld(
@@ -29703,7 +30124,7 @@ Hello world: query is [hello world]
 
 
 For more information on running ADK agents, see the
-[Quickstart](/adk-docs/get-started/quickstart/#run-your-agent)
+[Quickstart](/get-started/quickstart/#run-your-agent)
 guide.
 
 ## Build workflows with Plugins
@@ -30221,7 +30642,7 @@ projects:
 -   For more ADK Plugin code examples, see the
     [ADK Samples repository](https://github.com/google/adk-samples).
 -   For information on applying Plugins for security purposes, see
-    [Callbacks and Plugins for Security Guardrails](/adk-docs/safety/#callbacks-and-plugins-for-security-guardrails).
+    [Callbacks and Plugins for Security Guardrails](/safety/#callbacks-and-plugins-for-security-guardrails).
 
 ================
 File: docs/runtime/api-server.md
@@ -31606,7 +32027,7 @@ interruption.
 
 This guide explains how to configure your ADK agent workflow to be resumable.
 If you use Custom Agents, you can update them to be resumable. For more
-information, see 
+information, see
 [Add resume to custom Agents](#custom-agents).
 
 ## Add resumable configuration
@@ -31628,9 +32049,9 @@ app = App(
 
 !!! warning "Caution: Long Running Functions, Confirmations, Authentication"
     For agents that use
-    [Long Running Functions](/adk-docs/tools-custom/function-tools/#long-run-tool),
-    [Confirmations](/adk-docs/tools-custom/confirmation/), or
-    [Authentication](/adk-docs/tools-custom/authentication/)
+    [Long Running Functions](/tools-custom/function-tools/#long-run-tool),
+    [Confirmations](/tools-custom/confirmation/), or
+    [Authentication](/tools-custom/authentication/)
     requiring user input, adding a resumable confirmation changes how these features
     operate. For more information, see the documentation for those features.
 
@@ -31638,7 +32059,7 @@ app = App(
     Resume is not supported by default for Custom Agents. You must
     update the agent code for a Custom Agent to support the Resume feature. For
     information on modifying Custom Agents to support incremental resume
-    functionality, see 
+    functionality, see
     [Add resume to custom Agents](#custom-agents).
 
 ## Resume a stopped workflow
@@ -31646,7 +32067,7 @@ app = App(
 When an ADK workflow stops execution you can resume the workflow using a
 command containing the Invocation ID for the workflow instance, which can be
 found in the
-[Event](/adk-docs/events/#understanding-and-using-events)
+[Event](/events/#understanding-and-using-events)
 history of the workflow. Make sure the ADK API server is running, in case it was
 interrupted or powered off, and then run the following command to resume the
 workflow, as shown in the following API request example.
@@ -31670,7 +32091,7 @@ You can also resume a workflow using the Runner object Run Async method, as
 shown below:
 
 ```python
-runner.run_async(user_id='u_123', session_id='s_abc', 
+runner.run_async(user_id='u_123', session_id='s_abc',
     invocation_id='invocation-123')
 
 # When new_message is set to a function response,
@@ -31685,8 +32106,8 @@ runner.run_async(user_id='u_123', session_id='s_abc',
 
 The Resume feature works by logging completed Agent workflow tasks,
 including incremental steps using
-[Events](/adk-docs/events/) and
-[Event Actions](/adk-docs/events/#detecting-actions-and-side-effects).
+[Events](/events/) and
+[Event Actions](/events/#detecting-actions-and-side-effects).
 tracking completion of agent tasks within a resumable workflow. If a workflow is
 interrupted and then later restarted, the system resumes the workflow by setting
 the completion state of each agent. If an agent did not complete, the workflow
@@ -31715,7 +32136,7 @@ tools A and B, and resumes the workflow by re-running the tool C request.
     check for and prevent duplicate runs.
 
 !!! note "Note: Workflow modification with Resume not supported"
-    Do not modify a stopped agent workflow before resuming it. 
+    Do not modify a stopped agent workflow before resuming it.
     For example adding or removing agents from workflow that has stopped
     and then resuming that workflow is not supported.
 
@@ -31743,7 +32164,7 @@ Agent to support a workflow Resume.
 
 The following example shows the required code modifications to the example
 StoryFlowAgent class shown in the
-[Custom Agents](/adk-docs/agents/custom-agents/#full-code-example)
+[Custom Agents](/agents/custom-agents/#full-code-example)
 guide:
 
 ```python
@@ -33006,13 +33427,13 @@ Some examples include:
 
 * **Model Armor Plugin**: A plugin that queries the model armor API to check for potential content safety violations at specified points of agent execution. Similar to the _Gemini as a Judge_ plugin, if Model Armor finds matches of harmful content, it returns a predetermined response to the user.
 
-* **PII Redaction Plugin**: A specialized plugin with design for the [Before Tool Callback](/adk-docs/plugins/#tool-callbacks) and specifically created to redact personally identifiable information before it’s processed by a tool or sent to an external service.
+* **PII Redaction Plugin**: A specialized plugin with design for the [Before Tool Callback](/plugins/#tool-callbacks) and specifically created to redact personally identifiable information before it’s processed by a tool or sent to an external service.
 
 ### Sandboxed Code Execution
 
 Code execution is a special tool that has extra security implications: sandboxing must be used to prevent model-generated code to compromise the local environment, potentially creating security issues.
 
-Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/adk-docs/tools/gemini-api/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
+Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/tools/gemini-api/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
 
 If none of these options satisfy your requirements, you can build your own code executor using the building blocks provided by the ADK. We recommend creating execution environments that are hermetic: no network connections and API calls permitted to avoid uncontrolled data exfiltration; and full cleanup of data across execution to not create cross-user exfiltration concerns.
 
@@ -33242,14 +33663,14 @@ the storage backend that best suits your needs:
 *   **How it works:** Uses Google Cloud Vertex AI infrastructure via API
     calls for session management.
 *   **Persistence:** Yes. Data is managed reliably and scalably via
-    [Vertex AI Agent Engine](https://google.github.io/adk-docs/deploy/agent-engine/).
+    [Vertex AI Agent Engine](/deploy/agent-engine/).
 *   **Requires:**
     *   A Google Cloud project (`pip install vertexai`)
     *   A Google Cloud storage bucket that can be configured by this
         [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
     *   A Reasoning Engine resource name/ID that can setup following this
-        [tutorial](https://google.github.io/adk-docs/deploy/agent-engine/).
-    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/adk-docs/tools/google-cloud/express-mode/).
+        [tutorial](/deploy/agent-engine/).
+    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/tools/google-cloud/express-mode/).
 *   **Best for:** Scalable production applications deployed on Google Cloud,
     especially when integrating with other Vertex AI features.
 
@@ -33347,7 +33768,7 @@ session_service = DatabaseSessionService(db_url=db_url)
 
     The schema for the session database changed in ADK Python v1.22.0, which
     requires migration of the Session Database. For more information, see
-    [Session database schema migration](/adk-docs/sessions/session/migrate/).
+    [Session database schema migration](/sessions/session/migrate/).
 
 ## The Session Lifecycle
 
@@ -34942,7 +35363,7 @@ File: docs/streaming/dev-guide/part1.md
 ================
 # Part 1: Introduction to ADK Gemini Live API Toolkit
 
-Google's Agent Development Kit ([ADK](https://google.github.io/adk-docs/)) provides a production-ready framework for building Bidi-streaming applications with Gemini models. This guide introduces ADK's streaming architecture, which enables real-time, two-way communication between users and AI agents through multimodal channels (text, audio, video).
+Google's Agent Development Kit ([ADK](https://adk.dev)) provides a production-ready framework for building Bidi-streaming applications with Gemini models. This guide introduces ADK's streaming architecture, which enables real-time, two-way communication between users and AI agents through multimodal channels (text, audio, video).
 
 **What you'll learn**: This part covers the fundamentals of Bidi-streaming, the underlying Live API technology (Gemini Live API and Vertex AI Live API), ADK's architectural components (`LiveRequestQueue`, `Runner`, `Agent`), and a complete FastAPI implementation example. You'll understand how ADK handles session management, tool orchestration, and platform abstraction—reducing months of infrastructure development to declarative configuration.
 
@@ -35135,12 +35556,12 @@ ADK transforms these challenges into simple, declarative APIs. Instead of spendi
 
 | Feature | Raw Live API (`google-genai` SDK) | ADK Gemini Live API Toolkit (`adk-python` and `adk-java` SDK) |
 |---------|-----------------------------------|------------------------------------------------------|
-| **Agent Framework** | ❌ Not available | ✅ Single agent, multi-agent with sub-agents, and sequential workflow agents, Tool ecosystem, Deployment ready, Evaluation, Security and more (see [ADK Agent docs](https://google.github.io/adk-docs/agents/)) |
+| **Agent Framework** | ❌ Not available | ✅ Single agent, multi-agent with sub-agents, and sequential workflow agents, Tool ecosystem, Deployment ready, Evaluation, Security and more (see [ADK Agent docs](/agents/)) |
 | **Tool Execution** | ❌ Manual tool execution and response handling | ✅ Automatic tool execution (see [Part 3: Tool Call Events](part3.md#tool-call-events)) |
 | **Connection Management** | ❌ Manual reconnection and session resumption | ✅ Automatic reconnection and session resumption (see [Part 4: Live API Session Resumption](part4.md#live-api-session-resumption)) |
 | **Event Model** | ❌ Custom event structures and serialization | ✅ Unified event model with metadata (see [Part 3: Event Handling](part3.md)) |
 | **Async Event Processing Framework** | ❌ Manual async coordination and stream handling | ✅ `LiveRequestQueue`, `run_live()` async generator, automatic bidirectional flow coordination (see [Part 2](part2.md) and [Part 3](part3.md)) |
-| **App-level Session Persistence** | ❌ Manual implementation | ✅ SQL databases (PostgreSQL, MySQL, SQLite), Vertex AI, in-memory (see [ADK Session docs](https://google.github.io/adk-docs/sessions/)) |
+| **App-level Session Persistence** | ❌ Manual implementation | ✅ SQL databases (PostgreSQL, MySQL, SQLite), Vertex AI, in-memory (see [ADK Session docs](/sessions/)) |
 
 ### Platform Flexibility
 
@@ -35254,9 +35675,9 @@ ADK Gemini Live API Toolkit integrates Live API session into the ADK framework's
 
 - **Phase 1: Application Initialization** (Once at Startup)
   - ADK Application initialization
-    - Create an [Agent](https://google.github.io/adk-docs/agents/): for interacting with users, utilize external tools, and coordinate with other agents.
-    - Create a [SessionService](https://google.github.io/adk-docs/sessions/session/#managing-sessions-with-a-sessionservice): for getting or creating ADK `Session`
-    - Create a [Runner](https://google.github.io/adk-docs/runtime/): for providing a runtime for the Agent
+    - Create an [Agent](/agents/): for interacting with users, utilize external tools, and coordinate with other agents.
+    - Create a [SessionService](/sessions/session/#managing-sessions-with-a-sessionservice): for getting or creating ADK `Session`
+    - Create a [Runner](/runtime/): for providing a runtime for the Agent
 
 - **Phase 2: Session Initialization** (Once per User Session)
   - ADK `Session` initialization:
@@ -35374,7 +35795,7 @@ agent = Agent(
 )
 ```
 
-The agent instance is **stateless and reusable**—you create it once and use it for all streaming sessions. Agent configuration is covered in the [ADK Agent documentation](https://google.github.io/adk-docs/agents/).
+The agent instance is **stateless and reusable**—you create it once and use it for all streaming sessions. Agent configuration is covered in the [ADK Agent documentation](/agents/).
 
 !!! note "Model Availability"
 
@@ -35386,9 +35807,9 @@ The agent instance is **stateless and reusable**—you create it once and use it
 
 #### Define Your SessionService
 
-The ADK [Session](https://google.github.io/adk-docs/sessions/session/) manages conversation state and history across streaming sessions. It stores and retrieves session data, enabling features like conversation resumption and context persistence.
+The ADK [Session](/sessions/session/) manages conversation state and history across streaming sessions. It stores and retrieves session data, enabling features like conversation resumption and context persistence.
 
-To create a `Session`, or get an existing one for a specified `session_id`, every ADK application needs to have a [SessionService](https://google.github.io/adk-docs/sessions/session/#managing-sessions-with-a-sessionservice). For development purpose, ADK provides a simple `InMemorySessionService` that will lose the `Session` state when the application shuts down.
+To create a `Session`, or get an existing one for a specified `session_id`, every ADK application needs to have a [SessionService](/sessions/session/#managing-sessions-with-a-sessionservice). For development purpose, ADK provides a simple `InMemorySessionService` that will lose the `Session` state when the application shuts down.
 
 ```python title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/main.py#L37" target="_blank">main.py:37</a>'
 from google.adk.sessions import InMemorySessionService
@@ -35415,11 +35836,11 @@ For production applications, choose a persistent session service based on your i
 - You need tight integration with Vertex AI features
 - Example: `VertexAiSessionService(project="my-project")`
 
-Both provide session persistence capabilities—choose based on your infrastructure and scale requirements. With persistent session services, the state of the `Session` will be preserved even after application shutdown. See the [ADK Session Management documentation](https://google.github.io/adk-docs/sessions/) for more details.
+Both provide session persistence capabilities—choose based on your infrastructure and scale requirements. With persistent session services, the state of the `Session` will be preserved even after application shutdown. See the [ADK Session Management documentation](/sessions/) for more details.
 
 #### Define Your Runner
 
-The [Runner](https://google.github.io/adk-docs/runtime/) provides the runtime for the `Agent`. It manages the conversation flow, coordinates tool execution, handles events, and integrates with session storage. You create one runner instance at application startup and reuse it for all streaming sessions.
+The [Runner](/runtime/) provides the runtime for the `Agent`. It manages the conversation flow, coordinates tool execution, handles events, and integrates with session storage. You create one runner instance at application startup and reuse it for all streaming sessions.
 
 ```python title='Demo implementation: <a href="https://github.com/google/adk-samples/blob/31847c0723fbf16ddf6eed411eb070d1c76afd1a/python/agents/bidi-demo/app/main.py#L50" target="_blank">main.py:50,53</a>'
 from google.adk.runners import Runner
@@ -35799,7 +36220,7 @@ This example shows the core pattern. For production applications, consider:
 - **Authentication and authorization**: Implement authentication and authorization for your endpoints
 - **Rate limiting and quotas**: Add rate limiting and timeout controls. For guidance on concurrent sessions and quota management, see [Part 4: Concurrent Live API Sessions and Quota Management](part4.md#concurrent-live-api-sessions-and-quota-management).
 - **Structured logging**: Use structured logging for debugging.
-- **Persistent session services**: Consider using persistent session services (`DatabaseSessionService` or `VertexAiSessionService`). See the [ADK Session Services documentation](https://google.github.io/adk-docs/sessions/) for more details.
+- **Persistent session services**: Consider using persistent session services (`DatabaseSessionService` or `VertexAiSessionService`). See the [ADK Session Services documentation](/sessions/) for more details.
 
 ## 1.6 What We Will Learn
 
@@ -35817,7 +36238,7 @@ This guide takes you through ADK Gemini Live API Toolkit's architecture step by 
 
 For building an ADK Gemini Live API Toolkit application in production, we recommend having basic knowledge of the following technologies:
 
-**[ADK (Agent Development Kit)](https://google.github.io/adk-docs/)**
+**[ADK (Agent Development Kit)](https://adk.dev)**
 
 Google's production-ready framework for building AI agents with streaming capabilities. ADK provides high-level abstractions for session management, tool orchestration, and state persistence, eliminating the need to implement low-level streaming infrastructure from scratch.
 
@@ -36135,7 +36556,7 @@ You'll learn how to process different event types (text, audio, transcriptions, 
 !!! note "Async Context Required"
 
     All `run_live()` code requires async context. See [Part 1: FastAPI Application Example](part1.md#fastapi-application-example) for details and production examples.
-    
+
 ## How run_live() Works
 
 `run_live()` is an async generator that streams conversation events in real-time. It yields events immediately as they're generated—no buffering, no polling, no callbacks. Events are streamed without internal buffering. Overall memory depends on session persistence (e.g., in-memory vs database), making it suitable for both quick exchanges and extended sessions.
@@ -36158,7 +36579,7 @@ async def run_live(
 ```
 
 As its signature tells, every streaming conversation needs identity (user_id), continuity (session_id), communication (live_request_queue), and configuration (run_config). The return type—an async generator of Events—promises real-time delivery without overwhelming system resources.
-    
+
 ```mermaid
 sequenceDiagram
 participant Client
@@ -36179,7 +36600,7 @@ loop Continuous Streaming
     Runner-->>Client: Event (yield)
 end
 ```
-    
+
 ### Basic Usage Pattern
 
 The simplest way to consume events from `run_live()` is to iterate over the async generator with a for-loop:
@@ -37244,7 +37665,7 @@ ADK supports advanced tool patterns that integrate seamlessly with `run_live()`:
 
     **Code reference**: See `runners.py:828-865` (tool detection) and `function_tool.py:238-253` (parameter injection) for implementation details.
 
-    See the [Tools Guide](https://google.github.io/adk-docs/tools/) for implementation examples.
+    See the [Tools Guide](/tools/) for implementation examples.
 
 ### Key Takeaway
 
@@ -37269,7 +37690,7 @@ This automatic handling is one of the core value propositions of ADK—it transf
 
 While `run_live()` returns an AsyncGenerator for consuming events, internally it creates and manages an `InvocationContext`—ADK's unified state carrier that encapsulates everything needed for a complete conversation invocation. **One InvocationContext corresponds to one `run_live()` loop**—it's created when you call `run_live()` and persists for the entire streaming session.
 
-Think of it as a traveling notebook that accompanies a conversation from start to finish, collecting information, tracking progress, and providing context to every component along the way. It's ADK's runtime implementation of the Context concept, providing the execution-time state and services needed during a live conversation. For a broader overview of context in ADK, see [Context in ADK](https://google.github.io/adk-docs/context/).
+Think of it as a traveling notebook that accompanies a conversation from start to finish, collecting information, tracking progress, and providing context to every component along the way. It's ADK's runtime implementation of the Context concept, providing the execution-time state and services needed during a live conversation. For a broader overview of context in ADK, see [Context in ADK](/context/).
 
 ### What is an Invocation?
 
@@ -37367,7 +37788,7 @@ ADK's bidirectional streaming supports three agent architectures: **single agent
 
 !!! note "Learn More"
 
-    For comprehensive coverage of multi-agent patterns, see [Workflow Agents as Orchestrators](https://google.github.io/adk-docs/agents/multi-agents/#workflow-agents-as-orchestrators) in the ADK documentation.
+    For comprehensive coverage of multi-agent patterns, see [Workflow Agents as Orchestrators](/agents/multi-agents/#workflow-agents-as-orchestrators) in the ADK documentation.
 
 When building multi-agent systems with ADK, understanding how agents transition and share state during live streaming is crucial for smooth BIDI communication.
 
@@ -37924,7 +38345,7 @@ When building ADK Gemini Live API Toolkit applications, it's essential to unders
 Understanding the distinction between **ADK `Session`** and **Live API session** is crucial for building reliable streaming applications with ADK Gemini Live API Toolkit.
 
 **ADK `Session`** (managed by SessionService):
-- Persistent conversation storage for conversation history, events, and state, created via `SessionService.create_session()` 
+- Persistent conversation storage for conversation history, events, and state, created via `SessionService.create_session()`
 - Storage options: in-memory, database (PostgreSQL/MySQL/SQLite), or Vertex AI
 - Survives across multiple `run_live()` calls and application restarts (with the persistent `SessionService`)
 
@@ -38461,8 +38882,8 @@ This parameter controls whether audio and video streams are persisted to ADK's s
 
 Currently, **only audio is persisted** by ADK's implementation. When enabled, ADK persists audio streams to:
 
-- **[Session service](https://google.github.io/adk-docs/sessions/)**: Conversation history includes audio references
-- **[Artifact service](https://google.github.io/adk-docs/artifacts/)**: Audio files stored with unique IDs
+- **[Session service](/sessions/)**: Conversation history includes audio references
+- **[Artifact service](/artifacts/)**: Audio files stored with unique IDs
 
 **Use cases:**
 
@@ -38620,7 +39041,7 @@ CFC is designed for complex, multi-step workflows that benefit from intelligent 
 
 - [Gemini Function Calling Guide](https://ai.google.dev/gemini-api/docs/function-calling) - Official documentation on compositional and parallel function calling
 - [ADK Parallel Functions Example](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/contributing/samples/parallel_functions/agent.py) - Working example with async tools
-- [ADK Performance Guide](https://google.github.io/adk-docs/tools/performance/) - Best practices for parallel-ready tools
+- [ADK Performance Guide](/tools/performance/) - Best practices for parallel-ready tools
 
 ## Summary
 
@@ -39219,7 +39640,7 @@ ADK provides special tool support for processing video frames during streaming s
 
 **Important**: You must provide a `stop_streaming(function_name: str)` function as a tool to allow the model to explicitly stop streaming operations.
 
-For implementing custom video streaming tools that process and yield video frames to the model, see the [Streaming Tools documentation](https://google.github.io/adk-docs/streaming/streaming-tools/).
+For implementing custom video streaming tools that process and yield video frames to the model, see the [Streaming Tools documentation](/streaming/streaming-tools/).
 
 ## Understanding Audio Model Architectures
 
@@ -40665,9 +41086,9 @@ tools within an agent excludes the use of any other tools in that agent. The
 following ADK Tools can only be used by themselves, without any other tools, in
 a single agent object:
 
-*   [Code Execution](/adk-docs/tools/gemini-api/code-execution/) with Gemini API
-*   [Google Search](/adk-docs/tools/gemini-api/google-search/) with Gemini API
-*   [Vertex AI Search](/adk-docs/tools/google-cloud/vertex-ai-search/)
+*   [Code Execution](/tools/gemini-api/code-execution/) with Gemini API
+*   [Google Search](/tools/gemini-api/google-search/) with Gemini API
+*   [Vertex AI Search](/tools/google-cloud/vertex-ai-search/)
 
 For example, the following approach that uses one of these tools along with
 other tools, within a single agent, is ***not supported***:
@@ -41248,7 +41669,7 @@ if auth_request_function_call_id and auth_config:
 !!! note "Note: Authorization response with Resume feature"
 
     If your ADK agent workflow is configured with the
-    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    [Resume](/runtime/resume/) feature, you also must include
     the Invocation ID (`invocation_id`) parameter with the authorization
     response. The Invocation ID you provide must be the same invocation
     that generated the authorization request, otherwise the system
@@ -41257,7 +41678,7 @@ if auth_request_function_call_id and auth_config:
     as a parameter with your authorization request, so it can be included
     with the authorization response. For more details on using the Resume
     feature, see
-    [Resume stopped agents](/adk-docs/runtime/resume/).
+    [Resume stopped agents](/runtime/resume/).
 
 **Step 5: ADK Handles Token Exchange & Tool Retry and gets Tool result**
 
@@ -41607,7 +42028,7 @@ server's REST API. When using the confirmation feature with the ADK web user
 interface, the agent workflow displays a dialog box to the user to request
 input, as shown in Figure 1:
 
-![Screenshot of default user interface for tool confirmation](/adk-docs/assets/confirmation-ui.png)
+![Screenshot of default user interface for tool confirmation](/assets/confirmation-ui.png)
 
 **Figure 1.** Example confirmation response request dialog box using an
 advanced, tool response implementation.
@@ -41617,7 +42038,7 @@ scenarios. For a complete code sample, see the
 [human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
 example. There are additional ways to incorporate human input into your agent
 workflow, for more details, see the
-[Human-in-the-loop](/adk-docs/agents/multi-agents/#human-in-the-loop-pattern)
+[Human-in-the-loop](/agents/multi-agents/#human-in-the-loop-pattern)
 agent pattern.
 
 ## Boolean confirmation {#boolean-confirmation}
@@ -41710,7 +42131,7 @@ You can modify the behavior of the confirmation requirement by using a function 
     reimburseTool, _ := functiontool.New(functiontool.Config{
         Name:        "reimburse",
         Description: "Reimburse an amount",
-        // RequireConfirmationProvider allows for dynamic determination 
+        // RequireConfirmationProvider allows for dynamic determination
         // of whether user confirmation is needed.
         RequireConfirmationProvider: func(args ReimburseArgs) bool {
             return args.Amount > 1000
@@ -41724,13 +42145,13 @@ You can modify the behavior of the confirmation requirement by using a function 
 === "Java"
 
     ```java
-    // In ADK Java, dynamic threshold confirmation logic is evaluated directly 
+    // In ADK Java, dynamic threshold confirmation logic is evaluated directly
     // inside the tool logic using the ToolContext rather than via a lambda parameter.
     public Map<String, Object> reimburse(
         @Schema(name="amount") int amount, ToolContext toolContext) {
-      
+
       // 1. Dynamic threshold check
-      if (amount > 1000) { 
+      if (amount > 1000) {
         Optional<ToolConfirmation> toolConfirmation = toolContext.toolConfirmation();
         if (toolConfirmation.isEmpty()) {
            toolContext.requestConfirmation("Amount > 1000 requires approval.");
@@ -41739,7 +42160,7 @@ You can modify the behavior of the confirmation requirement by using a function 
            return Map.of("status", "Reimbursement rejected.");
         }
       }
-      
+
       // 2. Proceed with actual tool logic
       return Map.of("status", "ok", "reimbursedAmount", amount);
     }
@@ -41752,7 +42173,7 @@ You can modify the behavior of the confirmation requirement by using a function 
             FunctionTool.create(this, "reimburse")
         )
         // ...
-        .build();    
+        .build();
     ```
 
 ## Advanced confirmation {#advanced-confirmation}
@@ -41836,11 +42257,11 @@ time off requests for an employee:
         // Values in map[string]any from JSON are float64 by default in Go
         approvedDays := int(payload["approved_days"].(float64))
         approvedDays = min(approvedDays, args.Days)
-        
+
         if approvedDays == 0 {
             return map[string]any{"status": "The time off request is rejected.", "approved_days": 0}, nil
         }
-        
+
         return map[string]any{
             "status": "ok",
             "approved_days": approvedDays,
@@ -41852,7 +42273,7 @@ time off requests for an employee:
 
     ```java
     public Map<String, Object> requestTimeOff(
-        @Schema(name="days") int days, 
+        @Schema(name="days") int days,
         ToolContext toolContext) {
         // Request day off for the employee.
         // ...
@@ -41872,11 +42293,11 @@ time off requests for an employee:
         Map<String, Object> payload = (Map<String, Object>) toolConfirmation.get().payload();
         int approvedDays = (int) payload.get("approved_days");
         approvedDays = Math.min(approvedDays, days);
-        
+
         if (approvedDays == 0) {
             return Map.of("status", "The time off request is rejected.", "approved_days", 0);
         }
-        
+
         return Map.of(
             "status", "ok",
             "approved_days", approvedDays
@@ -41935,8 +42356,8 @@ requirements:
 
     !!! note "Note: Confirmation with Resume feature"
 
-    If your ADK agent workflow is configured with the 
-    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    If your ADK agent workflow is configured with the
+    [Resume](/runtime/resume/) feature, you also must include
     the Invocation ID (`invocation_id`) parameter with the confirmation
     response. The Invocation ID you provide must be the same invocation
     that generated the confirmation request, otherwise the system
@@ -41945,21 +42366,21 @@ requirements:
     as a parameter with your confirmation request, so it can be
     included with the response. For more details on using the Resume
     feature, see
-    [Resume stopped agents](/adk-docs/runtime/resume/).
+    [Resume stopped agents](/runtime/resume/).
 
 ## Known limitations {#known-limitations}
 
 The tool confirmation feature has the following limitations:
 
--   [DatabaseSessionService](/adk-docs/api-reference/python/google-adk.html#google.adk.sessions.DatabaseSessionService)
+-   [DatabaseSessionService](/api-reference/python/google-adk.html#google.adk.sessions.DatabaseSessionService)
     is not supported by this feature.
--   [VertexAiSessionService](/adk-docs/api-reference/python/google-adk.html#google.adk.sessions.VertexAiSessionService)
+-   [VertexAiSessionService](/api-reference/python/google-adk.html#google.adk.sessions.VertexAiSessionService)
     is not supported by this feature.
 
 ## Next steps
 
 For more information on building ADK tools for agent workflows, see [Function
-tools](/adk-docs/tools-custom/function-tools/).
+tools](/tools-custom/function-tools/).
 
 ================
 File: docs/tools-custom/function-tools.md
@@ -42045,10 +42466,10 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         public static Map<String, Object> getWeather(
             @Schema(description = "The city and state, e.g., San Francisco, CA", name = "location")
             String location,
-            
+
             @Schema(description = "The temperature unit, either 'Celsius' or 'Fahrenheit'", name = "unit")
             String unit) {
-            
+
             // ... function logic ...
             return Map.of("status", "success", "report", "Weather for " + location + " is sunny.");
         }
@@ -42108,13 +42529,13 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         public static Map<String, Object> searchFlights(
             @Schema(description = "The destination city.", name = "destination")
             String destination,
-            
+
             @Schema(description = "The desired departure date.", name = "departureDate")
             String departureDate,
-            
+
             @Schema(description = "Number of flexible days for the search. Defaults to 0.", name = "flexibleDays")
             Optional<Integer> flexibleDays) {
-            
+
             // ... function logic ...
             int days = flexibleDays.orElse(0);
             if (days > 0) {
@@ -42250,7 +42671,7 @@ While you have considerable flexibility in defining your function, remember that
 * **Simple Data Types:** Favor primitive data types like `str` and `int` over custom classes whenever possible.
 * **Meaningful Names:** The function's name and parameter names significantly influence how the LLM interprets and utilizes the tool. Choose names that clearly reflect the function's purpose and the meaning of its inputs. Avoid generic names like `do_stuff()` or `beAgent()`.
 * **Build for Parallel Execution:** Improve function calling performance when multiple tools are run by building for asynchronous operation. For information on enabling parallel execution for tools, see
-[Increase tool performance with parallel execution](/adk-docs/tools-custom/performance/).
+[Increase tool performance with parallel execution](/tools-custom/performance/).
 
 ## Long Running Function Tools {#long-run-tool}
 
@@ -42268,7 +42689,7 @@ When using a `LongRunningFunctionTool`, your function can initiate the long-runn
     Depending on the type of tool you are building, designing for asynchronous
     operation may be a better solution than creating a long running tool. For
     more information, see
-    [Increase tool performance with parallel execution](/adk-docs/tools-custom/performance/).
+    [Increase tool performance with parallel execution](/tools-custom/performance/).
 
 ### How it Works
 
@@ -42363,7 +42784,7 @@ Agent client received an event with long running function calls and check the st
 !!! note "Note: Long running function response with Resume feature"
 
     If your ADK agent workflow is configured with the
-    [Resume](/adk-docs/runtime/resume/) feature, you also must include
+    [Resume](/runtime/resume/) feature, you also must include
     the Invocation ID (`invocation_id`) parameter with the long running
     function response. The Invocation ID you provide must be the same
     invocation that generated the long running function request, otherwise
@@ -42372,7 +42793,7 @@ Agent client received an event with long running function calls and check the st
     as a parameter with your long running function request, so it can be
     included with the response. For more details on using the Resume
     feature, see
-    [Resume stopped agents](/adk-docs/runtime/resume/).
+    [Resume stopped agents](/runtime/resume/).
 
 ??? Tip "Applies to only Java ADK"
 
@@ -42559,9 +42980,9 @@ programming functions with an ADK Tool, such as:
 *   Retrieving information from documents (RAG)
 *   Interacting with other software or services
 
-!!! tip "[ADK Tools list](/adk-docs/tools/)"
+!!! tip "[ADK Tools list](/tools/)"
     Before building your own Tools for ADK, check out the
-    **[ADK Tools list](/adk-docs/tools/)**
+    **[ADK Tools list](/tools/)**
     for pre-built tools you can use with ADK Agents.
 
 ## What is a Tool?
@@ -42604,11 +43025,11 @@ Think of the tools as a specialized toolkit that the agent's intelligent core (t
 
 ADK offers flexibility by supporting several types of tools:
 
-1. **[Function Tools](/adk-docs/tools-custom/function-tools/):** Tools created by you, tailored to your specific application's needs.
-    * **[Functions/Methods](/adk-docs/tools-custom/function-tools/#1-function-tool):** Define standard synchronous functions or methods in your code (e.g., Python def).
-    * **[Agents-as-Tools](/adk-docs/tools-custom/function-tools/#3-agent-as-a-tool):** Use another, potentially specialized, agent as a tool for a parent agent.
-    * **[Long Running Function Tools](/adk-docs/tools-custom/function-tools/#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
-2. **[Built-in Tools](/adk-docs/tools/built-in-tools/):** Ready-to-use tools provided by the framework for common tasks.
+1. **[Function Tools](/tools-custom/function-tools/):** Tools created by you, tailored to your specific application's needs.
+    * **[Functions/Methods](/tools-custom/function-tools/#1-function-tool):** Define standard synchronous functions or methods in your code (e.g., Python def).
+    * **[Agents-as-Tools](/tools-custom/function-tools/#3-agent-as-a-tool):** Use another, potentially specialized, agent as a tool for a parent agent.
+    * **[Long Running Function Tools](/tools-custom/function-tools/#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
+2. **[Built-in Tools](/tools/built-in-tools/):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
 3. **Third-Party Tools:** Integrate tools seamlessly from popular external libraries.
 
@@ -43118,7 +43539,7 @@ File: docs/tools-custom/mcp-tools.md
 This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
 
 !!! tip "MCP tools for ADK"
-    For a list of pre-built MCP tools for ADK, see [Tools and Integrations](/adk-docs/integrations/?topic=mcp).
+    For a list of pre-built MCP tools for ADK, see [Tools and Integrations](/integrations/?topic=mcp).
 
 ## What is Model Context Protocol (MCP)?
 
@@ -44425,7 +44846,7 @@ The process involves these main steps when you use `OpenAPIToolset`:
     * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
     * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
 
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/adk-docs/tools/authentication/) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/tools/authentication/) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
 
 ## Usage Workflow
 
@@ -44482,8 +44903,8 @@ File: docs/tools-custom/performance.md
 </div>
 
 Starting with Agent Development Kit (ADK) version 1.10.0 for Python, the framework
-attempts to run any agent-requested 
-[function tools](/adk-docs/tools-custom/function-tools/) 
+attempts to run any agent-requested
+[function tools](/tools-custom/function-tools/)
 in parallel. This behavior can significantly improve the performance and
 responsiveness of your agents, particularly for agents that rely on multiple
 external APIs or long-running tasks. For example, if you have 3 tools that each
@@ -44626,7 +45047,7 @@ parallel.
   Examples:
   - "Get weather for London and currency rate USD to EUR" → Call both functions
     simultaneously
-  - "Compare cities A and B" → Call get_weather, get_population, get_distance in 
+  - "Compare cities A and B" → Call get_weather, get_population, get_distance in
     parallel
   - "Analyze multiple stocks" → Call get_stock_price for each stock in parallel
 
@@ -44655,7 +45076,7 @@ efficient use through parallel execution:
 ## Next steps
 
 For more information on building Tools for agents and function calling, see
-[Function Tools](/adk-docs/tools-custom/function-tools/). For
+[Function Tools](/tools-custom/function-tools/). For
 more detailed examples of tools that take advantage of parallel processing, see
 the samples in the
 [adk-python](https://github.com/google/adk-python/tree/main/contributing/samples/parallel_functions)
@@ -44704,7 +45125,7 @@ File: docs/tutorials/agent-team.md
 
 </div>
 
-This tutorial extends from the [Quickstart example](https://google.github.io/adk-docs/get-started/quickstart/) for [Agent Development Kit](https://google.github.io/adk-docs/get-started/). Now, you're ready to dive deeper and construct a more sophisticated, **multi-agent system**.
+This tutorial extends from the [Quickstart example](/get-started/quickstart/) for [Agent Development Kit](/get-started/). Now, you're ready to dive deeper and construct a more sophisticated, **multi-agent system**.
 
 We'll embark on building a **Weather Bot agent team**, progressively layering advanced features onto a simple foundation. Starting with a single agent that can look up weather, we will incrementally add capabilities like:
 
@@ -44844,7 +45265,7 @@ print("\nEnvironment configured.")
 
 Let's begin by building the fundamental component of our Weather Bot: a single agent capable of performing a specific task – looking up weather information. This involves creating two core pieces:
 
-1. **A Tool:** A Python function that equips the agent with the *ability* to fetch weather data.  
+1. **A Tool:** A Python function that equips the agent with the *ability* to fetch weather data.
 2. **An Agent:** The AI "brain" that understands the user's request, knows it has a weather tool, and decides when and how to use it.
 
 ---
@@ -44857,9 +45278,9 @@ Our first tool will provide a *mock* weather report. This allows us to focus on 
 
 **Key Concept: Docstrings are Crucial\!** The agent's LLM relies heavily on the function's **docstring** to understand:
 
-* *What* the tool does.  
-* *When* to use it.  
-* *What arguments* it requires (`city: str`).  
+* *What* the tool does.
+* *When* to use it.
+* *What arguments* it requires (`city: str`).
 * *What information* it returns.
 
 **Best Practice:** Write clear, descriptive, and accurate docstrings for your tools. This is essential for the LLM to use the tool correctly.
@@ -44907,10 +45328,10 @@ Now, let's create the **Agent** itself. An `Agent` in ADK orchestrates the inter
 
 We configure it with several key parameters:
 
-* `name`: A unique identifier for this agent (e.g., "weather\_agent\_v1").  
-* `model`: Specifies which LLM to use (e.g., `MODEL_GEMINI_2_5_FLASH`). We'll start with a specific Gemini model.  
-* `description`: A concise summary of the agent's overall purpose. This becomes crucial later when other agents need to decide whether to delegate tasks to *this* agent.  
-* `instruction`: Detailed guidance for the LLM on how to behave, its persona, its goals, and specifically *how and when* to utilize its assigned `tools`.  
+* `name`: A unique identifier for this agent (e.g., "weather\_agent\_v1").
+* `model`: Specifies which LLM to use (e.g., `MODEL_GEMINI_2_5_FLASH`). We'll start with a specific Gemini model.
+* `description`: A concise summary of the agent's overall purpose. This becomes crucial later when other agents need to decide whether to delegate tasks to *this* agent.
+* `instruction`: Detailed guidance for the LLM on how to behave, its persona, its goals, and specifically *how and when* to utilize its assigned `tools`.
 * `tools`: A list containing the actual Python tool functions the agent is allowed to use (e.g., `[get_weather]`).
 
 **Best Practice:** Provide clear and specific `instruction` prompts. The more detailed the instructions, the better the LLM can understand its role and how to use its tools effectively. Be explicit about error handling if needed.
@@ -44944,7 +45365,7 @@ print(f"Agent '{weather_agent.name}' created using model '{AGENT_MODEL}'.")
 
 To manage conversations and execute the agent, we need two more components:
 
-* `SessionService`: Responsible for managing conversation history and state for different users and sessions. The `InMemorySessionService` is a simple implementation that stores everything in memory, suitable for testing and simple applications. It keeps track of the messages exchanged. We'll explore state persistence more in Step 4\.  
+* `SessionService`: Responsible for managing conversation history and state for different users and sessions. The `InMemorySessionService` is a simple implementation that stores everything in memory, suitable for testing and simple applications. It keeps track of the messages exchanged. We'll explore state persistence more in Step 4\.
 * `Runner`: The engine that orchestrates the interaction flow. It takes user input, routes it to the appropriate agent, manages calls to the LLM and tools based on the agent's logic, handles session updates via the `SessionService`, and yields events representing the progress of the interaction.
 
 
@@ -44981,7 +45402,7 @@ print(f"Session created: App='{APP_NAME}', User='{USER_ID}', Session='{SESSION_I
 #     )
 #     print(f"Session created: App='{app_name}', User='{user_id}', Session='{session_id}'")
 #     return session
-# 
+#
 # session = asyncio.run(init_session(APP_NAME,USER_ID,SESSION_ID))
 
 # --- Runner ---
@@ -45002,10 +45423,10 @@ We need a way to send messages to our agent and receive its responses. Since LLM
 
 We'll define an `async` helper function (`call_agent_async`) that:
 
-1. Takes a user query string.  
-2. Packages it into the ADK `Content` format.  
-3. Calls `runner.run_async`, providing the user/session context and the new message.  
-4. Iterates through the **Events** yielded by the runner. Events represent steps in the agent's execution (e.g., tool call requested, tool result received, intermediate LLM thought, final response).  
+1. Takes a user query string.
+2. Packages it into the ADK `Content` format.
+3. Calls `runner.run_async`, providing the user/session context and the new message.
+4. Iterates through the **Events** yielded by the runner. Events represent steps in the agent's execution (e.g., tool call requested, tool result received, intermediate LLM thought, final response).
 5. Identifies and prints the **final response** event using `event.is_final_response()`.
 
 **Why `async`?** Interactions with LLMs and potentially tools (like external APIs) are I/O-bound operations. Using `asyncio` allows the program to handle these operations efficiently without blocking execution.
@@ -45052,8 +45473,8 @@ Finally, let's test our setup by sending a few queries to the agent. We wrap our
 
 Watch the output:
 
-* See the user queries.  
-* Notice the `--- Tool: get_weather called... ---` logs when the agent uses the tool.  
+* See the user queries.
+* Notice the `--- Tool: get_weather called... ---` logs when the agent uses the tool.
 * Observe the agent's final responses, including how it handles the case where weather data isn't available (for Paris).
 
 
@@ -45317,23 +45738,23 @@ In Steps 1 and 2, we built and experimented with a single agent focused solely o
 
 A more robust approach is to build an **Agent Team**. This involves:
 
-1. Creating multiple, **specialized agents**, each designed for a specific capability (e.g., one for weather, one for greetings, one for calculations).  
-2. Designating a **root agent** (or orchestrator) that receives the initial user request.  
+1. Creating multiple, **specialized agents**, each designed for a specific capability (e.g., one for weather, one for greetings, one for calculations).
+2. Designating a **root agent** (or orchestrator) that receives the initial user request.
 3. Enabling the root agent to **delegate** the request to the most appropriate specialized sub-agent based on the user's intent.
 
 **Why build an Agent Team?**
 
-* **Modularity:** Easier to develop, test, and maintain individual agents.  
-* **Specialization:** Each agent can be fine-tuned (instructions, model choice) for its specific task.  
-* **Scalability:** Simpler to add new capabilities by adding new agents.  
+* **Modularity:** Easier to develop, test, and maintain individual agents.
+* **Specialization:** Each agent can be fine-tuned (instructions, model choice) for its specific task.
+* **Scalability:** Simpler to add new capabilities by adding new agents.
 * **Efficiency:** Allows using potentially simpler/cheaper models for simpler tasks (like greetings).
 
 **In this step, we will:**
 
-1. Define simple tools for handling greetings (`say_hello`) and farewells (`say_goodbye`).  
-2. Create two new specialized sub-agents: `greeting_agent` and `farewell_agent`.  
-3. Update our main weather agent (`weather_agent_v2`) to act as the **root agent**.  
-4. Configure the root agent with its sub-agents, enabling **automatic delegation**.  
+1. Define simple tools for handling greetings (`say_hello`) and farewells (`say_goodbye`).
+2. Create two new specialized sub-agents: `greeting_agent` and `farewell_agent`.
+3. Update our main weather agent (`weather_agent_v2`) to act as the **root agent**.
+4. Configure the root agent with its sub-agents, enabling **automatic delegation**.
 5. Test the delegation flow by sending different types of requests to the root agent.
 
 ---
@@ -45444,7 +45865,7 @@ except Exception as e:
 
 Now, we upgrade our `weather_agent`. The key changes are:
 
-* Adding the `sub_agents` parameter: We pass a list containing the `greeting_agent` and `farewell_agent` instances we just created.  
+* Adding the `sub_agents` parameter: We pass a list containing the `greeting_agent` and `farewell_agent` instances we just created.
 * Updating the `instruction`: We explicitly tell the root agent *about* its sub-agents and *when* it should delegate tasks to them.
 
 **Key Concept: Automatic Delegation (Auto Flow)** By providing the `sub_agents` list, ADK enables automatic delegation. When the root agent receives a user query, its LLM considers not only its own instructions and tools but also the `description` of each sub-agent. If the LLM determines that a query aligns better with a sub-agent's described capability (e.g., "Handles simple greetings"), it will automatically generate a special internal action to *transfer control* to that sub-agent for that turn. The sub-agent then processes the query using its own model, instructions, and tools.
@@ -45620,21 +46041,21 @@ So far, our agent team can handle different tasks through delegation, but each i
 
 **What is Session State?**
 
-* It's a Python dictionary (`session.state`) tied to a specific user session (identified by `APP_NAME`, `USER_ID`, `SESSION_ID`).  
-* It persists information *across multiple conversational turns* within that session.  
+* It's a Python dictionary (`session.state`) tied to a specific user session (identified by `APP_NAME`, `USER_ID`, `SESSION_ID`).
+* It persists information *across multiple conversational turns* within that session.
 * Agents and Tools can read from and write to this state, allowing them to remember details, adapt behavior, and personalize responses.
 
 **How Agents Interact with State:**
 
-1. **`ToolContext` (Primary Method):** Tools can accept a `ToolContext` object (automatically provided by ADK if declared as the last argument). This object gives direct access to the session state via `tool_context.state`, allowing tools to read preferences or save results *during* execution.  
+1. **`ToolContext` (Primary Method):** Tools can accept a `ToolContext` object (automatically provided by ADK if declared as the last argument). This object gives direct access to the session state via `tool_context.state`, allowing tools to read preferences or save results *during* execution.
 2. **`output_key` (Auto-Save Agent Response):** An `Agent` can be configured with an `output_key="your_key"`. ADK will then automatically save the agent's final textual response for a turn into `session.state["your_key"]`.
 
 **In this step, we will enhance our Weather Bot team by:**
 
-1. Using a **new** `InMemorySessionService` to demonstrate state in isolation.  
-2. Initializing session state with a user preference for `temperature_unit`.  
-3. Creating a state-aware version of the weather tool (`get_weather_stateful`) that reads this preference via `ToolContext` and adjusts its output format (Celsius/Fahrenheit).  
-4. Updating the root agent to use this stateful tool and configuring it with an `output_key` to automatically save its final weather report to the session state.  
+1. Using a **new** `InMemorySessionService` to demonstrate state in isolation.
+2. Initializing session state with a user preference for `temperature_unit`.
+3. Creating a state-aware version of the weather tool (`get_weather_stateful`) that reads this preference via `ToolContext` and adjusts its output format (Celsius/Fahrenheit).
+4. Updating the root agent to use this stateful tool and configuring it with an `output_key` to automatically save its final weather report to the session state.
 5. Running a conversation to observe how the initial state affects the tool, how manual state changes alter subsequent behavior, and how `output_key` persists the agent's response.
 
 ---
@@ -45754,8 +46175,8 @@ print("✅ State-aware 'get_weather_stateful' tool defined.")
 
 To ensure this step is self-contained and builds correctly, we first redefine the `greeting_agent` and `farewell_agent` exactly as they were in Step 3\. Then, we define our new root agent (`weather_agent_v4_stateful`):
 
-* It uses the new `get_weather_stateful` tool.  
-* It includes the greeting and farewell sub-agents for delegation.  
+* It uses the new `get_weather_stateful` tool.
+* It includes the greeting and farewell sub-agents for delegation.
 * **Crucially**, it sets `output_key="last_weather_report"` which automatically saves its final weather response to the session state.
 
 
@@ -45981,41 +46402,41 @@ ADK provides **Callbacks** – functions that allow you to hook into specific po
 
 **What is `before_model_callback`?**
 
-* It's a Python function you define that ADK executes *just before* an agent sends its compiled request (including conversation history, instructions, and the latest user message) to the underlying LLM.  
+* It's a Python function you define that ADK executes *just before* an agent sends its compiled request (including conversation history, instructions, and the latest user message) to the underlying LLM.
 * **Purpose:** Inspect the request, modify it if necessary, or block it entirely based on predefined rules.
 
 **Common Use Cases:**
 
-* **Input Validation/Filtering:** Check if user input meets criteria or contains disallowed content (like PII or keywords).  
-* **Guardrails:** Prevent harmful, off-topic, or policy-violating requests from being processed by the LLM.  
+* **Input Validation/Filtering:** Check if user input meets criteria or contains disallowed content (like PII or keywords).
+* **Guardrails:** Prevent harmful, off-topic, or policy-violating requests from being processed by the LLM.
 * **Dynamic Prompt Modification:** Add timely information (e.g., from session state) to the LLM request context just before sending.
 
 **How it Works:**
 
-1. Define a function accepting `callback_context: CallbackContext` and `llm_request: LlmRequest`.  
+1. Define a function accepting `callback_context: CallbackContext` and `llm_request: LlmRequest`.
 
-    * `callback_context`: Provides access to agent info, session state (`callback_context.state`), etc.  
-    * `llm_request`: Contains the full payload intended for the LLM (`contents`, `config`).  
+    * `callback_context`: Provides access to agent info, session state (`callback_context.state`), etc.
+    * `llm_request`: Contains the full payload intended for the LLM (`contents`, `config`).
 
-2. Inside the function: 
+2. Inside the function:
 
-    * **Inspect:** Examine `llm_request.contents` (especially the last user message).  
-    * **Modify (Use Caution):** You *can* change parts of `llm_request`.  
-    * **Block (Guardrail):** Return an `LlmResponse` object. ADK will send this response back immediately, *skipping* the LLM call for that turn.  
+    * **Inspect:** Examine `llm_request.contents` (especially the last user message).
+    * **Modify (Use Caution):** You *can* change parts of `llm_request`.
+    * **Block (Guardrail):** Return an `LlmResponse` object. ADK will send this response back immediately, *skipping* the LLM call for that turn.
     * **Allow:** Return `None`. ADK proceeds to call the LLM with the (potentially modified) request.
 
 **In this step, we will:**
 
-1. Define a `before_model_callback` function (`block_keyword_guardrail`) that checks the user's input for a specific keyword ("BLOCK").  
-2. Update our stateful root agent (`weather_agent_v4_stateful` from Step 4\) to use this callback.  
-3. Create a new runner associated with this updated agent but using the *same stateful session service* to maintain state continuity.  
+1. Define a `before_model_callback` function (`block_keyword_guardrail`) that checks the user's input for a specific keyword ("BLOCK").
+2. Update our stateful root agent (`weather_agent_v4_stateful` from Step 4\) to use this callback.
+3. Create a new runner associated with this updated agent but using the *same stateful session service* to maintain state continuity.
 4. Test the guardrail by sending both normal and keyword-containing requests.
 
 ---
 
 **1\. Define the Guardrail Callback Function**
 
-This function will inspect the last user message within the `llm_request` content. If it finds "BLOCK" (case-insensitive), it constructs and returns an `LlmResponse` to block the flow; otherwise, it returns `None`.  
+This function will inspect the last user message within the `llm_request` content. If it finds "BLOCK" (case-insensitive), it constructs and returns an `LlmResponse` to block the flow; otherwise, it returns `None`.
 
 
 ```python
@@ -46169,8 +46590,8 @@ else:
 
 Let's test the guardrail's behavior. We'll use the *same session* (`SESSION_ID_STATEFUL`) as in Step 4 to show that state persists across these changes.
 
-1. Send a normal weather request (should pass the guardrail and execute).  
-2. Send a request containing "BLOCK" (should be intercepted by the callback).  
+1. Send a normal weather request (should pass the guardrail and execute).
+2. Send a request containing "BLOCK" (should be intercepted by the callback).
 3. Send a greeting (should pass the root agent's guardrail, be delegated, and execute normally).
 
 
@@ -46256,8 +46677,8 @@ else:
 
 Observe the execution flow:
 
-1. **London Weather:** The callback runs for `weather_agent_v5_model_guardrail`, inspects the message, prints "Keyword not found. Allowing LLM call.", and returns `None`. The agent proceeds, calls the `get_weather_stateful` tool (which uses the "Fahrenheit" preference from Step 4's state change), and returns the weather. This response updates `last_weather_report` via `output_key`.  
-2. **BLOCK Request:** The callback runs again for `weather_agent_v5_model_guardrail`, inspects the message, finds "BLOCK", prints "Blocking LLM call\!", sets the state flag, and returns the predefined `LlmResponse`. The agent's underlying LLM is *never called* for this turn. The user sees the callback's blocking message.  
+1. **London Weather:** The callback runs for `weather_agent_v5_model_guardrail`, inspects the message, prints "Keyword not found. Allowing LLM call.", and returns `None`. The agent proceeds, calls the `get_weather_stateful` tool (which uses the "Fahrenheit" preference from Step 4's state change), and returns the weather. This response updates `last_weather_report` via `output_key`.
+2. **BLOCK Request:** The callback runs again for `weather_agent_v5_model_guardrail`, inspects the message, finds "BLOCK", prints "Blocking LLM call\!", sets the state flag, and returns the predefined `LlmResponse`. The agent's underlying LLM is *never called* for this turn. The user sees the callback's blocking message.
 3. **Hello Again:** The callback runs for `weather_agent_v5_model_guardrail`, allows the request. The root agent then delegates to `greeting_agent`. *Note: The `before_model_callback` defined on the root agent does NOT automatically apply to sub-agents.* The `greeting_agent` proceeds normally, calls its `say_hello` tool, and returns the greeting.
 
 You have successfully implemented an input safety layer\! The `before_model_callback` provides a powerful mechanism to enforce rules and control agent behavior *before* expensive or potentially risky LLM calls are made. Next, we'll apply a similar concept to add guardrails around tool usage itself.
@@ -46270,36 +46691,36 @@ ADK provides the `before_tool_callback` for this precise purpose.
 
 **What is `before_tool_callback`?**
 
-* It's a Python function executed just *before* a specific tool function runs, after the LLM has requested its use and decided on the arguments.  
+* It's a Python function executed just *before* a specific tool function runs, after the LLM has requested its use and decided on the arguments.
 * **Purpose:** Validate tool arguments, prevent tool execution based on specific inputs, modify arguments dynamically, or enforce resource usage policies.
 
 **Common Use Cases:**
 
-* **Argument Validation:** Check if arguments provided by the LLM are valid, within allowed ranges, or conform to expected formats.  
-* **Resource Protection:** Prevent tools from being called with inputs that might be costly, access restricted data, or cause unwanted side effects (e.g., blocking API calls for certain parameters).  
+* **Argument Validation:** Check if arguments provided by the LLM are valid, within allowed ranges, or conform to expected formats.
+* **Resource Protection:** Prevent tools from being called with inputs that might be costly, access restricted data, or cause unwanted side effects (e.g., blocking API calls for certain parameters).
 * **Dynamic Argument Modification:** Adjust arguments based on session state or other contextual information before the tool runs.
 
 **How it Works:**
 
-1. Define a function accepting `tool: BaseTool`, `args: Dict[str, Any]`, and `tool_context: ToolContext`.  
+1. Define a function accepting `tool: BaseTool`, `args: Dict[str, Any]`, and `tool_context: ToolContext`.
 
-    * `tool`: The tool object about to be called (inspect `tool.name`).  
-    * `args`: The dictionary of arguments the LLM generated for the tool.  
-    * `tool_context`: Provides access to session state (`tool_context.state`), agent info, etc.  
+    * `tool`: The tool object about to be called (inspect `tool.name`).
+    * `args`: The dictionary of arguments the LLM generated for the tool.
+    * `tool_context`: Provides access to session state (`tool_context.state`), agent info, etc.
 
-2. Inside the function:  
+2. Inside the function:
 
-    * **Inspect:** Examine the `tool.name` and the `args` dictionary.  
-    * **Modify:** Change values within the `args` dictionary *directly*. If you return `None`, the tool runs with these modified args.  
-    * **Block/Override (Guardrail):** Return a **dictionary**. ADK treats this dictionary as the *result* of the tool call, completely *skipping* the execution of the original tool function. The dictionary should ideally match the expected return format of the tool it's blocking.  
+    * **Inspect:** Examine the `tool.name` and the `args` dictionary.
+    * **Modify:** Change values within the `args` dictionary *directly*. If you return `None`, the tool runs with these modified args.
+    * **Block/Override (Guardrail):** Return a **dictionary**. ADK treats this dictionary as the *result* of the tool call, completely *skipping* the execution of the original tool function. The dictionary should ideally match the expected return format of the tool it's blocking.
     * **Allow:** Return `None`. ADK proceeds to execute the actual tool function with the (potentially modified) arguments.
 
 **In this step, we will:**
 
-1. Define a `before_tool_callback` function (`block_paris_tool_guardrail`) that specifically checks if the `get_weather_stateful` tool is called with the city "Paris".  
-2. If "Paris" is detected, the callback will block the tool and return a custom error dictionary.  
-3. Update our root agent (`weather_agent_v6_tool_guardrail`) to include *both* the `before_model_callback` and this new `before_tool_callback`.  
-4. Create a new runner for this agent, using the same stateful session service.  
+1. Define a `before_tool_callback` function (`block_paris_tool_guardrail`) that specifically checks if the `get_weather_stateful` tool is called with the city "Paris".
+2. If "Paris" is detected, the callback will block the tool and return a custom error dictionary.
+3. Update our root agent (`weather_agent_v6_tool_guardrail`) to include *both* the `before_model_callback` and this new `before_tool_callback`.
+4. Create a new runner for this agent, using the same stateful session service.
 5. Test the flow by requesting weather for allowed cities and the blocked city ("Paris").
 
 ---
@@ -46460,8 +46881,8 @@ else:
 
 Let's test the interaction flow, again using the same stateful session (`SESSION_ID_STATEFUL`) from the previous steps.
 
-1. Request weather for "New York": Passes both callbacks, tool executes (using Fahrenheit preference from state).  
-2. Request weather for "Paris": Passes `before_model_callback`. LLM decides to call `get_weather_stateful(city='Paris')`. `before_tool_callback` intercepts, blocks the tool, and returns the error dictionary. Agent relays this error.  
+1. Request weather for "New York": Passes both callbacks, tool executes (using Fahrenheit preference from state).
+2. Request weather for "Paris": Passes `before_model_callback`. LLM decides to call `get_weather_stateful(city='Paris')`. `before_tool_callback` intercepts, blocks the tool, and returns the error dictionary. Agent relays this error.
 3. Request weather for "London": Passes both callbacks, tool executes normally.
 
 
@@ -46547,8 +46968,8 @@ else:
 
 Analyze the output:
 
-1. **New York:** The `before_model_callback` allows the request. The LLM requests `get_weather_stateful`. The `before_tool_callback` runs, inspects the args (`{'city': 'New York'}`), sees it's not "Paris", prints "Allowing tool..." and returns `None`. The actual `get_weather_stateful` function executes, reads "Fahrenheit" from state, and returns the weather report. The agent relays this, and it gets saved via `output_key`.  
-2. **Paris:** The `before_model_callback` allows the request. The LLM requests `get_weather_stateful(city='Paris')`. The `before_tool_callback` runs, inspects the args, detects "Paris", prints "Blocking tool execution\!", sets the state flag, and returns the error dictionary `{'status': 'error', 'error_message': 'Policy restriction...'}`. The actual `get_weather_stateful` function is **never executed**. The agent receives the error dictionary *as if it were the tool's output* and formulates a response based on that error message.  
+1. **New York:** The `before_model_callback` allows the request. The LLM requests `get_weather_stateful`. The `before_tool_callback` runs, inspects the args (`{'city': 'New York'}`), sees it's not "Paris", prints "Allowing tool..." and returns `None`. The actual `get_weather_stateful` function executes, reads "Fahrenheit" from state, and returns the weather report. The agent relays this, and it gets saved via `output_key`.
+2. **Paris:** The `before_model_callback` allows the request. The LLM requests `get_weather_stateful(city='Paris')`. The `before_tool_callback` runs, inspects the args, detects "Paris", prints "Blocking tool execution\!", sets the state flag, and returns the error dictionary `{'status': 'error', 'error_message': 'Policy restriction...'}`. The actual `get_weather_stateful` function is **never executed**. The agent receives the error dictionary *as if it were the tool's output* and formulates a response based on that error message.
 3. **London:** Behaves like New York, passing both callbacks and executing the tool successfully. The new London weather report overwrites the `last_weather_report` in the state.
 
 You've now added a crucial safety layer controlling not just *what* reaches the LLM, but also *how* the agent's tools can be used based on the specific arguments generated by the LLM. Callbacks like `before_model_callback` and `before_tool_callback` are essential for building robust, safe, and policy-compliant agent applications.
@@ -46676,7 +47097,7 @@ To add the ADK docs MCP server to [Antigravity](https://antigravity.google/)
             "mcpdoc",
             "mcpdoc",
             "--urls",
-            "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
+            "AgentDevelopmentKit:https://adk.dev/llms.txt",
             "--transport",
             "stdio"
           ]
@@ -46691,7 +47112,7 @@ To add the ADK docs MCP server to
 [Claude Code](https://code.claude.com/docs/en/overview):
 
 ```bash
-claude mcp add adk-docs --transport stdio -- uvx --from mcpdoc mcpdoc --urls AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt --transport stdio
+claude mcp add adk-docs --transport stdio -- uvx --from mcpdoc mcpdoc --urls AgentDevelopmentKit:https://adk.dev/llms.txt --transport stdio
 ```
 
 ### Cursor
@@ -46713,7 +47134,7 @@ To add the ADK docs MCP server to [Cursor](https://cursor.com/) (requires
             "mcpdoc",
             "mcpdoc",
             "--urls",
-            "AgentDevelopmentKit:https://google.github.io/adk-docs/llms.txt",
+            "AgentDevelopmentKit:https://adk.dev/llms.txt",
             "--transport",
             "stdio"
           ]
@@ -46736,8 +47157,8 @@ every documentation update and are always up to date.
 
 | File | Description | URL |
 |------|-------------|-----|
-| `llms.txt` | Documentation index with links | [`google.github.io/adk-docs/llms.txt`](https://google.github.io/adk-docs/llms.txt) |
-| `llms-full.txt` | Full documentation in a single file | [`google.github.io/adk-docs/llms-full.txt`](https://google.github.io/adk-docs/llms-full.txt) |
+| `llms.txt` | Documentation index with links | [`adk.dev/llms.txt`](https://adk.dev/llms.txt) |
+| `llms-full.txt` | Full documentation in a single file | [`adk.dev/llms-full.txt`](https://adk.dev/llms-full.txt) |
 
 ================
 File: docs/tutorials/index.md
@@ -46816,7 +47237,7 @@ and includes an AI-powered assistant to help you build agents.
 
 The Visual Builder interface is part of the ADK Web tool user interface.
 Make sure you have ADK library
-[installed](/adk-docs/get-started/installation/#python)
+[installed](/get-started/installation/#python)
 and then run the ADK Web user interface.
 
 ```console
@@ -46863,31 +47284,31 @@ The tool supports all the essential components for building an ADK agent workflo
 *   **Agents**
     *   **Root Agent**: The primary controlling agent for a workflow. All other agents in
         an ADK agent workflow are considered Sub Agents.
-    *   [**LLM Agent:**](/adk-docs/agents/llm-agents/)
+    *   [**LLM Agent:**](/agents/llm-agents/)
         An agent powered by a generative AI model.
-    *   [**Sequential Agent:**](/adk-docs/agents/workflow-agents/sequential-agents/)
+    *   [**Sequential Agent:**](/agents/workflow-agents/sequential-agents/)
         A workflow agent that executes a series of sub-agents in a sequence.
-    *   [**Loop Agent:**](/adk-docs/agents/workflow-agents/loop-agents/)
+    *   [**Loop Agent:**](/agents/workflow-agents/loop-agents/)
         A workflow agent that repeatedly executes a sub-agent until a certain condition is met.
-    *   [**Parallel Agent:**](/adk-docs/agents/workflow-agents/parallel-agents/)
+    *   [**Parallel Agent:**](/agents/workflow-agents/parallel-agents/)
         A workflow agent that executes multiple sub-agents concurrently.
 *   **Tools**
-    *   [**Prebuilt tools:**](/adk-docs/tools/built-in-tools/)
+    *   [**Prebuilt tools:**](/tools/built-in-tools/)
         A limited set of ADK-provided tools can be added to agents.
-    *   [**Custom tools:**](/adk-docs/tools-custom/)
+    *   [**Custom tools:**](/tools-custom/)
         You can build and add custom tools to your workflow.
 *   **Components**
-    *   [**Callbacks**](/adk-docs/callbacks/)
+    *   [**Callbacks**](/callbacks/)
         A flow control component that lets you modify the behavior of agents at the start
         and end of agent workflow events.
 
 Some advanced ADK features are not supported by Visual Builder due to
 limitations of the Agent Config feature. For more information, see the
-Agent Config [Known limitations](/adk-docs/agents/config/#known-limitations).
+Agent Config [Known limitations](/agents/config/#known-limitations).
 
 ## Project code output
 
-The Visual Builder tool generates code in the [Agent Config](/adk-docs/agents/config/)
+The Visual Builder tool generates code in the [Agent Config](/agents/config/)
 format, using `.yaml` configuration files for agents and Python code for custom
 tools. These files are generated in a subfolder of the directory where you ran
 the ADK Web interface. The following listing shows an example layout for a
@@ -46920,8 +47341,8 @@ Use the default model if you need to configure that.
 Check out more information on the Agent Config code format used by Visual Builder
 and the available options:
 
-*   [Agent Config](/adk-docs/agents/config/)
-*   [Agent Config YAML schema](/adk-docs/api-reference/agentconfig/)
+*   [Agent Config](/agents/config/)
+*   [Agent Config YAML schema](/api-reference/agentconfig/)
 
 ================
 File: docs/workflows/collaboration.md
@@ -46996,7 +47417,7 @@ identifies and assigns tasks to the subagents. When a subagent completes
 a task, it automatically returns to the coordinator agent.
 For more information about structuring data using ***input_schema*** and
 ***output_schema*** with agents, subagents, and workflow nodes, see
-[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+[Data handling for agent workflows](/workflows/data-handling/).
 
 ## Mode configuration and behaviors
 
@@ -47370,7 +47791,7 @@ root_agent = Workflow(
 ```
 
 For a complete, but simplified version of this workflow, see
-[Graph-based agent workflows](/adk-docs/workflows/#get-started).
+[Graph-based agent workflows](/workflows/#get-started).
 
 ================
 File: docs/workflows/dynamic.md
@@ -47382,7 +47803,7 @@ File: docs/workflows/dynamic.md
 </div>
 
 The ADK framework provides a programmatic way to define workflows as a more
-flexible and powerful alternative to [graph-based workflows](/adk-docs/workflows/).
+flexible and powerful alternative to [graph-based workflows](/workflows/).
 Using a graph-based approach provides a convenient way to compose multi-step,
 static process structures with workflow nodes. However, if the logic path for
 your workflow is more complex, with iterative loops or complex branching logic,
@@ -47416,7 +47837,7 @@ the benefits of dynamic workflows in ADK:
     [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
 
 For information on installing ADK 2.0 to test this feature, see
-[Welcome to ADK 2.0](/adk-docs/2.0/).
+[Welcome to ADK 2.0](/2.0/).
 
 ## Get started
 
@@ -47518,7 +47939,7 @@ root_agent = Workflow(
 ## Data handling
 
 When using dynamic workflows with ADK, passing data is simpler than
-[graph-based workflows](/adk-docs/workflows/) because, with a workflow,
+[graph-based workflows](/workflows/) because, with a workflow,
 the ***Context*** class's ***run_node()*** method returns the node's output
 directly. This eliminates the need to directly handle session state or complex
 routing outputs for data transfer. The following code example shows how you can
@@ -47572,12 +47993,12 @@ async def city_workflow(ctx: Context):
 ```
 
 For more information on data handling between workflow nodes, see
-[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+[Data handling for agent workflows](/workflows/data-handling/).
 
 ## Workflow routes
 
 Dynamic workflows in ADK provide more flexibility in terms of routing logic
-compared to [graph-based workflows](/adk-docs/workflows/), including
+compared to [graph-based workflows](/workflows/), including
 iterative loops or more complex branching logic. This section describes some of
 the techniques that you can use for routing.
 
@@ -47790,7 +48211,7 @@ logic, this approach allows you to define a specific, step-wise process workflow
 in code, providing improved precision and reliability over purely prompt-based
 agents.
 
-![Graph-based flight upgrade agent](/adk-docs/assets/graph-workflow-router.svg)
+![Graph-based flight upgrade agent](/assets/graph-workflow-router.svg)
 
 ```python
 root_agent = Workflow(
@@ -47827,7 +48248,7 @@ defined steps and process management.
     [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
 
 Get started with graph-based workflows in ADK by checking out
-[Graph-based agent workflows](/adk-docs/workflows/).
+[Graph-based agent workflows](/workflows/).
 
 ## Nodes
 
@@ -47846,7 +48267,7 @@ def my_function_node(node_input: str):
 ```
 
 For more information about transferring data between nodes, see .
-[Data handling for agent workflows](/adk-docs/workflows/data-handling/).
+[Data handling for agent workflows](/workflows/data-handling/).
 
 ## Workflow graphs syntax
 
@@ -47869,7 +48290,7 @@ root_agent = Workflow(
     You can add ***Agents***, or ***LlmAgents***, to graph-based workflows,
     however they must be set to a task or single-turn mode. For more
     information about agent modes, see
-    [Build collaborative agent teams](/adk-docs/workflows/collaboration/#mode-configuration-and-behaviors).
+    [Build collaborative agent teams](/workflows/collaboration/#mode-configuration-and-behaviors).
 
 ### Route sequences
 
@@ -47941,7 +48362,7 @@ You accomplish this by using a ***JoinNode*** object, which waits for each
 parallel task to complete and then passes the collection of outputs from these
 nodes to the next node.
 
-![Tasks connecting to a JoinNode](/adk-docs/assets/graph-joinnode.svg)
+![Tasks connecting to a JoinNode](/assets/graph-joinnode.svg)
 
 **Figure 2.** The output of parallel task nodes can be assembled using a
 JoinNode object.
@@ -47976,7 +48397,7 @@ functionality for specific tasks into reusable workflows. One or more
 ***Workflow*** objects can be used as a node within the graph of another
 workflow agent to accomplish this goal.
 
-![Nested Workflows inside a parent Workflow](/adk-docs/assets/graph-workflow-nodes.svg)
+![Nested Workflows inside a parent Workflow](/assets/graph-workflow-nodes.svg)
 
 **Figure 3.** Nested ***Workflows*** as nodes inside a parent ***Workflow***.
 
@@ -48158,14 +48579,14 @@ capabilities. Graph-based workflows allow you to define your agent logic as a
 graph of execution nodes and edges, combining AI-powered agents with
 deterministic tools and code.
 
-![Graph-based flight upgrade agent](/adk-docs/assets/workflow-design.svg)
+![Graph-based flight upgrade agent](/assets/workflow-design.svg)
 
 **Figure 1.** A graph-based agent design for flight upgrades, combining workflow
 nodes of different types, including Functions, human input, Tools, and LLM
 capabilities.
 
-Prebuilt ADK [workflow agents](/adk-docs/agents/workflow-agents/),
-such as [Sequential Agents](/adk-docs/agents/workflow-agents/sequential-agents/),
+Prebuilt ADK [workflow agents](/agents/workflow-agents/),
+such as [Sequential Agents](/agents/workflow-agents/sequential-agents/),
 provide a defined process flow control only across a set of agents. You can continue to
 build standard ADK agents with long prompts, tools, and use them in graph-based
 workflow agents. When you need more precise control, workflow agent graphs give
@@ -48189,7 +48610,7 @@ provide the following advantages:
     welcome your
     [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
 
-Follow the instructions for [installing ADK 2.0](/adk-docs/2.0/#install) and then
+Follow the instructions for [installing ADK 2.0](/2.0/#install) and then
 check out the instructions below to get started with graph-based workflows.
 
 ## Get started
@@ -48251,7 +48672,7 @@ with a longer prompt and a tool call, the graph-based approach gives you precise
 control over the task execution order and the data output from each step.
 
 For more information about data handling with graph-based workflows, see
-[Data handling with workflow nodes and agents](/adk-docs/workflows/data-handling/).
+[Data handling with workflow nodes and agents](/workflows/data-handling/).
 
 ## Build processes with graphs
 
@@ -48268,7 +48689,7 @@ as an execution ***Node*** in a graph and each node can be an AI agent, Tool, or
 your programmed code. The following diagram illustrates how a simple
 prompt-based agent would translate into a workflow agent graph:
 
-![Prompt-based agent to graph-based workflow](/adk-docs/assets/prompts-to-graphs.svg)
+![Prompt-based agent to graph-based workflow](/assets/prompts-to-graphs.svg)
 
 **Figure 2.** Structure of prompt-based agent instructions translated into a
 graph-based workflow.
@@ -48326,7 +48747,7 @@ This sample code demonstrates how you can use an ***edges*** array to define a
 graph with routes between a set of *nodes*, which are discrete tasks that can
 include agents, Tools, your code, and even additional ***Workflows***. For
 information about building advanced graphs for workflows, see
-[Build graph routes for workflow agents](/adk-docs/workflows/graph-routes/).
+[Build graph routes for workflow agents](/workflows/graph-routes/).
 
 ## Known limitations {#known-limitations}
 
@@ -48336,429 +48757,8 @@ are *not compatible* with the following ADK features:
 -   **Live Streaming** functionality is not compatible with graph-based
     workflows.
 -   **Integrations:** Some third-party
-    [Integrations](/adk-docs/integrations/) may not be
+    [Integrations](/integrations/) may not be
     compatible with graph-based workflows.
-
-================
-File: docs/community.md
-================
-# Community Resources
-
-Welcome! This page highlights resources built and maintained by the Agent
-Development Kit community.
-
-!!! info
-
-    Google and the ADK team do not provide support for the content linked in
-    these external community resources.
-
-## Getting Started
-
-<div class="resource-grid">
-  <a href="https://www.youtube.com/watch?v=zgrOwow_uTQ" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-agent-development-kit.jpg" alt="Introducing Agent Development Kit">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Demo</div>
-      <h3>📺 Introducing Agent Development Kit</h3>
-      <p>A demo of building a multi-agent travel planner, showcasing core design principles.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=44C8u0CDtSo" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-building-your-first-agent.jpg" alt="Building your first agent with ADK">
-    </div>
-    <div class="card-content">
-      <div class="type">Video</div>
-      <h3>📺 Getting started with Agent Development Kit</h3>
-      <p>Learn the fundamentals of agent definition and how to run and debug your first agent.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=5ZmaWY7UX6k" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-agent-tools-101.jpg" alt="ADK Agent Tools 101">
-    </div>
-    <div class="card-content">
-      <div class="type">Video</div>
-      <h3>📺 Getting Started with ADK Tools</h3>
-      <p>A guide to building a software bug assistant using tools like MCP and Google Search.</p>
-    </div>
-  </a>
-</div>
-
-## ADK Community Calls
-
-!!! tip "Stay Connected"
-
-    Join the [ADK Community Google Group](https://groups.google.com/g/adk-community) for updates, calendar invites, and to connect with the ADK community.
-
-    See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
-
-<div class="resource-grid">
-  <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/bPngDY7EuOQ/maxresdefault.jpg" alt="ADK Community Call Mar 2026">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Mar 2026 Recording</h3>
-      <p>Discussions include the ADK 2.0 alpha release, Workflows for graph-based agent composition, Agent Modes for structured multi-agent coordination, and a community spotlight on Restate durable agents.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=cXDr4RYJxK0" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/cXDr4RYJxK0/maxresdefault.jpg" alt="ADK Community Call Feb 2026">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Feb 2026 Recording</h3>
-      <p>Discussions include ADK evaluations with built-in metrics, token-based context compaction, the BigQuery observability plugin, and a community spotlight on Redis integration.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=h9Lueiqo89E" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/h9Lueiqo89E/maxresdefault.jpg" alt="ADK Community Call Jan 2026">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Jan 2026 Recording</h3>
-      <p>Discussions include Session Service schema for cross-language support, TypeScript multi-agent demo, API Registry for MCP servers, and third-party tool integrations.</p>
-    </div>
-  </a>
-
-</div>
-
-## Courses & Deep Dives
-
-<div class="resource-grid">
-  <a href="https://www.kaggle.com/learn-guide/5-day-agents" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://storage.googleapis.com/kaggle-media/Images/AI%20AGENT%20COURSE%20ILLUSTRATION.png" alt="ADK Masterclass Thumbnail">
-    </div>
-    <div class="card-content">
-      <div class="type">Online Course</div>
-      <h3>🎓 5-Day AI Agents Intensive Course with Google</h3>
-      <p>Build with core ADK agent components including, models, tools, memory, evaluation, and deployment.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=P4VFL9nIaIA" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-adk-masterclass.jpg" alt="ADK Masterclass Thumbnail">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Course</div>
-      <h3>🎓 ADK Masterclass: Build AI Agents & Automate Workflows</h3>
-      <p>A complete crash course that takes you from beginner to expert with 12 hands-on examples.</p>
-    </div>
-  </a>
-  <a href="https://raphaelmansuy.github.io/adk_training/" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-adk-training-hub.png" alt="ADK Training Hub Banner">
-    </div>
-    <div class="card-content">
-      <div class="type">Website</div>
-      <h3>🎓 ADK Training Hub</h3>
-      <p>Master ADK from first principles to production with comprehensive tutorials and examples.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/playlist?list=PLLrA_pU9-Gz2HwepRUVpq1TEPuYWo_fSi" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-master-agentic-ai-with-adk.jpg" alt="Master Agentic AI with ADK">
-    </div>
-    <div class="card-content">
-      <div class="type">YouTube Playlist</div>
-      <h3>🎓 Master Agentic AI with ADK</h3>
-      <p>A step-by-step playlist covering everything from setup to deploying and scaling agents.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/playlist?list=PL6tW9BrhiPTAZts0W5nQS9dbW6VMnLKab" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-adk-course.jpg" alt="ADK Course">
-    </div>
-    <div class="card-content">
-      <div class="type">YouTube Playlist</div>
-      <h3>🎓 Google ADK End-to-end Course</h3>
-      <p>Build, deploy, and scale production-ready agents with this in-depth course series.</p>
-    </div>
-  </a>
-  <a href="https://iamulya.one/tags/building-intelligent-agents-with-google-adk/" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-building-intelligent-agents-with-adk.jpg" alt="Building intelligent agents with ADK">
-    </div>
-    <div class="card-content">
-      <div class="type">Blog Series</div>
-      <h3>🎓 Building Intelligent Agents with Google ADK</h3>
-      <p>A developer's guide to building intelligent agents with Google's code-first Python toolkit.</p>
-    </div>
-  </a>
-  <a href="https://github.com/arjunprabhulal/google-adk-masterclass" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-adk-masterclass-hands-on.png" alt="Google ADK Masterclass Hands-on Series">
-    </div>
-    <div class="card-content">
-      <div class="type">Online Course</div>
-      <h3>🎓 Google ADK Masterclass: Hands-on Series</h3>
-      <p>Build production-ready AI agents with 20 modules covering agents, workflows, tools, memory, and MCP integrations.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/playlist?list=PL0Zc2RFDZsM_MkHOzWNJpaT4EH5fQxA8n" class="resource-card">
-      <div class="card-image-wrapper">
-        <img src="../assets/community-adk-news-jp.jpg" alt="ADK News">
-      </div>
-      <div class="card-content">
-        <div class="type">YouTube Playlist</div>
-        <h3>📻️ ADK News - ADK Podcast in Japanese</h3>
-        <p>An auto-generated Japanese podcast about ADK, created by an ADK agent that covers commit logs, release notes, and blog posts.</p>
-      </div>
-    </a>
-</div>
-
-## Agent Tutorials and Demos
-
-<div class="resource-grid">
-  <a href="https://www.youtube.com/watch?v=efcUXoMX818" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-data-science-agent.jpg" alt="Building a data science agent with ADK">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Tutorial</div>
-      <h3>📖 How to Build a Data Science Agent with ADK</h3>
-      <p>A deep dive into building a multi-agent system for database queries, Python analysis, and BigQuery ML.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=hPzjkQFV5yI" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-brand-search-optimization-agent.jpg" alt="Building a brand search optimization agent with ADK">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Tutorial</div>
-      <h3>📖 Build a Browser Use Agent with ADK and Selenium</h3>
-      <p>Learn to build an agent that enhances a retail website's product data by filling in missing information.</p>
-    </div>
-  </a>
-  <a href="https://github.com/google/adk-docs/blob/main/examples/python/notebooks/shop_agent.ipynb" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-shoppers-concierge-demo.jpg" alt="ADK Shopper's Concierge Demo">
-    </div>
-    <div class="card-content">
-      <div class="type">Jupyter Notebook</div>
-      <h3>📖 Build an E-commerce Recommendation Agent</h3>
-      <p>A tutorial on creating a simple multi-agent system for generative e-commerce recommendations.</p>
-    </div>
-  </a>
-  <a href="https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-adk-vertex-ai-live-api.png" alt="ADK + Vertex AI Live API">
-    </div>
-    <div class="card-content">
-      <div class="type">Blog Post</div>
-      <h3>📖 Google ADK + Vertex AI Live API</h3>
-      <p>Go beyond the ADK CLI by building real-time, streaming experiences with the Live API.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=LwHPYyw7u6U" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-shoppers-concierge-demo.jpg" alt="ADK Shopper's Concierge Demo">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Demo</div>
-      <h3>📺 Shopper's Concierge Demo</h3>
-      <p>See how AI agents can revolutionize shopping with personalized, real-time recommendations.</p>
-    </div>
-  </a>
-  <a href="https://agentdirectory.folch.ai/" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-agent-directory.png" alt="ADK Agent Directory">
-    </div>
-    <div class="card-content">
-      <div class="type">Gallery</div>
-      <h3>📖 ADK Agent Directory</h3>
-      <p>Discover and test production-ready ADK agents for web search, image generation, research, and more.</p>
-    </div>
-  </a>
-</div>
-
-## ADK for Java
-
-<div class="resource-grid">
-  <a href="https://www.youtube.com/watch?v=L6V6aQixOZU" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-discover-adk-java.jpg" alt="Discover ADK Java for Building AI Agents">
-    </div>
-    <div class="card-content">
-      <div class="type">Video Talk</div>
-      <h3>☕ Discover ADK Java for Building AI Agents</h3>
-      <p>A presentation to help you build your first AI agents in Java.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/playlist?list=PLLMxXO6kMiNhP87WYQ8CeC3xpV3EnF9cu" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-google-adk-for-java-experiments.jpg" alt="ADK for Java (Experiments)">
-    </div>
-    <div class="card-content">
-      <div class="type">YouTube Playlist</div>
-      <h3>☕ Google ADK for Java Tutorials</h3>
-      <p>Step-by-step tutorials covering A2A, MCP, multi-agent systems, and callbacks in Java.</p>
-    </div>
-  </a>
-  <a href="https://codelabs.developers.google.com/adk-java-getting-started" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="../assets/community-build-ai-agents-with-adk-for-java.png" alt="Build AI Agents with ADK for Java">
-    </div>
-    <div class="card-content">
-      <div class="type">Codelab</div>
-      <h3>☕ Build AI Agents with ADK for Java</h3>
-      <p>Move beyond simple LLM calls to create autonomous Java agents that reason, plan, and use tools.</p>
-    </div>
-  </a>
-</div>
-
-## Translations
-
-Community-provided translations of the ADK documentation.
-
-<ul class="translation-list">
-  <li><a href="https://adk.wiki/">🇨🇳 Chinese (中文) Documentation</a></li>
-  <li><a href="https://adk-labs.github.io/adk-docs/ko/">🇰🇷 Korean (한국어) Documentation</a></li>
-  <li><a href="https://adk-labs.github.io/adk-docs/ja/">🇯🇵 Japanese (日本語) Documentation</a></li>
-  <li><a href="https://adk-es.fabian-castro-c.dev/">🇪🇸 Spanish (Español) Documentation</a></li>
-</ul>
-
-## Contributing Your Resource
-
-Have an ADK resource to share (tutorial, translation, tool, video, or example)?
-
-Refer to the steps in the **[Contributing Guide](contributing-guide.md)** for more information on how to get involved!
-
-Thank you for your contributions to Agent Development Kit! ❤️
-
-================
-File: docs/contributing-guide.md
-================
-Thank you for your interest in contributing to Agent Development Kit (ADK)! We
-welcome contributions to the core frameworks, documentation, and related
-components, which are listed below.
-
-This guide provides information on how to get involved.
-
-## Preparing to contribute
-
-### Choose the right repository
-
-The ADK project is split across several repositories. Find the right one for
-your contribution:
-
-Repository | Description | Detailed Guide
---- | --- | ---
-[`google/adk-python`](https://github.com/google/adk-python) | Contains the core Python library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-python/blob/main/CONTRIBUTING.md)
-[`google/adk-python-community`](https://github.com/google/adk-python-community) | Contains community-contributed tools, integrations, and scripts | [`CONTRIBUTING.md`](https://github.com/google/adk-python-community/blob/main/CONTRIBUTING.md)
-[`google/adk-js`](https://github.com/google/adk-js) | Contains the core JavaScript library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-js/blob/main/CONTRIBUTING.md)
-[`google/adk-go`](https://github.com/google/adk-go) | Contains the core Go library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-go/blob/main/CONTRIBUTING.md)
-[`google/adk-java`](https://github.com/google/adk-java) | Contains the core Java library source code | [`CONTRIBUTING.md`](https://github.com/google/adk-java/blob/main/CONTRIBUTING.md)
-[`google/adk-docs`](https://github.com/google/adk-docs) | Contains the source for the documentation site you are currently reading | [`CONTRIBUTING.md`](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md)
-[`google/adk-samples`](https://github.com/google/adk-samples) | Contains sample agents for ADK | [`CONTRIBUTING.md`](https://github.com/google/adk-samples/blob/main/CONTRIBUTING.md)
-[`google/adk-web`](https://github.com/google/adk-web) | Contains the source for the `adk web` dev UI |
-
-These repositories typically include a `CONTRIBUTING.md` file in the root of
-their repository with more detailed information on requirements, testing, code
-review processes, etc. for that particular component.
-
-### Sign a CLA
-
-Contributions to this project must be accompanied by a
-[Contributor License Agreement](https://cla.developers.google.com/about) (CLA).
-You (or your employer) retain the copyright to your contribution; this simply
-gives us permission to use and redistribute your contributions as part of the
-project.
-
-If you or your current employer have already signed the Google CLA (even if it
-was for a different project), you probably don't need to do it again.
-
-Visit <https://cla.developers.google.com/> to see your current agreements or to
-sign a new one.
-
-### Review community guidelines
-
-This project follows
-[Google's Open Source Community Guidelines](https://opensource.google/conduct/).
-
-## Join the discussion
-
-Have questions, want to share ideas, or discuss how you're using ADK? Head over
-to our **[Python](https://github.com/google/adk-python/discussions)**,
-**[TypeScript](https://github.com/google/adk-js/discussions)**,
-**[Go](https://github.com/google/adk-go/discussions)**, or
-**[Java](https://github.com/google/adk-java/discussions)** Discussions!
-
-This is the primary place for:
-
-* Asking questions and getting help from the community and maintainers.
-* Sharing your projects or use cases (`Show and Tell`).
-* Discussing potential features or improvements before creating a formal issue.
-* General conversation about ADK.
-
-## How to contribute
-
-There are several ways you can contribute to ADK:
-
-### Reporting issues { #reporting-issues-bugs-errors }
-
-If you find a bug in the framework or an error in the documentation:
-
-* **Framework Bugs:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
-[`google/adk-js`](https://github.com/google/adk-js/issues/new),
-[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
-[`google/adk-java`](https://github.com/google/adk-java/issues/new)
-* **Documentation Errors:** [Open an issue in `google/adk-docs` (use bug template)](https://github.com/google/adk-docs/issues/new?template=bug_report.md)
-
-### Suggesting enhancements { #suggesting-enhancements }
-
-Have an idea for a new feature or an improvement to an existing one?
-
-* **Framework Enhancements:** Open an issue in [`google/adk-python`](https://github.com/google/adk-python/issues/new),
-[`google/adk-js`](https://github.com/google/adk-js/issues/new),
-[`google/adk-go`](https://github.com/google/adk-go/issues/new), or
-[`google/adk-java`](https://github.com/google/adk-java/issues/new)
-* **Documentation Enhancements:** [Open an issue in `google/adk-docs`](https://github.com/google/adk-docs/issues/new)
-
-### Improving documentation { #improving-documentation }
-
-Found a typo, unclear explanation, or missing information? Submit your changes directly:
-
-* **How:** Submit a Pull Request (PR) with your suggested improvements.
-* **Where:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
-
-### Writing code { #writing-code }
-
-Help fix bugs, implement new features or contribute code samples for the documentation:
-
-**How:** Submit a Pull Request (PR) with your code changes.
-
-* **Python Framework:** [Create a Pull Request in `google/adk-python`](https://github.com/google/adk-python/pulls)
-* **TypeScript Framework:** [Create a Pull Request in `google/adk-js`](https://github.com/google/adk-js/pulls)
-* **Go Framework:** [Create a Pull Request in `google/adk-go`](https://github.com/google/adk-go/pulls)
-* **Java Framework:** [Create a Pull Request in `google/adk-java`](https://github.com/google/adk-java/pulls)
-* **Documentation:** [Create a Pull Request in `google/adk-docs`](https://github.com/google/adk-docs/pulls)
-
-### Code reviews
-
-* All contributions, including those from project members, undergo a review
-  process.
-
-* We use GitHub Pull Requests (PRs) for code submission and review. Please
-  ensure your PR clearly describes the changes you are making.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the
-project's
-[Apache 2.0 License](https://github.com/google/adk-docs/blob/main/LICENSE).
-
-## Questions?
-
-If you get stuck or have questions, feel free to open an issue on the relevant
-repository's issue tracker.
 
 ================
 File: docs/index.md
@@ -48786,29 +48786,18 @@ from simple tasks to complex workflows.
 
 ??? tip "News: ADK Go 1.0.0 released!"
 
-    ADK Go 1.0.0 release adds several major features, including a replay plugin, 
-    model support through Apigee, improved parallel function call execution, and
-    simplified agent execution. For more details on this release, see the
-    [ADK Go v1.0.0 release notes](https://github.com/google/adk-go/releases/tag/v1.0.0).
+    ADK Go 1.0.0 release adds several major features, including OpenTelemetry
+    integration, self-healing logic using plugins, and improved human input support.
+    For more details on this release, see the
+    [ADK Go v1.0 announcement](https://developers.googleblog.com/adk-go-10-arrives/).
 
 ??? tip "News: ADK Java 1.0.0 released!"
 
-    ADK Java 1.0.0 is now available! This release includes several 
-    bug fixes and enhancements. Read more about it in the 
-    [blog announcement](https://developers.googleblog.com/announcing-adk-for-java-100-building-the-future-of-ai-agents-in-java/). 
-    Upgrade to ADK Java 1.0.0 to take advantage of these enhancements 
+    ADK Java 1.0.0 is now available! This release includes several
+    bug fixes and enhancements. Read more about it in the
+    [blog announcement](https://developers.googleblog.com/announcing-adk-for-java-100-building-the-future-of-ai-agents-in-java/).
+    Upgrade to ADK Java 1.0.0 to take advantage of these enhancements
     and ensure optimal performance in your applications.
-
-??? danger "ADK Python Security Advisory: LiteLLM supply chain compromise"
-
-    Unauthorized code was identified in LiteLLM versions 1.82.7 and 1.82.8 on
-    PyPI on March 24, 2026. If you use ADK Python with the `eval` or
-    `extensions` extras, update to the latest version of ADK Python immediately.
-    If you installed or upgraded LiteLLM during this period, rotate all secrets
-    and credentials. For details and required actions, refer to the [ADK
-    security advisory](https://github.com/google/adk-python/issues/5005) and
-    [LiteLLM's Security Update: Suspected Supply Chain
-    Incident](https://docs.litellm.ai/blog/security-update-march-2026).
 
 <div id="centered-install-tabs" class="install-command-container" markdown="1">
 
@@ -48851,10 +48840,10 @@ from simple tasks to complex workflows.
 </div>
 
 <p style="text-align:center;">
-  <a href="/adk-docs/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
-  <a href="/adk-docs/get-started/typescript/" class="md-button" style="margin:3px">Start with TypeScript</a>
-  <a href="/adk-docs/get-started/go/" class="md-button" style="margin:3px">Start with Go</a>
-  <a href="/adk-docs/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
+  <a href="/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
+  <a href="/get-started/typescript/" class="md-button" style="margin:3px">Start with TypeScript</a>
+  <a href="/get-started/go/" class="md-button" style="margin:3px">Start with Go</a>
+  <a href="/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
 </p>
 
 ---
