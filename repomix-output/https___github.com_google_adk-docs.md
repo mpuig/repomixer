@@ -13451,6 +13451,9 @@ Criterion                                | Description                          
 `hallucinations_v1`                      | LLM-judged groundedness of agent response against context | No              | No               | Yes            | Yes
 `safety_v1`                              | Safety/harmlessness of agent response                     | No              | No               | Yes            | Yes
 `per_turn_user_simulator_quality_v1`     | LLM-judged user simulator quality                         | No              | No               | Yes            | Yes
+`multi_turn_task_success_v1`             | Evaluates if agent achieves goal(s) of conversation       | No              | No               | Yes            | Yes
+`multi_turn_trajectory_quality_v1`       | Evaluates the overall trajectory of the conversation      | No              | No               | Yes            | Yes
+`multi_turn_tool_use_quality_v1`         | Evaluates function calls made during a conversation       | No              | No               | Yes            | Yes
 
 ## tool_trajectory_avg_score
 
@@ -13979,6 +13982,142 @@ turns in which the user simulator's response was judged to be valid according to
 the conversation scenario. A score of 1.0 indicates that the simulator behaved
 as expected in all turns, while a score closer to 0.0 indicates that the
 simulator deviated in many turns. Higher values are better.
+
+### multi_turn_task_success_v1
+
+This criterion evaluates if the agent achieved the goal or goals of the
+conversation.
+
+#### When To Use This Criterion?
+
+Use this criterion when you want to measure the overall success of a multi-turn
+conversation in achieving its intended objectives. It focuses on the final
+outcome rather than the specific steps taken to reach it.
+
+#### Details
+
+This criterion takes into account all the turns of the multi-turn conversation
+to determine if the task was successfully completed. It delegates the evaluation
+to the Vertex AI General AI Eval SDK.
+
+#### How To Use This Criterion?
+
+Using this criterion requires a Google Cloud Project. You must have
+`GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
+typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+function correctly.
+
+You can specify a threshold for this criterion in `EvalConfig` under the
+`criteria` dictionary. The value should be a float between 0.0 and 1.0,
+representing the minimum score for the conversation to be considered a success.
+
+Example `EvalConfig` entry:
+
+```json
+{
+  "criteria": {
+    "multi_turn_task_success_v1": 0.8
+  }
+}
+```
+
+#### Output And How To Interpret
+
+The criterion returns a score between 0.0 and 1.0. Scores closer to 1.0 indicate
+that the task was successfully achieved, while scores closer to 0.0 indicate
+failure to achieve the goals.
+
+### multi_turn_trajectory_quality_v1
+
+This criterion evaluates the overall trajectory of the conversation.
+
+#### When To Use This Criterion?
+
+This metric is different from `multi_turn_task_success_v1`, in the sense that
+task success only concerns itself with whether the goal was achieved or not. How
+that was achieved is not its concern. This metric, on the other hand, evaluates
+the path or trajectory that the agent took to achieve the goal. Use this
+criterion when you care about the efficiency, effectiveness, and logic of the
+steps taken during the conversation.
+
+#### Details
+
+This criterion is a reference-free metric that assesses the quality of the 
+interaction trajectory across multiple turns. It delegates the evaluation to the
+Vertex AI General AI Eval SDK.
+
+#### How To Use This Criterion?
+
+Using this criterion requires a Google Cloud Project. You must have
+`GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
+typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+function correctly.
+
+You can specify a threshold for this criterion in `EvalConfig` under the
+`criteria` dictionary. The value should be a float between 0.0 and 1.0,
+representing the minimum trajectory quality score to be considered passing.
+
+Example `EvalConfig` entry:
+
+```json
+{
+  "criteria": {
+    "multi_turn_trajectory_quality_v1": 0.8
+  }
+}
+```
+
+#### Output And How To Interpret
+
+The criterion returns a score between 0.0 and 1.0. Scores closer to 1.0 indicate
+a high-quality trajectory, while scores closer to 0.0 indicate a poor or
+inefficient trajectory.
+
+### multi_turn_tool_use_quality_v1
+
+This criterion evaluates the function calls made during a multi-turn
+conversation.
+
+#### When To Use This Criterion?
+
+Use this criterion to specifically assess the quality, relevance, and
+correctness of tool or function calls made by the agent across multiple turns of
+a conversation. It's useful for debugging agent capabilities such as whether the
+agent knows when and how to select proper tools in complex, multi-step
+workflows.
+
+#### Details
+
+This metric is reference-free and evaluates the function calling behavior
+without requiring a golden trajectory. It delegates the evaluation to the Vertex
+AI General AI Eval SDK.
+
+#### How To Use This Criterion?
+
+Using this criterion requires a Google Cloud Project. You must have
+`GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
+typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+function correctly.
+
+You can specify a threshold for this criterion in `EvalConfig` under the
+`criteria` dictionary. The value should be a float between 0.0 and 1.0,
+representing the minimum tool use quality score to be considered passing.
+
+Example `EvalConfig` entry:
+
+```json
+{
+  "criteria": {
+    "multi_turn_tool_use_quality_v1": 0.8
+  }
+}
+```
+
+#### Output And How To Interpret
+
+The criterion returns a score between 0.0 and 1.0. Scores closer to 1.0 indicate
+excellent tool usage throughout the conversation, while scores closer to 0.0
+indicate poor
 
 ================
 File: docs/evaluate/custom_metrics.md
@@ -14566,6 +14705,13 @@ Here is a summary of all the available criteria:
 *   **hallucinations_v1**: LLM-judged groundedness of agent response against
     context.
 *   **safety_v1**: Safety/harmlessness of agent response.
+*   **per_turn_user_simulator_quality_v1**: LLM-judged user simulator quality.
+*   **multi_turn_task_success_v1**: Evaluates if agent achieves goal(s) of
+    conversation.
+*   **multi_turn_trajectory_quality_v1**: Evaluates the overall trajectory of
+    the conversation.
+*   **multi_turn_tool_use_quality_v1**: Evaluates function calls made during a
+    conversation.
 
 If no evaluation criteria are provided, the following default configuration is used:
 
@@ -14608,6 +14754,15 @@ Choose criteria based on your evaluation goals:
     the information available to it (e.g., tool outputs).
 *   **Check for harmful content:** Use `safety_v1` to ensure that agent
     responses are safe and do not violate safety policies.
+*   **Evaluate multi-turn goal completion:** Use `multi_turn_task_success_v1` to
+    measure the overall success of a multi-turn conversation in achieving its
+    intended objectives.
+*   **Evaluate overall conversation trajectory:** Use
+    `multi_turn_trajectory_quality_v1` to assess the efficiency, effectiveness,
+    and logic of the steps taken during the conversation.
+*   **Evaluate tool usage in multi-turn workflows:** Use
+    `multi_turn_tool_use_quality_v1` to assess the quality, relevance, and
+    correctness of tool or function calls made across multiple turns.
 
 In addition, criteria which require information on expected agent tool use
 and/or responses are not supported in combination with
@@ -20095,7 +20250,11 @@ trace.set_tracer_provider(TracerProvider())
 # --- Configuration ---
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
 DATASET_ID = os.environ.get("BIG_QUERY_DATASET_ID", "your-big-query-dataset-id")
-LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "US") # default location is US in the plugin
+# GOOGLE_CLOUD_LOCATION must be a valid Vertex AI region (e.g., "us-central1").
+# BQ_LOCATION is the BigQuery dataset location, which can be a multi-region
+# like "US" or "EU", or a single region like "us-central1".
+VERTEX_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+BQ_LOCATION = os.environ.get("BQ_LOCATION", "US")
 GCS_BUCKET = os.environ.get("GCS_BUCKET_NAME", "your-gcs-bucket-name") # Optional
 
 if PROJECT_ID == "your-gcp-project-id":
@@ -20103,7 +20262,7 @@ if PROJECT_ID == "your-gcp-project-id":
 
 # --- CRITICAL: Set environment variables BEFORE Gemini instantiation ---
 os.environ['GOOGLE_CLOUD_PROJECT'] = PROJECT_ID
-os.environ['GOOGLE_CLOUD_LOCATION'] = LOCATION
+os.environ['GOOGLE_CLOUD_LOCATION'] = VERTEX_LOCATION
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
 
 # --- Initialize the Plugin with Config ---
@@ -20121,7 +20280,7 @@ bq_logging_plugin = BigQueryAgentAnalyticsPlugin(
     dataset_id=DATASET_ID,
     table_id="agent_events", # default table name is agent_events
     config=bq_config,
-    location=LOCATION
+    location=BQ_LOCATION
 )
 
 # --- Initialize Tools and Model ---
@@ -20160,6 +20319,262 @@ FROM `your-gcp-project-id.your-big-query-dataset-id.agent_events`
 ORDER BY timestamp DESC
 LIMIT 20;
 ```
+
+## Deploy to Agent Engine with the plugin {#deploy-agent-engine}
+
+You can deploy an agent with the BigQuery Agent Analytics plugin to
+[Vertex AI Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
+This section walks through the steps to deploy using the ADK CLI, and
+alternatively using the Vertex AI SDK programmatically.
+
+!!! important "Version Requirement"
+
+    Use ADK Python version **1.24.0 or higher** to deploy with this plugin to
+    Agent Engine. Earlier versions had an issue where the plugin's asynchronous
+    log writer could be terminated by the serverless runtime before flushing
+    pending events. Starting from 1.24.0, the plugin performs a synchronous
+    flush at the end of each invocation to ensure all events are written.
+
+### Prerequisites
+
+Before deploying, ensure you have completed the general
+[Agent Engine setup](/deploy/agent-engine/deploy/#setup-cloud-project),
+including:
+
+1.  A Google Cloud project with the **Vertex AI API** and **Cloud Resource
+    Manager API** enabled.
+2.  A **BigQuery dataset** in the target project (or a cross-project dataset
+    with the correct permissions).
+3.  A **Cloud Storage staging bucket** for deployment artifacts.
+4.  The deploying service account has the IAM roles listed in
+    [IAM permissions](#iam-permissions).
+5.  Your coding environment is
+    [authenticated](/deploy/agent-engine/deploy/#prerequisites-coding-env)
+    with `gcloud auth login` and `gcloud auth application-default login`.
+
+### Step 1: Define the agent and plugin
+
+Create your agent project folder with an `App` object that includes the plugin.
+The `App` object is required for Agent Engine deployments with plugins.
+
+```
+my_bq_agent/
+├── __init__.py
+├── agent.py
+└── requirements.txt
+```
+
+```python title="my_bq_agent/__init__.py"
+from . import agent
+```
+
+```python title="my_bq_agent/agent.py"
+import os
+import google.auth
+from google.adk.agents import Agent
+from google.adk.apps import App
+from google.adk.models.google_llm import Gemini
+from google.adk.plugins.bigquery_agent_analytics_plugin import (
+    BigQueryAgentAnalyticsPlugin,
+    BigQueryLoggerConfig,
+)
+from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+
+# --- Configuration ---
+PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
+DATASET_ID = os.environ.get("BQ_DATASET", "agent_analytics")
+# BQ_LOCATION is the BigQuery dataset location (multi-region "US"/"EU" or
+# a single region like "us-central1"). This is separate from the Vertex AI
+# region used by GOOGLE_CLOUD_LOCATION.
+BQ_LOCATION = os.environ.get("BQ_LOCATION", "US")
+
+os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
+# --- Plugin ---
+bq_analytics_plugin = BigQueryAgentAnalyticsPlugin(
+    project_id=PROJECT_ID,
+    dataset_id=DATASET_ID,
+    location=BQ_LOCATION,
+    config=BigQueryLoggerConfig(
+        batch_size=1,
+        batch_flush_interval=0.5,
+        log_session_metadata=True,
+    ),
+)
+
+# --- Tools ---
+credentials, _ = google.auth.default(
+    scopes=["https://www.googleapis.com/auth/cloud-platform"]
+)
+bigquery_toolset = BigQueryToolset(
+    credentials_config=BigQueryCredentialsConfig(credentials=credentials)
+)
+
+# --- Agent ---
+root_agent = Agent(
+    model=Gemini(model="gemini-2.5-flash"),
+    name="my_bq_agent",
+    instruction="You are a helpful assistant with access to BigQuery tools.",
+    tools=[bigquery_toolset],
+)
+
+# --- App (required for Agent Engine with plugins) ---
+app = App(
+    name="my_bq_agent",
+    root_agent=root_agent,
+    plugins=[bq_analytics_plugin],
+)
+```
+
+```text title="my_bq_agent/requirements.txt"
+google-adk[bigquery]
+google-cloud-bigquery-storage
+pyarrow
+opentelemetry-api
+opentelemetry-sdk
+```
+
+### Step 2: Deploy using ADK CLI
+
+Use the `adk deploy agent_engine` command to deploy the agent. The `--adk_app`
+flag tells the CLI which `App` object to use:
+
+```shell
+PROJECT_ID=your-gcp-project-id
+LOCATION=us-central1
+
+adk deploy agent_engine \
+    --project=$PROJECT_ID \
+    --region=$LOCATION \
+    --staging_bucket=gs://your-staging-bucket \
+    --display_name="My BQ Analytics Agent" \
+    --adk_app=agent.app \
+    my_bq_agent
+```
+
+!!! tip "`--adk_app` flag"
+
+    The `--adk_app` flag specifies the module path and variable name of the
+    `App` object (in the format `module.variable`). In this example,
+    `agent.app` refers to the `app` variable in `agent.py`. This ensures the
+    deployment correctly picks up the plugin configuration.
+
+Once successfully deployed, you should see output like:
+
+```shell
+AgentEngine created. Resource name: projects/123456789/locations/us-central1/reasoningEngines/751619551677906944
+```
+
+Note the **Resource name** for the next step.
+
+### Step 3: Test the deployed agent
+
+After deployment, you can query the agent using the Vertex AI SDK:
+
+```python title="test_deployed_agent.py"
+import uuid
+import vertexai
+
+PROJECT_ID = "your-gcp-project-id"
+LOCATION = "us-central1"
+AGENT_ID = "751619551677906944"  # from deployment output
+
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+client = vertexai.Client(project=PROJECT_ID, location=LOCATION)
+
+agent = client.agent_engines.get(
+    name=f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{AGENT_ID}"
+)
+
+user_id = f"test_user_{uuid.uuid4().hex[:8]}"
+for chunk in agent.stream_query(
+    message="List datasets in my project", user_id=user_id
+):
+    print(chunk, end="", flush=True)
+```
+
+### Step 4: Verify events in BigQuery
+
+After sending a few queries to the deployed agent, verify that events are being
+logged by querying your BigQuery table:
+
+```sql
+SELECT timestamp, event_type, agent, content
+FROM `your-gcp-project-id.agent_analytics.agent_events`
+ORDER BY timestamp DESC
+LIMIT 20;
+```
+
+You should see events such as `INVOCATION_STARTING`, `LLM_REQUEST`,
+`LLM_RESPONSE`, `TOOL_STARTING`, `TOOL_COMPLETED`, and `INVOCATION_COMPLETED`.
+
+### Alternative: Deploy using the Vertex AI SDK
+
+You can also deploy programmatically using the Vertex AI SDK directly. This is
+useful for CI/CD pipelines or custom deployment workflows:
+
+```python title="deploy.py"
+import vertexai
+from vertexai import agent_engines
+from my_bq_agent.agent import app
+
+PROJECT_ID = "your-gcp-project-id"
+LOCATION = "us-central1"
+STAGING_BUCKET = "gs://your-staging-bucket"
+
+vertexai.init(
+    project=PROJECT_ID, location=LOCATION, staging_bucket=STAGING_BUCKET
+)
+client = vertexai.Client(project=PROJECT_ID, location=LOCATION)
+
+remote_app = client.agent_engines.create(
+    agent=app,
+    config={
+        "display_name": "My BQ Analytics Agent",
+        "staging_bucket": STAGING_BUCKET,
+        "requirements": [
+            "google-adk[bigquery]",
+            "google-cloud-aiplatform[agent_engines]",
+            "google-cloud-bigquery-storage",
+            "pyarrow",
+            "opentelemetry-api",
+            "opentelemetry-sdk",
+        ],
+    },
+)
+print(f"Deployed agent: {remote_app.api_resource.name}")
+```
+
+### Troubleshooting
+
+If events are not appearing in your BigQuery table after deployment:
+
+1.  **Check ADK version**: Ensure `google-adk>=1.24.0` is in your requirements.
+    Earlier versions do not flush pending events before the serverless runtime
+    suspends the process.
+
+2.  **Enable debug logging**: Add the following to the top of your `agent.py` to
+    surface any silent errors:
+
+    ```python
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger("google_adk").setLevel(logging.DEBUG)
+    ```
+
+3.  **Check IAM permissions**: The Agent Engine service account needs
+    `roles/bigquery.dataEditor` on the target table and `roles/bigquery.jobUser`
+    on the project. For **cross-project** logging, also ensure the BigQuery API
+    is enabled in the source project and the service account has
+    `bigquery.tables.updateData` on the destination table.
+
+4.  **Verify plugin initialization**: In Cloud Logging, filter by
+    `resource.type="reasoning_engine"` and look for plugin startup messages or
+    error logs.
+
+5.  **Use immediate flush for debugging**: Set `batch_size=1` and
+    `batch_flush_interval=0.1` in `BigQueryLoggerConfig` to rule out buffering
+    issues.
 
 ## Tracing and Observability
 
@@ -20846,6 +21261,83 @@ To connect this dashboard to your own BigQuery table, use the following link for
 ```text
 https://lookerstudio.google.com/reporting/create?c.reportId=f1c5b513-3095-44f8-90a2-54953d41b125&ds.ds3.connector=bigQuery&ds.ds3.type=TABLE&ds.ds3.projectId=<your-project-id>&ds.ds3.datasetId=<your-dataset-id>&ds.ds3.tableId=<your-table-id>
 ```
+
+## Security: Avoid logging sensitive credentials {#security-credentials}
+
+!!! warning "Do not log OAuth tokens, API keys, or client secrets"
+
+    The BigQuery Agent Analytics plugin captures detailed event payloads,
+    including tool arguments, LLM prompts, and authentication-related events
+    (such as HITL credential requests). If your agent uses **authenticated
+    tools** (e.g., `AuthenticatedFunctionTool` with OAuth2), the plugin may
+    log sensitive values such as `client_secret`, `access_token`, or API keys
+    into the `content` column of your BigQuery table.
+
+    This is a known concern
+    ([google/adk-python#3845](https://github.com/google/adk-python/issues/3845))
+    and can lead to credential exposure in your analytics data.
+
+To prevent sensitive credentials from being persisted in BigQuery, use one or
+more of the following approaches:
+
+### Use `content_formatter` to redact secrets
+
+Provide a custom `content_formatter` function in `BigQueryLoggerConfig` to
+strip or mask sensitive fields before they are written:
+
+```python
+import json
+import re
+from typing import Any
+
+SENSITIVE_KEYS = {"client_secret", "access_token", "refresh_token", "api_key", "secret"}
+
+def redact_credentials(event_content: Any, event_type: str) -> str:
+    """Redact OAuth secrets and tokens from logged content."""
+    if isinstance(event_content, dict):
+        text = json.dumps(event_content)
+    else:
+        text = str(event_content)
+
+    for key in SENSITIVE_KEYS:
+        # Redact values in JSON-like strings: "client_secret": "GOCSPX-xxx"
+        text = re.sub(
+            rf'("{key}"\s*:\s*)"[^"]*"',
+            rf'\1"[REDACTED]"',
+            text,
+            flags=re.IGNORECASE,
+        )
+    return text
+
+config = BigQueryLoggerConfig(
+    content_formatter=redact_credentials,
+    # ... other options
+)
+```
+
+### Use `event_denylist` to skip credential events
+
+If you do not need to log authentication-related events, exclude them entirely:
+
+```python
+config = BigQueryLoggerConfig(
+    event_denylist=[
+        "HITL_CREDENTIAL_REQUEST",
+        "HITL_CREDENTIAL_REQUEST_COMPLETED",
+    ],
+    # ... other options
+)
+```
+
+### General best practices
+
+-   **Never hardcode secrets** in agent source code. Use environment variables
+    or a secret manager (e.g., Google Cloud Secret Manager) for OAuth client
+    secrets and API keys.
+-   **Restrict BigQuery table access** using IAM to limit who can read logged
+    event data.
+-   **Audit your logs** periodically to verify no unexpected sensitive data is
+    being captured.
 
 ## Feedback
 We welcome your feedback on BigQuery Agent Analytics. If you have questions, suggestions, or encounter any issues, please reach out to the team at bqaa-feedback@google.com.
@@ -33340,7 +33832,7 @@ session_service = DatabaseSessionService(db_url=db_url)
 
 ## The Session Lifecycle
 
-<img src="../../assets/session_lifecycle.png" alt="Session lifecycle">
+<img src="../../assets/event-loop.png" alt="Session lifecycle">
 
 Here’s a simplified flow of how `Session` and `SessionService` work together
 during a conversation turn:
@@ -40899,39 +41391,123 @@ File: docs/tools-custom/authentication.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
 </div>
 
-Many tools need to access protected resources (like user data in Google Calendar, Salesforce records, etc.) and require authentication. ADK provides a system to handle various authentication methods securely.
+The tools and services you use within ADK agents may require access to protected
+resources, such as user data in email or calendar applications, or sales records
+in databases. Getting access to these resources typically requires an
+authentication process that includes credentials and access keys which must
+be carefully managed and protected. The requirements for managing authentication
+data can also change if you are running your agent locally or deploying it
+to a hosted service. If multiple users, with potentially different access
+permissions, are interacting with the agent, this creates another layer of
+authentication management requirements.
 
-The key components involved are:
+!!! danger "WARNING: Credential storage and security risks"
 
-1. **`AuthScheme`**: Defines *how* an API expects authentication credentials (e.g., as an API Key in a header, an OAuth 2.0 Bearer token). ADK supports the same types of authentication schemes as OpenAPI 3.0. To know more about what each type of credential is, refer to [OpenAPI doc: Authentication](https://swagger.io/docs/specification/v3_0/authentication/). ADK uses specific classes like `APIKey`, `HTTPBearer`, `OAuth2`, `OpenIdConnectWithConfig`.
-2. **`AuthCredential`**: Holds the *initial* information needed to *start* the authentication process (e.g., your application's OAuth Client ID/Secret, an API key value). It includes an `auth_type` (like `API_KEY`, `OAUTH2`, `SERVICE_ACCOUNT`) specifying the credential type.
+    Storing sensitive credentials such as access tokens and especially refresh
+    tokens directly in the session state can pose security risks depending on
+    your session storage backend, your ***SessionService*** implementation,
+    and overall application security posture. Carefully consider how you manage
+    credentials in ADK agents before deploying them for general use.
 
-The general flow involves providing these details when configuring a tool. ADK then attempts to automatically exchange the initial credential for a usable one (like an access token) before the tool makes an API call. For flows requiring user interaction (like OAuth consent), a specific interactive process involving the Agent Client application is triggered.
+## Authentication and credential management
 
-## Supported Initial Credential Types
+There are several ways to manage authentication and credentials in ADK
+agents. Each of these methods carries some amount of risk, so you should
+carefully consider which approach best serves your application and customers.
 
-* **API\_KEY:** For simple key/value authentication. Usually requires no exchange.
-* **HTTP:** Can represent Basic Auth (not recommended/supported for exchange) or already obtained Bearer tokens. If it's a Bearer token, no exchange is needed.
-* **OAUTH2:** For standard OAuth 2.0 flows. Requires configuration (client ID, secret, scopes) and often triggers the interactive flow for user consent.
-* **OPEN\_ID\_CONNECT:** For authentication based on OpenID Connect. Similar to OAuth2, often requires configuration and user interaction.
-* **SERVICE\_ACCOUNT:** For Google Cloud Service Account credentials (JSON key or Application Default Credentials). Typically exchanged for a Bearer token.
+### Recommended: Secrets manager services
 
-## Configuring Authentication on Tools
+For production environments, storing sensitive credentials in a dedicated secret
+manager is the **most recommended approach**. With this approach, the secret
+manager securely stores the credentials for any tools or services accessed by
+the agent as needed, and those secrets are not resident in agent's operating
+memory. For example, a custom ADK Tool using this method would store only
+short-lived access tokens or secure references, and retrieve longer-lived
+refresh tokens from the secrets manager when needed. When selecting a secrets
+manager service, consider services from well-established providers, such as
+[Google Cloud Secret Manager](https://cloud.google.com/security/products/secret-manager)
+or other secret management services.
 
-You set up authentication when defining your tool:
+### Local encrypted secrets storage
 
-* **RestApiTool / OpenAPIToolset**: Pass `auth_scheme` and `auth_credential` during initialization
+For agent applications that are less security sensitive, keeping credentials in
+local, encrypted storage can be a viable option. Consider using dedicated local
+secrets storage system or encrypting the data in a local database using a robust
+encryption library, and then managing the encryption keys securely using a key
+management service. Take care to only keep short-lived access tokens in
+operating memory and access long-lived credentials and refresh tokens from
+encrypted local storage only when needed.
 
-* **GoogleApiToolSet Tools**: ADK has built-in 1st party tools like Google Calendar, BigQuery etc,. Use the toolset's specific method.
+### In-memory secrets
 
-* **APIHubToolset / ApplicationIntegrationToolset**: Pass `auth_scheme` and `auth_credential`during initialization, if the API managed in API Hub / provided by Application Integration requires authentication.
+This method *should only be used in the early development* and testing of your
+agent. With this approach, credentials are stored in the current
+***InMemorySessionService*** instance. The data exists only in session memory
+and is not persisted. However, you should carefully consider the risks of using
+this method based on how long an agent session may last, who has access to the
+agent, and the security of the environment where the agent is running.
 
-!!! tip "WARNING"
-    Storing sensitive credentials like access tokens and especially refresh tokens directly in the session state might pose security risks depending on your session storage backend (`SessionService`) and overall application security posture.
+## Framework components
 
-    *   **`InMemorySessionService`:** Suitable for testing and development, but data is lost when the process ends. Less risk as it's transient.
-    *   **Database/Persistent Storage:** **Strongly consider encrypting** the token data before storing it in the database using a robust encryption library (like `cryptography`) and managing encryption keys securely (e.g., using a key management service).
-    *   **Secure Secret Stores:** For production environments, storing sensitive credentials in a dedicated secret manager (like Google Cloud Secret Manager or HashiCorp Vault) is the **most recommended approach**. Your tool could potentially store only short-lived access tokens or secure references (not the refresh token itself) in the session state, fetching the necessary secrets from the secure store when needed.
+Within the ADK framework, the ***AuthScheme*** and ***AuthCredential*** are the
+key components for handling authentication methods and managing credential data:
+
+*   ***AuthScheme***: Defines *how* an API expects authentication credentials,
+    such as an API Key in a header or an OAuth 2.0 Bearer token. ADK supports
+    the same types of authentication schemes as OpenAPI 3.0 and uses specific
+    classes for credential types, including ***APIKey***, ***HTTPBearer***,
+    ***OAuth2***, and ***OpenIdConnectWithConfig***. For more details on each
+    OpenAPI credential type, see
+    [OpenAPI doc: Authentication](https://swagger.io/docs/specification/v3_0/authentication/).
+
+*   ***AuthCredential***: Holds the *initial* information needed to *start* the
+    authentication process, such as your application's OAuth Client ID or
+    Secret, or an API key value. An instance of this class includes an
+    **auth_type**, such as `API_KEY`, `OAUTH2`, `SERVICE_ACCOUNT`, specifying
+    the credential type.
+
+The general authentication flow involves providing these details when
+configuring a tool. ADK then attempts to automatically exchange the initial
+credential, such as an access token, before the tool makes an API call. For
+flows requiring user interaction, including OAuth consent, ADK triggers a
+specific interactive process with your ***Agent Client*** application.
+
+### Supported initial credential types
+
+*   **API\_KEY:** Provides simple key-value authentication, which usually
+    requires no authentication exchange.
+*   **HTTP:** Provides Basic Auth which is not recommended and may not be
+    supported for exchange, or already obtained Bearer tokens. Bearer tokens do
+    not require an authentication exchange.
+*   **OAUTH2:** Provides standard OAuth 2.0 authentication flows, and requires
+    configuration with client ID, secret, and scopes. This method often
+    triggers an interactive flow for user consent.
+*   **OPEN\_ID\_CONNECT:** Provides authentication based on OpenID Connect.
+    Similar to OAuth2, this type often requires configuration and user
+    interaction.
+*   **SERVICE\_ACCOUNT:** Provides Google Cloud Service Account credentials as a
+    JSON key or Application Default Credentials. This type typically exchanges a
+    Bearer token.
+
+## Tools and integrations quick guide
+
+Here is a quick guide to authentication for key ADK toolsets:
+
+*   [***RestApiTool***](/tools-custom/openapi-tools/):
+    Set `auth_scheme` and `auth_credential` during initialization
+*   [***OpenAPIToolset***](/tools-custom/openapi-tools/):
+    Set `auth_scheme` and `auth_credential` during initialization
+*   [***APIHubToolset***](/integrations/apigee-api-hub/):
+    Set `auth_scheme` and `auth_credential` during initialization, *if* the API
+    requires authentication.
+*   [***ApplicationIntegrationToolset***](/integrations/application-integration/):
+    Set `auth_scheme` and `auth_credential` during initialization, *if* the API
+    requires authentication.
+*   [***GoogleApiToolSet***](https://github.com/google/adk-python/blob/main/src/google/adk/tools/google_api_tool/google_api_toolset.py):
+    Use this toolset's specific authentication method.
+
+For more authentication details for other pre-built tools and integrations
+see the [ADK Integrations](/integrations) catalog.
 
 ---
 
@@ -41085,10 +41661,10 @@ The sequence diagram of auth request flow (where tools are requesting auth crede
 
 ### 2. Handling the Interactive OAuth/OIDC Flow (Client-Side)
 
-If a tool requires user login/consent (typically OAuth 2.0 or OIDC), the ADK framework pauses execution and signals your **Agent Client** application. There are two cases:
+If a tool requires user login/consent (typically OAuth 2.0 or OIDC), the ADK framework pauses execution and signals your ***Agent Client*** application. There are two cases:
 
-* **Agent Client** application runs the agent directly (via `runner.run_async`) in the same process. e.g. UI backend, CLI app, or Spark job etc.
-* **Agent Client** application interacts with ADK's fastapi server via `/run` or `/run_sse` endpoint. While ADK's fastapi server could be setup on the same server or different server as **Agent Client** application
+* ***Agent Client*** application runs the agent directly (via `runner.run_async`) in the same process. e.g. UI backend, CLI app, or Spark job etc.
+* ***Agent Client*** application interacts with ADK's fastapi server via `/run` or `/run_sse` endpoint. While ADK's fastapi server could be setup on the same server or different server as ***Agent Client*** application
 
 The second case is a special case of first case, because `/run` or `/run_sse` endpoint also invokes `runner.run_async`. The only differences are:
 
@@ -41186,7 +41762,7 @@ if auth_request_function_call_id and auth_config:
         # Append redirect_uri (use urlencode in production)
         auth_request_uri = base_auth_uri + f'&redirect_uri={redirect_uri}'
         # Now you need to redirect your end user to this auth_request_uri or ask them to open this auth_request_uri in their browser
-        # This auth_request_uri should be served by the corresponding auth provider and the end user should login and authorize your applicaiton to access their data
+        # This auth_request_uri should be served by the corresponding auth provider and the end user should login and authorize your application to access their data
         # And then the auth provider will redirect the end user to the redirect_uri you provided
         # Next step: Get this callback URL from the user (or your web server handler)
     else:
@@ -41205,7 +41781,7 @@ if auth_request_function_call_id and auth_config:
 **Step 4. Send Authentication Result Back to ADK (Client):**
 
 * Once you have the full callback URL (containing the authorization code), retrieve the `auth_request_function_call_id` and the `auth_config` object saved in Client Step 1\.
-* Set the captured callback URL into the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.
+* Set the captured callback URL in the `exchanged_auth_credential.oauth2.auth_response_uri` field. Also ensure `exchanged_auth_credential.oauth2.redirect_uri` contains the redirect URI you used.
 * Create a `types.Content` object containing a `types.Part` with a `types.FunctionResponse`.
       * Set `name` to `"adk_request_credential"`. (Note: This is a special name for ADK to proceed with authentication. Do not use other names.)
       * Set `id` to the `auth_request_function_call_id` you saved.
@@ -41278,14 +41854,14 @@ if auth_request_function_call_id and auth_config:
 
 * ADK receives the `FunctionResponse` for `adk_request_credential`.
 * It uses the information in the updated `AuthConfig` (including the callback URL containing the code) to perform the OAuth **token exchange** with the provider's token endpoint, obtaining the access token (and possibly refresh token).
-* ADK internally makes these tokens available by setting them in the session state).
+* ADK internally makes these tokens available by setting them in the session state.
 * ADK **automatically retries** the original tool call (the one that initially failed due to missing auth).
 * This time, the tool finds the valid tokens (via `tool_context.get_auth_response()`) and successfully executes the authenticated API call.
 * The agent receives the actual result from the tool and generates its final response to the user.
 
 ---
 
-The sequence diagram of auth response flow (where Agent Client send back the auth response and ADK retries tool calling) looks like below:
+The sequence diagram of auth response flow, where the ***Agent Client*** sends back the auth response and ADK retries the tool, is as follows:
 
 ![Authentication](../assets/auth_part2.svg)
 
@@ -41363,7 +41939,7 @@ exchanged_credential = tool_context.get_auth_response(AuthConfig(
   auth_scheme=auth_scheme,
   raw_auth_credential=auth_credential,
 ))
-# If exchanged_credential is not None, then there is already an exchanged credetial from the auth response.
+# If exchanged_credential is not None, then there is already an exchanged credential from the auth response.
 if exchanged_credential:
    # ADK exchanged the access token already for us
         access_token = exchanged_credential.oauth2.access_token
@@ -41397,7 +41973,7 @@ If no valid credentials (Step 1.) and no auth response (Step 2.) are found, the 
 
 **Step 4: Exchange Authorization Code for Tokens**
 
-ADK automatically generates oauth authorization URL and presents it to your Agent Client application. your Agent Client application should follow the same way described in Journey 1 to redirect the user to the authorization URL (with `redirect_uri` appended). Once a user completes the login flow following the authorization URL and ADK extracts the authentication callback url from Agent Client applications, automatically parses the auth code, and generates auth token. At the next Tool call, `tool_context.get_auth_response` in step 2 will contain a valid credential to use in subsequent API calls.
+ADK automatically generates oauth authorization URL and presents it to your ***Agent Client*** application. your ***Agent Client*** application should follow the same way described in Journey 1 to redirect the user to the authorization URL (with `redirect_uri` appended). Once a user completes the login flow, ADK extracts the authentication callback url from ***Agent Client*** applications, automatically parses the auth code, and generates auth token. At the next Tool call, `tool_context.get_auth_response` in step 2 will contain a valid credential to use in subsequent API calls.
 
 **Step 5: Cache Obtained Credentials**
 
