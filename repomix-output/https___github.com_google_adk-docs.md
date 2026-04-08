@@ -3,6 +3,255 @@ Files
 ================================================================
 
 ================
+File: docs/_includes/homepage/_ai-dev-tools.md
+================
+<!-- Developer Tools -->
+<div class="feature-split reverse">
+  <div class="feature-text">
+    <span class="feature-badge">AI Dev Tools</span>
+    <h2>Build agents <i>with</i> agents.</h2>
+    <p>ADK agents are designed to be written by humans and AI. Connect your AI-powered development tools to our ADK coding resources and generate robust, capable agents in seconds.</p>
+    <a href="tutorials/coding-with-ai/" class="btn btn-accent" style="margin-top:12px">Code with AI</a>
+  </div>
+  <div class="feature-visual">
+    <div id="asciinema-demo"></div>
+  </div>
+</div>
+<!-- requires: Asciinema player script -->
+
+================
+File: docs/_includes/homepage/_build-cta.md
+================
+<!-- Ready to Build CTA Section -->
+<div class="ceiling-section">
+  <h2>Ready to build agents?</h2>
+  <p class="section-subtitle">We think one of the best ways to learn is by building, so we've created guides that help you get your development environment set up and run an ADK agent in minutes.</p>
+  <a href="get-started/" class="btn btn-primary">Start building</a>
+</div>
+
+================
+File: docs/_includes/homepage/_community.md
+================
+<!-- Community Section -->
+<div class="ceiling-section">
+  <h2>Developer Community</h2>
+  <p class="section-subtitle">Build alongside a growing community of developers engineering the next generation of production-ready AI agents. Whether you want to troubleshoot a graph workflow, share a custom Agent Skill, or shape the future of the framework, we want you involved.</p>
+  <div class="features-grid">
+
+<!-- FEATURED: uncomment/comment cards to control which appear -->
+    <a class="carousel-card" href="community/#adk-community-calls">
+      <span class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#999999"><path d="M760-480q0-117-81.5-198.5T480-760v-80q75 0 140.5 28.5t114 77q48.5 48.5 77 114T840-480h-80Zm-160 0q0-50-35-85t-85-35v-80q83 0 141.5 58.5T680-480h-80Zm198 360q-125 0-247-54.5T329-329Q229-429 174.5-551T120-798q0-18 12-30t30-12h162q14 0 25 9.5t13 22.5l26 140q2 16-1 27t-11 19l-97 98q20 37 47.5 71.5T387-386q31 31 65 57.5t72 48.5l94-94q9-9 23.5-13.5T670-390l138 28q14 4 23 14.5t9 23.5v162q0 18-12 30t-30 12ZM241-600l66-66-17-94h-89q5 41 14 81t26 79Zm358 358q39 17 79.5 27t81.5 13v-88l-94-19-67 67ZM241-600Zm358 358Z"/></svg>
+      </span>
+      <h3>Community call</h3>
+      <p>Join the ADK core engineering team for live demos, technical deep dives, roadmap updates, and Q&A.</p>
+      <span class="card-learn-more">Learn more →</span>
+    </a>
+
+<!-- FEATURED: uncomment/comment cards to control which appear -->
+    <a class="carousel-card" href="community/">
+      <span class="card-icon"><svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#999999"><path d="m226-559 78 33q14-28 29-54t33-52l-56-11-84 84Zm142 83 114 113q42-16 90-49t90-75q70-70 109.5-155.5T806-800q-72-5-158 34.5T492-656q-42 42-75 90t-49 90Zm155-121.5q0-33.5 23-56.5t57-23q34 0 57 23t23 56.5q0 33.5-23 56.5t-57 23q-34 0-57-23t-23-56.5ZM565-220l84-84-11-56q-26 18-52 32.5T532-299l33 79Zm313-653q19 121-23.5 235.5T708-419l20 99q4 20-2 39t-20 33L538-80l-84-197-171-171-197-84 167-168q14-14 33.5-20t39.5-2l99 20q104-104 218-147t235-24ZM157-321q35-35 85.5-35.5T328-322q35 35 34.5 85.5T327-151q-25 25-83.5 43T82-76q14-103 32-161.5t43-83.5Zm57 56q-10 10-20 36.5T180-175q27-4 53.5-13.5T270-208q12-12 13-29t-11-29q-12-12-29-11.5T214-265Z"/></svg>
+      </span>
+      <h3>Developer resources</h3>
+      <p>Skip the learning curve with comprehensive training, videos, and deep-dives from community members like you.</p>
+      <span class="card-learn-more">Learn more →</span>
+    </a>
+
+  </div>
+</div>
+
+================
+File: docs/_includes/homepage/_ecosystem.md
+================
+<!-- Ecosystem -->
+<div class="feature-split">
+  <div class="feature-text">
+    <span class="feature-badge">Ecosystem</span>
+    <h2>Open ecosystem. Connect everything.</h2>
+    <p>ADK's open integration partners connect your agents with existing apps, a wide range of AI models, and extend agent capabilities to access data, add resilience, and evaluate performance.</p>
+    <a href="integrations/" class="btn btn-accent" style="margin-top:12px">Learn more</a>
+  </div>
+  <div class="feature-visual">
+    <div class="ui-wrapper">
+      <img src="assets/integrations-list.png" alt="ADK Integrations List" class="devui-img">
+    </div>
+  </div>
+</div>
+
+================
+File: docs/_includes/homepage/_eval.md
+================
+<!-- Eval Section -->
+<div class="feature-split">
+  <div class="feature-text">
+    <span class="feature-badge">Evaluation</span>
+    <h2>Go beyond vibes. Evaluate everything.</h2>
+    <p>Engage ADK's visual debugging, open evaluation framework, and partner tools to test your entire agent execution trajectory. Simulate user interactions, build custom performance metrics, and optimize agents against your evaluation results.</p>
+    <a href="evaluate/" class="btn btn-accent" style="margin-top:12px">Learn more</a>
+  </div>
+  <div class="feature-visual">
+    <div class="ui-wrapper">
+      <img src="assets/adk-eval-case.gif" alt="ADK Web Eval UI" class="devui-img">
+    </div>
+  </div>
+</div>
+
+================
+File: docs/_includes/homepage/_faq.md
+================
+<!-- FAQ Section -->
+<div class="faq-section">
+  <h2>Frequently Asked Questions</h2>
+  <p class="section-subtitle">Still have questions about ADK? Here are some answers:</p>
+
+  <div class="faq-grid">
+
+  <details class="faq-item-arrow">
+    <summary>Can I vibe code agents with ADK?</summary>
+    <p>Yes! ADK is designed to be written by both humans and AI. Connect your favorite coding assistant to our ADK developer Skills and AI-aware developer resources, and generate agents in seconds. Find out more about AI-powered coding of agents in our <a href="tutorials/coding-with-ai/">Coding with AI</a> guide.</p>
+  </details>
+
+  <details class="faq-item-arrow">
+    <summary>What AI models can I use with ADK?</summary>
+    <p>ADK can work with almost any generative AI model. The framework provides easy access to Gemini as well as other leading models, and we provide adapters that let you connect with many other models and model providers, including locally running models. For enterprises, ADK can connect to models on hosted services, including Google Cloud which provides a wide range of models and lets you closely manage performance, reliability, security, access, safety, and costs.</p>
+  </details>
+
+  <details class="faq-item-arrow">
+    <summary>What makes ADK different?</summary>
+    <p>With ADK, we are focused on building an open development framework that lets you build professional, production grade agents, without requiring a pile of code to get started. Our goal is to get you building agents quickly, and let you add functionality and complexity as you need it. ADK provides a basic structure for agents that is easy to build, and that structure is designed with the flexibility to let you extend, expand, and build complex, robust, useful agentic systems. We've put a lot of effort into providing you with development tools for interacting with agents you build, and providing ways to use AI-powered tools for building ADK agents. We are also quite proud of our approach to agent context management and how we manage context to keep it efficient, and also let you tune context management to your needs. We could go on, and if you are interested, you can find more details in our <a href="get-started/about/">developer docs</a>.</p>
+  </details>
+
+  <details class="faq-item-arrow">
+    <summary>How does ADK handle context management?</summary>
+    <p>Unlike tools that simply paste strings together until the context window overflows, ADK <b>manages</b> your context. We treat context like source code—sessions, memory, tool outputs, and artifacts are assembled into a structured view where every token earns its place. ADK automatically filters irrelevant events, summarizes older conversational turns, lazy-loads artifacts, and tracks token usage. This approach keeps your agents fast, efficient, and reliable by default, while giving you the controls to fully customize how context is managed for complex tasks.</p>
+  </details>
+
+  <details class="faq-item-arrow">
+    <summary>How does ADK deploy to production?</summary>
+    <p>ADK is built for <em>deploy anywhere</em> flexibility. You can containerize and run ADK on your own infrastructure, or take advantage of our native, one-command deployment to Google Cloud. When deploying to Google Cloud via Agent Engine (Vertex AI), Cloud Run, or GKE, your agents instantly inherit managed infrastructure, built-in authentication, Cloud Trace observability, and enterprise-grade security—all without requiring you to change a single line of your agent code. Develop locally, scale globally.</p>
+  </details>
+
+  <details class="faq-item-arrow">
+    <summary>When should I use an agent framework to work with generative AI?</summary>
+    <p>AI chat conversations can accomplish many tasks, but when you need to accomplish complex, multi-step processes, an agent framework lets you create a managed, repeatable task structure that can run <em>hands-off</em> with minimal human input. Agent frameworks like ADK can automatically initiate tasks, make multiple iterative AI model requests, manage context, handle tool calls, record data, run parallel jobs, handle failures, and resume tasks if they get stopped.</p>
+  </details>
+
+  </div>
+</div>
+
+================
+File: docs/_includes/homepage/_framework.md
+================
+<!-- Developer Tools -->
+<div class="feature-split reverse">
+  <div class="feature-text">
+    <span class="feature-badge">Framework</span>
+    <h2>Powerful simplicity. Built for scale.</h2>
+    <p>Start building ADK agents with prompts and tool calls, then grow to multi-agent orchestration, graph-based workflows, performance evaluation, and deployment to world class enterprise services for scalability, reliability, and throughput.</p>
+    <a href="get-started/about/" class="btn btn-accent" style="margin-top:12px">Learn more</a>
+  </div>
+  <div class="feature-visual">
+    <div class="ui-wrapper">
+      <img src="assets/hp-adk-web1.png" alt="ADK Web Dev UI" class="devui-img">
+    </div>
+  </div>
+</div>
+
+================
+File: docs/_includes/homepage/_hero.md
+================
+<!-- Hero Section -->
+<div class="hero-grid">
+  <div class="hero-content">
+    <h1>Build production agents, <span class="hero-punchline">not prototypes.</span></h1>
+    <p>ADK is the open-source agent development framework that lets you build, debug, and deploy reliable AI agents at enterprise scale. Available in Python, TypeScript, Go, and Java.</p>
+    <div class="hero-actions">
+      <a href="get-started/" class="btn btn-primary">Start building</a>
+      <!-- <a href="skills/" class="btn btn-accent">Agent skills</a> -->
+    </div>
+  </div>
+  <div class="hero-visual">
+    <!-- Tabbed Code Window -->
+    <div class="tabbed-area" id="tabbed-area">
+      <div class="mac-window">
+        <div class="iterm-tab-bar">
+          <div class="iterm-tab active" data-lang="python">Python</div>
+          <div class="iterm-tab" data-lang="typescript">TypeScript</div>
+          <div class="iterm-tab" data-lang="go">Go</div>
+          <div class="iterm-tab" data-lang="java">Java</div>
+        </div>
+<div class="code-content" id="code-python"><pre><span class="kw">from</span> google.adk <span class="kw">import</span> <span class="fn">Agent</span>
+<span class="kw">from</span> google.adk.tools <span class="kw">import</span> google_search
+
+agent = <span class="fn">Agent</span>(
+    name=<span class="str">"researcher"</span>,
+    model=<span class="str">"gemini-flash-latest"</span>,
+    instruction=<span class="str">"You help users research topics thoroughly."</span>,
+    tools=[google_search],
+)</pre></div>
+
+<div class="code-content" id="code-typescript" style="display:none"><pre><span class="kw">import</span> { <span class="fn">LlmAgent, GOOGLE_SEARCH</span> } <span class="kw">from</span> <span class="str">'@google/adk'</span>;
+
+<span class="kw">const</span> agent = <span class="kw">new</span> <span class="fn">LlmAgent</span>({
+  name: <span class="str">'researcher'</span>,
+  model: <span class="str">'gemini-flash-latest'</span>,
+  instruction: <span class="str">'You help users research topics thoroughly.'</span>,
+  tools: [GOOGLE_SEARCH],
+});
+
+</pre></div>
+
+<div class="code-content" id="code-go" style="display:none"><pre><span class="kw">import</span> <span class="str">"google.golang.org/adk/agent"</span>
+
+a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
+    agent.<span class="fn">WithModel</span>(<span class="str">"gemini-flash-latest"</span>),
+    agent.<span class="fn">WithInstruction</span>(<span class="str">"You help users research topics thoroughly."</span>),
+    agent.<span class="fn">WithTools</span>(googleSearch),
+)
+
+
+</pre></div>
+
+<div class="code-content" id="code-java" style="display:none"><pre><span class="kw">import</span> com.google.adk.agents.<span class="fn">LlmAgent</span>;
+<span class="kw">import</span> com.google.adk.tools.<span class="fn">GoogleSearchTool</span>;
+
+<span class="fn">LlmAgent</span> agent = <span class="fn">LlmAgent</span>.builder()
+    .name(<span class="str">"researcher"</span>)
+    .model(<span class="str">"gemini-flash-latest"</span>)
+    .instruction(<span class="str">"You help users research topics thoroughly."</span>)
+    .tools(<span class="kw">new</span> <span class="fn">GoogleSearchTool()</span>)
+    .build();</pre></div>
+
+</div>
+      <!-- Install info synced with tabs -->
+      <div class="install-info" id="install-python">
+        <div class="install-cmd">
+          <code>pip install google-adk</code>
+          <button class="copy-btn" data-copy="pip install google-adk" title="Copy to clipboard">📋</button>
+        </div>
+      </div>
+      <div class="install-info" id="install-typescript" style="display:none">
+        <div class="install-cmd">
+          <code>npm install @google/adk</code>
+          <button class="copy-btn" data-copy="npm install @google/adk" title="Copy to clipboard">📋</button>
+        </div>
+      </div>
+      <div class="install-info" id="install-go" style="display:none">
+        <div class="install-cmd">
+          <code>go get google.golang.org/adk</code>
+          <button class="copy-btn" data-copy="go get google.golang.org/adk" title="Copy to clipboard">📋</button>
+        </div>
+      </div>
+      <div class="install-info" id="install-java" style="display:none">
+        <div class="install-cmd">
+          <code>com.google.adk:google-adk</code>
+          <button class="copy-btn" data-copy="com.google.adk:google-adk" title="Copy to clipboard">📋</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+================
 File: docs/2.0/index.md
 ================
 # Welcome to ADK 2.0 Alpha
@@ -14376,6 +14625,454 @@ a score between -1.0 and 1.0:
     }
   }
 }
+```
+
+================
+File: docs/evaluate/environment_simulation.md
+================
+# Environment simulation for evaluations
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.24.0</span>
+</div>
+
+When evaluating agents that rely on external dependencies — such as APIs,
+databases, or third-party services — running those tools live during testing can
+be slow, costly, or unreliable. The **Environment Simulator** lets you safely
+intercept these tool calls during agent execution and replace them with
+controlled, deterministic responses, without modifying the agent itself. This
+approach can fill a critical gap in the agent improvement loop, allowing you to
+create hermetic, offline test runs that isolate your agent logic for reliable
+scoring.
+
+Overall, this feature lets you:
+
+*   Test how an agent handles API errors or edge-case responses.
+*   Run evaluations offline, without access to live backends.
+*   Generate realistic mock responses automatically using an LLM.
+*   Produce reproducible test runs by seeding probabilistic injections.
+
+The Environment Simulation integrates with ADK's tool execution pipeline via the
+[`before_tool_callback`](/callbacks/types-of-callbacks/#tool-execution-callbacks)
+hook or the [plugin system](/plugins/), so no
+changes to your agent code are required.
+
+```
+The Environment Simulation is an experimental feature. Its API may change in future
+releases.
+```
+
+## How it works
+
+While [User Simulation](/evaluate/user-sim/)
+drives the conversation forward, Environment Simulation provides the stable
+backend. At a high level, the Environment Simulator sits between your agent and
+its tools. When the agent calls a tool, the simulator intercepts the call and
+decides whether to return a synthetic response — either a predefined injection
+or an LLM-generated mock — or to let the real tool execute.
+
+The decision logic follows this order for each configured tool:
+
+1.  **Injection configs** are checked first, in order. If a matching injection
+    is found (based on argument matching and probability), its error or response
+    is returned immediately.
+2.  **Mock strategy** is used as a fallback if no injection config applies. The
+    simulator calls an LLM to generate a realistic response based on the tool's
+    schema and any stateful context.
+3.  **No-op** is returned (`None`) if the tool is not in the simulator config,
+    allowing the real tool to execute normally.
+
+## Integration
+
+The `EnvironmentSimulationFactory` class provides two integration points:
+
+*   `create_callback()` — Returns an async callable suitable for use as a
+    `before_tool_callback` on any `LlmAgent`.
+*   `create_plugin()` — Returns an `EnvironmentSimulationPlugin` instance that
+    integrates with the ADK plugin system.
+
+### Using as a callback
+
+The following example shows how to create an environment simulation as one of the adk agent callbacks.
+
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.tools.environment_simulation import EnvironmentSimulationFactory
+from google.adk.tools.environment_simulation.environment_simulation_config import (
+    EnvironmentSimulationConfig,
+    InjectedError,
+    InjectionConfig,
+    ToolSimulationConfig,
+)
+
+config = EnvironmentSimulationConfig(
+    tool_simulation_configs=[
+        ToolSimulationConfig(
+            tool_name="get_user_profile",
+            injection_configs=[
+                InjectionConfig(
+                    injected_error=InjectedError(
+                        injected_http_error_code=503,
+                        error_message="Service temporarily unavailable.",
+                    )
+                )
+            ],
+        )
+    ]
+)
+
+agent = LlmAgent(
+    name="my_agent",
+    model="gemini-2.5-flash",
+    tools=[get_user_profile],
+    before_tool_callback=EnvironmentSimulationFactory.create_callback(config),
+)
+```
+
+### Using as a plugin
+
+The following example shows how to create environment simulation as an ADK agent plugin.
+
+```python
+from google.adk.apps import App
+from google.adk.tools.environment_simulation import EnvironmentSimulationFactory
+from google.adk.tools.environment_simulation.environment_simulation_config import (
+    EnvironmentSimulationConfig,
+    MockStrategy,
+    ToolSimulationConfig,
+)
+
+config = EnvironmentSimulationConfig(
+    tool_simulation_configs=[
+        ToolSimulationConfig(
+            tool_name="search_products",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        )
+    ]
+)
+
+app = App(
+    agent=my_agent,
+    plugins=[EnvironmentSimulationFactory.create_plugin(config)],
+)
+```
+
+## Configuration reference
+
+You can configure the Environment Simulator with a set of dataclasses. The
+following sections provide a detailed reference for each configuration object.
+
+### `EnvironmentSimulationConfig`
+
+The top-level configuration object.
+
+Field                            | Type                         | Default              | Description
+:------------------------------- | :--------------------------- | :------------------- | :----------
+`tool_simulation_configs`        | `List[ToolSimulationConfig]` | required             | One entry per tool to simulate. Must not be empty, and tool names must be unique.
+`simulation_model`               | `str`                        | `"gemini-2.5-flash"` | The LLM used for tool connection analysis and mock response generation.
+`simulation_model_configuration` | `GenerateContentConfig`      | thinking enabled     | LLM generation config for internal simulator calls.
+`environment_data`               | `str \| None`                | `None`               | Optional environment context (e.g., a JSON database snapshot) passed to mock strategies to generate more realistic responses.
+`tracing`                        | `str \| None`                | `None`               | Tracing data (e.g., a prior agent run trace in JSON string format) to provide historical context.
+
+### `ToolSimulationConfig`
+
+Defines how a single named tool should be simulated.
+
+Field                | Type                    | Default                     | Description
+:------------------- | :---------------------- | :-------------------------- | :----------
+`tool_name`          | `str`                   | required                    | Must match the tool's registered name exactly.
+`injection_configs`  | `List[InjectionConfig]` | `[]`                        | Zero or more injection configs, checked in order before the mock strategy.
+`mock_strategy_type` | `MockStrategy`          | `MOCK_STRATEGY_UNSPECIFIED` | Fallback strategy when no injection is triggered.
+
+### `InjectionConfig`
+
+Controls a single synthetic response that can be injected into a tool call.
+Exactly one of `injected_error` or `injected_response` must be set.
+
+Field                      | Type                     | Default | Description
+:------------------------- | :----------------------- | :------ | :----------
+`injected_error`           | `InjectedError \| None`  | `None`  | Error to return (mutually exclusive with `injected_response`).
+`injected_response`        | `Dict[str, Any] \| None` | `None`  | Fixed response dict to return (mutually exclusive with `injected_error`).
+`injection_probability`    | `float`                  | `1.0`   | Probability `[0.0, 1.0]` that this injection fires.
+`match_args`               | `Dict[str, Any] \| None` | `None`  | If set, the injection only fires when the tool's arguments contain all key-value pairs in `match_args`.
+`injected_latency_seconds` | `float`                  | `0.0`   | Artificial delay (≤ 120 s) added before returning the injection result.
+`random_seed`              | `int \| None`            | `None`  | Seed for the probability check, enabling deterministic injection behavior.
+
+### `InjectedError`
+
+Defines an HTTP-style error response.
+
+| Field                      | Type  | Description                             |
+| :------------------------- | :---- | :-------------------------------------- |
+| `injected_http_error_code` | `int` | HTTP status code to surface as          |
+:                            :       : `"error_code"` in the tool response.    :
+| `error_message`            | `str` | Human-readable message surfaced as      |
+:                            :       : `"error_message"` in the tool response. :
+
+### `MockStrategy`
+
+Enum controlling how the simulator generates responses when no injection fires.
+
+| Value                     | Description                                     |
+| :------------------------ | :---------------------------------------------- |
+| `MOCK_STRATEGY_TOOL_SPEC` | Uses the tool's schema and stateful context to  |
+:                           : prompt an LLM to generate a realistic response. :
+| `MOCK_STRATEGY_TRACING`   | *(Deprecated)* Please use                       |
+:                           : `MOCK_STRATEGY_TOOL_SPEC` with tracing input.   :
+
+## Injection mode
+
+Use injection configs to test specific failure or edge-case scenarios.
+Injections are evaluated in list order; the first one whose `match_args`
+criteria are met (and whose probability check passes) is applied.
+
+### Injecting errors
+
+The following example shows how to inject errors with specific error code and error message to the agent.
+
+```python
+from google.adk.tools.environment_simulation.environment_simulation_config import (
+    InjectedError,
+    InjectionConfig,
+    ToolSimulationConfig,
+)
+
+ToolSimulationConfig(
+    tool_name="charge_payment",
+    injection_configs=[
+        InjectionConfig(
+            injected_error=InjectedError(
+                injected_http_error_code=402,
+                error_message="Payment declined.",
+            )
+        )
+    ],
+)
+```
+
+The agent will receive `{"error_code": 402, "error_message": "Payment
+declined."}` instead of a real tool result, allowing you to evaluate how the
+agent handles payment failures.
+
+### Injecting fixed responses
+
+Use the following InjectionConfig to specify a success response with fixed response payload. 
+
+```python
+InjectionConfig(
+    injected_response={"status": "ok", "order_id": "ORD-9999"}
+)
+```
+
+### Conditional injection with argument matching
+
+Use `match_args` to inject only when specific arguments are passed.
+
+```python
+InjectionConfig(
+    match_args={"item_id": "ITEM-404"},
+    injected_error=InjectedError(
+        injected_http_error_code=404,
+        error_message="Item not found.",
+    ),
+)
+```
+
+Here, the error is injected only when the tool is called with
+`item_id="ITEM-404"`. All other calls pass through to the next injection config
+or to the mock strategy.
+
+### Probabilistic injection
+
+Set `injection_probability` to a value between `0.0` and `1.0` to simulate flaky
+behavior. For reproducible test runs, pin the random outcome with `random_seed`.
+
+```python
+InjectionConfig(
+    injection_probability=0.3,
+    random_seed=42,
+    injected_error=InjectedError(
+        injected_http_error_code=500,
+        error_message="Internal server error.",
+    ),
+)
+```
+
+### Injecting latency
+
+Use `injected_latency_seconds` to simulate slow backend responses, useful for
+testing timeout handling or user experience under degraded conditions.
+
+```python
+InjectionConfig(
+    injected_latency_seconds=5.0,
+    injected_response={"result": "slow but successful"},
+)
+```
+
+### Combining multiple injection configs
+
+Multiple injection configs on a single tool are checked in order. You can
+combine them to test multiple scenarios:
+
+```python
+ToolSimulationConfig(
+    tool_name="get_inventory",
+    injection_configs=[
+        # Always fail for a specific out-of-stock item
+        InjectionConfig(
+            match_args={"sku": "OOS-001"},
+            injected_response={"quantity": 0, "available": False},
+        ),
+        # Randomly fail 20% of the time for all other items
+        InjectionConfig(
+            injection_probability=0.2,
+            random_seed=7,
+            injected_error=InjectedError(
+                injected_http_error_code=503,
+                error_message="Inventory service unavailable.",
+            ),
+        ),
+    ],
+)
+```
+
+## Mock strategy mode
+
+When you want the simulator to generate plausible responses automatically —
+rather than returning hand-crafted values — use `MOCK_STRATEGY_TOOL_SPEC`.
+
+The simulator uses an LLM to:
+
+1.  Analyze the schemas of all tools the agent has access to, and identify
+    *stateful dependencies* between them (e.g., a `create_order` tool produces
+    an `order_id` that `get_order` consumes).
+2.  Track a **state store** of IDs and resources created during the session.
+3.  Generate a response that is consistent with the tool's schema and the
+    current state — returning a 404-style error if a consuming tool requests a
+    resource that was never created.
+
+```python
+from google.adk.tools.environment_simulation.environment_simulation_config import (
+    EnvironmentSimulationConfig,
+    MockStrategy,
+    ToolSimulationConfig,
+)
+
+config = EnvironmentSimulationConfig(
+    tool_simulation_configs=[
+        ToolSimulationConfig(
+            tool_name="create_order",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        ),
+        ToolSimulationConfig(
+            tool_name="get_order",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        ),
+        ToolSimulationConfig(
+            tool_name="cancel_order",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        ),
+    ]
+)
+```
+
+With this config, the simulator will automatically generate an `order_id` when
+`create_order` is mocked, and use it to return consistent results (or a
+not-found error) when `get_order` or `cancel_order` are subsequently called.
+
+### Providing environment data
+
+Pass domain-specific context through `environment_data` to make mock responses
+more realistic. This can be a JSON string representing a snapshot of your
+database or any structured context the LLM should use when generating responses.
+
+```python
+import json
+
+db_snapshot = {
+    "products": [
+        {"id": "P-001", "name": "Wireless Headphones", "price": 79.99, "stock": 12},
+        {"id": "P-002", "name": "USB-C Hub", "price": 34.99, "stock": 0},
+    ],
+    "warehouse_location": "US-WEST-2",
+}
+
+config = EnvironmentSimulationConfig(
+    tool_simulation_configs=[
+        ToolSimulationConfig(
+            tool_name="search_products",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        ),
+    ],
+    environment_data=json.dumps(db_snapshot),
+)
+```
+
+The LLM will use this data to return product names, prices, and stock levels
+that match your domain, rather than generating arbitrary placeholder values.
+
+### Providing tracing data
+
+Feed traces generated in the agent to be mocked through `tracing` to make mock
+responses more realistic.
+
+```python
+import json
+
+agent_traces = [
+    {
+        "invocation_id": "inv-001",
+        "user_content": {"role": "user", "parts": [{"text": "Search for high-end headphones"}]},
+        "intermediate_data": {
+            "tool_uses": [
+                {
+                    "name": "search_products",
+                    "args": {"query": "high-end headphones"},
+                    "response": {"products": [{"id": "P-123", "name": "Premium Wireless ANC Headphones"}]}
+                }
+            ]
+        }
+    }
+]
+
+config = EnvironmentSimulationConfig(
+    tool_simulation_configs=[
+        ToolSimulationConfig(
+            tool_name="search_products",
+            mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+        ),
+    ],
+    tracing=json.dumps(agent_traces),
+)
+```
+
+The LLM will use this data to return product names, prices, and stock levels
+that match your domain, rather than generating arbitrary placeholder values.
+
+## Mixing injections and mock strategy
+
+Injection configs and a mock strategy can be combined on the same tool.
+Injections are always checked first; the mock strategy fires only when no
+injection applies.
+
+```python
+ToolSimulationConfig(
+    tool_name="send_notification",
+    injection_configs=[
+        # Always fail for a known-bad recipient
+        InjectionConfig(
+            match_args={"recipient_id": "INVALID"},
+            injected_error=InjectedError(
+                injected_http_error_code=400,
+                error_message="Invalid recipient.",
+            ),
+        ),
+    ],
+    # For all other recipients, generate a plausible success response
+    mock_strategy_type=MockStrategy.MOCK_STRATEGY_TOOL_SPEC,
+)
 ```
 
 ================
@@ -43981,67 +44678,63 @@ export const rootAgent = new LlmAgent({
 
 
 
-### Example 2: Google Maps MCP Server
+### Example 2: Google Maps Grounding Lite MCP Server
 
-This example demonstrates connecting to the Google Maps MCP server.
+[Google Maps Platform Grounding Lite](https://developers.google.com/maps/ai/grounding-lite) is a service with Model Context Protocol (MCP) support that makes it easy to ground your AI applications with trusted geospatial data from Google Maps. The MCP server provides tools that allow LLMs to access capabilities for places, weather, and routes. You can try out Grounding Lite by enabling it in any tool that supports MCP servers.
 
-#### Step 1: Get API Key and Enable APIs
+Grounding Lite provides tools that allow LLMs to access the following Google Maps capabilities:
 
-1.  **Google Maps API Key:** Follow the directions at [Use API keys](https://developers.google.com/maps/documentation/javascript/get-api-key#create-api-keys) to obtain a Google Maps API Key.
-2.  **Enable APIs:** In your Google Cloud project, ensure the following APIs are enabled:
-    *   Directions API
-    *   Routes API
-    For instructions, see the [Getting started with Google Maps Platform](https://developers.google.com/maps/get-started#enable-api-sdk) documentation.
+* **Search places:** Request information about places and get AI-generated place data summaries, as well as Place IDs, latitude and longitude coordinates, and Google Maps links for each of the places included in the summary. You can use the returned Place IDs and latitude and longitude coordinates with other Google Maps Platform APIs to show places on a map.
+* **Lookup weather:** Request information about weather and return current conditions, hourly forecasts, and daily forecasts.
+* **Compute routes:** Request information about driving or walking routes between two locations and return route distance and duration information.
 
-#### Step 2: Define your Agent with `McpToolset` for Google Maps
+#### Step 1: Enable the Maps Grounding Lite service on your Google Cloud project
+
+1. [Set up your Google Cloud project](https://developers.google.com/maps/get-started#create-project) if you haven’t got one.
+2. In the [Google Cloud Console](https://console.developers.google.com), choose the project you want to use for Grounding Lite.
+3. Enable Grounding Lite in the [Google Cloud Console API Library](https://console.developers.google.com/apis/library/mapstools.googleapis.com).
+4. [Get a Google Maps Platform API Key](https://developers.google.com/maps/get-started#api-key)
+
+#### Step 2: Define your Agent with `McpToolset` for Google Maps Grounding Lite
 
 Modify your `agent.py` file (e.g., in `./adk_agent_samples/mcp_agent/agent.py`). Replace `YOUR_GOOGLE_MAPS_API_KEY` with the actual API key you obtained.
 
 ```python
 # ./adk_agent_samples/mcp_agent/agent.py
 import os
-from google.adk.agents import LlmAgent
+from google.adk.agents.llm_agent import Agent
 from google.adk.tools.mcp_tool import McpToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from mcp import StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
 # Retrieve the API key from an environment variable or directly insert it.
 # Using an environment variable is generally safer.
 # Ensure this environment variable is set in the terminal where you run 'adk web'.
 # Example: export GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_KEY"
-google_maps_api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 
-if not google_maps_api_key:
+if not GOOGLE_MAPS_API_KEY:
     # Fallback or direct assignment for testing - NOT RECOMMENDED FOR PRODUCTION
-    google_maps_api_key = "YOUR_GOOGLE_MAPS_API_KEY_HERE" # Replace if not using env var
-    if google_maps_api_key == "YOUR_GOOGLE_MAPS_API_KEY_HERE":
+    GOOGLE_MAPS_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE" # Replace if not using env var
+    if GOOGLE_MAPS_API_KEY == "YOUR_GOOGLE_MAPS_API_KEY_HERE":
         print("WARNING: GOOGLE_MAPS_API_KEY is not set. Please set it as an environment variable or in the script.")
         # You might want to raise an error or exit if the key is crucial and not found.
 
-root_agent = LlmAgent(
-    model='gemini-2.5-flash',
-    name='maps_assistant_agent',
-    instruction='Help the user with mapping, directions, and finding places using Google Maps tools.',
+root_agent = Agent(
+    model='gemini-3-flash-preview',
+    name='travel_planner_agent',
+    description='A helpful assistant for planning travel routes.',
     tools=[
         McpToolset(
-            connection_params=StdioConnectionParams(
-                server_params = StdioServerParameters(
-                    command='npx',
-                    args=[
-                        "-y",
-                        "@modelcontextprotocol/server-google-maps",
-                    ],
-                    # Pass the API key as an environment variable to the npx process
-                    # This is how the MCP server for Google Maps expects the key.
-                    env={
-                        "GOOGLE_MAPS_API_KEY": google_maps_api_key
-                    }
-                ),
-            ),
-            # You can filter for specific Maps tools if needed:
-            # tool_filter=['get_directions', 'find_place_by_id']
+            connection_params=StreamableHTTPConnectionParams(
+                url="https://mapstools.googleapis.com/mcp",
+                headers={
+                    "X-Goog-Api-Key": GOOGLE_MAPS_API_KEY,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json, text/event-stream"
+                }
+            )
         )
-    ],
+    ]
 )
 ```
 
@@ -44071,15 +44764,15 @@ from . import agent
     ```
 
 3.  **Interact in the UI**:
-    *   Select the `maps_assistant_agent`.
+    *   Select the `travel_planner_agent`.
     *   Try prompts like:
-        *   "Get directions from GooglePlex to SFO."
+        *   "I will be in San Francisco tomorrow. What’s the weather like?"
         *   "Find coffee shops near Golden Gate Park."
-        *   "What's the route from Paris, France to Berlin, Germany?"
+        *   "Get directions from GooglePlex to SFO."
 
-You should see the agent use the Google Maps MCP tools to provide directions or location-based information.
+You should see the agent use the Google Maps Grounding Lite MCP tools to provide directions or location-based information.
 
-<img src="../../assets/adk-tool-mcp-maps-adk-web-demo.png" alt="MCP with ADK Web - Google Maps Example">
+<img src="../../assets/adk-tool-maps-lite-mcp-adk-web-demo.png" alt="Google Maps Grounding Lite MCP with ADK Web Example">
 
 
 For Java, refer to the following sample to define an agent that initializes the `McpToolset`:
@@ -44095,45 +44788,50 @@ import com.google.adk.tools.mcp.StdioServerParameters;
 import com.google.genai.types.Content;
 import com.google.genai.types.Part;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class MapsAgentCreator {
 
     /**
-     * Initializes an McpToolset for Google Maps, retrieves tools,
+     * Initializes an McpToolset for Google Maps Grounding Lite, 
      * creates an LlmAgent, sends a map-related prompt, and closes the toolset.
-     * @param args Command line arguments (not used).
      */
     public static void main(String[] args) {
-        // TODO: Replace with your actual Google Maps API key, on a project with the Places API enabled.
-        String googleMapsApiKey = "YOUR_GOOGLE_MAPS_API_KEY";
+        // Read from environment variables
+        String googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY");
 
-        Map<String, String> envVariables = new HashMap<>();
-        envVariables.put("GOOGLE_MAPS_API_KEY", googleMapsApiKey);
+        if (googleMapsApiKey == null || googleMapsApiKey.trim().isEmpty()) {
+            // Fallback or direct assignment for testing - NOT RECOMMENDED FOR PRODUCTION
+            googleMapsApiKey = "YOUR_GOOGLE_MAPS_API_KEY_HERE"; // Replace if not using env var
+            if ("YOUR_GOOGLE_MAPS_API_KEY_HERE".equals(googleMapsApiKey)) {
+                System.out.println("WARNING: GOOGLE_MAPS_API_KEY is not set. Please set it as an environment variable or in the script.");
+            }
+        }
 
-        StdioServerParameters serverParams = StdioServerParameters.builder()
-                .command("npx")
-                .args(List.of(
-                        "-y",
-                        "@modelcontextprotocol/server-google-maps"
-                ))
-                .env(envVariables)
+        // Setup the headers for the remote MCP connection
+        Map<String, String> headers = new HashMap<>();
+        headers.put("X-Goog-Api-Key", googleMapsApiKey);
+        headers.put("Content-Type", "application/json");
+        headers.put("Accept", "application/json, text/event-stream");
+
+        // Use StreamableHttpServerParameters for the remote HTTP MCP server connection
+        StreamableHttpServerParameters serverParams = StreamableHttpServerParameters.builder("https://mapstools.googleapis.com/mcp")
+                .headers(headers)
                 .build();
 
-        try (McpToolset toolset = new McpToolset(serverParams.toServerParameters())) {
+        try (McpToolset toolset = new McpToolset(serverParams)) {
+            // Build the Agent with the configured Toolset
             LlmAgent agent = LlmAgent.builder()
-                    .model("gemini-2.5-flash")
-                    .name("maps_assistant")
-                    .description("Maps assistant")
-                    .instruction("Help user with mapping and directions using available tools.")
+                    .model("gemini-3-flash-preview")
+                    .name("travel_planner_agent")
+                    .description("A helpful assistant for planning travel routes.")
                     .tools(toolset)
                     .build();
 
             System.out.println("Agent created: " + agent.name());
 
+            // Set up the runner and session
             InMemoryRunner runner = new InMemoryRunner(agent);
             String userId = "maps-user-" + System.currentTimeMillis();
             String sessionId = "maps-session-" + System.currentTimeMillis();
@@ -44148,6 +44846,7 @@ public class MapsAgentCreator {
 
             System.out.println("\nSending prompt: \"" + promptText + "\" to agent...\n");
 
+            // Execute the prompt asynchronously and print the streamed events
             runner.runAsync(sessionKey, promptContent)
                     .blockingForEach(event -> {
                         System.out.println("Event received: " + event.toJson());
@@ -44158,11 +44857,6 @@ public class MapsAgentCreator {
         }
     }
 }
-```
-
-A successful response will look like this:
-```shell
-Event received: {"id":"1a4deb46-c496-4158-bd41-72702c773368","invocationId":"e-48994aa0-531c-47be-8c57-65215c3e0319","author":"maps_assistant","content":{"parts":[{"text":"OK. I see a few options. The closest one is CVS Pharmacy at 5 Pennsylvania Plaza, New York, NY 10001, United States. Would you like directions?\n"}],"role":"model"},"actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"timestamp":1747380026642}
 ```
 
 For TypeScript, refer to the following sample to define an agent that initializes the `MCPToolset`:
@@ -44176,40 +44870,29 @@ import {LlmAgent, MCPToolset} from "@google/adk";
 // Example: export GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_KEY"
 const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
 if (!googleMapsApiKey) {
+    console.warn("WARNING: GOOGLE_MAPS_API_KEY is not set.");
+    // We throw an error here to prevent the agent from booting without its crucial grounding key
     throw new Error('GOOGLE_MAPS_API_KEY is not provided, please run "export GOOGLE_MAPS_API_KEY=YOUR_ACTUAL_KEY" to add that.');
 }
 
 export const rootAgent = new LlmAgent({
-    model: "gemini-2.5-flash",
-    name: "maps_assistant_agent",
-    instruction: "Help the user with mapping, directions, and finding places using Google Maps tools.",
+    model: "gemini-3-flash-preview",
+    name: "travel_planner_agent",
+    description: "A helpful assistant for planning travel.",
     tools: [
-        new MCPToolset(
-            {
-                type: "StdioConnectionParams",
-                serverParams: {
-                    command: "npx",
-                    args: [
-                        "-y",
-                        "@modelcontextprotocol/server-google-maps",
-                    ],
-                    // Pass the API key as an environment variable to the npx process
-                    // This is how the MCP server for Google Maps expects the key.
-                    env: {
-                        "GOOGLE_MAPS_API_KEY": googleMapsApiKey
-                    }
-                },
-            },
-            // You can filter for specific Maps tools if needed:
-            // ['get_directions', 'find_place_by_id']
-        )
+        new MCPToolset({
+            // Using SseConnectionParams to connect to the remote Grounding Lite service,
+            // mirroring Python's StreamableHTTPConnectionParams.
+            type: "SseConnectionParams", 
+            url: "https://mapstools.googleapis.com/mcp",
+            headers: {
+                "X-Goog-Api-Key": googleMapsApiKey,
+                "Content-Type": "application/json",
+                "Accept": "application/json, text/event-stream"
+            }
+        })
     ],
 });
-```
-
-A successful response will look like this:
-```shell
-Event received: {"id":"1a4deb46-c496-4158-bd41-72702c773368","invocationId":"e-48994aa0-531c-47be-8c57-65215c3e0319","author":"maps_assistant","content":{"parts":[{"text":"OK. I see a few options. The closest one is CVS Pharmacy at 5 Pennsylvania Plaza, New York, NY 10001, United States. Would you like directions?\n"}],"role":"model"},"actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"timestamp":1747380026642}
 ```
 
 ## 2. Building an MCP server with ADK tools (MCP server exposing ADK)
@@ -49689,155 +50372,95 @@ are *not compatible* with the following ADK features:
 File: docs/index.md
 ================
 ---
+title: Agent Development Kit (ADK)
 hide:
   - navigation
   - toc
 ---
+<link rel="stylesheet" type="text/css" href="stylesheets/homepage.css" />
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.9.0/dist/bundle/asciinema-player.css" />
+<script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.9.0/dist/bundle/asciinema-player.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>document.body.classList.add('adk-landing-page');</script>
 
-<div style="text-align: center;">
-  <div class="centered-logo-text-group">
-    <img src="assets/agent-development-kit.png" alt="Agent Development Kit Logo" width="100">
-    <h1>Agent Development Kit</h1>
-  </div>
-</div>
+<div class="adk-landing">
 
-Agent Development Kit (ADK) is a flexible and modular framework for **developing
-and deploying AI agents**. While optimized for Gemini and the Google ecosystem,
-ADK is **model-agnostic**, **deployment-agnostic**, and is built for
-**compatibility with other frameworks**. ADK was designed to make agent
-development feel more like software development, to make it easier for
-developers to create, deploy, and orchestrate agentic architectures that range
-from simple tasks to complex workflows.
+<!-- Ambient Glows -->
+<div class="glow glow-tl"></div>
+<div class="glow glow-tr"></div>
+<div class="glow glow-mr"></div>
 
-??? tip "News: ADK Go 1.0.0 released!"
+<!-- Hero Section -->
+{{% include '_includes/homepage/_hero.md' %}}
 
-    ADK Go 1.0.0 release adds several major features, including OpenTelemetry
-    integration, self-healing logic using plugins, and improved human input support.
-    For more details on this release, see the
-    [ADK Go v1.0 announcement](https://developers.googleblog.com/adk-go-10-arrives/).
+<!-- Framework -->
+{{% include '_includes/homepage/_framework.md' %}}
 
-??? tip "News: ADK Java 1.0.0 released!"
+<!-- Ecosystem -->
+{{% include '_includes/homepage/_ecosystem.md' %}}
 
-    ADK Java 1.0.0 is now available! This release includes several
-    bug fixes and enhancements. Read more about it in the
-    [blog announcement](https://developers.googleblog.com/announcing-adk-for-java-100-building-the-future-of-ai-agents-in-java/).
-    Upgrade to ADK Java 1.0.0 to take advantage of these enhancements
-    and ensure optimal performance in your applications.
+<!-- AI Dev Tools -->
+{{% include '_includes/homepage/_ai-dev-tools.md' %}}
 
-<div id="centered-install-tabs" class="install-command-container" markdown="1">
+<!-- Eval Section -->
+{{% include '_includes/homepage/_eval.md' %}}
 
-<p class="get-started-text" style="text-align: center;">Get started:</p>
+<!-- Ready to Build CTA Section -->
+{{% include '_includes/homepage/_build-cta.md' %}}
 
-=== "Python"
-    <br>
-    <p style="text-align: center;">
-    <code>pip install google-adk</code>
-    </p>
+<!-- Community Section -->
+{{% include '_includes/homepage/_community.md' %}}
 
-=== "TypeScript"
-    <br>
-    <p style="text-align: center;">
-    <code>npm install @google/adk</code>
-    </p>
+<!-- FAQ Section -->
+{{% include '_includes/homepage/_faq.md' %}}
 
-=== "Go"
-    <br>
-    <p style="text-align: center;">
-    <code>go get google.golang.org/adk</code>
-    </p>
+<script>
+// Tab switching logic
+document.addEventListener("DOMContentLoaded", function() {
+  var tabs = document.querySelectorAll('.iterm-tab');
+  var langs = ['python', 'go', 'java', 'typescript'];
 
-=== "Java"
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var lang = this.getAttribute('data-lang');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      this.classList.add('active');
+      langs.forEach(function(l) {
+        document.getElementById('code-' + l).style.display = l === lang ? 'block' : 'none';
+        document.getElementById('install-' + l).style.display = l === lang ? 'flex' : 'none';
+      });
+    });
+  });
 
-    ```xml title="pom.xml"
-    <dependency>
-        <groupId>com.google.adk</groupId>
-        <artifactId>google-adk</artifactId>
-        <version>1.0.0</version>
-    </dependency>
-    ```
+  // Copy-to-clipboard buttons
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.copy-btn');
+    if (!btn) return;
+    var text = btn.getAttribute('data-copy');
+    navigator.clipboard.writeText(text).then(function() {
+      var orig = btn.textContent;
+      btn.textContent = '✅';
+      setTimeout(function() { btn.textContent = orig; }, 1500);
+    });
+  });
 
-    ```gradle title="build.gradle"
-    dependencies {
-        implementation 'com.google.adk:google-adk:1.0.0'
-    }
-    ```
-
-</div>
-
-<p style="text-align:center;">
-  <a href="/get-started/python/" class="md-button" style="margin:3px">Start with Python</a>
-  <a href="/get-started/typescript/" class="md-button" style="margin:3px">Start with TypeScript</a>
-  <a href="/get-started/go/" class="md-button" style="margin:3px">Start with Go</a>
-  <a href="/get-started/java/" class="md-button" style="margin:3px">Start with Java</a>
-</p>
-
----
-
-## Learn more
-
-[:fontawesome-brands-youtube:{.youtube-red-icon} Watch "Introducing Agent Development Kit"!](https://www.youtube.com/watch?v=zgrOwow_uTQ){:target="_blank" rel="noopener noreferrer"}
-
-<div class="grid cards" markdown>
-
--   :material-transit-connection-variant: **Flexible Orchestration**
-
-    ---
-
-    Define workflows using workflow agents (`Sequential`, `Parallel`, `Loop`)
-    for predictable pipelines, or leverage LLM-driven dynamic routing
-    (`LlmAgent` transfer) for adaptive behavior.
-
-    [**Learn about agents**](agents/index.md)
-
--   :material-graph: **Multi-Agent Architecture**
-
-    ---
-
-    Build modular and scalable applications by composing multiple specialized
-    agents in a hierarchy. Enable complex coordination and delegation.
-
-    [**Explore multi-agent systems**](agents/multi-agents.md)
-
--   :material-toolbox-outline: **Rich Tool Ecosystem**
-
-    ---
-
-    Equip agents with diverse capabilities: use pre-built tools (Search, Code
-    Exec), create custom functions, integrate 3rd-party libraries, or even use
-    other agents as tools.
-
-    [**Browse tools and integrations**](integrations/index.md)
-
--   :material-rocket-launch-outline: **Deployment Ready**
-
-    ---
-
-    Containerize and deploy your agents anywhere – run locally, scale with
-    Vertex AI Agent Engine, or integrate into custom infrastructure using Cloud
-    Run or Docker.
-
-    [**Deploy agents**](deploy/index.md)
-
--   :material-clipboard-check-outline: **Built-in Evaluation**
-
-    ---
-
-    Systematically assess agent performance by evaluating both the final
-    response quality and the step-by-step execution trajectory against
-    predefined test cases.
-
-    [**Evaluate agents**](evaluate/index.md)
-
--   :material-console-line: **Building Safe and Secure Agents**
-
-    ---
-
-    Learn how to building powerful and trustworthy agents by implementing
-    security and safety patterns and best practices into your agent's design.
-
-    [**Safety and Security**](safety/index.md)
-
-</div>
+  // Asciinema player (for _agent-cli.md)
+  var playerEl = document.getElementById('asciinema-demo');
+  if (playerEl && typeof AsciinemaPlayer !== 'undefined') {
+    AsciinemaPlayer.create('assets/adk-demo.cast', playerEl, {
+      theme: 'monokai',
+      fit: 'width',
+      autoPlay: true,
+      loop: true,
+      speed: 1,
+      idleTimeLimit: 2,
+      cols: 85,
+      rows: 24,
+      poster: 'npt:0:18'
+    });
+  }
+});
+</script>
 
 ================
 File: docs/release-notes.md
