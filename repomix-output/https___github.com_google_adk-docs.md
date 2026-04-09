@@ -9288,6 +9288,16 @@ components, which are listed below.
 
 This guide provides information on how to get involved.
 
+## Join the community
+
+- Want to discuss ADK, ask questions, or talk about all things agents? Head to
+  **[r/agentdevelopmentkit](https://www.reddit.com/r/agentdevelopmentkit/)** on
+  Reddit.
+- Want updates on the monthly community call? Join the
+  **[ADK Community Google Group](https://groups.google.com/g/adk-community)**.
+- Want to file a bug or contribute to the ADK framework? See the sections
+  below for how to find the right repo and get started.
+
 ## Preparing to contribute
 
 ### Choose the right repository
@@ -9328,21 +9338,6 @@ sign a new one.
 
 This project follows
 [Google's Open Source Community Guidelines](https://opensource.google/conduct/).
-
-## Join the discussion
-
-Have questions, want to share ideas, or discuss how you're using ADK? Head over
-to our **[Python](https://github.com/google/adk-python/discussions)**,
-**[TypeScript](https://github.com/google/adk-js/discussions)**,
-**[Go](https://github.com/google/adk-go/discussions)**, or
-**[Java](https://github.com/google/adk-java/discussions)** Discussions!
-
-This is the primary place for:
-
-* Asking questions and getting help from the community and maintainers.
-* Sharing your projects or use cases (`Show and Tell`).
-* Discussing potential features or improvements before creating a formal issue.
-* General conversation about ADK.
 
 ## How to contribute
 
@@ -9419,6 +9414,17 @@ Development Kit community.
     Google and the ADK team do not provide support for the content linked in
     these external community resources.
 
+## Join the Community
+
+- Want to discuss ADK, ask questions, or talk about all things agents? Head to
+  **[r/agentdevelopmentkit](https://www.reddit.com/r/agentdevelopmentkit/)** on
+  Reddit.
+- Want updates on the monthly community call? Join the
+  **[ADK Community Google Group](https://groups.google.com/g/adk-community)**.
+- Want to file a bug or contribute to the ADK framework? Check out the
+  **[Contributing Guide](/community/contributing-guide/)** to find the right
+  repo and get started.
+
 ## Getting Started
 
 <div class="resource-grid">
@@ -9456,11 +9462,10 @@ Development Kit community.
 
 ## ADK Community Calls
 
-!!! tip "Stay Connected"
-
-    Join the [ADK Community Google Group](https://groups.google.com/g/adk-community) for updates, calendar invites, and to connect with the ADK community.
-
-    See recent recordings below, or browse all past calls on our [YouTube playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
+Join the [ADK Community Google Group](https://groups.google.com/g/adk-community)
+for updates on the next call. Recent recordings are below, or browse the full
+[YouTube
+playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
 
 <div class="resource-grid">
   <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
@@ -19693,6 +19698,250 @@ To get started, [create an AgentOps account](http://app.agentops.ai). For featur
 
 ### Extra links
 🐦 [Twitter](http://x.com/agentopsai)   •   📢 [Discord](http://x.com/agentopsai)   •   🖇️ [AgentOps Dashboard](http://app.agentops.ai)   •   📙 [Documentation](http://docs.agentops.ai)
+
+================
+File: docs/integrations/agentphone.md
+================
+---
+catalog_title: AgentPhone
+catalog_description: Make phone calls, send SMS, manage numbers, and build AI voice agents
+catalog_icon: /integrations/assets/agentphone.png
+catalog_tags: ["mcp"]
+---
+
+# AgentPhone MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [AgentPhone MCP Server](https://github.com/AgentPhone-AI/agentphone-mcp)
+connects your ADK agent to [AgentPhone](https://agentphone.to/), a telephony
+platform built for AI agents. This integration gives your agent the ability to
+make and receive phone calls, send and receive SMS, manage phone numbers, and
+create autonomous AI voice agents using natural language.
+
+## Use cases
+
+- **Autonomous Phone Calls**: Have your agent call a phone number and hold a
+  full AI-powered conversation about a specified topic, returning the complete
+  transcript when done.
+
+- **SMS Messaging**: Send and receive text messages, manage conversation threads
+  across multiple phone numbers, and retrieve message history.
+
+- **Phone Number Management**: Provision phone numbers with specific area codes,
+  assign them to agents, and release them when no longer needed.
+
+- **AI Voice Agents**: Create agents with configurable voices and system prompts
+  that autonomously handle inbound and outbound calls without requiring webhooks.
+
+- **Webhook Integration**: Set up project-level or per-agent webhooks to receive
+  real-time notifications for inbound messages and call events.
+
+## Prerequisites
+
+- Create an [AgentPhone account](https://agentphone.to/)
+- Generate an API key from the [AgentPhone Settings](https://agentphone.to/)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="agentphone_agent",
+            instruction="Help users make phone calls, send SMS, and manage phone numbers",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "agentphone-mcp",
+                            ],
+                            env={
+                                "AGENTPHONE_API_KEY": AGENTPHONE_API_KEY,
+                            }
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+        AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="agentphone_agent",
+            instruction="Help users make phone calls, send SMS, and manage phone numbers",
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPConnectionParams(
+                        url="https://mcp.agentphone.to/mcp",
+                        headers={
+                            "Authorization": f"Bearer {AGENTPHONE_API_KEY}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "agentphone_agent",
+            instruction: "Help users make phone calls, send SMS, and manage phone numbers",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: ["-y", "agentphone-mcp"],
+                        env: {
+                            AGENTPHONE_API_KEY: AGENTPHONE_API_KEY,
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "agentphone_agent",
+            instruction: "Help users make phone calls, send SMS, and manage phone numbers",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.agentphone.to/mcp",
+                    transportOptions: {
+                        requestInit: {
+                            headers: {
+                                Authorization: `Bearer ${AGENTPHONE_API_KEY}`,
+                            },
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Available tools
+
+### Account
+
+Tool | Description
+---- | -----------
+`account_overview` | Full snapshot of account: agents, numbers, webhook status, usage limits
+`get_usage` | Detailed usage stats: plan limits, number quotas, message/call volume
+
+### Phone numbers
+
+Tool | Description
+---- | -----------
+`list_numbers` | List all phone numbers in account
+`buy_number` | Purchase a new phone number with optional country and area code
+`release_number` | Permanently release a phone number back to carrier pool
+
+### SMS / Messages
+
+Tool | Description
+---- | -----------
+`get_messages` | Get SMS messages for a specific phone number
+`list_conversations` | List SMS conversation threads across all numbers
+`get_conversation` | Get a specific conversation with full message history
+
+### Voice calls
+
+Tool | Description
+---- | -----------
+`list_calls` | List recent calls across all numbers
+`list_calls_for_number` | List calls for a specific phone number
+`get_call` | Get call details and transcript with optional long-polling
+`make_call` | Place an outbound call using webhook for conversation handling
+`make_conversation_call` | Place an autonomous AI call that returns the full transcript
+
+### Agents
+
+Tool | Description
+---- | -----------
+`list_agents` | List all agents with phone numbers and voice config
+`create_agent` | Create a new agent with configurable voice and system prompt
+`update_agent` | Update agent configuration
+`delete_agent` | Delete an agent
+`get_agent` | Get agent details including numbers and voice config
+`attach_number` | Assign a phone number to an agent
+`list_voices` | List available voice options
+
+### Webhooks
+
+Tool | Description
+---- | -----------
+`get_webhook` | Get project-level webhook configuration
+`set_webhook` | Set project-level webhook for inbound messages and call events
+`delete_webhook` | Remove project-level webhook
+`get_agent_webhook` | Get webhook for a specific agent
+`set_agent_webhook` | Set agent-specific webhook (overrides project-level)
+`delete_agent_webhook` | Remove agent-specific webhook
+
+## Configuration
+
+The AgentPhone MCP server can be configured using environment variables:
+
+Variable | Description | Default
+-------- | ----------- | -------
+`AGENTPHONE_API_KEY` | Your AgentPhone API key | Required (stdio mode)
+`AGENTPHONE_BASE_URL` | Override API base URL | `https://api.agentphone.to`
+
+For remote HTTP mode, pass the API key via the `Authorization: Bearer` header
+instead of an environment variable.
+
+## Additional resources
+
+- [AgentPhone MCP Server on GitHub](https://github.com/AgentPhone-AI/agentphone-mcp)
+- [agentphone-mcp on npm](https://www.npmjs.com/package/agentphone-mcp)
+- [AgentPhone Website](https://agentphone.to/)
 
 ================
 File: docs/integrations/api-registry.md
@@ -34843,6 +35092,13 @@ The `InMemoryMemoryService` stores session information in the application's memo
     memory_service = InMemoryMemoryService()
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import { InMemoryMemoryService } from '@google/adk';
+    const memoryService = new InMemoryMemoryService();
+    ```
+
 === "Go"
     ```go
     import (
@@ -34962,6 +35218,12 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
     # await run_scenario()
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/sessions/memory_example.ts:full_example"
+    ```
+
 === "Go"
 
     ```go
@@ -35072,6 +35334,20 @@ You can also search memory from within a custom tool by using the `tool.Context`
     --8<-- "examples/go/snippets/sessions/memory_example/memory_example.go:tool_search"
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    // Within a tool implementation
+    async runAsync({ args, toolContext }: RunAsyncToolRequest) {
+      const query = args['query'] as string;
+      const response = await toolContext.searchMemory(query);
+      // process response
+      return {
+        memories: response.memories.map(m => m.content.parts?.map(p => p.text).join(' ')).join('\n')
+      };
+    }
+    ```
+
 === "Java"
 
     ```java
@@ -35164,6 +35440,18 @@ When a memory service is configured, your agent can use a tool or callback to re
     )
     ```
 
+=== "TypeScript"
+    ```typescript
+    import { LlmAgent, PRELOAD_MEMORY } from '@google/adk';
+
+    const agent = new LlmAgent({
+        model: MODEL_ID,
+        name: 'weather_sentiment_agent',
+        instruction: "...",
+        tools: [PRELOAD_MEMORY]
+    });
+    ```
+
 === "Go"
     ```go
     import (
@@ -35211,6 +35499,27 @@ To extract memories from your session, you need to call `add_session_to_memory`.
         tools=[adk.tools.preload_memory_tool.PreloadMemoryTool()],
         after_agent_callback=auto_save_session_to_memory_callback,
     )
+    ```
+
+=== "TypeScript"
+    ```typescript
+    import { LlmAgent, PRELOAD_MEMORY, SingleAgentCallback } from '@google/adk';
+
+    const autoSaveSessionToMemoryCallback: SingleAgentCallback = async (callbackContext) => {
+        if (callbackContext.invocationContext.memoryService) {
+            await callbackContext.invocationContext.memoryService.addSessionToMemory(
+                callbackContext.invocationContext.session
+            );
+        }
+    };
+
+    const agent = new LlmAgent({
+        model: MODEL,
+        name: "Generic_QA_Agent",
+        instruction: "Answer the user's questions",
+        tools: [PRELOAD_MEMORY],
+        afterAgentCallback: autoSaveSessionToMemoryCallback,
+    });
     ```
 
 === "Go"
