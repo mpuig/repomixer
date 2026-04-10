@@ -1157,7 +1157,7 @@ from google.adk.agents.llm_agent import Agent
 from google.genai import types
 
 root_agent = Agent(
-    model="gemini-2.0-flash",
+    model="gemini-flash-latest",
     name="root_agent",
     instruction="""
       <You are a helpful assistant that can roll dice and check if numbers are prime.
@@ -1555,7 +1555,7 @@ You can take an existing agent built using ADK and make it A2A-compatible by sim
 ```python
 # Your agent code here
 root_agent = Agent(
-    model='gemini-2.0-flash',
+    model='gemini-flash-latest',
     name='hello_world_agent',
     
     <...your agent code...>
@@ -1914,7 +1914,7 @@ Integrate Apigee's governance into your agent's workflow by instantiating the
     # Instantiate the ApigeeLlm wrapper
     model = ApigeeLlm(
         # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
-        model="apigee/gemini-2.5-flash",
+        model="apigee/gemini-flash-latest",
         # The proxy URL of your deployed Apigee proxy including the base path
         proxy_url=f"https://{APIGEE_PROXY_URL}",
         # Pass necessary authentication/authorization headers (like an API key)
@@ -1940,7 +1940,7 @@ Integrate Apigee's governance into your agent's workflow by instantiating the
 
     ApigeeLlm apigeeLlm =
             ApigeeLlm.builder()
-                .modelName("apigee/gemini-2.5-flash") // Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation
+                .modelName("apigee/gemini-flash-latest") // Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation
                 .proxyUrl(APIGEE_PROXY_URL) //The proxy URL of your deployed Apigee proxy including the base path
                 .customHeaders(ImmutableMap.of("foo", "bar")) //Pass necessary authentication/authorization headers (like an API key)
                 .build();
@@ -1991,7 +1991,7 @@ in your agents:
     # --- Example using a stable Gemini Flash model ---
     agent_gemini_flash = LlmAgent(
         # Use the latest stable Flash model identifier
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         name="gemini_flash_agent",
         instruction="You are a fast and helpful Gemini assistant.",
         # ... other agent parameters
@@ -2006,7 +2006,7 @@ in your agents:
     // --- Example #2: using a powerful Gemini Pro model with API Key in model ---
     export const rootAgent = new LlmAgent({
       name: 'hello_time_agent',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       description: 'Gemini flash agent',
       instruction: `You are a fast and helpful Gemini assistant.`,
     });
@@ -2031,7 +2031,7 @@ in your agents:
     LlmAgent agentGeminiFlash =
         LlmAgent.builder()
             // Use the latest stable Flash model identifier
-            .model("gemini-2.5-flash") // Set ENV variables to use this model
+            .model("gemini-flash-latest") // Set ENV variables to use this model
             .name("gemini_flash_agent")
             .instruction("You are a fast and helpful Gemini assistant.")
             // ... other agent parameters
@@ -2169,7 +2169,7 @@ To mitigate this, you can do one of the following:
 
         ```python
         root_agent = Agent(
-            model='gemini-2.5-flash',
+            model='gemini-flash-latest',
             # ...
             generate_content_config=types.GenerateContentConfig(
                 # ...
@@ -2193,7 +2193,7 @@ To mitigate this, you can do one of the following:
         // ...
 
         LlmAgent rootAgent = LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             // ...
             .generateContentConfig(GenerateContentConfig.builder()
                 // ...
@@ -2239,7 +2239,7 @@ To mitigate this, you can do one of the following:
 
         LlmAgent agent = LlmAgent.builder()
             .model(Gemini.builder()
-                .modelName("gemini-2.5-flash")
+                .modelName("gemini-flash-latest")
                 .apiClient(Client.builder()
                     .httpOptions(HttpOptions.builder()
                         .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
@@ -2274,7 +2274,7 @@ snippet:
 
     root_agent = Agent(
         model=Gemini(
-            model="gemini-2.5-flash",
+            model="gemini-flash-latest",
             use_interactions_api=True,  # Enable Interactions API
         ),
         name="interactions_test_agent",
@@ -2295,7 +2295,7 @@ snippet:
     // Note: Interactions API support in Java ADK is currently under development.
     LlmAgent rootAgent = LlmAgent.builder()
         .model(Gemini.builder()
-            .modelName("gemini-2.5-flash")
+            .modelName("gemini-flash-latest")
             .build())
         .name("interactions_test_agent")
         .tools(
@@ -3757,7 +3757,7 @@ following is a simple example of a basic Agent Config definition:
 
 ```yaml
 name: assistant_agent
-model: gemini-2.5-flash
+model: gemini-flash-latest
 description: A helper agent that can answer users' questions.
 instruction: You are an agent to help answer users' various questions.
 ```
@@ -3856,7 +3856,7 @@ To create an ADK project for use with Agent Config:
 ```
 # yaml-language-server: $schema=https://raw.githubusercontent.com/google/adk-python/refs/heads/main/src/google/adk/agents/config_schemas/AgentConfig.json
 name: assistant_agent
-model: gemini-2.5-flash
+model: gemini-flash-latest
 description: A helper agent that can answer users' questions.
 instruction: You are an agent to help answer users' various questions.
 ```
@@ -3939,7 +3939,7 @@ tool to reply to user requests.
 ```
 # yaml-language-server: $schema=https://raw.githubusercontent.com/google/adk-python/refs/heads/main/src/google/adk/agents/config_schemas/AgentConfig.json
 name: search_agent
-model: gemini-2.0-flash
+model: gemini-flash-latest
 description: 'an agent whose job it is to perform Google search queries and answer questions about the results.'
 instruction: You are an agent whose job is to perform Google search queries and answer questions about the results.
 tools:
@@ -3958,7 +3958,7 @@ list of numbers provided by the user are prime numbers.
 ```
 # yaml-language-server: $schema=https://raw.githubusercontent.com/google/adk-python/refs/heads/main/src/google/adk/agents/config_schemas/AgentConfig.json
 agent_class: LlmAgent
-model: gemini-2.5-flash
+model: gemini-flash-latest
 name: prime_agent
 description: Handles checking if numbers are prime.
 instruction: |
@@ -3984,7 +3984,7 @@ YAML files.
 ```
 # yaml-language-server: $schema=https://raw.githubusercontent.com/google/adk-python/refs/heads/main/src/google/adk/agents/config_schemas/AgentConfig.json
 agent_class: LlmAgent
-model: gemini-2.5-flash
+model: gemini-flash-latest
 name: root_agent
 description: Learning assistant that provides tutoring in code and math.
 instruction: |
@@ -4403,7 +4403,7 @@ These are standard `LlmAgent` definitions, responsible for specific tasks. Their
 === "Python"
 
     ```python
-    GEMINI_2_FLASH = "gemini-2.0-flash" # Define model constant
+    GEMINI_2_FLASH = "gemini-flash-latest" # Define model constant
     --8<-- "examples/python/snippets/agents/custom-agent/storyflow_agent.py:llmagents"
     ```
 
@@ -4631,7 +4631,7 @@ First, you need to establish what the agent *is* and what it's *for*.
   inquiries about current billing statements," not just "Billing agent").
 
 * **`model` (Required):** Specify the underlying LLM that will power this
-  agent's reasoning. This is a string identifier like `"gemini-2.5-flash"`. The
+  agent's reasoning. This is a string identifier like `"gemini-flash-latest"`. The
   choice of model impacts the agent's capabilities, cost, and performance. See
   the [Models](/agents/models/) page for available options and considerations.
 
@@ -4640,7 +4640,7 @@ First, you need to establish what the agent *is* and what it's *for*.
     ```python
     # Example: Defining the basic identity
     capital_agent = LlmAgent(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         name="capital_agent",
         description="Answers user questions about the capital city of a given country."
         # instruction and tools will be added next
@@ -4652,7 +4652,7 @@ First, you need to establish what the agent *is* and what it's *for*.
     ```typescript
     // Example: Defining the basic identity
     const capitalAgent = new LlmAgent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         name: 'capital_agent',
         description: 'Answers user questions about the capital city of a given country.',
         // instruction and tools will be added next
@@ -4671,7 +4671,7 @@ First, you need to establish what the agent *is* and what it's *for*.
     // Example: Defining the basic identity
     LlmAgent capitalAgent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("capital_agent")
             .description("Answers user questions about the capital city of a given country.")
             // instruction and tools will be added next
@@ -4709,7 +4709,7 @@ tells the agent:
     ```python
     # Example: Adding instructions
     capital_agent = LlmAgent(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         name="capital_agent",
         description="Answers user questions about the capital city of a given country.",
         instruction="""You are an agent that provides the capital city of a country.
@@ -4729,7 +4729,7 @@ tells the agent:
     ```typescript
     // Example: Adding instructions
     const capitalAgent = new LlmAgent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         name: 'capital_agent',
         description: 'Answers user questions about the capital city of a given country.',
         instruction: `You are an agent that provides the capital city of a country.
@@ -4756,7 +4756,7 @@ tells the agent:
     // Example: Adding instructions
     LlmAgent capitalAgent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("capital_agent")
             .description("Answers user questions about the capital city of a given country.")
             .instruction(
@@ -4804,7 +4804,7 @@ on the conversation and its instructions.
 
     # Add the tool to the agent
     capital_agent = LlmAgent(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         name="capital_agent",
         description="Answers user questions about the capital city of a given country.",
         instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
@@ -4845,7 +4845,7 @@ on the conversation and its instructions.
 
     // Add the tool to the agent
     const capitalAgent = new LlmAgent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         name: 'capitalAgent',
         description: 'Answers user questions about the capital city of a given country.',
         instruction: 'You are an agent that provides the capital city of a country...', // Note: the full instruction is omitted for brevity
@@ -4884,7 +4884,7 @@ on the conversation and its instructions.
     FunctionTool capitalTool = FunctionTool.create(experiment.getClass(), "getCapitalCity");
     LlmAgent capitalAgent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("capital_agent")
             .description("Answers user questions about the capital city of a given country.")
             .instruction("You are an agent that provides the capital city of a country... (previous instruction text)")
@@ -5131,7 +5131,7 @@ Control whether the agent receives the prior conversation history.
     from google.genai import types
 
     my_agent = Agent(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
                 include_thoughts=True,
@@ -5149,7 +5149,7 @@ Control whether the agent receives the prior conversation history.
     from google.adk.planners import PlanReActPlanner
 
     my_agent = Agent(
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         planner=PlanReActPlanner(),
         # ... your tools here
     )
@@ -5396,14 +5396,14 @@ The foundation for structuring multi-agent systems is the parent-child relations
 
 
     # Define individual agents
-    greeter = LlmAgent(name="Greeter", model="gemini-2.0-flash")
+    greeter = LlmAgent(name="Greeter", model="gemini-flash-latest")
     task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
 
 
     # Create parent agent and assign children via sub_agents
     coordinator = LlmAgent(
         name="Coordinator",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         description="I coordinate greetings and tasks.",
         sub_agents=[ # Assign sub_agents here
             greeter,
@@ -5441,13 +5441,13 @@ The foundation for structuring multi-agent systems is the parent-child relations
     }
 
     // Define individual agents
-    const greeter = new LlmAgent({name: 'Greeter', model: 'gemini-2.5-flash'});
+    const greeter = new LlmAgent({name: 'Greeter', model: 'gemini-flash-latest'});
     const taskDoer = new TaskExecutorAgent({name: 'TaskExecutor'}); // Custom non-LLM agent
 
     // Create parent agent and assign children via subAgents
     const coordinator = new LlmAgent({
         name: 'Coordinator',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         description: 'I coordinate greetings and tasks.',
         subAgents: [ // Assign subAgents here
             greeter,
@@ -5480,14 +5480,14 @@ The foundation for structuring multi-agent systems is the parent-child relations
 
 
     // Define individual agents
-    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-2.0-flash").build();
+    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-flash-latest").build();
     SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
 
 
     // Create parent agent and assign sub_agents
     LlmAgent coordinator = LlmAgent.builder()
         .name("Coordinator")
-        .model("gemini-2.0-flash")
+        .model("gemini-flash-latest")
         .description("I coordinate greetings and tasks")
         .subAgents(greeter, taskDoer) // Assign sub_agents here
         .build();
@@ -5855,7 +5855,7 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
 
     coordinator = LlmAgent(
         name="Coordinator",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         instruction="You are an assistant. Delegate booking tasks to Booker and info requests to Info.",
         description="Main coordinator.",
         # AutoFlow is typically used implicitly here
@@ -5877,7 +5877,7 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
 
     const coordinator = new LlmAgent({
         name: 'Coordinator',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         instruction: 'You are an assistant. Delegate booking tasks to Booker and info requests to Info.',
         description: 'Main coordinator.',
         // AutoFlow is typically used implicitly here
@@ -5920,7 +5920,7 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     // Define the coordinator agent
     LlmAgent coordinator = LlmAgent.builder()
         .name("Coordinator")
-        .model("gemini-2.0-flash") // Or your desired model
+        .model("gemini-flash-latest") // Or your desired model
         .instruction("You are an assistant. Delegate booking tasks to Booker and info requests to Info.")
         .description("Main coordinator.")
         // AutoFlow will be used by default (implicitly) because subAgents are present
@@ -5971,7 +5971,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     # Parent agent uses the AgentTool
     artist_agent = LlmAgent(
         name="Artist",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         instruction="Create a prompt and use the ImageGen tool to generate the image.",
         tools=[image_tool] # Include the AgentTool
     )
@@ -6013,7 +6013,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     // Parent agent uses the AgentTool
     const artistAgent = new LlmAgent({
         name: 'Artist',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         instruction: 'Create a prompt and use the ImageGen tool to generate the image.',
         tools: [imageTool] // Include the AgentTool
     });
@@ -6090,7 +6090,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     // Parent agent uses the AgentTool
     LlmAgent artistAgent = LlmAgent.builder()
             .name("Artist")
-            .model("gemini-2.0-flash")
+            .model("gemini-flash-latest")
             .instruction(
                     "You are an artist. Create a detailed prompt for an image and then " +
                             "use the 'ImageGen' tool to generate the image. " +
@@ -6136,7 +6136,7 @@ By combining ADK's composition primitives, you can implement various established
 
     coordinator = LlmAgent(
         name="HelpDeskCoordinator",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         instruction="Route user requests: Use Billing agent for payment issues, Support agent for technical problems.",
         description="Main help desk router.",
         # allow_transfer=True is often implicit with sub_agents in AutoFlow
@@ -6157,7 +6157,7 @@ By combining ADK's composition primitives, you can implement various established
 
     const coordinator = new LlmAgent({
         name: 'HelpDeskCoordinator',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         instruction: 'Route user requests: Use Billing agent for payment issues, Support agent for technical problems.',
         description: 'Main help desk router.',
         // allowTransfer=true is often implicit with subAgents in AutoFlow
@@ -6196,7 +6196,7 @@ By combining ADK's composition primitives, you can implement various established
 
     LlmAgent coordinator = LlmAgent.builder()
         .name("HelpDeskCoordinator")
-        .model("gemini-2.0-flash")
+        .model("gemini-flash-latest")
         .instruction("Route user requests: Use Billing agent for payment issues, Support agent for technical problems.")
         .description("Main help desk router.")
         .subAgents(billingAgent, supportAgent)
@@ -6450,7 +6450,7 @@ By combining ADK's composition primitives, you can implement various established
     # Mid-level agent combining tools
     research_assistant = LlmAgent(
         name="ResearchAssistant",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         description="Finds and summarizes information on a topic.",
         tools=[agent_tool.AgentTool(agent=web_searcher), agent_tool.AgentTool(agent=summarizer)]
     )
@@ -6459,7 +6459,7 @@ By combining ADK's composition primitives, you can implement various established
     # High-level agent delegating research
     report_writer = LlmAgent(
         name="ReportWriter",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         instruction="Write a report on topic X. Use the ResearchAssistant to gather information.",
         tools=[agent_tool.AgentTool(agent=research_assistant)]
         # Alternatively, could use LLM Transfer if research_assistant is a sub_agent
@@ -6483,7 +6483,7 @@ By combining ADK's composition primitives, you can implement various established
     // Mid-level agent combining tools
     const researchAssistant = new LlmAgent({
         name: 'ResearchAssistant',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         description: 'Finds and summarizes information on a topic.',
         tools: [new AgentTool({agent: webSearcher}), new AgentTool({agent: summarizer})]
     });
@@ -6491,7 +6491,7 @@ By combining ADK's composition primitives, you can implement various established
     // High-level agent delegating research
     const reportWriter = new LlmAgent({
         name: 'ReportWriter',
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         instruction: 'Write a report on topic X. Use the ResearchAssistant to gather information.',
         tools: [new AgentTool({agent: researchAssistant})]
         // Alternatively, could use LLM Transfer if researchAssistant is a subAgent
@@ -6538,7 +6538,7 @@ By combining ADK's composition primitives, you can implement various established
     // Mid-level agent combining tools
     LlmAgent researchAssistant = LlmAgent.builder()
         .name("ResearchAssistant")
-        .model("gemini-2.0-flash")
+        .model("gemini-flash-latest")
         .description("Finds and summarizes information on a topic.")
         .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
         .build();
@@ -6547,7 +6547,7 @@ By combining ADK's composition primitives, you can implement various established
     // High-level agent delegating research
     LlmAgent reportWriter = LlmAgent.builder()
         .name("ReportWriter")
-        .model("gemini-2.0-flash")
+        .model("gemini-flash-latest")
         .instruction("Write a report on topic X. Use the ResearchAssistant to gather information.")
         .tools(AgentTool.create(researchAssistant))
         // Alternatively, could use LLM Transfer if research_assistant is a subAgent
@@ -7053,7 +7053,7 @@ A conceptual example of using a `CustomPolicyEngine` to require user confirmatio
     ```typescript
     const rootAgent = new LlmAgent({
       name: 'weather_time_agent',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       description:
           'Agent to answer questions about the time and weather in a city.',
       instruction:
@@ -7509,7 +7509,7 @@ sample code:
     from google.adk.apps import App
 
     root_agent = Agent(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         name='greeter_agent',
         description='An agent that provides a friendly greeting.',
         instruction='Reply with Hello, World!',
@@ -7530,7 +7530,7 @@ sample code:
     import com.google.adk.apps.App;
 
     LlmAgent rootAgent = LlmAgent.builder()
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .name("greeter_agent")
         .description("An agent that provides a friendly greeting.")
         .instruction("Reply with Hello, World!")
@@ -7800,7 +7800,7 @@ Understanding artifacts involves grasping a few key components: the service that
     from google.adk.sessions import InMemorySessionService
 
     # Example: Configuring the Runner with an Artifact Service
-    my_agent = LlmAgent(name="artifact_user_agent", model="gemini-2.0-flash")
+    my_agent = LlmAgent(name="artifact_user_agent", model="gemini-flash-latest")
     artifact_service = InMemoryArtifactService() # Choose an implementation
     session_service = InMemorySessionService()
 
@@ -7822,7 +7822,7 @@ Understanding artifacts involves grasping a few key components: the service that
 	import { InMemorySessionService } from '@google/adk';
 
     // Example: Configuring the Runner with an Artifact Service
-    const myAgent = new LlmAgent({name: "artifact_user_agent", model: "gemini-2.5-flash"});
+    const myAgent = new LlmAgent({name: "artifact_user_agent", model: "gemini-flash-latest"});
     const artifactService = new InMemoryArtifactService(); // Choose an implementation
     const sessionService = new InMemorySessionService();
 
@@ -7864,7 +7864,7 @@ Understanding artifacts involves grasping a few key components: the service that
     // Example: Configuring the Runner with an Artifact Service
     LlmAgent myAgent =  LlmAgent.builder()
       .name("artifact_user_agent")
-      .model("gemini-2.0-flash")
+      .model("gemini-flash-latest")
       .build();
     InMemoryArtifactService artifactService = new InMemoryArtifactService(); // Choose an implementation
     InMemorySessionService sessionService = new InMemorySessionService();
@@ -8048,7 +8048,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
     from google.adk.sessions import InMemorySessionService
 
     # Your agent definition
-    agent = LlmAgent(name="my_agent", model="gemini-2.0-flash")
+    agent = LlmAgent(name="my_agent", model="gemini-flash-latest")
 
     # Instantiate the desired artifact service
     artifact_service = InMemoryArtifactService()
@@ -8069,7 +8069,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
     import { LlmAgent, InMemoryRunner, InMemoryArtifactService, InMemorySessionService } from '@google/adk';
 
     // Your agent definition
-    const agent = new LlmAgent({name: "my_agent", model: "gemini-2.5-flash"});
+    const agent = new LlmAgent({name: "my_agent", model: "gemini-flash-latest"});
 
     // Instantiate the desired artifact service
     const artifactService = new InMemoryArtifactService();
@@ -8120,7 +8120,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
         // Your agent definition
         LlmAgent agent = LlmAgent.builder()
             .name("my_agent")
-            .model("gemini-2.0-flash")
+            .model("gemini-flash-latest")
             .build();
 
         // Instantiate the desired artifact service
@@ -9920,7 +9920,7 @@ The following code example demonstrates how to define and configure a custom sum
     from google.adk.models import Gemini
 
     # Define the AI model to be used for summarization:
-    summarization_llm = Gemini(model="gemini-2.5-flash")
+    summarization_llm = Gemini(model="gemini-flash-latest")
 
     # Create the summarizer with the custom model:
     my_summarizer = LlmEventSummarizer(llm=summarization_llm)
@@ -9947,7 +9947,7 @@ The following code example demonstrates how to define and configure a custom sum
 
     // Define the AI model to be used for summarization:
     Gemini summarizationLlm = Gemini.builder()
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .build();
 
     // Create the summarizer with the custom model:
@@ -13137,7 +13137,7 @@ Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capita
 
     # Add the tool to the agent
     capital_agent = LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         name="capital_agent", #name of your agent
         description="Answers user questions about the capital city of a given country.",
         instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
@@ -13603,7 +13603,7 @@ You can also verify the image was built and pushed to the Artifact Registry usin
 
 When using the ADK Dev UI for your deployed agent, text-based chat works, but voice (e.g., clicking the microphone button) fail. You might see a `websockets.exceptions.ConnectionClosedError` in the pod logs indicating that your model is "not supported in the live api".
 
-This error occurs because the agent is configured with a model (like `gemini-2.0-flash` in the example) that does not support the Gemini Live API. The Live API is required for real-time, bidirectional streaming of audio and video.
+This error occurs because the agent is configured with a model (like `gemini-flash-latest` in the example) that does not support the Gemini Live API. The Live API is required for real-time, bidirectional streaming of audio and video.
 
 ## Cleanup
 
@@ -13918,7 +13918,7 @@ Example `EvalConfig` entry:
     "final_response_match_v2": {
       "threshold": 0.8,
       "judge_model_options": {
-            "judge_model": "gemini-2.5-flash",
+            "judge_model": "gemini-flash-latest",
             "num_samples": 5
           }
         }
@@ -13977,7 +13977,7 @@ Example `EvalConfig` entry:
     "rubric_based_final_response_quality_v1": {
       "threshold": 0.8,
       "judge_model_options": {
-        "judge_model": "gemini-2.5-flash",
+        "judge_model": "gemini-flash-latest",
         "num_samples": 5
       },
       "rubrics": [
@@ -14050,7 +14050,7 @@ Example `EvalConfig` entry:
     "rubric_based_tool_use_quality_v1": {
       "threshold": 1.0,
       "judge_model_options": {
-        "judge_model": "gemini-2.5-flash",
+        "judge_model": "gemini-flash-latest",
         "num_samples": 5
       },
       "rubrics": [
@@ -14122,7 +14122,7 @@ Example `EvalConfig` entry:
     "hallucinations_v1": {
       "threshold": 0.8,
       "judge_model_options": {
-            "judge_model": "gemini-2.5-flash",
+            "judge_model": "gemini-flash-latest",
           },
       "evaluate_intermediate_nl_responses": true
     }
@@ -14220,7 +14220,7 @@ Example `EvalConfig` entry:
     "per_turn_user_simulator_quality_v1": {
       "threshold": 1.0,
       "judge_model_options": {
-        "judge_model": "gemini-2.5-flash",
+        "judge_model": "gemini-flash-latest",
         "num_samples": 5
       },
       "stop_signal": "</finished>"
@@ -15805,7 +15805,7 @@ The below `EvalConfig` shows the default user simulator configuration:
     # same as before
   },
   "user_simulator_config": {
-    "model": "gemini-2.5-flash",
+    "model": "gemini-flash-latest",
     "model_configuration": {
       "thinking_config": {
         "include_thoughts": true,
@@ -17715,7 +17715,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	model, err := gemini.NewModel(ctx, "gemini-2.5-flash", &genai.ClientConfig{
+	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
 		APIKey: os.Getenv("GOOGLE_API_KEY"),
 	})
 	if err != nil {
@@ -18078,7 +18078,7 @@ public class HelloTimeAgent {
                 You are a helpful assistant that tells the current time in a city.
                 Use the 'getCurrentTime' tool for this purpose.
                 """)
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .tools(FunctionTool.create(HelloTimeAgent.class, "getCurrentTime"))
             .build();
     }
@@ -18372,7 +18372,7 @@ def get_current_time(city: str) -> dict:
     return {"status": "success", "city": city, "time": "10:30 AM"}
 
 root_agent = Agent(
-    model='gemini-3-flash-preview',
+    model='gemini-flash-latest',
     name='root_agent',
     description="Tells the current time in a specified city.",
     instruction="You are a helpful assistant that tells the current time in cities. Use the 'get_current_time' tool for this purpose.",
@@ -18524,7 +18524,7 @@ const getCurrentTime = new FunctionTool({
 
 export const rootAgent = new LlmAgent({
   name: 'hello_time_agent',
-  model: 'gemini-2.5-flash',
+  model: 'gemini-flash-latest',
   description: 'Tells the current time in a specified city.',
   instruction: `You are a helpful assistant that tells the current time in a city.
                 Use the 'getCurrentTime' tool for this purpose.`,
@@ -18617,7 +18617,7 @@ To enable Google Search Grounding, you include the search tool in your agent def
 
     root_agent = Agent(
         name="google_search_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="Answer questions using Google Search when needed. Always cite sources.",
         description="Professional search assistant with Google Search capabilities",
         tools=[google_search]
@@ -18631,7 +18631,7 @@ To enable Google Search Grounding, you include the search tool in your agent def
 
     const rootAgent = new LlmAgent({
         name: "google_search_agent",
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         instruction: "Answer questions using Google Search when needed. Always cite sources.",
         description: "Professional search assistant with Google Search capabilities",
         tools: [GOOGLE_SEARCH],
@@ -18646,7 +18646,7 @@ To enable Google Search Grounding, you include the search tool in your agent def
 
     LlmAgent rootAgent = LlmAgent.builder()
         .name("google_search_agent")
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .instruction("Answer questions using Google Search when needed. Always cite sources.")
         .description("Professional search assistant with Google Search capabilities")
         .tools(GoogleSearchTool.INSTANCE)
@@ -18861,7 +18861,7 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
 
     root_agent = Agent(
         name="vertex_search_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.",
         description="Enterprise document search assistant with Vertex AI Search capabilities",
         tools=[VertexAiSearchTool(data_store_id=DATASTORE_ID)]
@@ -18879,7 +18879,7 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
 
     LlmAgent rootAgent = LlmAgent.builder()
         .name("vertex_search_agent")
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .instruction("Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.")
         .description("Enterprise document search assistant with Vertex AI Search capabilities")
         .tools(VertexAiSearchTool.builder().dataStoreId(DATASTORE_ID).build())
@@ -20041,7 +20041,7 @@ registry_tools = api_registry.get_toolset(
 
 # Create an agent with the tools
 root_agent = LlmAgent(
-    model="gemini-1.5-flash", # Or your preferred model
+    model="gemini-flash-latest", # Or your preferred model
     name="bigquery_assistant",
     instruction="""
 Help user access their BigQuery data using the available tools.
@@ -20240,7 +20240,7 @@ you only need to follow a subset of these steps.
     from .tools import sample_toolset
 
     root_agent = LlmAgent(
-        model='gemini-2.0-flash',
+        model='gemini-flash-latest',
         name='enterprise_assistant',
         instruction='Help user, leverage the tools you have access to',
         tools=sample_toolset.get_tools(),
@@ -20494,7 +20494,7 @@ To create an Application Integration Toolset for Integration Connectors, follow 
     from .tools import connector_tool
 
     root_agent = LlmAgent(
-        model='gemini-2.0-flash',
+        model='gemini-flash-latest',
         name='connector_agent',
         instruction="Help user, leverage the tools you have access to",
         tools=[connector_tool],
@@ -20600,7 +20600,7 @@ workflow as a tool for your agent or create a new one.
           from .tools import integration_tool, connector_tool
 
           root_agent = LlmAgent(
-              model='gemini-2.0-flash',
+              model='gemini-flash-latest',
               name='integration_agent',
               instruction="Help user, leverage the tools you have access to",
               tools=[integration_tool],
@@ -20628,7 +20628,7 @@ workflow as a tool for your agent or create a new one.
                     LlmAgent rootAgent = LlmAgent.builder()
                             .name("science-teacher")
                             .description("Science teacher agent")
-                            .model("gemini-2.0-flash")
+                            .model("gemini-flash-latest")
                             .instruction(
                                     "Help user, leverage the tools you have access to."
                             )
@@ -20784,7 +20784,7 @@ def get_weather(city: str) -> dict:
 # Create an agent with tools
 agent = Agent(
     name="weather_agent",
-    model="gemini-2.0-flash-exp",
+    model="gemini-flash-latest",
     description="Agent to answer questions using weather tools.",
     instruction="You must use the available tools to find an answer.",
     tools=[get_weather]
@@ -21235,7 +21235,7 @@ bigquery_toolset = BigQueryToolset(
     credentials_config=BigQueryCredentialsConfig(credentials=credentials)
 )
 
-llm = Gemini(model="gemini-2.5-flash")
+llm = Gemini(model="gemini-flash-latest")
 
 root_agent = Agent(
     model=llm,
@@ -21625,7 +21625,7 @@ The events table (`agent_events`) uses a flexible schema. The following table pr
 | **span_id** | `STRING` | `NULLABLE` | The **OpenTelemetry** Span ID (16-char hex). Uniquely identifies this specific atomic operation. | `69867a836cd94798be2759d8e0d70215` |
 | **parent_span_id** | `STRING` | `NULLABLE` | The Span ID of the immediate caller. Used to reconstruct the parent-child execution tree (DAG). | `ef5843fe40764b4b8afec44e78044205` |
 | **content** | `JSON` | `NULLABLE` | The primary event payload. Structure is polymorphic based on `event_type`. | `{"system_prompt": "You are...", "prompt": [{"role": "user", "content": "hello"}], "response": "Hi", "usage": {"total": 15}}` |
-| **attributes** | `JSON` | `NULLABLE` | Metadata/Enrichment (usage stats, model info, tool provenance, custom tags). | `{"model": "gemini-2.5-flash", "usage_metadata": {"total_token_count": 15}, "session_metadata": {"session_id": "...", "app_name": "...", "user_id": "...", "state": {}}, "custom_tags": {"env": "prod"}}` |
+| **attributes** | `JSON` | `NULLABLE` | Metadata/Enrichment (usage stats, model info, tool provenance, custom tags). | `{"model": "gemini-flash-latest", "usage_metadata": {"total_token_count": 15}, "session_metadata": {"session_id": "...", "app_name": "...", "user_id": "...", "state": {}}, "custom_tags": {"env": "prod"}}` |
 | **latency_ms** | `JSON` | `NULLABLE` | Performance metrics. Standard keys are `total_ms` (wall-clock duration) and `time_to_first_token_ms` (streaming latency). | `{"total_ms": 1250, "time_to_first_token_ms": 450}` |
 | **status** | `STRING` | `NULLABLE` | High-level outcome. Values: `OK` (success) or `ERROR` (failure). | `OK` |
 | **error_message** | `STRING` | `NULLABLE` | Human-readable exception message or stack trace fragment. Populated only when `status` is `ERROR`. | `Error 404: Dataset not found` |
@@ -21720,7 +21720,7 @@ Captures the prompt sent to the model, including conversation history and system
   },
   "attributes": {
     "root_agent_name": "my_bq_agent",
-    "model": "gemini-2.5-flash",
+    "model": "gemini-flash-latest",
     "tools": ["list_dataset_ids", "execute_sql"],
     "llm_config": {
       "temperature": 0.5,
@@ -21747,7 +21747,7 @@ Captures the model's output and token usage statistics.
   },
   "attributes": {
     "root_agent_name": "my_bq_agent",
-    "model_version": "gemini-2.5-flash-001",
+    "model_version": "gemini-flash-latest-001",
     "usage_metadata": {
       "prompt_token_count": 10129,
       "candidates_token_count": 19,
@@ -22182,7 +22182,7 @@ SELECT
     session_id,
     AI.GENERATE(
         ('Analyze this conversation log and explain the root cause of the failure. Log: ', full_history),
-        endpoint => 'gemini-2.5-flash'
+        endpoint => 'gemini-flash-latest'
     ).result AS root_cause_explanation
 FROM SessionContext;
 ```
@@ -22875,7 +22875,7 @@ working_dir/
     # Create an agent with tools
     root_agent = Agent(
         name="weather_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         description="Agent to answer questions using weather tools.",
         instruction="You must use the available tools to find an answer.",
         tools=[get_weather],
@@ -23066,7 +23066,7 @@ from google.adk.agents.llm_agent import Agent
 from google.adk.code_executors.agent_engine_sandbox_code_executor import AgentEngineSandboxCodeExecutor
 
 root_agent = Agent(
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     name="agent_engine_code_execution_agent",
     instruction="You are a helpful agent that can write and execute code to answer questions and solve problems.",
     code_executor=AgentEngineSandboxCodeExecutor(
@@ -23220,7 +23220,7 @@ def base_system_instruction():
   """
 
 root_agent = Agent(
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     name="agent_engine_code_execution_agent",
     instruction=base_system_instruction() + """
 
@@ -23925,6 +23925,166 @@ The `ELEVENLABS_MCP_OUTPUT_MODE` environment variable supports three modes:
 - [ElevenLabs Documentation](https://elevenlabs.io/docs)
 
 ================
+File: docs/integrations/environment-toolset.md
+================
+---
+catalog_title: Environment Toolset
+catalog_description: Create local and custom compute environments for files, scripts, and code execution
+catalog_icon: /integrations/assets/adk.png
+catalog_tags: ["code", "google"]
+---
+
+# Environment Toolsets for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.29.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+Some types of tasks, particularly coding and file operations, require an agent
+to interact with a compute environment that can run code and operate on files
+that persist across multiple agent requests. The ***EnvironmentToolset*** class
+for ADK allows agents to interact with an environment to perform file operations
+and execute shell commands. The Environment Toolset is designed as a general
+framework for configuring and using local or remote execution environments with
+ADK agents. ADK provides a [***LocalEnvironment***](#local-environment)
+implementation for use with the Environment Toolset framework.
+
+!!! example "Experimental"
+    The Environment Toolset feature is experimental and may be updated.
+    We welcome your
+    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md)!
+
+## Get started
+
+Enable local environment interactions by adding the ***EnvironmentToolset***
+with a ***LocalEnvironment*** instance to your agent's tools.
+
+```python
+from google.adk import Agent
+from google.adk.environment import LocalEnvironment
+from google.adk.tools.environment import EnvironmentToolset
+
+root_agent = Agent(
+    model="gemini-flash-latest",
+    name="my_agent",
+    instruction="""
+    You are a helpful AI assistant that can use the local environment
+    to execute commands and file I/O. Follow the rules of the
+    environment and the user's instructions.
+    """,
+    tools=[
+        EnvironmentToolset(
+            environment=LocalEnvironment(),
+        ),
+    ],
+)
+```
+
+For a full implementation example, see the
+[Local environment sample](https://github.com/google/adk-python/tree/main/contributing/samples/local_environment).
+
+### Try with agent
+
+You can interact with an agent configured with the Environment Toolset by
+providing prompts that require file operations and command execution. Try the
+following prompt in an interactive session with an agent:
+
+```none
+Write a Python file named hello.py to the working directory
+that prints 'Hello from ADK!'. Then read the file to verify
+its contents, and finally execute it using a command.
+```
+
+Based on these instructions, the agent performs the following operations:
+
+-   Write File: The agent writes a `hello.py` file with the content "Hello
+    from ADK!".
+-   Read File: The agent reads the `hello.py` file and verifies its content.
+-   Execute: The agent runs the `hello.py` file and returns the output.
+
+## LocalEnvironment {#local-environment}
+
+The ***LocalEnvironment*** class is an environment implementation provided by
+ADK for use with ***Environment Toolset***. This environment provides the
+following capabilities:
+
+-   **Local Execution:** Run shell commands and scripts directly on the
+    local machine using Python asyncio subprocesses.
+-   **File Operations:** Create, read, and modify files within a specified
+    working directory.
+-   **Customization:** Configure custom environment variables and working
+    directories for the agent's workspace.
+-   **Framework Compatibility:** Works with both ADK 1.0 and ADK 2.0
+    framework versions, including graph-based workflows.
+
+### Configuration options
+
+The ***LocalEnvironment*** class supports the following parameters:
+
+-   **working_dir**: (optional) The directory where the agent will perform
+    file operations and execute commands. Setting a working directory means
+    that any generated files are still accessible after the agent runs. For
+    more details, see [File persistence](#file-persistence).
+-   **env_vars**: (optional) A dictionary of environment variables to be set
+    for the execution context.
+
+The following code sample shows how to set these options for a
+***LocalEnvironment*** object:
+
+```python
+local_environment=LocalEnvironment(
+    working_dir="/tmp/my_agent_workspace",
+    env_vars={"PORT": "8080", "LOG_LEVEL": "DEBUG"},
+)
+```
+
+### File operations
+
+The ***LocalEnvironment*** implementation includes the following tools an
+agent can run within a local compute environment:
+
+-   ***ReadFile***: Read an existing text file based on agent instructions.
+-   ***EditFile***: Edit an existing text file based on agent instructions.
+-   ***WriteFile***: Create a new text file based on agent instructions.
+-   ***Execute***: Execute terminal commands, including running installers,
+    shell scripts, and program code, based on agent instructions.
+
+!!! danger "Danger: Potential data loss, code execution"
+
+    Executing terminal commands in a local environment can cause loss
+    of data and impact the execution of code and applications in that
+    environment. Exercise caution and consider implementing human
+    permission checks before allowing agents to change files and execute
+    commands.
+
+Commands executed with ***LocalEnvironment*** use
+`asyncio.create_subprocess_shell`, ensuring that the agent remains responsive
+during long-running tasks.
+
+### File persistence {#file-persistence}
+
+Files and file output generated with the ***LocalEnvironment*** are placed in a
+temporary directory by default. That directory is removed when an agent is shut
+down, for example, when exiting an ADK Web session. However, if you set a
+***working directory*** for the environment, any files written there *are not
+removed* after the agent shuts down.
+
+**Tip:** If you want more control over how files are persisted between agent
+sessions, use [***Artifacts***](/artifacts/) and the Artifact
+Service to upload and download files to the environment.
+
+## Custom environments
+
+The ***EnvironmentToolset*** architecture is designed to be extensible so you
+can build your own custom environments, including remote environments. We
+encourage you to build execution environments for use with this feature using
+the
+[BaseEnvironment](https://github.com/google/adk-python/blob/main/src/google/adk/environment/_base_environment.py)
+class. You can review the code for the
+[LocalEnvironment](https://github.com/google/adk-python/blob/main/src/google/adk/environment/_local_environment.py)
+implementation to help you get started.
+
+================
 File: docs/integrations/express-mode.md
 ================
 ---
@@ -24076,6 +24236,212 @@ allowing your agent to recall user preferences and conversations.
 
 *   [Weather Agent with Session and Memory](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)
     using Vertex AI express mode
+
+================
+File: docs/integrations/firestore-session-service.md
+================
+---
+catalog_title: Firestore Session Service
+catalog_description: Session state management for ADK agents using Firestore
+catalog_icon: /integrations/assets/firestore-session.jpg
+catalog_tags: ["data", "google"]
+---
+
+# Session State Management using Firestore
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-java">Java</span>
+</div>
+
+[Google Cloud Firestore](https://cloud.google.com/firestore) is a flexible, scalable NoSQL cloud database to store and sync data for client- and server-side development. 
+ADK provides a native integration for managing persistent agent session states using Firestore, allowing continuous multi-turn conversations without losing conversation history.
+
+## Use cases
+
+- **Customer Support Agents**: Maintain context across long-running support tickets, allowing the agent to remember past troubleshooting steps and preferences across multiple sessions.
+- **Personalized Assistants**: Build agents that accumulate knowledge about the user over time, personalizing future interactions based on historical conversations.
+- **Multi-modal Workflows**: Seamlessly handle complex use cases involving images, videos, and audio alongside text conversations, leveraging the built-in GCS artifact storage.
+- **Enterprise Chatbots**: Deploy highly reliable, conversational AI applications with production-grade persistence suitable for large-scale enterprise environments.
+
+## Prerequisites
+
+- A [Google Cloud Project](https://cloud.google.com/) with Firestore enabled
+- A [Firestore database](https://cloud.google.com/firestore/docs/setup) in your Google Cloud Project
+- Appropriate [Google Cloud credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc) configured in your environment
+
+## Install dependencies
+
+!!! note
+
+    Ensure you use the same version for both `google-adk` and `google-adk-firestore-session-service` to guarantee compatibility.
+
+Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Gradle), replacing `1.0.0` with your target ADK version:
+
+### Maven
+
+```xml
+<dependencies>
+    <!-- ADK Core -->
+    <dependency>
+        <groupId>com.google.adk</groupId>
+        <artifactId>google-adk</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+    <!-- Firestore Session Service -->
+    <dependency>
+        <groupId>com.google.adk</groupId>
+        <artifactId>google-adk-firestore-session-service</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+</dependencies>
+```
+
+### Gradle
+
+```gradle
+dependencies {
+    // ADK Core
+    implementation 'com.google.adk:google-adk:1.0.0'
+    // Firestore Session Service
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.0.0'
+}
+```
+
+## Example: Agent with Firestore Session Management
+
+Use `FirestoreDatabaseRunner` to encapsulate your agent and Firestore-backed session management. Here is a complete example of setting up a simple assistant agent that remembers conversation context across turns using a custom session ID.
+
+```java
+import com.google.adk.agents.BaseAgent;
+import com.google.adk.agents.LlmAgent;
+import com.google.adk.agents.RunConfig;
+import com.google.adk.runner.FirestoreDatabaseRunner;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.FirestoreOptions;
+import io.reactivex.rxjava3.core.Flowable;
+import java.util.Map;
+import com.google.adk.sessions.FirestoreSessionService;
+import com.google.adk.sessions.Session;
+import com.google.adk.tools.Annotations.Schema;
+import com.google.adk.tools.FunctionTool;
+import com.google.genai.types.Content;
+import com.google.genai.types.Part;
+import com.google.adk.events.Event;
+import java.util.Scanner;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+public class YourAgentApplication {
+
+    public static void main(String[] args) {
+        System.out.println("Starting YourAgentApplication...");
+
+        RunConfig runConfig = RunConfig.builder().build();
+        String appName = "hello-time-agent";
+
+        BaseAgent timeAgent = initAgent();
+        
+        // Initialize Firestore
+        FirestoreOptions firestoreOptions = FirestoreOptions.getDefaultInstance();
+        Firestore firestore = firestoreOptions.getService();
+
+        // Use FirestoreDatabaseRunner to persist session state
+        FirestoreDatabaseRunner runner = new FirestoreDatabaseRunner(
+                timeAgent,
+                appName,
+                firestore
+        );
+
+        // Create a new session or load an existing one
+        Session session = new FirestoreSessionService(firestore)
+                .createSession(appName, "user1234", null, "12345")
+                .blockingGet();
+
+        // Start interactive CLI
+        try (Scanner scanner = new Scanner(System.in, UTF_8)) {
+            while (true) {
+                System.out.print("\\nYou > ");
+                String userInput = scanner.nextLine();
+                if ("quit".equalsIgnoreCase(userInput)) {
+                    break;
+                }
+
+                Content userMsg = Content.fromParts(Part.fromText(userInput));
+                Flowable<Event> events = runner.runAsync(session.userId(), session.id(), userMsg, runConfig);
+
+                System.out.print("\\nAgent > ");
+                events.blockingForEach(event -> {
+                    if (event.finalResponse()) {
+                        System.out.println(event.stringifyContent());
+                    }
+                });
+            }
+        }
+    }
+
+    /** Mock tool implementation */
+    @Schema(description = "Get the current time for a given city")
+    public static Map<String, String> getCurrentTime(
+        @Schema(name = "city", description = "Name of the city to get the time for") String city) {
+        return Map.of(
+            "city", city,
+            "time", "The time is 10:30am."
+        );
+    }
+    
+    private static BaseAgent initAgent() {
+        return LlmAgent.builder()
+            .name("hello-time-agent")
+            .description("Tells the current time in a specified city")
+            .instruction(\"""
+                You are a helpful assistant that tells the current time in a city.
+                Use the 'getCurrentTime' tool for this purpose.
+                \""")
+            .model("gemini-3.1-pro-preview")
+            .tools(FunctionTool.create(YourAgentApplication.class, "getCurrentTime"))
+            .build();
+    }
+}
+```
+
+## Configuration
+
+!!! note
+
+    The Firestore Session Service supports properties file configuration. This allows you to easily target a dedicated Firestore database and define custom collection names for storing your agent session data.
+
+You can customize your ADK application to use the Firestore session service by providing your own Firestore property settings, otherwise the library will use the default settings. 
+
+### Environment-Specific Configuration
+
+The library prioritizes environment-specific property files over the default settings using the following resolution order:
+
+1. **Environment Variable Override**: It first checks for an environment variable named `env`. If this variable is set (e.g., `env=dev`), it will attempt to load a properties file matching the template: `adk-firestore-{env}.properties` (e.g., `adk-firestore-dev.properties`).
+2. **Default Fallback**: If the `env` variable is not set, or the environment-specific file cannot be found, the library defaults to loading `adk-firestore.properties`.
+
+Sample Property Settings:
+
+```properties
+# Firestore collection name for storing session data
+firebase.root.collection.name=adk-session
+# Google Cloud Storage bucket name for artifact storage
+gcs.adk.bucket.name=your-gcs-bucket-name
+# stop words for keyword extraction
+keyword.extraction.stopwords=a,about,above,after,again,against,all,am,an,and,any,are,aren't,as,at,be,because,been,before,being,below,between,both,but,by,can't,cannot,could,couldn't,did,didn't,do,does,doesn't,doing,don't,down,during,each,few,for,from,further,had,hadn't,has,hasn't,have,haven't,having,he,he'd,he'll,he's,her,here,here's,hers,herself,him,himself,his,how,i,i'd,i'll,i'm,i've,if,in,into,is
+```
+
+!!! important
+
+    `FirestoreDatabaseRunner` requires the `gcs.adk.bucket.name` property to be defined. This is because the runner internally initializes the `GcsArtifactService` to handle multi-modal artifact storage. If this property is missing or empty, the application will throw a `RuntimeException` during startup. This is used for storing artifacts like images, videos, audio files, etc. that are generated or processed by the agent. 
+
+
+## Resources
+
+- [Firestore Session Service](https://github.com/google/adk-java/tree/main/contrib/firestore-session-service): 
+  Source code for the Firestore Session Service.
+- [Spring Boot Google ADK + Firestore Example](https://github.com/mohan-ganesh/spring-boot-google-adk-firestore): 
+  An example project demonstrating how to build a Java-based Google ADK agent application using Cloud Firestore for session management.
+- [Firestore Session Service - DeepWiki](https://deepwiki.com/google/adk-java/4.3-firestore-session-service): 
+  Detailed description of Firestore integration in the Google ADK for Java.
 
 ================
 File: docs/integrations/freeplay.md
@@ -24850,7 +25216,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     # Example with an Agent:
     gke_sandbox_agent = LlmAgent(
         name="gke_sandbox_coding_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="You are a helpful AI agent that writes and executes Python code using sandboxes.",
         code_executor=gke_sandbox_executor,
     )
@@ -24882,7 +25248,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     # Example with an Agent:
     gke_agent = LlmAgent(
         name="gke_coding_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="You are a helpful AI agent that writes and executes Python code.",
         code_executor=gke_executor,
     )
@@ -24958,7 +25324,7 @@ pip install goodmem-adk
 
     agent = LlmAgent(
         name="memory_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="You are a helpful assistant with persistent memory.",
     )
 
@@ -24985,7 +25351,7 @@ pip install goodmem-adk
 
     agent = LlmAgent(
         name="memory_agent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         instruction="You are a helpful assistant with persistent memory.",
         tools=[save_tool, fetch_tool],
     )
@@ -25203,7 +25569,7 @@ The `google_search` tool allows the agent to perform web searches using Google S
     import {GOOGLE_SEARCH, LlmAgent} from '@google/adk';
 
     export const rootAgent = new LlmAgent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       name: 'root_agent',
       description:
           'an agent whose job it is to perform Google search queries and answer questions about the results.',
@@ -25556,7 +25922,7 @@ def get_weather(city: str) -> dict:
 # Create an agent with tools
 agent = Agent(
     name="weather_agent",
-    model="gemini-2.0-flash",
+    model="gemini-flash-latest",
     description="Agent to answer questions about the weather.",
     instruction="You must use the available tools to find an answer.",
     tools=[get_weather],
@@ -26225,7 +26591,7 @@ documentation:
 
     export const rootAgent = new LlmAgent({
       name: 'weather_time_agent',
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       description:
         'Agent to answer questions about the time and weather in a city.',
       instruction:
@@ -26426,7 +26792,7 @@ calculator_tool = FunctionTool(func=calculator)
 
 root_agent = LlmAgent(
     name="MathAgent",
-    model="gemini-2.0-flash-exp",
+    model="gemini-flash-latest",
     instruction=(
         "You are a helpful assistant that can do math. "
         "When asked a math problem, use the calculator tool to solve it."
@@ -26809,7 +27175,7 @@ def get_weather(city: str) -> dict:
 # Create an agent with tools
 agent = Agent(
     name="weather_agent",
-    model="gemini-2.0-flash-exp",
+    model="gemini-flash-latest",
     description="Agent to answer questions using weather tools.",
     instruction="You must use the available tools to find an answer.",
     tools=[get_weather]
@@ -27644,7 +28010,7 @@ def get_weather(city: str) -> dict:
 # Create an agent with tools
 agent = Agent(
     name="weather_agent",
-    model="gemini-2.0-flash-exp",
+    model="gemini-flash-latest",
     description="Agent to answer questions using weather tools.",
     instruction="You must use the available tools to find an answer.",
     tools=[get_weather]
@@ -28640,7 +29006,7 @@ uv add stackone-adk
             print(f"Discovered {len(tools)} tools")
 
             agent = Agent(
-                model="gemini-2.5-flash",
+                model="gemini-flash-latest",
                 name="scheduling_agent",
                 description="Manages scheduling, HR, and CRM through StackOne.",
                 instruction=(
@@ -28694,7 +29060,7 @@ uv add stackone-adk
             print(f"Discovered {len(tools)} tools")
 
             agent = Agent(
-                model="gemini-2.5-flash",
+                model="gemini-flash-latest",
                 name="scheduling_agent",
                 description="Manages scheduling, HR, and CRM through StackOne.",
                 instruction=(
@@ -29597,7 +29963,7 @@ calculator_tool = FunctionTool(func=calculator)
 # Create an LLM agent
 root_agent = LlmAgent(
     name="MathAgent",
-    model="gemini-2.0-flash-exp",
+    model="gemini-flash-latest",
     instruction=(
         "You are a helpful assistant that can do math. "
         "When asked a math problem, use the calculator tool to solve it."
@@ -30022,7 +30388,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
 3.  **Inspect the Logs:** Look through the console output for a message from the `google.adk.models.google_llm` logger that starts with `LLM Request:`.
     ```log
     ...
-    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-2.0-flash, backend: GoogleLLMVariant.GEMINI_API, stream: False
+    2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-flash-latest, backend: GoogleLLMVariant.GEMINI_API, stream: False
     2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm -
     LLM Request:
     -----------------------------------------------------------
@@ -30322,7 +30688,7 @@ You can configure the `GEPARootAgentPromptOptimizer` with a
 
 * `optimizer_model` (optional): The model used to analyze evaluation results and
 optimize the agent.
-Defaults to `"gemini-2.5-flash"`.
+Defaults to `"gemini-flash-latest"`.
 * `model_configuration` (optional): The configuration for the optimizer model.
 Defaults to a config with a 10K token thinking budget.
 * `max_metric_calls` (optional): The maximum number of evaluations to run during
@@ -30798,7 +31164,7 @@ a simple ADK agent.
         print(f'Hello world: query is [{query}]')
 
         root_agent = Agent(
-            model='gemini-2.0-flash',
+            model='gemini-flash-latest',
             name='hello_world',
             description='Prints hello world with user query.',
             instruction="""Use hello_world tool to print hello world and user query.
@@ -30865,7 +31231,7 @@ a simple ADK agent.
     });
 
     const rootAgent = new LlmAgent({
-        model: "gemini-2.5-flash", // Preserved from your Python code
+        model: "gemini-flash-latest", // Preserved from your Python code
         name: "hello_world",
         description: "Prints hello world with user query.",
         instruction: `Use hello_world tool to print hello world and user query.`,
@@ -30941,7 +31307,7 @@ a simple ADK agent.
 
       public static void main(String[] args) {
         LlmAgent rootAgent = LlmAgent.builder()
-            .model("gemini-2.0-flash")
+            .model("gemini-flash-latest")
             .name("hello_world")
             .description("Prints hello world with user query.")
             .instruction("Use hello_world tool to print hello world and user query.")
@@ -31017,7 +31383,7 @@ a simple ADK agent.
 
     func main() {
     	ctx := context.Background()
-    	model, err := gemini.NewModel(ctx, "gemini-2.0-flash", &genai.ClientConfig{})
+    	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{})
     	if err != nil {
     		log.Fatalf("failed to create model: %v", err)
     	}
@@ -34287,7 +34653,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
 
     # Hypothetical Agent setup
     root_agent = LlmAgent( # Use specific agent type
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         name='root_agent',
         instruction="...",
         before_tool_callback=validate_tool_params, # Assign the callback
@@ -34328,7 +34694,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
 
     // Hypothetical Agent setup
     const rootAgent = new LlmAgent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-latest',
         name: 'root_agent',
         instruction: "...",
         beforeToolCallback: validateToolParams, // Assign the callback
@@ -34378,7 +34744,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
 
     // Hypothetical Agent setup
     // agent, _ := llmagent.New(llmagent.Config{
-    // 	Model: "gemini-2.5-flash",
+    // 	Model: "gemini-flash-latest",
     // 	Name: "root_agent",
     // 	Instruction: "...",
     // 	BeforeToolCallbacks: []llmagent.BeforeToolCallback{validateToolParams},
@@ -34416,7 +34782,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     public void runAgent() {
     LlmAgent agent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("AgentWithBeforeToolCallback")
             .instruction("...")
             .beforeToolCallback(this::validateToolParams) // Assign the callback
@@ -35137,7 +35503,7 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
     # --- Constants ---
     APP_NAME = "memory_example_app"
     USER_ID = "mem_user"
-    MODEL = "gemini-2.0-flash" # Use a valid model
+    MODEL = "gemini-flash-latest" # Use a valid model
 
     # --- Agent Definitions ---
     # Agent 1: Simple agent to capture information
@@ -35249,7 +35615,7 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
 
       private static final String APP_NAME = "memory_example_app";
       private static final String USER_ID = "mem_user";
-      private static final String MODEL = "gemini-2.0-flash";
+      private static final String MODEL = "gemini-flash-latest";
 
       public static void main(String[] args) {
         // Services
@@ -35712,7 +36078,7 @@ To inject a value from the session state, enclose the key of the desired state v
 
     story_generator = LlmAgent(
         name="StoryGenerator",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         instruction="""Write a short story about a cat, focusing on the theme: {topic}."""
     )
 
@@ -35728,7 +36094,7 @@ To inject a value from the session state, enclose the key of the desired state v
 
     const storyGenerator = new LlmAgent({
         name: "StoryGenerator",
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         instruction: "Write a short story about a cat, focusing on the theme: {topic}."
     });
 
@@ -35750,7 +36116,7 @@ To inject a value from the session state, enclose the key of the desired state v
 
     LlmAgent storyGenerator = LlmAgent.builder()
         .name("StoryGenerator")
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .instruction("Write a short story about a cat, focusing on the theme: " + topic)
         .build();
 
@@ -35788,7 +36154,7 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
         return 'Format your output as JSON: {"city": "<name>", "population": <number>}'
 
     agent = LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         name="template_helper_agent",
         instruction=my_instruction_provider
     )
@@ -35806,7 +36172,7 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
     }
 
     const agent = new LlmAgent({
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         name: "template_helper_agent",
         instruction: myInstructionProvider
     });
@@ -35835,7 +36201,7 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
     );
 
     LlmAgent agent = LlmAgent.builder()
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .name("template_helper_agent")
         .instruction(myInstructionProvider)
         .build();
@@ -35857,7 +36223,7 @@ If you want to both use an `InstructionProvider` *and* inject state into your in
         return await instructions_utils.inject_session_state(template, context)
 
     agent = LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         name="dynamic_template_helper_agent",
         instruction=my_dynamic_instruction_provider
     )
@@ -35888,7 +36254,7 @@ If you want to both use an `InstructionProvider` *and* inject state into your in
     );
 
     LlmAgent agent = LlmAgent.builder()
-        .model("gemini-2.5-flash")
+        .model("gemini-flash-latest")
         .name("dynamic_template_helper_agent")
         .instruction(myDynamicInstructionProvider)
         .build();
@@ -35928,7 +36294,7 @@ This is the simplest method for saving an agent's final text response directly i
     # Define agent with output_key
     greeting_agent = LlmAgent(
         name="Greeter",
-        model="gemini-2.0-flash", # Use a valid model
+        model="gemini-flash-latest", # Use a valid model
         instruction="Generate a short, friendly greeting.",
         output_key="last_greeting" # Save response to state['last_greeting']
     )
@@ -35971,7 +36337,7 @@ This is the simplest method for saving an agent's final text response directly i
     // Define agent with outputKey
     const greetingAgent = new LlmAgent({
         name: "Greeter",
-        model: "gemini-2.5-flash",
+        model: "gemini-flash-latest",
         instruction: "Generate a short, friendly greeting.",
         outputKey: "last_greeting" // Save response to state['last_greeting']
     });
@@ -36310,7 +36676,7 @@ my_skill_toolset = skill_toolset.SkillToolset(
 )
 
 root_agent = Agent(
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     name="skill_user_agent",
     description="An agent that can use specialized skills.",
     instruction=(
@@ -39385,8 +39751,8 @@ While this guide focuses on Bidi-streaming with Gemini 2.0 Live models, ADK also
 
 **Models:**
 
-- `gemini-1.5-pro`
-- `gemini-1.5-flash`
+- `gemini-pro-latest`
+- `gemini-flash-latest`
 
 **Supported:**
 
@@ -42004,7 +42370,7 @@ Now let's define an agent that can monitor stock price changes and monitor the v
 
           # Call the model to generate content based on the provided image and prompt
           response = client.models.generate_content(
-              model="gemini-2.0-flash-exp",
+              model="gemini-flash-latest",
               contents=contents,
               config=genai_types.GenerateContentConfig(
                   system_instruction=(
@@ -42038,7 +42404,7 @@ Now let's define an agent that can monitor stock price changes and monitor the v
 
 
     root_agent = Agent(
-        model="gemini-2.0-flash-exp",
+        model="gemini-flash-latest",
         name="video_streaming_agent",
         instruction="""
           You are a monitoring agent. You can do video monitoring and stock price monitoring
@@ -42109,7 +42475,7 @@ Now let's define an agent that can monitor stock price changes and monitor the v
                   .build();
 
               GenerateContentResponse response = client.models().generateContent(
-                  "gemini-2.5-flash",
+                  "gemini-flash-latest",
                   contents,
                   GenerateContentConfig.builder()
                       .systemInstruction(Content.builder().parts(Arrays.asList(
@@ -42132,7 +42498,7 @@ Now let's define an agent that can monitor stock price changes and monitor the v
 
       public static void main(String[] args) {
         LlmAgent rootAgent = LlmAgent.builder()
-            .model("gemini-2.0-flash-exp")
+            .model("gemini-flash-latest")
             .name("video_streaming_agent")
             .instruction(
                 "You are a monitoring agent. You can do video monitoring and stock price monitoring\n" +
@@ -42190,7 +42556,7 @@ other tools, within a single agent, is ***not supported***:
     ```py
     root_agent = Agent(
         name="RootAgent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         description="Code Agent",
         tools=[custom_function],
         code_executor=BuiltInCodeExecutor() # <-- NOT supported when used with tools
@@ -42227,7 +42593,7 @@ to use built-in tools with other tools by using multiple agents:
     from google.adk.code_executors import BuiltInCodeExecutor
 
     search_agent = Agent(
-        model='gemini-2.0-flash',
+        model='gemini-flash-latest',
         name='SearchAgent',
         instruction="""
         You're a specialist in Google Search
@@ -42235,7 +42601,7 @@ to use built-in tools with other tools by using multiple agents:
         tools=[google_search],
     )
     coding_agent = Agent(
-        model='gemini-2.0-flash',
+        model='gemini-flash-latest',
         name='CodeAgent',
         instruction="""
         You're a specialist in Code Execution
@@ -42244,7 +42610,7 @@ to use built-in tools with other tools by using multiple agents:
     )
     root_agent = Agent(
         name="RootAgent",
-        model="gemini-2.0-flash",
+        model="gemini-flash-latest",
         description="Root Agent",
         tools=[AgentTool(agent=search_agent), AgentTool(agent=coding_agent)],
     )
@@ -42262,7 +42628,7 @@ to use built-in tools with other tools by using multiple agents:
 
     public class NestedAgentApp {
 
-      private static final String MODEL_ID = "gemini-2.0-flash";
+      private static final String MODEL_ID = "gemini-flash-latest";
 
       public static void main(String[] args) {
 
@@ -42333,7 +42699,7 @@ is **not supported**:
 
     ```py
     url_context_agent = Agent(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         name='UrlContextAgent',
         instruction="""
         You're a specialist in URL Context
@@ -42341,7 +42707,7 @@ is **not supported**:
         tools=[url_context],
     )
     coding_agent = Agent(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         name='CodeAgent',
         instruction="""
         You're a specialist in Code Execution
@@ -42350,7 +42716,7 @@ is **not supported**:
     )
     root_agent = Agent(
         name="RootAgent",
-        model="gemini-2.5-flash",
+        model="gemini-flash-latest",
         description="Root Agent",
         sub_agents=[
             url_context_agent,
@@ -42364,7 +42730,7 @@ is **not supported**:
     ```java
     LlmAgent searchAgent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("SearchAgent")
             .instruction("You're a specialist in Google Search")
             .tools(new GoogleSearchTool())
@@ -42372,7 +42738,7 @@ is **not supported**:
 
     LlmAgent codingAgent =
         LlmAgent.builder()
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .name("CodeAgent")
             .instruction("You're a specialist in Code Execution")
             .tools(new BuiltInCodeExecutionTool())
@@ -42382,7 +42748,7 @@ is **not supported**:
     LlmAgent rootAgent =
         LlmAgent.builder()
             .name("RootAgent")
-            .model("gemini-2.5-flash")
+            .model("gemini-flash-latest")
             .description("Root Agent")
             .subAgents(searchAgent, codingAgent) // Not supported, as the sub agents use built in tools.
             .build();
@@ -42421,16 +42787,46 @@ There are several ways to manage authentication and credentials in ADK
 agents. Each of these methods carries some amount of risk, so you should
 carefully consider which approach best serves your application and customers.
 
-### Recommended: Secrets manager services
+### Recommended: Authentication manager services {#authentication-manager}
 
-For production environments, storing sensitive credentials in a dedicated secret
-manager is the **most recommended approach**. With this approach, the secret
-manager securely stores the credentials for any tools or services accessed by
-the agent as needed, and those secrets are not resident in agent's operating
-memory. For example, a custom ADK Tool using this method would store only
-short-lived access tokens or secure references, and retrieve longer-lived
-refresh tokens from the secrets manager when needed. When selecting a secrets
-manager service, consider services from well-established providers, such as
+When deploying agents to production hosted environments, your agent's ability to
+properly authenticate to restricted tools and services becomes more challenging
+and more important to properly manage. This authentication challenge can become
+even more complicated when users of your agent have varying levels of access to
+restricted tools and data. Rather than writing code to handle the authentication
+process and credential managment for various tools used by your agent, use an
+*authentication manager* service that manages *both* for you. This service
+should handle the storage of keys and secrets, as well as the acquisition,
+management, and storage of OAuth access or refresh tokens.
+
+### Self-managed authentication
+
+If you decide to manage your own authentication process with ADK helper functions
+and your own code, consider these recommendations:
+
+*   **API keys and client secrets:** For any API keys and client secrets used
+    inside ADK code, when running on a local compute environment use a local
+    `.env` file excluded from version control. When your agent is hosted or
+    otherwise in a production environment, use a secrets manager. For more
+    details on secrets managers, see the [next section](#secrets-manager).
+*   **Interactive authentication:** When using interactive three-legged auth
+    (3LO) OAuth or OpenID Connect (OIDC) for authentication to tools, write a
+    service on the client application to acquire, manage access, and refresh
+    tokens. Make sure to store these tokens against an authenticated user
+    identifier in an encrypted database.
+
+### Secrets manager services {#secrets-manager}
+
+For production environments, if you are not using an
+[authentication manager](#authentication-manager) service, you should store
+credentials in a dedicated secret manager service to protect that data. With
+this approach, a secret manager securely stores the credentials for any tools or
+services accessed by the agent as needed, and those secrets are not resident in
+agent's operating memory. For example, a custom ADK Tool using this method would
+have only short-lived access tokens or secure references in session memory, and
+retrieve longer-lived refresh tokens from the secrets manager when needed. When
+selecting a secrets manager, consider services from well-established providers,
+such as
 [Google Cloud Secret Manager](https://cloud.google.com/security/products/secret-manager)
 or other secret management services.
 
@@ -44126,12 +44522,12 @@ The `AgentTool` class provides the following attributes for customizing its beha
 
 ### How it works
 
-1. When the `main_agent` receives the long text, its instruction tells it to use the 'summarize' tool for long texts.
+1. When the `root_agent` receives the long text, its instruction tells it to use the 'summarize' tool for long texts.
 2. The framework recognizes 'summarize' as an `AgentTool` that wraps the `summary_agent`.
-3. Behind the scenes, the `main_agent` will call the `summary_agent` with the long text as input.
+3. Behind the scenes, the `root_agent` will call the `summary_agent` with the long text as input.
 4. The `summary_agent` will process the text according to its instruction and generate a summary.
-5. **The response from the `summary_agent` is then passed back to the `main_agent`.**
-6. The `main_agent` can then take the summary and formulate its final response to the user (e.g., "Here's a summary of the text: ...")
+5. **The response from the `summary_agent` is then passed back to the `root_agent`.**
+6. The `root_agent` can then take the summary and formulate its final response to the user (e.g., "Here's a summary of the text: ...")
 
 ================
 File: docs/tools-custom/index.md
@@ -44798,7 +45194,7 @@ TARGET_FOLDER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "/
 # If you created ./adk_agent_samples/mcp_agent/your_folder,
 
 root_agent = LlmAgent(
-    model='gemini-2.5-flash',
+    model='gemini-flash-latest',
     name='filesystem_assistant_agent',
     instruction='Help the user manage their files. You can list files, read files, etc.',
     tools=[
@@ -44901,7 +45297,7 @@ public class McpAgentCreator {
 
         try (McpToolset toolset = new McpToolset(serverParams.toServerParameters())) {
             LlmAgent agent = LlmAgent.builder()
-                    .model("gemini-2.5-flash")
+                    .model("gemini-flash-latest")
                     .name("enterprise_assistant")
                     .description("An agent to help users access their file systems")
                     .instruction(
@@ -44957,7 +45353,7 @@ import {LlmAgent, MCPToolset} from "@google/adk";
 const TARGET_FOLDER_PATH = "/path/to/your/folder";
 
 export const rootAgent = new LlmAgent({
-    model: "gemini-2.5-flash",
+    model: "gemini-flash-latest",
     name: "filesystem_assistant_agent",
     instruction: "Help the user manage their files. You can list files, read files, etc.",
     tools: [
@@ -45029,7 +45425,7 @@ if not GOOGLE_MAPS_API_KEY:
         # You might want to raise an error or exit if the key is crucial and not found.
 
 root_agent = Agent(
-    model='gemini-3-flash-preview',
+    model='gemini-flash-latest',
     name='travel_planner_agent',
     description='A helpful assistant for planning travel routes.',
     tools=[
@@ -45132,7 +45528,7 @@ public class MapsAgentCreator {
         try (McpToolset toolset = new McpToolset(serverParams)) {
             // Build the Agent with the configured Toolset
             LlmAgent agent = LlmAgent.builder()
-                    .model("gemini-3-flash-preview")
+                    .model("gemini-flash-latest")
                     .name("travel_planner_agent")
                     .description("A helpful assistant for planning travel routes.")
                     .tools(toolset)
@@ -45185,7 +45581,7 @@ if (!googleMapsApiKey) {
 }
 
 export const rootAgent = new LlmAgent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-flash-latest",
     name: "travel_planner_agent",
     description: "A helpful assistant for planning travel.",
     tools: [
@@ -45377,7 +45773,7 @@ if PATH_TO_YOUR_MCP_SERVER_SCRIPT == "/path/to/your/my_adk_mcp_server.py":
     # Optionally, raise an error if the path is critical
 
 root_agent = LlmAgent(
-    model='gemini-2.5-flash',
+    model='gemini-flash-latest',
     name='web_reader_mcp_client_agent',
     instruction="Use the 'load_web_page' tool to fetch content from a URL provided by the user.",
     tools=[
@@ -45486,7 +45882,7 @@ async def get_agent_async():
 
   # Use in an agent
   root_agent = LlmAgent(
-      model='gemini-2.5-flash', # Adjust model name if needed based on availability
+      model='gemini-flash-latest', # Adjust model name if needed based on availability
       name='enterprise_assistant',
       instruction='Help user accessing their file systems',
       tools=[toolset], # Provide the MCP tools to the ADK agent
@@ -45577,7 +45973,7 @@ from mcp import StdioServerParameters
 _allowed_path = os.path.dirname(os.path.abspath(__file__))
 
 root_agent = LlmAgent(
-    model='gemini-2.5-flash',
+    model='gemini-flash-latest',
     name='enterprise_assistant',
     instruction=f'Help user accessing their file systems. Allowed directory: {_allowed_path}',
     tools=[
@@ -46036,7 +46432,7 @@ Follow these steps to integrate an OpenAPI spec into your agent:
 
     my_agent = LlmAgent(
         name="api_interacting_agent",
-        model="gemini-2.0-flash", # Or your preferred model
+        model="gemini-flash-latest", # Or your preferred model
         tools=[toolset], # Pass the toolset
         # ... other agent config ...
     )
@@ -46410,7 +46806,7 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 # --- Define Model Constants for easier use ---
 
 # More supported models can be referenced here: https://ai.google.dev/gemini-api/docs/models#model-variations
-MODEL_GEMINI_2_5_FLASH = "gemini-2.5-flash"
+MODEL_GEMINI_2_5_FLASH = "gemini-flash-latest"
 
 # More supported models can be referenced here: https://docs.litellm.ai/docs/providers/openai#openai-chat-completion-models
 MODEL_GPT_4O = "openai/gpt-4.1" # You can also try: gpt-4.1-mini, gpt-4o etc.
@@ -49682,7 +50078,7 @@ def lookup_time_function(city: str):
 
 city_report_agent = Agent(
     name="city_report_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     input_schema=CityTime,
 
     # data selection based on class and parameter
@@ -49896,7 +50292,7 @@ def city_time_function(city: str):
 
 city_report_agent = Agent(
     name="city_report_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     input_schema=CityTime,
     instruction="""output the data provided by the previous node.""",
 )
@@ -49945,7 +50341,7 @@ workflow loop for generating, reviewing, and updating code:
 ```python
 coder_agent = LlmAgent(
     name="generator_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     instruction="Write python code for user request.",
     output_schema=str,
 )
@@ -49955,7 +50351,7 @@ compile_lint_check = ApiNode()
 
 fixer_agent = LlmAgent(
     name="generator_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     instruction="""Refactor current code {code}.
         Based on compile & lint review: {findings}""",
     output_schema=str,
@@ -50545,7 +50941,7 @@ from pydantic import BaseModel
 
 city_generator_agent = Agent(
     name="city_generator_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     instruction="""Return the name of a random city.
       Return only the name, nothing else.""",
     output_schema=str,
@@ -50561,7 +50957,7 @@ def lookup_time_function(node_input: str):
 
 city_report_agent = Agent(
     name="city_report_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     input_schema=CityTime,
     instruction="""Output following line:
     It is {CityTime.time_info} in {CityTime.city} right now.""",
@@ -50623,7 +51019,7 @@ translated into a graph-based agent using the ***Workflow*** class:
 ```python
 process_message = Agent(
     name="process_message",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
       or "LOGISTICS". If you think a message applies to more than one category,
       reply with a comma separated list of categories.
