@@ -2038,6 +2038,15 @@ in your agents:
             .build();
     ```
 
+??? note "Note: Gemini model selector `gemini-flash-latest`"
+
+    Most code examples in ADK documentation use `gemini-flash-latest` to select the
+    [latest available](https://ai.google.dev/gemini-api/docs/models#latest)
+    Gemini Flash version. However, if you access Gemini from a regional endpoint,
+    such as `us-central1`, this selection string may not work. In that case,
+    use a specific model version string from the
+    [Gemini models](https://ai.google.dev/gemini-api/docs/models) page or
+    Google Cloud [Gemini models](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models) list.
 
 ## Gemini model authentication
 
@@ -15910,6 +15919,40 @@ An `Event` in ADK is an immutable record representing a specific point in the ag
     #     # ...
     ```
 
+=== "TypeScript"
+    In TypeScript, this is an interface of type `Event`.
+
+    ```typescript
+    import {Content} from '@google/genai';
+
+    /**
+     * Conceptual Structure of an Event (TypeScript)
+     */
+    export interface Event extends LlmResponse {
+      /** Unique ID for this specific event. */
+      id: string;
+      /** ID for the whole interaction run. */
+      invocationId: string;
+      /** 'user' or agent name. */
+      author?: string;
+      /** Important for side-effects & control. */
+      actions: EventActions;
+      /** Creation time. */
+      timestamp: number;
+      /** Is it streaming output? */
+      partial?: boolean;
+      /** Is the turn finished? */
+      turnComplete?: boolean;
+      /** Hierarchy path. */
+      branch?: string;
+      /** List of IDs for long-running tools. */
+      longRunningToolIds?: string[];
+      /** The content of the response. */
+      content?: Content;
+      // ... other LlmResponse fields like errorCode, errorMessage
+    }
+    ```
+
 === "Go"
     In Go, this is a struct of type `google.golang.org/adk/session.Event`.
 
@@ -16020,6 +16063,47 @@ Quickly determine what an event represents by checking:
     #         print("  Type: State/Artifact Update")
     #     else:
     #         print("  Type: Control Signal or Other")
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    // Pseudocode: Basic event identification (TypeScript)
+    import {
+      Event,
+      getFunctionCalls,
+      getFunctionResponses
+    } from '@google/adk';
+
+    export async function processEvents(runnerEvents: AsyncIterable<Event>) {
+      for await (const event of runnerEvents) {
+        console.log(`Event from: ${event.author}`);
+
+        if (event.content && event.content.parts && event.content.parts.length > 0) {
+          if (getFunctionCalls(event).length > 0) {
+            console.log('  Type: Tool Call Request');
+          } else if (getFunctionResponses(event).length > 0) {
+            console.log('  Type: Tool Result');
+          } else if (event.content.parts[0].text) {
+            if (event.partial) {
+              console.log('  Type: Streaming Text Chunk');
+            } else {
+              console.log('  Type: Complete Text Message');
+            }
+          } else {
+            console.log('  Type: Other Content (e.g., code result)');
+          }
+        } else if (
+          event.actions &&
+          (Object.keys(event.actions.stateDelta).length > 0 ||
+            Object.keys(event.actions.artifactDelta).length > 0)
+        ) {
+          console.log('  Type: State/Artifact Update');
+        } else {
+          console.log('  Type: Control Signal or Other');
+        }
+      }
+    }
     ```
 
 === "Go"
@@ -16144,6 +16228,21 @@ Once you know the event type, access the relevant data:
                 # Application might dispatch execution based on this
         ```
 
+    === "TypeScript"
+
+        ```typescript
+        export function handleFunctionCalls(event: Event) {
+            const calls = getFunctionCalls(event);
+            if (calls.length > 0) {
+                for (const call of calls) {
+                    const toolName = call.name;
+                    const argumentsDict = call.args; // This is an object
+                    console.log(`  Tool: ${toolName}, Args: ${JSON.stringify(argumentsDict)}`);
+                }
+            }
+        }
+        ```
+
     === "Go"
 
         ```go
@@ -16199,6 +16298,22 @@ Once you know the event type, access the relevant data:
                 tool_name = response.name
                 result_dict = response.response # The dictionary returned by the tool
                 print(f"  Tool Result: {tool_name} -> {result_dict}")
+        ```
+
+    === "TypeScript"
+
+        ```typescript
+        // Pseudocode: Handle function responses (TypeScript)
+        export function handleFunctionResponses(event: Event) {
+            const responses = getFunctionResponses(event);
+            if (responses.length > 0) {
+                for (const response of responses) {
+                    const toolName = response.name;
+                    const result = response.response; // The object returned by the tool
+                    console.log(`  Tool Result: ${toolName} -> ${JSON.stringify(result)}`);
+                }
+            }
+        }
         ```
 
     === "Go"
@@ -16259,6 +16374,18 @@ The `event.actions` object signals changes that occurred or should occur. Always
             print(f"  State changes: {event.actions.state_delta}")
             # Update local UI or application state if necessary
         ```
+
+    === "TypeScript"
+        `delta = event.actions.stateDelta` (an object of `{key: value}` pairs).
+        ```typescript
+        export function handleStateChanges(event: Event) {
+            if (event.actions && Object.keys(event.actions.stateDelta).length > 0) {
+                console.log(`  State changes: ${JSON.stringify(event.actions.stateDelta)}`);
+                // Update local UI or application state if necessary
+            }
+        }
+        ```
+
     === "Go"
         `delta := event.Actions.StateDelta` (a `map[string]any`)
         ```go
@@ -16298,6 +16425,17 @@ The `event.actions` object signals changes that occurred or should occur. Always
         if event.actions and event.actions.artifact_delta:
             print(f"  Artifacts saved: {event.actions.artifact_delta}")
             # UI might refresh an artifact list
+        ```
+
+    === "TypeScript"
+        `artifact_changes = event.actions.artifactDelta` (an object of `{filename: version}`).
+        ```typescript
+        export function handleArtifactChanges(event: Event) {
+            if (event.actions && Object.keys(event.actions.artifactDelta).length > 0) {
+                console.log(`  Artifacts saved: ${JSON.stringify(event.actions.artifactDelta)}`);
+                // UI might refresh an artifact list
+            }
+        }
         ```
 
     === "Go"
@@ -16352,6 +16490,26 @@ The `event.actions` object signals changes that occurred or should occur. Always
                 print("  Signal: Escalate (terminate loop)")
             if event.actions.skip_summarization:
                 print("  Signal: Skip summarization for tool result")
+        ```
+
+    === "TypeScript"
+        *   `event.actions.transferToAgent` (string): Control should pass to the named agent.
+        *   `event.actions.escalate` (boolean): A loop should terminate.
+        *   `event.actions.skipSummarization` (boolean): A tool result should not be summarized by the LLM.
+        ```typescript
+        export function handleControlFlow(event: Event) {
+            if (event.actions) {
+                if (event.actions.transferToAgent) {
+                    console.log(`  Signal: Transfer to ${event.actions.transferToAgent}`);
+                }
+                if (event.actions.escalate) {
+                    console.log('  Signal: Escalate (terminate loop)');
+                }
+                if (event.actions.skipSummarization) {
+                    console.log('  Signal: Skip summarization for tool result');
+                }
+            }
+        }
         ```
 
     === "Go"
@@ -16447,6 +16605,53 @@ Use the built-in helper method `event.is_final_response()` to identify events su
         #         else:
         #              # Handle other types of final responses if applicable
         #              print("Display: Final non-textual response or signal.")
+        ```
+
+    === "TypeScript"
+        ```typescript
+        // Pseudocode: Handling final responses in application (TypeScript)
+        import {
+            Event,
+            getFunctionResponses,
+            isFinalResponse,
+            stringifyContent
+        } from '@google/adk';
+
+        async function handleFinalResponses(runnerEvents: AsyncIterable<Event>) {
+            let fullResponseText = '';
+
+            for await (const event of runnerEvents) {
+                // Accumulate streaming text if needed...
+                if (event.partial) {
+                    fullResponseText += stringifyContent(event);
+                }
+
+                // Check if it's a final, displayable event
+                if (isFinalResponse(event)) {
+                    console.log('\n--- Final Output Detected ---');
+
+                    const eventText = stringifyContent(event);
+                    if (fullResponseText || eventText) {
+                        // If it's the final part of a stream (or a single message), use accumulated text
+                        const finalText = fullResponseText + (event.partial ? '' : eventText);
+                        console.log(`Display to user: ${finalText.trim()}`);
+                        fullResponseText = ''; // Reset accumulator
+                    } else if (
+                        event.actions?.skipSummarization &&
+                        getFunctionResponses(event).length > 0
+                    ) {
+                        // Handle displaying the raw tool result if needed
+                        const responseData = getFunctionResponses(event)[0].response;
+                        console.log(`Display raw tool result: ${JSON.stringify(responseData)}`);
+                    } else if (event.longRunningToolIds && event.longRunningToolIds.length > 0) {
+                        console.log('Display message: Tool is running in background...');
+                    } else {
+                        // Handle other types of final responses if applicable
+                        console.log('Display: Final non-textual response or signal.');
+                    }
+                }
+            }
+        }
         ```
 
     === "Go"
@@ -16724,6 +16929,9 @@ To use events effectively in your ADK applications:
 
     === "Python"
         Use `yield Event(author=self.name, ...)` in `BaseAgent` subclasses.
+
+    === "TypeScript"
+        When constructing an `Event` in your custom agent logic, set the author, for example: `createEvent({ author: this.name, ... })`
 
     === "Go"
         In custom agent `Run` methods, the framework typically handles authorship. If creating an event manually, set the author: `yield(&session.Event{Author: a.name, ...}, nil)`
@@ -21159,6 +21367,16 @@ information, see [Event types and payloads](#event-types).
     -   **Local:** Run `gcloud auth application-default login`.
     -   **Cloud:** Ensure your service account has the required permissions.
 
+??? note "Note: Gemini model selector `gemini-flash-latest`"
+
+    Most code examples in ADK documentation use `gemini-flash-latest` to select the
+    [latest available](https://ai.google.dev/gemini-api/docs/models#latest)
+    Gemini Flash version. However, if you access Gemini from a regional endpoint,
+    such as `us-central1`, this selection string may not work. In that case,
+    use a specific model version string from the
+    [Gemini models](https://ai.google.dev/gemini-api/docs/models) page or
+    Google Cloud [Gemini models](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models) list.
+
 ### IAM permissions
 
 For the agent to work properly, the principal (e.g., service account, user account) under which the agent is running needs these Google Cloud roles:
@@ -21358,7 +21576,7 @@ bigquery_toolset = BigQueryToolset(
 
 # --- Agent ---
 root_agent = Agent(
-    model=Gemini(model="gemini-2.5-flash"),
+    model=Gemini(model="gemini-flash-latest"),
     name="my_bq_agent",
     instruction="You are a helpful assistant with access to BigQuery tools.",
     tools=[bigquery_toolset],
@@ -21747,7 +21965,7 @@ Captures the model's output and token usage statistics.
   },
   "attributes": {
     "root_agent_name": "my_bq_agent",
-    "model_version": "gemini-flash-latest-001",
+    "model_version": "gemini-flash-latest",
     "usage_metadata": {
       "prompt_token_count": 10129,
       "candidates_token_count": 19,
