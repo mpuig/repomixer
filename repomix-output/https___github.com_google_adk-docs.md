@@ -326,7 +326,7 @@ To install ADK 2.0, follow these steps:
     Create a Python virtual environment:
 
     ```shell
-    python -m venv .venv
+    python3 -m venv .venv
     ```
 
     Activate the Python virtual environment:
@@ -7624,7 +7624,7 @@ You can use the ***Runner*** class to run your agent workflow using the
     Run your App agent with the `main.py` code using the following command:
 
     ```console
-    python main.py
+    python3 main.py
     ```
 
 === "Java"
@@ -9824,7 +9824,7 @@ File: docs/context/compaction.md
 # Compress agent context for performance
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-typescript">TypeScript v0.6.0</span>
 </div>
 
 As an ADK agent runs it collects *context* information, including user
@@ -9844,8 +9844,10 @@ specific number of workflow events, or invocations, with the current Session.
 ## Configure context compaction
 
 Add context compaction to your agent workflow by adding an Events Compaction
-Configuration setting to the App object of your workflow. As part of the
-configuration, you must specify a compaction interval and overlap size, as shown
+Configuration setting to the App object (Python/Java) or by configuring `contextCompactors`
+on the `LlmAgent` (TypeScript). As part of the
+configuration, you must specify a compaction interval and overlap size (Python/Java)
+or a token threshold and event retention size (TypeScript), as shown
 in the following sample code:
 
 === "Python"
@@ -9878,6 +9880,26 @@ in the following sample code:
             .overlapSize(1)         // Include last invocation from the previous window.
             .build())
         .build();
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {Gemini, LlmAgent, LlmSummarizer, TokenBasedContextCompactor} from '@google/adk';
+
+    const agent = new LlmAgent({
+      name: 'my-agent',
+      model: 'gemini-flash-latest',
+      contextCompactors: [
+        new TokenBasedContextCompactor({
+          tokenThreshold: 1000, // Trigger compaction when session exceeds 1000 tokens.
+          eventRetentionSize: 1, // Keep at least 1 raw event (overlap).
+          summarizer: new LlmSummarizer({
+            llm: new Gemini({model: 'gemini-flash-latest'}),
+          }),
+        }),
+      ],
+    });
     ```
 
 Once configured, the ADK `Runner` handles the compaction process in the
@@ -9918,7 +9940,8 @@ a compactor object
 
 ### Define a Summarizer {#define-summarizer}
 You can customize the process of context compression by defining a summarizer.
-The LlmEventSummarizer class allows you to specify a particular model for summarization.
+The `LlmEventSummarizer` (Python/Java) or `LlmSummarizer` (TypeScript) class allows
+you to specify a particular model for summarization.
 The following code example demonstrates how to define and configure a custom summarizer:
 
 === "Python"
@@ -9974,10 +9997,36 @@ The following code example demonstrates how to define and configure a custom sum
         .build();
     ```
 
-You can further refine the operation of the `SlidingWindowCompactor`
-by modifying its summarizer class `LlmEventSummarizer` including changing
-the `prompt_template` setting of that class. For more details, see the
-[`LlmEventSummarizer` code](https://github.com/google/adk-python/blob/main/src/google/adk/apps/llm_event_summarizer.py#L60).
+=== "TypeScript"
+
+    ```typescript
+    import {Gemini, LlmAgent, LlmSummarizer, TokenBasedContextCompactor} from '@google/adk';
+
+    // Define the AI model to be used for summarization:
+    const summarizationLlm = new Gemini({model: 'gemini-flash-latest'});
+
+    // Create the summarizer with the custom model:
+    const mySummarizer = new LlmSummarizer({llm: summarizationLlm});
+
+    // Configure the agent with the custom summarizer and compaction settings:
+    const agent = new LlmAgent({
+      name: 'my-agent',
+      model: 'gemini-flash-latest',
+      contextCompactors: [
+        new TokenBasedContextCompactor({
+          tokenThreshold: 1000,
+          eventRetentionSize: 1,
+          summarizer: mySummarizer,
+        }),
+      ],
+    });
+    ```
+
+You can further refine the compactor by modifying its summarizer. In Python and Java,
+customize the `prompt_template` on `LlmEventSummarizer`. In TypeScript, customize
+the `prompt` on `LlmSummarizer`. For more details, see the
+[`LlmEventSummarizer` code](https://github.com/google/adk-python/blob/main/src/google/adk/apps/llm_event_summarizer.py#L60) or
+[`LlmSummarizer` code](https://github.com/google/adk-js/blob/main/core/src/context/summarizers/llm_summarizer.ts).
 
 ================
 File: docs/context/index.md
@@ -15880,6 +15929,43 @@ Example of a custom persona definition:
 }
 ```
 
+## Generating Evaluation Cases via User Simulation
+
+Writing evaluation cases manually can be time-consuming and may not cover all potential failure modes. ADK provides a command to automatically generate diverse and realistic conversation scenarios based on your agent's definition using the Vertex AI Eval SDK.
+
+!!! warning "Prerequisites: Vertex AI Credentials"
+    Generating evaluation cases uses the [Vertex Gen AI Evaluation Service API](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/evaluation-overview). You must have a Google Cloud project with the Vertex AI API enabled and valid Application Default Credentials (ADC) configured in your environment.
+
+
+### Command Syntax
+
+```bash
+adk eval_set generate_eval_cases \
+    <AGENT_MODULE_FILE_PATH> \
+    <EVAL_SET_ID> \
+    --user_simulation_config_file=<PATH_TO_CONFIG_FILE>
+```
+
+### Configuration File Format
+
+The `--user_simulation_config_file` expects a JSON file matching the `ConversationGenerationConfig` schema:
+
+```json
+{
+  "count": 5,
+  "generation_instruction": "Generate scenarios where the user asks to control home devices under different conditions.",
+  "environment_context": "Available devices: device_1 (Light), device_2 (Thermostat).",
+  "model_name": "gemini-flash-latest"
+}
+```
+
+### Configuration Fields
+
+*   **`count`** (required): The number of conversation scenarios to generate.
+*   **`generation_instruction`** (optional): A natural language prompt guiding the specific types of scenarios or goals you want to test.
+*   **`environment_context`** (optional): Context describing the backend data or state accessible to the agent's tools. This helps the generator create queries that are grounded in realistic data (e.g., valid device IDs).
+*   **`model_name`** (required): The Gemini model used for generation (e.g., `gemini-flash-latest`).
+
 ================
 File: docs/events/index.md
 ================
@@ -17582,7 +17668,7 @@ Create & Activate Virtual Environment (Recommended):
 
 ```bash
 # Create
-python -m venv .venv
+python3 -m venv .venv
 # Activate (each new terminal)
 # macOS/Linux: source .venv/bin/activate
 # Windows CMD: .venv\Scripts\activate.bat
@@ -17693,12 +17779,12 @@ Also, set `SSL_CERT_FILE` variable with the following command. This is required 
 
 === "OS X &amp; Linux"
     ```bash
-    export SSL_CERT_FILE=$(python -m certifi)
+    export SSL_CERT_FILE=$(python3 -m certifi)
     ```
 
 === "Windows"
     ```powershell
-    $env:SSL_CERT_FILE = (python -m certifi)
+    $env:SSL_CERT_FILE = (python3 -m certifi)
     ```
 
 
@@ -18091,7 +18177,7 @@ File: docs/get-started/installation.md
     [venv](https://docs.python.org/3/library/venv.html):
 
     ```shell
-    python -m venv .venv
+    python3 -m venv .venv
     ```
 
     Now, you can activate the virtual environment using the appropriate command for
@@ -18521,7 +18607,7 @@ pip install google-adk
     Create a Python virtual environment:
 
     ```shell
-    python -m venv .venv
+    python3 -m venv .venv
     ```
 
     Activate the Python virtual environment:
@@ -19470,6 +19556,261 @@ The A2UI repository includes ADK sample agents you can run immediately:
 - [A2A protocol](https://google.github.io/A2A/)
 
 ================
+File: docs/integrations/adspirer.md
+================
+---
+catalog_title: Adspirer
+catalog_description: Create, manage, and optimize ad campaigns across Google, Meta, LinkedIn, and TikTok Ads
+catalog_icon: /integrations/assets/adspirer.png
+catalog_tags: ["mcp", "connectors"]
+---
+
+# Adspirer MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Adspirer MCP Server](https://github.com/amekala/ads-mcp) connects your ADK agent to
+[Adspirer](https://www.adspirer.com/), an AI-powered advertising platform with
+100+ tools across Google Ads, Meta Ads, LinkedIn Ads, and TikTok Ads. This
+integration gives your agent the ability to create, manage, and optimize ad
+campaigns using natural language — from keyword research and audience planning to
+campaign launch and performance analysis.
+
+## How it works
+
+Adspirer is a remote MCP server that acts as a bridge between your ADK agent and
+advertising platforms. Your agent connects to Adspirer's MCP endpoint, authenticates
+via OAuth 2.1, and gains access to 100+ tools that map directly to ad platform APIs.
+
+The typical workflow looks like this:
+
+1. **Connect** — Your ADK agent connects to `https://mcp.adspirer.com/mcp` and
+   authenticates via OAuth 2.1. On first run, a browser window opens for you to
+   sign in and authorize access to your ad accounts.
+2. **Discover** — The agent discovers available tools based on your connected ad
+   platforms (Google Ads, Meta Ads, LinkedIn Ads, TikTok Ads).
+3. **Execute** — The agent can now execute the full campaign lifecycle through
+   natural language: research keywords, plan audiences, create campaigns, analyze
+   performance, optimize budgets, and manage ads — all without touching a dashboard.
+
+Adspirer handles OAuth token management, ad platform API calls, and safety
+guardrails (e.g., cannot delete campaigns or modify existing budgets) so your
+agent can operate autonomously with built-in protections.
+
+## Use cases
+
+- **Campaign Creation**: Launch complex ad campaigns across Google, Meta,
+  LinkedIn, and TikTok through natural language. Create Search, Performance Max,
+  YouTube, Demand Gen, image, video, and carousel campaigns without touching a
+  dashboard.
+
+- **Performance Analysis**: Analyze campaign metrics across all connected ad
+  platforms. Ask questions like "Which campaigns have the best ROAS?" or
+  "Where am I wasting spend?" and get actionable insights with optimization
+  recommendations.
+
+- **Keyword Research & Planning**: Research keywords using Google Keyword Planner
+  with real CPC data, search volumes, and competition analysis. Build keyword
+  strategies and add them directly to campaigns.
+
+- **Budget Optimization**: Identify underperforming campaigns, detect budget
+  inefficiencies, and get AI-driven recommendations for spend allocation across
+  channels and campaigns.
+
+- **Ad Management**: Add new ad groups, ad sets, and ads to existing campaigns.
+  A/B test creatives, update ad copy, manage keywords, and pause or resume
+  campaigns — all through your agent.
+
+## Prerequisites
+
+- An [Adspirer](https://www.adspirer.com/) account (free tier available)
+- At least one connected ad platform (Google Ads, Meta Ads, LinkedIn Ads, or
+  TikTok Ads) — connect via your Adspirer dashboard after signing up
+- See the [Quickstart guide](https://www.adspirer.com/docs/quickstart) for
+  step-by-step setup instructions
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        When you run this agent for the first time, a browser window opens
+        automatically to request access via OAuth. Approve the request in
+        your browser to grant the agent access to your connected ad accounts.
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="advertising_agent",
+            instruction=(
+                "You are an advertising agent that helps users create, manage, "
+                "and optimize ad campaigns across Google Ads, Meta Ads, "
+                "LinkedIn Ads, and TikTok Ads."
+            ),
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://mcp.adspirer.com/mcp",
+                            ],
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+    === "Remote MCP Server"
+
+        If you already have an Adspirer access token, you can connect directly
+        using Streamable HTTP without the OAuth browser flow.
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
+
+        ADSPIRER_ACCESS_TOKEN = "YOUR_ADSPIRER_ACCESS_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-2.5-pro",
+            name="advertising_agent",
+            instruction=(
+                "You are an advertising agent that helps users create, manage, "
+                "and optimize ad campaigns across Google Ads, Meta Ads, "
+                "LinkedIn Ads, and TikTok Ads."
+            ),
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPConnectionParams(
+                        url="https://mcp.adspirer.com/mcp",
+                        headers={
+                            "Authorization": f"Bearer {ADSPIRER_ACCESS_TOKEN}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        When you run this agent for the first time, a browser window opens
+        automatically to request access via OAuth. Approve the request in
+        your browser to grant the agent access to your connected ad accounts.
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "advertising_agent",
+            instruction:
+                "You are an advertising agent that helps users create, manage, " +
+                "and optimize ad campaigns across Google Ads, Meta Ads, " +
+                "LinkedIn Ads, and TikTok Ads.",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
+                            "-y",
+                            "mcp-remote",
+                            "https://mcp.adspirer.com/mcp",
+                        ],
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+    === "Remote MCP Server"
+
+        If you already have an Adspirer access token, you can connect directly
+        using Streamable HTTP without the OAuth browser flow.
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const ADSPIRER_ACCESS_TOKEN = "YOUR_ADSPIRER_ACCESS_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-2.5-pro",
+            name: "advertising_agent",
+            instruction:
+                "You are an advertising agent that helps users create, manage, " +
+                "and optimize ad campaigns across Google Ads, Meta Ads, " +
+                "LinkedIn Ads, and TikTok Ads.",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://mcp.adspirer.com/mcp",
+                    transportOptions: {
+                        requestInit: {
+                            headers: {
+                                Authorization: `Bearer ${ADSPIRER_ACCESS_TOKEN}`,
+                            },
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+## Capabilities
+
+Adspirer provides 100+ MCP tools for full-lifecycle ad campaign management
+across four major advertising platforms.
+
+Capability | Description
+---------- | -----------
+Campaign creation | Launch Search, PMax, YouTube, Demand Gen, image, video, and carousel campaigns
+Performance analysis | Analyze metrics, detect anomalies, and get optimization recommendations
+Keyword research | Research keywords with real CPC, search volume, and competition data
+Budget optimization | AI-driven budget allocation and wasted spend detection
+Ad management | Create and update ads, ad groups, ad sets, headlines, and descriptions
+Audience targeting | Search interests, behaviors, job titles, and custom audiences
+Asset management | Validate, upload, and discover existing creative assets
+Campaign controls | Pause, resume, update bids, budgets, and targeting settings
+
+## Supported platforms
+
+Platform | Tools | Capabilities
+-------- | ----- | ------------
+Google Ads | 49 | Search, PMax, YouTube, Demand Gen campaigns, keyword research, ad extensions, audience signals
+Meta Ads | 30+ | Image, video, carousel, DCO campaigns, pixel tracking, lead forms, audience insights
+LinkedIn Ads | 28 | Sponsored content, lead gen, conversation ads, demographic targeting, engagement analysis
+TikTok Ads | 4 | Campaign management and performance analysis
+
+## Additional resources
+
+- [Adspirer Website](https://www.adspirer.com/)
+- [Adspirer MCP Server on GitHub](https://github.com/amekala/ads-mcp)
+- [Quickstart Guide](https://www.adspirer.com/docs/quickstart)
+- [Tool Catalog](https://www.adspirer.com/docs/agent-skills/tools)
+- [Core Workflows](https://www.adspirer.com/docs/agent-skills/workflows)
+- [Ad Platform Guides](https://www.adspirer.com/docs)
+
+================
 File: docs/integrations/ag-ui.md
 ================
 ---
@@ -20090,22 +20431,22 @@ Tool | Description
 ---- | -----------
 `list_numbers` | List all phone numbers in account
 `buy_number` | Purchase a new phone number with optional country and area code
-`release_number` | Permanently release a phone number back to carrier pool
 
 ### SMS / Messages
 
 Tool | Description
 ---- | -----------
+`send_message` | Send an SMS or iMessage from an agent's phone number
 `get_messages` | Get SMS messages for a specific phone number
-`list_conversations` | List SMS conversation threads across all numbers
+`list_conversations` | List SMS conversation threads, optionally filtered by agent
 `get_conversation` | Get a specific conversation with full message history
+`update_conversation` | Set or clear metadata on a conversation
 
 ### Voice calls
 
 Tool | Description
 ---- | -----------
-`list_calls` | List recent calls across all numbers
-`list_calls_for_number` | List calls for a specific phone number
+`list_calls` | List recent calls with optional agent, number, status, or direction filters
 `get_call` | Get call details and transcript with optional long-polling
 `make_call` | Place an outbound call using webhook for conversation handling
 `make_conversation_call` | Place an autonomous AI call that returns the full transcript
@@ -20120,18 +20461,22 @@ Tool | Description
 `delete_agent` | Delete an agent
 `get_agent` | Get agent details including numbers and voice config
 `attach_number` | Assign a phone number to an agent
+`detach_number` | Detach a phone number from an agent
 `list_voices` | List available voice options
 
 ### Webhooks
 
+All webhook tools accept an optional `agent_id` parameter. When provided, the
+operation targets that agent's webhook. When omitted, it targets the
+project-level default. Agent-level webhooks take priority over project-level.
+
 Tool | Description
 ---- | -----------
-`get_webhook` | Get project-level webhook configuration
-`set_webhook` | Set project-level webhook for inbound messages and call events
-`delete_webhook` | Remove project-level webhook
-`get_agent_webhook` | Get webhook for a specific agent
-`set_agent_webhook` | Set agent-specific webhook (overrides project-level)
-`delete_agent_webhook` | Remove agent-specific webhook
+`get_webhook` | Get webhook configuration
+`set_webhook` | Set webhook URL for inbound messages and call events
+`delete_webhook` | Remove a webhook
+`test_webhook` | Send a test event to verify a webhook is working
+`list_webhook_deliveries` | View recent webhook delivery history
 
 ## Configuration
 
@@ -21750,7 +22095,16 @@ The plugin supports **OpenTelemetry** for distributed tracing. OpenTelemetry is 
 
 ## Configuration options
 
-You can customize the plugin using `BigQueryLoggerConfig`.
+You can customize the plugin using `BigQueryLoggerConfig`. The `BigQueryAgentAnalyticsPlugin` constructor also accepts `**kwargs`, which are forwarded directly to `BigQueryLoggerConfig`. This lets you pass config fields (like `batch_size` or `enabled`) without creating a separate config object:
+
+```python
+plugin = BigQueryAgentAnalyticsPlugin(
+    project_id="my-project",
+    dataset_id="my_dataset",
+    batch_size=10,           # forwarded to BigQueryLoggerConfig
+    shutdown_timeout=5.0,    # forwarded to BigQueryLoggerConfig
+)
+```
 
 -   **`enabled`** (`bool`, default: `True`): To disable the plugin from logging agent data to the BigQuery table, set this parameter to False.
 -   **`table_id`** (`str`, default: `"agent_events"`): The BigQuery table ID within the dataset. Can also be overridden by the `table_id` parameter on the `BigQueryAgentAnalyticsPlugin` constructor, which takes precedence.
@@ -21771,11 +22125,12 @@ You can customize the plugin using `BigQueryLoggerConfig`.
 -   **`content_formatter`** (`Optional[Callable[[Any, str], Any]]`, default: `None`): An optional function to format event content before logging. The function receives two arguments: the raw content and the event type string (e.g., `"LLM_REQUEST"`).
 -   **`log_multi_modal_content`** (`bool`, default: `True`): Whether to log detailed content parts (including GCS references).
 -   **`queue_max_size`** (`int`, default: `10000`): The maximum number of events to hold in the in-memory queue before dropping new events.
--   **`retry_config`** (`RetryConfig`, default: `RetryConfig()`): Configuration for retrying failed BigQuery writes (attributes: `max_retries`, `initial_delay`, `multiplier`, `max_delay`).
--   **`log_session_metadata`** (`bool`, default: `True`): If True, logs session information into the `attributes` column, including `session_id`, `app_name`, `user_id`, and the session `state` dictionary (e.g., custom state like gchat thread-id, customer_id).
+-   **`retry_config`** (`RetryConfig`, default: `RetryConfig()`): Configuration for retrying failed BigQuery writes. Sub-fields: `max_retries` (default `3`), `initial_delay` (default `1.0` seconds), `multiplier` (default `2.0`), `max_delay` (default `10.0` seconds).
+-   **`log_session_metadata`** (`bool`, default: `True`): If True, logs session information into the `attributes` column, including `session_id`, `app_name`, `user_id`, and the session `state` dictionary (e.g., custom state like gchat thread-id, customer_id). State keys prefixed with `temp:` or `secret:` are automatically redacted. See [Built-in redaction](#built-in-redaction).
 -   **`custom_tags`** (`Dict[str, Any]`, default: `{}`): A dictionary of static tags (e.g., `{"env": "prod", "version": "1.0"}`) to be included in the `attributes` column for every event.
 -   **`auto_schema_upgrade`** (`bool`, default: `True`): When enabled, the plugin automatically adds new columns to an existing table when the plugin schema evolves. Only additive changes are made (columns are never dropped or altered). A version label (`adk_schema_version`) on the table ensures the diff runs at most once per schema version. Safe to leave enabled.
 -   **`create_views`** (`bool`, default: `True`): Added in 1.27.0. When enabled, automatically generates per-event-type BigQuery views that unnest structured JSON data (such as `content` or `attributes`) into flat, typed columns, significantly simplifying SQL queries.
+-   **`view_prefix`** (`str`, default: `"v"`): Prefix for auto-created view names. The default `"v"` produces views like `v_llm_request`. Set a distinct prefix per table when multiple plugin instances share the same dataset to avoid view-name collisions (e.g., `"v_staging"` produces `v_staging_llm_request`). Must be non-empty.
 
 
 The following code sample shows how to define a configuration for the
@@ -21824,6 +22179,23 @@ config = BigQueryLoggerConfig(
 plugin = BigQueryAgentAnalyticsPlugin(..., config=config)
 ```
 
+### Public methods
+
+The plugin exposes several public methods for lifecycle management:
+
+-   **`await plugin.flush()`**: Flush all pending events to BigQuery. Call this before shutdown to avoid data loss.
+-   **`await plugin.shutdown(timeout=None)`**: Gracefully shut down the plugin, flushing pending events and releasing resources. The optional `timeout` parameter overrides `shutdown_timeout` from the config.
+-   **`await plugin.create_analytics_views()`**: Manually (re-)create all per-event-type analytics views. Useful after a schema upgrade or when views need to be refreshed.
+-   **Async context manager**: The plugin supports `async with` for automatic startup and shutdown:
+
+    ```python
+    async with BigQueryAgentAnalyticsPlugin(
+        project_id=PROJECT_ID, dataset_id=DATASET_ID
+    ) as plugin:
+        # plugin is initialized and ready to use
+        ...
+    # plugin.shutdown() is called automatically on exit
+    ```
 
 ## Schema and production setup
 
@@ -21896,15 +22268,48 @@ CLUSTER BY event_type, agent, user_id;
 
 When `create_views=True` (the default in 1.27.0 and higher), the plugin automatically generates views for each event type that unnest common JSON structures into flat, typed columns. This significantly simplifies SQL, eliminating the need to write complex `JSON_VALUE` or `JSON_QUERY` functions explicitly.
 
-For example, the view `v_llm_request` includes the following schema:
+View names follow the convention `{view_prefix}_{event_type_lowercase}` (for example, with the default prefix `"v"`, `LLM_REQUEST` becomes `v_llm_request`). Set `view_prefix` in `BigQueryLoggerConfig` to a distinct value when multiple plugin instances write to different tables in the same dataset, preventing view-name collisions:
 
-| Field Name | Type | Description |
-|:---|:---|:---|
-| **(Common Columns)** | `VARIES` | Includes standard metadata: `timestamp`, `event_type`, `agent`, `session_id`, `invocation_id`, `user_id`, `trace_id`, `span_id`, `parent_span_id`, `status`, `error_message`, `is_truncated`. |
-| **model** | `STRING` | The name of the LLM model used for the request. |
-| **request_content** | `JSON` | The raw LLM request payload. |
-| **llm_config** | `JSON` | The configuration parameters passed to the LLM (temperature, top_p, etc.). |
-| **tools** | `JSON` | Array of tools available during the request. |
+```python
+# Two plugins in the same dataset with distinct view prefixes
+plugin_prod = BigQueryAgentAnalyticsPlugin(
+    project_id=PROJECT_ID, dataset_id=DATASET_ID,
+    table_id="agent_events_prod",
+    config=BigQueryLoggerConfig(view_prefix="v_prod"),
+)
+# Creates views: v_prod_llm_request, v_prod_tool_completed, ...
+
+plugin_staging = BigQueryAgentAnalyticsPlugin(
+    project_id=PROJECT_ID, dataset_id=DATASET_ID,
+    table_id="agent_events_staging",
+    config=BigQueryLoggerConfig(view_prefix="v_staging"),
+)
+# Creates views: v_staging_llm_request, v_staging_tool_completed, ...
+```
+
+You can also call the public async method `await plugin.create_analytics_views()` to manually refresh views, for example after a schema upgrade.
+
+Every view includes these **common columns**: `timestamp`, `event_type`, `agent`, `session_id`, `invocation_id`, `user_id`, `trace_id`, `span_id`, `parent_span_id`, `status`, `error_message`, `is_truncated`.
+
+The following table lists all 15 auto-created views and their event-specific columns:
+
+| View Name | Event-Specific Columns |
+|:---|:---|
+| **`v_user_message_received`** | *(common columns only)* |
+| **`v_llm_request`** | `model` (STRING), `request_content` (JSON), `llm_config` (JSON), `tools` (JSON) |
+| **`v_llm_response`** | `response` (JSON), `usage_prompt_tokens` (INT64), `usage_completion_tokens` (INT64), `usage_total_tokens` (INT64), `total_ms` (INT64), `ttft_ms` (INT64), `model_version` (STRING), `usage_metadata` (JSON) |
+| **`v_llm_error`** | `total_ms` (INT64) |
+| **`v_tool_starting`** | `tool_name` (STRING), `tool_args` (JSON), `tool_origin` (STRING) |
+| **`v_tool_completed`** | `tool_name` (STRING), `tool_result` (JSON), `tool_origin` (STRING), `total_ms` (INT64) |
+| **`v_tool_error`** | `tool_name` (STRING), `tool_args` (JSON), `tool_origin` (STRING), `total_ms` (INT64) |
+| **`v_agent_starting`** | `agent_instruction` (STRING) |
+| **`v_agent_completed`** | `total_ms` (INT64) |
+| **`v_invocation_starting`** | *(common columns only)* |
+| **`v_invocation_completed`** | *(common columns only)* |
+| **`v_state_delta`** | `state_delta` (JSON) |
+| **`v_hitl_credential_request`** | `tool_name` (STRING), `tool_args` (JSON) |
+| **`v_hitl_confirmation_request`** | `tool_name` (STRING), `tool_args` (JSON) |
+| **`v_hitl_input_request`** | `tool_name` (STRING), `tool_args` (JSON) |
 
 ### Event types and payloads {#event-types}
 
@@ -22075,14 +22480,21 @@ These events track changes to the agent's state, typically triggered by tools.
 
 **7. STATE_DELTA**
 
-Tracks changes to the agent's internal state (e.g., token cache updates).
+Tracks changes to the agent's internal state (e.g., custom application state updated by tools).
+
+!!! note "Built-in redaction"
+
+    State keys prefixed with `temp:` or `secret:` are automatically
+    redacted to `[REDACTED]` in the logged `state_delta`. See
+    [Built-in redaction](#built-in-redaction) for details.
 
 ```json
 {
   "event_type": "STATE_DELTA",
   "attributes": {
     "state_delta": {
-      "bigquery_token_cache": "{\"token\": \"ya29...\", \"expiry\": \"...\"}"
+      "customer_tier": "enterprise",
+      "last_query_dataset": "bigquery-public-data.samples"
     }
   }
 }
@@ -22176,6 +22588,15 @@ The following HITL tool names are recognized:
 
 HITL request events are detected from `function_call` parts in `on_event_callback`. HITL completion events are detected from `function_response` parts in both `on_event_callback` and `on_user_message_callback`.
 
+!!! note "Views for HITL events"
+
+    Auto-created views exist only for the three **request** event types
+    (`v_hitl_credential_request`, `v_hitl_confirmation_request`,
+    `v_hitl_input_request`). The three `*_COMPLETED` event types are logged
+    to the base table but do not have dedicated views. Query them directly
+    from the `agent_events` table using
+    `WHERE event_type LIKE 'HITL_%_COMPLETED'`.
+
 #### GCS Offloading Examples (Multimodal & Large Text)
 
 When `gcs_bucket_name` is configured, large text and multimodal content (images, audio, etc.) are automatically offloaded to GCS. The `content` column will contain a summary or placeholder, while `content_parts` contains the `object_ref` pointing to the GCS URI.
@@ -22251,7 +22672,19 @@ WHERE trace_id = 'your-trace-id'
 ORDER BY timestamp ASC;
 ```
 
-### Token usage analysis (accessing JSON fields)
+### Token usage analysis
+
+Using the `v_llm_response` view (recommended):
+
+```sql
+SELECT
+  AVG(usage_total_tokens) as avg_tokens,
+  AVG(usage_prompt_tokens) as avg_prompt_tokens,
+  AVG(usage_completion_tokens) as avg_completion_tokens
+FROM `your-gcp-project-id.your-dataset-id.v_llm_response`;
+```
+
+Or using the base table with JSON extraction:
 
 ```sql
 SELECT
@@ -22295,6 +22728,22 @@ LIMIT 1;
 
 ### Latency Analysis (LLM & Tools)
 
+Using views (recommended):
+
+```sql
+-- LLM latency
+SELECT AVG(total_ms) as avg_llm_ms, AVG(ttft_ms) as avg_ttft_ms
+FROM `your-gcp-project-id.your-dataset-id.v_llm_response`;
+
+-- Tool latency by tool name
+SELECT tool_name, tool_origin, AVG(total_ms) as avg_tool_ms
+FROM `your-gcp-project-id.your-dataset-id.v_tool_completed`
+GROUP BY tool_name, tool_origin
+ORDER BY avg_tool_ms DESC;
+```
+
+Or using the base table:
+
 ```sql
 SELECT
   event_type,
@@ -22327,30 +22776,33 @@ ORDER BY timestamp ASC;
 
 ### Error Analysis (LLM & Tool Errors)
 
+Using views (recommended):
+
 ```sql
-SELECT
-  timestamp,
-  event_type,
-  agent,
-  error_message,
-  JSON_VALUE(content, '$.tool') as tool_name,
-  CAST(JSON_VALUE(latency_ms, '$.total_ms') AS INT64) as latency_ms
-FROM `your-gcp-project-id.your-dataset-id.agent_events`
-WHERE event_type IN ('LLM_ERROR', 'TOOL_ERROR')
+-- Tool errors with provenance
+SELECT timestamp, agent, tool_name, tool_origin, error_message, total_ms
+FROM `your-gcp-project-id.your-dataset-id.v_tool_error`
+ORDER BY timestamp DESC
+LIMIT 20;
+
+-- LLM errors
+SELECT timestamp, agent, error_message, total_ms
+FROM `your-gcp-project-id.your-dataset-id.v_llm_error`
 ORDER BY timestamp DESC
 LIMIT 20;
 ```
 
 ### Tool Provenance Analysis
 
+Using the `v_tool_completed` view (recommended):
+
 ```sql
 SELECT
-  JSON_VALUE(content, '$.tool_origin') as tool_origin,
-  JSON_VALUE(content, '$.tool') as tool_name,
+  tool_origin,
+  tool_name,
   COUNT(*) as call_count,
-  AVG(CAST(JSON_VALUE(latency_ms, '$.total_ms') AS INT64)) as avg_latency_ms
-FROM `your-gcp-project-id.your-dataset-id.agent_events`
-WHERE event_type = 'TOOL_COMPLETED'
+  AVG(total_ms) as avg_latency_ms
+FROM `your-gcp-project-id.your-dataset-id.v_tool_completed`
 GROUP BY tool_origin, tool_name
 ORDER BY call_count DESC;
 ```
@@ -22441,10 +22893,33 @@ https://lookerstudio.google.com/reporting/create?c.reportId=f1c5b513-3095-44f8-9
     ([google/adk-python#3845](https://github.com/google/adk-python/issues/3845))
     and can lead to credential exposure in your analytics data.
 
-To prevent sensitive credentials from being persisted in BigQuery, use one or
-more of the following approaches:
+The plugin includes **built-in redaction** that automatically protects
+common secrets. For additional control, you can layer custom redaction on top.
 
-### Use `content_formatter` to redact secrets
+### Built-in redaction {#built-in-redaction}
+
+The plugin automatically redacts values for the following well-known key
+names (case-insensitive) wherever they appear in `content` or `attributes`
+JSON:
+
+`client_secret`, `access_token`, `refresh_token`, `id_token`, `api_key`,
+`password`
+
+In addition, any state key prefixed with **`temp:`** or **`secret:`** is
+automatically replaced with `[REDACTED]` in the logged `state_delta`.
+This means ADK session state stored under the `secret:` scope (such as
+OAuth tokens cached by credential services) is never persisted in
+BigQuery.
+
+!!! info "No configuration required"
+
+    Built-in redaction is always active for structured attributes and
+    state logging, and applies recursively to nested dictionaries and
+    JSON-encoded strings within attribute values. Custom
+    `content_formatter` runs **first** on raw content, so use it to add
+    masking for secrets that may appear in free-form payloads.
+
+### Use `content_formatter` to redact additional secrets
 
 Provide a custom `content_formatter` function in `BigQueryLoggerConfig` to
 strip or mask sensitive fields before they are written:
@@ -23549,7 +24024,7 @@ to be able to use the Computer Use Toolset.
     Create a Python virtual environment:
 
     ```shell
-    python -m venv .venv
+    python3 -m venv .venv
     ```
 
     Activate the Python virtual environment:
@@ -35106,7 +35581,7 @@ are its key properties:
         print(f"---------------------------------")
 
         # Clean up (optional for this example)
-        temp_service = await temp_service.delete_session(app_name=example_session.app_name,
+        await temp_service.delete_session(app_name=example_session.app_name,
                                     user_id=example_session.user_id, session_id=example_session.id)
         print("The final status of temp_service - ", temp_service)
        ```
@@ -49011,7 +49486,7 @@ application entirely on your machine and is recommended for internal development
 
     ```bash
     # Create
-    python -m venv .venv
+    python3 -m venv .venv
     # Activate (each new terminal)
     # macOS/Linux: source .venv/bin/activate
     # Windows CMD: .venv\Scripts\activate.bat
