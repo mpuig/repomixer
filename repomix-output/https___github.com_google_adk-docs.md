@@ -1972,10 +1972,10 @@ File: docs/agents/models/google-gemini.md
 ADK supports the Google Gemini family of generative AI models that provide a
 powerful set of models with a wide range of features. ADK provides support for many
 Gemini features, including
-[Code Execution](/tools/gemini-api/code-execution/),
-[Google Search](/tools/gemini-api/google-search/),
+[Code Execution](/integrations/code-execution/),
+[Google Search](/integrations/google-search/),
 [Context caching](/context/caching/),
-[Computer use](/tools/gemini-api/computer-use/)
+[Computer use](/integrations/computer-use/)
 and the [Interactions API](#interactions-api).
 
 ## Get started
@@ -2321,7 +2321,7 @@ For a complete code sample, see the
 
 The Interactions API **does not** support mixing custom function calling tools with
 built-in tools, such as the
-[Google Search](/tools/built-in-tools/#google-search),
+[Google Search](/integrations/google-search/),
 tool, within the same agent. You can work around this limitation by configuring the
 the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
 parameter:
@@ -5309,7 +5309,7 @@ call_agent("If it's raining in New York right now, what is the current temperatu
 
 - **`code_executor` (Optional):** Provide a `BaseCodeExecutor` instance to allow
   the agent to execute code blocks found in the LLM's response. For more
-  information, see [Code Execution with Gemini API](/tools/gemini-api/code-execution/).
+  information, see [Code Execution with Gemini API](/integrations/code-execution/).
 
 === "Python"
 
@@ -11978,7 +11978,7 @@ adk deploy agent_engine \
 For `region`, you can find a list of the supported regions on the
 [Vertex AI Agent Builder locations page](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine).
 To learn about the CLI options for the `adk deploy agent_engine` command, see the
-[ADK CLI Reference](/api-reference/cli/cli.html#adk-deploy-agent-engine).
+[ADK CLI Reference](/api-reference/cli/#adk-deploy-agent-engine).
 
 ### Deploy command output
 
@@ -18033,7 +18033,7 @@ my_agent/
 ### Define the agent code
 
 Create the code for a basic agent that uses the built-in
-[Google Search tool](/tools/built-in-tools/#google-search). Add the
+[Google Search tool](/integrations/google-search/). Add the
 following code to the `my_agent/agent.go` file in your project directory:
 
 ```go title="my_agent/agent.go"
@@ -18845,7 +18845,7 @@ npm install -D @google/adk-devtools
 ### Define the agent code
 
 Create the code for a basic agent, including a simple implementation of an ADK
-[Function Tool](/tools/function-tools/), called `getCurrentTime`.
+[Function Tool](/tools-custom/function-tools/), called `getCurrentTime`.
 Create an `agent.ts` file in your project directory and add the following code:
 
 ```typescript title="my-agent/agent.ts"
@@ -18945,7 +18945,7 @@ File: docs/grounding/google_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Google Search Grounding tool](/tools/gemini-api/google-search/) is a powerful feature in the Agent Development Kit (ADK) that connects your AI agents directly to Google Search. By giving your agents access to real-time, authoritative information from the web, they can answer questions about recent events, current weather, stock prices, or any other dynamic data that falls outside the model's training window. The agent automatically decides when to search and seamlessly incorporates the results into its responses with proper citations.
+[Google Search Grounding tool](/integrations/google-search/) is a powerful feature in the Agent Development Kit (ADK) that connects your AI agents directly to Google Search. By giving your agents access to real-time, authoritative information from the web, they can answer questions about recent events, current weather, stock prices, or any other dynamic data that falls outside the model's training window. The agent automatically decides when to search and seamlessly incorporates the results into its responses with proper citations.
 
 ## Creating a Grounded Agent
 
@@ -19165,7 +19165,7 @@ File: docs/grounding/vertex_ai_search_grounding.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Vertex AI Search](/tools/google-cloud/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
+[Vertex AI Search](/integrations/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
 This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
 
@@ -19424,7 +19424,7 @@ schema_manager = A2uiSchemaManager(
 
 !!! tip
     If you omit the `catalogs` parameter, the schema manager uses the
-    [Basic Catalog](https://a2ui.org/latest/catalogs/) maintained by the
+    [Basic Catalog](https://a2ui.org/concepts/catalogs/) maintained by the
     A2UI team, which includes common components like Text, Card, Button,
     Image, and more. You can also create [custom catalogs](#custom-catalogs)
     with domain-specific components, or mix the basic catalog with your own
@@ -19589,7 +19589,6 @@ The A2UI repository includes ADK sample agents you can run immediately:
 
 | Sample | Description |
 |---|---|
-| [contact_lookup](https://github.com/google/A2UI/tree/main/samples/agent/adk/contact_lookup) | Simple agent with static schema — looks up contacts and displays results as cards |
 | [restaurant_finder](https://github.com/google/A2UI/tree/main/samples/agent/adk/restaurant_finder) | Static schema agent for searching and displaying restaurant information |
 | [rizzcharts](https://github.com/google/A2UI/tree/main/samples/agent/adk/rizzcharts) | Dynamic catalog agent that selects chart components based on context |
 | [orchestrator](https://github.com/google/A2UI/tree/main/samples/agent/adk/orchestrator) | Multi-agent setup that delegates to sub-agents and aggregates UI capabilities |
@@ -19600,8 +19599,8 @@ The A2UI repository includes ADK sample agents you can run immediately:
 - [A2UI GitHub repository](https://github.com/google/A2UI)
 - [A2UI Python SDK (`a2ui-agent-sdk`)](https://pypi.org/project/a2ui-agent-sdk/)
 - [Agent development guide](https://github.com/google/A2UI/blob/main/agent_sdks/python/agent_development.md)
-- [Component gallery](https://a2ui.org/latest/reference/components/)
-- [A2A protocol](https://google.github.io/A2A/)
+- [Component gallery](https://a2ui.org/reference/components/)
+- [A2A protocol](https://a2a-protocol.org)
 
 ================
 File: docs/integrations/adspirer.md
@@ -20330,8 +20329,12 @@ create autonomous AI voice agents using natural language.
 - **Phone Number Management**: Provision phone numbers with specific area codes,
   assign them to agents, and release them when no longer needed.
 
-- **AI Voice Agents**: Create agents with configurable voices and system prompts
-  that autonomously handle inbound and outbound calls without requiring webhooks.
+- **AI Voice Agents**: Create agents with configurable voices, system prompts,
+  and model tiers (turbo, balanced, max) that autonomously handle inbound and
+  outbound calls without requiring webhooks.
+
+- **Call Transfer & Voicemail**: Configure agents to transfer calls to a human
+  and set up voicemail greetings for unanswered calls.
 
 - **Webhook Integration**: Set up project-level or per-agent webhooks to receive
   real-time notifications for inbound messages and call events.
@@ -20496,16 +20499,16 @@ Tool | Description
 ---- | -----------
 `list_calls` | List recent calls with optional agent, number, status, or direction filters
 `get_call` | Get call details and transcript with optional long-polling
-`make_call` | Place an outbound call using webhook for conversation handling
-`make_conversation_call` | Place an autonomous AI call that returns the full transcript
+`make_call` | Place an outbound call with optional voice override, using webhook for conversation handling
+`make_conversation_call` | Place an autonomous AI call with optional voice override that returns the full transcript
 
 ### Agents
 
 Tool | Description
 ---- | -----------
 `list_agents` | List all agents with phone numbers and voice config
-`create_agent` | Create a new agent with configurable voice and system prompt
-`update_agent` | Update agent configuration
+`create_agent` | Create a new agent with voice, system prompt, model tier, call transfer, and voicemail
+`update_agent` | Update agent configuration including voice, model tier, transfer, and voicemail
 `delete_agent` | Delete an agent
 `get_agent` | Get agent details including numbers and voice config
 `attach_number` | Assign a phone number to an agent
@@ -21420,7 +21423,7 @@ async for event in runner.run_async(
 ![Agent Experiments](https://storage.googleapis.com/arize-phoenix-assets/assets/images/google-adk-experiments.png)
 
 ## Support and Resources
-- [Arize AX Documentation](https://arize.com/docs/ax/integrations/frameworks-and-platforms/google-adk)
+- [Arize AX Documentation](https://arize.com/docs/ax/integrations/python-agent-frameworks/google-adk)
 - [Arize Community Slack](https://arize-ai.slack.com/join/shared_invite/zt-11t1vbu4x-xkBIHmOREQnYnYDH1GDfCg#/shared-invite/email)
 - [OpenInference Package](https://github.com/Arize-ai/openinference/tree/main/python/instrumentation/openinference-instrumentation-google-adk)
 
@@ -24905,7 +24908,7 @@ Next, create your Agent Engine instance using the Vertex AI SDK.
 
 ## Manage Sessions with `VertexAiSessionService` {#vertex-ai-session-service}
 
-[`VertexAiSessionService`](/sessions/session.md#sessionservice-implementations)
+[`VertexAiSessionService`](/sessions/session/#sessionservice-implementations)
 is compatible with Vertex AI express mode API Keys. You can instead initialize
 the session object without any project or location.
 
@@ -24999,7 +25002,7 @@ ADK provides a native integration for managing persistent agent session states u
 ## Prerequisites
 
 - A [Google Cloud Project](https://cloud.google.com/) with Firestore enabled
-- A [Firestore database](https://cloud.google.com/firestore/docs/setup) in your Google Cloud Project
+- A [Firestore database](https://cloud.google.com/firestore/native/docs/create-database-server-client-library) in your Google Cloud Project
 - Appropriate [Google Cloud credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc) configured in your environment
 
 ## Install dependencies
@@ -30275,11 +30278,12 @@ catalog_tags: ["resilience"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[Temporal](https://temporal.io) is a general-purpose durable execution platform that makes ADK
-agents resilient, scalable, and production-ready. LLM calls and tool executions
-run as Temporal [Activities](https://docs.temporal.io/activities) with automatic
-retries and recovery. If anything fails, your agent picks up exactly where it
-left off - no manual session management or external database required.
+[Temporal](https://temporal.io) is a general-purpose durable execution platform
+that makes ADK agents resilient, scalable, and production-ready. LLM calls and
+tool executions run as Temporal
+[Activities](https://docs.temporal.io/activities) with automatic retries and
+recovery. If anything fails, your agent picks up exactly where it left off - no
+manual session management or external database required.
 
 ## Use cases
 
@@ -30315,7 +30319,6 @@ The Temporal plugin gives your agents:
 
 Note that as of Temporal Python 1.24.0, this integration is experimental and
 there may be future breaking changes.
-
 
 ## Installation
 
@@ -30402,7 +30405,8 @@ class WeatherAgentWorkflow:
 
 **2. Configure and start the worker**
 
-Use `GoogleAdkPlugin` to configure the worker to make ADK ready to run in a Workflow on a distributed system:
+Use `GoogleAdkPlugin` to configure the worker to make ADK ready to run in a
+Workflow on a distributed system:
 
 ```python
 import asyncio
@@ -30450,7 +30454,6 @@ async def start():
 asyncio.run(start())
 ```
 
-
 ### Using MCP tools
 
 Execute [MCP](/mcp/) tools as Temporal
@@ -30469,18 +30472,20 @@ from temporalio.contrib.google_adk_agents import (
     TemporalMcpToolSetProvider,
 )
 
-# Define a factory that lets Temporal instantiate your MCPToolset as needed.
-toolset_provider = TemporalMcpToolSetProvider(
-    "my-tools",
-    lambda _: McpToolset(
+# Define a shared factory for your MCP toolset.
+# Both the worker (TemporalMcpToolSetProvider) and agent (TemporalMcpToolSet) use it.
+def toolset_factory(_):
+    return McpToolset(
         connection_params=StdioConnectionParams(
             server_params=StdioServerParameters(
                 command="npx",
                 args=["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"],
             ),
         ),
-    ),
-)
+    )
+
+# The provider tells the worker how to instantiate the toolset.
+toolset_provider = TemporalMcpToolSetProvider("my-tools", toolset_factory)
 
 # Configure the client with the toolset provider
 client = await Client.connect(
@@ -30488,17 +30493,33 @@ client = await Client.connect(
     plugins=[GoogleAdkPlugin(toolset_providers=[toolset_provider])]
 )
 
-# Reference the toolset by name when you declare your Agent (inside a @workflow.run)
+# Reference the toolset by name when you declare your Agent (inside a @workflow.run).
+# not_in_workflow_toolset lets this agent also run locally with `adk web`.
 agent = Agent(
     name="tool_agent",
     model=TemporalModel("gemini-2.5-pro"),
-    tools=[TemporalMcpToolSet("my-tools")],
+    tools=[TemporalMcpToolSet("my-tools", not_in_workflow_toolset=toolset_factory)],
 )
 ```
 
+### Local development with `adk web`
+
+For ease of local development, the Temporal wrappers automatically fall back to
+direct execution when run outside a Temporal Workflow, so you can use `adk web`
+and other ADK development commands without a running Temporal server. You won't
+get the benefits of durable execution in this mode, nor will you be precisely
+testing the production behavior.
+
+- `TemporalModel` and `activity_tool` work automatically — they detect they're
+  outside a workflow and call the underlying LLM or function directly.
+- `TemporalMcpToolSet` requires the `not_in_workflow_toolset` parameter (shown
+  in the MCP example above) so it knows how to instantiate the toolset locally.
+
 ## How it works
 
-The plugin ensures your ADK agent runs deterministically inside Temporal Workflow code, and causes inputs and outputs to be serialized and recorded for robust recovery.  For example:
+The plugin ensures your ADK agent runs deterministically inside Temporal
+Workflow code, and causes inputs and outputs to be serialized and recorded for
+robust recovery. For example:
 
 - **LLM calls** are executed as Temporal Activities via `TemporalModel`. If a
   call fails or the worker crashes, Temporal retries or replays from the last
@@ -30507,7 +30528,7 @@ The plugin ensures your ADK agent runs deterministically inside Temporal Workflo
   automatically replaced with Temporal's deterministic equivalents
   (`workflow.now()`, `workflow.uuid4()`) when run in Workflow code (but not Activity code).
 - **ADK and Gemini modules** are configured for Temporal's
-  [sandbox](https://docs.temporal.io/develop/python/sandbox-environment)
+  [sandbox](https://docs.temporal.io/develop/python/best-practices/python-sdk-sandbox)
   environment with automatic passthrough.
 - **Pydantic serialization** is configured automatically for ADK's data types.
 
@@ -30517,13 +30538,12 @@ The plugin ensures your ADK agent runs deterministically inside Temporal Workflo
 | --- | --- |
 | Durable tool execution | `activity_tool` wraps tool functions as Activities, supporting long-running tools, automatic retries, and heartbeating |
 | MCP tool support | `TemporalMcpToolSet` executes MCP tools as Activities with full event propagation |
-| Human-in-the-loop | Your Agent Workflow can wait for [Signals](https://docs.temporal.io/signals) and [Updates](https://docs.temporal.io/messages#updates) to wait for human input, and clients can send those to resume the Agent |
+| Human-in-the-loop | Your Agent Workflow can wait for [Signals](https://docs.temporal.io/sending-messages#sending-signals) and [Updates](https://docs.temporal.io/sending-messages#sending-updates) to wait for human input, and clients can send those to resume the Agent |
 | Deterministic runtime | `GoogleAdkPlugin` replaces non-deterministic calls with Temporal-safe equivalents |
 | Debuggability | Every LLM call and tool execution is visible as an Activity in the Temporal UI, making it trivial to debug faults. |
 | Observability | Work with your favorite Observability solution using OpenTelemetry, with cross-process spans that are resilient to crashes. |
 | Safe versioning | Deploy new agent versions using [Temporal Worker Versioning](https://docs.temporal.io/production-deployment/worker-deployments/worker-versioning) without disrupting in-flight executions |
 | Multi-agent orchestration | Compose multiple agents within a Workflow, or scale them to more complex use cases by using [Child Workflows](https://docs.temporal.io/child-workflows) or [Nexus](https://docs.temporal.io/nexus) |
-
 
 ## Additional resources
 
@@ -31684,9 +31704,9 @@ agent application.
 ADK includes several plugins that you can add to your agent workflows
 immediately:
 
-*   [**Reflect and Retry Tools**](/plugins/reflect-and-retry/):
+*   [**Reflect and Retry Tools**](/integrations/reflect-and-retry/):
     Tracks tool failures and intelligently retries tool requests.
-*   [**BigQuery Analytics**](/observability/bigquery-agent-analytics/):
+*   [**BigQuery Analytics**](/integrations/bigquery-agent-analytics/):
     Enables agent logging and analysis with BigQuery.
 *   [**Context Filter**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/context_filter_plugin.py):
     Filters the generative AI context to reduce its size.
@@ -33219,7 +33239,7 @@ trigger endpoint:
 
 - **Pub/Sub**: Create a [push subscription](https://cloud.google.com/pubsub/docs/push)
   pointing to `/apps/{app_name}/trigger/pubsub`.
-- **Eventarc**: Create an [Eventarc Standard trigger](https://cloud.google.com/eventarc/standard/docs/creating-triggers)
+- **Eventarc**: Create an [Eventarc Standard trigger](https://docs.cloud.google.com/eventarc/standard/docs/event-providers-targets)
   or an [Eventarc Advanced pipeline](https://cloud.google.com/eventarc/advanced/docs/overview)
   routing to `/apps/{app_name}/trigger/eventarc`.
 - **Cloud Scheduler**: Create a [scheduler job](https://cloud.google.com/scheduler/docs/creating)
@@ -36023,7 +36043,7 @@ Some examples include:
 
 Code execution is a special tool that has extra security implications: sandboxing must be used to prevent model-generated code to compromise the local environment, potentially creating security issues.
 
-Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/tools/gemini-api/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
+Google and the ADK provide several options for safe code execution. [Vertex Gemini Enterprise API code execution feature](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/code-execution-api) enables agents to take advantage of sandboxed code execution server-side by enabling the tool\_execution tool. For code performing data analysis, you can use the [Code Executor](/integrations/code-execution/) tool in ADK to call the [Vertex Code Interpreter Extension](https://cloud.google.com/vertex-ai/generative-ai/docs/extensions/code-interpreter).
 
 If none of these options satisfy your requirements, you can build your own code executor using the building blocks provided by the ADK. We recommend creating execution environments that are hermetic: no network connections and API calls permitted to avoid uncontrolled data exfiltration; and full cleanup of data across execution to not create cross-user exfiltration concerns.
 
@@ -36260,7 +36280,7 @@ the storage backend that best suits your needs:
         [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
     *   A Reasoning Engine resource name/ID that can setup following this
         [tutorial](/deploy/agent-engine/).
-    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/tools/google-cloud/express-mode/).
+    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/integrations/express-mode/).
 *   **Best for:** Scalable production applications deployed on Google Cloud,
     especially when integrating with other Vertex AI features.
 
@@ -40302,7 +40322,7 @@ ADK supports advanced tool patterns that integrate seamlessly with `run_live()`:
 
     **Code reference**: See `runners.py:828-865` (tool detection) and `function_tool.py:238-253` (parameter injection) for implementation details.
 
-    See the [Tools Guide](/tools/) for implementation examples.
+    See the [Tools Guide](/integrations/) for implementation examples.
 
 ### Key Takeaway
 
@@ -41678,7 +41698,7 @@ CFC is designed for complex, multi-step workflows that benefit from intelligent 
 
 - [Gemini Function Calling Guide](https://ai.google.dev/gemini-api/docs/function-calling) - Official documentation on compositional and parallel function calling
 - [ADK Parallel Functions Example](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/contributing/samples/parallel_functions/agent.py) - Working example with async tools
-- [ADK Performance Guide](/tools/performance/) - Best practices for parallel-ready tools
+- [ADK Performance Guide](/tools-custom/performance/) - Best practices for parallel-ready tools
 
 ## Summary
 
@@ -43749,9 +43769,9 @@ tools within an agent excludes the use of any other tools in that agent. The
 following ADK Tools can only be used by themselves, without any other tools, in
 a single agent object:
 
-*   [Code Execution](/tools/gemini-api/code-execution/) with Gemini API
-*   [Google Search](/tools/gemini-api/google-search/) with Gemini API
-*   [Vertex AI Search](/tools/google-cloud/vertex-ai-search/)
+*   [Code Execution](/integrations/code-execution/) with Gemini API
+*   [Google Search](/integrations/google-search/) with Gemini API
+*   [Vertex AI Search](/integrations/vertex-ai-search/)
 
 For example, the following approach that uses one of these tools along with
 other tools, within a single agent, is ***not supported***:
@@ -45757,10 +45777,10 @@ programming functions with an ADK Tool, such as:
 *   Retrieving information from documents (RAG)
 *   Interacting with other software or services
 
-!!! tip "[ADK Tools list](/tools/)"
-    Before building your own Tools for ADK, check out the
-    **[ADK Tools list](/tools/)**
-    for pre-built tools you can use with ADK Agents.
+!!! tip "[ADK Tools and Integrations](/integrations/)"
+    Before building your own tools for ADK, check out the **[ADK Tools and
+    Integrations](/integrations/)** for pre-built tools and integrations you can
+    use with ADK Agents.
 
 ## What is a Tool?
 
@@ -45806,7 +45826,7 @@ ADK offers flexibility by supporting several types of tools:
     * **[Functions/Methods](/tools-custom/function-tools/#1-function-tool):** Define standard synchronous functions or methods in your code (e.g., Python def).
     * **[Agents-as-Tools](/tools-custom/function-tools/#3-agent-as-a-tool):** Use another, potentially specialized, agent as a tool for a parent agent.
     * **[Long Running Function Tools](/tools-custom/function-tools/#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
-2. **[Built-in Tools](/tools/built-in-tools/):** Ready-to-use tools provided by the framework for common tasks.
+2. **[Built-in Tools](/integrations/):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
 3. **Third-Party Tools:** Integrate tools seamlessly from popular external libraries.
 
@@ -46460,9 +46480,7 @@ Once the ADK Web UI loads in your browser:
 
 You should see the agent interacting with the MCP file system server, and the server's responses (file listings, file content) relayed through the agent. The `adk web` console (terminal where you ran the command) might also show logs from the `npx` process if it outputs to stderr.
 
-<img src="../../assets/adk-tool-mcp-filesystem-adk-web-demo.png" alt="MCP with ADK Web - FileSystem Example">
-
-
+![MCP with ADK Web - FileSystem Example](../assets/adk-tool-mcp-filesystem-adk-web-demo.png)
 
 For Java, refer to the following sample to define an agent that initializes the `McpToolset`:
 
@@ -46682,8 +46700,7 @@ from . import agent
 
 You should see the agent use the Google Maps Grounding Lite MCP tools to provide directions or location-based information.
 
-<img src="../../assets/adk-tool-maps-lite-mcp-adk-web-demo.png" alt="Google Maps Grounding Lite MCP with ADK Web Example">
-
+![Google Maps Grounding Lite MCP with ADK Web Example](../assets/adk-tool-maps-lite-mcp-adk-web-demo.png)
 
 For Java, refer to the following sample to define an agent that initializes the `McpToolset`:
 
@@ -46704,7 +46721,7 @@ import java.util.Map;
 public class MapsAgentCreator {
 
     /**
-     * Initializes an McpToolset for Google Maps Grounding Lite, 
+     * Initializes an McpToolset for Google Maps Grounding Lite,
      * creates an LlmAgent, sends a map-related prompt, and closes the toolset.
      */
     public static void main(String[] args) {
@@ -46793,7 +46810,7 @@ export const rootAgent = new LlmAgent({
         new MCPToolset({
             // Using SseConnectionParams to connect to the remote Grounding Lite service,
             // mirroring Python's StreamableHTTPConnectionParams.
-            type: "SseConnectionParams", 
+            type: "SseConnectionParams",
             url: "https://mapstools.googleapis.com/mcp",
             headers: {
                 "X-Goog-Api-Key": googleMapsApiKey,
@@ -47609,7 +47626,7 @@ The process involves these main steps when you use `OpenAPIToolset`:
     * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
     * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
 
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/tools/authentication/) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/tools-custom/authentication/) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
 
 ## Usage Workflow
 
@@ -50811,7 +50828,7 @@ The tool supports all the essential components for building an ADK agent workflo
     *   [**Parallel Agent:**](/agents/workflow-agents/parallel-agents/)
         A workflow agent that executes multiple sub-agents concurrently.
 *   **Tools**
-    *   [**Prebuilt tools:**](/tools/built-in-tools/)
+    *   [**Prebuilt tools:**](/integrations/)
         A limited set of ADK-provided tools can be added to agents.
     *   [**Custom tools:**](/tools-custom/)
         You can build and add custom tools to your workflow.
