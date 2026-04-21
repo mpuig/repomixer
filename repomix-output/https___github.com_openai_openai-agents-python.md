@@ -8161,61 +8161,55 @@ search:
 ---
 # 트레이싱
 
-Agents SDK에는 내장 트레이싱이 포함되어 있어, 에이전트 실행 중 발생하는 이벤트(LLM 생성, 도구 호출, 핸드오프, 가드레일, 사용자 정의 이벤트 등)에 대한 포괄적인 기록을 수집합니다. [Traces 대시보드](https://platform.openai.com/traces)를 사용하면 개발 중과 프로덕션에서 워크플로를 디버그하고, 시각화하고, 모니터링할 수 있습니다
+Agents SDK에는 기본 제공 트레이싱이 포함되어 있으며, 에이전트 실행 중 발생하는 이벤트의 포괄적인 기록을 수집합니다. 여기에는 LLM 생성, 도구 호출, 핸드오프, 가드레일, 그리고 발생한 사용자 정의 이벤트까지 포함됩니다. [Traces dashboard](https://platform.openai.com/traces)를 사용하면 개발 중과 프로덕션 환경에서 워크플로를 디버그하고, 시각화하고, 모니터링할 수 있습니다.
 
 !!!note
 
-    트레이싱은 기본적으로 활성화되어 있습니다. 다음의 세 가지 일반적인 방법으로 비활성화할 수 있습니다:
+    트레이싱은 기본적으로 활성화되어 있습니다. 다음의 일반적인 세 가지 방법으로 비활성화할 수 있습니다:
 
-    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1`을 설정하여 전역적으로 트레이싱을 비활성화할 수 있습니다
-    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]로 전역적으로 트레이싱을 비활성화할 수 있습니다
-    3. 단일 실행에 대해 [`agents.run.RunConfig.tracing_disabled`][]를 `True`로 설정하여 트레이싱을 비활성화할 수 있습니다
+    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1` 을 설정하여 전역적으로 트레이싱을 비활성화할 수 있습니다
+    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]를 사용해 전역적으로 트레이싱을 비활성화할 수 있습니다
+    3. 단일 실행에 대해서는 [`agents.run.RunConfig.tracing_disabled`][]를 `True`로 설정하여 트레이싱을 비활성화할 수 있습니다
 
-***OpenAI API를 사용하며 Zero Data Retention (ZDR) 정책 하에서 운영되는 조직의 경우, 트레이싱을 사용할 수 없습니다.***
+***OpenAI API를 사용하면서 Zero Data Retention (ZDR) 정책 하에서 운영하는 조직에서는 트레이싱을 사용할 수 없습니다.***
 
-## 트레이스 및 스팬
+## 트레이스와 스팬
 
 -   **트레이스**는 하나의 "워크플로"에 대한 단일 엔드투엔드 작업을 나타냅니다. 트레이스는 스팬으로 구성됩니다. 트레이스에는 다음 속성이 있습니다:
-    -   `workflow_name`: 논리적 워크플로 또는 앱입니다. 예: "Code generation", "Customer service"
-    -   `trace_id`: 트레이스의 고유 ID입니다. 전달하지 않으면 자동 생성됩니다. 형식은 `trace_<32_alphanumeric>`이어야 합니다
-    -   `group_id`: 선택적 그룹 ID로, 동일한 대화의 여러 트레이스를 연결하는 데 사용합니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다
-    -   `disabled`: True이면 트레이스가 기록되지 않습니다
-    -   `metadata`: 트레이스에 대한 선택적 메타데이터입니다
+    -   `workflow_name`: 논리적인 워크플로 또는 앱입니다. 예를 들어 "Code generation" 또는 "Customer service"입니다.
+    -   `trace_id`: 트레이스의 고유 ID입니다. 전달하지 않으면 자동으로 생성됩니다. 형식은 `trace_<32_alphanumeric>`이어야 합니다.
+    -   `group_id`: 선택적 그룹 ID로, 동일한 대화에서 나온 여러 트레이스를 연결하는 데 사용합니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다.
+    -   `disabled`: True이면 트레이스가 기록되지 않습니다.
+    -   `metadata`: 트레이스에 대한 선택적 메타데이터입니다.
 -   **스팬**은 시작 시간과 종료 시간이 있는 작업을 나타냅니다. 스팬에는 다음이 있습니다:
     -   `started_at` 및 `ended_at` 타임스탬프
-    -   `trace_id`: 해당 스팬이 속한 트레이스를 나타냅니다
-    -   `parent_id`: 이 스팬의 부모 스팬(있는 경우)을 가리킵니다
-    -   `span_data`: 스팬에 대한 정보입니다. 예를 들어 `AgentSpanData`는 에이전트 정보를, `GenerationSpanData`는 LLM 생성 정보를 포함합니다
+    -   `trace_id`: 이 스팬이 속한 트레이스를 나타냅니다
+    -   `parent_id`: 이 스팬의 상위 스팬을 가리킵니다(있는 경우)
+    -   `span_data`: 스팬에 대한 정보입니다. 예를 들어 `AgentSpanData`에는 Agent에 대한 정보가, `GenerationSpanData`에는 LLM 생성에 대한 정보가 포함됩니다.
 
 ## 기본 트레이싱
 
 기본적으로 SDK는 다음을 트레이싱합니다:
 
--   전체 `Runner.{run, run_sync, run_streamed}()`는 `trace()`로 래핑됩니다
--   에이전트가 실행될 때마다 `agent_span()`으로 래핑됩니다
--   LLM 생성은 `generation_span()`으로 래핑됩니다
--   함수 도구 호출은 각각 `function_span()`으로 래핑됩니다
--   가드레일은 `guardrail_span()`으로 래핑됩니다
--   핸드오프는 `handoff_span()`으로 래핑됩니다
--   오디오 입력(음성-텍스트)은 `transcription_span()`으로 래핑됩니다
--   오디오 출력(텍스트-음성)은 `speech_span()`으로 래핑됩니다
--   관련 오디오 스팬은 `speech_group_span()` 아래에 부모-자식으로 배치될 수 있습니다
+-   전체 `Runner.{run, run_sync, run_streamed}()`는 `trace()`로 감싸집니다
+-   에이전트가 실행될 때마다 `agent_span()`으로 감싸집니다
+-   LLM 생성은 `generation_span()`으로 감싸집니다
+-   함수 도구 호출은 각각 `function_span()`으로 감싸집니다
+-   가드레일은 `guardrail_span()`으로 감싸집니다
+-   핸드오프는 `handoff_span()`으로 감싸집니다
+-   오디오 입력(음성-텍스트 변환)은 `transcription_span()`으로 감싸집니다
+-   오디오 출력(텍스트-음성 변환)은 `speech_span()`으로 감싸집니다
+-   관련 오디오 스팬은 `speech_group_span()` 아래에 부모-자식 관계로 중첩될 수 있습니다
 
-기본적으로 트레이스 이름은 "Agent workflow"입니다. `trace`를 사용하면 이 이름을 설정할 수 있고, [`RunConfig`][agents.run.RunConfig]로 이름과 기타 속성을 구성할 수도 있습니다.
+기본적으로 트레이스 이름은 "Agent workflow"입니다. `trace`를 사용하는 경우 이 이름을 설정할 수 있으며, [`RunConfig`][agents.run.RunConfig]를 사용해 이름 및 기타 속성을 구성할 수도 있습니다.
 
-또한 [사용자 정의 트레이스 프로세서](#custom-tracing-processors)를 설정하여 트레이스를 다른 대상으로 전송할 수 있습니다(대체 또는 보조 대상).
+또한 [사용자 정의 트레이스 프로세서](#custom-tracing-processors)를 설정하여 다른 대상에 트레이스를 전송할 수 있습니다(대체 대상 또는 보조 대상으로).
 
 ## 장기 실행 워커와 즉시 내보내기
 
-기본 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]는 몇 초마다 백그라운드에서
-트레이스를 내보내거나, 메모리 내 큐가 크기 임계값에 도달하면 더 빨리 내보내며,
-프로세스가 종료될 때 최종 flush도 수행합니다. Celery,
-RQ, Dramatiq 또는 FastAPI 백그라운드 작업과 같은 장기 실행 워커에서는 이는 일반적으로 트레이스가
-추가 코드 없이 자동으로 내보내된다는 의미이지만, 각 작업이
-완료된 직후에는 Traces 대시보드에 즉시 표시되지 않을 수 있습니다.
+기본 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]는 몇 초마다 백그라운드에서 트레이스를 내보내며, 메모리 내 큐가 크기 임계값에 도달하면 더 빨리 내보냅니다. 또한 프로세스가 종료될 때 최종 플러시를 수행합니다. Celery, RQ, Dramatiq 또는 FastAPI 백그라운드 작업과 같은 장기 실행 워커에서는 일반적으로 추가 코드 없이도 트레이스가 자동으로 내보내지지만, 각 작업이 끝난 직후 Traces dashboard에 바로 표시되지는 않을 수 있습니다.
 
-작업 단위 종료 시 즉시 전달 보장이 필요하다면
-트레이스 컨텍스트가 종료된 후 [`flush_traces()`][agents.tracing.flush_traces]를 호출하세요.
+작업 단위가 끝날 때 즉시 전달을 보장해야 한다면, 트레이스 컨텍스트가 종료된 후 [`flush_traces()`][agents.tracing.flush_traces]를 호출하세요.
 
 ```python
 from agents import Runner, flush_traces, trace
@@ -8252,14 +8246,11 @@ async def run(prompt: str, background_tasks: BackgroundTasks):
     return {"status": "queued"}
 ```
 
-[`flush_traces()`][agents.tracing.flush_traces]는 현재 버퍼링된 트레이스와 스팬이
-내보내질 때까지 블로킹하므로, 부분적으로 구성된 트레이스를 flush하지 않도록 `trace()`가 닫힌 뒤에
-호출해야 합니다. 기본 내보내기 지연 시간이 허용 가능하다면
-이 호출을 생략할 수 있습니다.
+[`flush_traces()`][agents.tracing.flush_traces]는 현재 버퍼링된 트레이스와 스팬이 내보내질 때까지 블로킹되므로, 부분적으로만 구성된 트레이스를 플러시하지 않도록 `trace()`가 닫힌 후 호출해야 합니다. 기본 내보내기 지연이 허용 가능하다면 이 호출은 생략할 수 있습니다.
 
 ## 상위 수준 트레이스
 
-때로는 여러 `run()` 호출을 하나의 트레이스에 포함하고 싶을 수 있습니다. 전체 코드를 `trace()`로 래핑하면 가능합니다.
+경우에 따라 여러 `run()` 호출을 하나의 단일 트레이스에 포함하고 싶을 수 있습니다. 이 경우 전체 코드를 `trace()`로 감싸면 됩니다.
 
 ```python
 from agents import Agent, Runner, trace
@@ -8274,49 +8265,48 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 두 번의 `Runner.run` 호출이 `with trace()`로 래핑되어 있으므로, 개별 실행은 각각 두 개의 트레이스를 생성하는 대신 전체 트레이스의 일부가 됩니다
+1. 두 번의 `Runner.run` 호출이 `with trace()`로 감싸져 있으므로, 개별 실행이 각각 두 개의 트레이스를 생성하는 대신 전체 트레이스의 일부가 됩니다.
 
 ## 트레이스 생성
 
-[`trace()`][agents.tracing.trace] 함수를 사용해 트레이스를 생성할 수 있습니다. 트레이스는 시작과 종료가 필요합니다. 방법은 두 가지입니다:
+[`trace()`][agents.tracing.trace] 함수를 사용해 트레이스를 생성할 수 있습니다. 트레이스는 시작되고 종료되어야 하며, 이를 위한 두 가지 방법이 있습니다:
 
-1. **권장**: 트레이스를 컨텍스트 매니저로 사용합니다. 즉, `with trace(...) as my_trace` 형태로 사용합니다. 이렇게 하면 적절한 시점에 트레이스가 자동으로 시작되고 종료됩니다
-2. [`trace.start()`][agents.tracing.Trace.start]와 [`trace.finish()`][agents.tracing.Trace.finish]를 수동으로 호출할 수도 있습니다
+1. **권장 방식**: `with trace(...) as my_trace`처럼 트레이스를 컨텍스트 매니저로 사용합니다. 이렇게 하면 적절한 시점에 트레이스가 자동으로 시작되고 종료됩니다.
+2. [`trace.start()`][agents.tracing.Trace.start] 및 [`trace.finish()`][agents.tracing.Trace.finish]를 수동으로 호출할 수도 있습니다.
 
-현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적됩니다. 즉, 동시성 환경에서도 자동으로 동작합니다. 트레이스를 수동으로 시작/종료하는 경우, 현재 트레이스를 갱신하기 위해 `start()`/`finish()`에 `mark_as_current`와 `reset_current`를 전달해야 합니다.
+현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적됩니다. 이는 동시성 환경에서도 자동으로 동작함을 의미합니다. 트레이스를 수동으로 시작/종료하는 경우, 현재 트레이스를 갱신하기 위해 `start()`/`finish()`에 `mark_as_current` 및 `reset_current`를 전달해야 합니다.
 
 ## 스팬 생성
 
-다양한 [`*_span()`][agents.tracing.create] 메서드를 사용해 스팬을 생성할 수 있습니다. 일반적으로 스팬을 수동으로 생성할 필요는 없습니다. 사용자 정의 스팬 정보를 추적하기 위해 [`custom_span()`][agents.tracing.custom_span] 함수를 사용할 수 있습니다.
+다양한 [`*_span()`][agents.tracing.create] 메서드를 사용해 스팬을 생성할 수 있습니다. 일반적으로는 스팬을 수동으로 생성할 필요가 없습니다. 사용자 정의 스팬 정보를 추적하기 위해 [`custom_span()`][agents.tracing.custom_span] 함수를 사용할 수 있습니다.
 
-스팬은 자동으로 현재 트레이스의 일부가 되며, Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)로 추적되는 가장 가까운 현재 스팬 아래에 중첩됩니다.
+스팬은 자동으로 현재 트레이스의 일부가 되며, Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적되는 가장 가까운 현재 스팬 아래에 중첩됩니다.
 
 ## 민감한 데이터
 
 일부 스팬은 잠재적으로 민감한 데이터를 캡처할 수 있습니다.
 
-`generation_span()`은 LLM 생성의 입력/출력을 저장하고, `function_span()`은 함수 호출의 입력/출력을 저장합니다. 여기에는 민감한 데이터가 포함될 수 있으므로 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터 캡처를 비활성화할 수 있습니다.
+`generation_span()`은 LLM 생성의 입력/출력을 저장하고, `function_span()`은 함수 호출의 입력/출력을 저장합니다. 여기에는 민감한 데이터가 포함될 수 있으므로, [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터의 캡처를 비활성화할 수 있습니다.
 
-마찬가지로 오디오 스팬은 기본적으로 입력 및 출력 오디오에 대한 base64 인코딩 PCM 데이터를 포함합니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성하여 이 오디오 데이터 캡처를 비활성화할 수 있습니다.
+마찬가지로 오디오 스팬은 기본적으로 입력 및 출력 오디오에 대한 base64 인코딩 PCM 데이터를 포함합니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성하여 이 오디오 데이터의 캡처를 비활성화할 수 있습니다.
 
-기본적으로 `trace_include_sensitive_data`는 `True`입니다. 앱 실행 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`으로 설정하면 코드 변경 없이 기본값을 지정할 수 있습니다.
+기본적으로 `trace_include_sensitive_data`는 `True`입니다. 앱을 실행하기 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`으로 내보내 코드 변경 없이 기본값을 설정할 수 있습니다.
 
 ## 사용자 정의 트레이싱 프로세서
 
 트레이싱의 상위 수준 아키텍처는 다음과 같습니다:
 
--   초기화 시, 트레이스 생성을 담당하는 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]를 생성합니다
--   `TraceProvider`를 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 구성하며, 이 프로세서는 트레이스/스팬을 배치로 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]에 전송하고, 익스포터는 스팬과 트레이스를 배치로 OpenAI 백엔드에 내보냅니다
+-   초기화 시 트레이스 생성을 담당하는 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]를 생성합니다
+-   `TraceProvider`를 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 구성하며, 이 프로세서는 트레이스/스팬을 배치로 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]에 전송하고, `BackendSpanExporter`는 스팬과 트레이스를 OpenAI 백엔드로 배치 단위로 내보냅니다
 
-이 기본 구성을 사용자 지정하여 트레이스를 대체 또는 추가 백엔드로 전송하거나 익스포터 동작을 수정하려면 두 가지 방법이 있습니다:
+이 기본 설정을 사용자 정의하여 대체 또는 추가 백엔드로 트레이스를 보내거나 내보내기 동작을 수정하려면 두 가지 옵션이 있습니다:
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 준비되는 대로 트레이스와 스팬을 수신하는 **추가** 트레이스 프로세서를 추가할 수 있습니다. 이를 통해 OpenAI 백엔드로 전송하는 것 외에 자체 처리를 수행할 수 있습니다
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 사용자 정의 트레이스 프로세서로 **대체**할 수 있습니다. 이 경우 해당 기능을 수행하는 `TracingProcessor`를 포함하지 않으면 트레이스는 OpenAI 백엔드로 전송되지 않습니다
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 준비된 트레이스와 스팬을 전달받는 **추가** 트레이스 프로세서를 추가할 수 있습니다. 이를 통해 트레이스를 OpenAI 백엔드로 전송하는 것에 더해 자체 처리를 수행할 수 있습니다.
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 사용자의 트레이스 프로세서로 **대체**할 수 있습니다. 이 경우 `TracingProcessor`를 포함하지 않으면 트레이스는 OpenAI 백엔드로 전송되지 않습니다.
 
+## 비 OpenAI 모델과의 트레이싱
 
-## 비-OpenAI 모델에서의 트레이싱
-
-트레이싱을 비활성화하지 않고도 OpenAI Traces 대시보드에서 무료 트레이싱을 활성화하려면 비-OpenAI 모델과 함께 OpenAI API 키를 사용할 수 있습니다. 어댑터 선택 및 설정 시 주의사항은 Models 가이드의 [Third-party adapters](models/index.md#third-party-adapters) 섹션을 참조하세요.
+트레이싱을 비활성화하지 않고도 OpenAI Traces dashboard에서 무료 트레이싱을 활성화하기 위해 비 OpenAI 모델에 OpenAI API 키를 사용할 수 있습니다. 어댑터 선택 및 설정 시 유의사항은 Models 가이드의 [서드파티 어댑터](models/index.md#third-party-adapters) 섹션을 참고하세요.
 
 ```python
 import os
@@ -8337,7 +8327,7 @@ agent = Agent(
 )
 ```
 
-단일 실행에 대해서만 다른 트레이싱 키가 필요하다면 전역 익스포터를 변경하는 대신 `RunConfig`를 통해 전달하세요.
+단일 실행에 대해서만 다른 트레이싱 키가 필요하다면, 전역 exporter를 변경하는 대신 `RunConfig`를 통해 전달하세요.
 
 ```python
 from agents import Runner, RunConfig
@@ -8350,12 +8340,11 @@ await Runner.run(
 ```
 
 ## 추가 참고 사항
-- Openai Traces 대시보드에서 무료 트레이스를 확인하세요
-
+- Openai Traces dashboard에서 무료 트레이스를 확인하세요
 
 ## 에코시스템 통합
 
-다음 커뮤니티 및 벤더 통합은 OpenAI Agents SDK 트레이싱 표면을 지원합니다
+다음 커뮤니티 및 벤더 통합은 OpenAI Agents SDK 트레이싱 표면을 지원합니다.
 
 ### 외부 트레이싱 프로세서 목록
 
@@ -8384,6 +8373,7 @@ await Runner.run(
 -   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 -   [HoneyHive](https://docs.honeyhive.ai/v2/integrations/openai-agents)
 -   [Asqav](https://www.asqav.com/docs/integrations#openai-agents)
+-   [Datadog](https://docs.datadoghq.com/llm_observability/instrumentation/auto_instrumentation/?tab=python#openai-agents)
 
 ================
 File: docs/ko/usage.md
@@ -22362,61 +22352,61 @@ search:
 ---
 # 追踪
 
-Agents SDK 内置了追踪功能，可在智能体运行期间收集完整的事件记录：LLM 生成、工具调用、任务转移、安全防护措施，甚至发生的自定义事件。使用[追踪仪表盘](https://platform.openai.com/traces)，你可以在开发和生产环境中调试、可视化并监控工作流。
+Agents SDK 内置了追踪功能，可收集智能体运行期间事件的完整记录：LLM 生成、工具调用、任务转移、安全防护措施，甚至包括发生的自定义事件。借助[Traces 仪表板](https://platform.openai.com/traces)，你可以在开发和生产环境中调试、可视化并监控你的工作流。
 
 !!!note
 
-    默认启用追踪。你可以通过三种常见方式禁用它：
+    追踪默认启用。你可以通过以下三种常见方式禁用它：
 
     1. 你可以通过设置环境变量 `OPENAI_AGENTS_DISABLE_TRACING=1` 全局禁用追踪
-    2. 你可以在代码中通过 [`set_tracing_disabled(True)`][agents.set_tracing_disabled] 全局禁用追踪
-    3. 你可以通过将 [`agents.run.RunConfig.tracing_disabled`][] 设置为 `True` 来禁用单次运行的追踪
+    2. 你可以在代码中使用 [`set_tracing_disabled(True)`][agents.set_tracing_disabled] 全局禁用追踪
+    3. 你可以通过将 [`agents.run.RunConfig.tracing_disabled`][] 设置为 `True` 来为单次运行禁用追踪
 
-***对于在 OpenAI API 上使用零数据保留（ZDR）策略的组织，追踪功能不可用。***
+***对于在 Zero Data Retention (ZDR) 策略下使用 OpenAI API 的组织，追踪不可用。***
 
-## 追踪与跨度
+## Traces 和 spans
 
--   **Traces** 表示“工作流”的单次端到端操作。它们由 Span 组成。Traces 具有以下属性：
-    -   `workflow_name`：逻辑工作流或应用。例如“代码生成”或“客户服务”。
-    -   `trace_id`：追踪的唯一 ID。如果不传入会自动生成。格式必须为 `trace_<32_alphanumeric>`。
-    -   `group_id`：可选分组 ID，用于关联同一会话中的多个追踪。例如，你可以使用聊天线程 ID。
-    -   `disabled`：若为 True，则不会记录该追踪。
-    -   `metadata`：追踪的可选元数据。
--   **Spans** 表示具有开始和结束时间的操作。Spans 具有：
+-   **Traces** 表示“工作流”的单个端到端操作。它们由 Span 组成。Traces 具有以下属性：
+    -   `workflow_name`：这是逻辑工作流或应用。例如“代码生成”或“客户服务”。
+    -   `trace_id`：Trace 的唯一 ID。如果你未传入，则会自动生成。格式必须为 `trace_<32_alphanumeric>`。
+    -   `group_id`：可选的分组 ID，用于关联同一会话中的多个 trace。例如，你可以使用聊天线程 ID。
+    -   `disabled`：如果为 True，则不会记录该 trace。
+    -   `metadata`：trace 的可选元数据。
+-   **Spans** 表示具有开始时间和结束时间的操作。Span 具有：
     -   `started_at` 和 `ended_at` 时间戳。
-    -   `trace_id`，表示其所属追踪
-    -   `parent_id`，指向该 Span 的父 Span（若有）
-    -   `span_data`，即关于该 Span 的信息。例如，`AgentSpanData` 包含智能体信息，`GenerationSpanData` 包含 LLM 生成信息等。
+    -   `trace_id`，表示它们所属的 trace
+    -   `parent_id`，指向该 Span 的父 Span（如果有）
+    -   `span_data`，即有关该 Span 的信息。例如，`AgentSpanData` 包含有关 Agent 的信息，`GenerationSpanData` 包含有关 LLM 生成的信息，等等。
 
 ## 默认追踪
 
 默认情况下，SDK 会追踪以下内容：
 
--   整个 `Runner.{run, run_sync, run_streamed}()` 都包裹在 `trace()` 中。
--   每次智能体运行都会包裹在 `agent_span()` 中
--   LLM 生成会包裹在 `generation_span()` 中
--   每次工具调用都会包裹在 `function_span()` 中
--   安全防护措施会包裹在 `guardrail_span()` 中
--   任务转移会包裹在 `handoff_span()` 中
--   音频输入（语音转文本）会包裹在 `transcription_span()` 中
--   音频输出（文本转语音）会包裹在 `speech_span()` 中
--   相关音频跨度可能作为 `speech_group_span()` 的子项
+-   整个 `Runner.{run, run_sync, run_streamed}()` 都包装在 `trace()` 中。
+-   每次智能体运行时，都会包装在 `agent_span()` 中
+-   LLM 生成会包装在 `generation_span()` 中
+-   每次工具调用都会分别包装在 `function_span()` 中
+-   安全防护措施会包装在 `guardrail_span()` 中
+-   任务转移会包装在 `handoff_span()` 中
+-   音频输入（语音转文本）会包装在 `transcription_span()` 中
+-   音频输出（文本转语音）会包装在 `speech_span()` 中
+-   相关的音频 span 可能会作为 `speech_group_span()` 的子项
 
-默认情况下，追踪名称为“Agent workflow”。如果你使用 `trace`，可以设置该名称；也可以通过 [`RunConfig`][agents.run.RunConfig] 配置名称和其他属性。
+默认情况下，trace 名称为“Agent workflow”。如果你使用 `trace`，可以设置该名称；也可以使用 [`RunConfig`][agents.run.RunConfig] 配置名称和其他属性。
 
-此外，你还可以设置[自定义追踪进程](#custom-tracing-processors)，将追踪推送到其他目标（作为替代或次要目标）。
+此外，你还可以设置[自定义追踪处理器](#custom-tracing-processors)，将 trace 推送到其他目标位置（作为替代目标或次级目标）。
 
-## 长时运行工作进程与即时导出
+## 长时间运行的 worker 与即时导出
 
-默认的 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 会在后台每隔几秒导出追踪，
-或者当内存队列达到大小触发条件时更早导出，
-并且在进程退出时执行最终刷新。在 Celery、
-RQ、Dramatiq 或 FastAPI 后台任务等长时运行工作进程中，这意味着追踪通常会自动导出，
-无需额外代码，但它们在每个任务
-结束后可能不会立即出现在 Traces 仪表盘中。
+默认的 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 会在后台每隔几秒导出一次 traces，
+或者当内存队列达到其大小触发阈值时更快导出，
+并且还会在进程退出时执行最终刷新。在 Celery、
+RQ、Dramatiq 或 FastAPI 后台任务等长时间运行的 worker 中，这意味着 traces 通常会自动导出，
+无需额外代码，但它们可能不会在每个作业
+完成后立即出现在 Traces 仪表板中。
 
-如果你需要在一个工作单元结束时确保立即投递，请调用
-[`flush_traces()`][agents.tracing.flush_traces]，并在追踪上下文退出后执行。
+如果你需要在一个工作单元结束时立即投递的保证，请在
+trace 上下文退出后调用 [`flush_traces()`][agents.tracing.flush_traces]。
 
 ```python
 from agents import Runner, flush_traces, trace
@@ -22453,13 +22443,14 @@ async def run(prompt: str, background_tasks: BackgroundTasks):
     return {"status": "queued"}
 ```
 
-[`flush_traces()`][agents.tracing.flush_traces] 会阻塞，直到当前缓冲的追踪和跨度
-被导出，因此请在 `trace()` 关闭后调用，以避免刷新到部分构建的追踪。若可接受
-默认导出延迟，则可跳过此调用。
+[`flush_traces()`][agents.tracing.flush_traces] 会阻塞，直到当前缓冲的 traces 和 spans
+被导出，因此请在 `trace()` 关闭后调用它，以避免刷新尚未完全构建的 trace。若默认的
+导出延迟可以接受，则可以跳过
+此调用。
 
-## 高层追踪
+## 更高层级的 traces
 
-有时，你可能希望多次调用 `run()` 属于同一个追踪。你可以通过将整段代码包裹在 `trace()` 中来实现。
+有时，你可能希望多次调用 `run()` 属于同一个 trace。你可以通过将整个代码包装在 `trace()` 中来实现。
 
 ```python
 from agents import Agent, Runner, trace
@@ -22474,49 +22465,49 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 因为两次对 `Runner.run` 的调用都包裹在 `with trace()` 中，单次运行将成为整体追踪的一部分，而不是创建两个追踪。
+1. 因为这两次对 `Runner.run` 的调用被包装在 `with trace()` 中，所以这些单独的运行将成为整体 trace 的一部分，而不是创建两个 trace。
 
-## 创建追踪
+## 创建 traces
 
-你可以使用 [`trace()`][agents.tracing.trace] 函数创建追踪。追踪需要启动和结束。你有两种方式：
+你可以使用 [`trace()`][agents.tracing.trace] 函数创建 trace。Trace 需要被启动和结束。你有两种方式：
 
-1. **推荐**：将 trace 作为上下文管理器使用，即 `with trace(...) as my_trace`。这样会在正确时机自动启动并结束追踪。
+1. **推荐**：将 trace 用作上下文管理器，即 `with trace(...) as my_trace`。这样会在正确的时间自动启动和结束 trace。
 2. 你也可以手动调用 [`trace.start()`][agents.tracing.Trace.start] 和 [`trace.finish()`][agents.tracing.Trace.finish]。
 
-当前追踪通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。这意味着它能自动适配并发场景。如果你手动启动/结束追踪，则需要向 `start()`/`finish()` 传入 `mark_as_current` 和 `reset_current` 以更新当前追踪。
+当前 trace 通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。这意味着它能够自动适配并发。如果你手动启动/结束 trace，则需要向 `start()`/`finish()` 传递 `mark_as_current` 和 `reset_current` 以更新当前 trace。
 
-## 创建跨度
+## 创建 spans
 
-你可以使用各种 [`*_span()`][agents.tracing.create] 方法创建跨度。通常你不需要手动创建跨度。可使用 [`custom_span()`][agents.tracing.custom_span] 函数来跟踪自定义跨度信息。
+你可以使用各种 [`*_span()`][agents.tracing.create] 方法创建 span。通常，你不需要手动创建 span。也提供了 [`custom_span()`][agents.tracing.custom_span] 函数，用于跟踪自定义 span 信息。
 
-跨度会自动归属于当前追踪，并嵌套在最近的当前跨度之下；这一状态通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 跟踪。
+Span 会自动归属于当前 trace，并嵌套在最近的当前 span 之下，而这个当前 span 是通过 Python 的 [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪的。
 
 ## 敏感数据
 
-某些跨度可能会捕获潜在敏感数据。
+某些 span 可能会捕获潜在的敏感数据。
 
-`generation_span()` 会存储 LLM 生成的输入/输出，`function_span()` 会存储函数调用的输入/输出。这些内容可能包含敏感数据，因此你可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁用这些数据的采集。
+`generation_span()` 会存储 LLM 生成的输入/输出，而 `function_span()` 会存储函数调用的输入/输出。这些内容可能包含敏感数据，因此你可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁用对这些数据的捕获。
 
-同样，音频跨度默认包含输入与输出音频的 base64 编码 PCM 数据。你可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 禁用音频数据采集。
+同样，音频 span 默认会包含输入和输出音频的 base64 编码 PCM 数据。你可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 来禁用对这些音频数据的捕获。
 
-默认情况下，`trace_include_sensitive_data` 为 `True`。你也可以在不改代码的情况下，通过在应用运行前将 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量设置为 `true/1` 或 `false/0` 来设置默认值。
+默认情况下，`trace_include_sensitive_data` 为 `True`。你也可以在不修改代码的情况下，通过在运行应用前将 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量导出为 `true/1` 或 `false/0` 来设置默认值。
 
-## 自定义追踪进程
+## 自定义追踪处理器
 
 追踪的高层架构如下：
 
--   初始化时，我们会创建一个全局 [`TraceProvider`][agents.tracing.setup.TraceProvider]，其负责创建追踪。
--   我们使用 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 配置 `TraceProvider`，该进程会将追踪/跨度分批发送到 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者再将跨度和追踪分批导出到 OpenAI 后端。
+-   初始化时，我们会创建一个全局的 [`TraceProvider`][agents.tracing.setup.TraceProvider]，它负责创建 traces。
+-   我们会为 `TraceProvider` 配置一个 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]，它会将 traces/spans 分批发送给 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者再将 spans 和 traces 分批导出到 OpenAI 后端。
 
-若要自定义此默认设置，将追踪发送到替代或附加后端，或修改导出器行为，你有两种选择：
+若要自定义这一默认设置，将 traces 发送到替代或附加后端，或修改导出器行为，你有两个选项：
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 允许你添加**额外的**追踪进程，在追踪和跨度就绪时接收它们。这让你可以在发送到 OpenAI 后端之外执行自己的处理。
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 允许你用自己的追踪进程**替换**默认进程。这意味着除非你包含一个会执行该操作的 `TracingProcessor`，否则追踪不会发送到 OpenAI 后端。
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 允许你添加一个**额外的**追踪处理器，它会在 traces 和 spans 就绪时接收它们。这样你就可以在将 traces 发送到 OpenAI 后端之外，执行自己的处理。
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 允许你用自己的追踪处理器**替换**默认处理器。这意味着 traces 不会发送到 OpenAI 后端，除非你包含一个会执行该操作的 `TracingProcessor`。
 
 
-## 使用非 OpenAI 模型进行追踪
+## 非 OpenAI 模型的追踪
 
-你可以将 OpenAI API key 与非 OpenAI 模型一起使用，以在 OpenAI Traces 仪表盘中启用免费追踪，而无需禁用追踪。有关适配器选择与设置注意事项，请参阅 Models 指南中的[第三方适配器](models/index.md#third-party-adapters)部分。
+你可以将 OpenAI API key 与非 OpenAI 模型一起使用，从而在无需禁用追踪的情况下，于 OpenAI Traces 仪表板中启用免费追踪。有关适配器选择和设置注意事项，请参阅 Models 指南中的[第三方适配器](models/index.md#third-party-adapters)部分。
 
 ```python
 import os
@@ -22537,7 +22528,7 @@ agent = Agent(
 )
 ```
 
-如果你仅在单次运行中需要不同的追踪 key，请通过 `RunConfig` 传递，而不是修改全局导出器。
+如果你只需要为单次运行使用不同的追踪 key，请通过 `RunConfig` 传递，而不是更改全局导出器。
 
 ```python
 from agents import Runner, RunConfig
@@ -22549,21 +22540,21 @@ await Runner.run(
 )
 ```
 
-## 补充说明
-- 在 Openai Traces 仪表盘查看免费追踪。
+## 附加说明
+- 在 Openai Traces 仪表板查看免费 traces。
 
 
-## 生态集成
+## 生态系统集成
 
-以下社区和供应商集成支持 OpenAI Agents SDK 追踪能力。
+以下社区和供应商集成支持 OpenAI Agents SDK 的追踪接口。
 
-### 外部追踪进程列表
+### 外部追踪处理器列表
 
 -   [Weights & Biases](https://weave-docs.wandb.ai/guides/integrations/openai_agents)
 -   [Arize-Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)
 -   [Future AGI](https://docs.futureagi.com/future-agi/products/observability/auto-instrumentation/openai_agents)
--   [MLflow（self-hosted/OSS）](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
--   [MLflow（Databricks hosted）](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
+-   [MLflow（自托管/OSS）](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
+-   [MLflow（Databricks 托管）](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
 -   [Braintrust](https://braintrust.dev/docs/guides/traces/integrations#openai-agents-sdk)
 -   [Pydantic Logfire](https://logfire.pydantic.dev/docs/integrations/llms/openai/#openai-agents)
 -   [AgentOps](https://docs.agentops.ai/v1/integrations/agentssdk)
@@ -22584,6 +22575,7 @@ await Runner.run(
 -   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 -   [HoneyHive](https://docs.honeyhive.ai/v2/integrations/openai-agents)
 -   [Asqav](https://www.asqav.com/docs/integrations#openai-agents)
+-   [Datadog](https://docs.datadoghq.com/llm_observability/instrumentation/auto_instrumentation/?tab=python#openai-agents)
 
 ================
 File: docs/zh/usage.md
@@ -27231,6 +27223,7 @@ The following community and vendor integrations support the OpenAI Agents SDK tr
 -   [PromptLayer](https://docs.promptlayer.com/languages/integrations#openai-agents-sdk)
 -   [HoneyHive](https://docs.honeyhive.ai/v2/integrations/openai-agents)
 -   [Asqav](https://www.asqav.com/docs/integrations#openai-agents)
+-   [Datadog](https://docs.datadoghq.com/llm_observability/instrumentation/auto_instrumentation/?tab=python#openai-agents)
 
 ================
 File: docs/usage.md
