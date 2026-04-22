@@ -24393,6 +24393,134 @@ They are packaged in the toolset `DataAgentToolset`.
 ```
 
 ================
+File: docs/integrations/database-memory.md
+================
+---
+catalog_title: Database Memory Service
+catalog_description: SQL-backed persistent memory for agents
+catalog_icon: /integrations/assets/adk-database-memory.png
+catalog_tags: ["data"]
+---
+
+# Database Memory Service for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[`adk-database-memory`](https://github.com/anmolg1997/adk-database-memory) is a
+drop-in persistent `BaseMemoryService` for ADK Python, backed by async
+SQLAlchemy. This integration provides persistent cross-session memory for ADK
+agents using your own database: use SQLite for development, or Postgres / MySQL
+for production.
+
+## Use cases
+
+- **Personalized assistants**: Accumulate long-term user preferences, facts, and
+  past decisions across sessions so the agent can recall them on demand.
+- **Support and task agents**: Persist conversation history across tickets and
+  devices, so context is available whenever the user returns.
+- **Self-hosted deployments**: When Vertex AI Memory Bank is not an option
+  (on-prem, air-gapped, non-GCP cloud), keep memory on the database you already
+  use.
+- **Local development**: Drop in SQLite for zero-config persistent memory that
+  survives restarts, then flip the connection string to Postgres in production.
+
+## Prerequisites
+
+- Python 3.10 or later
+- A supported database: SQLite, PostgreSQL, or MySQL / MariaDB
+
+## Installation
+
+Install the package together with the driver for your database:
+
+```bash
+pip install "adk-database-memory[sqlite]"    # SQLite (via aiosqlite)
+pip install "adk-database-memory[postgres]"  # PostgreSQL (via asyncpg)
+pip install "adk-database-memory[mysql]"     # MySQL / MariaDB (via aiomysql)
+```
+
+The core package does not include any database drivers. Choose the extra that
+matches your backend, or install your own async driver separately.
+
+## Use with agent
+
+The service implements
+`google.adk.memory.base_memory_service.BaseMemoryService`, so it slots into any
+ADK `Runner` that accepts a `memory_service`:
+
+```python
+import asyncio
+
+from adk_database_memory import DatabaseMemoryService
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+
+memory = DatabaseMemoryService("sqlite+aiosqlite:///memory.db")
+
+agent = Agent(
+    name="assistant",
+    model="gemini-flash-latest",
+    instruction="You are a helpful assistant.",
+)
+
+async def main():
+    async with memory:
+        # Run the agent, then persist the session to memory
+        runner = InMemoryRunner(agent=agent, app_name="my_app")
+        session = await runner.session_service.create_session(app_name="my_app", user_id="u1")
+        # After the session completes:
+        await memory.add_session_to_memory(session)
+
+        # Later, recall relevant memories for a new query:
+        result = await memory.search_memory(
+            app_name="my_app",
+            user_id="u1",
+            query="what did we decide about the pricing model?",
+        )
+        for entry in result.memories:
+            print(entry.author, entry.timestamp, entry.content)
+
+asyncio.run(main())
+```
+
+## Supported backends
+
+| Backend | Connection URL example | Extra |
+| ---- | ---- | ---- |
+| SQLite | `sqlite+aiosqlite:///memory.db` | `[sqlite]` |
+| SQLite (in-memory) | `sqlite+aiosqlite:///:memory:` | `[sqlite]` |
+| PostgreSQL | `postgresql+asyncpg://user:pass@host/db` | `[postgres]` |
+| MySQL / MariaDB | `mysql+aiomysql://user:pass@host/db` | `[mysql]` |
+| Any async SQLAlchemy dialect | depends on driver | bring your own |
+
+## API
+
+| Method | Description |
+| ---- | ---- |
+| `add_session_to_memory(session)` | Index every event in a completed session. |
+| `add_events_to_memory(app_name, user_id, events, ...)` | Index an explicit slice of events (useful for streaming ingestion). |
+| `search_memory(app_name, user_id, query)` | Return `MemoryEntry` objects whose indexed keywords overlap with the query, scoped to the given app and user. |
+
+On first write, the service creates a single table (`adk_memory_entries`) with
+an index on `(app_name, user_id)`. JSON content is stored as `JSONB` on
+PostgreSQL, `LONGTEXT` on MySQL, and `TEXT` on SQLite.
+
+Retrieval uses the same keyword-extraction and matching approach as the
+in-memory and Firestore memory services in ADK. For embedding-based recall, pair
+this package with Vertex AI Memory Bank or a vector store.
+
+## Resources
+
+- [GitHub repository](https://github.com/anmolg1997/adk-database-memory): source
+  code, issues, and examples.
+- [PyPI package](https://pypi.org/project/adk-database-memory/): releases and
+  install instructions.
+- [ADK Memory overview](/sessions/memory/):
+  background on how ADK uses memory services.
+
+================
 File: docs/integrations/daytona.md
 ================
 ---
@@ -27446,10 +27574,126 @@ For more information, read more about the following features:
 * [OpenTelemetry](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry): get metrics and tracing from Toolbox with OpenTelemetry
 
 ================
-File: docs/integrations/mlflow.md
+File: docs/integrations/mlflow-gateway.md
 ================
 ---
-catalog_title: MLflow
+catalog_title: MLflow AI Gateway
+catalog_description: Route LLM requests for multi-provider access with built-in governance
+catalog_icon: /integrations/assets/mlflow.png
+catalog_tags: ["connectors"]
+---
+
+# MLflow AI Gateway for ADK agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[MLflow AI Gateway](https://mlflow.org/docs/latest/genai/governance/ai-gateway/)
+is a database-backed LLM proxy built into the MLflow tracking server (MLflow ≥
+3.0). It provides a unified OpenAI-compatible API across dozens of providers,
+including Gemini, Anthropic, Mistral, Bedrock, Ollama, and more, with built-in
+secrets management, fallback/retry, traffic splitting, and budget tracking, all
+configured through the MLflow UI.
+
+Since MLflow AI Gateway exposes an OpenAI-compatible endpoint, you can connect
+ADK agents to it using the [LiteLLM](/agents/models/litellm/) model connector.
+
+## Use cases
+
+- **Multi-provider routing**: Switch LLM providers without changing agent code
+- **Secrets management**: Provider API keys stored encrypted on the server; your
+  application sends no provider keys
+- **Fallback & retry**: Automatic failover to backup models on failure
+- **Budget tracking**: Per-endpoint or per-user token budgets
+- **Traffic splitting**: Route percentages of requests to different models for
+  A/B testing
+- **Usage tracing**: Every call logged as an MLflow trace automatically
+
+## Prerequisites
+
+- MLflow version 3.0 or newer
+- Google ADK and LiteLLM installed in your environment
+
+## Setup
+
+Install dependencies:
+
+```bash
+pip install mlflow[genai] google-adk litellm
+```
+
+Start the MLflow server:
+
+```bash
+mlflow server --host 127.0.0.1 --port 5000
+```
+
+The MLflow UI will be available at `http://localhost:5000`.
+
+Create a gateway endpoint by navigating to the MLflow UI at
+`http://localhost:5000`, then go to **AI Gateway → Create Endpoint**. Select a
+provider (e.g., Google Gemini) and model (e.g., `gemini-flash-latest`), and
+enter your provider API key, which is stored encrypted on the server.
+
+![MLflow AI Gateway - Create Endpoint](assets/mlflow-gateway-create-endpoint.png)
+
+See the [MLflow AI Gateway
+documentation](https://mlflow.org/docs/latest/genai/governance/ai-gateway/endpoints/)
+for more details on endpoint configuration.
+
+## Use with agent
+
+Use the `LiteLlm` wrapper with `api_base` pointing to the MLflow Gateway's
+endpoint. The `model` parameter should use the `openai/` prefix followed by your
+gateway endpoint name.
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
+
+# Point to MLflow AI Gateway endpoint.
+# "my-chat-endpoint" is the endpoint name you created in the MLflow UI.
+agent = LlmAgent(
+    model=LiteLlm(
+        model="openai/my-chat-endpoint",
+        api_base="http://localhost:5000/gateway/openai/v1",
+        api_key="unused",  # provider keys are managed by the MLflow server
+    ),
+    name="gateway_agent",
+    instruction="You are a helpful assistant powered by MLflow AI Gateway.",
+)
+```
+
+You can swap the underlying LLM provider at any time by reconfiguring the
+gateway endpoint in the MLflow UI with no code changes required in your ADK
+agent.
+
+## Tips
+
+- The `api_key` parameter is required by LiteLLM but not validated by the
+  gateway. Set it to any non-empty string.
+- Behind a proxy or on a remote host, replace `localhost:5000` with your server
+  address.
+- Combine with [MLflow Tracing](/integrations/mlflow-tracing/) for end-to-end
+  observability of your ADK agents.
+
+## Resources
+
+- [MLflow AI Gateway
+  Documentation](https://mlflow.org/docs/latest/genai/governance/ai-gateway/):
+  Official documentation for MLflow AI Gateway covering endpoint management,
+  query APIs, and gateway features.
+- [MLflow Tracing for ADK](/integrations/mlflow-tracing/): Set up observability
+  for your ADK agents with MLflow Tracing.
+- [LiteLLM model connector](/agents/models/litellm/): Documentation for the
+  LiteLLM wrapper used to connect ADK agents to compatible endpoints.
+
+================
+File: docs/integrations/mlflow-tracing.md
+================
+---
+catalog_title: MLflow Tracing
 catalog_description: Ingest OpenTelemetry traces for agent runs, tool calls, and model requests
 catalog_icon: /integrations/assets/mlflow.png
 catalog_tags: ["observability"]
@@ -28042,11 +28286,12 @@ catalog_tags: ["mcp", "connectors"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
 </div>
 
-The [n8n MCP Server](https://docs.n8n.io/advanced-ai/accessing-n8n-mcp-server/)
-connects your ADK agent to [n8n](https://n8n.io/), an extendable workflow
-automation tool. This integration allows your agent to securely connect to an
-n8n instance to search, inspect, and trigger workflows directly from a natural
-language interface.
+The [n8n MCP
+Server](https://docs.n8n.io/advanced-ai/mcp/accessing-n8n-mcp-server/) connects
+your ADK agent to [n8n](https://n8n.io/), an extendable workflow automation
+tool. This integration allows your agent to securely connect to an n8n instance
+to search, inspect, and trigger workflows directly from a natural language
+interface.
 
 !!! note "Alternative: Workflow-level MCP Server"
 
@@ -28079,8 +28324,8 @@ language interface.
 - MCP access enabled in settings
 - A valid MCP access token
 
-Refer to the
-[n8n MCP documentation](https://docs.n8n.io/advanced-ai/accessing-n8n-mcp-server/)
+Refer to the [n8n MCP
+documentation](https://docs.n8n.io/advanced-ai/mcp/accessing-n8n-mcp-server/)
 for detailed setup instructions.
 
 ## Use with agent
@@ -28238,7 +28483,7 @@ criteria:
 
 ## Additional resources
 
-- [n8n MCP Server Documentation](https://docs.n8n.io/advanced-ai/accessing-n8n-mcp-server/)
+- [n8n MCP Server Documentation](https://docs.n8n.io/advanced-ai/mcp/accessing-n8n-mcp-server/)
 
 ================
 File: docs/integrations/notion.md
