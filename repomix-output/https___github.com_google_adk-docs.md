@@ -127,7 +127,7 @@ File: docs/_includes/homepage/_faq.md
 
   <details class="faq-item-arrow">
     <summary>How does ADK deploy to production?</summary>
-    <p>ADK is built for <em>deploy anywhere</em> flexibility. You can containerize and run ADK on your own infrastructure, or take advantage of our native, one-command deployment to Google Cloud. When deploying to Google Cloud via Agent Engine (Vertex AI), Cloud Run, or GKE, your agents instantly inherit managed infrastructure, built-in authentication, Cloud Trace observability, and enterprise-grade security—all without requiring you to change a single line of your agent code. Develop locally, scale globally.</p>
+    <p>ADK is built for <em>deploy anywhere</em> flexibility. You can containerize and run ADK on your own infrastructure, or take advantage of our native, one-command deployment to Google Cloud. When deploying to Google Cloud via Agent Runtime (Agent Platform), Cloud Run, or GKE, your agents instantly inherit managed infrastructure, built-in authentication, Cloud Trace observability, and enterprise-grade security—all without requiring you to change a single line of your agent code. Develop locally, scale globally.</p>
   </details>
 
   <details class="faq-item-arrow">
@@ -254,11 +254,11 @@ a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
 ================
 File: docs/2.0/index.md
 ================
-# Welcome to ADK 2.0 Alpha
+# Welcome to ADK 2.0 Beta
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -266,7 +266,7 @@ File: docs/2.0/index.md
 
 ADK 2.0 introduces powerful tools for building sophisticated AI agents, and
 helps you structure agents to execute challenging tasks with more control,
-predictability, and reliability. ADK 2.0 is available as an Alpha release for
+predictability, and reliability. ADK 2.0 is available as a Beta release for
 Python and includes the following key features:
 
 -   [**Graph-based workflows**](/workflows/): Build deterministic agent
@@ -294,12 +294,6 @@ issues so we have a chance to address them. Report any ADK 1.0 to ADK 2.0
 incompatibilities you encounter through our
 [issue tracker](https://github.com/google/adk-python/issues/new?template=bug_report.md&labels=v2).
 
-!!! danger "WARNING: DO NOT MIX ADK 2.0 and ADK 1.0 data storage systems"
-
-    If you use persistent storage for ADK 2.0 projects, **DO NOT allow ADK 2.0
-    projects to share storage with ADK 1.0 projects**, including, but not limited to,
-    session storage, memory systems, and evaluation data. Doing so may result in
-    loss of data or make the data unusable in ADK 1.0 projects.
 
 ## Install ADK 2.0 {#install}
 
@@ -307,7 +301,7 @@ While ADK 2.0 is available as a pre-GA release, it is not installed automaticall
 You must select it as an installation option. This version has the following
 system requirements:
 
-*   **Python 3.11** or later
+*   **Python 3.10** or later
 *   `pip` for installing packages
 
 To install ADK 2.0, follow these steps:
@@ -1772,6 +1766,330 @@ Now that you have created an agent that's exposing a remote agent via an A2A ser
 - [**A2A Quickstart (Consuming)**](./quickstart-consuming.md): Learn how your agent can use other agents using the A2A Protocol.
 
 ================
+File: docs/agents/models/agent-platform.md
+================
+# Agent Platform hosted models for ADK agents
+
+For enterprise-grade scalability, reliability, and integration with Google
+Cloud's MLOps ecosystem, you can use models deployed to Agent Platform Endpoints.
+This includes models from Model Garden or your own fine-tuned models.
+
+**Integration Method:** Pass the full Agent Platform Endpoint resource string
+(`projects/PROJECT_ID/locations/LOCATION/endpoints/ENDPOINT_ID`) directly to the
+`model` parameter of `LlmAgent`.
+
+## Agent Platform Setup
+
+Ensure your environment is configured for Agent Platform:
+
+1. **Authentication:** Use Application Default Credentials (ADC):
+
+    ```shell
+    gcloud auth application-default login
+    ```
+
+2. **Environment Variables:** Set your project and location:
+
+    ```shell
+    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
+    ```
+
+3. **Enable Agent Platform Backend:** Crucially, ensure the `google-genai` library
+   targets Agent Platform:
+
+    ```shell
+    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    ```
+
+## Model Garden Deployments
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+You can deploy various open and proprietary models from the
+[Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
+to an endpoint.
+
+**Example:**
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.genai import types # For config objects
+
+    # --- Example Agent using a Llama 3 model deployed from Model Garden ---
+
+    # Replace with your actual Agent Platform Endpoint resource name
+    llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
+
+    agent_llama3_vertex = LlmAgent(
+        model=llama3_endpoint,
+        name="llama3_vertex_agent",
+        instruction="You are a helpful assistant based on Llama 3, hosted on Agent Platform.",
+        generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
+        # ... other agent parameters
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+    import com.google.genai.types.GenerateContentConfig;
+
+    // ...
+
+    // Replace with your actual Agent Platform Endpoint resource name
+    String llama3Endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID";
+
+    LlmAgent agentLlama3Vertex = LlmAgent.builder()
+        .model(Gemini.builder()
+            .modelName(llama3Endpoint)
+            .build())
+        .name("llama3_vertex_agent")
+        .instruction("You are a helpful assistant based on Llama 3, hosted on Agent Platform.")
+        .generateContentConfig(GenerateContentConfig.builder()
+            .maxOutputTokens(2048)
+            .build())
+        // ... other agent parameters
+        .build();
+    ```
+
+## Fine-tuned Model Endpoints
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+Deploying your fine-tuned models (whether based on Gemini or other architectures
+supported by Agent Platform) results in an endpoint that can be used directly.
+
+**Example:**
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    # --- Example Agent using a fine-tuned Gemini model endpoint ---
+
+    # Replace with your fine-tuned model's endpoint resource name
+    finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
+
+    agent_finetuned_gemini = LlmAgent(
+        model=finetuned_gemini_endpoint,
+        name="finetuned_gemini_agent",
+        instruction="You are a specialized assistant trained on specific data.",
+        # ... other agent parameters
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+
+    // ...
+
+    // Replace with your fine-tuned model's endpoint resource name
+    String finetunedGeminiEndpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID";
+
+    LlmAgent agentFinetunedGemini = LlmAgent.builder()
+        .model(Gemini.builder()
+            .modelName(finetunedGeminiEndpoint)
+            .build())
+        .name("finetuned_gemini_agent")
+        .instruction("You are a specialized assistant trained on specific data.")
+        // ... other agent parameters
+        .build();
+    ```
+
+## Anthropic Claude on Agent Platform {#anthropic-claude}
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+Some providers, like Anthropic, make their models available directly through
+Agent Platform.
+
+**Example:**
+
+=== "Python"
+
+    **Integration Method:** Uses the direct model string (e.g.,
+    `"claude-3-sonnet@20240229"`), *but requires manual registration* within ADK.
+
+    **Why Registration?** ADK's registry automatically recognizes `gemini-*` strings
+    and standard Agent Platform endpoint strings (`projects/.../endpoints/...`) and
+    routes them via the `google-genai` library. For other model types used directly
+    via Agent Platform (like Claude), you must explicitly tell the ADK registry which
+    specific wrapper class (`Claude` in this case) knows how to handle that model
+    identifier string with the Agent Platform backend.
+
+    **Setup:**
+
+    1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
+       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+
+    2. **Install Provider Library:** Install the necessary client library configured
+       for Agent Platform.
+
+        ```shell
+        pip install "anthropic[vertex]"
+        ```
+
+    3. **Register Model Class:** Add this code near the start of your application,
+       *before* creating an agent using the Claude model string:
+
+        ```python
+        # Required for using Claude model strings directly via Agent Platform with LlmAgent
+        from google.adk.models.anthropic_llm import Claude
+        from google.adk.models.registry import LLMRegistry
+
+        LLMRegistry.register(Claude)
+        ```
+
+       ```python
+       from google.adk.agents import LlmAgent
+       from google.adk.models.anthropic_llm import Claude # Import needed for registration
+       from google.adk.models.registry import LLMRegistry # Import needed for registration
+       from google.genai import types
+
+       # --- Register Claude class (do this once at startup) ---
+       LLMRegistry.register(Claude)
+
+       # --- Example Agent using Claude 3 Sonnet on Agent Platform ---
+
+       # Standard model name for Claude 3 Sonnet on Agent Platform
+       claude_model_vertexai = "claude-3-sonnet@20240229"
+
+       agent_claude_vertexai = LlmAgent(
+           model=claude_model_vertexai, # Pass the direct string after registration
+           name="claude_vertexai_agent",
+           instruction="You are an assistant powered by Claude 3 Sonnet on Agent Platform.",
+           generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
+           # ... other agent parameters
+       )
+       ```
+
+=== "Java"
+
+    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with an Agent Platform backend.
+
+    **Why Direct Instantiation?** The Java ADK's `LlmRegistry` primarily handles Gemini models by default. For third-party models like Claude on Agent Platform, you directly provide an instance of the ADK's wrapper class (e.g., `Claude`) to the `LlmAgent`. This wrapper class is responsible for interacting with the model via its specific client library, configured for Agent Platform.
+
+    **Setup:**
+
+    1.  **Agent Platform Environment:**
+        *   Ensure your Google Cloud project and region are correctly set up.
+        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries use these credentials to authenticate with Agent Platform. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
+
+    2.  **Provider Library Dependencies:**
+        *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Agent Platform (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
+
+    3.  **Instantiate and Configure the Model:**
+        When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
+
+    ```java
+    import com.anthropic.client.AnthropicClient;
+    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+    import com.anthropic.vertex.backends.VertexBackend;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Claude; // ADK's wrapper for Claude
+    import com.google.auth.oauth2.GoogleCredentials;
+    import java.io.IOException;
+
+    // ... other imports
+
+    public class ClaudeVertexAiAgent {
+
+        public static LlmAgent createAgent() throws IOException {
+            // Model name for Claude 3 Sonnet on Agent Platform (or other versions)
+            String claudeModelVertexAi = "claude-3-7-sonnet"; // Or any other Claude model
+
+            // Configure the AnthropicOkHttpClient with the VertexBackend
+            AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+                .backend(
+                    VertexBackend.builder()
+                        .region("us-east5") // Specify your Agent Platform region
+                        .project("your-gcp-project-id") // Specify your GCP Project ID
+                        .googleCredentials(GoogleCredentials.getApplicationDefault())
+                        .build())
+                .build();
+
+            // Instantiate LlmAgent with the ADK Claude wrapper
+            LlmAgent agentClaudeVertexAi = LlmAgent.builder()
+                .model(new Claude(claudeModelVertexAi, anthropicClient)) // Pass the Claude instance
+                .name("claude_vertexai_agent")
+                .instruction("You are an assistant powered by Claude 3 Sonnet on Agent Platform.")
+                // .generateContentConfig(...) // Optional: Add generation config if needed
+                // ... other agent parameters
+                .build();
+
+            return agentClaudeVertexAi;
+        }
+
+        public static void main(String[] args) {
+            try {
+                LlmAgent agent = createAgent();
+                System.out.println("Successfully created agent: " + agent.name());
+                // Here you would typically set up a Runner and Session to interact with the agent
+            } catch (IOException e) {
+                System.err.println("Failed to create agent: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+    }
+    ```
+
+## Open Models on Agent Platform {#open-models}
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+Agent Platform offers a curated selection of open-source models, such as Meta Llama, through Model-as-a-Service (MaaS). These models are accessible via managed APIs, allowing you to deploy and scale without managing the underlying infrastructure. For a full list of available options, see the [Agent Platform open models for MaaS](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/use-open-models#open-models) documentation.
+
+=== "Python"
+
+    You can use the [LiteLLM](https://docs.litellm.ai/) library to access open models like Meta's Llama on Agent Platform MaaS
+
+    **Integration Method:** Use the `LiteLlm` wrapper class and set it
+    as the `model` parameter of `LlmAgent`. Make sure you go through the [LiteLLM model connector for ADK agents](/agents/models/litellm/#litellm-model-connector-for-adk-agents) documentation on how to use LiteLLM in ADK
+
+    **Setup:**
+
+    1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
+       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+
+    2. **Install LiteLLM:**
+            ```shell
+            pip install litellm
+            ```
+
+    **Example:**
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.models.lite_llm import LiteLlm
+
+    # --- Example Agent using Meta's Llama 4 Scout ---
+    agent_llama_vertexai = LlmAgent(
+        model=LiteLlm(model="vertex_ai/meta/llama-4-scout-17b-16e-instruct-maas"), # LiteLLM model string format
+        name="llama4_agent",
+        instruction="You are a helpful assistant powered by Llama 4 Scout.",
+        # ... other agent parameters
+    )
+
+    ```
+
+================
 File: docs/agents/models/anthropic.md
 ================
 # Claude models for ADK agents
@@ -1781,10 +2099,10 @@ File: docs/agents/models/anthropic.md
 </div>
 
 You can integrate Anthropic's Claude models directly using an Anthropic API key
-or from a Vertex AI backend into your Java ADK applications by using the ADK's
+or from an Agent Platform backend into your Java ADK applications by using the ADK's
 `Claude` wrapper class. You can also access Anthropic models through
-Google Cloud Vertex AI services. For more information, see the
-[Third-Party Models on Vertex AI](/agents/models/vertex/#third-party-models-on-vertex-ai-eg-anthropic-claude)
+Google Cloud Agent Platform services. For more information, see the
+[Third-Party Models on Agent Platform](/agents/models/agent-platform/#anthropic-claude)
 section. You can also use Anthropic models through the
 [LiteLLM](/agents/models/litellm/) library for Python.
 
@@ -1882,7 +2200,7 @@ File: docs/agents/models/apigee.md
 [Apigee](https://docs.cloud.google.com/apigee/docs/api-platform/get-started/what-apigee)
 provides a powerful [AI Gateway](https://cloud.google.com/solutions/apigee-ai),
 transforming how you manage and govern your generative AI model traffic. By
-exposing your AI model endpoint (like Vertex AI or the Gemini API) through an
+exposing your AI model endpoint (like Agent Platform or the Gemini API) through an
 Apigee proxy, you immediately gain enterprise-grade capabilities:
 
 - **Model Safety:** Implement security policies like Model Armor for threat protection.
@@ -1895,7 +2213,7 @@ Apigee proxy, you immediately gain enterprise-grade capabilities:
 
 !!! note
 
-    The `ApigeeLLM` wrapper is currently designed for use with Vertex AI
+    The `ApigeeLLM` wrapper is currently designed for use with Agent Platform
     and the Gemini API (generateContent). We are continually expanding support for
     other models and interfaces.
 
@@ -2050,7 +2368,7 @@ in your agents:
 
 ## Gemini model authentication
 
-This section covers authenticating with Google's Gemini models, either through Google AI Studio for rapid development or Google Cloud Vertex AI for enterprise applications. This is the most direct way to use Google's flagship models within ADK.
+This section covers authenticating with Google's Gemini models, either through Google AI Studio for rapid development or Google Cloud Agent Platform for enterprise applications. This is the most direct way to use Google's flagship models within ADK.
 
 **Integration Method:** Once you are authenticated using one of the below methods, you can pass the model's identifier string directly to the
 `model` parameter of `LlmAgent`.
@@ -2059,7 +2377,7 @@ This section covers authenticating with Google's Gemini models, either through G
 !!! tip
 
     The `google-genai` library, used internally by ADK for Gemini models, can connect
-    through either Google AI Studio or Vertex AI.
+    through either Google AI Studio or Agent Platform.
 
     **Model support for voice/video streaming**
 
@@ -2068,7 +2386,7 @@ This section covers authenticating with Google's Gemini models, either through G
     support the Gemini Live API in the documentation:
 
     - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-    - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+    - [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
 ### Google AI Studio
 
@@ -2091,11 +2409,11 @@ This is the simplest method and is recommended for getting started quickly.
 * **Models:** Find all available models on the
   [Google AI for Developers site](https://ai.google.dev/gemini-api/docs/models).
 
-### Google Cloud Vertex AI
+### Google Cloud Agent Platform
 
-For scalable and production-oriented use cases, Vertex AI is the recommended platform. Gemini on Vertex AI supports enterprise-grade features, security, and compliance controls. Based on your development environment and usecase, *choose one of the below methods to authenticate*.
+For scalable and production-oriented use cases, Agent Platform is the recommended platform. Gemini on Agent Platform supports enterprise-grade features, security, and compliance controls. Based on your development environment and usecase, *choose one of the below methods to authenticate*.
 
-**Pre-requisites:** A Google Cloud Project with [Vertex AI enabled](https://console.cloud.google.com/apis/enableflow;apiid=aiplatform.googleapis.com).
+**Pre-requisites:** A Google Cloud Project with [Agent Platform enabled](https://console.cloud.google.com/apis/enableflow;apiid=aiplatform.googleapis.com).
 
 ### **Method A: User Credentials (for Local Development)**
 
@@ -2110,17 +2428,17 @@ For scalable and production-oriented use cases, Vertex AI is the recommended pla
     export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
     ```
 
-    Explicitly tell the library to use Vertex AI:
+    Explicitly tell the library to use Agent Platform:
 
     ```shell
     export GOOGLE_GENAI_USE_VERTEXAI=TRUE
     ```
 
 4. **Models:** Find available model IDs in the
-  [Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
+  [Agent Platform documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
 
-### **Method B: Vertex AI Express Mode**
-[Vertex AI Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) offers a simplified, API-key-based setup for rapid prototyping.
+### **Method B: Agent Platform Express Mode**
+[Agent Platform Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) offers a simplified, API-key-based setup for rapid prototyping.
 
 1.  **Sign up for Express Mode** to get your API key.
 2.  **Set environment variables:**
@@ -2133,7 +2451,7 @@ For scalable and production-oriented use cases, Vertex AI is the recommended pla
 
 For deployed applications, a service account is the standard method.
 
-1.  [**Create a Service Account**](https://cloud.google.com/iam/docs/service-accounts-create#console) and grant it the `Vertex AI User` role.
+1.  [**Create a Service Account**](https://cloud.google.com/iam/docs/service-accounts-create#console) and grant it the `Agent Platform User` role.
 2.  **Provide credentials to your application:**
     *   **On Google Cloud:** If you are running the agent in Cloud Run, GKE, VM or other Google Cloud services, the environment can automatically provide the service account credentials. You don't have to create a key file.
     *   **Elsewhere:** Create a [service account key file](https://cloud.google.com/iam/docs/keys-create-delete#console) and point to it with an environment variable:
@@ -2361,7 +2679,7 @@ and [Structured Output](/agents/llm-agents/#structuring-data-input_schema-output
 
 You can use Gemma 4 through the [Gemini API](https://ai.google.dev/gemini-api/docs),
 or with one of many self-hosting options on Google Cloud:
-[Vertex AI](https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemma4),
+[Agent Platform](https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemma4),
 [Google Kubernetes Engine](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm),
 [Cloud Run](https://docs.cloud.google.com/run/docs/run-gemma-on-cloud-run).
 
@@ -2429,7 +2747,7 @@ The following example shows how to use a Gemma 4 vLLM endpoint with ADK agents.
 ### Setup
 
 1. **Deploy Model:** Deploy your chosen model using
-    [Vertex AI](https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemma4),
+    [Agent Platform](https://console.cloud.google.com/vertex-ai/publishers/google/model-garden/gemma4),
     [Google Kubernetes Engine](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm),
     or [Cloud Run](https://docs.cloud.google.com/run/docs/run-gemma-on-cloud-run),
     and use its OpenAI-compatible API endpoint.
@@ -2682,13 +3000,13 @@ including those hosted externally or running locally.
 ADK primarily uses two mechanisms for model integration:
 
 1. **Direct String / Registry:** For models tightly integrated with Google Cloud,
-   such as Gemini models accessed via Google AI Studio or Vertex AI, or models
-   hosted on Vertex AI endpoints. You access these models by providing the model name or endpoint resource string and ADK's internal registry
+   such as Gemini models accessed via Google AI Studio or Agent Platform, or models
+   hosted on Agent Platform endpoints. You access these models by providing the model name or endpoint resource string and ADK's internal registry
    resolves this string to the appropriate backend client.
 
       *  [Gemini models](/agents/models/google-gemini/)
       *  [Claude models](/agents/models/anthropic/)
-      *  [Vertex AI hosted models](/agents/models/vertex/)
+      *  [Agent Platform hosted models](/agents/models/agent-platform/)
 
 2. **Model connectors:** For broader compatibility, especially models
    outside the Google ecosystem or those requiring specific client
@@ -2726,7 +3044,7 @@ File: docs/agents/models/litellm.md
 translation layer for models and model hosting services, providing a
 standardized, OpenAI-compatible interface to over 100+ LLMs. ADK provides
 integration through the LiteLLM library, allowing you to access a vast range of
-LLMs from providers like OpenAI, Anthropic (non-Vertex AI), Cohere, and many
+LLMs from providers like OpenAI, Anthropic (non-Agent Platform), Cohere, and many
 others. You can run open-source models locally or self-host them and integrate
 them using LiteLLM for operational control, cost savings, privacy, or offline
 use cases.
@@ -2772,7 +3090,7 @@ You can use the LiteLLM library to access remote or locally hosted AI models:
         export OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
         ```
 
-    * *Example for Anthropic (non-Vertex AI):*
+    * *Example for Anthropic (non-Agent Platform):*
 
         ```shell
         export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
@@ -3085,330 +3403,6 @@ curl -X POST \
 http://localhost:11434/api/chat \
 -d '{'model': 'mistral-small3.1', 'messages': [{'role': 'system', 'content': ...
 ```
-
-================
-File: docs/agents/models/vertex.md
-================
-# Vertex AI hosted models for ADK agents
-
-For enterprise-grade scalability, reliability, and integration with Google
-Cloud's MLOps ecosystem, you can use models deployed to Vertex AI Endpoints.
-This includes models from Model Garden or your own fine-tuned models.
-
-**Integration Method:** Pass the full Vertex AI Endpoint resource string
-(`projects/PROJECT_ID/locations/LOCATION/endpoints/ENDPOINT_ID`) directly to the
-`model` parameter of `LlmAgent`.
-
-## Vertex AI Setup
-
-Ensure your environment is configured for Vertex AI:
-
-1. **Authentication:** Use Application Default Credentials (ADC):
-
-    ```shell
-    gcloud auth application-default login
-    ```
-
-2. **Environment Variables:** Set your project and location:
-
-    ```shell
-    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
-    ```
-
-3. **Enable Vertex Backend:** Crucially, ensure the `google-genai` library
-   targets Vertex AI:
-
-    ```shell
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    ```
-
-## Model Garden Deployments
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-You can deploy various open and proprietary models from the
-[Vertex AI Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
-to an endpoint.
-
-**Example:**
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-    from google.genai import types # For config objects
-
-    # --- Example Agent using a Llama 3 model deployed from Model Garden ---
-
-    # Replace with your actual Vertex AI Endpoint resource name
-    llama3_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID"
-
-    agent_llama3_vertex = LlmAgent(
-        model=llama3_endpoint,
-        name="llama3_vertex_agent",
-        instruction="You are a helpful assistant based on Llama 3, hosted on Vertex AI.",
-        generate_content_config=types.GenerateContentConfig(max_output_tokens=2048),
-        # ... other agent parameters
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Gemini;
-    import com.google.genai.types.GenerateContentConfig;
-
-    // ...
-
-    // Replace with your actual Vertex AI Endpoint resource name
-    String llama3Endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_LLAMA3_ENDPOINT_ID";
-
-    LlmAgent agentLlama3Vertex = LlmAgent.builder()
-        .model(Gemini.builder()
-            .modelName(llama3Endpoint)
-            .build())
-        .name("llama3_vertex_agent")
-        .instruction("You are a helpful assistant based on Llama 3, hosted on Vertex AI.")
-        .generateContentConfig(GenerateContentConfig.builder()
-            .maxOutputTokens(2048)
-            .build())
-        // ... other agent parameters
-        .build();
-    ```
-
-## Fine-tuned Model Endpoints
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-Deploying your fine-tuned models (whether based on Gemini or other architectures
-supported by Vertex AI) results in an endpoint that can be used directly.
-
-**Example:**
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-
-    # --- Example Agent using a fine-tuned Gemini model endpoint ---
-
-    # Replace with your fine-tuned model's endpoint resource name
-    finetuned_gemini_endpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID"
-
-    agent_finetuned_gemini = LlmAgent(
-        model=finetuned_gemini_endpoint,
-        name="finetuned_gemini_agent",
-        instruction="You are a specialized assistant trained on specific data.",
-        # ... other agent parameters
-    )
-    ```
-
-=== "Java"
-
-    ```java
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Gemini;
-
-    // ...
-
-    // Replace with your fine-tuned model's endpoint resource name
-    String finetunedGeminiEndpoint = "projects/YOUR_PROJECT_ID/locations/us-central1/endpoints/YOUR_FINETUNED_ENDPOINT_ID";
-
-    LlmAgent agentFinetunedGemini = LlmAgent.builder()
-        .model(Gemini.builder()
-            .modelName(finetunedGeminiEndpoint)
-            .build())
-        .name("finetuned_gemini_agent")
-        .instruction("You are a specialized assistant trained on specific data.")
-        // ... other agent parameters
-        .build();
-    ```
-
-## Anthropic Claude on Vertex AI {#third-party-models-on-vertex-ai-eg-anthropic-claude}
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-Some providers, like Anthropic, make their models available directly through
-Vertex AI.
-
-**Example:**
-
-=== "Python"
-
-    **Integration Method:** Uses the direct model string (e.g.,
-    `"claude-3-sonnet@20240229"`), *but requires manual registration* within ADK.
-
-    **Why Registration?** ADK's registry automatically recognizes `gemini-*` strings
-    and standard Vertex AI endpoint strings (`projects/.../endpoints/...`) and
-    routes them via the `google-genai` library. For other model types used directly
-    via Vertex AI (like Claude), you must explicitly tell the ADK registry which
-    specific wrapper class (`Claude` in this case) knows how to handle that model
-    identifier string with the Vertex AI backend.
-
-    **Setup:**
-
-    1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
-
-    2. **Install Provider Library:** Install the necessary client library configured
-       for Vertex AI.
-
-        ```shell
-        pip install "anthropic[vertex]"
-        ```
-
-    3. **Register Model Class:** Add this code near the start of your application,
-       *before* creating an agent using the Claude model string:
-
-        ```python
-        # Required for using Claude model strings directly via Vertex AI with LlmAgent
-        from google.adk.models.anthropic_llm import Claude
-        from google.adk.models.registry import LLMRegistry
-
-        LLMRegistry.register(Claude)
-        ```
-
-       ```python
-       from google.adk.agents import LlmAgent
-       from google.adk.models.anthropic_llm import Claude # Import needed for registration
-       from google.adk.models.registry import LLMRegistry # Import needed for registration
-       from google.genai import types
-
-       # --- Register Claude class (do this once at startup) ---
-       LLMRegistry.register(Claude)
-
-       # --- Example Agent using Claude 3 Sonnet on Vertex AI ---
-
-       # Standard model name for Claude 3 Sonnet on Vertex AI
-       claude_model_vertexai = "claude-3-sonnet@20240229"
-
-       agent_claude_vertexai = LlmAgent(
-           model=claude_model_vertexai, # Pass the direct string after registration
-           name="claude_vertexai_agent",
-           instruction="You are an assistant powered by Claude 3 Sonnet on Vertex AI.",
-           generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
-           # ... other agent parameters
-       )
-       ```
-
-=== "Java"
-
-    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with a Vertex AI backend.
-
-    **Why Direct Instantiation?** The Java ADK's `LlmRegistry` primarily handles Gemini models by default. For third-party models like Claude on Vertex AI, you directly provide an instance of the ADK's wrapper class (e.g., `Claude`) to the `LlmAgent`. This wrapper class is responsible for interacting with the model via its specific client library, configured for Vertex AI.
-
-    **Setup:**
-
-    1.  **Vertex AI Environment:**
-        *   Ensure your Google Cloud project and region are correctly set up.
-        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries use these credentials to authenticate with Vertex AI. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
-
-    2.  **Provider Library Dependencies:**
-        *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Vertex AI (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
-
-    3.  **Instantiate and Configure the Model:**
-        When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
-
-    ```java
-    import com.anthropic.client.AnthropicClient;
-    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-    import com.anthropic.vertex.backends.VertexBackend;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Claude; // ADK's wrapper for Claude
-    import com.google.auth.oauth2.GoogleCredentials;
-    import java.io.IOException;
-
-    // ... other imports
-
-    public class ClaudeVertexAiAgent {
-
-        public static LlmAgent createAgent() throws IOException {
-            // Model name for Claude 3 Sonnet on Vertex AI (or other versions)
-            String claudeModelVertexAi = "claude-3-7-sonnet"; // Or any other Claude model
-
-            // Configure the AnthropicOkHttpClient with the VertexBackend
-            AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-                .backend(
-                    VertexBackend.builder()
-                        .region("us-east5") // Specify your Vertex AI region
-                        .project("your-gcp-project-id") // Specify your GCP Project ID
-                        .googleCredentials(GoogleCredentials.getApplicationDefault())
-                        .build())
-                .build();
-
-            // Instantiate LlmAgent with the ADK Claude wrapper
-            LlmAgent agentClaudeVertexAi = LlmAgent.builder()
-                .model(new Claude(claudeModelVertexAi, anthropicClient)) // Pass the Claude instance
-                .name("claude_vertexai_agent")
-                .instruction("You are an assistant powered by Claude 3 Sonnet on Vertex AI.")
-                // .generateContentConfig(...) // Optional: Add generation config if needed
-                // ... other agent parameters
-                .build();
-
-            return agentClaudeVertexAi;
-        }
-
-        public static void main(String[] args) {
-            try {
-                LlmAgent agent = createAgent();
-                System.out.println("Successfully created agent: " + agent.name());
-                // Here you would typically set up a Runner and Session to interact with the agent
-            } catch (IOException e) {
-                System.err.println("Failed to create agent: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-    ```
-
-## Open Models on Vertex AI {#open-models}
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-Vertex AI offers a curated selection of open-source models, such as Meta Llama, through Model-as-a-Service (MaaS). These models are accessible via managed APIs, allowing you to deploy and scale without managing the underlying infrastructure. For a full list of available options, see the [Vertex AI open models for MaaS](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/maas/use-open-models#open-models) documentation.
-
-=== "Python"
-
-    You can use the [LiteLLM](https://docs.litellm.ai/) library to access open models like Meta's Llama on VertexAI MaaS
-
-    **Integration Method:** Use the `LiteLlm` wrapper class and set it
-    as the `model` parameter of `LlmAgent`. Make sure you go through the [LiteLLM model connector for ADK agents](/agents/models/litellm/#litellm-model-connector-for-adk-agents) documentation on how to use LiteLLM in ADK
-
-    **Setup:**
-
-    1. **Vertex AI Environment:** Ensure the consolidated Vertex AI setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
-
-    2. **Install LiteLLM:**
-            ```shell
-            pip install litellm
-            ```
-
-    **Example:**
-
-    ```python
-    from google.adk.agents import LlmAgent
-    from google.adk.models.lite_llm import LiteLlm
-
-    # --- Example Agent using Meta's Llama 4 Scout ---
-    agent_llama_vertexai = LlmAgent(
-        model=LiteLlm(model="vertex_ai/meta/llama-4-scout-17b-16e-instruct-maas"), # LiteLLM model string format
-        name="llama4_agent",
-        instruction="You are a helpful assistant powered by Llama 4 Scout.",
-        # ... other agent parameters
-    )
-
-    ```
 
 ================
 File: docs/agents/models/vllm.md
@@ -4017,11 +4011,11 @@ For more details, see the full code for this sample in the
 
 You can deploy Agent Config agents with
 [Cloud Run](/deploy/cloud-run/) and
-[Agent Engine](/deploy/agent-engine/),
+[Agent Runtime](/deploy/agent-runtime/),
 using the same procedure as code-based agents. For more information on how
 to prepare and deploy Agent Config-based agents, see the
 [Cloud Run](/deploy/cloud-run/) and
-[Agent Engine](/deploy/agent-engine/)
+[Agent Runtime](/deploy/agent-runtime/)
 deployment guides.
 
 ## Known limitations {#known-limitations}
@@ -4051,7 +4045,7 @@ limitations:
     -   `ExampleTool`: Provides example-based few-shot learning for tools.
 -   **Agent Type Support:** The `LangGraphAgent` and `A2aAgent` types are
     not yet supported.
--   **Vertex AI Search:** The `VertexAiSearchTool` is currently supported in
+-   **Agent Search:** The `VertexAiSearchTool` is currently supported in
     Python and Java Agent Configs.
 
 ## Next steps
@@ -9678,11 +9672,11 @@ playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5R
   </a>
   <a href="https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e" class="resource-card">
     <div class="card-image-wrapper">
-      <img src="../assets/community-adk-vertex-ai-live-api.png" alt="ADK + Vertex AI Live API">
+      <img src="../assets/community-adk-gemini-live-api.png" alt="ADK + Gemini Live API">
     </div>
     <div class="card-content">
       <div class="type">Blog Post</div>
-      <h3>📖 Google ADK + Vertex AI Live API</h3>
+      <h3>📖 Google ADK + Gemini Live API</h3>
       <p>Go beyond the ADK CLI by building real-time, streaming experiences with the Live API.</p>
     </div>
   </a>
@@ -11609,21 +11603,21 @@ Setting `ctx.end_invocation = True` is a way to gracefully stop the entire reque
 By understanding and effectively using these context objects, you can build more sophisticated, stateful, and capable agents with ADK.
 
 ================
-File: docs/deploy/agent-engine/asp.md
+File: docs/deploy/agent-runtime/agents-cli.md
 ================
-# Deploy to Agent Engine with Agent Starter Pack
+# Deploy to Agent Runtime with agents-cli
 
-<div class="language-support-tag" title="Vertex AI Agent Engine currently supports only Python.">
+<div class="language-support-tag" title="Agent Runtime currently supports only Python.">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-This deployment procedure describes how to perform a deployment using the
-[Agent Starter Pack](https://github.com/GoogleCloudPlatform/agent-starter-pack)
-(ASP) and the ADK command line interface (CLI) tool. Deploying to the Agent Engine runtime via ASP provides an accelerated path to a production-ready environment. ASP automatically configures Google Cloud resources, CI/CD pipelines, and Infrastructure-as-Code (Terraform) to support the entire development lifecycle. As a best practice, always ensure you review the generated configurations to align with your organization’s security and compliance standards before production deployment.
+This deployment procedure describes how to perform a deployment using
+[agents-cli](https://google.github.io/agents-cli/)
+and the ADK. Deploying to Agent Runtime via agents-cli provides an accelerated path to a production-ready environment. agents-cli automatically configures Google Cloud resources, CI/CD pipelines, and Infrastructure-as-Code (Terraform) to support the entire development lifecycle. As a best practice, always ensure you review the generated configurations to align with your organization’s security and compliance standards before production deployment.
 
-This deployment guide uses the ASP tool to apply a project template to your
+This deployment guide uses agents-cli to apply a project template to your
 existing project, add deployment artifacts, and prepare your agent project for
-deployment. These instructions show you how to use ASP to provision a Google
+deployment. These instructions show you how to use agents-cli to provision a Google
 Cloud project with services needed for deploying your ADK project, as follows:
 
 -   [Prerequisites](#prerequisites-ad): Set up Google Cloud
@@ -11637,11 +11631,11 @@ Cloud project with services needed for deploying your ADK project, as follows:
     required services in your Google Cloud project and upload your ADK project code.
 
 For information on testing a deployed agent, see [Test deployed agent](test.md).
-For more information on using Agent Starter Pack and its command line tools,
+For more information on using agents-cli and its command line tools,
 see the
-[CLI reference](https://googlecloudplatform.github.io/agent-starter-pack/cli/enhance.html)
+[CLI reference](https://google.github.io/agents-cli/cli/)
 and
-[Development guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/development-guide.html).
+[Guide](https://google.github.io/agents-cli/).
 
 ### Prerequisites {#prerequisites-ad}
 
@@ -11649,16 +11643,16 @@ You need the following resources configured to use this deployment path:
 
 -   **Google Cloud Project and Permissions**: A Google Cloud project with [billing enabled](https://cloud.google.com/billing/docs/how-to/modify-project).
     You can use an existing project or create a new one. You must have one of the following IAM roles assigned within this project:
-    -   **Vertex AI User role** — sufficient to deploy an agent to Agent Engine.
+    -   **Agent Platform User role** — sufficient to deploy an agent to Agent Runtime.
     -   **Owner role** — required for the full production setup (Terraform infrastructure provisioning, CI/CD pipelines, IAM configuration).
 
 !!! tip "Note"
     An empty project is recommended to avoid conflicts with existing resources.
     For new projects, see [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
 
--   **Python Environment**: A Python version supported by the
-    [ASP project](https://googlecloudplatform.github.io/agent-starter-pack/guide/getting-started.html).
--   **uv Tool:** Manage Python development environment and running ASP
+-   **Python Environment**: A Python version supported by
+    [agents-cli](https://google.github.io/agents-cli/guide/getting-started/).
+-   **uv Tool:** Manage Python development environment and running agents-cli
     tools. For installation details, see
     [Install uv](https://docs.astral.sh/uv/getting-started/installation/).
 -   **Google Cloud CLI tool**: The gcloud command line interface. For
@@ -11670,8 +11664,8 @@ You need the following resources configured to use this deployment path:
 
 ### Prepare your ADK project {#prepare-ad}
 
-When you deploy an ADK project to Agent Engine, you need some additional files
-to support the deployment operation. The following ASP command backs up your
+When you deploy an ADK project to Agent Runtime, you need some additional files
+to support the deployment operation. The following agents-cli command backs up your
 project and then adds files to your project for deployment purposes.
 
 These instructions assume you have an existing ADK project that you are modifying
@@ -11680,7 +11674,7 @@ project, complete one of the [Get started](/get-started/) guides,
 which creates an agent project. The following instructions use the `my_agent`
 project as an example.
 
-To prepare your ADK project for deployment to Agent Engine:
+To prepare your ADK project for deployment to Agent Runtime:
 
 1.  In a terminal window of your development environment, navigate to the
     **parent directory** that contains your agent folder. For example, if your
@@ -11696,18 +11690,18 @@ To prepare your ADK project for deployment to Agent Engine:
 
     Navigate to `your-project-directory/`
 
-1.  Run the ASP `enhance` command to add the files required for deployment into
+1.  Run the agents-cli `scaffold enhance` command to add the files required for deployment into
     your project.
 
     ```shell
-    uvx agent-starter-pack enhance --adk -d agent_engine
+    agents-cli scaffold enhance --deployment-target agent_engine
     ```
 
-1.  Follow the instructions from the ASP tool. In general, you can accept
+1.  Follow the instructions from the agents-cli tool. In general, you can accept
     the default answers to all questions. However for the **GCP region**,
     option, make sure you select one of the
     [supported regions](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine)
-    for Agent Engine.
+    for Agent Runtime.
 
 When you successfully complete this process, the tool shows the following message:
 
@@ -11716,11 +11710,11 @@ When you successfully complete this process, the tool shows the following messag
 ```
 
 !!! tip "Note"
-    The ASP tool may show a reminder to connect to Google Cloud while
+    The agents-cli tool may show a reminder to connect to Google Cloud while
     running, but that connection is *not required* at this stage.
 
-For more information about the changes ASP makes to your ADK project, see
-[Changes to your ADK project](#adk-asp-changes).
+For more information about the changes agents-cli makes to your ADK project, see
+[Changes to your ADK project](#adk-agents-cli-changes).
 
 ### Connect to your Google Cloud project {#connect-ad}
 
@@ -11751,42 +11745,53 @@ To connect to Google Cloud and list your project:
     ```
 
 Once you have successfully connected to Google Cloud and set your Cloud Project
-ID, you are ready to deploy your ADK project files to Agent Engine.
+ID, you are ready to deploy your ADK project files to Agent Runtime.
 
 ### Deploy your ADK project {#deploy-ad}
 
-When using the ASP tool, you deploy in stages. In the first stage, you run a
-`make` command that provisions the services needed to run your ADK workflow on
-Agent Engine. In the second stage, the tool uploads your project code to the
-Agent Engine service and runs it in the hosted environment
+When using agents-cli, you deploy using the `agents-cli deploy` command. This
+command builds a container from your agent code, pushes it to a registry, and
+deploys it to Agent Runtime in the hosted environment.
 
 !!! warning "Important"
     *Make sure your Google Cloud target deployment project is set as your ***current
-    project*** before performing these steps*. The `make backend` command uses
+    project*** before performing these steps*. The `agents-cli deploy` command uses
     your currently set Google Cloud project when it performs a deployment. For
     information on setting and checking your current project, see
     [Connect to your Google Cloud project](#connect-ad).
 
-To deploy your ADK project to Agent Engine in your Google Cloud project:
+To deploy your ADK project to Agent Runtime in your Google Cloud project:
 
-1.  In a terminal window, ensure you are in the parent directory (e.g.,
-    `your-project-directory/`) that contains your agent folder.
+1.  In a terminal window, navigate to your agent project directory (e.g.,
+    `your-project-directory/`).
 
-1.  Deploy the code from the updated local project into the Google Cloud
-development environment, by running the following ASP make command:
+2.  Deploy your agent code to the Google Cloud development environment:
 
     ```shell
-    make backend
+    agents-cli deploy
     ```
 
+    The command reads your `deployment_target` from `pyproject.toml` and deploys
+    to the configured target (Agent Runtime, Cloud Run, or GKE).
+
+3.  (Optional) To enable observability features like prompt-response logging and
+    content logs, provision the telemetry infrastructure:
+
+    ```shell
+    agents-cli infra single-project
+    ```
+
+    For more details, see the
+    [Observability Guide](https://google.github.io/agents-cli/guide/observability/).
+
 Once this process completes successfully, you should be able to interact with
-the agent running on Google Cloud Agent Engine. For details on testing the
+the agent running on Google Cloud Agent Runtime. For details on testing the
 deployed agent, see
-[Test deployed agent](/deploy/agent-engine/test/).
+[Test deployed agent](/deploy/agent-runtime/test/).
 
-### Changes to your ADK project {#adk-asp-changes}
+### Changes to your ADK project {#adk-agents-cli-changes}
 
-The ASP tools add more files to your project for deployment. The procedure
+The agents-cli tools add more files to your project for deployment. The procedure
 below backs up your existing project files before modifying them. This guide
 uses the
 [multi_tool_agent](https://github.com/google/adk-docs/tree/main/examples/python/snippets/get-started/multi_tool_agent)
@@ -11800,14 +11805,14 @@ my_agent/
 └─ .env
 ```
 
-After running the ASP enhance command to add Agent Engine deployment
+After running the agents-cli scaffold enhance command to add Agent Runtime deployment
 information, the new structure is as follows:
 
 ```
 my-agent/
 ├─ app/                 # Core application code
 │   ├─ agent.py         # Main agent logic
-│   ├─ agent_engine_app.py # Agent Engine application logic
+│   ├─ agent_engine_app.py # Agent Runtime application logic
 │   └─ utils/           # Utility functions and helpers
 ├─ .cloudbuild/         # CI/CD pipeline configurations for Google Cloud Build
 ├─ deployment/          # Infrastructure and deployment scripts
@@ -11819,28 +11824,28 @@ my-agent/
 ```
 
 See the *README.md* file in your updated ADK project folder for more information.
-For more information on using Agent Starter Pack, see the
-[Development guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/development-guide.html).
+For more information on using agents-cli, see the
+[agents-cli documentation](https://google.github.io/agents-cli/).
 
 ## Test deployed agents
 
 After completing deployment of your ADK agent you should test the workflow in
 its new hosted environment. For more information on testing an ADK agent
-deployed to Agent Engine, see
-[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
+deployed to Agent Runtime, see
+[Test deployed agents in Agent Runtime](/deploy/agent-runtime/test/).
 
 ================
-File: docs/deploy/agent-engine/deploy.md
+File: docs/deploy/agent-runtime/deploy.md
 ================
-# Deploy to Vertex AI Agent Engine
+# Deploy to Agent Runtime
 
-<div class="language-support-tag" title="Vertex AI Agent Engine currently supports only Python.">
+<div class="language-support-tag" title="Agent Runtime currently supports only Python.">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
 This deployment procedure describes how to perform a standard deployment of
 ADK agent code to Google Cloud
-[Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
+[Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
 You should follow this deployment path if you have an existing Google Cloud
 project and if you want to carefully manage deploying an ADK agent to Agent
 Engine runtime environment. These instructions use Cloud Console, the gcloud
@@ -11857,7 +11862,7 @@ Engine runtime environment, which includes the following stages:
 
 ## Setup Google Cloud project {#setup-cloud-project}
 
-To deploy your agent to Agent Engine, you need a Google Cloud project:
+To deploy your agent to Agent Runtime, you need a Google Cloud project:
 
 1. **Sign into Google Cloud**:
     * If you're an **existing user** of Google Cloud:
@@ -11890,12 +11895,12 @@ To deploy your agent to Agent Engine, you need a Google Cloud project:
 
     <img src="/assets/project-id.png" alt="Google Cloud Project ID">
 
-4. **Enable Vertex AI in your project**
-    * To use Agent Engine, you need to [enable the Vertex AI API](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com). Click on the "Enable" button to enable the API. Once enabled, it
+4. **Enable Agent Platform in your project**
+    * To use Agent Runtime, you need to [enable the Agent Platform API](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com). Click on the "Enable" button to enable the API. Once enabled, it
     should say "API Enabled".
 
 5. **Enable Cloud Resource Manager API in your project**
-    * To use Agent Engine, you need to [enable the Cloud Resource Manager API](https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview). Click on the "Enable" button to enable the API. Once enabled, it should say "API Enabled".
+    * To use Agent Runtime, you need to [enable the Cloud Resource Manager API](https://console.developers.google.com/apis/api/cloudresourcemanager.googleapis.com/overview). Click on the "Enable" button to enable the API. Once enabled, it should say "API Enabled".
 
 ## Set up your coding environment {#prerequisites-coding-env}
 
@@ -11959,7 +11964,7 @@ code sample.
 
 You can deploy from your terminal using the `adk deploy` command line tool. This
 process packages your code, builds it into a container, and deploys it to the
-managed Agent Engine service. This process can take several minutes.
+managed Agent Runtime service. This process can take several minutes.
 
 The following example deploy command uses the `multi_tool_agent` sample code as
 the project to be deployed:
@@ -11976,7 +11981,7 @@ adk deploy agent_engine \
 ```
 
 For `region`, you can find a list of the supported regions on the
-[Vertex AI Agent Builder locations page](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine).
+[Agent Builder locations page](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine).
 To learn about the CLI options for the `adk deploy agent_engine` command, see the
 [ADK CLI Reference](/api-reference/cli/#adk-deploy-agent-engine).
 
@@ -11996,22 +12001,22 @@ Cleaning up the temp folder: /var/folders/k5/pv70z5m92s30k0n7hfkxszfr00mz24/T/ag
 
 Note that you now have a `RESOURCE_ID` where your agent has been deployed (which
 in the example above is `751619551677906944`). You need this ID number along
-with the other values to use your agent on Agent Engine.
+with the other values to use your agent on Agent Runtime.
 
-## Using an agent on Agent Engine
+## Using an agent on Agent Runtime
 
 Once you have completed deployment of your ADK project, you can query the agent
-using the Vertex AI SDK, Python requests library, or a REST API client. This
+using the Agent Platform SDK, Python requests library, or a REST API client. This
 section provides some information on what you need to interact with your agent
 and how to construct URLs to interact with your agent's REST API.
 
-To interact with your agent on Agent Engine, you need the following:
+To interact with your agent on Agent Runtime, you need the following:
 
 *   **PROJECT_ID** (example: "my-project-id") which you can find on your
     [project details page](https://console.cloud.google.com/iam-admin/settings)
 *   **LOCATION_ID** (example: "us-central1"), that you used to deploy your agent
 *   **RESOURCE_ID** (example: "751619551677906944"), which you can find on the
-    [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
+    [Agent Runtime UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
 
 The query URL structure is as follows:
 
@@ -12020,19 +12025,19 @@ https://$(LOCATION_ID)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locat
 ```
 
 You can make requests from your agent using this URL structure. For more information
-on how to make requests, see the instructions in the Agent Engine documentation
+on how to make requests, see the instructions in the Agent Runtime documentation
 [Use an Agent Development Kit agent](https://docs.cloud.google.com/agent-builder/agent-engine/use/adk#rest-api).
-You can also check the Agent Engine documentation to learn about how to manage your
+You can also check the Agent Runtime documentation to learn about how to manage your
 [deployed agent](https://docs.cloud.google.com/agent-builder/agent-engine/manage/overview).
 For more information on testing and interacting with a deployed agent, see
-[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
+[Test deployed agents in Agent Runtime](/deploy/agent-runtime/test/).
 
 ### Monitoring and verification
 
 *   You can monitor the deployment status in the
-    [Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
+    [Agent Runtime UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
     in the Google Cloud Console.
-*   For additional details, you can visit the Agent Engine documentation
+*   For additional details, you can visit the Agent Runtime documentation
     [deploying an agent](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/deploy)
     and
     [managing deployed agents](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/manage/overview).
@@ -12041,82 +12046,82 @@ For more information on testing and interacting with a deployed agent, see
 
 After completing deployment of your ADK agent you should test the workflow in
 its new hosted environment. For more information on testing an ADK agent
-deployed to Agent Engine, see
-[Test deployed agents in Agent Engine](/deploy/agent-engine/test/).
+deployed to Agent Runtime, see
+[Test deployed agents in Agent Runtime](/deploy/agent-runtime/test/).
 
 ================
-File: docs/deploy/agent-engine/index.md
+File: docs/deploy/agent-runtime/index.md
 ================
-# Deploy to Vertex AI Agent Engine
+# Deploy to Agent Runtime
 
-<div class="language-support-tag" title="Vertex AI Agent Engine currently supports only Python.">
+<div class="language-support-tag" title="Agent Runtime currently supports only Python.">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-Google Cloud Vertex AI
-[Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
+Google Cloud Agent Platform
+[Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 is a set of modular services that help developers scale and govern agents in
-production. The Agent Engine runtime enables you to deploy agents in production
+production. The Agent Runtime runtime enables you to deploy agents in production
 with end-to-end managed infrastructure so you can focus on creating intelligent
-and impactful agents. When you deploy an ADK agent to Agent Engine, your code
-runs in the *Agent Engine runtime* environment, which is part of the larger set
-of agent services provided by the Agent Engine product.
+and impactful agents. When you deploy an ADK agent to Agent Runtime, your code
+runs in the *Agent Runtime runtime* environment, which is part of the larger set
+of agent services provided by the Agent Runtime product.
 
 This guide includes the following deployment paths, which serve different
 purposes:
 
-*   **[Standard deployment](/deploy/agent-engine/deploy/)**: Follow
+*   **[Standard deployment](/deploy/agent-runtime/deploy/)**: Follow
     this standard deployment path if you want to carefully manage deploying an ADK agent to the Agent
-    Engine runtime. This deployment path uses Cloud Console, ADK command line
+    Runtime runtime. This deployment path uses Cloud Console, ADK command line
     interface, and provides step-by-step instructions. This path is recommended
     for users who are already familiar with configuring Google Cloud projects,
     and users preparing for production deployments.
 
-*   **[Agent Starter Pack deployment](/deploy/agent-engine/asp/)**:
+*   **[agents-cli deployment](/deploy/agent-runtime/agents-cli/)**:
     Follow this accelerated deployment path to set up a fully configured Google
     Cloud environment with CI/CD, infrastructure-as-code, and deployment pipelines
     for your ADK agent. You need a Google Cloud project with billing enabled.
-    The Agent Starter Pack (ASP) helps you deploy ADK projects quickly and it
+    agents-cli in Agent Platform helps you deploy ADK projects quickly and it
     includes advanced service configurations that extend the core capabilities of
-    the Agent Engine runtime for more mature use cases.
+    the Agent Runtime runtime for more mature use cases.
 
-!!! note "Agent Engine service on Google Cloud"
+!!! note "Agent Runtime service on Google Cloud"
 
-    Agent Engine is a paid service and you may incur costs if you go
+    Agent Runtime is a paid service and you may incur costs if you go
     above the no-cost access tier. More information can be found on the
-    [Agent Engine pricing page](https://cloud.google.com/vertex-ai/pricing#vertex-ai-agent-engine).
+    [Agent Runtime pricing page](https://cloud.google.com/vertex-ai/pricing#vertex-ai-agent-engine).
 
 ## Deployment payload {#payload}
 
-When you deploy your ADK agent project to Agent Engine, the following content is
+When you deploy your ADK agent project to Agent Runtime, the following content is
 uploaded to the service:
 
 - Your ADK agent code
 - Any dependencies declared in your ADK agent code
 
 The deployment *does not* include the ADK API server or the ADK web user
-interface libraries. The Agent Engine service provides the libraries for ADK API
+interface libraries. The Agent Runtime service provides the libraries for ADK API
 server functionality.
 
 ================
-File: docs/deploy/agent-engine/test.md
+File: docs/deploy/agent-runtime/test.md
 ================
-# Test deployed agents in Agent Engine
+# Test deployed agents in Agent Runtime
 
 These instructions explain how to test an ADK agent deployed to the
-[Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
+[Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 runtime environment. Before using these instructions, you need to have completed
-the deployment of your agent to the Agent Engine runtime environment using one
-of the [available methods](/deploy/agent-engine/). This guide shows you
+the deployment of your agent to the Agent Runtime runtime environment using one
+of the [available methods](/deploy/agent-runtime/). This guide shows you
 how to view, interact, and test your deployed agent through the Google Cloud
-Console, and interact with the agent using REST API calls or the Vertex AI SDK
+Console, and interact with the agent using REST API calls or the Agent Platform SDK
 for Python.
 
 ## View deployed agent in Cloud Console
 
 To view your deployed agent in the Cloud Console:
 
--   Navigate to the Agent Engine page in the Google Cloud Console:
+-   Navigate to the Agent Runtime page in the Google Cloud Console:
     [https://console.cloud.google.com/vertex-ai/agents/agent-engines](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
 
 This page lists all deployed agents in your currently selected Google Cloud
@@ -12131,12 +12136,12 @@ You need the address and resource identification for your project (`PROJECT_ID`,
 `LOCATION_ID`, `RESOURCE_ID`) to be able to test your deployment. You can use Cloud
 Console or the `gcloud` command line tool to find this information.
 
-??? note "Vertex AI express mode API key"
-    If you are using Vertex AI express mode, you can skip this step and use your API key.
+??? note "Agent Platform express mode API key"
+    If you are using Agent Platform express mode, you can skip this step and use your API key.
 
 To find your project information with Google Cloud Console:
 
-1.  In the Google Cloud Console, navigate to the Agent Engine page:
+1.  In the Google Cloud Console, navigate to the Agent Runtime page:
     [https://console.cloud.google.com/vertex-ai/agents/agent-engines](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
 
 1.  At the top of the page, select **API URLs**, and then copy the **Query
@@ -12165,7 +12170,7 @@ To find your project information with the `gcloud` command line tool:
 
 ## Test using REST calls
 
-A simple way to interact with your deployed agent in Agent Engine is to use REST
+A simple way to interact with your deployed agent in Agent Runtime is to use REST
 calls with the `curl` tool. This section describes how to check your
 connection to the agent and also to test processing of a request by the deployed
 agent.
@@ -12173,7 +12178,7 @@ agent.
 ### Check connection to agent
 
 You can check your connection to the running agent using the **Query URL**
-available in the Agent Engine section of the Cloud Console. This check does not
+available in the Agent Runtime section of the Cloud Console. This check does not
 execute the deployed agent, but returns information about the agent.
 
 To send a REST call and get a response from deployed agent:
@@ -12189,7 +12194,7 @@ To send a REST call and get a response from deployed agent:
             "https://$(LOCATION_ID)-aiplatform.googleapis.com/v1/projects/$(PROJECT_ID)/locations/$(LOCATION_ID)/reasoningEngines"
         ```
 
-    === "Vertex AI express mode"
+    === "Agent Platform express mode"
 
         ```shell
         curl -X GET \
@@ -12201,7 +12206,7 @@ If your deployment was successful, this request responds with a list of valid
 requests and expected data formats.
 
 !!! tip "Remove `:query` parameter for connection URL"
-    If you use the **Query URL** available in the Agent Engine section of the Cloud
+    If you use the **Query URL** available in the Agent Runtime section of the Cloud
     Console, make sure to remove the `:query` parameter from end of the address.
 
 !!! tip "Access for agent connections"
@@ -12230,7 +12235,7 @@ To test interaction with the deployed agent via REST:
             -d '{"class_method": "async_create_session", "input": {"user_id": "u_123"},}'
         ```
 
-    === "Vertex AI express mode"
+    === "Agent Platform express mode"
 
         ```shell
         curl \
@@ -12276,7 +12281,7 @@ To test interaction with the deployed agent via REST:
         }'
         ```
 
-    === "Vertex AI express mode"
+    === "Agent Platform express mode"
 
         ```shell
         curl \
@@ -12294,16 +12299,16 @@ To test interaction with the deployed agent via REST:
 
 This request should generate a response from your deployed agent code in JSON
 format. For more information about interacting with a deployed ADK agent in
-Agent Engine using REST calls, see
+Agent Runtime using REST calls, see
 [Manage deployed agents](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/manage/overview#console)
 and
 [Use an Agent Development Kit agent](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/use/adk)
-in the Agent Engine documentation.
+in the Agent Runtime documentation.
 
 ## Test using Python
 
 You can use Python code for more sophisticated and repeatable testing of your
-agent deployed in Agent Engine. These instructions describe how to create
+agent deployed in Agent Runtime. These instructions describe how to create
 a session with the deployed agent, and then send a request to the agent for
 processing.
 
@@ -12330,7 +12335,7 @@ Expected output for `create_session` (remote):
 ```
 
 The `id` value is the session ID, and `app_name` is the resource ID of the
-deployed agent on Agent Engine.
+deployed agent on Agent Runtime.
 
 #### Send queries to your remote agent
 
@@ -12352,11 +12357,11 @@ Expected output for `async_stream_query` (remote):
 ```
 
 For more information about interacting with a deployed ADK agent in
-Agent Engine, see
+Agent Runtime, see
 [Manage deployed agents](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/manage/overview)
 and
 [Use a Agent Development Kit agent](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/use/adk)
-in the Agent Engine documentation.
+in the Agent Runtime documentation.
 
 ### Sending Multimodal Queries
 
@@ -12386,7 +12391,7 @@ async for event in remote_app.async_stream_query(
 !!!note
     While the underlying communication with the model may involve Base64
     encoding for images, the recommended and supported method for sending image
-    data to an agent deployed on Agent Engine is by providing a GCS URI.
+    data to an agent deployed on Agent Runtime is by providing a GCS URI.
 
 ## Clean up deployments
 
@@ -12401,7 +12406,7 @@ remote_app.delete(force=True)
 The `force=True` parameter also deletes any child resources that were generated
 from the deployed agent, such as sessions. You can also delete your deployed
 agent via the
-[Agent Engine UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
+[Agent Runtime UI](https://console.cloud.google.com/vertex-ai/agents/agent-engines)
 on Google Cloud.
 
 ================
@@ -12582,7 +12587,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     * `--region TEXT`: (Required) The Google Cloud location for deployment (e.g., `$GOOGLE_CLOUD_LOCATION`, `us-central1`).
     * `--service_name TEXT`: (Optional) The name for the Cloud Run service (e.g., `$SERVICE_NAME`). Defaults to `adk-default-service-name`.
     * `--app_name TEXT`: (Optional) The application name for the ADK API server (e.g., `$APP_NAME`). Defaults to the name of the directory specified by `AGENT_PATH` (e.g., `capital_agent` if `AGENT_PATH` is `./capital_agent`).
-    * `--agent_engine_id TEXT`: (Optional) If you are using a managed session service via Vertex AI Agent Engine, provide its resource ID here.
+    * `--agent_engine_id TEXT`: (Optional) If you are using a managed session service via Agent Runtime, provide its resource ID here.
     * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
     * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
     * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
@@ -13107,7 +13112,7 @@ File: docs/deploy/gke.md
 
 To deploy your agent you will need to have a Kubernetes cluster running on GKE. You can create a cluster using the Google Cloud Console or the `gcloud` command line tool.
 
-In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Vertex AI or AI Studio as the LLM provider using the Environment variable `GOOGLE_GENAI_USE_VERTEXAI`.
+In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Agent Platform or AI Studio as the LLM provider using the Environment variable `GOOGLE_GENAI_USE_VERTEXAI`.
 
 ## Environment variables
 
@@ -13116,7 +13121,7 @@ Set your environment variables as described in the [Setup and Installation](../g
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project-id # Your GCP project ID
 export GOOGLE_CLOUD_LOCATION=us-central1 # Or your preferred location
-export GOOGLE_GENAI_USE_VERTEXAI=true # Set to true if using Vertex AI
+export GOOGLE_GENAI_USE_VERTEXAI=true # Set to true if using Agent Platform
 export GOOGLE_CLOUD_PROJECT_NUMBER=$(gcloud projects describe --format json $GOOGLE_CLOUD_PROJECT | jq -r ".projectNumber")
 ```
 
@@ -13358,9 +13363,9 @@ gcloud artifacts docker images list \
   --project=$GOOGLE_CLOUD_PROJECT
 ```
 
-### Configure Kubernetes Service Account for Vertex AI
+### Configure Kubernetes Service Account for Agent Platform
 
-If your agent uses Vertex AI, you need to create a Kubernetes service account with the necessary permissions. This example creates a service account named `adk-agent-sa` and binds it to the `Vertex AI User` role.
+If your agent uses Agent Platform, you need to create a Kubernetes service account with the necessary permissions. This example creates a service account named `adk-agent-sa` and binds it to the `Agent Platform User` role.
 
 > If you are using AI Studio and accessing the model with an API key you can skip this step.
 
@@ -13660,7 +13665,7 @@ These are some common issues you might encounter when deploying your agent to GK
 
 ### 403 Permission Denied for `Gemini 2.0 Flash`
 
-This usually means that the Kubernetes service account does not have the necessary permission to access the Vertex AI API. Ensure that you have created the service account and bound it to the `Vertex AI User` role as described in the [Configure Kubernetes Service Account for Vertex AI](#configure-kubernetes-service-account-for-vertex-ai) section. If you are using AI Studio, ensure that you have set the `GOOGLE_API_KEY` environment variable in the deployment manifest and it is valid.
+This usually means that the Kubernetes service account does not have the necessary permission to access the Agent Platform API. Ensure that you have created the service account and bound it to the `Agent Platform User` role as described in the [Configure Kubernetes Service Account for Agent Platform](#configure-kubernetes-service-account-for-agent-platform) section. If you are using AI Studio, ensure that you have set the `GOOGLE_API_KEY` environment variable in the deployment manifest and it is valid.
 
 ### 404 or Not Found response
 
@@ -13752,13 +13757,13 @@ from your local development machine to a scalable and reliable environment.
 Your ADK agent can be deployed to a range of different environments based
 on your needs for production readiness or custom flexibility:
 
-### Agent Engine in Vertex AI
+### Agent Runtime on Agent Platform
 
-[Agent Engine](agent-engine/index.md) is a fully managed auto-scaling service on Google Cloud
+[Agent Runtime](agent-runtime/index.md) is a fully managed auto-scaling service on Google Cloud
 specifically designed for deploying, managing, and scaling AI agents built with
 frameworks such as ADK.
 
-Learn more about [deploying your agent to Vertex AI Agent Engine](agent-engine/index.md).
+Learn more about [deploying your agent to Agent Runtime](agent-runtime/index.md).
 
 ### Cloud Run
 
@@ -14260,13 +14265,13 @@ response safety is a priority.
 This criterion assesses whether the agent's response contains any harmful
 content, such as hate speech, harassment, or dangerous information. Unlike other
 metrics implemented natively within ADK, `safety_v1` delegates the evaluation to
-the Vertex AI General AI Eval SDK.
+the Agent Platform Eval SDK.
 
 ### How To Use This Criterion?
 
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
-typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
 function correctly.
 
 You can specify a threshold for this criterion in `EvalConfig` under the
@@ -14358,13 +14363,13 @@ outcome rather than the specific steps taken to reach it.
 
 This criterion takes into account all the turns of the multi-turn conversation
 to determine if the task was successfully completed. It delegates the evaluation
-to the Vertex AI General AI Eval SDK.
+to the Agent Platform Eval SDK.
 
 #### How To Use This Criterion?
 
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
-typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
 function correctly.
 
 You can specify a threshold for this criterion in `EvalConfig` under the
@@ -14404,13 +14409,13 @@ steps taken during the conversation.
 
 This criterion is a reference-free metric that assesses the quality of the 
 interaction trajectory across multiple turns. It delegates the evaluation to the
-Vertex AI General AI Eval SDK.
+Agent Platform Eval SDK.
 
 #### How To Use This Criterion?
 
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
-typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
 function correctly.
 
 You can specify a threshold for this criterion in `EvalConfig` under the
@@ -14456,7 +14461,7 @@ AI General AI Eval SDK.
 
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
-typically in an `.env` file in your agent's directory, for the Vertex AI SDK to
+typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
 function correctly.
 
 You can specify a threshold for this criterion in `EvalConfig` under the
@@ -15979,10 +15984,10 @@ Example of a custom persona definition:
 
 ## Generating Evaluation Cases via User Simulation
 
-Writing evaluation cases manually can be time-consuming and may not cover all potential failure modes. ADK provides a command to automatically generate diverse and realistic conversation scenarios based on your agent's definition using the Vertex AI Eval SDK.
+Writing evaluation cases manually can be time-consuming and may not cover all potential failure modes. ADK provides a command to automatically generate diverse and realistic conversation scenarios based on your agent's definition using the Agent Platform Eval SDK.
 
-!!! warning "Prerequisites: Vertex AI Credentials"
-    Generating evaluation cases uses the [Vertex Gen AI Evaluation Service API](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/evaluation-overview). You must have a Google Cloud project with the Vertex AI API enabled and valid Application Default Credentials (ADC) configured in your environment.
+!!! warning "Prerequisites: Agent Platform Credentials"
+    Generating evaluation cases uses the [Vertex Gen AI Evaluation Service API](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models/evaluation-overview). You must have a Google Cloud project with the Agent Platform API enabled and valid Application Default Credentials (ADC) configured in your environment.
 
 
 ### Command Syntax
@@ -17223,7 +17228,7 @@ We will use `Dev UI` to run this agent later. For the tool to automatically reco
 To run the server, you’ll need to export two environment variables:
 
 * a Gemini key that you can [get from AI Studio](https://ai.google.dev/gemini-api/docs/api-key),
-* a variable to specify we’re not using Vertex AI this time.
+* a variable to specify we’re not using Agent Platform this time.
 
 ```shell
 export GOOGLE_GENAI_USE_VERTEXAI=FALSE
@@ -17708,7 +17713,7 @@ With this quickstart, you'll learn to create a simple agent and use ADK Streamin
 In order to use voice/video streaming in ADK, you will need to use Gemini models that support the Live API. You can find the **model ID(s)** that supports the Gemini Live API in the documentation:
 
 - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-- [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+- [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
 ## 1. Setup Environment & Install ADK { #setup-environment-install-adk }
 
@@ -17782,7 +17787,7 @@ from . import agent
 
 ## 3\. Set up the platform { #set-up-the-platform }
 
-To run the agent, choose a platform from either Google AI Studio or Google Cloud Vertex AI:
+To run the agent, choose a platform from either Google AI Studio or Google Cloud Agent Platform:
 
 === "Gemini - Google AI Studio"
     1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).
@@ -17795,7 +17800,7 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
 
     3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
 
-=== "Gemini - Google Cloud Vertex AI"
+=== "Gemini - Google Cloud Agent Platform"
     1. You need an existing
        [Google Cloud](https://cloud.google.com/?e=48754805&hl=en) account and a
        project.
@@ -17805,7 +17810,7 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
           [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
         * Authenticate to Google Cloud, from the terminal by running
           `gcloud auth login`.
-        * [Enable the Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
+        * [Enable the Agent Platform API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
     2. Open the **`.env`** file located inside (`app/`). Copy-paste
        the following code and update the project ID and location.
 
@@ -17962,7 +17967,7 @@ agentic applications:
    streaming (text and audio). This integrates seamlessly with underlying
    capabilities like the [Gemini Live API for the Gemini Developer API](https://ai.google.dev/gemini-api/docs/live)
    (or for
-   [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/multimodal-live)),
+   [Agent Platform](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/multimodal-live)),
    often enabled with simple configuration changes.
 6. **Built-in Agent Evaluation:** Assess agent performance systematically. The
    framework includes tools to create multi-turn evaluation datasets and run
@@ -19089,93 +19094,28 @@ The `searchEntryPoint` object in the `groundingMetadata` contains pre-formatted 
 
 **Rendered HTML from searchEntryPoint:** The metadata provides the necessary HTML and CSS to render the search suggestions bar, which includes the Google logo and chips for related queries. Integrating this HTML directly into your application's front end will display the suggestions as intended.
 
-For more information, consult [using Google Search Suggestions](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions) in Vertex AI documentation.
+For more information, consult [using Google Search Suggestions](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions) in Agent Platform documentation.
 
 ================
-File: docs/grounding/index.md
+File: docs/grounding/grounding_with_search.md
 ================
-# Grounding agents with data
-
-Grounding is the process that connects your AI agents to external information sources, allowing them to generate more accurate, current, and verifiable responses. By grounding agent responses in authoritative data, you can reduce hallucinations and provide users with answers backed by reliable sources.
-
-ADK supports multiple grounding approaches:
-
-- **Google Search Grounding**: Connect agents to real-time web information for queries requiring current data like news, weather, or facts that may have changed since the model's training.
-- **Vertex AI Search Grounding**: Connect agents to your organization's private documents and enterprise data for queries requiring proprietary information.
-- **Agentic RAG**: Build agents that reason about how to search, constructing queries and filters dynamically using Vector Search 2.0, Vertex AI RAG Engine, or other retrieval systems.
-
-<div class="grid cards" markdown>
-
--   :material-magnify: **Google Search Grounding**
-
-    ---
-
-    Enable your agents to access real-time, authoritative information from the web. Learn how to set up Google Search grounding, understand the data flow, interpret grounded responses, and display citations to users.
-
-    - [Understanding Google Search Grounding](google_search_grounding.md)
-
--   :material-file-search: **Vertex AI Search Grounding**
-
-    ---
-
-    Connect your agents to indexed enterprise documents and private data repositories. Learn how to configure Vertex AI Search datastores, ground responses in your organization's knowledge base, and provide source attribution.
-
-    - [Understanding Vertex AI Search Grounding](vertex_ai_search_grounding.md)
-
--   :material-post: **Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK**
-
-    ---
-
-    Learn how to build an Agentic RAG system that goes beyond simple retrieve-then-generate patterns. This article walks through building a travel agent that parses user intent, constructs metadata filters, and searches 2,000 London Airbnb listings using hybrid search with Vector Search 2.0 and ADK.
-
-    - [Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK](https://medium.com/google-cloud/10-minute-agentic-rag-with-the-new-vector-search-2-0-and-adk-655fff0bacac)
-
--   :material-notebook: **Vector Search 2.0 Travel Agent Notebook**
-
-    ---
-
-    A hands-on Jupyter notebook companion to the Agentic RAG blog post. Build an end-to-end travel agent using real Airbnb data, auto-embeddings, hybrid search with RRF ranking, and ADK tool integration.
-
-    - [Vector Search 2.0 Travel Agent Notebook](https://github.com/google/adk-samples/blob/main/python/notebooks/grounding/vectorsearch2_travel_agent.ipynb)
-
--   :material-text-search: **Deep Search Agent**
-
-    ---
-
-    A production-ready fullstack research agent that transforms topics into comprehensive reports with citations. Features a two-phase workflow with human-in-the-loop plan approval, iterative search refinement, and multi-agent architecture for planning, researching, critiquing, and composing.
-
-    - [Deep Search Agent](https://github.com/google/adk-samples/tree/main/python/agents/deep-search)
-
--   :material-file-document-multiple: **RAG Agent**
-
-    ---
-
-    A document Q&A agent powered by Vertex AI RAG Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
-
-    - [RAG Agent](https://github.com/google/adk-samples/tree/main/python/agents/RAG)
-
-</div>
-
-================
-File: docs/grounding/vertex_ai_search_grounding.md
-================
-# Vertex AI Search Grounding for agents
+# Grounding with Search for agents
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-[Vertex AI Search](/integrations/vertex-ai-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
+[Agent Search](/integrations/agent-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
 
-This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Vertex AI Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
+This feature is particularly valuable for enterprise-specific queries requiring information from internal documentation, policies, research papers, or any proprietary content that has been indexed in your [Agent Search](https://cloud.google.com/enterprise-search) datastore. When your agent determines that information from your knowledge base is needed, it automatically searches your indexed documents and incorporates the results into its response with proper attribution.
 
-## Preparing Vertex AI Search
+## Preparing Agent Search
 
-Before creating a grounded agent, you must have an existing Vertex AI Search Data Store. If you don't have one, follow the instructions in [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) to create one. You will need your `Data store ID` (e.g., `projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID`) to configure the agent.
+Before creating a grounded agent, you must have an existing Agent Search Data Store. If you don't have one, follow the instructions in [Get started with custom search](https://cloud.google.com/generative-ai-app-builder/docs/try-enterprise-search#unstructured-data) to create one. You will need your `Data store ID` (e.g., `projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID`) to configure the agent.
 
 ## Authentication Setup
 
-**Note: Vertex AI Search requires Google Cloud Platform (Vertex AI) authentication. Google AI Studio is not supported for this tool.**
+**Note: Agent Search requires Google Cloud Platform (Agent Platform) authentication. Google AI Studio is not supported for this tool.**
 
 * Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
 * Authenticate to Google Cloud, from the terminal by running `gcloud auth login`.
@@ -19190,7 +19130,7 @@ GOOGLE_CLOUD_LOCATION=LOCATION
 
 ## Creating a Grounded Agent
 
-To enable Vertex AI Search Grounding, you include the search tool in your agent definition, providing the `data_store_id`.
+To enable Grounding with Search, you include the search tool in your agent definition, providing the `data_store_id`.
 
 === "Python"
 
@@ -19204,8 +19144,8 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
     root_agent = Agent(
         name="vertex_search_agent",
         model="gemini-flash-latest",
-        instruction="Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.",
-        description="Enterprise document search assistant with Vertex AI Search capabilities",
+        instruction="Answer questions using Agent Search to find information from internal documents. Always cite sources when available.",
+        description="Enterprise document search assistant with Agent Search capabilities",
         tools=[VertexAiSearchTool(data_store_id=DATASTORE_ID)]
     )
     ```
@@ -19222,21 +19162,21 @@ To enable Vertex AI Search Grounding, you include the search tool in your agent 
     LlmAgent rootAgent = LlmAgent.builder()
         .name("vertex_search_agent")
         .model("gemini-flash-latest")
-        .instruction("Answer questions using Vertex AI Search to find information from internal documents. Always cite sources when available.")
-        .description("Enterprise document search assistant with Vertex AI Search capabilities")
+        .instruction("Answer questions using Agent Search to find information from internal documents. Always cite sources when available.")
+        .description("Enterprise document search assistant with Agent Search capabilities")
         .tools(VertexAiSearchTool.builder().dataStoreId(DATASTORE_ID).build())
         .build();
     ```
 
-## How grounding with Vertex AI Search works
+## How Grounding with Search works
 
-Grounding with Vertex AI Search is the process that connects your agent to your organization's indexed documents and data, allowing it to generate accurate responses based on private enterprise content. When a user's prompt requires information from your internal knowledge base, the agent's underlying LLM intelligently decides to invoke the `VertexAiSearchTool` to find relevant facts from your indexed documents.
+Grounding with Search is the process that connects your agent to your organization's indexed documents and data, allowing it to generate accurate responses based on private enterprise content. When a user's prompt requires information from your internal knowledge base, the agent's underlying LLM intelligently decides to invoke the `VertexAiSearchTool` to find relevant facts from your indexed documents.
 
 ### Data Flow Diagram
 
 This diagram illustrates the step-by-step process of how a user query results in a grounded response.
 
-![Vertex AI Search Grounding Data Flow](../assets/vertex_ai_search_grd_dataflow.png)
+![Grounding with Search Data Flow](../assets/grounding-with-search-data-flow.png)
 
 ### Detailed Description
 
@@ -19245,15 +19185,15 @@ The grounding agent uses the data flow described in the diagram to retrieve, pro
 1. **User Query**: An end-user interacts with your agent by asking a question about internal documents or enterprise data.
 2. **ADK Orchestration**: The Agent Development Kit orchestrates the agent's behavior and passes the user's message to the core of your agent.
 3. **LLM Analysis and Tool-Calling**: The agent's LLM (e.g., a Gemini model) analyzes the prompt. If it determines that information from your indexed documents is required, it triggers the grounding mechanism by calling the `VertexAiSearchTool`. This is ideal for answering queries about company policies, technical documentation, or proprietary research.
-4. **Vertex AI Search Service Interaction**: The `VertexAiSearchTool` interacts with your configured Vertex AI Search datastore, which contains your indexed enterprise documents. The service formulates and executes search queries against your private content.
-5. **Document Retrieval & Ranking**: Vertex AI Search retrieves and ranks the most relevant document chunks from your datastore based on semantic similarity and relevance scoring.
+4. **Vertex AI Search Service Interaction**: The `VertexAiSearchTool` interacts with your configured Agent Search datastore, which contains your indexed enterprise documents. The service formulates and executes search queries against your private content.
+5. **Document Retrieval & Ranking**: Agent Search retrieves and ranks the most relevant document chunks from your datastore based on semantic similarity and relevance scoring.
 6. **Context Injection**: The search service integrates the retrieved document snippets into the model's context before the final response is generated. This crucial step allows the model to "reason" over your organization's factual data.
 7. **Grounded Response Generation**: The LLM, now informed by relevant enterprise content, generates a response that incorporates the retrieved information from your documents.
 8. **Response Presentation with Sources**: The ADK receives the final grounded response, which includes the necessary source document references and `groundingMetadata`, and presents it to the user with attribution. This allows end-users to verify the information against your enterprise sources.
 
-## Understanding grounding with Vertex AI Search response
+## Understanding Grounding with Search response
 
-When the agent uses Vertex AI Search to ground a response, it returns detailed information that includes the final text answer and metadata about the documents used to generate that answer. This metadata is crucial for verifying the response and providing attribution to your enterprise sources.
+When the agent uses Agent Search to ground a response, it returns detailed information that includes the final text answer and metadata about the documents used to generate that answer. This metadata is crucial for verifying the response and providing attribution to your enterprise sources.
 
 ### Example of a Grounded Response
 
@@ -19315,9 +19255,9 @@ The metadata provides a link between the text generated by the model and the ent
 - **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the `groundingChunks`. For example, the text about "HIPAA compliance" is supported by information from `groundingChunks` at index 1 (the "Regulatory and Ethical Hurdles" document).
 - **retrievalQueries**: This array shows the specific search queries that were executed against your datastore to find relevant information.
 
-## How to display grounding responses with Vertex AI Search
+## How to display responses with Grounding with Search
 
-Unlike Google Search grounding, Vertex AI Search grounding does not require specific display components. However, displaying citations and document references builds trust and allows users to verify information against your organization's authoritative sources.
+Unlike Google Search grounding, Grounding with Search does not require specific display components. However, displaying citations and document references builds trust and allows users to verify information against your organization's authoritative sources.
 
 ### Optional Citation Display
 
@@ -19356,13 +19296,78 @@ Since grounding metadata is provided, you can choose to implement citation displ
 
 ### Implementation Considerations
 
-When implementing Vertex AI Search grounding displays:
+When implementing Grounding with Search displays:
 
 1. **Document Access**: Verify user permissions for referenced documents
 2. **Simple Integration**: Basic text output requires no additional display logic
 3. **Optional Enhancements**: Add citations only if your use case benefits from source attribution
 4. **Document Links**: Convert document URIs to accessible internal links when needed
 5. **Search Queries**: The `retrievalQueries` array shows what searches were performed against your datastore
+
+================
+File: docs/grounding/index.md
+================
+# Grounding agents with data
+
+Grounding is the process that connects your AI agents to external information sources, allowing them to generate more accurate, current, and verifiable responses. By grounding agent responses in authoritative data, you can reduce hallucinations and provide users with answers backed by reliable sources.
+
+ADK supports multiple grounding approaches:
+
+- **Google Search Grounding**: Connect agents to real-time web information for queries requiring current data like news, weather, or facts that may have changed since the model's training.
+- **Grounding with Search**: Connect agents to your organization's private documents and enterprise data for queries requiring proprietary information.
+- **Agentic RAG**: Build agents that reason about how to search, constructing queries and filters dynamically using Vector Search 2.0, RAG Engine, or other retrieval systems.
+
+<div class="grid cards" markdown>
+
+-   :material-magnify: **Google Search Grounding**
+
+    ---
+
+    Enable your agents to access real-time, authoritative information from the web. Learn how to set up Google Search grounding, understand the data flow, interpret grounded responses, and display citations to users.
+
+    - [Understanding Google Search Grounding](google_search_grounding.md)
+
+-   :material-file-search: **Grounding with Search**
+
+    ---
+
+    Connect your agents to indexed enterprise documents and private data repositories. Learn how to configure Agent Search datastores, ground responses in your organization's knowledge base, and provide source attribution.
+
+    - [Understanding Grounding with Search](grounding_with_search.md)
+
+-   :material-post: **Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK**
+
+    ---
+
+    Learn how to build an Agentic RAG system that goes beyond simple retrieve-then-generate patterns. This article walks through building a travel agent that parses user intent, constructs metadata filters, and searches 2,000 London Airbnb listings using hybrid search with Vector Search 2.0 and ADK.
+
+    - [Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK](https://medium.com/google-cloud/10-minute-agentic-rag-with-the-new-vector-search-2-0-and-adk-655fff0bacac)
+
+-   :material-notebook: **Vector Search 2.0 Travel Agent Notebook**
+
+    ---
+
+    A hands-on Jupyter notebook companion to the Agentic RAG blog post. Build an end-to-end travel agent using real Airbnb data, auto-embeddings, hybrid search with RRF ranking, and ADK tool integration.
+
+    - [Vector Search 2.0 Travel Agent Notebook](https://github.com/google/adk-samples/blob/main/python/notebooks/grounding/vectorsearch2_travel_agent.ipynb)
+
+-   :material-text-search: **Deep Search Agent**
+
+    ---
+
+    A production-ready fullstack research agent that transforms topics into comprehensive reports with citations. Features a two-phase workflow with human-in-the-loop plan approval, iterative search refinement, and multi-agent architecture for planning, researching, critiquing, and composing.
+
+    - [Deep Search Agent](https://github.com/google/adk-samples/tree/main/python/agents/deep-search)
+
+-   :material-file-document-multiple: **RAG Agent**
+
+    ---
+
+    A document Q&A agent powered by RAG Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
+
+    - [RAG Agent](https://github.com/google/adk-samples/tree/main/python/agents/RAG)
+
+</div>
 
 ================
 File: docs/integrations/a2ui.md
@@ -20000,6 +20005,261 @@ CopilotKit docs:
 - [Frontend Actions](https://docs.copilotkit.ai/adk/frontend-actions)
 
 Or try them out in the [AG-UI Dojo](https://dojo.ag-ui.com).
+
+================
+File: docs/integrations/agent-registry.md
+================
+---
+catalog_title: Google Cloud Agent Registry
+catalog_description: Discover and connect to AI Agents and MCP Servers
+catalog_icon: /integrations/assets/agent-platform.svg
+catalog_tags: ["google", "mcp", "connectors"]
+---
+
+# Google Cloud Agent Registry
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.26.0</span><span class="lst-preview">Preview</span>
+</div>
+
+The Agent Registry client library withins Agent Development Kit (ADK) allows
+developers to discover, look up, and connect to AI Agents and MCP Servers
+cataloged within the [Google Cloud Agent
+Registry](https://docs.cloud.google.com/agent-registry/overview). This enables
+dynamic composition of agent-based applications using governed components.
+
+## Use cases
+
+- **Accelerated Development**: Easily find and reuse existing agents and tools
+  (MCP Servers) from the central catalog instead of rebuilding them.
+- **Dynamic Integration**: Discover agent and MCP Server endpoints at runtime,
+  making applications more robust to changes in the environment.
+- **Enhanced Governance**: Utilize governed and verified components from the
+  registry within your ADK applications.
+
+## Prerequisites
+
+- A [Google Cloud
+  project](https://docs.cloud.google.com/resource-manager/docs/creating-managing-projects).
+- The [Agent Registry API](https://docs.cloud.google.com/agent-registry/setup)
+  enabled in your Google Cloud project.
+- Authentication configured for your environment. You should log in using
+  [Application Default
+  Credentials](https://docs.cloud.google.com/docs/authentication/application-default-credentials)
+  (`gcloud auth application-default login`).
+- Environment variables `GOOGLE_CLOUD_PROJECT` set to your project ID and
+  `GOOGLE_CLOUD_LOCATION` set to the appropriate region (e.g., `global`,
+  `us-central1`).
+- `google-adk` library installed.
+
+## Installation
+
+The [Agent Registry](https://docs.cloud.google.com/agent-registry/overview)
+integration is part of the core ADK library.
+
+```bash
+pip install google-adk
+```
+
+### Optional Dependencies
+
+To use the full capabilities of the AgentRegistry integration, you may need to
+install additional extras depending on your use case:
+
+**For A2A (Agent-to-Agent) Support:** If you plan to use `get_remote_a2a_agent`
+or interact with remote A2A-compliant agents, install the `a2a` extra:
+
+```bash
+pip install "google-adk[a2a]"
+```
+
+**For Agent Identity (GCP Auth Provider):** If you need to use the
+`GcpAuthProvider` (e.g., when `get_mcp_toolset` automatically resolves
+authentication via IAM bindings for registered MCP servers), install the
+`agent-identity` extra:
+
+```bash
+pip install "google-adk[agent-identity]"
+```
+
+## Use with Agent
+
+The primary way to use the Agent Registry integration within an ADK agent is to
+dynamically fetch remote agents or toolsets using the AgentRegistry client.
+
+```py
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.integrations.agent_registry import AgentRegistry
+import os
+
+# 1. Initialization
+project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+
+if not project_id:
+    raise ValueError("GOOGLE_CLOUD_PROJECT environment variable not set.")
+
+registry = AgentRegistry(
+    project_id=project_id,
+    location=location,
+)
+
+# 2. Listing Resources
+print("Listing Agents...")
+agents_response = registry.list_agents()
+for agent in agents_response.get("agents", []):
+    print(f"  - {agent.get('name')} ({agent.get('displayName')})")
+
+print("Listing MCP Servers...")
+mcp_servers_response = registry.list_mcp_servers()
+for server in mcp_servers_response.get("mcpServers", []):
+    print(f"  - {server.get('name')} ({server.get('displayName')})")
+
+# 3. Using a Remote A2A Agent
+# Replace with the full resource name of your registered agent
+agent_name = f"projects/{project_id}/locations/{location}/agents/YOUR_AGENT_ID"
+my_remote_agent = registry.get_remote_a2a_agent(agent_name=agent_name)
+
+# 4. Using an MCP Toolset
+# Replace with the full resource name of your registered MCP server
+mcp_server_name = f"projects/{project_id}/locations/{location}/mcpServers/YOUR_MCP_SERVER_ID"
+my_mcp_toolset = registry.get_mcp_toolset(mcp_server_name=mcp_server_name)
+
+# 5. Example Agent Composition
+main_agent = LlmAgent(
+    model="gemini-flash-latest", # Or your preferred model
+    name="demo_agent",
+    instruction="You can leverage registered tools and sub-agents.",
+    tools=[my_mcp_toolset],
+    sub_agents=[my_remote_agent],
+)
+```
+
+## Authentication for Google MCP Servers and Remote A2A Agents
+
+### Remote A2A Agents
+
+If you are connecting to a Google A2A agent, you need to pass an
+`httpx.AsyncClient` configured with Google authentication headers to the
+`get_remote_a2a_agent` method.
+
+Example:
+```python
+import httpx
+import google.auth
+from google.auth.transport.requests import Request
+
+class GoogleAuth(httpx.Auth):
+    def __init__(self):
+        self.creds, _ = google.auth.default()
+    def auth_flow(self, request):
+        if not self.creds.valid:
+            self.creds.refresh(Request())
+        request.headers["Authorization"] = f"Bearer {self.creds.token}"
+        yield request
+
+httpx_client = httpx.AsyncClient(auth=GoogleAuth(), timeout=httpx.Timeout(60.0))
+remote_agent = registry.get_remote_a2a_agent(
+    f"projects/{project_id}/locations/{location}/agents/YOUR_AGENT_ID",
+    httpx_client=httpx_client,
+)
+```
+
+### Google MCP Servers
+
+For Google MCP servers, authentication headers are automatically passed in.
+However, if automatic authentication is not working as expected, you can
+manually provide headers using the `header_provider` argument in the
+`AgentRegistry` constructor.
+
+Example:
+```python
+import google.auth
+from google.auth.transport.requests import Request
+from google.adk.integrations.agent_registry import AgentRegistry
+
+def google_auth_header_provider(context):
+    creds, _ = google.auth.default()
+    if not creds.valid:
+        creds.refresh(Request())
+    return {"Authorization": f"Bearer {creds.token}"}
+
+registry = AgentRegistry(
+    project_id=project_id,
+    location=location,
+    header_provider=google_auth_header_provider
+)
+```
+
+## API Reference
+
+The AgentRegistry class provides the following core methods:
+
+- `list_mcp_servers(self, filter_str, page_size, page_token)`: Fetches a list of
+  registered MCP Servers.
+- `get_mcp_server(self, name)`: Retrieves detailed metadata of a specific MCP
+  Server.
+- `get_mcp_toolset(self, mcp_server_name)`: Constructs an ADK McpToolset
+  instance from a registered MCP Server.
+- `list_agents(self, filter_str, page_size, page_token)`: Fetches a list of
+  registered A2A Agents.
+- `get_agent_info(self, name)`: Retrieves detailed metadata of a specific A2A
+  Agent.
+- `get_remote_a2a_agent(self, agent_name)`: Creates an ADK RemoteA2aAgent
+  instance for a registered A2A Agent.
+
+## Configuration Options
+
+The AgentRegistry constructor accepts the following arguments:
+
+- `project_id` (str, required): The Google Cloud project ID.
+- `location` (str, required): The Google Cloud location/region, such as
+  "global", "us-central1".
+- `header_provider` (Callable, optional): A callable that takes a
+  ReadonlyContext and returns a dictionary of custom headers to be included in
+  requests made by the [McpToolset](/tools-custom/mcp-tools/#mcptoolset-class)
+  or
+  [RemoteA2aAgent](/a2a/quickstart-consuming-go/#quickstart-consuming-a-remote-agent-via-a2a)
+  to the target services. This does not affect headers used to call the Agent
+  Registry API itself.
+
+## Additional resources
+- [Sample Agent Code](https://github.com/google/adk-python/tree/main/contributing/samples/agent_registry_agent)
+- [Agent Registry Client](https://github.com/google/adk-python/blob/main/src/google/adk/integrations/agent_registry/agent_registry.py)
+- [Google Auth Library](https://google-auth.readthedocs.io/en/latest/)
+
+================
+File: docs/integrations/agent-search.md
+================
+---
+catalog_title: Agent Search
+catalog_description: Search across your private, configured data stores in Agent Search
+catalog_icon: /integrations/assets/agent-platform.svg
+catalog_tags: ["search","google"]
+---
+
+# Agent Search tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+</div>
+
+The `vertex_ai_search_tool` uses Google Cloud Agent Search, enabling the
+agent to search across your private, configured data stores (e.g., internal
+documents, company policies, knowledge bases). This built-in tool requires you
+to provide the specific data store ID during configuration. For further details
+of the tool, see
+[Understanding Grounding with Search](/grounding/grounding_with_search/).
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
+
+```py
+--8<-- "examples/python/snippets/tools/built-in-tools/agent_search.py"
+```
 
 ================
 File: docs/integrations/agentmail.md
@@ -20978,7 +21238,7 @@ Workflows):
     - roles/connectors.invoker
     - roles/secretmanager.secretAccessor
 
-**Note:** When using Agent Engine (AE) for deployment, don't use
+**Note:** When using Agent Runtime for deployment, don't use
 `roles/integrations.integrationInvoker`, as it can result in 403 errors. Use
 `roles/integrations.integrationEditor` instead.
 
@@ -21804,7 +22064,7 @@ trace.set_tracer_provider(TracerProvider())
 # --- Configuration ---
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
 DATASET_ID = os.environ.get("BIG_QUERY_DATASET_ID", "your-big-query-dataset-id")
-# GOOGLE_CLOUD_LOCATION must be a valid Vertex AI region (e.g., "us-central1").
+# GOOGLE_CLOUD_LOCATION must be a valid Agent Platform region (e.g., "us-central1").
 # BQ_LOCATION is the BigQuery dataset location, which can be a multi-region
 # like "US" or "EU", or a single region like "us-central1".
 VERTEX_LOCATION = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
@@ -21874,17 +22134,17 @@ ORDER BY timestamp DESC
 LIMIT 20;
 ```
 
-## Deploy to Agent Engine with the plugin {#deploy-agent-engine}
+## Deploy to Agent Runtime with the plugin {#deploy-agent-runtime}
 
 You can deploy an agent with the BigQuery Agent Analytics plugin to
-[Vertex AI Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
+[Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
 This section walks through the steps to deploy using the ADK CLI, and
-alternatively using the Vertex AI SDK programmatically.
+alternatively using the Agent Platform SDK programmatically.
 
 !!! important "Version Requirement"
 
     Use ADK Python version **1.24.0 or higher** to deploy with this plugin to
-    Agent Engine. Earlier versions had an issue where the plugin's asynchronous
+    Agent Runtime. Earlier versions had an issue where the plugin's asynchronous
     log writer could be terminated by the serverless runtime before flushing
     pending events. Starting from 1.24.0, the plugin performs a synchronous
     flush at the end of each invocation to ensure all events are written.
@@ -21892,10 +22152,10 @@ alternatively using the Vertex AI SDK programmatically.
 ### Prerequisites
 
 Before deploying, ensure you have completed the general
-[Agent Engine setup](/deploy/agent-engine/deploy/#setup-cloud-project),
+[Agent Runtime setup](/deploy/agent-runtime/deploy/#setup-cloud-project),
 including:
 
-1.  A Google Cloud project with the **Vertex AI API** and **Cloud Resource
+1.  A Google Cloud project with the **Agent Platform API** and **Cloud Resource
     Manager API** enabled.
 2.  A **BigQuery dataset** in the target project (or a cross-project dataset
     with the correct permissions).
@@ -21903,13 +22163,13 @@ including:
 4.  The deploying service account has the IAM roles listed in
     [IAM permissions](#iam-permissions).
 5.  Your coding environment is
-    [authenticated](/deploy/agent-engine/deploy/#prerequisites-coding-env)
+    [authenticated](/deploy/agent-runtime/deploy/#prerequisites-coding-env)
     with `gcloud auth login` and `gcloud auth application-default login`.
 
 ### Step 1: Define the agent and plugin
 
 Create your agent project folder with an `App` object that includes the plugin.
-The `App` object is required for Agent Engine deployments with plugins.
+The `App` object is required for Agent Runtime deployments with plugins.
 
 ```
 my_bq_agent/
@@ -21938,7 +22198,7 @@ from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
 DATASET_ID = os.environ.get("BQ_DATASET", "agent_analytics")
 # BQ_LOCATION is the BigQuery dataset location (multi-region "US"/"EU" or
-# a single region like "us-central1"). This is separate from the Vertex AI
+# a single region like "us-central1"). This is separate from the Agent Platform
 # region used by GOOGLE_CLOUD_LOCATION.
 BQ_LOCATION = os.environ.get("BQ_LOCATION", "US")
 
@@ -21972,7 +22232,7 @@ root_agent = Agent(
     tools=[bigquery_toolset],
 )
 
-# --- App (required for Agent Engine with plugins) ---
+# --- App (required for Agent Runtime with plugins) ---
 app = App(
     name="my_bq_agent",
     root_agent=root_agent,
@@ -22023,7 +22283,7 @@ Note the **Resource name** for the next step.
 
 ### Step 3: Test the deployed agent
 
-After deployment, you can query the agent using the Vertex AI SDK:
+After deployment, you can query the agent using the Agent Platform SDK:
 
 ```python title="test_deployed_agent.py"
 import uuid
@@ -22062,9 +22322,9 @@ LIMIT 20;
 You should see events such as `INVOCATION_STARTING`, `LLM_REQUEST`,
 `LLM_RESPONSE`, `TOOL_STARTING`, `TOOL_COMPLETED`, and `INVOCATION_COMPLETED`.
 
-### Alternative: Deploy using the Vertex AI SDK
+### Alternative: Deploy using the Agent Platform SDK
 
-You can also deploy programmatically using the Vertex AI SDK directly. This is
+You can also deploy programmatically using the Agent Platform SDK directly. This is
 useful for CI/CD pipelines or custom deployment workflows:
 
 ```python title="deploy.py"
@@ -22116,7 +22376,7 @@ If events are not appearing in your BigQuery table after deployment:
     logging.getLogger("google_adk").setLevel(logging.DEBUG)
     ```
 
-3.  **Check IAM permissions**: The Agent Engine service account needs
+3.  **Check IAM permissions**: The Agent Runtime service account needs
     `roles/bigquery.dataEditor` on the target table and `roles/bigquery.jobUser`
     on the project. For **cross-project** logging, also ensure the BigQuery API
     is enabled in the source project and the service account has
@@ -23744,22 +24004,22 @@ If you click on one of the traces, you will see a waterfall view of the detailed
 - [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
 
 ================
-File: docs/integrations/code-exec-agent-engine.md
+File: docs/integrations/code-exec-agent-runtime.md
 ================
 ---
-catalog_title: Code Execution Tool with Agent Engine
+catalog_title: Code Execution Tool with Agent Runtime
 catalog_description: Run AI-generated code in a secure and scalable GKE environment
-catalog_icon: /integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/agent-platform.svg
 catalog_tags: ["code", "google"]
 ---
 
-# Agent Engine Code Execution tool for ADK
+# Agent Runtime Code Execution tool for ADK
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span>
 </div>
 
-The Agent Engine Code Execution ADK Tool provides a low-latency, highly
+The Agent Runtime Code Execution ADK Tool provides a low-latency, highly
 efficient method for running AI-generated code using the
 [Google Cloud Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 service. This tool is designed for fast execution, tailored for agentic workflows,
@@ -23772,23 +24032,23 @@ multi-step coding tasks, including:
 -   **Code with data analysis:** Upload data files up to 100MB, and run
     multiple code-based analyses without the need to reload data for each code run.
 
-This code execution tool is part of the Agent Engine suite, however you do not
-have to deploy your agent to Agent Engine to use it. You can run your agent
+This code execution tool is part of the Agent Runtime suite, however you do not
+have to deploy your agent to Agent Runtime to use it. You can run your agent
 locally or with other services and use this tool. For more information about the
-Code Execution feature in Agent Engine, see the
+Code Execution feature in Agent Runtime, see the
 [Agent Engine Code Execution](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/overview)
 documentation.
 
 
 ## Use the Tool
 
-Using the Agent Engine Code Execution tool requires that you create a sandbox
-environment with Google Cloud Agent Engine before using the tool with an ADK
+Using the Agent Runtime Code Execution tool requires that you create a sandbox
+environment with Google Cloud Agent Runtime before using the tool with an ADK
 agent.
 
 To use the Code Execution tool with your ADK agent:
 
-1.  Follow the instructions in the Agent Engine
+1.  Follow the instructions in the Agent Runtime
     [Code Execution quickstart](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/quickstart)
     to create a code execution sandbox environment.
 1.  Create an ADK agent with settings to access the Google Cloud project
@@ -23825,7 +24085,7 @@ agent's task, meaning the sandbox's state persists across all operations within
 an ADK workflow session.
 
 1.  **Sandbox creation:** For multi-step tasks requiring code execution,
-    the Agent Engine creates a sandbox with specified language and machine
+    the Agent Runtime creates a sandbox with specified language and machine
     configurations, isolating the code execution environment. If no sandbox is
     pre-created, the code execution tool will automatically create one using
     default settings.
@@ -23846,7 +24106,7 @@ an ADK workflow session.
     variable context must carry over between multiple tool calls.
 -   **Targeted Isolation:** Provides robust process-level isolation,
     ensuring that tool code execution is safe while remaining lightweight.
--   **Agent Engine integration:** Tightly integrated into the Agent Engine
+-   **Agent Runtime integration:** Tightly integrated into the Agent Runtime
     tool-use and orchestration layer.
 -   **Low-latency performance:** Designed for speed, allowing agents to
     execute complex tool-use workflows efficiently without significant overhead.
@@ -23855,10 +24115,10 @@ an ADK workflow session.
 
 ## System requirements¶
 
-The following requirements must be met to successfully use the Agent Engine
+The following requirements must be met to successfully use the Agent Runtime
 Code Execution tool with your ADK agents:
 
--   Google Cloud project with Vertex API enabled
+-   Google Cloud project with Agent Platform API enabled
 -   Agent's service account requires **roles/aiplatform.user** role, which
     allow it to:
     -   Create, get, list and delete code execution sandboxes
@@ -23866,7 +24126,7 @@ Code Execution tool with your ADK agents:
 
 ## Configuration parameters {#config-parameters}
 
-The Agent Engine Code Execution tool has the following parameters. You must set
+The Agent Runtime Code Execution tool has the following parameters. You must set
 one of the following resource parameters:
 
 -   **`sandbox_resource_name`** : A sandbox resource path to an
@@ -23878,7 +24138,7 @@ string format is as follows:
     # Example:
     projects/my-vertex-agent-project/locations/us-central1/reasoningEngines/6842888880301111172/sandboxEnvironments/6545148888889161728
     ```
--   **`agent_engine_resource_name`**: Agent Engine resource name where the tool
+-   **`agent_engine_resource_name`**: Agent Runtime resource name where the tool
 creates a sandbox environment. The expected string format is as follows:
     ```
     projects/{$PROJECT_ID}/locations/{$LOCATION_ID}/reasoningEngines/{$REASONING_ENGINE_ID}
@@ -23887,15 +24147,15 @@ creates a sandbox environment. The expected string format is as follows:
     projects/my-vertex-agent-project/locations/us-central1/reasoningEngines/6842888880301111172
     ```
 
-You can use Google Cloud Agent Engine's API to configure Agent Engine sandbox
+You can use Google Cloud Agent Runtime's API to configure Agent Runtime sandbox
 environments separately using a Google Cloud client connection, including the
 following settings:
 
 -   **Programming languages,** including Python and JavaScript
 -   **Compute environment**, including CPU and memory sizes
 
-For more information on connecting to Google Cloud Agent Engine and configuring
-sandbox environments, see the Agent Engine
+For more information on connecting to Google Cloud Agent Runtime and configuring
+sandbox environments, see the Agent Runtime
 [Code Execution quickstart](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/quickstart#create_a_sandbox).
 
 ## Advanced example {#advanced-example}
@@ -24049,7 +24309,7 @@ web pages by taking screenshots, clicking, typing, and navigating.
 
 For more information about the computer use model, see
 Gemini API [Computer use](https://ai.google.dev/gemini-api/docs/computer-use)
-or the Google Cloud Vertex AI API
+or the Agent Platform API
 [Computer use](https://cloud.google.com/vertex-ai/generative-ai/docs/computer-use).
 
 !!! example "Preview release"
@@ -24358,7 +24618,7 @@ File: docs/integrations/data-agent.md
 ---
 catalog_title: Data Agents
 catalog_description: Analyze data with AI-powered agents
-catalog_icon: /integrations/assets/vertex-ai.png
+catalog_icon: /integrations/assets/agent-platform.svg
 catalog_tags: ["data", "google"]
 ---
 
@@ -24952,49 +25212,49 @@ implementation to help you get started.
 File: docs/integrations/express-mode.md
 ================
 ---
-catalog_title: Vertex AI express mode
-catalog_description: Try development with Vertex AI services at no cost
-catalog_icon: /integrations/assets/vertex-ai.png
+catalog_title: Agent Platform Express Mode
+catalog_description: Try development with Agent Platform services at no cost
+catalog_icon: /integrations/assets/agent-platform.svg
 catalog_tags: ["google"]
 ---
 
-# Google Cloud Vertex AI express mode for ADK
+# Google Cloud Agent Platform express mode for ADK
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-preview">Preview</span>
 </div>
 
-Google Cloud Vertex AI express mode provides a no-cost access tier for
-prototyping and development, allowing you to use Vertex AI services without
+Google Cloud Agent Platform express mode provides a no-cost access tier for
+prototyping and development, allowing you to use Agent Platform services without
 creating a full Google Cloud Project. This service includes access to many
-powerful Vertex AI services, including:
+powerful Agent Platform services, including:
 
-- [Vertex AI SessionService](#vertex-ai-session-service)
-- [Vertex AI MemoryBankService](#vertex-ai-memory-bank)
+- [Agent Runtime SessionService](#agent-runtime-session-service)
+- [Agent Runtime MemoryBankService](#memory-bank)
 
 You can sign up for an express mode account using a Gmail account and receive an
 API key to use with the ADK. Obtain an API key through the
 [Google Cloud Console](https://console.cloud.google.com/expressmode).
 For more information, see
-[Vertex AI express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
+[Agent Platform express mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview).
 
 !!! example "Preview release"
-    The Vertex AI express mode feature is a Preview release. For
+    The Agent Platform express mode feature is a Preview release. For
     more information, see the
     [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
 
-??? info "Vertex AI express mode limitations"
+??? info "Agent Platform express mode limitations"
 
-    Vertex AI express mode projects are only valid for 90 days and only select
+    Agent Platform express mode projects are only valid for 90 days and only select
     services are available to be used with limited quota. For example, the number of
-    Agent Engines is restricted to 10 and deployment to Agent Engine requires paid
-    access. To remove the quota restrictions and use all of Vertex AI's services,
+    Agent Runtime instances are restricted to 10 and deployment to Agent Runtime requires paid
+    access. To remove the quota restrictions and use all of Agent Platform's services,
     add a billing account to your express mode project.
 
-## Configure Agent Engine container
+## Configure Agent Runtime container
 
-When using Vertex AI express mode, create an `AgentEngine` object to enable
-Vertex AI management of agent components such as `Session` and `Memory` objects.
+When using Agent Platform express mode, create an `AgentEngine` object to enable
+Agent Platform management of agent components such as `Session` and `Memory` objects.
 With this approach, `Session` objects are handled as children of the
 `AgentEngine` object. Before running your agent make sure your environment
 variables are set correctly, as shown below:
@@ -25004,40 +25264,40 @@ GOOGLE_GENAI_USE_VERTEXAI=TRUE
 GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
 ```
 
-Next, create your Agent Engine instance using the Vertex AI SDK.
+Next, create your Agent Runtime instance using the Agent Platform SDK.
 
-1. Import Vertex AI SDK.
+1. Import Agent Platform SDK.
 
     ```py
     import vertexai
     from vertexai import agent_engines
     ```
 
-2. Initialize the Vertex AI Client with your API key and create an agent engine instance.
+2. Initialize the Agent Platform Client with your API key and create an agent engine instance.
 
     ```py
-    # Create Agent Engine with Gen AI SDK
+    # Create Agent Runtime with Gen AI SDK
     client = vertexai.Client(
       api_key="YOUR_API_KEY",
     )
 
     agent_engine = client.agent_engines.create(
       config={
-        "display_name": "Demo Agent Engine",
-        "description": "Agent Engine for Session and Memory",
+        "display_name": "Demo Agent Runtime",
+        "description": "Agent Runtime for Session and Memory",
       })
     ```
 
-3. Get the Agent Engine name and ID from the response to use with Memories and Sessions.
+3. Get the Agent Runtime name and ID from the response to use with Memories and Sessions.
 
     ```py
     APP_ID = agent_engine.api_resource.name.split('/')[-1]
     ```
 
-## Manage Sessions with `VertexAiSessionService` {#vertex-ai-session-service}
+## Manage Sessions with `VertexAiSessionService` {#agent-runtime-session-service}
 
-[`VertexAiSessionService`](/sessions/session/#sessionservice-implementations)
-is compatible with Vertex AI express mode API Keys. You can instead initialize
+[`VertexAiSessionService`](/sessions/session#sessionservice-implementations)
+is compatible with Agent Platform Express Mode API Keys. You can instead initialize
 the session object without any project or location.
 
 ```py
@@ -25050,7 +25310,7 @@ from google.adk.sessions import VertexAiSessionService
 # The app_name used with this service should be the Reasoning Engine ID or name
 APP_ID = "your-reasoning-engine-id"
 
-# Project and location are not required when initializing with Vertex express mode
+# Project and location are not required when initializing with Agent Platform express mode
 session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 # Use REASONING_ENGINE_APP_ID when calling service methods, e.g.:
 # session = await session_service.create_session(app_name=APP_ID, user_id= ...)
@@ -25060,13 +25320,13 @@ session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 
     For Free express mode Projects, `VertexAiSessionService` has the following quota:
 
-    - 10 Create, delete, or update Vertex AI Agent Engine sessions per minute
-    - 30 Append event to Vertex AI Agent Engine sessions per minute
+    - 10 Create, delete, or update Agent Runtime sessions per minute
+    - 30 Append event to Agent Runtime sessions per minute
 
-## Manage Memory with `VertexAiMemoryBankService` {#vertex-ai-memory-bank}
+## Manage Memory with `VertexAiMemoryBankService` {#memory-bank}
 
-[`VertexAiMemoryBankService`](/sessions/memory.md#vertex-ai-memory-bank)
-is compatible with Vertex AI express mode API Keys. You can instead initialize
+[`VertexAiMemoryBankService`](/sessions/memory.md#memory-bank)
+is compatible with Agent Platform express mode API Keys. You can instead initialize
 the memory object without any project or location.
 
 ```py
@@ -25089,8 +25349,8 @@ memory_service = VertexAiMemoryBankService(agent_engine_id=APP_ID)
 
     For Free express mode Projects, `VertexAiMemoryBankService` has the following quota:
 
-    - 10 Create, delete, or update Vertex AI Agent Engine memory resources per minute
-    - 10 Get, list, or retrieve from Vertex AI Agent Engine Memory Bank per minute
+    - 10 Create, delete, or update Agent Runtime memory resources per minute
+    - 10 Get, list, or retrieve from Agent Runtime Memory Bank per minute
 
 ### Code Sample: Weather Agent with Session and Memory
 
@@ -25099,7 +25359,7 @@ This code sample shows a weather agent that utilizes both
 allowing your agent to recall user preferences and conversations.
 
 *   [Weather Agent with Session and Memory](https://github.com/google/adk-docs/blob/main/examples/python/notebooks/express-mode-weather-agent.ipynb)
-    using Vertex AI express mode
+    using Agent Platform express mode
 
 ================
 File: docs/integrations/firestore-session-service.md
@@ -26413,7 +26673,7 @@ The `google_search` tool allows the agent to perform web searches using Google S
 
 !!! warning "Additional requirements when using the `google_search` tool"
     When you use grounding with Google Search, and you receive Search suggestions in your response, you must display the Search suggestions in production and in your applications.
-    For more information on grounding with Google Search, see Grounding with Google Search documentation for [Google AI Studio](https://ai.google.dev/gemini-api/docs/grounding/search-suggestions) or [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions). The UI code (HTML) is returned in the Gemini response as `renderedContent`, and you will need to show the HTML in your app, in accordance with the policy.
+    For more information on grounding with Google Search, see Grounding with Google Search documentation for [Google AI Studio](https://ai.google.dev/gemini-api/docs/grounding/search-suggestions) or [Agent Platform](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-search-suggestions). The UI code (HTML) is returned in the Gemini response as `renderedContent`, and you will need to show the HTML in your app, in accordance with the policy.
 
 !!! warning "Warning: Single tool per agent limitation"
 
@@ -29605,6 +29865,39 @@ env={
 - [Qdrant Cloud](https://cloud.qdrant.io/)
 
 ================
+File: docs/integrations/rag-engine.md
+================
+---
+catalog_title: RAG Engine
+catalog_description: Perform private data retrieval using RAG Engine
+catalog_icon: /integrations/assets/agent-platform.svg
+catalog_tags: ["data","google"]
+---
+
+# RAG Engine tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using RAG Engine.
+
+When you use grounding with RAG Engine, you need to prepare a RAG corpus beforehand.
+Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/tools/limitations/).
+
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/rag_engine.py"
+    ```
+
+================
 File: docs/integrations/reflect-and-retry.md
 ================
 ---
@@ -30799,73 +31092,6 @@ robust recovery. For example:
 - [Temporal Cloud](https://temporal.io/cloud) - Managed Temporal service
 - [Orchestrating ambient agents with Temporal](https://temporal.io/blog/orchestrating-ambient-agents-with-temporal) -
   Blog post on long-running agent patterns
-
-================
-File: docs/integrations/vertex-ai-rag-engine.md
-================
----
-catalog_title: Vertex AI RAG Engine
-catalog_description: Perform private data retrieval using Vertex AI RAG Engine
-catalog_icon: /integrations/assets/vertex-ai.png
-catalog_tags: ["data","google"]
----
-
-# Vertex AI RAG Engine tool for ADK
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
-</div>
-
-The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using Vertex
-AI RAG Engine.
-
-When you use grounding with Vertex AI RAG Engine, you need to prepare a RAG corpus beforehand.
-Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [Vertex AI RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
-
-!!! warning "Warning: Single tool per agent limitation"
-
-    This tool can only be used ***by itself*** within an agent instance.
-    For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/tools/limitations/).
-
-=== "Python"
-
-    ```py
-    --8<-- "examples/python/snippets/tools/built-in-tools/vertexai_rag_engine.py"
-    ```
-
-================
-File: docs/integrations/vertex-ai-search.md
-================
----
-catalog_title: Vertex AI Search
-catalog_description: Search across your private, configured data stores in Vertex AI Search
-catalog_icon: /integrations/assets/vertex-ai.png
-catalog_tags: ["search","google"]
----
-
-# Vertex AI Search tool for ADK
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
-</div>
-
-The `vertex_ai_search_tool` uses Google Cloud Vertex AI Search, enabling the
-agent to search across your private, configured data stores (e.g., internal
-documents, company policies, knowledge bases). This built-in tool requires you
-to provide the specific data store ID during configuration. For further details
-of the tool, see
-[Understanding Vertex AI Search grounding](/grounding/vertex_ai_search_grounding/).
-
-!!! warning "Warning: Single tool per agent limitation"
-
-    This tool can only be used ***by itself*** within an agent instance.
-    For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
-
-```py
---8<-- "examples/python/snippets/tools/built-in-tools/vertexai_search.py"
-```
 
 ================
 File: docs/integrations/weave.md
@@ -33787,8 +34013,8 @@ issues, and evaluating performance.
 Now that you've verified the local operation of your agent, you're ready to move
 on to deploying your agent! Here are some ways you can deploy your agent:
 
-* Deploy to [Agent Engine](../deploy/agent-engine/index.md), a simple way to deploy
-  your ADK agents to a managed service in Vertex AI on Google Cloud.
+* Deploy to [Agent Runtime](../deploy/agent-runtime/index.md), a simple way to deploy
+  your ADK agents to a managed service on Agent Platform on Google Cloud.
 * Deploy to [Cloud Run](../deploy/cloud-run.md) and have full control over how
   you scale and manage your agents using serverless architecture on Google
   Cloud.
@@ -35736,7 +35962,7 @@ File: docs/safety/index.md
 
 As AI agents grow in capability, ensuring they operate safely, securely, and align with your brand values is paramount. Uncontrolled agents can pose risks, including executing misaligned or harmful actions, such as data exfiltration, and generating inappropriate content that can impact your brand’s reputation. **Sources of risk include vague instructions, model hallucination, jailbreaks and prompt injections from adversarial users, and indirect prompt injections via tool use.**
 
-[Google Cloud Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/overview) provides a multi-layered approach to mitigate these risks, enabling you to build powerful *and* trustworthy agents. It offers several mechanisms to establish strict boundaries, ensuring agents only perform actions you've explicitly allowed:
+[Google Cloud Agent Platform](https://cloud.google.com/vertex-ai/generative-ai/docs/overview) provides a multi-layered approach to mitigate these risks, enabling you to build powerful *and* trustworthy agents. It offers several mechanisms to establish strict boundaries, ensuring agents only perform actions you've explicitly allowed:
 
 1. **Identity and Authorization**: Control who the agent **acts as** by defining agent and user auth.
 2. **Guardrails to screen inputs and outputs:** Control your model and tool calls precisely.
@@ -36054,7 +36280,7 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
 
 Gemini models come with in-built safety mechanisms that can be leveraged to improve content and brand safety.
 
-* **Content safety filters**:  [Content filters](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes) can help block the output of harmful content. They function independently from Gemini models as part of a layered defense against threat actors who attempt to jailbreak the model. Gemini models on Vertex AI use two types of content filters:
+* **Content safety filters**:  [Content filters](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes) can help block the output of harmful content. They function independently from Gemini models as part of a layered defense against threat actors who attempt to jailbreak the model. Gemini models on Agent Platform use two types of content filters:
     * **Non-configurable safety filters** automatically block outputs containing prohibited content, such as child sexual abuse material (CSAM) and personally identifiable information (PII).
     * **Configurable content filters** allow you to define blocking thresholds in four harm categories (hate speech, harassment, sexually explicit, and dangerous content,) based on probability and severity scores. These filters are default off but you can configure them according to your needs.
 
@@ -36098,7 +36324,7 @@ Gemini models come with in-built safety mechanisms that can be leveraged to impr
     })
     ```
 
-* **System instructions for safety**: [System instructions](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/safety-system-instructions) for Gemini models in Vertex AI provide direct guidance to the model on how to behave and what type of content to generate. By providing specific instructions, you can proactively steer the model away from generating undesirable content to meet your organization’s unique needs. You can craft system instructions to define content safety guidelines, such as prohibited and sensitive topics, and disclaimer language, as well as brand safety guidelines to ensure the model's outputs align with your brand's voice, tone, values, and target audience.
+* **System instructions for safety**: [System instructions](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/safety-system-instructions) for Gemini models on Agent Platform provide direct guidance to the model on how to behave and what type of content to generate. By providing specific instructions, you can proactively steer the model away from generating undesirable content to meet your organization’s unique needs. You can craft system instructions to define content safety guidelines, such as prohibited and sensitive topics, and disclaimer language, as well as brand safety guidelines to ensure the model's outputs align with your brand's voice, tone, values, and target audience.
 
 While these measures are robust against content safety, you need additional checks to reduce agent misalignment, unsafe actions, and brand safety risks.
 
@@ -36515,19 +36741,19 @@ the storage backend that best suits your needs:
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-*   **How it works:** Uses Google Cloud Vertex AI infrastructure via API
+*   **How it works:** Uses Google Cloud Agent Platform infrastructure via API
     calls for session management.
 *   **Persistence:** Yes. Data is managed reliably and scalably via
-    [Vertex AI Agent Engine](/deploy/agent-engine/).
+    [Agent Runtime](/deploy/agent-runtime/).
 *   **Requires:**
     *   A Google Cloud project (`pip install vertexai`)
     *   A Google Cloud storage bucket that can be configured by this
         [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
     *   A Reasoning Engine resource name/ID that can setup following this
-        [tutorial](/deploy/agent-engine/).
-    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Vertex AI Express Mode](/integrations/express-mode/).
+        [tutorial](/deploy/agent-runtime/).
+    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Agent Platform Express Mode](/integrations/express-mode/).
 *   **Best for:** Scalable production applications deployed on Google Cloud,
-    especially when integrating with other Vertex AI features.
+    especially when integrating with other Agent Platform features.
 
 === "Python"
 
@@ -36921,12 +37147,12 @@ The ADK offers two distinct `MemoryService` implementations, each tailored to di
 
 | **Feature** | **InMemoryMemoryService** | **VertexAiMemoryBankService** |
 | :--- | :--- | :--- |
-| **Persistence** | None (data is lost on restart) | Yes (Managed by Vertex AI) |
+| **Persistence** | None (data is lost on restart) | Yes (Managed by Agent Platform) |
 | **Primary Use Case** | Prototyping, local development, and simple testing. | Building meaningful, evolving memories from user conversations. |
 | **Memory Extraction** | Stores full conversation | Extracts [meaningful information](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories) from conversations and consolidates it with existing memories (powered by LLM) |
 | **Search Capability** | Basic keyword matching. | Advanced semantic search. |
-| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) instance in Vertex AI. |
-| **Dependencies** | None. | Google Cloud Project, Vertex AI API |
+| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) instance on Agent Platform. |
+| **Dependencies** | None. | Google Cloud Project, Agent Platform API |
 | **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. |
 
 
@@ -37211,9 +37437,9 @@ You can also search memory from within a custom tool by using the `tool.Context`
     }
     ```
 
-## Vertex AI Memory Bank
+## Memory Bank
 
-The `VertexAiMemoryBankService` connects your agent to [Vertex AI Memory Bank](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview), a fully managed Google Cloud service that provides sophisticated, persistent memory capabilities for conversational agents.
+The `VertexAiMemoryBankService` connects your agent to [Memory Bank](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview), a fully managed Google Cloud service that provides sophisticated, persistent memory capabilities for conversational agents.
 
 ### How It Works
 
@@ -37226,8 +37452,8 @@ The service handles two key operations:
 
 Before you can use this feature, you must have:
 
-1.  **A Google Cloud Project:** With the Vertex AI API enabled.
-2.  **An Agent Engine:** You need to create an Agent Engine in Vertex AI. You do not need to deploy your agent to Agent Engine Runtime to use Memory Bank. This will provide you with the **Agent Engine ID** required for configuration.
+1.  **A Google Cloud Project:** With the Agent Platform API enabled.
+2.  **An Agent Runtime:** You need to create an Agent Runtime on Agent Platform. You do not need to deploy your agent to Agent Runtime to use Memory Bank. This will provide you with the **Agent Runtime ID** required for configuration.
 3.  **Authentication:** Ensure your local environment is authenticated to access Google Cloud services. The simplest way is to run:
     ```bash
     gcloud auth application-default login
@@ -37406,7 +37632,7 @@ To extract memories from your session, you need to call `add_session_to_memory`.
 The memory workflow internally involves these steps:
 
 1. **Session Interaction:** A user interacts with an agent via a `Session`, managed by a `SessionService`. Events are added, and state might be updated.
-2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or Agent Engine Memory Bank).
+2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or Agent Runtime Memory Bank).
 3. **Later Query:** In a *different* (or the same) session, the user might ask a question requiring past context (e.g., "What did we discuss about project X last week?").
 4. **Agent Uses Memory Tool:** An agent equipped with a memory-retrieval tool (like the built-in `load_memory` tool) recognizes the need for past context. It calls the tool, providing a search query (e.g., "discussion project X last week").
 5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name, user_id, query)`.
@@ -38121,7 +38347,7 @@ File: docs/skills/index.md
 # Skills for ADK agents
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-preview">Experimental</span>
 </div>
 
 An agent ***Skill*** is a self-contained unit of functionality that an ADK agent
@@ -38142,33 +38368,42 @@ definition and then add to your agent's tools list. You can define a
 [Skill in code](#inline-skills),
 or load the skill from a file definition, as shown below:
 
-```python
-import pathlib
+=== "Python"
 
-from google.adk import Agent
-from google.adk.skills import load_skill_from_dir
-from google.adk.tools import skill_toolset
+    ```python
+    import pathlib
 
-weather_skill = load_skill_from_dir(
-    pathlib.Path(__file__).parent / "skills" / "weather_skill"
-)
+    from google.adk import Agent
+    from google.adk.skills import load_skill_from_dir
+    from google.adk.tools import skill_toolset
 
-my_skill_toolset = skill_toolset.SkillToolset(
-    skills=[weather_skill]
-)
+    weather_skill = load_skill_from_dir(
+        pathlib.Path(__file__).parent / "skills" / "weather_skill"
+    )
 
-root_agent = Agent(
-    model="gemini-flash-latest",
-    name="skill_user_agent",
-    description="An agent that can use specialized skills.",
-    instruction=(
-        "You are a helpful assistant that can leverage skills to perform tasks."
-    ),
-    tools=[
-        my_skill_toolset,
-    ],
-)
-```
+    my_skill_toolset = skill_toolset.SkillToolset(
+        skills=[weather_skill],
+        additional_tools=[get_weather_tool],
+    )
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="skill_user_agent",
+        description="An agent that can use specialized skills.",
+        instruction=(
+            "You are a helpful assistant that can leverage skills to perform tasks."
+        ),
+        tools=[
+            my_skill_toolset,
+        ],
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/skills/get_started.ts:full_example"
+    ```
 
 For a complete code example of an ADK agent with a Skill, including both
 file-based and in-line Skill definitions, see the code sample
@@ -38207,7 +38442,7 @@ file structure. Only the `SKILL.md` file is required.
 
 ```
 my_agent/
-    agent.py
+    agent.py (or agent.ts)
     .env
     skills/
         example_skill/        # Skill
@@ -38219,37 +38454,46 @@ my_agent/
             assets/
                 *.*           # templates, images, data
             scripts/
-                *.py          # utility scripts
+                *.py          # utility scripts (Python)
+                *.js          # utility scripts (JavaScript)
+                *.ts          # utility scripts (TypeScript)
 ```
 
 ### Define Skills in code {#inline-skills}
 
-In ADK agents, you can also define Skills within the code of the agent, using
-the `Skill` model class, as shown below. This method of Skill definition enables
+In ADK agents, you can also define Skills within the code of the agent, as shown below. This method of Skill definition enables
 you to dynamically modify skills from your ADK agent code.
 
-```python
-from google.adk.skills import models
+=== "Python"
 
-greeting_skill = models.Skill(
-    frontmatter=models.Frontmatter(
-        name="greeting-skill",
-        description=(
-            "A friendly greeting skill that can say hello to a specific person."
+    ```python
+    from google.adk.skills import models
+
+    greeting_skill = models.Skill(
+        frontmatter=models.Frontmatter(
+            name="greeting-skill",
+            description=(
+                "A friendly greeting skill that can say hello to a specific person."
+            ),
         ),
-    ),
-    instructions=(
-        "Step 1: Read the 'references/hello_world.txt' file to understand how"
-        " to greet the user. Step 2: Return a greeting based on the reference."
-    ),
-    resources=models.Resources(
-        references={
-            "hello_world.txt": "Hello! So glad to have you here!",
-            "example.md": "This is an example reference.",
-        },
-    ),
-)
-```
+        instructions=(
+            "Step 1: Read the 'references/hello_world.txt' file to understand how"
+            " to greet the user. Step 2: Return a greeting based on the reference."
+        ),
+        resources=models.Resources(
+            references={
+                "hello_world.txt": "Hello! So glad to have you here!",
+                "example.md": "This is an example reference.",
+            },
+        ),
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/skills/inline_skill.ts:full_example"
+    ```
 
 ## Next steps
 
@@ -38267,7 +38511,7 @@ File: docs/streaming/dev-guide/part1.md
 
 Google's Agent Development Kit ([ADK](https://adk.dev)) provides a production-ready framework for building Bidi-streaming applications with Gemini models. This guide introduces ADK's streaming architecture, which enables real-time, two-way communication between users and AI agents through multimodal channels (text, audio, video).
 
-**What you'll learn**: This part covers the fundamentals of Bidi-streaming, the underlying Live API technology (Gemini Live API and Vertex AI Live API), ADK's architectural components (`LiveRequestQueue`, `Runner`, `Agent`), and a complete FastAPI implementation example. You'll understand how ADK handles session management, tool orchestration, and platform abstraction—reducing months of infrastructure development to declarative configuration.
+**What you'll learn**: This part covers the fundamentals of Bidi-streaming, the underlying Live API technology (Gemini Live API and Gemini Live API (Agent Platform)), ADK's architectural components (`LiveRequestQueue`, `Runner`, `Agent`), and a complete FastAPI implementation example. You'll understand how ADK handles session management, tool orchestration, and platform abstraction—reducing months of infrastructure development to declarative configuration.
 
 ## ADK Gemini Live API Toolkit Demo
 
@@ -38388,11 +38632,11 @@ An agent can provide clients with a secure, interactive, and data-rich way to ma
 - Multimodality (Screen Sharing): The agent can share its screen to display charts, graphs, and portfolio performance data. The client could also share their screen to point to a specific news article and ask, "What is the potential impact of this event on my tech stocks?"
 - Live Interaction: Analyze the client's current portfolio allocation by accessing their account data.Simulate the impact of a potential trade on the portfolio's risk profile.
 
-## 1.2 Gemini Live API and Vertex AI Live API
+## 1.2 Gemini Live API and Gemini Live API (Agent Platform)
 
-ADK Gemini Live API Toolkit capabilities are powered by Live API technology, available through two platforms: **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud). Both provide real-time, low-latency streaming conversations with Gemini models, but serve different development and deployment needs.
+ADK Gemini Live API Toolkit capabilities are powered by Live API technology, available through two platforms: **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud). Both provide real-time, low-latency streaming conversations with Gemini models, but serve different development and deployment needs.
 
-Throughout this guide, we use **"Live API"** to refer to both platforms collectively, specifying "Gemini Live API" or "Vertex AI Live API" only when discussing platform-specific features or differences.
+Throughout this guide, we use **"Live API"** to refer to both platforms collectively, specifying "Gemini Live API" or "Gemini Live API (Agent Platform)" only when discussing platform-specific features or differences.
 
 ### What is the Live API?
 
@@ -38425,11 +38669,11 @@ Live API is Google's real-time conversational AI technology that enables **low-l
 - **Context windows**: Varies by model (typically 32k-128k tokens for Live API models). See [Gemini models](https://ai.google.dev/gemini-api/docs/models/gemini) for specific limits.
 - **Languages**: 24+ languages supported with automatic detection
 
-### Gemini Live API vs Vertex AI Live API
+### Gemini Live API vs Gemini Live API (Agent Platform)
 
 Both APIs provide the same core Live API technology, but differ in deployment platform, authentication, and enterprise features:
 
-| **Aspect** | **Gemini Live API** | **Vertex AI Live API** |
+| **Aspect** | **Gemini Live API** | **Gemini Live API (Agent Platform)** |
 |--------|-----------------|-------------------|
 | **Access** | Google AI Studio | Google Cloud |
 | **Authentication** | API key (`GOOGLE_API_KEY`) | Google Cloud credentials (`GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`) |
@@ -38446,7 +38690,7 @@ Both APIs provide the same core Live API technology, but differ in deployment pl
 
     **Concurrent session limits**: Quota-based and may vary by account tier or configuration. Check your current quotas in Google AI Studio or Google Cloud Console.
 
-    **Official Documentation**: [Gemini Live API Guide](https://ai.google.dev/gemini-api/docs/live-guide) | [Vertex AI Live API Overview](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+    **Official Documentation**: [Gemini Live API Guide](https://ai.google.dev/gemini-api/docs/live-guide) | [Gemini Live API (Agent Platform) Overview](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
 ## 1.3 ADK Gemini Live API Toolkit: For Building Realtime Agent Applications
 
@@ -38463,18 +38707,18 @@ ADK transforms these challenges into simple, declarative APIs. Instead of spendi
 | **Connection Management** | ❌ Manual reconnection and session resumption | ✅ Automatic reconnection and session resumption (see [Part 4: Live API Session Resumption](part4.md#live-api-session-resumption)) |
 | **Event Model** | ❌ Custom event structures and serialization | ✅ Unified event model with metadata (see [Part 3: Event Handling](part3.md)) |
 | **Async Event Processing Framework** | ❌ Manual async coordination and stream handling | ✅ `LiveRequestQueue`, `run_live()` async generator, automatic bidirectional flow coordination (see [Part 2](part2.md) and [Part 3](part3.md)) |
-| **App-level Session Persistence** | ❌ Manual implementation | ✅ SQL databases (PostgreSQL, MySQL, SQLite), Vertex AI, in-memory (see [ADK Session docs](/sessions/)) |
+| **App-level Session Persistence** | ❌ Manual implementation | ✅ SQL databases (PostgreSQL, MySQL, SQLite), Agent Platform, in-memory (see [ADK Session docs](/sessions/)) |
 
 ### Platform Flexibility
 
-One of ADK's most powerful features is its transparent support for both [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) and [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api). This platform flexibility enables a seamless development-to-production workflow: develop locally with Gemini API using free API keys, then deploy to production with Vertex AI using enterprise Google Cloud infrastructure—all **without changing application code**, only environment configuration.
+One of ADK's most powerful features is its transparent support for both [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) and [Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api). This platform flexibility enables a seamless development-to-production workflow: develop locally with Gemini API using free API keys, then deploy to production with Agent Platform using enterprise Google Cloud infrastructure—all **without changing application code**, only environment configuration.
 
 #### How Platform Selection Works
 
 ADK uses the `GOOGLE_GENAI_USE_VERTEXAI` environment variable to determine which Live API platform to use:
 
 - `GOOGLE_GENAI_USE_VERTEXAI=FALSE` (or not set): Uses Gemini Live API via Google AI Studio
-- `GOOGLE_GENAI_USE_VERTEXAI=TRUE`: Uses Vertex AI Live API via Google Cloud
+- `GOOGLE_GENAI_USE_VERTEXAI=TRUE`: Uses Gemini Live API (Agent Platform) via Google Cloud
 
 This environment variable is read by the underlying `google-genai` SDK when ADK creates the LLM connection. No code changes are needed when switching platforms—only environment configuration changes.
 
@@ -38493,7 +38737,7 @@ GOOGLE_API_KEY=your_api_key_here
 - Instant experimentation with streaming features
 - Zero infrastructure costs during development
 
-##### Production Phase: Vertex AI Live API (Google Cloud)
+##### Production Phase: Gemini Live API (Agent Platform)
 
 ```bash
 # .env.production
@@ -38542,7 +38786,7 @@ graph TB
 
         subgraph "LLM Integration"
             G1[GeminiLlmConnection]
-            G2[Gemini Live API / Vertex AI Live API]
+            G2[Gemini Live API / Gemini Live API on Agent Platform]
         end
     end
 
@@ -38567,7 +38811,7 @@ graph TB
 
 | Developer provides: | ADK provides: | Live API provide: |
 |---------------------|---------------|------------------|
-| **Web / Mobile**: Frontend applications that users interact with, handling UI/UX, user input capture, and response display<br><br>**[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) / [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) Server**: Real-time communication server (such as [FastAPI](https://fastapi.tiangolo.com/)) that manages client connections, handles streaming protocols, and routes messages between clients and ADK<br><br>**`Agent`**: Custom AI agent definition with specific instructions, tools, and behavior tailored to your application's needs | **[LiveRequestQueue](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/live_request_queue.py)**: Message queue that buffers and sequences incoming user messages (text content, audio blobs, control signals) for orderly processing by the agent<br><br>**[Runner](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py)**: Execution engine that orchestrates agent sessions, manages conversation state, and provides the `run_live()` streaming interface<br><br>**[RunConfig](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/run_config.py)**: Configuration for streaming behavior, modalities, and advanced features<br><br>**Internal components** (managed automatically, not directly used by developers): [LLM Flow](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py) for processing pipeline and [GeminiLlmConnection](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/gemini_llm_connection.py) for protocol translation | **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud): Google's real-time language model services that process streaming input, generate responses, handle interruptions, support multimodal content (text, audio, video), and provide advanced AI capabilities like function calling and contextual understanding |
+| **Web / Mobile**: Frontend applications that users interact with, handling UI/UX, user input capture, and response display<br><br>**[WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket) / [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) Server**: Real-time communication server (such as [FastAPI](https://fastapi.tiangolo.com/)) that manages client connections, handles streaming protocols, and routes messages between clients and ADK<br><br>**`Agent`**: Custom AI agent definition with specific instructions, tools, and behavior tailored to your application's needs | **[LiveRequestQueue](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/live_request_queue.py)**: Message queue that buffers and sequences incoming user messages (text content, audio blobs, control signals) for orderly processing by the agent<br><br>**[Runner](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/runners.py)**: Execution engine that orchestrates agent sessions, manages conversation state, and provides the `run_live()` streaming interface<br><br>**[RunConfig](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/agents/run_config.py)**: Configuration for streaming behavior, modalities, and advanced features<br><br>**Internal components** (managed automatically, not directly used by developers): [LLM Flow](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/flows/llm_flows/base_llm_flow.py) for processing pipeline and [GeminiLlmConnection](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/gemini_llm_connection.py) for protocol translation | **[Gemini Live API](https://ai.google.dev/gemini-api/docs/live)** (via Google AI Studio) and **[Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)** (via Google Cloud): Google's real-time language model services that process streaming input, generate responses, handle interruptions, support multimodal content (text, audio, video), and provide advanced AI capabilities like function calling and contextual understanding |
 
 This architecture demonstrates ADK's clear separation of concerns: your application handles user interaction and transport protocols, ADK manages the streaming orchestration and state, and Live API provide the AI intelligence. By abstracting away the complexity of LLM-side streaming connection management, event loops, and protocol translation, ADK enables you to focus on building agent behavior and user experiences rather than streaming infrastructure.
 
@@ -38688,7 +38932,7 @@ from google.adk.tools import google_search
 
 # Default models for Live API with native audio support:
 # - Gemini Live API: gemini-2.5-flash-native-audio-preview-12-2025
-# - Vertex AI Live API: gemini-live-2.5-flash-native-audio
+# - Gemini Live API (Agent Platform): gemini-live-2.5-flash-native-audio
 agent = Agent(
     name="google_search_agent",
     model=os.getenv("DEMO_AGENT_MODEL", "gemini-2.5-flash-native-audio-preview-12-2025"),
@@ -38735,7 +38979,7 @@ For production applications, choose a persistent session service based on your i
 
 - You're already using Google Cloud Platform
 - You want managed storage with built-in scalability
-- You need tight integration with Vertex AI features
+- You need tight integration with Agent Platform features
 - Example: `VertexAiSessionService(project="my-project")`
 
 Both provide session persistence capabilities—choose based on your infrastructure and scale requirements. With persistent session services, the state of the `Session` will be preserved even after application shutdown. See the [ADK Session Management documentation](/sessions/) for more details.
@@ -39144,7 +39388,7 @@ For building an ADK Gemini Live API Toolkit application in production, we recomm
 
 Google's production-ready framework for building AI agents with streaming capabilities. ADK provides high-level abstractions for session management, tool orchestration, and state persistence, eliminating the need to implement low-level streaming infrastructure from scratch.
 
-**Live API ([Gemini Live API](https://ai.google.dev/gemini-api/docs/live) and [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api))**
+**Live API ([Gemini Live API](https://ai.google.dev/gemini-api/docs/live) and [Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api))**
 
 Google's real-time conversational AI technology that enables low-latency bidirectional streaming with Gemini models. The Live API provides the underlying WebSocket-based protocol that powers ADK's streaming capabilities, handling multimodal input/output and natural conversation flow.
 
@@ -39603,7 +39847,7 @@ These events are ephemeral and only yielded to callers during active streaming:
 
 ## Understanding Events
 
-Events are the core communication mechanism in ADK Gemini Live API Toolkit's streaming system. This section explores the complete lifecycle of events—from how they're generated through multiple pipeline layers, to concurrent processing patterns that enable true real-time interaction, to practical handling of interruptions and turn completion. You'll learn about event types (text, audio, transcriptions, tool calls), serialization strategies for network transport, and the connection lifecycle that manages streaming sessions across both Gemini Live API and Vertex AI Live API platforms.
+Events are the core communication mechanism in ADK Gemini Live API Toolkit's streaming system. This section explores the complete lifecycle of events—from how they're generated through multiple pipeline layers, to concurrent processing patterns that enable true real-time interaction, to practical handling of interruptions and turn completion. You'll learn about event types (text, audio, transcriptions, tool calls), serialization strategies for network transport, and the connection lifecycle that manages streaming sessions across both Gemini Live API and Gemini Live API platforms.
 
 ### The Event Class
 
@@ -40093,8 +40337,8 @@ For complete error code listings and descriptions, refer to the official documen
 
 !!! note "Official Documentation"
 
-    - **FinishReason** (when model stops generating tokens): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/Candidate/FinishReason) | [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini)
-    - **BlockedReason** (when prompts are blocked by content filters): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/GenerateContentResponse/PromptFeedback/BlockReason) | [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes)
+    - **FinishReason** (when model stops generating tokens): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/Candidate/FinishReason) | [Agent Platform](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini)
+    - **BlockedReason** (when prompts are blocked by content filters): [Google AI for Developers](https://ai.google.dev/api/python/google/ai/generativelanguage/GenerateContentResponse/PromptFeedback/BlockReason) | [Agent Platform](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/configure-safety-attributes)
     - **ADK Implementation**: [`llm_response.py:145-200`](https://github.com/google/adk-python/blob/427a983b18088bdc22272d02714393b0a779ecdf/src/google/adk/models/llm_response.py#L145-L200)
 
 **Best practices for error handling:**
@@ -40979,7 +41223,7 @@ This table provides a quick reference for all RunConfig parameters covered in th
 
 **Platform Support Legend:**
 
-- **Both**: Supported on both Gemini Live API and Vertex AI Live API
+- **Both**: Supported on both Gemini Live API and Gemini Live API (Agent Platform)
 - **Gemini**: Only supported on Gemini Live API
 - **Model-specific**: Requires specific model architecture (e.g., native audio)
 
@@ -41004,7 +41248,7 @@ The `RunConfig` class itself and `StreamingMode` enum are imported from `google.
 
 ## Response Modalities
 
-Response modalities control how the model generates output—as text or audio. Both Gemini Live API and Vertex AI Live API have the same restriction: only one response modality per session.
+Response modalities control how the model generates output—as text or audio. Both Gemini Live API and Gemini Live API (Agent Platform) have the same restriction: only one response modality per session.
 
 **Configuration:**
 
@@ -41036,7 +41280,7 @@ run_config = RunConfig(
 )
 ```
 
-Both Gemini Live API and Vertex AI Live API restrict sessions to a single response modality. Attempting to use both will result in an API error:
+Both Gemini Live API and Gemini Live API (Agent Platform) restrict sessions to a single response modality. Attempting to use both will result in an API error:
 
 ```python
 # ❌ INCORRECT: Both modalities not supported
@@ -41240,7 +41484,7 @@ While this guide focuses on Bidi-streaming with Gemini 2.0 Live models, ADK also
 
 ## Understanding Live API Connections and Sessions
 
-When building ADK Gemini Live API Toolkit applications, it's essential to understand how ADK manages the communication layer between itself and the  Live API backend. This section explores the fundamental distinction between **connections** (the WebSocket transport links that ADK establishes to Live API) and **sessions** (the logical conversation contexts maintained by Live API). Unlike traditional request-response APIs, the Bidi-streaming architecture introduces unique constraints: connection timeouts, session duration limits that vary by modality (audio-only vs audio+video), finite context windows, and concurrent session quotas that differ between Gemini Live API and Vertex AI Live API.
+When building ADK Gemini Live API Toolkit applications, it's essential to understand how ADK manages the communication layer between itself and the  Live API backend. This section explores the fundamental distinction between **connections** (the WebSocket transport links that ADK establishes to Live API) and **sessions** (the logical conversation contexts maintained by Live API). Unlike traditional request-response APIs, the Bidi-streaming architecture introduces unique constraints: connection timeouts, session duration limits that vary by modality (audio-only vs audio+video), finite context windows, and concurrent session quotas that differ between Gemini Live API and Gemini Live API (Agent Platform).
 
 ### ADK `Session` vs Live API Session
 
@@ -41248,7 +41492,7 @@ Understanding the distinction between **ADK `Session`** and **Live API session**
 
 **ADK `Session`** (managed by SessionService):
 - Persistent conversation storage for conversation history, events, and state, created via `SessionService.create_session()`
-- Storage options: in-memory, database (PostgreSQL/MySQL/SQLite), or Vertex AI
+- Storage options: in-memory, database (PostgreSQL/MySQL/SQLite), or Agent Platform
 - Survives across multiple `run_live()` calls and application restarts (with the persistent `SessionService`)
 
 **Live API session** (managed by Live API backend):
@@ -41320,7 +41564,7 @@ sequenceDiagram
 - ADK Session survives across multiple `run_live()` calls and app restarts
 - Live API session is ephemeral - created and destroyed per streaming session
 - Conversation continuity is maintained through ADK Session's persistent storage
-- SessionService manages the persistence layer (in-memory, database, or Vertex AI)
+- SessionService manages the persistence layer (in-memory, database, or Agent Platform)
 
 Now that we understand the difference between ADK `Session` objects and Live API sessions, let's focus on Live API connections and sessions—the backend infrastructure that powers real-time bidirectional streaming.
 
@@ -41341,20 +41585,20 @@ Understanding the distinction between **connections** and **sessions** at the Li
 
 #### Live API Connection and Session Limits by Platform
 
-Understanding the constraints of each platform is critical for production planning. Gemini Live API and Vertex AI Live API have different limits that affect how long conversations can run and how many users can connect simultaneously. The most important distinction is between **connection duration** (how long a single WebSocket connection stays open) and **session duration** (how long a logical conversation can continue).
+Understanding the constraints of each platform is critical for production planning. Gemini Live API and Gemini Live API (Agent Platform) have different limits that affect how long conversations can run and how many users can connect simultaneously. The most important distinction is between **connection duration** (how long a single WebSocket connection stays open) and **session duration** (how long a logical conversation can continue).
 
-| Constraint Type | Gemini Live API<br>(Google AI Studio) | Vertex AI Live API<br>(Google Cloud) | Notes |
+| Constraint Type | Gemini Live API<br>(Google AI Studio) | Gemini Live API<br>(Agent Platform) | Notes |
 |----------------|---------------------------------------|--------------------------------------|-------|
 | **Connection duration** | ~10 minutes | Not documented separately | Each Gemini WebSocket connection auto-terminates; ADK reconnects transparently with session resumption |
 | **Session Duration (Audio-only)** | 15 minutes | 10 minutes | Maximum session duration without context window compression. Both platforms: unlimited with context window compression enabled |
-| **Session Duration (Audio + video)** | 2 minutes | 10 minutes | Gemini has shorter limit for video; Vertex treats all sessions equally. Both platforms: unlimited with context window compression enabled |
-| **Concurrent sessions** | 50 (Tier 1)<br>1,000 (Tier 2+) | Up to 1,000 | Gemini limits vary by API tier; Vertex limit is per Google Cloud project |
+| **Session Duration (Audio + video)** | 2 minutes | 10 minutes | Gemini has shorter limit for video; Agent Platform treats all sessions equally. Both platforms: unlimited with context window compression enabled |
+| **Concurrent sessions** | 50 (Tier 1)<br>1,000 (Tier 2+) | Up to 1,000 | Gemini limits vary by API tier; Agent Platform limit is per Google Cloud project |
 
 !!! note "Source References"
 
     - [Gemini Live API Capabilities Guide](https://ai.google.dev/gemini-api/docs/live-guide)
     - [Gemini API Quotas](https://ai.google.dev/gemini-api/docs/quota)
-    - [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+    - [Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
 ## Live API Session Resumption
 
@@ -41364,7 +41608,7 @@ By default, the Live API limits connection duration to approximately 10 minutes�
 
 ### Scope of ADK's Reconnection Management
 
-ADK manages the **ADK-to-Live API connection** (the WebSocket between ADK and the Gemini/Vertex Live API backend). This is transparent to your application code.
+ADK manages the **ADK-to-Live API connection** (the WebSocket between ADK and the Gemini Live API backend). This is transparent to your application code.
 
 **Your application remains responsible for**:
 
@@ -41397,7 +41641,7 @@ While session resumption is recommended for most production applications, consid
 
 ### How ADK Manages Session Resumption
 
-While session resumption is supported by both Gemini Live API and Vertex AI Live API, using it directly requires managing resumption handles, detecting connection closures, and implementing reconnection logic. ADK takes full responsibility for this complexity, automatically utilizing session resumption behind the scenes so developers don't need to write any reconnection code. You simply enable it in RunConfig, and ADK handles everything transparently.
+While session resumption is supported by both Gemini Live API and Gemini Live API (Agent Platform), using it directly requires managing resumption handles, detecting connection closures, and implementing reconnection logic. ADK takes full responsibility for this complexity, automatically utilizing session resumption behind the scenes so developers don't need to write any reconnection code. You simply enable it in RunConfig, and ADK handles everything transparently.
 
 **ADK's automatic management:**
 
@@ -41420,7 +41664,7 @@ sequenceDiagram
     participant App as Your Application
     participant ADK as ADK (run_live)
     participant WS as WebSocket Connection
-    participant API as Live API (Gemini/Vertex AI)
+    participant API as Live API (Gemini/Agent Platform)
     participant LiveSession as Live Session Context
 
     Note over App,LiveSession: Initial Connection (with session resumption enabled)
@@ -41479,18 +41723,18 @@ sequenceDiagram
 
 ## Live API Context Window Compression
 
-**Problem:** Live API sessions face two critical constraints that limit conversation duration. First, **session duration limits** impose hard time caps: without compression, Gemini Live API limits audio-only sessions to 15 minutes and audio+video sessions to just 2 minutes, while Vertex AI limits all sessions to 10 minutes. Second, **context window limits** restrict conversation length: models have finite token capacities (128k tokens for `gemini-2.5-flash-native-audio-preview-12-2025`, 32k-128k for Vertex AI models). Long conversations—especially extended customer support sessions, tutoring interactions, or multi-hour voice dialogues—will hit either the time limit or the token limit, causing the session to terminate or lose critical conversation history.
+**Problem:** Live API sessions face two critical constraints that limit conversation duration. First, **session duration limits** impose hard time caps: without compression, Gemini Live API limits audio-only sessions to 15 minutes and audio+video sessions to just 2 minutes, while Agent Platform limits all sessions to 10 minutes. Second, **context window limits** restrict conversation length: models have finite token capacities (128k tokens for `gemini-2.5-flash-native-audio-preview-12-2025`, 32k-128k for Agent Platform models). Long conversations—especially extended customer support sessions, tutoring interactions, or multi-hour voice dialogues—will hit either the time limit or the token limit, causing the session to terminate or lose critical conversation history.
 
-**Solution:** [Context window compression](https://ai.google.dev/gemini-api/docs/live-session#context-window-compression) solves both constraints simultaneously. It uses a sliding-window approach to automatically compress or summarize earlier conversation history when the token count reaches a configured threshold. The Live API preserves recent context in full detail while compressing older portions. **Critically, enabling context window compression extends session duration to unlimited time**, removing the session duration limits (15 minutes for audio-only / 2 minutes for audio+video on Gemini Live API; 10 minutes for all sessions on Vertex AI) while also preventing token limit exhaustion. However, there is a trade-off: as the feature summarizes earlier conversation history rather than retaining it all, the detail of past context will be gradually lost over time. The model will have access to compressed summaries of older exchanges, not the full verbatim history.
+**Solution:** [Context window compression](https://ai.google.dev/gemini-api/docs/live-session#context-window-compression) solves both constraints simultaneously. It uses a sliding-window approach to automatically compress or summarize earlier conversation history when the token count reaches a configured threshold. The Live API preserves recent context in full detail while compressing older portions. **Critically, enabling context window compression extends session duration to unlimited time**, removing the session duration limits (15 minutes for audio-only / 2 minutes for audio+video on Gemini Live API; 10 minutes for all sessions on Agent Platform) while also preventing token limit exhaustion. However, there is a trade-off: as the feature summarizes earlier conversation history rather than retaining it all, the detail of past context will be gradually lost over time. The model will have access to compressed summaries of older exchanges, not the full verbatim history.
 
 ### Platform Behavior and Official Limits
 
-Session duration management and context window compression are **Live API platform features**. ADK configures these features via RunConfig and passes the configuration to the Live API, but the actual enforcement and implementation are handled by the Gemini/Vertex AI Live API backends.
+Session duration management and context window compression are **Live API platform features**. ADK configures these features via RunConfig and passes the configuration to the Live API, but the actual enforcement and implementation are handled by the Gemini Live API backends.
 
 **Important**: The duration limits and "unlimited" session behavior mentioned in this guide are based on current Live API behavior. These limits are subject to change by Google. Always verify current session duration limits and compression behavior in the official documentation:
 
 - [Gemini Live API Documentation](https://ai.google.dev/gemini-api/docs/live)
-- [Vertex AI Live API Documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+- [Gemini Live API (Agent Platform) Documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
 ADK provides an easy way to configure context window compression through RunConfig. However, developers are responsible for appropriately configuring the compression parameters (`trigger_tokens` and `target_tokens`) based on their specific requirements—model context window size, expected conversation patterns, and quality needs:
 
@@ -41518,7 +41762,7 @@ When context window compression is enabled:
 3. Earlier conversation history is compressed or summarized using a sliding window approach
 4. Recent context (last `target_tokens` worth) is preserved in full detail
 5. **Two critical effects occur simultaneously:**
-   - Session duration limits are removed (no more 15-minute/2-minute caps on Gemini Live API or 10-minute caps on Vertex AI)
+   - Session duration limits are removed (no more 15-minute/2-minute caps on Gemini Live API or 10-minute caps on Agent Platform)
    - Token limits are managed (sessions can continue indefinitely regardless of conversation length)
 
 **Choosing appropriate thresholds:**
@@ -41557,7 +41801,7 @@ While compression enables unlimited session duration, consider these trade-offs:
 
 | Aspect | With Compression | Without Compression | Best For |
 |--------|------------------|---------------------|----------|
-| **Session Duration** | Unlimited | 15 min (audio)<br>2 min (video) Gemini<br>10 min Vertex | Compression: Long sessions<br>No compression: Short sessions |
+| **Session Duration** | Unlimited | 15 min (audio)<br>2 min (video) Gemini<br>10 min Agent Platform | Compression: Long sessions<br>No compression: Short sessions |
 | **Context Quality** | Older context summarized | Full verbatim history | Compression: General conversation<br>No compression: Precision-critical |
 | **Latency** | Compression overhead | No overhead | Compression: Async scenarios<br>No compression: Real-time |
 | **Memory Usage** | Bounded | Grows with session | Compression: Long sessions<br>No compression: Short sessions |
@@ -41625,13 +41869,13 @@ run_config = RunConfig(
 
 - ✅ Focus on **session duration limits**, not connection timeouts (ADK handles those automatically)
 - ✅ **Gemini Live API**: Monitor for 15-minute limit (audio-only) or 2-minute limit (audio+video)
-- ✅ **Vertex AI Live API**: Monitor for 10-minute session limit
+- ✅ **Gemini Live API (Agent Platform)**: Monitor for 10-minute session limit
 - ✅ Warn users 1-2 minutes before session duration limits
 - ✅ Implement graceful session transitions for conversations exceeding session limits
 
 ## Concurrent Live API Sessions and Quota Management
 
-**Problem:** Production voice applications typically serve multiple users simultaneously, each requiring their own Live API session. However, both Gemini Live API and Vertex AI Live API impose strict concurrent session limits that vary by platform and pricing tier. Without proper quota planning and session management, applications can hit these limits quickly, causing connection failures for new users or degraded service quality during peak usage.
+**Problem:** Production voice applications typically serve multiple users simultaneously, each requiring their own Live API session. However, both Gemini Live API and Gemini Live API (Agent Platform) impose strict concurrent session limits that vary by platform and pricing tier. Without proper quota planning and session management, applications can hit these limits quickly, causing connection failures for new users or degraded service quality during peak usage.
 
 **Solution:** Understand platform-specific quotas, design your architecture to stay within concurrent session limits, implement session pooling or queueing strategies when needed, and monitor quota usage proactively. ADK handles individual session lifecycle automatically, but developers must architect their applications to manage multiple concurrent users within quota constraints.
 
@@ -41654,7 +41898,7 @@ Both platforms limit how many Live API sessions can run simultaneously, but the 
 
     [Gemini API Quotas](https://ai.google.dev/gemini-api/docs/quota)
 
-**Vertex AI Live API (Google Cloud) - Project-based quotas:**
+**Gemini Live API (Agent Platform) - Project-based quotas:**
 
 | **Resource Type** | **Limit** | **Scope** |
 |---------------|------:|-------|
@@ -41664,7 +41908,7 @@ Both platforms limit how many Live API sessions can run simultaneously, but the 
 
 !!! note "Source"
 
-    [Vertex AI Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api) | [Vertex AI Quotas](https://cloud.google.com/vertex-ai/generative-ai/docs/quotas)
+    [Gemini Live API (Agent Platform)](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api) | [Agent Platform Quotas](https://cloud.google.com/vertex-ai/generative-ai/docs/quotas)
 
 **Requesting a quota increase:**
 
@@ -41676,7 +41920,7 @@ To request an increase for Live API concurrent sessions, navigate to the [Quotas
 
 1. **Gemini Live API**: Concurrent session limits scale dramatically with API tier (50 → 1,000 sessions). Best for applications with unpredictable or rapidly scaling user bases willing to pay for higher tiers.
 
-2. **Vertex AI Live API**: Rate-limited by connection establishment rate (10/min) but supports up to 1,000 total concurrent sessions. Best for enterprise applications with gradual scaling patterns and existing Google Cloud infrastructure. Additionally, you can request quota increases to prepare for production deployments with higher concurrency requirements.
+2. **Gemini Live API (Agent Platform)**: Rate-limited by connection establishment rate (10/min) but supports up to 1,000 total concurrent sessions. Best for enterprise applications with gradual scaling patterns and existing Google Cloud infrastructure. Additionally, you can request quota increases to prepare for production deployments with higher concurrency requirements.
 
 ### Architectural Patterns for Managing Quotas
 
@@ -41836,7 +42080,7 @@ run_config = RunConfig(
 When you provide `custom_metadata` in RunConfig:
 
 1. **Metadata attachment**: The dictionary is attached to every `Event` generated during the invocation
-2. **Session persistence**: Events with metadata are stored in the session service (database, Vertex AI, or in-memory)
+2. **Session persistence**: Events with metadata are stored in the session service (database, Agent Platform, or in-memory)
 3. **Event access**: Retrieve metadata from any event via `event.custom_metadata`
 4. **A2A integration**: For Agent-to-Agent (A2A) communication, ADK automatically propagates A2A request metadata to this field
 
@@ -42557,7 +42801,7 @@ A fully integrated end-to-end audio model architecture where the model processes
 | Audio Model Architecture | Platform | Model | Notes |
 |-------------------|----------|-------|-------|
 | Native Audio | Gemini Live API | [gemini-2.5-flash-native-audio-preview-12-2025](https://ai.google.dev/gemini-api/docs/models#gemini-2.5-flash-live) |Publicly available|
-| Native Audio | Vertex AI Live API | [gemini-live-2.5-flash-native-audio](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash-live-api) | Public preview |
+| Native Audio | Gemini Live API | [gemini-live-2.5-flash-native-audio](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash-live-api) | Public preview |
 
 **Key Characteristics:**
 
@@ -42580,7 +42824,7 @@ Audio input is processed natively, but responses are first generated as text the
 | Audio Model Architecture | Platform | Model | Notes |
 |-------------------|----------|-------|-------|
 | Half-Cascade | Gemini Live API | [gemini-2.0-flash-live-001](https://ai.google.dev/gemini-api/docs/models#gemini-2.0-flash-live) | Deprecated on December 09, 2025 |
-| Half-Cascade | Vertex AI Live API | [gemini-live-2.5-flash](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#2.5-flash) | Private GA, not publicly available |
+| Half-Cascade | Gemini Live API | [gemini-live-2.5-flash](https://cloud.google.com/vertex-ai/generative-ai/docs/models/gemini/2-5-flash#2.5-flash) | Private GA, not publicly available |
 
 **Key Characteristics:**
 
@@ -42612,7 +42856,7 @@ agent = Agent(
 **Why use environment variables:**
 
 - **Model availability changes**: Models are released, updated, and deprecated regularly (e.g., `gemini-2.0-flash-live-001` was deprecated on December 09, 2025)
-- **Platform-specific names**: Gemini Live API and Vertex AI Live API use different model naming conventions for the same functionality
+- **Platform-specific names**: Gemini Live API and Gemini Live API on Agent Platform use different model naming conventions for the same functionality
 - **Easy switching**: Change models without modifying code by updating the `.env` file
 - **Environment-specific configuration**: Use different models for development, staging, and production
 
@@ -42622,7 +42866,7 @@ agent = Agent(
 # For Gemini Live API (publicly available)
 DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 
-# For Vertex AI Live API (if using Vertex AI)
+# For Gemini Live API (if using Agent Platform)
 # DEMO_AGENT_MODEL=gemini-live-2.5-flash-native-audio
 ```
 
@@ -42657,7 +42901,7 @@ DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 
 **Selecting the right model:**
 
-1. **Choose platform**: Decide between Gemini Live API (public) or Vertex AI Live API (enterprise)
+1. **Choose platform**: Decide between Gemini Live API (public) or Gemini Live API on Agent Platform (enterprise)
 2. **Choose architecture**:
    - Native Audio for natural conversational AI with advanced features
    - Half-Cascade for production reliability with tool execution
@@ -42669,7 +42913,7 @@ DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 For the latest information on Live API model compatibility and availability:
 
 - **Gemini Live API models**: See the [Gemini models documentation](https://ai.google.dev/gemini-api/docs/models/gemini)
-- **Vertex AI Live API models**: See the [Vertex AI model documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models)
+- **Gemini Live API models (Agent Platform)**: See the [Agent Platform model documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models)
 
 Always verify model availability and feature support in the official documentation before deploying to production.
 
@@ -43166,11 +43410,11 @@ Voice configuration is supported on both platforms, but voice availability may v
 - ✅ Half-cascade models: 8 voices (Puck, Charon, Kore, Fenrir, Aoede, Leda, Orus, Zephyr)
 - ✅ Native audio models: Extended voice list (see [documentation](https://ai.google.dev/gemini-api/docs/live-guide))
 
-**Vertex AI Live API:**
+**Gemini Live API (Agent Platform):**
 
 - ✅ Voice configuration supported
 - ⚠️ **Platform-specific difference**: Voice availability may differ from Gemini Live API
-- ⚠️ **Verification required**: Check [Vertex AI documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api) for the current list of supported voices
+- ⚠️ **Verification required**: Check [Agent Platform documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api) for the current list of supported voices
 
 **Best practice**: Always test your chosen voice configuration on your target platform during development. If a voice is not supported on your platform/model combination, the Live API will return an error at connection time.
 
@@ -43514,7 +43758,7 @@ These features are **model-specific** and have platform implications:
 - ✅ Supported on `gemini-2.5-flash-native-audio-preview-12-2025` (native audio model)
 - ❌ Not supported on `gemini-live-2.5-flash-preview` (half-cascade model)
 
-**Vertex AI Live API:**
+**Gemini Live API (Agent Platform):**
 
 - ❌ Not currently supported on `gemini-live-2.5-flash` (half-cascade model)
 - ⚠️ **Platform-specific difference**: Proactivity and affective dialog require native audio models, which are currently only available on Gemini Live API
@@ -43716,13 +43960,13 @@ text, audio, and video inputs, and they can provide text and audio output.
 
     - [Streaming Tools](streaming-tools.md)
 
--   :material-console-line: **Blog post: Google ADK + Vertex AI Live API**
+-   :material-console-line: **Blog post: Google ADK + Gemini Live API**
 
     ---
 
     This article shows how to use Gemini Live API Toolkit in ADK for real-time audio/video streaming. It offers a Python server example using LiveRequestQueue to build custom, interactive AI agents.
 
-    - [Blog post: Google ADK + Vertex AI Live API](https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e)
+    - [Blog post: Google ADK + Gemini Live API](https://medium.com/google-cloud/google-adk-vertex-ai-live-api-125238982d5e)
 
 -   :material-console-line: **Blog post: Supercharge ADK Development with Claude Code Skills**
 
@@ -44005,7 +44249,7 @@ agent workflow. This page lists these tool limitations and workarounds, if avail
 
 !!! note "ONLY for Search in ADK Python v1.15.0 and lower"
 
-    This limitation only applies to the use of Google Search and Vertex AI Search
+    This limitation only applies to the use of Google Search and Agent Search
     tools in ADK Python v1.15.0 and lower. ADK Python release v1.16.0 and higher
     provides a built-in workaround to remove this limitation.
 
@@ -44014,9 +44258,12 @@ tools within an agent excludes the use of any other tools in that agent. The
 following ADK Tools can only be used by themselves, without any other tools, in
 a single agent object:
 
-*   [Code Execution](/integrations/code-execution/) with Gemini API
-*   [Google Search](/integrations/google-search/) with Gemini API
-*   [Vertex AI Search](/integrations/vertex-ai-search/)
+* [Code Execution](/integrations/code-execution/) with Gemini API (Note: in
+  TypeScript, this requires Gemini 2.0+ and does not have this limitation)
+* [Google Search](/integrations/google-search/) with Gemini API (Note:
+  limitation only applies to Gemini 1.x models in TypeScript)
+* [Agent Search](/integrations/agent-search/) (Note: currently unavailable in
+  TypeScript)
 
 For example, the following approach that uses one of these tools along with
 other tools, within a single agent, is ***not supported***:
@@ -44031,6 +44278,20 @@ other tools, within a single agent, is ***not supported***:
         tools=[custom_function],
         code_executor=BuiltInCodeExecutor() # <-- NOT supported when used with tools
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {Agent, BuiltInCodeExecutor} from '@google/adk';
+
+    const rootAgent = new Agent({
+      name: 'RootAgent',
+      model: 'gemini-flash-latest',
+      description: 'Code Agent',
+      tools: [myCustomTool], // Assume myCustomTool is defined
+      codeExecutor: new BuiltInCodeExecutor(), // <-- NOT supported when used with tools
+    });
     ```
 
 === "Java"
@@ -44048,7 +44309,7 @@ other tools, within a single agent, is ***not supported***:
 ### Workaround #1: AgentTool.create() method
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript (v0.6.1+)</span><span class="lst-java">Java</span>
 </div>
 
 The following code sample demonstrates how to use multiple built-in tools or how
@@ -44084,6 +44345,33 @@ to use built-in tools with other tools by using multiple agents:
         description="Root Agent",
         tools=[AgentTool(agent=search_agent), AgentTool(agent=coding_agent)],
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {Agent, AgentTool, BuiltInCodeExecutor, GOOGLE_SEARCH} from '@google/adk';
+
+    const searchAgent = new Agent({
+      model: 'gemini-flash-latest',
+      name: 'SearchAgent',
+      instruction: "You're a specialist in Google Search",
+      tools: [GOOGLE_SEARCH],
+    });
+
+    const codingAgent = new Agent({
+      model: 'gemini-flash-latest', // Built-in code execution requires Gemini 2.0+ in ADK JS
+      name: 'CodeAgent',
+      instruction: "You're a specialist in Code Execution",
+      codeExecutor: new BuiltInCodeExecutor(),
+    });
+
+    const rootAgent = new Agent({
+      name: 'RootAgent',
+      model: 'gemini-flash-latest',
+      description: 'Root Agent',
+      tools: [new AgentTool({agent: searchAgent}), new AgentTool({agent: codingAgent})],
+    });
     ```
 
 === "Java"
@@ -44195,6 +44483,33 @@ is **not supported**:
     )
     ```
 
+=== "TypeScript"
+
+    ```typescript
+    import {Agent, BuiltInCodeExecutor} from '@google/adk';
+
+    const urlContextAgent = new Agent({
+      model: 'gemini-flash-latest',
+      name: 'UrlContextAgent',
+      instruction: "You're a specialist in URL Context",
+      tools: [myCustomTool], // Assume myCustomTool is defined
+    });
+
+    const codingAgent = new Agent({
+      model: 'gemini-flash-latest',
+      name: 'CodeAgent',
+      instruction: "You're a specialist in Code Execution",
+      codeExecutor: new BuiltInCodeExecutor(),
+    });
+
+    const rootAgent = new Agent({
+      name: 'RootAgent',
+      model: 'gemini-flash-latest',
+      description: 'Root Agent',
+      subAgents: [urlContextAgent, codingAgent], // NOT supported when sub-agents use built-in tools
+    });
+    ```
+
 === "Java"
 
     ```java
@@ -44263,11 +44578,16 @@ When deploying agents to production hosted environments, your agent's ability to
 properly authenticate to restricted tools and services becomes more challenging
 and more important to properly manage. This authentication challenge can become
 even more complicated when users of your agent have varying levels of access to
-restricted tools and data. Rather than writing code to handle the authentication
-process and credential managment for various tools used by your agent, use an
-*authentication manager* service that manages *both* for you. This service
-should handle the storage of keys and secrets, as well as the acquisition,
-management, and storage of OAuth access or refresh tokens.
+restricted tools and data.
+
+Rather than writing code to handle the authentication process and credential
+management for various tools used by your agent, use an *authentication manager*
+service that manages *both* for you. This service should handle the storage of
+keys and secrets, as well as the acquisition, management, and storage of OAuth
+access or refresh tokens. Learn more about Agent Identity Authentication Manager
+for [2-legged OAuth](https://docs.cloud.google.com/iam/docs/auth-with-2lo),
+[3-legged OAuth](https://docs.cloud.google.com/iam/docs/auth-with-3lo), and [API
+key](https://docs.cloud.google.com/iam/docs/auth-with-api-key).
 
 ### Self-managed authentication
 
@@ -45040,7 +45360,7 @@ File: docs/tools-custom/confirmation.md
 # Get action confirmation for ADK Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 Some agent workflows require confirmation for decision making, verification,
@@ -45086,10 +45406,13 @@ agent pattern.
 ## Boolean confirmation {#boolean-confirmation}
 
 When your tool only requires a simple `yes` or `no` from the user, you can
-append a confirmation step using the `FunctionTool` class as a wrapper. For
-example, if you have a tool called `reimburse`, you can enable a confirmation
-step by wrapping it with the `FunctionTool` class and setting the
-`require_confirmation` parameter to `True`, as shown in the following example:
+append a confirmation step. In Python, Go, and Java, you can enable this by
+wrapping the tool with the `FunctionTool` class and setting the
+`require_confirmation` parameter (or equivalent) to `True`. In TypeScript, you
+implement this logic manually within the `execute` function using the
+`ToolContext`.
+
+The following examples show how to enable boolean confirmation:
 
 === "Python"
 
@@ -45108,6 +45431,16 @@ step by wrapping it with the `FunctionTool` class and setting the
     # approvals from the user or confirming system. For a complete example of this
     # approach, see the following code sample for a more detailed example:
     # https://github.com/google/adk-python/blob/main/contributing/samples/human_tool_confirmation/agent.py
+    ```
+
+=== "TypeScript"
+
+    !!! note
+        ADK for TypeScript currently requires manual implementation of
+        confirmation logic within the tool's `execute` function.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/confirmation/boolean_confirmation.ts:boolean_confirmation"
     ```
 
 === "Go"
@@ -45146,7 +45479,7 @@ step by wrapping it with the `FunctionTool` class and setting the
 
 ### Require confirmation function
 
-You can modify the behavior of the confirmation requirement by using a function that returns a boolean response based on the tool's input.
+You can modify the behavior of the confirmation requirement by using a function that returns a boolean response based on the tool's input. In TypeScript, this is handled by adding conditional logic to your `execute` function.
 
 === "Python"
 
@@ -45165,6 +45498,12 @@ You can modify the behavior of the confirmation requirement by using a function 
         ],
         # ...
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/confirmation/boolean_confirmation.ts:dynamic_confirmation"
     ```
 
 === "Go"
@@ -45278,6 +45617,12 @@ time off requests for an employee:
             'status': 'ok',
             'approved_days': approved_days,
         }
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/tools/confirmation/confirmation_example.ts:advanced_confirmation"
     ```
 
 === "Go"
@@ -47423,7 +47768,7 @@ When working with MCP and ADK, keep these points in mind:
 
 ## Deploying Agents with MCP Tools
 
-When deploying ADK agents that use MCP tools to production environments like Cloud Run, GKE, or Vertex AI Agent Engine, you need to consider how MCP connections will work in containerized and distributed environments.
+When deploying ADK agents that use MCP tools to production environments like Cloud Run, GKE, or Agent Runtime, you need to consider how MCP connections will work in containerized and distributed environments.
 
 ### Critical Deployment Requirement: Synchronous Agent Definition
 
@@ -47472,7 +47817,7 @@ async def get_agent():  # This won't work for deployment
 
 ### Quick Deployment Commands
 
-#### Vertex AI Agent Engine
+#### Agent Runtime
 ```bash
 uv run adk deploy agent_engine \
   --project=<your-gcp-project-id> \
@@ -47777,9 +48122,9 @@ McpToolset(
 )
 ```
 
-#### Vertex AI Agent Engine
+#### Agent Runtime
 ```python
-# Agent Engine managed deployment
+# Agent Runtime managed deployment
 # Prefer lightweight, self-contained MCP servers or external services
 McpToolset(
     connection_params=SseConnectionParams(
@@ -48261,7 +48606,7 @@ print(f"Google API Key set: {'Yes' if os.environ.get('GOOGLE_API_KEY') and os.en
 print(f"OpenAI API Key set: {'Yes' if os.environ.get('OPENAI_API_KEY') and os.environ['OPENAI_API_KEY'] != 'YOUR_OPENAI_API_KEY' else 'No (REPLACE PLACEHOLDER!)'}")
 print(f"Anthropic API Key set: {'Yes' if os.environ.get('ANTHROPIC_API_KEY') and os.environ['ANTHROPIC_API_KEY'] != 'YOUR_ANTHROPIC_API_KEY' else 'No (REPLACE PLACEHOLDER!)'}")
 
-# Configure ADK to use API keys directly (not Vertex AI for this multi-model setup)
+# Configure ADK to use API keys directly (not Agent Platform for this multi-model setup)
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 
@@ -50056,37 +50401,50 @@ You can use AI coding assistants to build agents with Agent Development Kit
 into your project, or by connecting it to ADK documentation through an MCP
 server.
 
-- [**ADK Dev Skills**](#adk-dev-skills): Install ADK development skills directly into
-  your project.
+- [**agents-cli**](#agents-cli): Command-line tool and coding skills for ADK development.
 - [**ADK Docs MCP Server**](#adk-docs-mcp-server): Connect your coding tool to
   ADK documentation through an MCP server.
 - [**ADK Docs Index**](#adk-docs-index): Machine-readable documentation files
   following the `llms.txt` standard.
 
-## ADK Dev Skills
+## agents-cli
 
-ADK provides a set of development [skills](https://agentskills.io/) that cover
-APIs, coding patterns, deployment, and evaluation. The skills work with any
-compatible tool, including Gemini CLI, Antigravity, Claude Code, and Cursor.
+[agents-cli](https://google.github.io/agents-cli/) is the command-line tool for
+ADK development. It provides scaffolding commands, deployment tools, and
+development skills that work with any compatible coding assistant, including
+Gemini CLI, Antigravity, Claude Code, and Cursor.
 
-To install the ADK development skills, run the following in your project
-directory:
+To install agents-cli and set up ADK development skills:
 
 ```bash
-npx skills add google/adk-docs/skills -y -g
+uvx google-agents-cli setup
 ```
 
-Browse the [ADK Dev Skills on
-GitHub](https://github.com/google/adk-docs/tree/main/skills), which include:
+This installs both the CLI and coding skills. Browse the [agents-cli
+documentation](https://google.github.io/agents-cli/) for more details.
+
+### CLI Commands
+
+| Command | Description |
+|---------|-------------|
+| `agents-cli scaffold create` | Create a new ADK agent project |
+| `agents-cli scaffold enhance` | Add deployment to existing project |
+| `agents-cli eval` | Run agent evaluations |
+| `agents-cli deploy` | Deploy to Agent Runtime or Cloud Run |
+| `agents-cli publish` | Publish agent to Agent Store |
+
+### Development Skills
+
+After setup, the following skills are available in your coding tool:
 
 | Skill | Description |
 |-------|-------------|
-| `adk-cheatsheet` | Python API quick reference and docs index |
-| `adk-deploy-guide` | Agent Engine and Cloud Run deployment |
-| `adk-dev-guide` | Development lifecycle and coding guidelines |
-| `adk-eval-guide` | Evaluation methodology and scoring |
-| `adk-observability-guide` | Tracing, logging, and integrations |
-| `adk-scaffold` | Project scaffolding |
+| `google-agents-cli-adk-code` | Python API quick reference and docs index |
+| `google-agents-cli-adk-deploy` | Agent Runtime and Cloud Run deployment |
+| `google-agents-cli-adk-dev` | Development lifecycle and coding guidelines |
+| `google-agents-cli-adk-eval` | Evaluation methodology and scoring |
+| `google-agents-cli-adk-observe` | Tracing, logging, and integrations |
+| `google-agents-cli-adk-scaffold` | Project scaffolding |
 
 ## ADK Docs MCP Server
 
@@ -50573,8 +50931,8 @@ agent will be unable to function.
 
     3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
 
-=== "Gemini - Google Cloud Vertex AI"
-    1. Set up a [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp) and [enable the Vertex AI API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
+=== "Gemini - Google Cloud Agent Platform"
+    1. Set up a [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp) and [enable the Agent Platform API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
     2. Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local).
     3. Authenticate to Google Cloud from the terminal by running `gcloud auth application-default login`.
     4. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
@@ -50610,11 +50968,11 @@ agent will be unable to function.
         export GOOGLE_CLOUD_LOCATION=LOCATION
         ```
 
-=== "Gemini - Google Cloud Vertex AI with Express Mode"
+=== "Gemini - Google Cloud Agent Platform with Express Mode"
     1. You can sign up for a free Google Cloud project and use Gemini for free with an eligible account!
         * Set up a
-          [Google Cloud project with Vertex AI Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview)
-        * Get an API key from your Express mode project. This key can be used with ADK to use Gemini models for free, as well as access to Agent Engine services.
+          [Google Cloud project with Agent Platform Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview)
+        * Get an API key from your Express mode project. This key can be used with ADK to use Gemini models for free, as well as access to Agent Runtime services.
     2. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
     the following code and update the project ID and location.
 
@@ -50663,8 +51021,8 @@ agent will be unable to function.
 
     === "Dev UI (adk web)"
 
-        !!! success "Authentication Setup for Vertex AI Users"
-            If you selected **"Gemini - Google Cloud Vertex AI"** in the previous step, you must authenticate with Google Cloud before launching the dev UI.
+        !!! success "Authentication Setup for Agent Platform Users"
+            If you selected **"Gemini - Google Cloud Agent Platform"** in the previous step, you must authenticate with Google Cloud before launching the dev UI.
 
             Run this command and follow the prompts:
             ```bash
@@ -50723,7 +51081,7 @@ agent will be unable to function.
             In order to use voice/video streaming in ADK, you will need to use Gemini models that support the Live API. You can find the **model ID(s)** that supports the Gemini Live API in the documentation:
 
             - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-            - [Vertex AI: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+            - [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
 
             You can then replace the `model` string in `root_agent` in the `agent.py` file you created earlier ([jump to section](#agentpy)). Your code should look something like:
 
@@ -51130,7 +51488,7 @@ File: docs/workflows/collaboration.md
 # Build collaborative agent teams
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 Some complex tasks may require multiple agents with specific responsibilities
@@ -51157,9 +51515,9 @@ available for collaboration modes:
 This guide covers how to use modes for your subagents and how these modes impact
 agent behavior.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -51171,7 +51529,7 @@ The following code example shows how to set operating modes for
 a small team of subagents and assign them to a coordinator agent:
 
 ```python
-from google.adk.workflow.agents.llm_agent import Agent
+from google.adk import Agent
 
 weather_agent = Agent(
     name="weather_checker",
@@ -51325,7 +51683,7 @@ File: docs/workflows/data-handling.md
 # Data handling for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 Structuring and managing data between agents and graph-based notes is critical
@@ -51336,20 +51694,14 @@ the essential parameters for events, data, content, and state, and explains how
 to implement structured data transfer for both function and agent nodes using
 data format schemas and specific instruction syntax.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
     [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
 
-!!! danger "WARNING: DO NOT MIX ADK 2.0 and ADK 1.0 data storage systems"
-
-    If you use persistent storage for ADK 2.0 projects, **DO NOT allow ADK 2.0
-    projects to share storage with ADK 1.0 projects**, including, but not limited to,
-    session storage, memory systems, and evaluation data. Doing so may result in
-    loss of data or make the data unusable in ADK 1.0 projects.
 
 ## Workflow graph Events
 
@@ -51399,8 +51751,8 @@ containing the data, as shown in the following code sample:
 def my_function_node_1():
     return Event(output="The Result")
 
-def my_function_node_2(node_input: Content):
-    output_value = node_input.parts[0].text.lower()
+def my_function_node_2(node_input: str):
+    output_value = node_input.lower()
     return Event(output=output_value) # "the result"
 ```
 
@@ -51462,7 +51814,7 @@ async def task_attempt_node(node_input: Content, attempts: int):
       },
   )
 
-async def read_state_node(ctx: WorkflowContext):
+async def read_state_node(ctx: Context):
   print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
 
 root_agent = Workflow(
@@ -51512,7 +51864,7 @@ flight_searcher = Agent(
     input_schema=FlightSearchInput,
     output_schema=FlightSearchOutput,
     tools=[search_flights_api],
-    mode="single-turn",
+    mode="single_turn",
     ...
 )
 
@@ -51579,7 +51931,7 @@ File: docs/workflows/dynamic.md
 # Dynamic workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 The ADK framework provides a programmatic way to define workflows as a more
@@ -51608,9 +51960,9 @@ the benefits of dynamic workflows in ADK:
     internally compose lower-level nodes, keeping the overall workflow graph
     clean and manageable.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -51625,9 +51977,9 @@ The following dynamic workflow code example shows how to define a basic
 workflow containing a single node with a function:
 
 ```python
-from google.adk import Workflow
-from google.adk import Event
 from google.adk import Context
+from google.adk import Workflow
+from google.adk.workflow import node
 from typing import Any
 
 @node(name="hello_node")
@@ -51638,7 +51990,7 @@ def my_node(node_input: Any):
 @node(rerun_on_resume=True)
 async def my_workflow(ctx: Context, node_input: str) -> str:
     # run_node executes a node and returns its output
-    result = await ctx.run_node(my_node, input_data="hello")
+    result = await ctx.run_node(my_node, node_input="hello")
     return result
 
 # Run the workflow
@@ -51705,8 +52057,8 @@ for those nodes, as shown in the following code sample:
 @node(rerun_on_resume=True)
 async def my_workflow(ctx):
     # run_node executes a node and returns its output
-    result = await ctx.run_node(my_function_node, input_data="Hello")
-    result_formatted = await ctx.run_node(my_formatting_node, input_data=result)
+    result = await ctx.run_node(my_function_node, node_input="Hello")
+    result_formatted = await ctx.run_node(my_formatting_node, node_input=result)
     return result_formatted
 
 # Run the workflow
@@ -51727,6 +52079,7 @@ pass string data between an agent node and a function node:
 
 ```python
 from google.adk import Context
+from google.adk.workflow import node
 
 @node(rerun_on_resume=True)
 async def editorial_workflow(ctx: Context, user_request: str):
@@ -51746,6 +52099,7 @@ following code example:
 ```python
 from google.adk import Agent
 from google.adk import Context
+from google.adk.workflow import node
 from pydantic import BaseModel
 
 class CityTime(BaseModel):
@@ -51806,6 +52160,11 @@ following code example shows how to use dynamic workflows to construct a
 workflow loop for generating, reviewing, and updating code:
 
 ```python
+from google.adk import Context
+from google.adk import Event
+from google.adk.agents import LlmAgent
+from google.adk.workflow import node
+
 coder_agent = LlmAgent(
     name="generator_agent",
     model="gemini-flash-latest",
@@ -51814,10 +52173,14 @@ coder_agent = LlmAgent(
 )
 
 @node(name="lint_reviewer")
-compile_lint_check = ApiNode()
+async def compile_lint_check(ctx: Context, code: str):
+    # Simulate API call or lint check
+    class Response:
+        findings = ""
+    return Response()
 
 fixer_agent = LlmAgent(
-    name="generator_agent",
+    name="fixer_agent",
     model="gemini-flash-latest",
     instruction="""Refactor current code {code}.
         Based on compile & lint review: {findings}""",
@@ -51825,13 +52188,13 @@ fixer_agent = LlmAgent(
 )
 
 @node # workflow node
-async def code_workflow(ctx):
-  code = await ctx.run_node(coder_agent)
+async def code_workflow(ctx: Context, user_request: str):
+  code = await ctx.run_node(coder_agent, user_request)
   check_resp = await ctx.run_node(compile_lint_check, code)
 
   while check_resp.findings:
     yield Event(state={"code": code, "findings": check_resp.findings})
-    code = await ctx.run_node(fixer_agent)
+    code = await ctx.run_node(fixer_agent, {"code": code, "findings": check_resp.findings})
 
     check_resp = await ctx.run_node(compile_lint_check, code)
 
@@ -51841,33 +52204,30 @@ async def code_workflow(ctx):
 ### Parallel execution routes
 
 Dynamic workflows in ADK can support parallel execution, and you can use
-standard asynchronous libraries, such as the `asyncio`, to build this
+standard asynchronous libraries, such as `asyncio`, to build this
 functionality. The following code example shows how to build a workflow node
-that supports parallel execution, which can then be integrated into a larger
-workflow:
+that supports parallel execution using `@node` and `asyncio.gather`:
 
 ```python
-from google.adk.workflow import BaseNode
-from google.adk import Context
-from typing import Any
 import asyncio
+from typing import Any
+from google.adk import Context
+from google.adk.workflow import BaseNode, node
 
-class ParallelNode(BaseNode):
-    """A supervisor node that runs a worker node in parallel."""
-    real_node: BaseNode
 
-    async def run(self, ctx: Context, node_input: list[Any]):
-        tasks = []
+@node(rerun_on_resume=True)
+async def parallel_supervisor(
+    ctx: Context, node_input: list[Any], real_node: BaseNode
+):
+    """Runs a worker node in parallel for each item in the input list."""
+    tasks = []
+    for item in node_input:
+        # ctx.run_node returns a future. Append instead of awaiting immediately.
+        tasks.append(ctx.run_node(real_node, item))
 
-        # Dynamically schedule worker nodes for each item in the input list
-        for item in node_input:
-            # ctx.run_node returns an awaitable future for the ephemeral node
-            tasks.append(ctx.run_node(self.real_node, item))
-
-        # Use asyncio to gather results in parallel
-        results = await asyncio.gather(*tasks)
-
-        return results
+    # Collect all results in parallel
+    results = await asyncio.gather(*tasks)
+    return results
 ```
 
 !!! tip "Tip: Resuming parallel nodes"
@@ -51879,47 +52239,38 @@ class ParallelNode(BaseNode):
 ## Human input
 
 Dynamic workflows in ADK can also include human input or human in the loop
-(HITL) steps. You build human input into workflows by creating a ***BaseNode***
-subclass that interrupts the workflow, combined with a ***RequestInput***
-instance for providing a request to the user and retrieving the response. The
-following code example shows how to build a human input node and include it in a
-workflow:
+(HITL) steps. You build human input into workflows by yielding a
+***RequestInput*** from a `@node` function, which pauses the workflow and waits
+for user input. The following code example shows how to build a human input node
+and include it in a workflow:
 
 ```python
-from google.adk.workflow import BaseNode
+from typing import Any
 from google.adk import Context
 from google.adk.events import RequestInput
-from typing import Any, AsyncGenerator
+from google.adk.workflow import node
 
-class GetInput(BaseNode):
-    """A node that pauses execution and waits for human input."""
-    rerun_on_resume = False  # Ensure the response is yielded as output on resume
 
-    def __init__(self, request: RequestInput, name: str):
-        self.request = request
-        self.name = name
+@node(rerun_on_resume=False)
+async def get_user_approval(ctx: Context, node_input: Any):
+    """Yields a RequestInput to pause the workflow and wait for user input."""
+    yield RequestInput(message="Please approve this request (Yes/No)")
 
-    def get_name(self) -> str:
-        return self.name
 
-    async def run(self) -> AsyncGenerator[Any, None]:
-        # Yielding the request tells the workflow to pause and wait for input
-        yield self.request
-
-async def approval_process_node(ctx: Context, node_input: Any):
-    """A parent node that coordinates a human approval step."""
-
-    # Define the request for the user
-    request = RequestInput(message="Please approve this request (Yes/No)")
-
-    # Invoke the HITL node dynamically. The workflow pauses here.
-    user_response = await ctx.run_node(GetInput(request, name="approval_step"))
+@node(rerun_on_resume=True)
+async def handle_process(ctx: Context, node_input: Any):
+    """The orchestrator calling the interactive step."""
+    user_response = await ctx.run_node(get_user_approval)
 
     if user_response.lower() == "yes":
-        return "Request Approved"
-    else:
-        return "Request Denied"
+        return "Approved"
+    return "Denied"
 ```
+
+!!! important "Important: Parent nodes with `ctx.run_node`"
+
+    Parent nodes in dynamic workflows that call `ctx.run_node` must set
+    `rerun_on_resume=True` to handle interruptions properly.
 
 ## Advanced features
 
@@ -51954,24 +52305,36 @@ executing node in a workflow:
     system attempts to re-run those nodes in your workflow.
 
 ```python
+from google.adk import Context
+from google.adk.workflow import node
+from pydantic import BaseModel
+from typing import Any
+import asyncio
+
 class Order(BaseModel):
   order_id: str
   cart_items: list[Product]
 
-def shorten_link(ctx, node_input: str):
-
+@node(rerun_on_resume=True)
+async def process_all_orders(ctx: Context, node_input: Any):
   orders = await get_orders()
 
   process_tasks = []
-  for i, order in enumerate(orders):
-    task = ctx.run_node(process_order, order, name=order.order_id))
-
+  for order in orders:
+    # Use run_id to provide a custom identifier.
+    # Custom run_ids must contain at least one non-numeric character
+    # to avoid collision with auto-generated sequential numeric IDs.
+    task = ctx.run_node(process_order, order, run_id=f"order-{order.order_id}")
     process_tasks.append(task)
 
-  result = asyncio.gather(*process_tasks)
-
-  yield result
+  results = await asyncio.gather(*process_tasks)
+  return results
 ```
+
+By default, auto-generated run IDs are sequential integers starting from
+`"1"` (represented as strings). Custom `run_id` values must contain at
+least one non-numeric character to avoid collisions with these
+auto-generated IDs.
 
 ================
 File: docs/workflows/graph-routes.md
@@ -51979,7 +52342,7 @@ File: docs/workflows/graph-routes.md
 # Build graph routes for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 Graph-based workflows in ADK define agent logic as a graph of execution nodes
@@ -52019,9 +52382,9 @@ tasks are routed and executed. This structured node definition improves the
 predictability of agents and enhances reliability for complex tasks that require
 defined steps and process management.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -52217,7 +52580,7 @@ File: docs/workflows/human-input.md
 # Human input for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 Being able to request human input for data input, decision verification, or
@@ -52227,9 +52590,9 @@ specifically built for obtaining input from humans as part of a workflow. These
 nodes do not require artificial intelligence (AI) models to run, which can make
 the input process more predictable and reliable.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -52306,9 +52669,7 @@ async def initial_prompt(ctx: Context):
            Hobby,
            Example of attraction you liked
    """
-   resp = {"user_response": str}
-
-   yield RequestInput(message=input_message, response_schema=resp)
+   yield RequestInput(message=input_message, response_schema=str)
 ```
 
 ### Request input with data payload
@@ -52325,6 +52686,10 @@ class ActivitiesList(BaseModel):
    activity has a name and a description"""
    itinerary: List[Dict[str, str]]
 
+class UserFeedback(BaseModel):
+   """Expected response structure from the user."""
+   user_response: str
+
 async def get_user_feedback(node_input: ActivitiesList):
    """
    Retrieves the user's thoughts on the agents initial itinerary in order to
@@ -52340,7 +52705,7 @@ async def get_user_feedback(node_input: ActivitiesList):
    yield RequestInput(
        message=message,
        payload=node_input,
-       response_schema={"user":"response"}
+        response_schema=UserFeedback,
    )
 ```
 
@@ -52350,7 +52715,7 @@ File: docs/workflows/index.md
 # Graph-based agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Alpha</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
 Graph-based workflows in ADK let you build agents with more precise control,
@@ -52382,9 +52747,9 @@ provide the following advantages:
 -   **Enhance reliability:** Improve the predictability of your agents by
     relying on structured node definitions rather than prompts alone.
 
-!!! example "Alpha Release"
+!!! example "Beta Release"
 
-    ADK 2.0 is an Alpha release and may cause breaking changes when used with prior
+    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
     versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
     as in production environments. We encourage you to test this release and we
     welcome your
@@ -52587,38 +52952,10 @@ hide:
 {{% include '_includes/homepage/_faq.md' %}}
 
 <script>
-// Tab switching logic
-document.addEventListener("DOMContentLoaded", function() {
-  var tabs = document.querySelectorAll('.iterm-tab');
-  var langs = ['python', 'go', 'java', 'typescript'];
-
-  tabs.forEach(function(tab) {
-    tab.addEventListener('click', function() {
-      var lang = this.getAttribute('data-lang');
-      tabs.forEach(function(t) { t.classList.remove('active'); });
-      this.classList.add('active');
-      langs.forEach(function(l) {
-        document.getElementById('code-' + l).style.display = l === lang ? 'block' : 'none';
-        document.getElementById('install-' + l).style.display = l === lang ? 'flex' : 'none';
-      });
-    });
-  });
-
-  // Copy-to-clipboard buttons
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest('.copy-btn');
-    if (!btn) return;
-    var text = btn.getAttribute('data-copy');
-    navigator.clipboard.writeText(text).then(function() {
-      var orig = btn.textContent;
-      btn.textContent = '✅';
-      setTimeout(function() { btn.textContent = orig; }, 1500);
-    });
-  });
-
+function initHomepage() {
   // Asciinema player (for _agent-cli.md)
   var playerEl = document.getElementById('asciinema-demo');
-  if (playerEl && typeof AsciinemaPlayer !== 'undefined') {
+  if (playerEl && !playerEl.hasChildNodes() && typeof AsciinemaPlayer !== 'undefined') {
     AsciinemaPlayer.create('assets/adk-demo.cast', playerEl, {
       theme: 'monokai',
       fit: 'width',
@@ -52631,7 +52968,48 @@ document.addEventListener("DOMContentLoaded", function() {
       poster: 'npt:0:18'
     });
   }
+}
+
+// Event delegation for tab switching and copy buttons.
+// Attaching to `document` means these handlers survive DOM replacement
+// during MkDocs Material instant (SPA) navigation.
+document.addEventListener('click', function(e) {
+  // Tab switching
+  var tab = e.target.closest('.iterm-tab');
+  if (tab) {
+    var lang = tab.getAttribute('data-lang');
+    var allTabs = document.querySelectorAll('.iterm-tab');
+    var langs = ['python', 'go', 'java', 'typescript'];
+    allTabs.forEach(function(t) { t.classList.remove('active'); });
+    tab.classList.add('active');
+    langs.forEach(function(l) {
+      var codeEl = document.getElementById('code-' + l);
+      var installEl = document.getElementById('install-' + l);
+      if (codeEl) codeEl.style.display = l === lang ? 'block' : 'none';
+      if (installEl) installEl.style.display = l === lang ? 'flex' : 'none';
+    });
+    return;
+  }
+
+  // Copy-to-clipboard buttons
+  var btn = e.target.closest('.copy-btn');
+  if (btn) {
+    var text = btn.getAttribute('data-copy');
+    navigator.clipboard.writeText(text).then(function() {
+      var orig = btn.textContent;
+      btn.textContent = '✅';
+      setTimeout(function() { btn.textContent = orig; }, 1500);
+    });
+  }
 });
+
+// Initialize on first load
+document.addEventListener('DOMContentLoaded', initHomepage);
+
+// Re-initialize after MkDocs Material instant navigation
+if (typeof document$ !== 'undefined') {
+  document$.subscribe(function() { initHomepage(); });
+}
 </script>
 
 ================
