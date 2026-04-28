@@ -11605,19 +11605,19 @@ By understanding and effectively using these context objects, you can build more
 ================
 File: docs/deploy/agent-runtime/agents-cli.md
 ================
-# Deploy to Agent Runtime with agents-cli
+# Deploy to Agent Runtime with Agents CLI
 
 <div class="language-support-tag" title="Agent Runtime currently supports only Python.">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
 This deployment procedure describes how to perform a deployment using
-[agents-cli](https://google.github.io/agents-cli/)
-and the ADK. Deploying to Agent Runtime via agents-cli provides an accelerated path to a production-ready environment. agents-cli automatically configures Google Cloud resources, CI/CD pipelines, and Infrastructure-as-Code (Terraform) to support the entire development lifecycle. As a best practice, always ensure you review the generated configurations to align with your organization’s security and compliance standards before production deployment.
+[Agents CLI in Agent Platform](https://google.github.io/agents-cli/)
+and the ADK. Deploying to Agent Runtime via Agents CLI provides an accelerated path to a production-ready environment. Agents CLI automatically configures Google Cloud resources, CI/CD pipelines, and Infrastructure-as-Code (Terraform) to support the entire development lifecycle. As a best practice, always ensure you review the generated configurations to align with your organization’s security and compliance standards before production deployment.
 
-This deployment guide uses agents-cli to apply a project template to your
+This deployment guide uses Agents CLI to apply a project template to your
 existing project, add deployment artifacts, and prepare your agent project for
-deployment. These instructions show you how to use agents-cli to provision a Google
+deployment. These instructions show you how to use Agents CLI to provision a Google
 Cloud project with services needed for deploying your ADK project, as follows:
 
 -   [Prerequisites](#prerequisites-ad): Set up Google Cloud
@@ -11631,7 +11631,7 @@ Cloud project with services needed for deploying your ADK project, as follows:
     required services in your Google Cloud project and upload your ADK project code.
 
 For information on testing a deployed agent, see [Test deployed agent](test.md).
-For more information on using agents-cli and its command line tools,
+For more information on using Agents CLI and its command line tools,
 see the
 [CLI reference](https://google.github.io/agents-cli/cli/)
 and
@@ -11651,7 +11651,7 @@ You need the following resources configured to use this deployment path:
     For new projects, see [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
 
 -   **Python Environment**: A Python version supported by
-    [agents-cli](https://google.github.io/agents-cli/guide/getting-started/).
+    [Agents CLI](https://google.github.io/agents-cli/guide/getting-started/).
 -   **uv Tool:** Manage Python development environment and running agents-cli
     tools. For installation details, see
     [Install uv](https://docs.astral.sh/uv/getting-started/installation/).
@@ -11665,7 +11665,7 @@ You need the following resources configured to use this deployment path:
 ### Prepare your ADK project {#prepare-ad}
 
 When you deploy an ADK project to Agent Runtime, you need some additional files
-to support the deployment operation. The following agents-cli command backs up your
+to support the deployment operation. The following Agents CLI command backs up your
 project and then adds files to your project for deployment purposes.
 
 These instructions assume you have an existing ADK project that you are modifying
@@ -11690,14 +11690,14 @@ To prepare your ADK project for deployment to Agent Runtime:
 
     Navigate to `your-project-directory/`
 
-1.  Run the agents-cli `scaffold enhance` command to add the files required for deployment into
+1.  Run the Agents CLI `scaffold enhance` command to add the files required for deployment into
     your project.
 
     ```shell
     agents-cli scaffold enhance --deployment-target agent_engine
     ```
 
-1.  Follow the instructions from the agents-cli tool. In general, you can accept
+1.  Follow the instructions from the Agents CLI tool. In general, you can accept
     the default answers to all questions. However for the **GCP region**,
     option, make sure you select one of the
     [supported regions](https://docs.cloud.google.com/agent-builder/locations#supported-regions-agent-engine)
@@ -11710,10 +11710,10 @@ When you successfully complete this process, the tool shows the following messag
 ```
 
 !!! tip "Note"
-    The agents-cli tool may show a reminder to connect to Google Cloud while
+    The Agents CLI tool may show a reminder to connect to Google Cloud while
     running, but that connection is *not required* at this stage.
 
-For more information about the changes agents-cli makes to your ADK project, see
+For more information about the changes Agents CLI makes to your ADK project, see
 [Changes to your ADK project](#adk-agents-cli-changes).
 
 ### Connect to your Google Cloud project {#connect-ad}
@@ -11749,7 +11749,7 @@ ID, you are ready to deploy your ADK project files to Agent Runtime.
 
 ### Deploy your ADK project {#deploy-ad}
 
-When using agents-cli, you deploy using the `agents-cli deploy` command. This
+When using Agents CLI, you deploy using the `agents-cli deploy` command. This
 command builds a container from your agent code, pushes it to a registry, and
 deploys it to Agent Runtime in the hosted environment.
 
@@ -11791,7 +11791,7 @@ deployed agent, see
 
 ### Changes to your ADK project {#adk-agents-cli-changes}
 
-The agents-cli tools add more files to your project for deployment. The procedure
+The Agents CLI tools add more files to your project for deployment. The procedure
 below backs up your existing project files before modifying them. This guide
 uses the
 [multi_tool_agent](https://github.com/google/adk-docs/tree/main/examples/python/snippets/get-started/multi_tool_agent)
@@ -11805,7 +11805,7 @@ my_agent/
 └─ .env
 ```
 
-After running the agents-cli scaffold enhance command to add Agent Runtime deployment
+After running the Agents CLI scaffold enhance command to add Agent Runtime deployment
 information, the new structure is as follows:
 
 ```
@@ -11824,8 +11824,8 @@ my-agent/
 ```
 
 See the *README.md* file in your updated ADK project folder for more information.
-For more information on using agents-cli, see the
-[agents-cli documentation](https://google.github.io/agents-cli/).
+For more information on using Agents CLI, see the
+[Agents CLI documentation](https://google.github.io/agents-cli/).
 
 ## Test deployed agents
 
@@ -12077,11 +12077,11 @@ purposes:
     for users who are already familiar with configuring Google Cloud projects,
     and users preparing for production deployments.
 
-*   **[agents-cli deployment](/deploy/agent-runtime/agents-cli/)**:
+*   **[Agents CLI deployment](/deploy/agent-runtime/agents-cli/)**:
     Follow this accelerated deployment path to set up a fully configured Google
     Cloud environment with CI/CD, infrastructure-as-code, and deployment pipelines
     for your ADK agent. You need a Google Cloud project with billing enabled.
-    agents-cli in Agent Platform helps you deploy ADK projects quickly and it
+    Agents CLI in Agent Platform helps you deploy ADK projects quickly and it
     includes advanced service configurations that extend the core capabilities of
     the Agent Runtime runtime for more mature use cases.
 
@@ -12946,12 +12946,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>1.0.0</version>
+             <version>1.2.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>1.0.0</version>
+             <version>1.2.0</version>
           </dependency>
         </dependencies>
 
@@ -17313,7 +17313,7 @@ Replace your existing pom.xml with the following.
     <auto-value.version>1.11.0</auto-value.version>
     <!-- Main class for exec-maven-plugin -->
     <exec.mainClass>samples.liveaudio.LiveAudioRun</exec.mainClass>
-    <google-adk.version>0.1.0</google-adk.version>
+    <google-adk.version>1.2.0</google-adk.version>
   </properties>
 
   <dependencyManagement>
@@ -18321,13 +18321,13 @@ File: docs/get-started/installation.md
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.0.0</version>
+                <version>1.2.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.0.0</version>
+                <version>1.2.0</version>
             </dependency>
         </dependencies>
 
@@ -18340,8 +18340,8 @@ File: docs/get-started/installation.md
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:1.0.0'
-        implementation 'com.google.adk:google-adk-dev:1.0.0'
+        implementation 'com.google.adk:google-adk:1.2.0'
+        implementation 'com.google.adk:google-adk-dev:1.2.0'
     }
     ```
 
@@ -18459,7 +18459,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.0.0</version>
+        <version>1.2.0</version>
     </dependency>
 </dependencies>
 ```
@@ -18494,13 +18494,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.0.0</version>
+                <version>1.2.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.0.0</version>
+                <version>1.2.0</version>
             </dependency>
         </dependencies>
 
@@ -21983,7 +21983,7 @@ catalog_tags: ["observability", "google"]
 
 The BigQuery Agent Analytics Plugin significantly enhances the Agent Development Kit (ADK) by providing a robust solution for in-depth agent behavior analysis. Using the ADK Plugin architecture and the **BigQuery Storage Write API**, it captures and logs critical operational events directly into a Google BigQuery table, empowering you with advanced capabilities for debugging, real-time monitoring, and comprehensive offline performance evaluation.
 
-Version 1.26.0 adds **Auto Schema Upgrade** (safely add new columns to existing tables), **Tool Provenance** tracking (LOCAL, MCP, SUB_AGENT, A2A, TRANSFER_AGENT), and **HITL Event Tracing** for human-in-the-loop interactions. Version 1.27.0 adds **Automatic View Creation** (generate flat, query-friendly event views).
+Version 1.26.0 adds **Auto Schema Upgrade** (safely add new columns to existing tables), **Tool Provenance** tracking (LOCAL, MCP, SUB_AGENT, A2A, TRANSFER_AGENT, TRANSFER_A2A), and **HITL Event Tracing** for human-in-the-loop interactions. Version 1.27.0 adds **Automatic View Creation** (generate flat, query-friendly event views).
 
 !!! warning "BigQuery Storage Write API"
 
@@ -22400,7 +22400,16 @@ The plugin supports **OpenTelemetry** for distributed tracing. OpenTelemetry is 
 
 ## Configuration options
 
-You can customize the plugin using `BigQueryLoggerConfig`. The `BigQueryAgentAnalyticsPlugin` constructor also accepts `**kwargs`, which are forwarded directly to `BigQueryLoggerConfig`. This lets you pass config fields (like `batch_size` or `enabled`) without creating a separate config object:
+The `BigQueryAgentAnalyticsPlugin` constructor accepts the following parameters:
+
+-   **`project_id`** (`str`): The Google Cloud project ID.
+-   **`dataset_id`** (`str`): The BigQuery dataset ID.
+-   **`table_id`** (`Optional[str]`, default: `None`): The BigQuery table ID. Overrides `table_id` in `BigQueryLoggerConfig` if both are set.
+-   **`config`** (`Optional[BigQueryLoggerConfig]`, default: `None`): A `BigQueryLoggerConfig` instance for detailed configuration.
+-   **`location`** (`str`, default: `"US"`): The BigQuery dataset location (e.g., `"US"`, `"EU"`, `"us-central1"`).
+-   **`credentials`** (`Optional[google.auth.credentials.Credentials]`, default: `None`): Explicit Google credentials for the plugin's BigQuery and GCS clients. If `None`, the plugin uses [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials). Use this for service-account, impersonated, or cross-project setups.
+
+The constructor also accepts `**kwargs`, which are forwarded directly to `BigQueryLoggerConfig`. This lets you pass config fields (like `batch_size` or `enabled`) without creating a separate config object:
 
 ```python
 plugin = BigQueryAgentAnalyticsPlugin(
@@ -22596,13 +22605,13 @@ You can also call the public async method `await plugin.create_analytics_views()
 
 Every view includes these **common columns**: `timestamp`, `event_type`, `agent`, `session_id`, `invocation_id`, `user_id`, `trace_id`, `span_id`, `parent_span_id`, `status`, `error_message`, `is_truncated`.
 
-The following table lists all 15 auto-created views and their event-specific columns:
+The following table lists all 16 auto-created views and their event-specific columns:
 
 | View Name | Event-Specific Columns |
 |:---|:---|
 | **`v_user_message_received`** | *(common columns only)* |
 | **`v_llm_request`** | `model` (STRING), `request_content` (JSON), `llm_config` (JSON), `tools` (JSON) |
-| **`v_llm_response`** | `response` (JSON), `usage_prompt_tokens` (INT64), `usage_completion_tokens` (INT64), `usage_total_tokens` (INT64), `total_ms` (INT64), `ttft_ms` (INT64), `model_version` (STRING), `usage_metadata` (JSON) |
+| **`v_llm_response`** | `response` (JSON), `usage_prompt_tokens` (INT64), `usage_completion_tokens` (INT64), `usage_total_tokens` (INT64), `usage_cached_tokens` (INT64), `total_ms` (INT64), `ttft_ms` (INT64), `model_version` (STRING), `usage_metadata` (JSON), `cache_metadata` (JSON), `context_cache_hit_rate` (FLOAT64) |
 | **`v_llm_error`** | `total_ms` (INT64) |
 | **`v_tool_starting`** | `tool_name` (STRING), `tool_args` (JSON), `tool_origin` (STRING) |
 | **`v_tool_completed`** | `tool_name` (STRING), `tool_result` (JSON), `tool_origin` (STRING), `total_ms` (INT64) |
@@ -22615,6 +22624,7 @@ The following table lists all 15 auto-created views and their event-specific col
 | **`v_hitl_credential_request`** | `tool_name` (STRING), `tool_args` (JSON) |
 | **`v_hitl_confirmation_request`** | `tool_name` (STRING), `tool_args` (JSON) |
 | **`v_hitl_input_request`** | `tool_name` (STRING), `tool_args` (JSON) |
+| **`v_a2a_interaction`** | `response_content` (JSON), `a2a_task_id` (STRING), `a2a_context_id` (STRING), `a2a_request` (JSON), `a2a_response` (JSON) |
 
 ### Event types and payloads {#event-types}
 
@@ -22717,7 +22727,8 @@ These events track the execution of tools by the agent. Each tool event includes
 | `MCP` | Model Context Protocol tools (`McpTool` instances) |
 | `SUB_AGENT` | `AgentTool` instances (sub-agents) |
 | `A2A` | Remote Agent-to-Agent instances (`RemoteA2aAgent`) |
-| `TRANSFER_AGENT` | `TransferToAgentTool` instances |
+| `TRANSFER_AGENT` | `TransferToAgentTool` instances (generic agent transfer) |
+| `TRANSFER_A2A` | `TransferToAgentTool` instances that transfer to a `RemoteA2aAgent` (classified at call-level) |
 | `UNKNOWN` | Unclassified tools |
 
 **4. TOOL_STARTING**
@@ -22901,6 +22912,27 @@ HITL request events are detected from `function_call` parts in `on_event_callbac
     to the base table but do not have dedicated views. Query them directly
     from the `agent_events` table using
     `WHERE event_type LIKE 'HITL_%_COMPLETED'`.
+
+#### A2A Interaction Events
+
+When your agent communicates with a remote agent via the Agent-to-Agent (A2A) protocol, the plugin logs an `A2A_INTERACTION` event capturing the request and response details.
+
+**A2A_INTERACTION**
+
+Logged when an A2A remote agent call completes.
+
+```json
+{
+  "event_type": "A2A_INTERACTION",
+  "content": {
+    "response_content": "The remote agent's response...",
+    "a2a_task_id": "task-abc123",
+    "a2a_context_id": "ctx-def456",
+    "a2a_request": { ... },
+    "a2a_response": { ... }
+  }
+}
+```
 
 #### GCS Offloading Examples (Multimodal & Large Text)
 
@@ -23280,6 +23312,21 @@ config = BigQueryLoggerConfig(
     event data.
 -   **Audit your logs** periodically to verify no unexpected sensitive data is
     being captured.
+
+## Multiprocessing and fork safety
+
+The plugin is fork-aware: it sets `GRPC_ENABLE_FORK_SUPPORT=1` before loading the gRPC C-core library and registers an `os.register_at_fork` handler that resets inherited runtime state (gRPC channels, write streams, event loops) in child processes. This means the plugin can survive `os.fork()` without leaking file descriptors or sending data on a parent's connection.
+
+However, **`spawn` is the recommended multiprocessing start method** for production deployments. `fork` copies the parent's address space — including any in-flight gRPC state — and the post-fork reset adds latency to the first write in each child. With `spawn`, each worker initializes the plugin cleanly.
+
+For Gunicorn deployments specifically:
+
+-   Prefer `--preload` combined with lazy plugin initialization (the plugin defers setup until the first event is logged), or
+-   Initialize the plugin inside a `post_fork` hook so each worker gets its own client.
+
+!!! note
+
+    The fork-safety mechanism resets runtime state only. It does **not** replay events that were queued but not yet flushed in the parent process at the time of fork. Call `await plugin.flush()` before forking if you need to guarantee delivery.
 
 ## Feedback
 We welcome your feedback on BigQuery Agent Analytics. If you have questions, suggestions, or encounter any issues, please reach out to the team at bqaa-feedback@google.com.
@@ -23790,6 +23837,199 @@ Variable | Description
 - [Chroma MCP Server Repository](https://github.com/chroma-core/chroma-mcp)
 - [Chroma Documentation](https://docs.trychroma.com/)
 - [Chroma Cloud](https://www.trychroma.com/)
+
+================
+File: docs/integrations/cisco-ai-defense.md
+================
+---
+catalog_title: Cisco AI Defense
+catalog_description: Security guardrails to monitor or block agent prompts and tool calls
+catalog_icon: /integrations/assets/cisco-ai-defense.png
+---
+
+# Cisco AI Defense plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[Cisco AI
+Defense](https://www.cisco.com/site/us/en/products/security/ai-defense/index.html)
+is an enterprise AI security platform that provides runtime guardrails to
+protect against threats like prompt injection, data leakage, and harmful
+content. The [ADK
+plugin](https://github.com/cisco-ai-defense/ai-defense-google-adk) integrates
+these guardrails directly into the ADK Runner lifecycle: it inspects prompts,
+model responses, and tool calls, then allows or blocks them based on configurable
+security policies.
+
+## Use cases
+
+- **Runtime protection for model calls**: Inspect user prompts before model
+  calls and model outputs after generation, then allow or block based on policy
+  (`monitor` or `enforce`).
+- **Tool and MCP call inspection**: Inspect tool call requests before execution
+  and tool responses after execution, and block unsafe tool behavior in
+  `enforce` mode with clear metadata.
+- **Auditable decision trace and alerts**: Capture decision context (action,
+  severity, classifications, request_id/event_id) and optionally trigger an
+  `on_violation` callback for monitoring and incident response.
+
+## Prerequisites
+
+- [Cisco AI Defense](https://www.cisco.com/site/us/en/products/security/ai-defense/index.html) account and API key
+- Python >= 3.10
+- [ADK](https://adk.dev) >= 1.0.0
+
+## Installation
+
+```bash
+pip install cisco-aidefense-google-adk
+```
+
+Set the `AI_DEFENSE_API_KEY` environment variable (and `AI_DEFENSE_MCP_API_KEY`
+for tool inspection).
+
+## Use with agent
+
+### Quickstart
+
+Add Cisco AI Defense to any ADK agent with a single line:
+
+```python
+from aidefense_google_adk import defend
+
+agent = defend(agent, mode="enforce")
+```
+
+Or get a plugin for the entire app:
+
+```python
+from aidefense_google_adk import defend
+
+plugin = defend(mode="enforce")
+app = App(name="my_app", root_agent=agent, plugins=[plugin])
+```
+
+### Global plugin
+
+Use `CiscoAIDefensePlugin` to apply inspection globally to all agents in a
+Runner:
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.apps import App
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+from aidefense_google_adk import CiscoAIDefensePlugin
+
+agent = LlmAgent(
+    model="gemini-flash-latest",
+    name="assistant",
+    instruction="You are a helpful assistant.",
+)
+
+app = App(
+    name="my_app",
+    root_agent=agent,
+    plugins=[
+        CiscoAIDefensePlugin(mode="enforce"),
+    ],
+)
+runner = Runner(app=app, session_service=InMemorySessionService())
+```
+
+### Per-agent callbacks
+
+Use `make_aidefense_callbacks` to wire inspection into a specific agent:
+
+```python
+from google.adk.agents import LlmAgent
+from aidefense_google_adk import make_aidefense_callbacks
+
+cbs = make_aidefense_callbacks(mode="enforce")
+
+agent = LlmAgent(
+    model="gemini-flash-latest",
+    name="assistant",
+    instruction="You are a helpful assistant.",
+)
+cbs.apply_to(agent)  # wires all 4 callbacks
+```
+
+## Modes
+
+The plugin supports three operating modes:
+
+Mode | Behavior
+---- | --------
+`monitor` | Inspect all traffic, log violations, never block (default)
+`enforce` | Inspect all traffic, block requests/responses that violate policy
+`off` | Skip inspection entirely
+
+Modes can be set globally or per-channel:
+
+```python
+CiscoAIDefensePlugin(
+    mode="monitor",      # default for both
+    llm_mode="enforce",  # override for LLM only
+    mcp_mode="off",      # override for tools only
+)
+```
+
+## Violation callback
+
+Use the `on_violation` callback to receive notifications for every violation in
+both `monitor` and `enforce` modes:
+
+```python
+def handle_violation(result):
+    print(f"Violation: {result.action} / {result.severity}")
+
+CiscoAIDefensePlugin(
+    mode="monitor",
+    on_violation=handle_violation,
+)
+```
+
+## Retry and fail-open support
+
+For automatic retry with exponential backoff, fail-open/fail-closed semantics,
+and structured `Decision` objects, use the `AgentsecPlugin` variant:
+
+```python
+from aidefense_google_adk import AgentsecPlugin
+
+app = App(
+    name="my_app",
+    root_agent=agent,
+    plugins=[
+        AgentsecPlugin(
+            mode="enforce",
+            fail_open=True,
+            retry_total=3,
+            retry_backoff=0.5,
+        ),
+    ],
+)
+```
+
+Or at the per-agent level:
+
+```python
+from aidefense_google_adk import make_agentsec_callbacks
+
+cbs = make_agentsec_callbacks(mode="enforce", fail_open=True)
+cbs.apply_to(agent)
+```
+
+## Additional resources
+
+- [GitHub Repository](https://github.com/cisco-ai-defense/ai-defense-google-adk)
+- [PyPI Package](https://pypi.org/project/cisco-aidefense-google-adk/)
+- [Cisco AI Defense](https://www.cisco.com/site/us/en/products/security/ai-defense/index.html)
+- [cisco-aidefense-sdk on PyPI](https://pypi.org/project/cisco-aidefense-sdk/)
 
 ================
 File: docs/integrations/cloud-trace.md
@@ -25399,7 +25639,7 @@ ADK provides a native integration for managing persistent agent session states u
 
     Ensure you use the same version for both `google-adk` and `google-adk-firestore-session-service` to guarantee compatibility.
 
-Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Gradle), replacing `1.0.0` with your target ADK version:
+Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Gradle), replacing `1.2.0` with your target ADK version:
 
 ### Maven
 
@@ -25409,13 +25649,13 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Grad
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.0.0</version>
+        <version>1.2.0</version>
     </dependency>
     <!-- Firestore Session Service -->
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk-firestore-session-service</artifactId>
-        <version>1.0.0</version>
+        <version>1.2.0</version>
     </dependency>
 </dependencies>
 ```
@@ -25425,9 +25665,9 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Grad
 ```gradle
 dependencies {
     // ADK Core
-    implementation 'com.google.adk:google-adk:1.0.0'
+    implementation 'com.google.adk:google-adk:1.2.0'
     // Firestore Session Service
-    implementation 'com.google.adk:google-adk-firestore-session-service:1.0.0'
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.2.0'
 }
 ```
 
@@ -50471,7 +50711,7 @@ You can use AI coding assistants to build agents with Agent Development Kit
 into your project, or by connecting it to ADK documentation through an MCP
 server.
 
-- [**agents-cli**](#agents-cli): Command-line tool and coding skills for ADK development.
+- [**Agents CLI in Agent Platform**](#agents-cli): Command-line tool and coding skills for ADK development.
 - [**ADK Docs MCP Server**](#adk-docs-mcp-server): Connect your coding tool to
   ADK documentation through an MCP server.
 - [**ADK Docs Index**](#adk-docs-index): Machine-readable documentation files
@@ -50479,18 +50719,18 @@ server.
 
 ## agents-cli
 
-[agents-cli](https://google.github.io/agents-cli/) is the command-line tool for
+[Agents CLI in Agent Platform](https://google.github.io/agents-cli/) is the command-line tool for
 ADK development. It provides scaffolding commands, deployment tools, and
 development skills that work with any compatible coding assistant, including
 Gemini CLI, Antigravity, Claude Code, and Cursor.
 
-To install agents-cli and set up ADK development skills:
+To install Agents CLI and set up ADK development skills:
 
 ```bash
 uvx google-agents-cli setup
 ```
 
-This installs both the CLI and coding skills. Browse the [agents-cli
+This installs both the CLI and coding skills. Browse the [Agents CLI
 documentation](https://google.github.io/agents-cli/) for more details.
 
 ### CLI Commands
@@ -50500,8 +50740,8 @@ documentation](https://google.github.io/agents-cli/) for more details.
 | `agents-cli scaffold create` | Create a new ADK agent project |
 | `agents-cli scaffold enhance` | Add deployment to existing project |
 | `agents-cli eval` | Run agent evaluations |
-| `agents-cli deploy` | Deploy to Agent Runtime or Cloud Run |
-| `agents-cli publish` | Publish agent to Agent Store |
+| `agents-cli deploy` | Deploy to Agent Runtime, Cloud Run, or GKE |
+| `agents-cli publish` | Publish to Gemini Enterprise |
 
 ### Development Skills
 
@@ -50509,12 +50749,13 @@ After setup, the following skills are available in your coding tool:
 
 | Skill | Description |
 |-------|-------------|
+| `google-agents-cli-workflow` | Development lifecycle and coding guidelines |
 | `google-agents-cli-adk-code` | Python API quick reference and docs index |
-| `google-agents-cli-adk-deploy` | Agent Runtime and Cloud Run deployment |
-| `google-agents-cli-adk-dev` | Development lifecycle and coding guidelines |
-| `google-agents-cli-adk-eval` | Evaluation methodology and scoring |
-| `google-agents-cli-adk-observe` | Tracing, logging, and integrations |
-| `google-agents-cli-adk-scaffold` | Project scaffolding |
+| `google-agents-cli-scaffold` | Project scaffolding |
+| `google-agents-cli-eval` | Evaluation methodology and scoring |
+| `google-agents-cli-deploy` | Agent Runtime, Cloud Run, and GKE deployment |
+| `google-agents-cli-publish` | Gemini Enterprise registration |
+| `google-agents-cli-observability` | Tracing, logging, and integrations |
 
 ## ADK Docs MCP Server
 
