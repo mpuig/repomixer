@@ -11848,13 +11848,13 @@ ADK agent code to Google Cloud
 [Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview).
 You should follow this deployment path if you have an existing Google Cloud
 project and if you want to carefully manage deploying an ADK agent to Agent
-Engine runtime environment. These instructions use Cloud Console, the gcloud
+Runtime environment. These instructions use Cloud Console, the gcloud
 command line interface, and the ADK command line interface (ADK CLI). This path
 is recommended for users who are already familiar with configuring Google Cloud
 projects, and users preparing for production deployments.
 
 These instructions describe how to deploy an ADK project to Google Cloud Agent
-Engine runtime environment, which includes the following stages:
+Runtime environment, which includes the following stages:
 
 *   [Setup Google Cloud project](#setup-cloud-project)
 *   [Prepare agent project folder](#define-your-agent)
@@ -12397,7 +12397,7 @@ async for event in remote_app.async_stream_query(
 
 If you have performed deployments as tests, it is a good practice to clean up
 your cloud resources after you have finished. You can delete the deployed Agent
-Engine instance to avoid any unexpected charges on your Google Cloud account.
+Runtime instance to avoid any unexpected charges on your Google Cloud account.
 
 ```python
 remote_app.delete(force=True)
@@ -19315,7 +19315,7 @@ ADK supports multiple grounding approaches:
 
 - **Google Search Grounding**: Connect agents to real-time web information for queries requiring current data like news, weather, or facts that may have changed since the model's training.
 - **Grounding with Search**: Connect agents to your organization's private documents and enterprise data for queries requiring proprietary information.
-- **Agentic RAG**: Build agents that reason about how to search, constructing queries and filters dynamically using Vector Search 2.0, RAG Engine, or other retrieval systems.
+- **Agentic RAG**: Build agents that reason about how to search, constructing queries and filters dynamically using Agent Retrieval, Knowledge Engine, or other retrieval systems.
 
 <div class="grid cards" markdown>
 
@@ -19363,7 +19363,7 @@ ADK supports multiple grounding approaches:
 
     ---
 
-    A document Q&A agent powered by RAG Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
+    A document Q&A agent powered by Knowledge Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
 
     - [RAG Agent](https://github.com/google/adk-samples/tree/main/python/agents/RAG)
 
@@ -19700,7 +19700,7 @@ agent can operate autonomously with built-in protections.
         from mcp import StdioServerParameters
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="advertising_agent",
             instruction=(
                 "You are an advertising agent that helps users create, manage, "
@@ -19737,7 +19737,7 @@ agent can operate autonomously with built-in protections.
         ADSPIRER_ACCESS_TOKEN = "YOUR_ADSPIRER_ACCESS_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="advertising_agent",
             instruction=(
                 "You are an advertising agent that helps users create, manage, "
@@ -19769,7 +19769,7 @@ agent can operate autonomously with built-in protections.
         import { LlmAgent, MCPToolset } from "@google/adk";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "advertising_agent",
             instruction:
                 "You are an advertising agent that helps users create, manage, " +
@@ -19804,7 +19804,7 @@ agent can operate autonomously with built-in protections.
         const ADSPIRER_ACCESS_TOKEN = "YOUR_ADSPIRER_ACCESS_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "advertising_agent",
             instruction:
                 "You are an advertising agent that helps users create, manage, " +
@@ -20318,7 +20318,7 @@ language.
         AGENTMAIL_API_KEY = "YOUR_AGENTMAIL_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="agentmail_agent",
             instruction="Help users manage email inboxes and send messages",
             tools=[
@@ -20351,7 +20351,7 @@ language.
         const AGENTMAIL_API_KEY = "YOUR_AGENTMAIL_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "agentmail_agent",
             instruction: "Help users manage email inboxes and send messages",
             tools: [
@@ -20619,7 +20619,7 @@ create autonomous AI voice agents using natural language.
         AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="agentphone_agent",
             instruction="Help users make phone calls, send SMS, and manage phone numbers",
             tools=[
@@ -20652,7 +20652,7 @@ create autonomous AI voice agents using natural language.
         AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="agentphone_agent",
             instruction="Help users make phone calls, send SMS, and manage phone numbers",
             tools=[
@@ -20678,7 +20678,7 @@ create autonomous AI voice agents using natural language.
         const AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "agentphone_agent",
             instruction: "Help users make phone calls, send SMS, and manage phone numbers",
             tools: [
@@ -20706,7 +20706,7 @@ create autonomous AI voice agents using natural language.
         const AGENTPHONE_API_KEY = "YOUR_AGENTPHONE_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "agentphone_agent",
             instruction: "Help users make phone calls, send SMS, and manage phone numbers",
             tools: [
@@ -21736,7 +21736,7 @@ tasks, goals, and team collaboration using natural language.
         from mcp import StdioServerParameters
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="asana_agent",
             instruction="Help users manage projects, tasks, and goals in Asana",
             tools=[
@@ -21765,7 +21765,7 @@ tasks, goals, and team collaboration using natural language.
         import { LlmAgent, MCPToolset } from "@google/adk";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "asana_agent",
             instruction: "Help users manage projects, tasks, and goals in Asana",
             tools: [
@@ -21867,7 +21867,7 @@ collaboration workflows using natural language.
 
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="atlassian_agent",
             instruction="Help users work with data in Atlassian products",
             tools=[
@@ -21896,7 +21896,7 @@ collaboration workflows using natural language.
         import { LlmAgent, MCPToolset } from "@google/adk";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "atlassian_agent",
             instruction: "Help users work with data in Atlassian products",
             tools: [
@@ -23554,7 +23554,7 @@ across languages, and create audio content using natural language.
         CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="cartesia_agent",
             instruction="Help users generate speech and work with audio content",
             tools=[
@@ -23585,7 +23585,7 @@ across languages, and create audio content using natural language.
         const CARTESIA_API_KEY = "YOUR_CARTESIA_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "cartesia_agent",
             instruction: "Help users generate speech and work with audio content",
             tools: [
@@ -23696,7 +23696,7 @@ search, and metadata filtering.
         # CHROMA_API_KEY = "your-api-key"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="chroma_agent",
             instruction="Help users store and retrieve information using semantic search",
             tools=[
@@ -23745,7 +23745,7 @@ search, and metadata filtering.
         // const CHROMA_API_KEY = "your-api-key";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "chroma_agent",
             instruction: "Help users store and retrieve information using semantic search",
             tools: [
@@ -24261,7 +24261,7 @@ catalog_tags: ["code", "google"]
 
 The Agent Runtime Code Execution ADK Tool provides a low-latency, highly
 efficient method for running AI-generated code using the
-[Google Cloud Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
+[Google Cloud Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 service. This tool is designed for fast execution, tailored for agentic workflows,
 and uses sandboxed environments for improved security. The Code Execution tool
 allows code and data to persist over multiple requests, enabling complex,
@@ -24276,7 +24276,7 @@ This code execution tool is part of the Agent Runtime suite, however you do not
 have to deploy your agent to Agent Runtime to use it. You can run your agent
 locally or with other services and use this tool. For more information about the
 Code Execution feature in Agent Runtime, see the
-[Agent Engine Code Execution](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/overview)
+[Agent Runtime Code Execution](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/code-execution/overview)
 documentation.
 
 
@@ -24702,7 +24702,7 @@ issues.
         CB_PASSWORD = "password"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="couchbase_agent",
             instruction="Help users explore and query Couchbase databases",
             tools=[
@@ -24737,7 +24737,7 @@ issues.
         const CB_PASSWORD = "password";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "couchbase_agent",
             instruction: "Help users explore and query Couchbase databases",
             tools: [
@@ -25021,6 +25021,107 @@ this package with Vertex AI Memory Bank or a vector store.
   background on how ADK uses memory services.
 
 ================
+File: docs/integrations/datadog.md
+================
+---
+catalog_title: Datadog
+catalog_description: Develop, evaluate, and monitor LLM applications
+catalog_icon: /integrations/assets/datadog.png
+catalog_tags: ["observability"]
+---
+
+# Datadog Observability for ADK
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in:</span>
+    <span class="lst-python">Python</span>
+</div>
+
+[Datadog LLM
+Observability](https://www.datadoghq.com/product/llm-observability/) helps AI
+engineers, data scientists, and application developers quickly develop,
+evaluate, and monitor LLM applications. Confidently improve output quality,
+performance, costs, and overall risk with structured experiments, end-to-end
+tracing across AI agents, and evaluations.
+
+## Overview
+
+Datadog LLM Observability can [automatically instrument and trace your agents
+built on Google
+ADK](https://docs.datadoghq.com/llm_observability/instrumentation/auto_instrumentation?tab=python#google-adk),
+allowing you to:
+
+- **Observe agent executions and interactions** - Automatically capture every
+  agent run, tool call, and code execution within your agents
+- **Capture LLM calls and responses** made with the underlying Google GenAI SDK
+- **Debug issues** by providing error rates, token usage and cost, and
+  out-of-the-box evaluations on your LLM calls and tool usage
+
+## Prerequisites
+
+Sign up for a [Datadog account](https://www.datadoghq.com/) if you do not have
+one and [get your API
+key](https://docs.datadoghq.com/account_management/api-app-keys/#api-keys).
+
+## Installation
+
+Install the required packages:
+
+```bash
+pip install ddtrace
+```
+
+## Setup
+
+### Create an Application using the Google ADK
+
+If you do not have an application using the Google ADK, follow the steps in the
+[ADK Getting Started Guide](https://google.github.io/adk-docs/get-started/) to
+create a sample ADK agent.
+
+### Configure Environment Variables
+
+You will need to specify an ML Application name in the following environment
+variables. An ML Application is a grouping of LLM Observability traces
+associated with a specific LLM-based application. See [ML Application Naming
+Guidelines](https://docs.datadoghq.com/llm_observability/instrumentation/sdk?tab=python#application-naming-guidelines)
+for more information on limitations with ML Application names.
+
+```shell
+export DD_API_KEY=<YOUR_DD_API_KEY>
+export DD_SITE=<YOUR_DD_SITE>
+export DD_LLMOBS_ENABLED=true
+export DD_LLMOBS_ML_APP=<YOUR_ML_APP_NAME>
+export DD_LLMOBS_AGENTLESS_ENABLED=true
+export DD_APM_TRACING_ENABLED=false  # Only set this if you are not using Datadog APM
+```
+
+These variables must be exported before running your application so the
+following `ddtrace-run` command can use them, as opposed to putting them in the
+agent's `.env` file.
+
+### Run Your Application
+
+Once you have configured your environment variables, you can run your
+application and start observing your LLM-based applications.
+
+```shell
+ddtrace-run adk run my_agent
+```
+
+## Observe
+
+Navigate to the [Datadog LLM Observability Traces
+View](https://app.datadoghq.com/llm/traces) to see the traces generated by your
+application.
+
+![datadog-observability.png](./assets/datadog-observability.png)
+
+## Support and Resources
+- [Datadog LLM Observability](https://www.datadoghq.com/product/llm-observability/)
+- [Datadog Support](https://docs.datadoghq.com/help/)
+
+================
 File: docs/integrations/daytona.md
 ================
 ---
@@ -25075,7 +25176,7 @@ plugin = DaytonaPlugin(
 )
 
 root_agent = Agent(
-    model="gemini-2.5-pro",
+    model="gemini-flash-latest",
     name="sandbox_agent",
     instruction="Help users execute code and commands in a secure sandbox",
     tools=plugin.get_tools(),
@@ -25167,7 +25268,7 @@ AI experiences using natural language.
         ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="elevenlabs_agent",
             instruction="Help users generate speech, clone voices, and process audio",
             tools=[
@@ -25197,7 +25298,7 @@ AI experiences using natural language.
         const ELEVENLABS_API_KEY = "YOUR_ELEVENLABS_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "elevenlabs_agent",
             instruction: "Help users generate speech, clone voices, and process audio",
             tools: [
@@ -25760,7 +25861,7 @@ public class YourAgentApplication {
                 You are a helpful assistant that tells the current time in a city.
                 Use the 'getCurrentTime' tool for this purpose.
                 \""")
-            .model("gemini-3.1-pro-preview")
+            .model("gemini-flash-latest")
             .tools(FunctionTool.create(YourAgentApplication.class, "getCurrentTime"))
             .build();
     }
@@ -26110,7 +26211,7 @@ def get_current_time(city: str) -> dict:
 
 
 root_agent = Agent(
-    model="gemini-3-flash-preview",
+    model="gemini-flash-latest",
     name="root_agent",
     description="Tells the current time in a specified city.",
     instruction=(
@@ -26210,7 +26311,7 @@ automate workflows using natural language.
         GITHUB_TOKEN = "YOUR_GITHUB_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="github_agent",
             instruction="Help users get information from GitHub",
             tools=[
@@ -26238,7 +26339,7 @@ automate workflows using natural language.
         const GITHUB_TOKEN = "YOUR_GITHUB_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "github_agent",
             instruction: "Help users get information from GitHub",
             tools: [
@@ -26370,7 +26471,7 @@ searches, and automate development workflows using natural language.
         GITLAB_INSTANCE_URL = "gitlab.com"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="gitlab_agent",
             instruction="Help users get information from GitLab",
             tools=[
@@ -26404,7 +26505,7 @@ searches, and automate development workflows using natural language.
         const GITLAB_INSTANCE_URL = "gitlab.com";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "gitlab_agent",
             instruction: "Help users get information from GitLab",
             tools: [
@@ -26835,7 +26936,7 @@ Guide](https://developers.google.com/knowledge/mcp#installation) for the precise
         DEVELOPER_KNOWLEDGE_API_KEY = "YOUR_DEVELOPER_KNOWLEDGE_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="google_knowledge_agent",
             instruction="Search Google developer documentation for implementation guidance.",
             tools=[
@@ -26859,7 +26960,7 @@ Guide](https://developers.google.com/knowledge/mcp#installation) for the precise
         const DEVELOPER_KNOWLEDGE_API_KEY = "YOUR_DEVELOPER_KNOWLEDGE_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "google_knowledge_agent",
             instruction: "Search Google developer documentation for implementation guidance.",
             tools: [
@@ -27005,7 +27106,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="hugging_face_agent",
             instruction="Help users get information from Hugging Face",
             tools=[
@@ -27038,7 +27139,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="hugging_face_agent",
             instruction="Help users get information from Hugging Face",
             tools=[
@@ -27064,7 +27165,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         const HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "hugging_face_agent",
             instruction: "Help users get information from Hugging Face",
             tools: [
@@ -27092,7 +27193,7 @@ your ADK agent to the Hugging Face Hub and thousands of Gradio AI Applications.
         const HUGGING_FACE_TOKEN = "YOUR_HUGGING_FACE_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "hugging_face_agent",
             instruction: "Help users get information from Hugging Face",
             tools: [
@@ -27176,6 +27277,44 @@ integrations to this catalog, see the
 [Contribution Guide for Integrations](https://github.com/google/adk-docs/blob/main/CONTRIBUTING.md#integrations).
 
 {{$ render_catalog('integrations/*.md') $}}
+
+================
+File: docs/integrations/knowledge-engine.md
+================
+---
+catalog_title: Knowledge Engine
+catalog_description: Perform private data retrieval using Knowledge Engine
+catalog_icon: /integrations/assets/agent-platform.svg
+catalog_tags: ["data","google"]
+---
+
+# Knowledge Engine tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+The `vertex_ai_rag_retrieval` tool allows the agent to perform private data
+retrieval using Knowledge Engine.
+
+When you use grounding with Knowledge Engine, you need to prepare a RAG corpus
+beforehand. Please refer to the [RAG ADK agent
+sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py)
+or [Knowledge Engine
+page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart)
+for setting it up.
+
+!!! warning "Warning: Single tool per agent limitation"
+
+    This tool can only be used ***by itself*** within an agent instance.
+    For more information about this limitation and workarounds, see
+    [Limitations for ADK tools](/tools/limitations/).
+
+=== "Python"
+
+    ```py
+    --8<-- "examples/python/snippets/tools/built-in-tools/rag_engine.py"
+    ```
 
 ================
 File: docs/integrations/langwatch.md
@@ -27411,7 +27550,7 @@ project cycles, and automate development workflows using natural language.
         from mcp import StdioServerParameters
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="linear_agent",
             instruction="Help users manage issues, projects, and cycles in Linear",
             tools=[
@@ -27449,7 +27588,7 @@ project cycles, and automate development workflows using natural language.
         LINEAR_API_KEY = "YOUR_LINEAR_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="linear_agent",
             instruction="Help users manage issues, projects, and cycles in Linear",
             tools=[
@@ -27479,7 +27618,7 @@ project cycles, and automate development workflows using natural language.
         import { LlmAgent, MCPToolset } from "@google/adk";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "linear_agent",
             instruction: "Help users manage issues, projects, and cycles in Linear",
             tools: [
@@ -27511,7 +27650,7 @@ project cycles, and automate development workflows using natural language.
         const LINEAR_API_KEY = "YOUR_LINEAR_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "linear_agent",
             instruction: "Help users manage issues, projects, and cycles in Linear",
             tools: [
@@ -27625,7 +27764,7 @@ natural language.
         MAILGUN_API_KEY = "YOUR_MAILGUN_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="mailgun_agent",
             instruction="Help users send emails and manage their Mailgun account",
             tools=[
@@ -27659,7 +27798,7 @@ natural language.
         const MAILGUN_API_KEY = "YOUR_MAILGUN_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "mailgun_agent",
             instruction: "Help users send emails and manage their Mailgun account",
             tools: [
@@ -28397,7 +28536,7 @@ using natural language.
         # ATLAS_CLIENT_SECRET = "YOUR_ATLAS_CLIENT_SECRET"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="mongodb_agent",
             instruction="Help users query and manage MongoDB databases",
             tools=[
@@ -28440,7 +28579,7 @@ using natural language.
         // const ATLAS_CLIENT_SECRET = "YOUR_ATLAS_CLIENT_SECRET";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "mongodb_agent",
             instruction: "Help users query and manage MongoDB databases",
             tools: [
@@ -28844,7 +28983,7 @@ for detailed setup instructions.
         N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="n8n_agent",
             instruction="Help users manage and execute workflows in n8n",
             tools=[
@@ -28879,7 +29018,7 @@ for detailed setup instructions.
         N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="n8n_agent",
             instruction="Help users manage and execute workflows in n8n",
             tools=[
@@ -28906,7 +29045,7 @@ for detailed setup instructions.
         const N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "n8n_agent",
             instruction: "Help users manage and execute workflows in n8n",
             tools: [
@@ -28939,7 +29078,7 @@ for detailed setup instructions.
         const N8N_MCP_TOKEN = "YOUR_N8N_MCP_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "n8n_agent",
             instruction: "Help users manage and execute workflows in n8n",
             tools: [
@@ -29048,7 +29187,7 @@ language.
         NOTION_TOKEN = "YOUR_NOTION_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="notion_agent",
             instruction="Help users get information from Notion",
             tools=[
@@ -29081,7 +29220,7 @@ language.
         const NOTION_TOKEN = "YOUR_NOTION_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "notion_agent",
             instruction: "Help users get information from Notion",
             tools: [
@@ -29185,7 +29324,7 @@ workflows and business insights.
         PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="paypal_agent",
             instruction="Help users manage their PayPal account",
             tools=[
@@ -29223,7 +29362,7 @@ workflows and business insights.
         PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="paypal_agent",
             instruction="Help users manage their PayPal account",
             tools=[
@@ -29250,7 +29389,7 @@ workflows and business insights.
         const PAYPAL_ACCESS_TOKEN = "YOUR_PAYPAL_ACCESS_TOKEN";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "paypal_agent",
             instruction: "Help users manage their PayPal account",
             tools: [
@@ -29590,7 +29729,7 @@ filtering, and search across multiple indexes with reranking.
         PINECONE_API_KEY = "YOUR_PINECONE_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="pinecone_agent",
             instruction="Help users manage and search their Pinecone vector indexes",
             tools=[
@@ -29623,7 +29762,7 @@ filtering, and search across multiple indexes with reranking.
         const PINECONE_API_KEY = "YOUR_PINECONE_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "pinecone_agent",
             instruction: "Help users manage and search their Pinecone vector indexes",
             tools: [
@@ -29737,7 +29876,7 @@ natural language interactions.
         POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="postman_agent",
             instruction="Help users manage their Postman workspaces and collections",
             tools=[
@@ -29773,7 +29912,7 @@ natural language interactions.
         POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="postman_agent",
             instruction="Help users manage their Postman workspaces and collections",
             tools=[
@@ -29802,7 +29941,7 @@ natural language interactions.
         const POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "postman_agent",
             instruction: "Help users manage their Postman workspaces and collections",
             tools: [
@@ -29836,7 +29975,7 @@ natural language interactions.
         const POSTMAN_API_KEY = "YOUR_POSTMAN_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "postman_agent",
             instruction: "Help users manage their Postman workspaces and collections",
             tools: [
@@ -30007,7 +30146,7 @@ retrieve information using semantic search.
         # QDRANT_API_KEY = "YOUR_QDRANT_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="qdrant_agent",
             instruction="Help users store and retrieve information using semantic search",
             tools=[
@@ -30041,7 +30180,7 @@ retrieve information using semantic search.
         // const QDRANT_API_KEY = "YOUR_QDRANT_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "qdrant_agent",
             instruction: "Help users store and retrieve information using semantic search",
             tools: [
@@ -30103,39 +30242,6 @@ env={
 - [Qdrant MCP Server Repository](https://github.com/qdrant/mcp-server-qdrant)
 - [Qdrant Documentation](https://qdrant.tech/documentation/)
 - [Qdrant Cloud](https://cloud.qdrant.io/)
-
-================
-File: docs/integrations/rag-engine.md
-================
----
-catalog_title: RAG Engine
-catalog_description: Perform private data retrieval using RAG Engine
-catalog_icon: /integrations/assets/agent-platform.svg
-catalog_tags: ["data","google"]
----
-
-# RAG Engine tool for ADK
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
-</div>
-
-The `vertex_ai_rag_retrieval` tool allows the agent to perform private data retrieval using RAG Engine.
-
-When you use grounding with RAG Engine, you need to prepare a RAG corpus beforehand.
-Please refer to the [RAG ADK agent sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py) or [RAG Engine page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart) for setting it up.
-
-!!! warning "Warning: Single tool per agent limitation"
-
-    This tool can only be used ***by itself*** within an agent instance.
-    For more information about this limitation and workarounds, see
-    [Limitations for ADK tools](/tools/limitations/).
-
-=== "Python"
-
-    ```py
-    --8<-- "examples/python/snippets/tools/built-in-tools/rag_engine.py"
-    ```
 
 ================
 File: docs/integrations/reflect-and-retry.md
@@ -30745,7 +30851,7 @@ operations.
         STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="stripe_agent",
             instruction="Help users manage their Stripe account",
             tools=[
@@ -30781,7 +30887,7 @@ operations.
         STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="stripe_agent",
             instruction="Help users manage their Stripe account",
             tools=[
@@ -30807,7 +30913,7 @@ operations.
         const STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "stripe_agent",
             instruction: "Help users manage their Stripe account",
             tools: [
@@ -30841,7 +30947,7 @@ operations.
         const STRIPE_SECRET_KEY = "YOUR_STRIPE_SECRET_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "stripe_agent",
             instruction: "Help users manage their Stripe account",
             tools: [
@@ -30965,7 +31071,7 @@ accounts using natural language.
         SUPERMETRICS_API_KEY = "YOUR_SUPERMETRICS_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="supermetrics_agent",
             instruction="Help users query and analyze their marketing data from Supermetrics",
             tools=[
@@ -30991,7 +31097,7 @@ accounts using natural language.
         const SUPERMETRICS_API_KEY = "YOUR_SUPERMETRICS_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "supermetrics_agent",
             instruction: "Help users query and analyze their marketing data from Supermetrics",
             tools: [
@@ -31149,7 +31255,7 @@ weather_tool = activity_tool(
 agent = Agent(
     name="weather_agent",
     model=TemporalModel(
-      "gemini-2.5-pro",
+      "gemini-flash-latest",
       activity_config=ActivityConfig(summary="Weather Agent")),
     tools=[weather_tool],
 )
@@ -31275,7 +31381,7 @@ client = await Client.connect(
 # not_in_workflow_toolset lets this agent also run locally with `adk web`.
 agent = Agent(
     name="tool_agent",
-    model=TemporalModel("gemini-2.5-pro"),
+    model=TemporalModel("gemini-flash-latest"),
     tools=[TemporalMcpToolSet("my-tools", not_in_workflow_toolset=toolset_factory)],
 )
 ```
@@ -31534,7 +31640,7 @@ business data using natural language, without writing SQL or custom scripts.
         WINDSOR_API_KEY = "YOUR_WINDSOR_API_KEY"
 
         root_agent = Agent(
-            model="gemini-2.5-pro",
+            model="gemini-flash-latest",
             name="windsor_agent",
             instruction="Help users analyze their marketing and business data.",
             tools=[
@@ -31560,7 +31666,7 @@ business data using natural language, without writing SQL or custom scripts.
         const WINDSOR_API_KEY = "YOUR_WINDSOR_API_KEY";
 
         const rootAgent = new LlmAgent({
-            model: "gemini-2.5-pro",
+            model: "gemini-flash-latest",
             name: "windsor_agent",
             instruction: "Help users analyze their marketing and business data.",
             tools: [
@@ -31692,12 +31798,11 @@ agents, you may need these features to help debug and diagnose their
 in-process behavior. Basic input and output monitoring is typically
 insufficient for agents with any significant level of complexity.
 
-Agent Development Kit (ADK) provides configurable
-[logging](/observability/logging/)
-functionality for monitoring and debugging agents. However, you may
-need to consider more advanced
-[observability ADK Integrations](/integrations/?topic=observability)
-for monitoring and analysis.
+Agent Development Kit (ADK) provides built-in observability through
+[logging](/observability/logging/), [metrics](/observability/metrics/), and
+[traces](/observability/traces/) to help you monitor and debug your agents.
+However, you may need to consider more advanced [observability ADK
+Integrations](/integrations/?topic=observability) for monitoring and analysis.
 
 !!! tip "ADK Integrations for observability"
     For a list of pre-built observability libraries for ADK, see
@@ -31769,6 +31874,7 @@ The available log levels for the `--log_level` option are:
 | **`ERROR`** | A serious error that prevented an operation from completing. | <ul><li>Failed API calls to external services (e.g., LLM, Session Service).</li><li>Unhandled exceptions during agent execution.</li><li>Configuration errors.</li></ul> |
 
 **Note:** It is recommended to use `INFO` or `WARNING` in production environments. Only enable `DEBUG` when actively troubleshooting an issue, as `DEBUG` logs can be very verbose and may contain sensitive information.
+
 ---
 
 ## Configuring Logging in Go
@@ -31799,9 +31905,9 @@ import (
 
 func main() {
 	ctx := context.Background()
-	
+
 	// Initialize telemetry with prompt content logging enabled
-	tp, err := telemetry.New(ctx, 
+	tp, err := telemetry.New(ctx,
 		telemetry.WithGenAICaptureMessageContent(true),
 		// Add other options like WithOtelToCloud(true) for GCP export
 	)
@@ -31809,10 +31915,10 @@ func main() {
 		// handle error
 	}
 	defer tp.Shutdown(ctx)
-	
+
 	// Register as global OTel providers
 	tp.SetGlobalOtelProviders()
-	
+
 	// Your ADK agent code follows...
 }
 ```
@@ -31852,6 +31958,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
 
 **Scenario:** Your agent is not producing the expected output, and you suspect the prompt being sent to the LLM is incorrect.
 **Steps:**
+
 1.  **Enable DEBUG Logging:** In your `main.py`, set the logging level to `DEBUG` as shown in the configuration example.
     ```python
     logging.basicConfig(
@@ -31859,8 +31966,11 @@ By reading the logger name, you can immediately pinpoint the source of the log a
         format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
     )
     ```
+
 2.  **Run Your Agent:** Execute your agent's task as you normally would.
+
 3.  **Inspect the Logs:** Look through the console output for a message from the `google.adk.models.google_llm` logger that starts with `LLM Request:`.
+
     ```log
     ...
     2025-07-10 15:26:13,778 - DEBUG - google_adk.google.adk.models.google_llm - Sending out request, model: gemini-flash-latest, backend: GoogleLLMVariant.GEMINI_API, stream: False
@@ -31903,6 +32013,7 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     I have rolled a 6 sided die, and the result is 2.
     ...
     ```
+
 4.  **Analyze the Prompt:** By examining the `System Instruction`, `contents`, `functions` sections of the logged request, you can verify:
     -   Is the system instruction correct?
     -   Is the conversation history (`user` and `model` turns) accurate?
@@ -31912,6 +32023,199 @@ By reading the logger name, you can immediately pinpoint the source of the log a
     -   How long it takes for the model to respond?
 
 This detailed output allows you to diagnose a wide range of issues, from incorrect prompt engineering to problems with tool definitions, directly from the log files.
+
+================
+File: docs/observability/metrics.md
+================
+# Agent activity metrics
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.32.0</span>
+</div>
+
+Agent Development Kit (ADK) provides built-in, vendor-neutral metrics collection to help you understand the performance, cost, and usage patterns of your agents. While logs provide a detailed narrative of *what* happened, metrics give you aggregated, quantitative data to answer *how often* and *how fast* things are happening.
+
+## Metrics philosophy
+
+ADK's approach to metrics is designed to be lightweight, standardized, and entirely agnostic to your choice of monitoring backend.
+
+*   **OpenTelemetry Semantic Conventions:** ADK implements the OpenTelemetry (OTel) [Semantic Conventions for GenAI](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md). This ensures that metrics are recorded under standard, predictable attribute and metric names.
+*   **OTLP Wire Format:** ADK emits data using the standard OTLP format, ensuring that your metrics will seamlessly integrate into any OTel-compatible backend (e.g., Prometheus, Datadog, SigNoz, Google Cloud Monitoring).
+*   **Cost and Performance Focused:** Metrics are significantly less costly and more performant than logs or traces when performing analytics over large swathes of data. ADK tracks the most critical signals for LLM applications: token consumption, request latency, and tool execution reliability.
+*   **Vendor-Neutral Export:** ADK does not lock you into a specific metrics pipeline. You instantiate standard OTel meter providers and export data wherever your infrastructure demands.
+
+---
+
+## Metrics schema
+
+When metrics are enabled, ADK automatically instruments the agent's lifecycle, workflow steps, and tool executions based on the OpenTelemetry GenAI Semantic Conventions. The following core metrics are emitted:
+
+| Metric Name | Type | Description | Key Attributes (Dimensions) |
+| :--- | :--- | :--- | :--- |
+| **`gen_ai.agent.invocation.duration`** | Histogram | The total time taken for an agent to process a prompt and return a response. | `gen_ai.agent.name`, `error.type` |
+| **`gen_ai.tool.execution.duration`** | Histogram | The execution latency of individual tools called by the agent. Useful for spotting slow external APIs. | `gen_ai.tool.name`, `error.type` |
+| **`gen_ai.agent.request.size`** | Histogram | The size or complexity of the incoming request sent to the agent. | `gen_ai.agent.name` |
+| **`gen_ai.agent.response.size`** | Histogram | The size or complexity of the final response generated by the agent. | `gen_ai.agent.name` |
+| **`gen_ai.agent.workflow.steps`** | Histogram | Tracks the number of iterative steps or reasoning loops an agent takes to complete a workflow. | `gen_ai.agent.name` |
+
+---
+
+## Metrics export setup
+
+### Metrics export in ADK Web
+
+If you are running your agent using the `adk web` or `adk api_server` CLI commands, you can configure metrics export.
+
+
+#### OTLP export
+
+To export metrics to an OTLP-compatible backend, set the standard OTel environment variables:
+
+```bash
+export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="http://your-collector:4318/v1/metrics"
+adk web path/to/your/agents_dir
+```
+
+> **Note:** You can also set the general `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable if you would like to send traces and logs to the same endpoint in addition to metrics.
+
+#### GCP export
+
+To enable metrics export to Google Cloud Monitoring, use the `-otel_to_cloud` flag:
+
+```bash
+adk web -otel_to_cloud path/to/your/agents_dir
+```
+
+### Programmatic metrics export
+
+You can also configure metrics export programmatically in your application code.
+
+#### OTLP export setup
+
+To enable metrics and export them to an OpenTelemetry Collector (or an OTLP-compatible backend) programmatically:
+
+```python
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+os.environ["OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"] = "http://your-collector:4318/v1/metrics"
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers()
+```
+
+#### GCP export setup
+
+To export metrics to Google Cloud Monitoring programmatically, use the OpenTelemetry Google Cloud exporter. Here is an example in Python:
+
+```python
+from google.adk.telemetry.google_cloud import get_gcp_exporters
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+gcp_exporters = get_gcp_exporters(
+  enable_cloud_metrics = True,
+)
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers([gcp_exporters])
+```
+
+================
+File: docs/observability/traces.md
+================
+# Agent activity traces
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-go">Go v1.0.0</span>
+</div>
+
+Agent Development Kit (ADK) provides distributed tracing capabilities to help you visualize the end-to-end journey of a request as it travels through your agent's architecture. While metrics tell you *how long* a process took and logs tell you *what* happened, traces connect these events, showing you exactly *where* the time was spent and the hierarchical relationship between LLM reasoning, tool calls, and external APIs.
+
+## Traces philosophy
+
+ADK's approach to tracing is built on standard protocols to ensure seamless integration with your existing observability stack.
+
+*   **OpenTelemetry Semantic Conventions:** ADK implements the OpenTelemetry (OTel) [Semantic Conventions for GenAI](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md). This ensures that trace spans and attributes are recorded under standard, predictable names.
+*   **OTLP Wire Format:** ADK emits data using the standard OTLP format, ensuring that your traces will seamlessly integrate into any OTel-compatible backend (e.g., Google Cloud Trace, Jaeger, Grafana Tempo, Datadog).
+*   **Hierarchical Visualization:** Traces are organized into "Spans." An agent run is a root span, which contains child spans for LLM operations, which may in turn contain child spans for tool executions. This creates a clear "waterfall" view of the agent's reasoning loop.
+*   **Context Propagation:** ADK automatically passes trace context across process boundaries, ensuring that if your agent calls an external microservice via a tool, that service's spans are linked to the agent's root trace.
+
+---
+
+## Traces schema
+
+When tracing is enabled, ADK automatically instruments key operations following the OpenTelemetry GenAI Semantic Conventions for Agents. A typical trace waterfall includes the following spans:
+
+| Span Name | Type | Description | Key Attributes |
+| :--- | :--- | :--- | :--- |
+| **[`invoke_agent`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)** | Client / Internal Span | Describes GenAI agent invocation over a remote service or locally. Represents the lifecycle of an agent interaction.| `gen_ai.agent.name`, `gen_ai.system` |
+| **[`invoke_workflow`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-workflow-span)** | Child Span | Describes the invocation of a multi-step agentic workflow. | `gen_ai.workflow.name`, `gen_ai.system`|
+| **[`execute_tool`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#execute-tool-span)**       | Child Span | Represents the execution of a specific tool or function call requested by the GenAI system.| `gen_ai.tool.name`, `gen_ai.system`|
+| **[`generate_content {model.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)** | Internal Span | Represents the invocation of the underlying language model (via the GenAI SDK) to generate content. It tracks the request parameters, response details, and usage metrics. | `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.agent.name`, `gen_ai.conversation.id`, `user.id`, `gen_ai.request.top_p`, `gen_ai.request.max_tokens`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
+
+---
+
+## Traces export setup
+
+### Traces export in ADK Web
+
+If you are running your agent using the `adk web` or `adk api_server` CLI commands, you can configure trace exports.
+
+#### OTLP export
+
+To export traces to an OTLP-compatible backend, set the standard OTel environment variables:
+
+```bash
+export OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://your-collector:4318/v1/traces"
+adk web path/to/your/agents_dir
+```
+
+> **Note:**  You can also set the general `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable if you would like to send metrics and logs to the same endpoint in addition to traces.
+
+
+#### GCP export
+
+To enable trace export to Google Cloud Trace, use the `-otel_to_cloud` flag:
+
+```bash
+adk web -otel_to_cloud path/to/your/agents_dir
+```
+
+### Programmatic traces export
+
+You can also configure trace export programmatically in your application code.
+
+#### OTLP export setup
+
+To enable tracing and export spans to an OpenTelemetry Collector programmatically:
+
+```python
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+os.environ["OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"] = "http://your-collector:4318/v1/traces"
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers()
+```
+
+#### GCP export setup
+
+To export traces to Google Cloud Trace programmatically, use the OpenTelemetry Google Cloud exporter. Here is an example in Python:
+
+```python
+from google.adk.telemetry.google_cloud import get_gcp_exporters
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+gcp_exporters = get_gcp_exporters(
+  enable_cloud_tracing = True,
+)
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers([gcp_exporters])
+```
 
 ================
 File: docs/optimize/index.md
@@ -37059,7 +37363,7 @@ the storage backend that best suits your needs:
     *   A Google Cloud project (`pip install vertexai`)
     *   A Google Cloud storage bucket that can be configured by this
         [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
-    *   A Reasoning Engine resource name/ID that can setup following this
+    *   An Agent Runtime resource name/ID that can setup following this
         [tutorial](/deploy/agent-runtime/).
     *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Agent Platform Express Mode](/integrations/express-mode/).
 *   **Best for:** Scalable production applications deployed on Google Cloud,
@@ -37446,24 +37750,30 @@ Think of it this way:
 
 ## The `MemoryService` Role
 
-The `BaseMemoryService` (or `Service` in Go) defines the interface for managing this searchable, long-term knowledge store. Its primary responsibilities are:
+The `BaseMemoryService` (or `Service` in Go) defines the interface for managing this searchable, long-term knowledge store. It supports four operations:
 
-1. **Ingesting Information (`add_session_to_memory`):** Taking the contents of a (usually completed) `Session` and adding relevant information to the long-term knowledge store.
-2. **Searching Information (`search_memory`):** Allowing an agent (typically via a `Tool`) to query the knowledge store and retrieve relevant snippets or context based on a search query.
+1. **Ingesting a session (`add_session_to_memory`):** Take the contents of a (usually completed) `Session` and add relevant information to the long-term knowledge store.
+2. **Ingesting events incrementally (`add_events_to_memory`):** Append a delta of events (e.g., the latest turn) without re-ingesting the full session. Useful when you want to write to memory partway through a long-running session.
+3. **Writing memory items directly (`add_memory`):** Insert pre-built `MemoryEntry` items, for services that support direct writes alongside event-based extraction.
+4. **Searching (`search_memory`):** Allow an agent (typically via a `Tool`) to query the knowledge store and retrieve relevant snippets based on a search query.
+
+Operations 2 and 3 are optional — the base class implementations of `add_events_to_memory` and `add_memory` raise `NotImplementedError`, so check your concrete service before relying on them.
 
 ## Choosing the Right Memory Service
 
-The ADK offers two distinct `MemoryService` implementations, each tailored to different use cases. Use the table below to decide which is the best fit for your agent.
+The Python ADK ships three `MemoryService` implementations. Use the table below to decide which is the best fit for your agent.
 
-| **Feature** | **InMemoryMemoryService** | **VertexAiMemoryBankService** |
-| :--- | :--- | :--- |
-| **Persistence** | None (data is lost on restart) | Yes (Managed by Agent Platform) |
-| **Primary Use Case** | Prototyping, local development, and simple testing. | Building meaningful, evolving memories from user conversations. |
-| **Memory Extraction** | Stores full conversation | Extracts [meaningful information](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories) from conversations and consolidates it with existing memories (powered by LLM) |
-| **Search Capability** | Basic keyword matching. | Advanced semantic search. |
-| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) instance on Agent Platform. |
-| **Dependencies** | None. | Google Cloud Project, Agent Platform API |
-| **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. |
+| **Feature** | **InMemoryMemoryService** | **VertexAiMemoryBankService** | **VertexAiRagMemoryService** |
+| :--- | :--- | :--- | :--- |
+| **Persistence** | None (data is lost on restart) | Yes (Managed by Agent Platform) | Yes (stored in Knowledge Engine) |
+| **Primary Use Case** | Prototyping, local development, and simple testing. | Building meaningful, evolving memories from user conversations. | Vector-search retrieval over the full conversation corpus, or alongside other RAG-indexed content. |
+| **Memory Extraction** | Stores full conversation | Extracts [meaningful information](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/generate-memories) from conversations and consolidates it with existing memories (powered by LLM) | Stores full conversation, indexed by [Knowledge Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-overview). |
+| **Search Capability** | Basic keyword matching. | Advanced semantic search. | Vector similarity search over Knowledge Engine. |
+| **Setup Complexity** | None. It's the default. | Low. Requires an [Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/memory-bank/overview) instance on Agent Platform. | Medium. Requires [Knowledge Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/manage-your-rag-corpus). |
+| **Dependencies** | None. | Google Cloud Project, Agent Platform API | Google Cloud Project, Knowledge Engine, the Agent Platform SDK (optional install). |
+| **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. | When you already have RAG infrastructure or want to retrieve over raw conversation transcripts. |
+
+`VertexAiRagMemoryService` is only exported from `google.adk.memory` when the Agent Platform SDK is installed. Memory Bank and RAG-backed memory are documented in [Memory Bank](#memory-bank) and [RAG Memory](#rag-memory) below.
 
 
 ## In-Memory Memory
@@ -37711,7 +38021,26 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
 
 ### Searching Memory Within a Tool
 
-You can also search memory from within a custom tool by using the `tool.Context`.
+You can also search memory from within a custom tool by using the tool context.
+
+=== "Python"
+
+    ```python
+    from google.adk.tools import ToolContext
+
+    async def search_past_conversations(
+        query: str, tool_context: ToolContext
+    ) -> dict:
+        response = await tool_context.search_memory(query)
+        return {
+            "results": [
+                part.text
+                for entry in response.memories
+                for part in (entry.content.parts or [])
+                if part.text
+            ]
+        }
+    ```
 
 === "Go"
 
@@ -37803,6 +38132,22 @@ Or, you can configure your agent to use the Memory Bank by manually instantiatin
   )
   ```
 
+## RAG Memory
+
+The `VertexAiRagMemoryService` stores conversations in [Knowledge Engine](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-overview) and retrieves them by vector similarity. Use it when you already have RAG infrastructure or want raw transcript retrieval rather than the LLM-extracted memories produced by Memory Bank. Requires the Agent Platform SDK.
+
+=== "Python"
+
+    ```py
+    from google.adk.memory import VertexAiRagMemoryService
+
+    memory_service = VertexAiRagMemoryService(
+        rag_corpus="projects/PROJECT_ID/locations/LOCATION/ragCorpora/CORPUS_ID",
+        similarity_top_k=5,
+        vector_distance_threshold=0.6,
+    )
+    ```
+
 ## Using Memory in Your Agent
 
 When a memory service is configured, your agent can use a tool or callback to retrieve memories. ADK includes two pre-built tools for retrieving memories:
@@ -37874,8 +38219,7 @@ To extract memories from your session, you need to call `add_session_to_memory`.
     from google import adk
 
     async def auto_save_session_to_memory_callback(callback_context):
-        await callback_context._invocation_context.memory_service.add_session_to_memory(
-            callback_context._invocation_context.session)
+        await callback_context.add_session_to_memory()
 
     agent = Agent(
         model=MODEL,
@@ -37945,59 +38289,62 @@ The memory workflow internally involves these steps:
 2. **Ingestion into Memory:** At some point (often when a session is considered complete or has yielded significant information), your application calls `memory_service.add_session_to_memory(session)`. This extracts relevant information from the session's events and adds it to the long-term knowledge store (in-memory dictionary or Agent Runtime Memory Bank).
 3. **Later Query:** In a *different* (or the same) session, the user might ask a question requiring past context (e.g., "What did we discuss about project X last week?").
 4. **Agent Uses Memory Tool:** An agent equipped with a memory-retrieval tool (like the built-in `load_memory` tool) recognizes the need for past context. It calls the tool, providing a search query (e.g., "discussion project X last week").
-5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name, user_id, query)`.
-6. **Results Returned:** The `MemoryService` searches its store (using keyword matching or semantic search) and returns relevant snippets as a `SearchMemoryResponse` containing a list of `MemoryResult` objects (each potentially holding events from a relevant past session).
+5. **Search Execution:** The tool internally calls `memory_service.search_memory(app_name=..., user_id=..., query=...)`.
+6. **Results Returned:** The `MemoryService` searches its store (using keyword matching or semantic search) and returns matching snippets as a `SearchMemoryResponse` containing a list of `MemoryEntry` objects (each holding `content`, optional `author`, optional `timestamp`, and optional `custom_metadata`).
 7. **Agent Uses Results:** The tool returns these results to the agent, usually as part of the context or function response. The agent can then use this retrieved information to formulate its final answer to the user.
 
 ### Can an agent have access to more than one memory service?
 
-*   **Through Standard Configuration: No.** The framework (`adk web`, `adk api_server`) is designed to be configured with one single memory service at a time via the `--memory_service_uri` flag. This single service is then provided to the agent and accessed through the built-in `self.search_memory()` method. From a configuration standpoint, you can only choose one backend (`InMemory`, `VertexAiMemoryBankService`) for all agents served by that process.
+*   **Through Standard Configuration: No.** The framework (`adk web`, `adk api_server`) is designed to be configured with one memory service at a time via the `--memory_service_uri` flag. That single service is wired into the runner and exposed through `tool_context.search_memory()` and `callback_context.search_memory()`.
 
-*   **Within Your Agent's Code: Yes, absolutely.** There is nothing preventing you from manually importing and instantiating another memory service directly inside your agent's code. This allows you to access multiple memory sources within a single agent turn.
+*   **Within Your Agent's Code: Yes.** Nothing stops you from importing and instantiating a second `BaseMemoryService` directly. The cleanest place to consult it is from a custom tool, which already has a `ToolContext` for the framework-configured service.
 
-For example, your agent could use the framework-configured `InMemoryMemoryService` to recall conversational history, and also manually instantiate a `VertexAiMemoryBankService` to look up information in a technical manual.
+For example, your agent can use the framework-configured `InMemoryMemoryService` for conversation history and manually instantiate a second service (a `VertexAiMemoryBankService`, a `VertexAiRagMemoryService` over a docs corpus, or any other `BaseMemoryService` implementation) for a separate knowledge base.
 
 #### Example: Using Two Memory Services
 
-Here’s how you could implement that in your agent's code:
-
 === "Python"
-```python
-from google.adk.agents import Agent
-from google.adk.memory import InMemoryMemoryService, VertexAiMemoryBankService
-from google.genai import types
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.memory import InMemoryMemoryService
+    from google.adk.tools import ToolContext
 
-class MultiMemoryAgent(Agent):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    # Second memory service for docs lookup; could be any BaseMemoryService.
+    docs_memory = InMemoryMemoryService()
 
-        self.memory_service = InMemoryMemoryService()
-        # Manually instantiate a second memory service for document lookups
-        self.vertexai_memorybank_service = VertexAiMemoryBankService(
-            project="PROJECT_ID",
-            location="LOCATION",
-            agent_engine_id="AGENT_ENGINE_ID"
+
+    async def search_all_memory(query: str, tool_context: ToolContext) -> dict:
+        """Search both the conversational memory and the docs corpus."""
+        conversational = await tool_context.search_memory(query)
+        docs = await docs_memory.search_memory(
+            app_name="docs", user_id="shared", query=query
         )
+        return {
+            "from_conversations": [
+                part.text
+                for entry in conversational.memories
+                for part in (entry.content.parts or [])
+                if part.text
+            ],
+            "from_docs": [
+                part.text
+                for entry in docs.memories
+                for part in (entry.content.parts or [])
+                if part.text
+            ],
+        }
 
-    async def run(self, request: types.Content, **kwargs) -> types.Content:
-        user_query = request.parts[0].text
 
-        # 1. Search conversational history using the framework-provided memory
-        #    (This would be InMemoryMemoryService if configured)
-        conversation_context = await self.memory_service.search_memory(query=user_query)
-
-        # 2. Search the document knowledge base using the manually created service
-        document_context = await self.vertexai_memorybank_service.search_memory(query=user_query)
-
-        # Combine the context from both sources to generate a better response
-        prompt = "From our past conversations, I remember:\n"
-        prompt += f"{conversation_context.memories}\n\n"
-        prompt += "From the technical manuals, I found:\n"
-        prompt += f"{document_context.memories}\n\n"
-        prompt += f"Based on all this, here is my answer to '{user_query}':"
-
-        return await self.llm.generate_content_async(prompt)
-```
+    agent = Agent(
+        model="gemini-flash-latest",
+        name="multi_memory_agent",
+        instruction=(
+            "Answer questions using both your conversation history and the "
+            "docs knowledge base. Use the search_all_memory tool."
+        ),
+        tools=[search_all_memory],
+    )
+    ```
 
 ================
 File: docs/sessions/state.md
@@ -38657,7 +39004,7 @@ File: docs/skills/index.md
 # Skills for ADK agents
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v1.2.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 An agent ***Skill*** is a self-contained unit of functionality that an ADK agent
@@ -38668,15 +39015,17 @@ The structure of a Skill allows it to be loaded incrementally to minimize the
 impact on the operating context window of the agent.
 
 !!! example "Experimental"
-    The Skills feature is experimental. We welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills)!
+    The Skills feature is experimental. We welcome your feedback via the
+    respective ADK GitHub repositories:
+    [ADK Python](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills),
+    [ADK TypeScript](https://github.com/google/adk-js/issues/new?template=feature_request.md&labels=skills),
+    [ADK Go](https://github.com/google/adk-go/issues/new?template=feature_request.md&labels=skills).
 
 ## Get started
 
-Use the `SkillToolset` class to include one or more Skills in your agent
-definition and then add to your agent's tools list. You can define a
-[Skill in code](#inline-skills),
-or load the skill from a file definition, as shown below:
+Use the `SkillToolset` class to make one or more Skills available to your agent.
+You can define [skills in code](#inline-skills) or load
+[skills from a filesystem](#filesystem-skills).
 
 === "Python"
 
@@ -38709,17 +39058,52 @@ or load the skill from a file definition, as shown below:
     )
     ```
 
+    For a complete code example of an ADK agent with a Skill, including both
+    file-based and in-line Skill definitions, see the code sample
+    [skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
+
 === "TypeScript"
 
     ```typescript
     --8<-- "examples/typescript/snippets/skills/get_started.ts:full_example"
     ```
 
-For a complete code example of an ADK agent with a Skill, including both
-file-based and in-line Skill definitions, see the code sample
-[skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
+=== "Go"
 
-## Define Skills
+    ```go
+    import (
+        "context"
+        "os"
+
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/tool/skilltoolset/skill"
+        "google.golang.org/adk/tool/skilltoolset"
+        "google.golang.org/adk/tool"
+    )
+
+    mySkillToolset, err := skilltoolset.New(ctx, skilltoolset.Config{
+        Source: skill.NewFileSystemSource(os.DirFS("./skills")),
+    })
+    if err != nil {
+        // handle error
+    }
+
+    rootAgent, err := llmagent.New(llmagent.Config{
+        Name:        "skill_user_agent",
+        Model:       model,
+        Description: "An agent that can use specialized skills.",
+        Instruction: "You are a helpful assistant that can leverage skills to perform tasks.",
+        Toolsets:    []tool.Toolset{mySkillToolset},
+    })
+    if err != nil {
+        // handle error
+    }
+    ```
+
+    For a complete example, see the code sample in
+    [skills](https://github.com/google/adk-go/tree/main/examples/skills).
+
+## Understand Skills
 
 The Skills feature allows you to create modular packages of Skill instructions
 and resources that agents can load on demand. This approach helps you organize
@@ -38742,20 +39126,20 @@ three levels:
         documentation, templates, or examples.
     -   `scripts/`: Executable scripts supported by the agent runtime.
 
-### Define Skills with files
+### Skills directory structure
 
 The following directory structure shows the recommended way to include Skills in
-your ADK agent project. The `example_skill/` directory shown below, and any
+your ADK agent project. The `example-skill/` directory shown below, and any
 parallel Skill directories, must follow the
-[Agent Skill specification](https://agentskills.io/specification)
-file structure. Only the `SKILL.md` file is required.
+[Agent Skill specification](https://agentskills.io/specification) file
+structure. Only the `SKILL.md` file is required.
 
 ```
 my_agent/
-    agent.py (or agent.ts)
+    agent.py (or agent.ts / main.go)
     .env
     skills/
-        example_skill/        # Skill
+        example-skill/        # Skill
             SKILL.md          # main instructions (required)
             references/
                 REFERENCE.md  # detailed API reference
@@ -38769,10 +39153,14 @@ my_agent/
                 *.ts          # utility scripts (TypeScript)
 ```
 
+## Skill sources
+
+You can define [skills within the code](#inline-skills) or read
+[skills from a filesystem](#filesystem-skills).
+
 ### Define Skills in code {#inline-skills}
 
-In ADK agents, you can also define Skills within the code of the agent, as shown below. This method of Skill definition enables
-you to dynamically modify skills from your ADK agent code.
+You can define Skills within the code of your agent, as shown below.
 
 === "Python"
 
@@ -38805,14 +39193,136 @@ you to dynamically modify skills from your ADK agent code.
     --8<-- "examples/typescript/snippets/skills/inline_skill.ts:full_example"
     ```
 
+=== "Go"
+
+    !!! note
+        ADK Go does not currently provide a standard Source for inline skills,
+        though this may be added in the future.
+        To define skills directly in code, you must implement the `skill.Source`
+        interface yourself, as shown below.
+
+    ```go
+    import (
+        "context"
+        "io"
+        "slices"
+        "strings"
+
+        "google.golang.org/adk/tool/skilltoolset/skill"
+    )
+
+    // Example implementation of a static in-memory skill.Source:
+    type StaticSource struct{}
+
+    func (s *StaticSource) ListFrontmatters(ctx context.Context) ([]*skill.Frontmatter, error) {
+        return []*skill.Frontmatter{
+            {Name: "greeting-skill", Description: "A friendly greeting skill that can say hello to a specific person."},
+        }, nil
+    }
+
+    func (s *StaticSource) LoadFrontmatter(ctx context.Context, name string) (*skill.Frontmatter, error) {
+        if name != "greeting-skill" {
+            return nil, skill.ErrSkillNotFound
+        }
+        return &skill.Frontmatter{Name: "greeting-skill", Description: "A friendly greeting skill that can say hello to a specific person."}, nil
+    }
+
+    func (s *StaticSource) LoadInstructions(ctx context.Context, name string) (string, error) {
+        if name != "greeting-skill" {
+            return "", skill.ErrSkillNotFound
+        }
+        return "Step 1: Read the 'references/hello_world.txt' file to understand how to greet the user. Step 2: Return a greeting based on the reference.", nil
+    }
+
+    func (s *StaticSource) ListResources(ctx context.Context, name, subpath string) ([]string, error) {
+        if name != "greeting-skill" {
+            return nil, skill.ErrSkillNotFound
+        }
+        if !slices.Contains([]string{"", ".", "references", "references/"}, subpath) {
+            return nil, skill.ErrResourceNotFound
+        }
+        return []string{"references/hello_world.txt", "references/example.md"}, nil
+    }
+
+    func (s *StaticSource) LoadResource(ctx context.Context, name, resourcePath string) (io.ReadCloser, error) {
+        if name != "greeting-skill" {
+            return nil, skill.ErrSkillNotFound
+        }
+        switch resourcePath {
+        case "references/hello_world.txt":
+            return io.NopCloser(strings.NewReader("Hello! So glad to have you here!")), nil
+        case "references/example.md":
+            return io.NopCloser(strings.NewReader("This is an example reference.")), nil
+        default:
+            return nil, skill.ErrResourceNotFound
+        }
+    }
+    ```
+
+!!! note
+    The `Source` interface can be backed by any data store (such as a database)
+    to support dynamic use cases like live updates and personalization.
+
+### Read Skills from filesystem {#filesystem-skills}
+
+=== "Python"
+
+    ```python
+    import pathlib
+
+    from google.adk.skills import load_skill_from_dir
+    from google.adk.tools import skill_toolset
+
+    greeting_skill = load_skill_from_dir(
+        pathlib.Path(__file__).parent / "skills" / "greeting-skill"
+    )
+    weather_skill = load_skill_from_dir(
+        pathlib.Path(__file__).parent / "skills" / "weather-skill"
+    )
+
+    my_skill_toolset = skill_toolset.SkillToolset(
+        skills=[weather_skill, greeting_skill],
+    )
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "os"
+    
+        "google.golang.org/adk/tool/skilltoolset/skill"
+        "google.golang.org/adk/tool/skilltoolset"
+    )
+    
+    // ...
+
+    source := skill.NewFileSystemSource(os.DirFS("./skills"))
+
+    // This example doesn't use any optional wrappers, but you can use them if
+    // needed, e.g.:
+    //   source, _, err = skill.WithFrontmatterPreloadSource(ctx, source)
+    //   source, _, err = skill.WithCompletePreloadSource(ctx, source)
+    // For more information about these and other wrappers, see
+    // https://pkg.go.dev/google.golang.org/adk/tool/skilltoolset/skill#Source.
+
+    skillToolset, err := skilltoolset.New(ctx, skilltoolset.Config{
+        Source: source,
+    })
+    if err != nil {
+        // handle error
+    }
+    ```
+
+
+
 ## Next steps
 
 Check out these resources for building agents with Skills:
 
-*   ADK Skills agent code sample:
-    [skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
-*   Agent Skills
-    [specification documentation](https://agentskills.io/)
+- [Skills in Python - code sample](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent)
+- [Skills in Go - code sample](https://github.com/google/adk-go/tree/main/examples/skills)
+- Agent Skills [specification documentation](https://agentskills.io/)
 
 ================
 File: docs/streaming/dev-guide/part1.md
@@ -51997,7 +52507,7 @@ File: docs/workflows/data-handling.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
 </div>
 
-Structuring and managing data between agents and graph-based notes is critical
+Structuring and managing data between agents and graph-based nodes is critical
 for building reliable processes with ADK. This guide explains data handling
 within graph-based workflows and collaboration agents, including how information
 is transmitted and received between graph nodes using ***Events***. It covers
@@ -52551,9 +53061,9 @@ async def parallel_supervisor(
 
 Dynamic workflows in ADK can also include human input or human in the loop
 (HITL) steps. You build human input into workflows by yielding a
-***RequestInput*** from a `@node` function, which pauses the workflow and waits
-for user input. The following code example shows how to build a human input node
-and include it in a workflow:
+***RequestInput*** from a node, which pauses the workflow and waits for user
+input. The following code example shows how to build a human input node and
+include it in a workflow:
 
 ```python
 from typing import Any
