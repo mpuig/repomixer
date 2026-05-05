@@ -2997,28 +2997,33 @@ integrate various Large Language Models (LLMs) into your agents. This section
 details how to leverage Gemini and integrate other popular models effectively,
 including those hosted externally or running locally.
 
-ADK primarily uses two mechanisms for model integration:
+ADK provides several mechanisms for model integration:
 
-1. **Direct String / Registry:** For models tightly integrated with Google Cloud,
-   such as Gemini models accessed via Google AI Studio or Agent Platform, or models
-   hosted on Agent Platform endpoints. You access these models by providing the model name or endpoint resource string and ADK's internal registry
-   resolves this string to the appropriate backend client.
+1. **Direct String / Registry:** For models tightly integrated with Google
+   Cloud, such as Gemini models accessed via Google AI Studio or Agent Platform,
+   or models hosted on Agent Platform endpoints. You access these models by
+   providing the model name or endpoint resource string and ADK's internal
+   registry resolves this string to the appropriate backend client.
 
       *  [Gemini models](/agents/models/google-gemini/)
       *  [Claude models](/agents/models/anthropic/)
       *  [Agent Platform hosted models](/agents/models/agent-platform/)
 
-2. **Model connectors:** For broader compatibility, especially models
-   outside the Google ecosystem or those requiring specific client
-   configurations, such as models accessed via Apigee or LiteLLM. You instantiate a specific wrapper class, such as `ApigeeLlm` or
-   `LiteLlm`, and pass this object as the `model` parameter
-   to your `LlmAgent`.
+2. **Model connectors:** For broader compatibility, especially models outside
+   the Google ecosystem or those requiring specific client configurations, such
+   as models accessed via Apigee or LiteLLM. You instantiate a specific wrapper
+   class, such as `ApigeeLlm` or `LiteLlm`, and pass this object as the `model`
+   parameter to your `LlmAgent`.
 
       *  [Apigee models](/agents/models/apigee/)
       *  [LiteLLM models](/agents/models/litellm/)
       *  [Ollama model hosting](/agents/models/ollama/)
       *  [vLLM model hosting](/agents/models/vllm/)
       *  [LiteRT-LM model hosting](/agents/models/litert-lm/)
+
+3. **[Model routing](/agents/models/routing/):** For dynamically selecting
+   between multiple models at runtime using a router function, with automatic
+   failover on error.
 
 ================
 File: docs/agents/models/litellm.md
@@ -3403,6 +3408,74 @@ curl -X POST \
 http://localhost:11434/api/chat \
 -d '{'model': 'mistral-small3.1', 'messages': [{'role': 'system', 'content': ...
 ```
+
+================
+File: docs/agents/models/routing.md
+================
+# Route between models
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-typescript">TypeScript v1.0.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+!!! example "Experimental"
+
+    Model routing is experimental and may change in future releases. We welcome
+    your
+    [feedback](https://github.com/google/adk-js/issues/new?template=feature_request.md)!
+
+An `LlmAgent` uses a single model by default. When you need to dynamically
+select between different models for each request, you can define a routing
+function that chooses which model to use. `RoutedLlm` provides this capability,
+enabling model fallback on error, A/B testing between models, and auto-routing
+by input complexity. If the selected model fails before producing any output,
+the routing function is called again with error context so it can select a
+different model.
+
+Pass a `RoutedLlm` as an `LlmAgent`'s `model` parameter. Use `RoutedLlm` when
+only the model varies between routes. If you also need to switch instructions,
+tools, or sub-agents, use [`RoutedAgent`](../routing.md) instead.
+
+## How routing works
+
+The `LlmRouter` function receives the map of available models and the current
+`LlmRequest`, and returns the key of the model to use:
+
+=== "TypeScript"
+
+    ```typescript
+    type LlmRouter = (
+      models: Readonly<Record<string, BaseLlm>>,
+      request: LlmRequest,
+      errorContext?: { failedKeys: ReadonlySet<string>; lastError: unknown },
+    ) => Promise<string | undefined> | string | undefined;
+    ```
+
+The `models` parameter accepts either a `Record<string, BaseLlm>` with explicit
+keys, or an array of `BaseLlm` instances. If an array is provided, each model's
+name is used as its key.
+
+Failover follows the same rules as
+[`RoutedAgent`](../routing.md#how-routing-works): the router is re-called with
+`errorContext` only if the selected model fails before yielding any response.
+After yielding, errors propagate without retry. The router can return
+`undefined` to stop retrying and propagate the last error.
+
+**Live connections:** `RoutedLlm.connect()` selects the model at connection
+time. Once a live connection is established, the model cannot be switched
+mid-stream.
+
+## Basic usage
+
+The following example creates a `RoutedLlm` that tries a primary model first and
+falls back to a secondary model if the primary fails. The router checks
+`errorContext.failedKeys` to avoid re-selecting the failed model:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/models/routing/basic-usage.ts:full"
+    ```
 
 ================
 File: docs/agents/models/vllm.md
@@ -4586,6 +4659,7 @@ Now that you have an overview of the different agent types available in ADK, div
 * [**Workflow Agents:**](workflow-agents/index.md) Learn how to orchestrate tasks using `SequentialAgent`, `ParallelAgent`, and `LoopAgent` for structured and predictable processes.
 * [**Custom Agents:**](custom-agents.md) Discover the principles of extending `BaseAgent` to build agents with unique logic and integrations tailored to your specific needs.
 * [**Multi-Agents:**](multi-agents.md) Understand how to combine different agent types to create sophisticated, collaborative systems capable of tackling complex problems.
+* [**Agent Routing:**](routing.md) Dynamically select between multiple agents at runtime using router functions for fallback, A/B testing, and auto-routing.
 * [**Models:**](/agents/models/) Learn about the different LLM integrations available and how to select the right model for your agents.
 
 ================
@@ -7088,6 +7162,136 @@ A conceptual example of using a `CustomPolicyEngine` to require user confirmatio
 These patterns provide starting points for structuring your multi-agent systems. You can mix and match them as needed to create the most effective architecture for your specific application.
 
 ================
+File: docs/agents/routing.md
+================
+# Route between agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-typescript">TypeScript v1.0.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+!!! example "Experimental"
+
+    Agent routing is experimental and may change in future releases. We welcome
+    your
+    [feedback](https://github.com/google/adk-js/issues/new?template=feature_request.md)!
+
+When building agents for different tasks, you can define a routing function that
+selects which one handles each invocation at runtime. `RoutedAgent` provides
+this capability, enabling agent fallback on error, A/B testing, planning modes,
+and auto-routing by input complexity. If the selected agent fails before
+producing any output, the routing function is called again with error context so
+it can select a fallback.
+
+`RoutedAgent` is different from [workflow agents](workflow-agents/index.md) like
+`SequentialAgent` or `ParallelAgent`, which orchestrate multiple agents in a
+fixed pattern, and from [LLM-driven
+delegation](multi-agents.md#b-llm-driven-delegation-agent-transfer), where the
+LLM decides which agent to hand off to. With `RoutedAgent`, you write an
+explicit routing function that selects **one** agent per invocation. For
+model-level routing, see [Model routing](models/routing.md).
+
+## How routing works
+
+Both `RoutedAgent` and [`RoutedLlm`](models/routing.md) are powered by a shared
+routing utility that handles selection and failover.
+
+The router function receives the map of available agents and the current
+context, and returns the key of the agent to run. It can be synchronous or
+async:
+
+=== "TypeScript"
+
+    ```typescript
+    type AgentRouter = (
+      agents: Readonly<Record<string, BaseAgent>>,
+      context: InvocationContext,
+      errorContext?: { failedKeys: ReadonlySet<string>; lastError: unknown },
+    ) => Promise<string | undefined> | string | undefined;
+    ```
+
+**The `agents` parameter** accepts either a `Record<string, BaseAgent>` with
+explicit keys, or an array of agents. If an array is provided, each agent's
+`name` property is used as its key.
+
+**Failover behavior:**
+
+- The router is first called without `errorContext` to make the initial
+  selection.
+- If the selected agent throws an error **before yielding any events**, the
+  router is called again with `errorContext` containing `failedKeys` and
+  `lastError`.
+- If the selected agent throws an error **after yielding events**, the error
+  propagates directly without retry, because partial results have already been
+  emitted.
+- A key that has already been tried cannot be re-selected. If the router returns
+  a previously failed key, the error propagates.
+- If the router returns `undefined`, routing stops and the last error is thrown.
+
+## Basic usage
+
+Create multiple agents, define a router function that returns a key, and wrap
+them in a `RoutedAgent`. The following example routes between two agents based
+on an external configuration value that can change between invocations:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/routing/basic-usage.ts:full"
+    ```
+
+Change `config.selectedAgent` to `'agent_b'` before the next invocation to
+route to a different agent.
+
+## Fallback on error
+
+When an agent fails, the router is called again with `errorContext` so it can
+select a fallback. Failover only applies if the agent fails before yielding any
+events (see [How routing works](#how-routing-works)). The following example
+checks `errorContext.failedKeys` to avoid re-selecting the failed agent:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/routing/fallback.ts:config"
+    ```
+
+## Planning mode
+
+A router can read any external state to select between agents with different
+instructions, models, and tools. This lets you implement a planning mode where
+the agent switches behavior dynamically. For example, a basic agent might have
+read and write tools, while a planning agent is restricted to read-only access
+and uses a more powerful model for analysis.
+
+The following example shows a different `RoutedAgent` configuration. See [basic
+usage](#basic-usage) for the full runner setup.
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/routing/planning-mode.ts:config"
+    ```
+
+Set `planningMode = true` before an invocation to route to the planning agent
+with its restricted tool set and different instructions.
+
+## Auto-routing by complexity
+
+The router function can call a lightweight classifier model to categorize input
+and route to different agents accordingly. Because the router can be async, you
+can make LLM calls inside it before selecting an agent.
+
+The following example shows a different `RoutedAgent` configuration. See [basic
+usage](#basic-usage) for the full runner setup.
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/agents/routing/auto-routing.ts:config"
+    ```
+
+================
 File: docs/api-reference/java/legal/dejavufonts.md
 ================
 ## DejaVu fonts v2.37
@@ -7379,7 +7583,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     ---
     Explore the complete API documentation for the Python Agent Development Kit. Discover detailed information on all modules, classes, functions, and examples to build sophisticated AI agents with Python.
 
-    [:octicons-arrow-right-24: View Python API Docs](python/index.html) <br>
+    [:octicons-arrow-right-24: View Python API Docs](https://adk.dev/api-reference/python/) <br>
     <!-- Assuming your Python API docs are in a 'python' subdirectory -->
     <!-- Or link to an external ReadTheDocs, etc. -->
     <!-- [:octicons-arrow-right-24: View Python API Docs](python/index.html) -->
@@ -7400,7 +7604,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     ---
     Access the comprehensive Javadoc for the Java Agent Development Kit. This reference provides detailed specifications for all packages, classes, interfaces, and methods, enabling you to develop robust AI agents using Java.
 
-    [:octicons-arrow-right-24: View Java API Docs](java/index.html) <br>
+    [:octicons-arrow-right-24: View Java API Docs](https://adk.dev/api-reference/java/) <br>
     <!-- Assuming your Java API docs (Javadocs) are in a 'java' subdirectory -->
     <!-- Or link to an external Javadoc hosting site -->
     <!-- [:octicons-arrow-right-24: View Java API Docs](java/index.html) -->
@@ -7412,7 +7616,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     ---
     Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
 
-    [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) <br>
+    [:octicons-arrow-right-24: View Typescript API Docs](https://adk.dev/api-reference/typescript/) <br>
     <!-- Assuming your Typescript API docs are in a 'typescript' subdirectory -->
     <!-- [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) -->
 
@@ -7424,7 +7628,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     Explore the complete API documentation for the CLI including all of the
     valid options and subcommands.
 
-    [:octicons-arrow-right-24: View CLI Docs](cli/index.html) <br>
+    [:octicons-arrow-right-24: View CLI Docs](https://adk.dev/api-reference/cli/) <br>
 
 <!-- This comment forces a block separation -->
 
@@ -7434,7 +7638,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     View the full Agent Config syntax for configuring ADK with
     YAML text files.
 
-    [:octicons-arrow-right-24: View Agent Config reference](agentconfig/index.html) <br>
+    [:octicons-arrow-right-24: View Agent Config reference](https://adk.dev/api-reference/agentconfig/) <br>
 
 <!-- This comment forces a block separation -->
 
@@ -7443,7 +7647,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     ---
     Explore the REST API for the ADK web server. This reference provides details on the available endpoints, request and response formats, and more.
 
-    [:octicons-arrow-right-24: View REST API Docs](rest/index.html) <br>
+    [:octicons-arrow-right-24: View REST API Docs](https://adk.dev/api-reference/rest/) <br>
 
 </div>
 
@@ -12496,6 +12700,17 @@ export GOOGLE_API_KEY=your-api-key
 ## Secret
 
 Please make sure you have created a secret which can be read by your service account.
+
+
+### Cloud Build Permissions
+
+Since the `adk deploy` command uses Google Cloud Build to automate the build process, you must set your default compute service account to have permission to use Cloud Build.
+The following command example shows how to grant this permission:
+
+```bash
+gcloud projects add-iam-policy-binding [PROJECT_ID] \
+    --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
+    --role="roles/cloudbuild.builds.builder"
 
 ### Entry for GOOGLE_API_KEY secret
 
@@ -27912,6 +28127,251 @@ Variable | Required | Default | Description
 - [Mailgun Documentation](https://documentation.mailgun.com/)
 
 ================
+File: docs/integrations/markifact.md
+================
+---
+catalog_title: Markifact
+catalog_description: Manage marketing operations across Google Ads, Meta, GA4, TikTok, and 15+ more platforms
+catalog_icon: /integrations/assets/markifact.png
+catalog_tags: ["mcp", "connectors"]
+---
+
+# Markifact MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Markifact MCP Server](https://github.com/markifact/markifact-mcp) connects
+your ADK agent to [Markifact](https://www.markifact.com), an AI marketing
+automation platform with 300+ operations across 20+ platforms including Google
+Ads, Meta Ads, GA4, TikTok Ads, and Shopify. This integration gives your agent
+the ability to manage campaigns, analyze performance, and automate marketing
+workflows using natural language, with approval prompts on every write operation.
+
+## Use cases
+
+- **Spend hygiene**: surface wasted budget across Google Ads, Meta, TikTok and
+  LinkedIn with concrete pause and reallocation recommendations.
+- **Unified reporting**: one prompt produces blended spend, ROAS, CAC and
+  conversion deltas across every connected channel and GA4.
+- **Briefs to live campaigns**: go from a one-line brief to drafted Search,
+  Performance Max, Meta Advantage+, TikTok or LinkedIn campaigns ready for
+  human approval.
+- **Lead handoff**: sweep Meta and LinkedIn lead forms, enrich in HubSpot or
+  Klaviyo, and trigger WhatsApp or Slack follow-ups.
+
+## Prerequisites
+
+- A [Markifact](https://www.markifact.com) account (free tier available)
+- At least one platform connected from the Markifact dashboard (Google Ads,
+  Meta, GA4, Shopify, etc.)
+- See the [Markifact docs](https://docs.markifact.com) for connection setup
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+        root_agent = Agent(
+            model="gemini-flash-latest",
+            name="marketing_agent",
+            instruction=(
+                "You are a performance marketing agent that helps users manage "
+                "ad campaigns, run analytics, sync e-commerce data, and "
+                "execute marketing workflows across Google Ads, Meta Ads, GA4, "
+                "TikTok Ads, LinkedIn Ads, Shopify, HubSpot, and more. "
+                "Always confirm with the user before any write operation."
+            ),
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://api.markifact.com/mcp",
+                            ],
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+        !!! note
+
+            When you run this agent for the first time, a browser window opens
+            automatically to request access via OAuth. Approve the request in
+            your browser to grant the agent access to your connected accounts.
+
+    === "Remote MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
+
+        MARKIFACT_ACCESS_TOKEN = "YOUR_MARKIFACT_ACCESS_TOKEN"
+
+        root_agent = Agent(
+            model="gemini-flash-latest",
+            name="marketing_agent",
+            instruction=(
+                "You are a performance marketing agent that helps users manage "
+                "ad campaigns, run analytics, sync e-commerce data, and "
+                "execute marketing workflows across Google Ads, Meta Ads, GA4, "
+                "TikTok Ads, LinkedIn Ads, Shopify, HubSpot, and more. "
+                "Always confirm with the user before any write operation."
+            ),
+            tools=[
+                McpToolset(
+                    connection_params=StreamableHTTPConnectionParams(
+                        url="https://api.markifact.com/mcp",
+                        headers={
+                            "Authorization": f"Bearer {MARKIFACT_ACCESS_TOKEN}",
+                        },
+                    ),
+                )
+            ],
+        )
+        ```
+
+        !!! note
+
+            If you already have a Markifact access token, you can connect
+            directly using Streamable HTTP without the OAuth browser flow.
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-flash-latest",
+            name: "marketing_agent",
+            instruction:
+                "You are a performance marketing agent that helps users manage " +
+                "ad campaigns, run analytics, sync e-commerce data, and " +
+                "execute marketing workflows across Google Ads, Meta Ads, GA4, " +
+                "TikTok Ads, LinkedIn Ads, Shopify, HubSpot, and more. " +
+                "Always confirm with the user before any write operation.",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
+                            "-y",
+                            "mcp-remote",
+                            "https://api.markifact.com/mcp",
+                        ],
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+        !!! note
+
+            When you run this agent for the first time, a browser window opens
+            automatically to request access via OAuth. Approve the request in
+            your browser to grant the agent access to your connected accounts.
+
+    === "Remote MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const MARKIFACT_ACCESS_TOKEN = "YOUR_MARKIFACT_ACCESS_TOKEN";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-flash-latest",
+            name: "marketing_agent",
+            instruction:
+                "You are a performance marketing agent that helps users manage " +
+                "ad campaigns, run analytics, sync e-commerce data, and " +
+                "execute marketing workflows across Google Ads, Meta Ads, GA4, " +
+                "TikTok Ads, LinkedIn Ads, Shopify, HubSpot, and more. " +
+                "Always confirm with the user before any write operation.",
+            tools: [
+                new MCPToolset({
+                    type: "StreamableHTTPConnectionParams",
+                    url: "https://api.markifact.com/mcp",
+                    transportOptions: {
+                        requestInit: {
+                            headers: {
+                                Authorization: `Bearer ${MARKIFACT_ACCESS_TOKEN}`,
+                            },
+                        },
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+        !!! note
+
+            If you already have a Markifact access token, you can connect
+            directly using Streamable HTTP without the OAuth browser flow.
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`find_operations` | Semantic search over the operation registry, scoped by platform and intent
+`get_operation_inputs` | Returns JSON Schema for a specific operation's inputs
+`run_operation` | Execute read operations
+`run_write_operation` | Execute write operations with approval protocol
+`list_connections` | List OAuth connections in the workspace
+`get_file_url` | Get URLs for reports and exports
+`read_file` | Read file contents
+`upload_media` | Upload media assets
+
+## Capabilities
+
+Capability | Description
+---------- | -----------
+Discovery | Semantic search over 300+ operations with read/write classification
+Approval-gated writes | Four-step protocol around `run_write_operation` for any spend or destructive change
+Campaign management | Create, edit, pause and resume campaigns, ad sets and ads across all paid channels
+Reporting & attribution | Cross-platform spend, ROAS and conversion blends, plus GA4 path and channel analysis
+Audiences | Custom audiences, lookalikes, exclusions and behavioural targeting per platform
+Creative | Asset upload, variant rotation, fatigue detection and approval-gated publishing
+Commerce & CRM | Shopify, HubSpot and Klaviyo sync with paid media for closed-loop reporting
+Messaging | WhatsApp and Slack notifications for approvals, alerts and lead handoff
+File I/O | Reports, exports and uploads via `get_file_url`, `read_file`, `upload_media`
+
+## Supported platforms
+
+Category | Platforms
+-------- | ---------
+Paid media | Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads, Microsoft Ads, Reddit Ads, Pinterest Ads, Snapchat Ads, Amazon Ads, DV360
+Analytics | GA4, BigQuery, Google Search Console, Google Merchant Center
+E-commerce, CRM, messaging | Shopify, HubSpot, Klaviyo, WhatsApp, Slack
+Organic & social | Facebook, Instagram, LinkedIn, Google Business Profile
+
+## Additional resources
+
+- [Markifact Website](https://www.markifact.com)
+- [Markifact MCP Server on GitHub](https://github.com/markifact/markifact-mcp)
+- [Skills on skills.sh](https://skills.sh/markifact/markifact-mcp)
+
+================
 File: docs/integrations/mcp-toolbox-for-databases.md
 ================
 ---
@@ -31799,8 +32259,8 @@ in-process behavior. Basic input and output monitoring is typically
 insufficient for agents with any significant level of complexity.
 
 Agent Development Kit (ADK) provides built-in observability through
-[logging](/observability/logging/) and [traces](/observability/traces/) to help
-you monitor and debug your agents. However, you may need to consider more
+[logging](/observability/logging/), [metrics](/observability/metrics/), and
+[traces](/observability/traces/) to help you monitor and debug your agents. However, you may need to consider more
 advanced [observability ADK Integrations](/integrations/?topic=observability)
 for monitoring and analysis.
 
@@ -32116,6 +32576,103 @@ From this output you can verify:
 - Are the correct tools being provided to the model?
 - Are the tools correctly called by the model?
 - How long it takes for the model to respond?
+
+================
+File: docs/observability/metrics.md
+================
+# Agent activity metrics
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.32.0</span>
+</div>
+
+Agent Development Kit (ADK) provides built-in, vendor-neutral metrics collection to help you understand the performance, cost, and usage patterns of your agents. While logs provide a detailed narrative of *what* happened, metrics give you aggregated, quantitative data to answer *how often* and *how fast* things are happening.
+
+## Metrics philosophy
+
+ADK's approach to metrics is designed to be lightweight, standardized, and entirely agnostic to your choice of monitoring backend.
+
+*   **OpenTelemetry Semantic Conventions:** ADK implements the OpenTelemetry (OTel) [Semantic Conventions for GenAI](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md). This ensures that metrics are recorded under standard, predictable attribute and metric names.
+*   **OTLP Wire Format:** ADK emits data using the standard OTLP format, ensuring that your metrics will seamlessly integrate into any OTel-compatible backend (e.g., Prometheus, Datadog, SigNoz, Google Cloud Monitoring).
+*   **Cost and Performance Focused:** Metrics are significantly less costly and more performant than logs or traces when performing analytics over large swathes of data. ADK tracks the most critical signals for LLM applications: token consumption, request latency, and tool execution reliability.
+*   **Vendor-Neutral Export:** ADK does not lock you into a specific metrics pipeline. You instantiate standard OTel meter providers and export data wherever your infrastructure demands.
+
+---
+
+## Metrics schema
+
+When metrics are enabled, ADK automatically instruments the agent's lifecycle, workflow steps, and tool executions based on the OpenTelemetry GenAI Semantic Conventions. The following core metrics are emitted:
+
+| Metric Name | Type | Description | Key Attributes (Dimensions) |
+| :--- | :--- | :--- | :--- |
+| **`gen_ai.agent.invocation.duration`** | Histogram | The total time taken for an agent to process a prompt and return a response. | `gen_ai.agent.name`, `error.type` |
+| **`gen_ai.tool.execution.duration`** | Histogram | The execution latency of individual tools called by the agent. Useful for spotting slow external APIs. | `gen_ai.tool.name`, `error.type` |
+| **`gen_ai.agent.request.size`** | Histogram | The size or complexity of the incoming request sent to the agent. | `gen_ai.agent.name` |
+| **`gen_ai.agent.response.size`** | Histogram | The size or complexity of the final response generated by the agent. | `gen_ai.agent.name` |
+| **`gen_ai.agent.workflow.steps`** | Histogram | Tracks the number of iterative steps or reasoning loops an agent takes to complete a workflow. | `gen_ai.agent.name` |
+
+---
+
+## Metrics export setup
+
+### Metrics export in ADK Web
+
+If you are running your agent using the `adk web` or `adk api_server` CLI commands, you can configure metrics export.
+
+
+#### OTLP export
+
+To export metrics to an OTLP-compatible backend, set the standard OTel environment variables:
+
+```bash
+export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="http://your-collector:4318/v1/metrics"
+adk web path/to/your/agents_dir
+```
+
+> **Note:** You can also set the general `OTEL_EXPORTER_OTLP_ENDPOINT` environment variable if you would like to send traces and logs to the same endpoint in addition to metrics.
+
+#### GCP export
+
+To enable metrics export to Google Cloud Monitoring, use the `-otel_to_cloud` flag:
+
+```bash
+adk web -otel_to_cloud path/to/your/agents_dir
+```
+
+### Programmatic metrics export
+
+You can also configure metrics export programmatically in your application code.
+
+#### OTLP export setup
+
+To enable metrics and export them to an OpenTelemetry Collector (or an OTLP-compatible backend) programmatically:
+
+```python
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+os.environ["OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"] = "http://your-collector:4318/v1/metrics"
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers()
+```
+
+#### GCP export setup
+
+To export metrics to Google Cloud Monitoring programmatically, use the OpenTelemetry Google Cloud exporter. Here is an example in Python:
+
+```python
+from google.adk.telemetry.google_cloud import get_gcp_exporters
+from google.adk.telemetry.setup import maybe_set_otel_providers
+import os
+
+gcp_exporters = get_gcp_exporters(
+  enable_cloud_metrics = True,
+)
+os.environ["OTEL_SERVICE_NAME"] = "your-adk-agent"
+os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
+maybe_set_otel_providers([gcp_exporters])
+```
 
 ================
 File: docs/observability/traces.md
@@ -33794,15 +34351,18 @@ projects:
 ================
 File: docs/runtime/ambient-agents.md
 ================
-# Ambient Agents
+# Trigger actions with ambient agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.29.0</span><span class="lst-go">Go v1.1.0</span>
 </div>
 
-ADK supports **ambient agents**, autonomous agents that process data, monitor
-events, and respond asynchronously without human intervention. Use ambient
-agents to:
+When running an agent workflow, you may want to activate it in response to an
+event or new data being available, rather than waiting for input from a human.
+You can configure ADK agents with triggers to respond to events and perform
+work, known as *ambient agents*. These agents can run as background processes
+to process data, monitor events, and respond asynchronously without human 
+intervention. You can use ambient agents to:
 
 - **React to cloud events.** Process a file when it's uploaded to
   [Cloud Storage](https://cloud.google.com/storage), respond to database
@@ -34818,6 +35378,111 @@ curl -X POST http://localhost:8000/run_sse \
 ```
 
 ================
+File: docs/runtime/cancel.md
+================
+# Cancel agent runs
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-typescript">TypeScript v1.0.0</span>
+</div>
+
+When an agent run takes too long, encounters changing conditions, or is no
+longer needed, you may want to cancel it without losing the work already
+completed. Cancellation in ADK is non-destructive: events already committed to
+the session remain persisted.
+
+ADK supports graceful cancellation using `AbortController` and `AbortSignal`.
+Pass an `AbortSignal` to `runner.runAsync()` to cancel the entire invocation at
+any point in the execution stack, including agent execution, LLM generation,
+tool execution, and plugin callbacks.
+
+## Get started
+
+Create an `AbortController`, pass its `signal` to `runner.runAsync()`, and call
+`controller.abort()` when you want to cancel execution:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/runtime/cancel/basic-usage.ts:full"
+    ```
+
+## How cancellation propagates
+
+When you abort the signal, cancellation propagates down through the entire
+execution stack. Each component checks `abortSignal.aborted` at critical
+lifecycle points and terminates early when it detects cancellation:
+
+| Component | What happens on abort |
+| :--- | :--- |
+| **Runner** | Stops before session fetch, after plugin callbacks, and within the event streaming loop. |
+| **LlmAgent** | Stops between execution steps, before/after model callbacks, and within response streaming. |
+| **LoopAgent** | Stops between loop iterations and between sub-agent executions. |
+| **ParallelAgent** | Stops when merging results from concurrent sub-agent runs. |
+| **Models (Gemini)** | The signal is passed to the underlying Google GenAI SDK via `config.abortSignal`, cancelling the in-flight HTTP request. |
+| **AgentTool** | Passes the signal to the sub-agent runner and checks for abort after session creation. |
+| **MCPTool** | Passes the signal to the MCP client's `callTool` method. |
+
+The `InvocationContext` also registers a listener on the signal that
+automatically sets `endInvocation = true` when triggered, signaling all
+components to wind down.
+
+### Behavior on cancellation
+
+When an `AbortSignal` is triggered, the following applies:
+
+- **Graceful termination:** The async generator returned by `runner.runAsync()`
+  completes (stops yielding events) without throwing an error.
+- **Committed events persist:** Any events that were already yielded and
+  processed by the Runner before the abort remain committed to the session
+  history.
+- **No partial events:** Events that were in progress but not yet yielded are
+  discarded.
+- **Resource cleanup:** In-flight LLM requests to the Gemini API are cancelled
+  through the SDK's native `AbortSignal` support, freeing network resources.
+
+## Advanced examples
+
+The following examples show additional cancellation patterns beyond the basic
+`AbortController` usage.
+
+### Cancellation with a timeout
+
+Use `AbortSignal.timeout()` to automatically cancel an agent run after a
+specified duration. This is useful for enforcing time limits on agent execution.
+
+Using the same agent and runner setup from the get started example, replace
+everything from `const controller` onwards with:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/runtime/cancel/timeout.ts:run"
+    ```
+
+You can also combine a timeout with programmatic cancellation using
+`AbortSignal.any()`. Using the same setup, replace everything from `const
+controller` onwards with:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/runtime/cancel/combined-signal.ts:run"
+    ```
+
+### AbortSignal in custom tools
+
+When you pass an `AbortSignal` to `runner.runAsync()`, it is available on
+`toolContext.abortSignal` inside your custom tools. The following example shows
+the pattern for checking the abort signal inside a custom tool:
+
+=== "TypeScript"
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/runtime/cancel/custom-tool.ts:tool"
+    ```
+
+================
 File: docs/runtime/command-line.md
 ================
 # Use the Command Line
@@ -35685,6 +36350,15 @@ the method that best fits your development workflow.
 
     [:octicons-arrow-right-24: Use the API Server](api-server.md)
 
+-   :material-access-point:{ .lg .middle } **Ambient Agents**
+
+    ---
+
+    Build autonomous agents that process events, monitor systems, and respond
+    asynchronously without human intervention.
+
+    [:octicons-arrow-right-24: Use Ambient Agents](ambient-agents.md)
+
 </div>
 
 ## Technical reference
@@ -35696,6 +36370,8 @@ pages:
   ADK, including the yield/pause/resume cycle.
 - **[Resume Agents](resume.md)**: Learn how to resume agent execution from a
   previous state.
+- **[Cancel Agent Runs](cancel.md)**: Gracefully cancel running
+  agent invocations using AbortSignal (TypeScript).
 - **[Runtime Config](runconfig.md)**: Configure runtime behavior with
   RunConfig.
 
