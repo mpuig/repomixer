@@ -22159,6 +22159,182 @@ Object search | Quick typeahead search across Asana objects
 - [Asana MCP Integration Guide](https://developers.asana.com/docs/integrating-with-asanas-mcp-server)
 
 ================
+File: docs/integrations/atlan.md
+================
+---
+catalog_title: Atlan
+catalog_description: Search, explore, and govern data assets in your Atlan catalog
+catalog_icon: /integrations/assets/atlan.png
+catalog_tags: ["mcp"]
+---
+
+# Atlan MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [Atlan MCP Server](https://github.com/atlanhq/agent-toolkit) connects your
+ADK agent to your [Atlan](https://www.atlan.com/) data catalog, giving the
+agent the ability to discover, explore, govern, and manage data assets across
+your warehouses, lakes, BI tools, and pipelines using natural language.
+
+## Use cases
+
+- **Asset Discovery**: Search across tables, columns, dashboards, and pipelines
+  with semantic search to find the right data for an analysis or feature.
+
+- **Lineage and Impact Analysis**: Trace upstream sources or downstream
+  consumers of an asset to understand dependencies before a schema change.
+
+- **Governance and Stewardship**: Update descriptions, certify assets,
+  manage glossaries and data domains, and create or schedule data quality
+  rules from the agent.
+
+## Prerequisites
+
+- An [Atlan](https://atlan.com/) tenant
+- An Atlan account with permissions to access the assets you want to query
+- Node.js installed locally (used by `mcp-remote` to bridge to the hosted
+  MCP server)
+
+## Use with agent
+
+=== "Python"
+
+    === "Local MCP Server"
+
+        ```python
+        from google.adk.agents import Agent
+        from google.adk.tools.mcp_tool import McpToolset
+        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+        from mcp import StdioServerParameters
+
+
+        root_agent = Agent(
+            model="gemini-flash-latest",
+            name="atlan_agent",
+            instruction="Help users search, explore, and govern data assets in Atlan",
+            tools=[
+                McpToolset(
+                    connection_params=StdioConnectionParams(
+                        server_params=StdioServerParameters(
+                            command="npx",
+                            args=[
+                                "-y",
+                                "mcp-remote",
+                                "https://mcp.atlan.com/mcp",
+                            ]
+                        ),
+                        timeout=30,
+                    ),
+                )
+            ],
+        )
+        ```
+
+=== "TypeScript"
+
+    === "Local MCP Server"
+
+        ```typescript
+        import { LlmAgent, MCPToolset } from "@google/adk";
+
+        const rootAgent = new LlmAgent({
+            model: "gemini-flash-latest",
+            name: "atlan_agent",
+            instruction: "Help users search, explore, and govern data assets in Atlan",
+            tools: [
+                new MCPToolset({
+                    type: "StdioConnectionParams",
+                    serverParams: {
+                        command: "npx",
+                        args: [
+                            "-y",
+                            "mcp-remote",
+                            "https://mcp.atlan.com/mcp",
+                        ],
+                    },
+                }),
+            ],
+        });
+
+        export { rootAgent };
+        ```
+
+!!! note
+
+    When you run this agent for the first time, a browser window opens
+    automatically to request access via OAuth. Alternatively, you can use the
+    authorization URL printed in the console. You must approve this request to
+    allow the agent to access your Atlan tenant.
+
+## Available tools
+
+### Discovery and search
+
+Tool | Description
+---- | -----------
+`semantic_search_tool` | Natural-language search across all data assets using AI-powered semantic understanding
+`search_assets_tool` | Search assets using structured filters and conditions
+`traverse_lineage_tool` | Trace data flow upstream (sources) or downstream (consumers) for an asset
+`query_assets_tool` | Execute SQL queries against connected data sources
+`get_asset_tool` | Get detailed information about a single asset by GUID or qualified name (including custom metadata, data quality checks, and README)
+`resolve_metadata_tool` | Discover metadata entities by name or description (users, classifications, custom metadata sets, glossaries, domains, data products)
+`get_groups_tool` | List workspace groups and their members
+`search_atlan_docs_tool` | Search Atlan's product documentation and return an LLM-generated answer with source citations
+
+### Asset updates
+
+Tool | Description
+---- | -----------
+`update_assets_tool` | Update asset descriptions, certificate status, README, or terms
+`manage_announcements_tool` | Add or remove announcements (information, warning, issue) on assets
+`manage_asset_lifecycle_tool` | Archive, restore, or permanently purge assets
+
+### Glossaries and domains
+
+Tool | Description
+---- | -----------
+`create_glossaries` | Create new glossaries
+`create_glossary_terms` | Create terms within glossaries
+`create_glossary_categories` | Create categories within glossaries
+`create_domains` | Create data domains and subdomains
+`create_data_products` | Create data products linked to domains and assets
+
+### Data quality rules
+
+Tool | Description
+---- | -----------
+`create_dq_rules_tool` | Create data quality rules (null checks, uniqueness, regex, custom SQL, etc.)
+`update_dq_rules_tool` | Update existing data quality rules
+`schedule_dq_rules_tool` | Schedule data quality rule execution with cron expressions
+`delete_dq_rules_tool` | Delete data quality rules
+
+### Custom metadata
+
+Tool | Description
+---- | -----------
+`create_custom_metadata_set_tool` | Create custom metadata sets with typed attributes
+`add_attributes_to_cm_set_tool` | Add new attributes to an existing custom metadata set
+`remove_attributes_from_cm_set_tool` | Archive (soft-delete) attributes from a custom metadata set
+`delete_custom_metadata_set_tool` | Permanently delete a custom metadata set and clear its values from all assets
+`update_custom_metadata_tool` | Update custom metadata values on one or more assets
+`remove_custom_metadata_tool` | Remove a custom metadata set's values from an asset
+
+### Atlan tags
+
+Tool | Description
+---- | -----------
+`add_atlan_tags_tool` | Add Atlan tags to one or more assets
+`remove_atlan_tag_tool` | Remove an Atlan tag from one or more assets
+
+## Additional resources
+
+- [Atlan MCP Server Repository](https://github.com/atlanhq/agent-toolkit)
+- [Atlan MCP Overview](https://docs.atlan.com/product/capabilities/atlan-ai/how-tos/atlan-mcp-overview)
+
+================
 File: docs/integrations/atlassian.md
 ================
 ---
@@ -25328,6 +25504,225 @@ env={
 - [Couchbase MCP Server Repository](https://github.com/Couchbase-Ecosystem/mcp-server-couchbase)
 - [Couchbase Documentation](https://docs.couchbase.com/)
 - [Couchbase Capella](https://cloud.couchbase.com/)
+
+================
+File: docs/integrations/dapr.md
+================
+---
+catalog_title: Dapr
+catalog_description: Durable, long-running and self-recovering agents with human approvals and safe versioning
+catalog_icon: /integrations/assets/dapr.png
+catalog_tags: ["resilience"]
+---
+
+# Dapr plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[Dapr](https://dapr.io) is a distributed workflow orchestration engine that
+makes ADK agents resilient to failures. LLM calls and tool executions run as
+Dapr
+[Workflow](https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-overview/)
+activities with automatic retries and recovery. If anything fails, your agent
+automatically picks up exactly where it left off.
+
+## Use cases
+
+The Dapr plugin gives your agents:
+
+- **Durable execution**: Never lose progress. If your agent crashes or stalls,
+  Dapr automatically recovers from the last successful activity with no need to
+  [manually resume](/runtime/resume/#resume-a-stopped-workflow).
+- **Built-in retries and backoff**: Configurable [retry
+  policies](https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-features-concepts/#retry-policies)
+  with exponential backoff to handle transient failures from LLM providers and
+  tool APIs.
+- **Long-running and ambient agents**: Support for agents and tools that run for
+  hours, days, or indefinitely, backed by Dapr's persistent state stores.
+- **Portable infrastructure**: Swap 15+ databases (Redis, GCP Firestore,
+  PostgreSQL, DynamoDB, Cosmos DB, and [many
+  more](https://docs.dapr.io/reference/components-reference/supported-state-stores/))
+  without changing agent code. Dapr's pluggable component model lets you move
+  from local dev to any cloud.
+- **Observability and debugging**: Inspect every step of your agent's execution
+  using Dapr's workflow APIs, and emit traces and metrics through Dapr's
+  built-in [OpenTelemetry
+  integration](https://docs.dapr.io/operations/observability/tracing/tracing-overview/).
+
+## Prerequisites
+
+- Python 3.11+
+- A [Gemini API key](https://aistudio.google.com/app/api-keys) (or any
+  [supported model](/agents/models/))
+- Dapr CLI and runtime installed ([install
+  guide](https://docs.dapr.io/getting-started/install-dapr-cli/))
+- A configured Dapr [state store
+  component](https://docs.dapr.io/reference/components-reference/supported-state-stores/)
+  for workflow persistence
+
+## Installation
+
+Install the [Diagrid Agent package](https://pypi.org/project/diagrid/) for Dapr,
+which includes the ADK extension:
+
+```bash
+pip install diagrid
+```
+
+Initialize Dapr:
+
+```bash
+dapr init
+```
+
+## Use with agent
+
+### Basic setup
+
+The integration wraps your ADK agent so each LLM call and each tool execution
+runs as a durable Dapr Workflow activity. The runner handles workflow
+registration, starts the Dapr workflow runtime, and exposes an async interface
+for invoking the agent.
+
+**Define your agent and runner**
+
+Create an ADK agent as usual and pass it to `DaprWorkflowAgentRunner`.
+
+```python
+import asyncio
+from google.adk.agents import LlmAgent
+from google.adk.tools import FunctionTool
+from diagrid.agent.adk import DaprWorkflowAgentRunner
+
+
+def get_weather(city: str) -> str:
+    """Get the current weather for a city.
+
+    Args:
+        city: The name of the city to get weather for.
+
+    Returns:
+        A string describing the weather.
+    """
+    # Your weather API call here
+    return f"72°F and sunny in {city}"
+
+
+# Define the ADK agent
+agent = LlmAgent(
+    name="weather_agent",
+    model="gemini-flash-latest",
+    instruction="You are a helpful assistant that can check the weather.",
+    tools=[FunctionTool(get_weather)],
+)
+
+
+async def main():
+    # Wrap the agent so each tool call runs as a durable Dapr activity
+    runner = DaprWorkflowAgentRunner(
+        agent=agent,
+        name="weather-agent",
+        max_iterations=10,
+    )
+
+    # Start the Dapr Workflow runtime
+    runner.start()
+
+    try:
+        async for event in runner.run_async(
+            user_message="What's the weather in San Francisco?",
+            session_id="session-001",
+        ):
+            if event["type"] == "workflow_completed":
+                print(event["final_response"])
+    finally:
+        runner.shutdown()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Run the agent with Dapr**
+
+Dapr Workflow uses a lightweight sidecar and a configured state store. Use this
+command to run Dapr locally and your agent alongside it:
+
+```bash
+dapr run --app-id weather-agent -- python3 agent.py
+```
+
+!!! note
+
+    By default Dapr uses the Redis component installed with Dapr, located at
+    `~/.dapr/components/statestore.yaml`. See [supported state
+    stores](https://docs.dapr.io/reference/components-reference/supported-state-stores/)
+    to change the state store used.
+
+### Crash recovery
+
+If the process hosting your agent crashes mid-execution, Dapr automatically
+resumes the workflow from the last successful activity when the app restarts -
+no custom replay logic required.
+
+```python
+# First run: process crashes after tool 1 completes.
+# Second run: Dapr automatically resumes and executes tools 2 and 3.
+runner = DaprWorkflowAgentRunner(agent=agent, name="sequential-agent")
+runner.start()
+
+async for event in runner.run_async(
+    user_message="Run the three-step pipeline.",
+    session_id="pipeline-001",
+):
+    if event["type"] == "workflow_completed":
+        print(event["final_response"])
+```
+
+Because the `session_id` and workflow instance ID are stable, relaunching the
+same app with Dapr causes the sidecar to pick up in-flight workflows and drive
+them to completion, without needing to manually resume.
+
+## How it works
+
+The plugin turns an ADK agent loop into a Dapr Workflow so that each step is
+checkpointed, retried, and automatically replayable:
+
+- **LLM calls** are executed as Dapr Workflow
+  [activities](https://docs.dapr.io/developing-applications/building-blocks/workflow/workflow-features-concepts/#workflow-activities).
+  If a call fails or the worker crashes, Dapr retries according to the
+  configured retry policy or replays the workflow from the last successful
+  activity, adding resilience and reducing token spend.
+- **Tool executions** are run as independent activities, one per tool call. The
+  workflow fans out parallel tool calls via Dapr's `when_all` primitive and
+  waits for them to complete before re-invoking the LLM.
+- **Workflow state** (messages, tool calls, tool results) is serialized and
+  stored in the configured Dapr state store after every activity, so any replica
+  with access to the state store can take over execution.
+- **Deterministic orchestration**: the `agent_workflow` function contains only
+  deterministic control flow; all side effects (LLM calls, tool invocations)
+  happen inside activities, which is the model Dapr Workflow requires for replay
+  safety.
+
+## Capabilities
+
+| Capability | Description |
+| --- | --- |
+| Durable tool execution | Each ADK tool runs as a Dapr Workflow activity, with automatic retries, backoff, and replay on failure |
+| Parallel tool calls | Multiple tool calls from a single LLM response are dispatched concurrently as activities and joined before the next LLM step |
+| Portable state stores | Swap between Redis, GCP Firestore, PostgreSQL, Cosmos DB, and many others via Dapr components without code changes |
+| Long-running agents | Workflows can run for hours, days, or indefinitely; state stays in the Dapr state store until completion |
+| Observability | Every LLM call and tool execution is a workflow activity, traceable via Dapr's OpenTelemetry integration and inspectable through the workflow API |
+| Kubernetes-native | Deploy the same agent to Kubernetes without code changes using Dapr's sidecar injection |
+
+## Additional resources
+
+- [Dapr Workflow documentation](https://docs.dapr.io/developing-applications/building-blocks/workflow/) - Full reference for Dapr's workflow building block
+- [Diagrid Agent SDK on GitHub](https://github.com/diagridio/python-ai) - Source code for the Dapr ADK integration
+- [Dapr Community Discord](https://bit.ly/dapr-discord) - Questions, bug reports, and community discussion
+- [Supported state stores](https://docs.dapr.io/reference/components-reference/supported-state-stores/) - List of state store components compatible with Dapr Workflow
 
 ================
 File: docs/integrations/data-agent.md
