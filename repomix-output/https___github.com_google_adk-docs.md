@@ -6,7 +6,7 @@ Files
 File: docs/_includes/homepage/_ai-dev-tools.md
 ================
 <!-- Developer Tools -->
-<div class="feature-split reverse">
+<div class="feature-split">
   <div class="feature-text">
     <span class="feature-badge">AI Dev Tools</span>
     <h2>Build agents <i>with</i> agents.</h2>
@@ -63,7 +63,7 @@ File: docs/_includes/homepage/_community.md
 File: docs/_includes/homepage/_ecosystem.md
 ================
 <!-- Ecosystem -->
-<div class="feature-split">
+<div class="feature-split reverse">
   <div class="feature-text">
     <span class="feature-badge">Ecosystem</span>
     <h2>Open ecosystem. Connect everything.</h2>
@@ -81,7 +81,7 @@ File: docs/_includes/homepage/_ecosystem.md
 File: docs/_includes/homepage/_eval.md
 ================
 <!-- Eval Section -->
-<div class="feature-split">
+<div class="feature-split reverse">
   <div class="feature-text">
     <span class="feature-badge">Evaluation</span>
     <h2>Go beyond vibes. Evaluate everything.</h2>
@@ -142,7 +142,7 @@ File: docs/_includes/homepage/_faq.md
 File: docs/_includes/homepage/_framework.md
 ================
 <!-- Developer Tools -->
-<div class="feature-split reverse">
+<div class="feature-split">
   <div class="feature-text">
     <span class="feature-badge">Framework</span>
     <h2>Powerful simplicity. Built for scale.</h2>
@@ -157,13 +157,33 @@ File: docs/_includes/homepage/_framework.md
 </div>
 
 ================
+File: docs/_includes/homepage/_graphs.md
+================
+<!-- Developer Tools -->
+<div class="feature-split reverse">
+  <div class="feature-text">
+    <span class="feature-badge">Graph Workflows</span>
+    <h2>Reliable logic. Intelligent reasoning.</h2>
+    <p>Weave deterministic code with adaptive AI reasoning. Orchestrate
+    complex tasks through structured, graph-based architectures, with explicit
+    execution paths and predictable outcomes. New in ADK 2.0!</p>
+    <a href="graphs/" class="btn btn-accent" style="margin-top:12px">Learn more</a>
+  </div>
+  <div class="feature-visual">
+    <div class="ui-wrapper">
+      <img src="assets/adk-graphs-fp.png" alt="ADK Graph-based Agents" class="devui-img">
+    </div>
+  </div>
+</div>
+
+================
 File: docs/_includes/homepage/_hero.md
 ================
 <!-- Hero Section -->
 <div class="hero-grid">
   <div class="hero-content">
     <h1>Build production agents, <span class="hero-punchline">not prototypes.</span></h1>
-    <p>ADK is the open-source agent development framework that lets you build, debug, and deploy reliable AI agents at enterprise scale. Available in Python, TypeScript, Go, and Java.</p>
+    <p>ADK is the open-source agent development framework that lets you build, debug, and deploy reliable AI agents at enterprise scale. Available in Python, TypeScript, Go, Java, and Kotlin.</p>
     <div class="hero-actions">
       <a href="get-started/" class="btn btn-primary">Start building</a>
       <!-- <a href="skills/" class="btn btn-accent">Agent skills</a> -->
@@ -178,6 +198,7 @@ File: docs/_includes/homepage/_hero.md
           <div class="iterm-tab" data-lang="typescript">TypeScript</div>
           <div class="iterm-tab" data-lang="go">Go</div>
           <div class="iterm-tab" data-lang="java">Java</div>
+          <div class="iterm-tab" data-lang="kotlin">Kotlin</div>
         </div>
 <div class="code-content" id="code-python"><pre><span class="kw">from</span> google.adk <span class="kw">import</span> <span class="fn">Agent</span>
 <span class="kw">from</span> google.adk.tools <span class="kw">import</span> google_search
@@ -200,16 +221,15 @@ agent = <span class="fn">Agent</span>(
 
 </pre></div>
 
-<div class="code-content" id="code-go" style="display:none"><pre><span class="kw">import</span> <span class="str">"google.golang.org/adk/agent"</span>
+<div class="code-content" id="code-go" style="display:none"><pre><span class="kw">import</span> <span class="str">"google.golang.org/adk/agent/llmagent"</span>
 
-a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
-    agent.<span class="fn">WithModel</span>(<span class="str">"gemini-flash-latest"</span>),
-    agent.<span class="fn">WithInstruction</span>(<span class="str">"You help users research topics thoroughly."</span>),
-    agent.<span class="fn">WithTools</span>(googleSearch),
-)
-
-
-</pre></div>
+model, _ := gemini.<span class="fn">NewModel</span>(context.<span class="fn">Background</span>(), <span class="str">"gemini-flash-latest"</span>, <span class="kw">nil</span>)
+a, _ := llmagent.<span class="fn">New</span>(llmagent.<span class="fn">Config</span>{
+    Name:        <span class="str">"researcher"</span>,
+    Model:       model,
+    Instruction: <span class="str">"You help users research topics thoroughly."</span>,
+    Tools:       []tool.Tool{geminitool.<span class="fn">GoogleSearch</span>{}},
+})</pre></div>
 
 <div class="code-content" id="code-java" style="display:none"><pre><span class="kw">import</span> com.google.adk.agents.<span class="fn">LlmAgent</span>;
 <span class="kw">import</span> com.google.adk.tools.<span class="fn">GoogleSearchTool</span>;
@@ -220,6 +240,16 @@ a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
     .instruction(<span class="str">"You help users research topics thoroughly."</span>)
     .tools(<span class="kw">new</span> <span class="fn">GoogleSearchTool()</span>)
     .build();</pre></div>
+
+<div class="code-content" id="code-kotlin" style="display:none"><pre><span class="kw">import</span> com.google.adk.kt.agents.<span class="fn">LlmAgent</span>
+<span class="kw">import</span> com.google.adk.kt.tools.<span class="fn">GoogleSearchTool</span>
+
+<span class="kw">val</span> agent = <span class="fn">LlmAgent</span>(
+    name = <span class="str">"researcher"</span>,
+    model = <span class="fn">Gemini</span>(name = <span class="str">"gemini-flash-latest"</span>),
+    instruction = <span class="fn">Instruction</span>(<span class="str">"You help users research topics thoroughly."</span>),
+    tools = listOf(<span class="fn">GoogleSearchTool</span>()),
+)</pre></div>
 
 </div>
       <!-- Install info synced with tabs -->
@@ -247,6 +277,12 @@ a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
           <button class="copy-btn" data-copy="com.google.adk:google-adk" title="Copy to clipboard">📋</button>
         </div>
       </div>
+      <div class="install-info" id="install-kotlin" style="display:none">
+        <div class="install-cmd">
+          <code>com.google.adk:google-adk-kotlin-core</code>
+          <button class="copy-btn" data-copy="com.google.adk:google-adk-kotlin-core" title="Copy to clipboard">📋</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -254,65 +290,154 @@ a := agent.<span class="fn">New</span>(<span class="str">"researcher"</span>,
 ================
 File: docs/2.0/index.md
 ================
-# Welcome to ADK 2.0 Beta
+---
+hide:
+  - navigation
+---
 
-!!! example "Beta Release"
-
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+# Welcome to ADK 2.0
 
 ADK 2.0 introduces powerful tools for building sophisticated AI agents, and
 helps you structure agents to execute challenging tasks with more control,
-predictability, and reliability. ADK 2.0 is available as a Beta release for
-Python and includes the following key features:
+predictability, and reliability. ADK 2.0 is available for Python and includes
+the following key features:
 
--   [**Graph-based workflows**](/workflows/): Build deterministic agent
+-   [**Graph-based workflows**](/graphs/): Build deterministic agent
     workflows with more control over how tasks are routed and executed.
 
--   [**Collaborative agents**](/workflows/collaboration/):
-    Build complex agent architectures with coordinator agents and multiple
-    subagents working together.
-
--   [**Dynamic workflows**](/workflows/dynamic/):
+-   [**Dynamic workflows**](/graphs/dynamic/):
     Use code-based logic for building more complex workflows including
     iterative loops and complex decision-based branching.
+
+-   [**Collaborative workflows**](/workflows/collaboration/):
+    Build complex agent architectures with coordinator agents and multiple
+    subagents working together.
 
 Check out the linked topics above for more information, and try out the new way
 to build agents with ADK 2.0!
 
-## ADK 1.0 compatibility
+!!! tip "ADK Python v2.0.0 GA release"
+
+    ADK Python 2.0 is released for general availability as of May 19, 2026.
+
+## ADK Python 1.x compatibility
 
 ADK 2.0 is designed to be compatible with agents developed with ADK 1.x
-releases. However, given the number and diversity of agents built with ADK 1.x,
-we expect that some agent implementations, particularly advanced and
-feature-rich agents, will uncover incompatibilities in ADK 2.0. During the
-current pre-GA release period, we ask your assistance helping us identify these
-issues so we have a chance to address them. Report any ADK 1.0 to ADK 2.0
-incompatibilities you encounter through our
+releases. However, there are a few breaking changes you should be aware of
+before upgrading an ADK 1.x project to ADK 2.0.
+
+!!! warning "Breaking changes: ADK Python 1.x to 2.0 incompatibilities"
+
+    There are several known incompatibilities and breaking changes introduced
+    with ADK Python v2.0.0. Before upgrading, review these changes and take
+    mitigation steps, if necessary.
+
+The ADK 2.0 release introduces the Workflow Runtime, transitioning ADK from a
+hierarchical agent executor to a graph-based execution engine. In this new
+architecture, your Agents, Tools, and Functions are evaluated as individual
+*nodes* within a workflow graph. If you are upgrading from ADK 1.x, review the
+following breaking changes and migration steps to ensure a smooth transition for
+your production applications.
+
+### Event Schema & Custom Session Databases
+
+ADK 2.0 introduces new fields `node_info` and `output` to the core
+***Event*** schema to track graph state and workflow outputs.
+
+*   **Custom Session storage:** If you have implemented a custom
+    `BaseSessionService`, such as storing sessions in your own SQL or NoSQL
+    databases using rigid columns, your underlying database schema must be
+    updated to accommodate these new fields. Inserting a 2.0 ***Event*** into a
+    rigid 1.x database table causes insertion or ORM deserialization
+    failures. *However, if your custom session service stores events as
+    serialized JSON blobs rather than mapping them to explicit columns, you do
+    not need to update your schema.*
+*   **Strict JSON validation:** If your deployment includes downstream API
+    gateways, mobile clients, or web frontends that perform strict JSON schema
+    validation, including setting `additionalProperties: false`, then validation
+    will reject 2.0 events until their expected schemas are updated.
+
+**Migration action:** Update your database schemas and downstream client
+validators to expect and store the `node_info` and `output` fields on all Event
+payloads. Ensure all reader applications are updated to handle the 2.0 format
+before writing 2.0 sessions to a shared database.
+
+### Agent Execution: BaseAgent to BaseNode
+
+In ADK 1.x, Agents were standalone executors. In ADK 2.0, the ***BaseAgent***
+class now subclasses ***BaseNode***. Agents are now evaluated as individual
+*nodes* within the new Workflow Graph engine.
+
+*   **Execution driver custom overrides:** The ABC contract has changed. Custom
+    overrides of 1.x abstract methods, such as `_run_async_impl()` or
+    `generate_content()`, are no longer the correct way to drive execution. The
+    Workflow Graph engine completely bypasses these legacy overrides. If you
+    inject custom telemetry or state management by overriding these methods,
+    those calls are silently ignored.
+
+**Migration action:** Move custom execution logic out of `run()` overrides.
+Instead, utilize the standardized `BeforeAgentCallback` and `AfterAgentCallback`
+interfaces to safely inject custom logic into the execution lifecycle.
+
+### Context & Callbacks: In-Place Mutation
+
+Bypassing the framework to manually append events is no longer safe.
+
+*   **Direct appending of events:** In ADK 1.x, some developers forcefully
+    appended events to the session via
+    `context.session.events.append(custom_event)`. In ADK 2.0, the Workflow
+    runner needs strict control over event emission to manage state, graph
+    routing, and streaming. Manually appending to the session list circumvents
+    the graph engine and breaks determinism.
+
+**Migration action:** Do not append events directly to the session, and do not
+use `enqueue_event` directly. You must now explicitly yield the event from within
+your node or agent so that the framework can manage its persistence, routing, and
+streaming natively.
+
+### Error Handling & Automatic Retries
+
+The ADK 2.0 framework now automatically catches exceptions to enable automatic
+retries, telemetry, and Human-in-the-Loop (HITL) pauses.
+
+*   **`Try...except` and `BaseException`:** In ADK 1.x, the framework did not
+    have native automatic retries, so developers often wrote manual
+    `try...except` loops inside their tools to prevent crashes. In ADK 2.0, if
+    you migrate a tool and leave a broad `except Exception:` block inside it,
+    this code masks the failure from the framework, permanently disabling the
+    new 2.0 automatic retry mechanisms for that step. Furthermore, catching
+    `BaseException` inadvertently traps `NodeInterruptedError`, which breaks
+    the framework's ability to pause the workflow for Human-in-the-Loop (HITL)
+    input.
+
+**Migration Action:** Allow standard exceptions to propagate out of your tools
+so the framework can evaluate them against your configured ***RetryConfig***,
+such as `RetryConfig(max_attempts=3)`. Never catch ***BaseException*** unless
+you are explicitly re-raising the exception.
+
+If you encounter additional ADK 1.0 to ADK 2.0 incompatibilities, report them
+through the
 [issue tracker](https://github.com/google/adk-python/issues/new?template=bug_report.md&labels=v2).
 
 
-## Install ADK 2.0 {#install}
+### Installing ADK Python 1.x {#install}
 
-While ADK 2.0 is available as a pre-GA release, it is not installed automatically.
-You must select it as an installation option. This version has the following
-system requirements:
+If you want to update ADK, but are not yet ready to update to ADK 2.0, make sure
+to specify an ADK version during installation or use the compatible release `~=`
+operator as shown below. ADK 1.0 has the following system requirements:
 
 *   **Python 3.10** or later
 *   `pip` for installing packages
 
-To install ADK 2.0, follow these steps:
+To install the latest version of ADK 1.x, follow these steps:
 
 1.  Enable a Python virtual environment. See below for instructions.
 
-1.  Install the package using pip using `--pre` to select the current,
-    pre-GA version of ADK 2.0:
+1.  Install the package using pip using compatible release `~=`
+    operator for ADK 1.x:
 
     ```bash
-    pip install google-adk --pre
+    pip install "google-adk~=1.0"
     ```
 
 ??? tip "Recommended: Create and activate a Python virtual environment"
@@ -343,22 +468,13 @@ To install ADK 2.0, follow these steps:
         source .venv/bin/activate
         ```
 
-!!! note "Note: Updating existing ADK 1.0 projects"
-
-    The `--pre` option does not install the ADK 2.0 libraries if you already have
-    ADK 1.0 libraries installed in a Python environment. You can force installation
-    of the ADK 2.0 library by adding the `--force` option to the install command
-    shown above. Remember to use Python virtual environments for ADK 2.0, and
-    **ensure you have backups of ADK 1.0 projects *before* updating them to
-    use ADK 2.0 libraries.**
-
 ## Next steps
 
 Read the developer guides for building agents with ADK 2.0 features:
 
--   [**Graph-based workflows**](/workflows/)
+-   [**Graph-based workflows**](/graphs/)
 -   [**Collaborative agents**](/workflows/collaboration/)
--   [**Dynamic workflows**](/workflows/dynamic/)
+-   [**Dynamic workflows**](/graphs/dynamic/)
 
 Check out these ADK 2.0 code samples for testing and inspiration:
 
@@ -374,7 +490,7 @@ File: docs/a2a/a2a-extension.md
 # A2A extension for improved reliability
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python 1.27.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.27.0</span>
 </div>
 
 ADK provides an extension for Agent2Agent (A2A) support to improved message and data handling as part of
@@ -1018,7 +1134,7 @@ First, make sure you have the necessary dependencies installed:
 pip install google-adk[a2a]
 ```
 
-You can clone and navigate to the [**`a2a_basic`** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_basic) here:
+You can clone and navigate to the [**`a2a_basic`** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a/a2a_basic) here:
 
 ```bash
 git clone https://github.com/google/adk-python.git
@@ -1057,13 +1173,13 @@ To show how your ADK agent can consume a remote agent via A2A, you'll first need
 
 ```bash
 # Start the remote a2a server that serves the check_prime_agent on port 8001
-adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a
+adk api_server --a2a --port 8001 contributing/samples/a2a/a2a_basic/remote_a2a
 ```
 
 ??? note "Adding logging for debugging with `--log_level debug`"
     To enable debug-level logging, you can add `--log_level debug` to your `adk api_server`, as in:
     ```bash
-    adk api_server --a2a --port 8001 contributing/samples/a2a_basic/remote_a2a --log_level debug
+    adk api_server --a2a --port 8001 contributing/samples/a2a/a2a_basic/remote_a2a --log_level debug
     ```
     This will give richer logs for you to inspect when testing your agents.
 
@@ -1616,7 +1732,7 @@ First, make sure you have the necessary dependencies installed:
 pip install google-adk[a2a]
 ```
 
-You can clone and navigate to the [**a2a_root** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a_root) here:
+You can clone and navigate to the [**a2a_root** sample](https://github.com/google/adk-python/tree/main/contributing/samples/a2a/a2a_root) here:
 
 ```bash
 git clone https://github.com/google/adk-python.git
@@ -2231,7 +2347,7 @@ Integrate Apigee's governance into your agent's workflow by instantiating the
 
     # Instantiate the ApigeeLlm wrapper
     model = ApigeeLlm(
-        # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+        # Specify the Apigee route to your model. For more info, check out the ApigeeLlm documentation (https://github.com/google/adk-python/tree/main/contributing/samples/models/hello_world_apigeellm).
         model="apigee/gemini-flash-latest",
         # The proxy URL of your deployed Apigee proxy including the base path
         proxy_url=f"https://{APIGEE_PROXY_URL}",
@@ -2276,7 +2392,7 @@ With this configuration, every API call from your agent will be routed through
 Apigee first, where all necessary policies (security, rate limiting, logging)
 are executed before the request is securely forwarded to the underlying AI model
 endpoint. For a full code example using the Apigee proxy, see
-[Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_apigeellm).
+[Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/models/hello_world_apigeellm).
 
 ================
 File: docs/agents/models/google-gemini.md
@@ -2284,7 +2400,7 @@ File: docs/agents/models/google-gemini.md
 # Google Gemini models for ADK agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 ADK supports the Google Gemini family of generative AI models that provide a
@@ -2354,6 +2470,23 @@ in your agents:
             .instruction("You are a fast and helpful Gemini assistant.")
             // ... other agent parameters
             .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.Gemini
+
+    // --- Example using a stable Gemini Flash model ---
+    val agentGeminiFlash = LlmAgent(
+        // Use the latest stable Flash model identifier
+        name = "gemini_flash_agent",
+        model = Gemini(name = "gemini-flash-latest"),
+        instruction = Instruction("You are a fast and helpful Gemini assistant."),
+        // ... other agent parameters
+    )
     ```
 
 ??? note "Note: Gemini model selector `gemini-flash-latest`"
@@ -2487,7 +2620,7 @@ To mitigate this, you can do one of the following:
 
     There are two ways you can set retry options:
 
-    **Option 1:** Set retry options on the Agent as a part of generate_content_config.
+    **Option 1:** Set retry options on the Agent as a part of `generate_content_config`.
 
     You would use this option if you are instantiating this model adapter by
     yourself.
@@ -2576,9 +2709,36 @@ To mitigate this, you can do one of the following:
             .build();
         ```
 
+    === "Kotlin"
+
+        In Kotlin, you can achieve this by creating the `Client` instance yourself and passing it to the `Gemini` constructor.
+
+        ```kotlin
+        import com.google.adk.kt.agents.LlmAgent
+        import com.google.adk.kt.models.Gemini
+        import com.google.genai.Client
+        import com.google.genai.types.HttpOptions
+        import com.google.genai.types.HttpRetryOptions
+
+        val client = Client.builder()
+            .apiKey("YOUR_API_KEY")
+            .httpOptions(HttpOptions.builder()
+                .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                .build())
+            .build()
+
+        val model = Gemini(client = client, name = "gemini-flash-latest")
+
+        val agent = LlmAgent(
+            name = "my_agent",
+            model = model
+            // ...
+        )
+        ```
+
 ## Gemini Interactions API {#interactions-api}
 
-<div class="language-support-tag" title="Java ADK currently supports Gemini and Anthropic models.">
+<div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
 </div>
 
@@ -2612,28 +2772,8 @@ snippet:
     )
     ```
 
-=== "Java"
-
-    ```java
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Gemini;
-    import com.google.adk.tools.GoogleSearchTool;
-
-    // Note: Interactions API support in Java ADK is currently under development.
-    LlmAgent rootAgent = LlmAgent.builder()
-        .model(Gemini.builder()
-            .modelName("gemini-flash-latest")
-            .build())
-        .name("interactions_test_agent")
-        .tools(
-            GoogleSearchTool.INSTANCE, // Search tool
-            getCurrentWeather // Custom function tool
-        )
-        .build();
-    ```
-
 For a complete code sample, see the
-[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/interactions_api).
+[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api).
 
 ### Known limitations
 
@@ -2651,16 +2791,8 @@ parameter:
     GoogleSearchTool(bypass_multi_tools_limit=True)
     ```
 
-=== "Java"
-
-    ```java
-    // Note: bypassMultiToolsLimit is Python-specific.
-    // In Java, simply use the tool instance.
-    GoogleSearchTool.INSTANCE;
-    ```
-
-In this example, this option converts the built-in google_search to a function
-calling tool (via GoogleSearchAgentTool), which allows it to work alongside
+In this example, this option converts the built-in `google_search` to a function
+calling tool (via `GoogleSearchAgentTool`), which allows it to work alongside
 custom function tools.
 
 ================
@@ -3556,76 +3688,103 @@ agent_vllm = LlmAgent(
 ================
 File: docs/agents/workflow-agents/index.md
 ================
-# Workflow Agents
+# Template agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-This section introduces "*workflow agents*" - **specialized agents that control the execution flow of its sub-agents**.
+This section introduces *template workflows*, also known as *workflow agents*,
+which are specialized agents that control the execution flow of one or more
+sub-agents. Template workflow agents are specialized components designed for
+orchestrating the execution flow of sub-agents. Their primary role is to manage
+how and when other agents run, defining the control flow of a process.
 
-Workflow agents are specialized components in ADK designed purely for **orchestrating the execution flow of sub-agents**. Their primary role is to manage *how* and *when* other agents run, defining the control flow of a process.
+!!! note "Alternative: graph-based workflows"
 
-Unlike [LLM Agents](../llm-agents.md), which use Large Language Models for dynamic reasoning and decision-making, Workflow Agents operate based on **predefined logic**. They determine the execution sequence according to their type (e.g., sequential, parallel, loop) without consulting an LLM for the orchestration itself. This results in **deterministic and predictable execution patterns**.
+    Starting in ADK 2.0, template workflows have been superseded
 
-ADK provides three core workflow agent types, each implementing a distinct execution pattern:
+    by more flexible workflow structures, including
+    [graph-based workflows](/workflows/graphs/) and
+    [dynamic workflows](/workflows/dynamic/).
+    These workflow architectures provide more control, flexibility
+    and capability to evolve your agent workflows over time.
+
+<img src="/assets/template_workflows.svg" alt="Template agent workflows in ADK">
+
+**Figure 1.** Execution patterns of template workflows in ADK
+
+Template workflow agents operate based on predefined logic. They determine the
+execution sequence according to their type, such as sequential, parallel, or
+loop, without consulting an AI model for assistance with the orchestration. This
+approach results in deterministic and predictable execution patterns. Template
+workflows include the following task execution structures, which each implement
+a distinct task completion pattern:
 
 <div class="grid cards" markdown>
 
-- :material-console-line: **Sequential Agents**
+- :material-console-line: **Sequential Agent workflow**
 
     ---
 
-    Executes sub-agents one after another, in **sequence**.
+    Executes sub-agents one after another, in sequence.
 
     [:octicons-arrow-right-24: Learn more](sequential-agents.md)
 
-- :material-console-line: **Loop Agents**
+- :material-console-line: **Loop Agent workflow**
 
     ---
 
-    **Repeatedly** executes its sub-agents until a specific termination condition is met.
+    Repeatedly executes its sub-agents until a specific termination condition is met.
 
     [:octicons-arrow-right-24: Learn more](loop-agents.md)
 
-- :material-console-line: **Parallel Agents**
+- :material-console-line: **Parallel Agent workflow**
 
     ---
 
-    Executes multiple sub-agents in **parallel**.
+    Executes multiple sub-agents in parallel.
 
     [:octicons-arrow-right-24: Learn more](parallel-agents.md)
 
 </div>
 
-## Why Use Workflow Agents?
-
-Workflow agents are essential when you need explicit control over how a series of tasks or agents are executed. They provide:
-
-* **Predictability:** The flow of execution is guaranteed based on the agent type and configuration.
-* **Reliability:** Ensures tasks run in the required order or pattern consistently.
-* **Structure:** Allows you to build complex processes by composing agents within clear control structures.
-
-While the workflow agent manages the control flow deterministically, the sub-agents it orchestrates can themselves be any type of agent, including intelligent LLM Agent instances. This allows you to combine structured process control with flexible, LLM-powered task execution.
-
 ================
 File: docs/agents/workflow-agents/loop-agents.md
 ================
-# Loop agents
+# Loop template workflow agent
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `LoopAgent` is a workflow agent that executes its sub-agents in a loop (i.e. iteratively). It **_repeatedly runs_ a sequence of agents** for a specified number of iterations or until a termination condition is met.
+The ***LoopAgent*** class is a [template workflow](/agents/workflow-agents/) agent
+that executes its sub-agents in a loop for a specified number of iterations or
+until a termination condition is met. Use the ***LoopAgent*** when your workflow
+involves repetition or iterative refinement, such as revising code or a
+document. As with other templated workflows, the execution of a ***LoopAgent***
+object is not controlled by an AI model, and is deterministic in how it executes
+its sub-agents. The sub-agents within the defined loop may or may not utilize AI
+models, but the overall execution of those sub-agents is ultimately managed by
+the ***LoopAgent*** object you define.
 
-Use the `LoopAgent` when your workflow involves repetition or iterative refinement, such as revising code.
+!!! note "Alternative: graph-based workflows"
 
-### Example
+    Starting in ADK 2.0, templated workflows have been superseded
 
-* You want to build an agent that can generate images of food, but sometimes when you want to generate a specific number of items (e.g. 5 bananas), it generates a different number of those items in the image, such as an image of 7 bananas. You have two tools: `Generate Image`, `Count Food Items`. Because you want to keep generating images until it either correctly generates the specified number of items, or after a certain number of iterations, you should build your agent using a `LoopAgent`.
+    by more flexible workflow structures, including
+    [graph-based workflows](/workflows/graphs/) and
+    [dynamic workflows](/workflows/dynamic/).
 
-As with other [workflow agents](index.md), the `LoopAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned with their execution, such as in a loop, and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
+### Example scenario
+
+You want to build an agent that can generate images of food, but sometimes when
+you want to generate a specific number of items, such as bananas, the agent
+generates a different number of those items in the image, such as an image of 7
+bananas. You have two tools: `Generate Image`, `Count Food Items`. If your goal
+is to keep generating images until it either correctly generates the specified
+number of items, or after a certain number of iterations, you can build your
+agent using a ***LoopAgent*** workflow.
 
 ### How it Works
 
@@ -3639,7 +3798,7 @@ When the `LoopAgent`'s `Run Async` method is called, it performs the following a
     * **Max Iterations**: Set a maximum number of iterations in the `LoopAgent`. **The loop will terminate after that many iterations**.
     * **Escalation from sub-agent**: Design one or more sub-agents to evaluate a condition (e.g., "Is the document quality good enough?", "Has a consensus been reached?").  If the condition is met, the sub-agent can signal termination (e.g., by raising a custom event, setting a flag in a shared context, or returning a specific value).
 
-![Loop Agent](../../assets/loop-agent.png)
+![Loop Agent](/assets/loop-agent.png)
 
 ### Full Example: Iterative Document Improvement
 
@@ -3679,21 +3838,36 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
 ================
 File: docs/agents/workflow-agents/parallel-agents.md
 ================
-# Parallel agents
+# Parallel template workflow agent
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `ParallelAgent` is a [workflow agent](index.md) that executes its sub-agents *concurrently*. This dramatically speeds up workflows where tasks can be performed independently.
+The ***ParallelAgent*** class is a [template workflow](/agents/workflow-agents/)
+agent that executes its sub-agents concurrently. This execution strategy can
+dramatically speed up workflows where two or more tasks can be performed
+independently. For scenarios prioritizing speed and involving independent,
+resource-intensive tasks, this templated workflow facilitates parallel
+execution, which can significantly reduce overall processing time. When using
+this workflow type, it is important that each sub-agent can operate without
+depending on the other sub-agents. This workflow type is particularly beneficial
+for operations like multi-source data retrieval or heavy computations, where
+parallelization yields substantial performance gains.
 
-Use `ParallelAgent` when: For scenarios prioritizing speed and involving independent, resource-intensive tasks, a `ParallelAgent` facilitates efficient parallel execution. **When sub-agents operate without dependencies, their tasks can be performed concurrently**, significantly reducing overall processing time.
+As with other templated workflows, the execution of a ***ParallelAgent*** object
+is not controlled by an AI model, and is deterministic in how it executes its
+sub-agents. The sub-agents specified in the parallel execution set may or may
+not utilize AI models, but the overall execution of those sub-agents is
+ultimately managed by the ***ParallelAgent*** object you define.
 
-As with other [workflow agents](index.md), the `ParallelAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are only concerned with their execution (i.e. executing sub-agents in parallel), and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
+!!! note "Alternative: graph-based workflows"
 
-### Example
+    Starting in ADK 2.0, templated workflows have been superseded
 
-This approach is particularly beneficial for operations like multi-source data retrieval or heavy computations, where parallelization yields substantial performance gains. Importantly, this strategy assumes no inherent need for shared state or direct information exchange between the concurrently executing agents.
+    by more flexible workflow structures, including
+    [graph-based workflows](/workflows/graphs/) and
+    [dynamic workflows](/workflows/dynamic/).
 
 ### How it works
 
@@ -3711,7 +3885,7 @@ It's *crucial* to understand that sub-agents within a `ParallelAgent` run indepe
 * **External State Management:**  Use an external database, message queue, or other mechanism to manage shared state and facilitate communication between agents.
 * **Post-Processing:** Collect results from each branch, and then implement logic to coordinate data afterwards.
 
-![Parallel Agent](../../assets/parallel-agent.png){: width="600"}
+![Parallel Agent](/assets/parallel-agent.png){: width="600"}
 
 ### Full Example: Parallel Web Research
 
@@ -3752,20 +3926,36 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
 ================
 File: docs/agents/workflow-agents/sequential-agents.md
 ================
-# Sequential agents
+# Sequential template workflow agent
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `SequentialAgent` is a [workflow agent](index.md) that executes its sub-agents in the order they are specified in the list.
-Use the `SequentialAgent` when you want the execution to occur in a fixed, strict order.
+The ***SequentialAgent*** class is a [template workflow](/agents/workflow-agents/)
+agent that executes its sub-agents in the order they are specified in a list.
+Use ***SequentialAgent*** when you want execution to occur in a fixed, strict
+order. As with other templated workflows, the execution of a
+***SequentialAgent*** object is not controlled by an AI model, and is
+deterministic in how it executes its sub-agents. The sub-agents specified in the
+sequential execution set may or may not utilize AI models, but the overall
+execution of those sub-agents is ultimately managed by the ***SequentialAgent***
+object you define.
 
-### Example
+!!! note "Alternative: graph-based workflows"
 
-* You want to build an agent that can summarize any webpage, using two tools: `Get Page Contents` and `Summarize Page`. Because the agent must always call `Get Page Contents` before calling `Summarize Page` (you can't summarize from nothing!), you should build your agent using a `SequentialAgent`.
+    Starting in ADK 2.0, templated workflows have been superseded
 
-As with other [workflow agents](index.md), the `SequentialAgent` is not powered by an LLM, and is thus deterministic in how it executes. That being said, workflow agents are concerned only with their execution (i.e. in sequence), and not their internal logic; the tools or sub-agents of a workflow agent may or may not utilize LLMs.
+    by more flexible workflow structures, including
+    [graph-based workflows](/workflows/graphs/) and
+    [dynamic workflows](/workflows/dynamic/).
+
+### Example scenario
+
+You want to build an agent that can summarize any webpage, using two tools:
+**Get Page Contents** and **Summarize Page**. Since the agent must always call
+**Get Page Contents** before calling **Summarize Page**, you can build your
+agent using the ***SequentialAgent*** class.
 
 ### How it works
 
@@ -3774,7 +3964,13 @@ When the `SequentialAgent`'s `Run Async` method is called, it performs the follo
 1. **Iteration:** It iterates through the sub agents list in the order they were provided.
 2. **Sub-Agent Execution:** For each sub-agent in the list, it calls the sub-agent's `Run Async` method.
 
-![Sequential Agent](../../assets/sequential-agent.png){: width="600"}
+![Sequential Agent](/assets/sequential-agent.png){: width="600"}
+
+!!! note "Shared Invocation Context"
+    The `SequentialAgent` passes the same `InvocationContext` to each of its
+    sub-agents. This means they all share the same session state, including the
+    temporary (`temp:`) namespace, making it easy to pass data between steps within
+    a single turn.
 
 ### Full Example: Code Development Pipeline
 
@@ -3782,18 +3978,16 @@ Consider a simplified code development pipeline:
 
 * **Code Writer Agent:**  An LLM Agent that generates initial code based on a specification.
 * **Code Reviewer Agent:**  An LLM Agent that reviews the generated code for errors, style issues, and adherence to best practices.  It receives the output of the Code Writer Agent.
-* **Code Refactorer Agent:** An LLM Agent that takes the reviewed code (and the reviewer's comments) and refactors it to improve quality and address issues.
+* **Code Refactorer Agent:** An LLM Agent that takes the reviewed code, and the reviewer's comments, and refactors it to improve quality and address issues.
 
-A `SequentialAgent` is perfect for this:
+Using a `SequentialAgent` makes it simple to define this exection flow, as shown
+in the following code snippet:
 
 ```py
 SequentialAgent(sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAgent])
 ```
 
-This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](../llm-agents.md#structuring-data-input_schema-output_schema-output_key)**.
-
-!!! note "Shared Invocation Context"
-    The `SequentialAgent` passes the same `InvocationContext` to each of its sub-agents. This means they all share the same session state, including the temporary (`temp:`) namespace, making it easy to pass data between steps within a single turn.
+This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](/agents/llm-agents/##data-handling)**.
 
 ???+ "Code"
 
@@ -4023,7 +4217,7 @@ tools:
 ```
 
 For more details, see the full code for this sample in the
-[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/tool_builtin_config/root_agent.yaml).
+[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/tools/tool_builtin_config/root_agent.yaml).
 
 ### Custom tool example
 
@@ -4047,7 +4241,7 @@ tools:
 ```
 
 For more details, see the full code for this sample in the
-[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/multi_agent_llm_config/prime_agent.yaml).
+[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/multi_agent/multi_agent_llm_config/prime_agent.yaml).
 
 ### Sub-agents example
 
@@ -4078,7 +4272,7 @@ sub_agents:
 ```
 
 For more details, see the full code for this sample in the
-[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/multi_agent_basic_config/root_agent.yaml).
+[ADK sample repository](https://github.com/google/adk-python/blob/main/contributing/samples/multi_agent/multi_agent_basic_config/root_agent.yaml).
 
 ## Deploy agent configs
 
@@ -4133,30 +4327,59 @@ the Agent Config format, see the
 ================
 File: docs/agents/custom-agents.md
 ================
-# Custom agents
+# Custom agent template workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
-Custom agents provide the ultimate flexibility in ADK, allowing you to define **arbitrary orchestration logic** by inheriting directly from `BaseAgent` and implementing your own control flow. This goes beyond the predefined patterns of `SequentialAgent`, `LoopAgent`, and `ParallelAgent`, enabling you to build highly specific and complex agentic workflows.
+Custom agents and agent-based workflows allow you to define arbitrary
+orchestration logic by inheriting directly from `BaseAgent` and implementing
+your own control flow. This approach allows you to create new execution patterns
+similar to `SequentialAgent`, `LoopAgent`, and `ParallelAgent`, enabling you to
+build highly specific and complex agentic workflows.
+
+!!! warning "Alternative: graph-based workflows"
+
+    Starting in ADK 2.0, agent-based workflows using
+    `BaseAgent` have been superseded
+
+    by more flexible workflow structures, including
+    [graph-based workflows](/workflows/graphs/) and
+    [dynamic workflows](/workflows/dynamic/). You should
+    evaluate the capabilities of these workflow mechanisms
+    ***before*** building a custom agent for your
+    target workflow.
 
 !!! warning "Advanced Concept"
 
-    Building custom agents by directly implementing `_run_async_impl` (or its equivalent in other languages) provides powerful control but is more complex than using the predefined `LlmAgent` or standard `WorkflowAgent` types. We recommend understanding those foundational agent types first before tackling custom orchestration logic.
+    Building custom agents by directly implementing `_run_async_impl`, or its
+    equivalent in other languages, provides powerful control but is more complex
+    than using the predefined `LlmAgent` or `WorkflowAgent` types. We
+    recommend understanding those foundational agent types first before tackling
+    custom orchestration logic.
 
-## Introduction: Beyond Predefined Workflows
+## Overview
 
-### What is a Custom Agent?
+A Custom Agent is essentially any class you create that inherits from
+`google.adk.agents.BaseAgent` and implements its core execution logic within the
+`_run_async_impl` asynchronous method. You have complete control over how this
+method calls other sub-agents, manages state, and handles events.
 
-A Custom Agent is essentially any class you create that inherits from `google.adk.agents.BaseAgent` and implements its core execution logic within the `_run_async_impl` asynchronous method. You have complete control over how this method calls other agents (sub-agents), manages state, and handles events.
+![intro_components.png](/assets/custom-agent-flow.png)
 
 !!! Note
-    The specific method name for implementing an agent's core asynchronous logic may vary slightly by SDK language (e.g., `runAsyncImpl` in Java, `_run_async_impl` in Python, or `runAsyncImpl` in TypeScript). Refer to the language-specific API documentation for details.
 
-### Why Use Them?
+    The specific method name for implementing an agent's core asynchronous logic may
+    vary slightly by SDK language, such as `runAsyncImpl` in Java, `_run_async_impl`
+    in Python, or `runAsyncImpl` in TypeScript. Refer to the language-specific API
+    documentation for details.
 
-While the standard [Workflow Agents](workflow-agents/index.md) (`SequentialAgent`, `LoopAgent`, `ParallelAgent`) cover common orchestration patterns, you'll need a Custom agent when your requirements include:
+### Why build Custom Agents?
+
+After reviewing exising ADK [agent workflow](/workflows/) approaches and architectures,
+you may want to consider building a custom workflow agent if those mechanisms cannot
+meet one or more of following requirements for your project:
 
 * **Conditional Logic:** Executing different sub-agents or taking different paths based on runtime conditions or the results of previous steps.
 * **Complex State Management:** Implementing intricate logic for maintaining and updating state throughout the workflow beyond simple sequential passing.
@@ -4164,11 +4387,7 @@ While the standard [Workflow Agents](workflow-agents/index.md) (`SequentialAgent
 * **Dynamic Agent Selection:** Choosing which sub-agent(s) to run next based on dynamic evaluation of the situation or input.
 * **Unique Workflow Patterns:** Implementing orchestration logic that doesn't fit the standard sequential, parallel, or loop structures.
 
-
-![intro_components.png](../assets/custom-agent-flow.png)
-
-
-## Implementing Custom Logic:
+## Implementing custom logic
 
 The core of any custom agent is the method where you define its unique asynchronous behavior. This method allows you to orchestrate sub-agents and manage the flow of execution.
 
@@ -4205,7 +4424,7 @@ The core of any custom agent is the method where you define its unique asynchron
     *   **Reactive Stream (`Flowable`):** It must return an `io.reactivex.rxjava3.core.Flowable<Event>`. This `Flowable` represents a stream of events that will be produced by the custom agent's logic, often by combining or transforming multiple `Flowable` from sub-agents.
     *   **`ctx` (InvocationContext):** Provides access to crucial runtime information, most importantly `ctx.session().state()`, which is a `java.util.concurrent.ConcurrentMap<String, Object>`. This is the primary way to share data between steps orchestrated by your custom agent.
 
-**Key Capabilities within the Core Asynchronous Method:**
+### Key capabilities within the core asynchronous method
 
 === "Python"
 
@@ -4352,7 +4571,7 @@ The core of any custom agent is the method where you define its unique asynchron
           *   **Conditional:** `Flowable.defer()` to choose which `Flowable` to subscribe to based on a condition, or `filter()` if you're filtering events within a stream.
           *   **Iterative:** Operators like `repeat()`, `retry()`, or by structuring your `Flowable` chain to recursively call parts of itself based on conditions (often managed with `flatMapPublisher` or `concatMap`).
 
-## Managing Sub-Agents and State
+## Managing sub-agents and state
 
 Typically, a custom agent orchestrates other agents (like `LlmAgent`, `LoopAgent`, etc.).
 
@@ -4360,7 +4579,792 @@ Typically, a custom agent orchestrates other agents (like `LlmAgent`, `LoopAgent
 * **Sub Agents List:** When initializing the `BaseAgent` using it's `super()` constructor, you should pass a `sub agents` list. This list tells the ADK framework about the agents that are part of this custom agent's immediate hierarchy. It's important for framework features like lifecycle management, introspection, and potentially future routing capabilities, even if your core execution logic (`_run_async_impl`) calls the agents directly via `self.xxx_agent`. Include the agents that your custom logic directly invokes at the top level.
 * **State:** As mentioned, `ctx.session.state` is the standard way sub-agents (especially `LlmAgent`s using `output key`) communicate results back to the orchestrator and how the orchestrator passes necessary inputs down.
 
-## Design Pattern Example: `StoryFlowAgent`
+## Agent-based workflow primitives
+
+The following sections detail the core ADK primitives—such as agent hierarchy,
+workflow agents, and interaction mechanisms—that enable you to construct and
+manage these multi-agent systems effectively. ADK provides core building
+blocks—primitives—that enable you to structure and manage interactions within
+your multi-agent system.
+
+!!! Note
+
+    The specific parameters or method names for the primitives may vary slightly by
+    SDK language, for example `sub_agents` in Python, and `subAgents` in Java. Refer
+    to the language-specific API documentation for details.
+
+### Agent hierarchy: Parent agents and sub-agents
+
+The foundation for structuring multi-agent systems is the parent-child relationship defined in `BaseAgent`.
+
+* **Establishing Hierarchy:** You create a tree structure by passing a list of agent instances to the `sub_agents` argument when initializing a parent agent. ADK automatically sets the `parent_agent` attribute on each child agent during initialization.
+* **Single Parent Rule:** An agent instance can only be added as a sub-agent once. Attempting to assign a second parent will result in a `ValueError`.
+* **Importance:** This hierarchy defines the scope for [Workflow Agents](#workflow-agents-as-orchestrators) and influences the potential targets for LLM-Driven Delegation. You can navigate the hierarchy using `agent.parent_agent` or find descendants using `agent.find_agent(name)`.
+
+=== "Python"
+
+    ```python
+    # Conceptual Example: Defining Hierarchy
+    from google.adk.agents import LlmAgent, BaseAgent
+
+
+    # Define individual agents
+    greeter = LlmAgent(name="Greeter", model="gemini-flash-latest")
+    task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
+
+
+    # Create parent agent and assign children via sub_agents
+    coordinator = LlmAgent(
+        name="Coordinator",
+        model="gemini-flash-latest",
+        description="I coordinate greetings and tasks.",
+        sub_agents=[ # Assign sub_agents here
+            greeter,
+            task_doer
+        ]
+    )
+
+
+    # Framework automatically sets:
+    # assert greeter.parent_agent == coordinator
+    # assert task_doer.parent_agent == coordinator
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Defining Hierarchy
+    import { LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEventActions } from '@google/adk';
+
+    class TaskExecutorAgent extends BaseAgent {
+      async *runAsyncImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+        yield {
+          id: 'event-1',
+          invocationId: context.invocationId,
+          author: this.name,
+          content: { parts: [{ text: 'Task completed!' }] },
+          actions: createEventActions(),
+          timestamp: Date.now(),
+        };
+      }
+      async *runLiveImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
+        this.runAsyncImpl(context);
+      }
+    }
+
+    // Define individual agents
+    const greeter = new LlmAgent({name: 'Greeter', model: 'gemini-flash-latest'});
+    const taskDoer = new TaskExecutorAgent({name: 'TaskExecutor'}); // Custom non-LLM agent
+
+    // Create parent agent and assign children via subAgents
+    const coordinator = new LlmAgent({
+        name: 'Coordinator',
+        model: 'gemini-flash-latest',
+        description: 'I coordinate greetings and tasks.',
+        subAgents: [ // Assign subAgents here
+            greeter,
+            taskDoer
+        ],
+    });
+
+    // Framework automatically sets:
+    // console.assert(greeter.parentAgent === coordinator);
+    // console.assert(taskDoer.parentAgent === coordinator);
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchy"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Defining Hierarchy
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.agents.LlmAgent;
+
+
+    // Define individual agents
+    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-flash-latest").build();
+    SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
+
+
+    // Create parent agent and assign sub_agents
+    LlmAgent coordinator = LlmAgent.builder()
+        .name("Coordinator")
+        .model("gemini-flash-latest")
+        .description("I coordinate greetings and tasks")
+        .subAgents(greeter, taskDoer) // Assign sub_agents here
+        .build();
+
+
+    // Framework automatically sets:
+    // assert greeter.parentAgent().equals(coordinator);
+    // assert taskDoer.parentAgent().equals(coordinator);
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:custom_agent"
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:hierarchy"
+    ```
+
+### Workflow agents as orchestrators
+
+ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
+
+* **[`SequentialAgent`](workflow-agents/sequential-agents.md):** Executes its `sub_agents` one after another in the order they are listed.
+    * **Context:** Passes the *same* [`InvocationContext`](../runtime/index.md) sequentially, allowing agents to easily pass results via shared state.
+
+=== "Python"
+
+    ```python
+    # Conceptual Example: Sequential Pipeline
+    from google.adk.agents import SequentialAgent, LlmAgent
+
+    step1 = LlmAgent(name="Step1_Fetch", output_key="data") # Saves output to state['data']
+    step2 = LlmAgent(name="Step2_Process", instruction="Process data from {data}.")
+
+    pipeline = SequentialAgent(name="MyPipeline", sub_agents=[step1, step2])
+    # When pipeline runs, Step2 can access the state['data'] set by Step1.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Sequential Pipeline
+    import { SequentialAgent, LlmAgent } from '@google/adk';
+
+    const step1 = new LlmAgent({name: 'Step1_Fetch', outputKey: 'data'}); // Saves output to state['data']
+    const step2 = new LlmAgent({name: 'Step2_Process', instruction: 'Process data from {data}.'});
+
+    const pipeline = new SequentialAgent({name: 'MyPipeline', subAgents: [step1, step2]});
+    // When pipeline runs, Step2 can access the state['data'] set by Step1.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Sequential Pipeline
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.agents.LlmAgent;
+
+    LlmAgent step1 = LlmAgent.builder().name("Step1_Fetch").outputKey("data").build(); // Saves output to state.get("data")
+    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from {data}.").build();
+
+    SequentialAgent pipeline = SequentialAgent.builder().name("MyPipeline").subAgents(step1, step2).build();
+    // When pipeline runs, Step2 can access the state.get("data") set by Step1.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:sequential_pipeline"
+    ```
+
+* **[`ParallelAgent`](workflow-agents/parallel-agents.md):** Executes its `sub_agents` in parallel. Events from sub-agents may be interleaved.
+    * **Context:** Modifies the `InvocationContext.branch` for each child agent (e.g., `ParentBranch.ChildName`), providing a distinct contextual path which can be useful for isolating history in some memory implementations.
+    * **State:** Despite different branches, all parallel children access the *same shared* `session.state`, enabling them to read initial state and write results (use distinct keys to avoid race conditions).
+
+=== "Python"
+
+    ```python
+    # Conceptual Example: Parallel Execution
+    from google.adk.agents import ParallelAgent, LlmAgent
+
+    fetch_weather = LlmAgent(name="WeatherFetcher", output_key="weather")
+    fetch_news = LlmAgent(name="NewsFetcher", output_key="news")
+
+    gatherer = ParallelAgent(name="InfoGatherer", sub_agents=[fetch_weather, fetch_news])
+    # When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
+    # A subsequent agent could read state['weather'] and state['news'].
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Parallel Execution
+    import { ParallelAgent, LlmAgent } from '@google/adk';
+
+    const fetchWeather = new LlmAgent({name: 'WeatherFetcher', outputKey: 'weather'});
+    const fetchNews = new LlmAgent({name: 'NewsFetcher', outputKey: 'news'});
+
+    const gatherer = new ParallelAgent({name: 'InfoGatherer', subAgents: [fetchWeather, fetchNews]});
+    // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
+    // A subsequent agent could read state['weather'] and state['news'].
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/parallelagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-execution"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Parallel Execution
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.ParallelAgent;
+
+
+    LlmAgent fetchWeather = LlmAgent.builder()
+        .name("WeatherFetcher")
+        .outputKey("weather")
+        .build();
+
+
+    LlmAgent fetchNews = LlmAgent.builder()
+        .name("NewsFetcher")
+        .instruction("news")
+        .build();
+
+
+    ParallelAgent gatherer = ParallelAgent.builder()
+        .name("InfoGatherer")
+        .subAgents(fetchWeather, fetchNews)
+        .build();
+
+
+    // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
+    // A subsequent agent could read state['weather'] and state['news'].
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:parallel_execution"
+    ```
+
+  * **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
+      * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent returns an [`Event`](../events/index.md) with `escalate=True` in its Event Actions.
+      * **Context & State:** Passes the *same* `InvocationContext` in each iteration, allowing state changes (e.g., counters, flags) to persist across loops.
+
+=== "Python"
+
+      ```python
+      # Conceptual Example: Loop with Condition
+      from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+      from google.adk.events import Event, EventActions
+      from google.adk.agents.invocation_context import InvocationContext
+      from typing import AsyncGenerator
+
+      class CheckCondition(BaseAgent): # Custom agent to check state
+          async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+              status = ctx.session.state.get("status", "pending")
+              is_done = (status == "completed")
+              yield Event(author=self.name, actions=EventActions(escalate=is_done)) # Escalate if done
+
+      process_step = LlmAgent(name="ProcessingStep") # Agent that might update state['status']
+
+      poller = LoopAgent(
+          name="StatusPoller",
+          max_iterations=10,
+          sub_agents=[process_step, CheckCondition(name="Checker")]
+      )
+      # When poller runs, it executes process_step then Checker repeatedly
+      # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
+      ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Loop with Condition
+    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEventActions, EventActions } from '@google/adk';
+
+    class CheckConditionAgent extends BaseAgent { // Custom agent to check state
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            const status = ctx.session.state['status'] || 'pending';
+            const isDone = status === 'completed';
+            yield createEvent({ author: 'check_condition', actions: createEventActions({ escalate: isDone }) });
+        }
+
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            // This is not implemented.
+        }
+    };
+
+    const processStep = new LlmAgent({name: 'ProcessingStep'}); // Agent that might update state['status']
+
+    const poller = new LoopAgent({
+        name: 'StatusPoller',
+        maxIterations: 10,
+        // Executes its sub_agents sequentially in a loop
+        subAgents: [processStep, new CheckConditionAgent ({name: 'Checker'})]
+    });
+    // When poller runs, it executes processStep then Checker repeatedly
+    // until Checker escalates (state['status'] === 'completed') or 10 iterations pass.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "iter"
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/loopagent"
+        "google.golang.org/adk/session"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:loop-with-condition"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Loop with Condition
+    // Custom agent to check state and potentially escalate
+    public static class CheckConditionAgent extends BaseAgent {
+      public CheckConditionAgent(String name, String description) {
+        super(name, description, List.of(), null, null);
+      }
+
+      @Override
+      protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
+        String status = (String) ctx.session().state().getOrDefault("status", "pending");
+        boolean isDone = "completed".equalsIgnoreCase(status);
+
+        // Emit an event that signals to escalate (exit the loop) if the condition is met.
+        // If not done, the escalate flag will be false or absent, and the loop continues.
+        Event checkEvent = Event.builder()
+                .author(name())
+                .id(Event.generateEventId()) // Important to give events unique IDs
+                .actions(EventActions.builder().escalate(isDone).build()) // Escalate if done
+                .build();
+        return Flowable.just(checkEvent);
+      }
+    }
+
+    // Agent that might update state.put("status")
+    LlmAgent processingStepAgent = LlmAgent.builder().name("ProcessingStep").build();
+    // Custom agent instance for checking the condition
+    CheckConditionAgent conditionCheckerAgent = new CheckConditionAgent(
+        "ConditionChecker",
+        "Checks if the status is 'completed'."
+    );
+    LoopAgent poller = LoopAgent.builder().name("StatusPoller").maxIterations(10).subAgents(processingStepAgent, conditionCheckerAgent).build();
+    // When poller runs, it executes processingStepAgent then conditionCheckerAgent repeatedly
+    // until Checker escalates (state.get("status") == "completed") or 10 iterations pass.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:check_condition_agent"
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:loop_with_condition"
+    ```
+
+### Interaction and communication mechanisms
+
+Agents within a system often need to exchange data or trigger actions in one another. ADK facilitates this through:
+
+#### Shared session state
+
+The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](/sessions/session/) object via the `InvocationContext`) to communicate passively.
+
+* **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). State changes are tracked via [`CallbackContext`](../callbacks/index.md).
+* **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
+* **Nature:** Asynchronous, passive communication. Ideal for pipelines orchestrated by `SequentialAgent` or passing data across `LoopAgent` iterations.
+* **See Also:** [State Management](../sessions/state.md)
+
+!!! note "Invocation Context and `temp:` State"
+    When a parent agent invokes a sub-agent, it passes the same `InvocationContext`. This means they share the same temporary (`temp:`) state, which is ideal for passing data that is only relevant for the current turn.
+
+=== "Python"
+
+    ```python
+    # Conceptual Example: Using output_key and reading state
+    from google.adk.agents import LlmAgent, SequentialAgent
+
+
+    agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
+    agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in {capital_city}.")
+
+
+    pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
+    # AgentA runs, saves "Paris" to state['capital_city'].
+    # AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Example: Using outputKey and reading state
+    import { LlmAgent, SequentialAgent } from '@google/adk';
+
+    const agentA = new LlmAgent({name: 'AgentA', instruction: 'Find the capital of France.', outputKey: 'capital_city'});
+    const agentB = new LlmAgent({name: 'AgentB', instruction: 'Tell me about the city stored in {capital_city}.'});
+
+    const pipeline = new SequentialAgent({name: 'CityInfo', subAgents: [agentA, agentB]});
+    // AgentA runs, saves "Paris" to state['capital_city'].
+    // AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:output-key-state"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Example: Using outputKey and reading state
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent agentA = LlmAgent.builder()
+        .name("AgentA")
+        .instruction("Find the capital of France.")
+        .outputKey("capital_city")
+        .build();
+
+
+    LlmAgent agentB = LlmAgent.builder()
+        .name("AgentB")
+        .instruction("Tell me about the city stored in {capital_city}.")
+        .outputKey("capital_city")
+        .build();
+
+
+    SequentialAgent pipeline = SequentialAgent.builder().name("CityInfo").subAgents(agentA, agentB).build();
+    // AgentA runs, saves "Paris" to state('capital_city').
+    // AgentB runs, its instruction processor reads state.get("capital_city") to get "Paris".
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:output_key_state"
+    ```
+
+#### LLM delegation and agent transfer {#delegation}
+
+Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route tasks to other suitable agents within the hierarchy.
+
+* **Mechanism:** The agent's LLM generates a specific function call: `transfer_to_agent(agent_name='target_agent_name')`.
+* **Handling:** The `AutoFlow`, used by default when sub-agents are present or transfer isn't disallowed, intercepts this call. It identifies the target agent using `root_agent.find_agent()` and updates the `InvocationContext` to switch execution focus.
+* **Requires:** The calling `LlmAgent` needs clear `instructions` on when to transfer, and potential target agents need distinct `description`s for the LLM to make informed decisions. Transfer scope (parent, sub-agent, siblings) can be configured on the `LlmAgent`.
+* **Nature:** Dynamic, flexible routing based on LLM interpretation.
+
+=== "Python"
+
+    ```python
+    # Conceptual Setup: LLM Transfer
+    from google.adk.agents import LlmAgent
+
+
+    booking_agent = LlmAgent(name="Booker", description="Handles flight and hotel bookings.")
+    info_agent = LlmAgent(name="Info", description="Provides general information and answers questions.")
+
+
+    coordinator = LlmAgent(
+        name="Coordinator",
+        model="gemini-flash-latest",
+        instruction="You are an assistant. Delegate booking tasks to Booker and info requests to Info.",
+        description="Main coordinator.",
+        # AutoFlow is typically used implicitly here
+        sub_agents=[booking_agent, info_agent]
+    )
+    # If coordinator receives "Book a flight", its LLM should generate:
+    # FunctionCall(name='transfer_to_agent', args={'agent_name': 'Booker'})
+    # ADK framework then routes execution to booking_agent.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Setup: LLM Transfer
+    import { LlmAgent } from '@google/adk';
+
+    const bookingAgent = new LlmAgent({name: 'Booker', description: 'Handles flight and hotel bookings.'});
+    const infoAgent = new LlmAgent({name: 'Info', description: 'Provides general information and answers questions.'});
+
+    const coordinator = new LlmAgent({
+        name: 'Coordinator',
+        model: 'gemini-flash-latest',
+        instruction: 'You are an assistant. Delegate booking tasks to Booker and info requests to Info.',
+        description: 'Main coordinator.',
+        // AutoFlow is typically used implicitly here
+        subAgents: [bookingAgent, infoAgent]
+    });
+    // If coordinator receives "Book a flight", its LLM should generate:
+    // {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Booker'}}}
+    // ADK framework then routes execution to bookingAgent.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent/llmagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:llm-transfer"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Setup: LLM Transfer
+    import com.google.adk.agents.LlmAgent;
+
+
+    LlmAgent bookingAgent = LlmAgent.builder()
+        .name("Booker")
+        .description("Handles flight and hotel bookings.")
+        .build();
+
+
+    LlmAgent infoAgent = LlmAgent.builder()
+        .name("Info")
+        .description("Provides general information and answers questions.")
+        .build();
+
+
+    // Define the coordinator agent
+    LlmAgent coordinator = LlmAgent.builder()
+        .name("Coordinator")
+        .model("gemini-flash-latest") // Or your desired model
+        .instruction("You are an assistant. Delegate booking tasks to Booker and info requests to Info.")
+        .description("Main coordinator.")
+        // AutoFlow will be used by default (implicitly) because subAgents are present
+        // and transfer is not disallowed.
+        .subAgents(bookingAgent, infoAgent)
+        .build();
+
+    // If coordinator receives "Book a flight", its LLM should generate:
+    // FunctionCall.builder.name("transferToAgent").args(ImmutableMap.of("agent_name", "Booker")).build()
+    // ADK framework then routes execution to bookingAgent.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:llm_transfer"
+    ```
+
+#### Explicit invocation with `AgentTool`
+
+Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a callable function or
+[Tool](/tools-custom/).
+
+* **Mechanism:** Wrap the target agent instance in `AgentTool` and include it in the parent `LlmAgent`'s `tools` list. `AgentTool` generates a corresponding function declaration for the LLM.
+* **Handling:** When the parent LLM generates a function call targeting the `AgentTool`, the framework executes `AgentTool.run_async`. This method runs the target agent, captures its final response, forwards any state/artifact changes back to the parent's context, and returns the response as the tool's result.
+* **Nature:** Synchronous (within the parent's flow), explicit, controlled invocation like any other tool.
+* **(Note:** `AgentTool` needs to be imported and used explicitly).
+
+=== "Python"
+
+    ```python
+    # Conceptual Setup: Agent as a Tool
+    from google.adk.agents import LlmAgent, BaseAgent
+    from google.adk.tools import agent_tool
+    from pydantic import BaseModel
+
+
+    # Define a target agent (could be LlmAgent or custom BaseAgent)
+    class ImageGeneratorAgent(BaseAgent): # Example custom agent
+        name: str = "ImageGen"
+        description: str = "Generates an image based on a prompt."
+        # ... internal logic ...
+        async def _run_async_impl(self, ctx): # Simplified run logic
+            prompt = ctx.session.state.get("image_prompt", "default prompt")
+            # ... generate image bytes ...
+            image_bytes = b"..."
+            yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
+
+
+    image_agent = ImageGeneratorAgent()
+    image_tool = agent_tool.AgentTool(agent=image_agent) # Wrap the agent
+
+
+    # Parent agent uses the AgentTool
+    artist_agent = LlmAgent(
+        name="Artist",
+        model="gemini-flash-latest",
+        instruction="Create a prompt and use the ImageGen tool to generate the image.",
+        tools=[image_tool] # Include the AgentTool
+    )
+    # Artist LLM generates a prompt, then calls:
+    # FunctionCall(name='ImageGen', args={'image_prompt': 'a cat wearing a hat'})
+    # Framework calls image_tool.run_async(...), which runs ImageGeneratorAgent.
+    # The resulting image Part is returned to the Artist agent as the tool result.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Setup: Agent as a Tool
+    import { LlmAgent, BaseAgent, AgentTool, InvocationContext } from '@google/adk';
+    import type { Part, createEvent, Event } from '@google/genai';
+
+    // Define a target agent (could be LlmAgent or custom BaseAgent)
+    class ImageGeneratorAgent extends BaseAgent { // Example custom agent
+        constructor() {
+            super({name: 'ImageGen', description: 'Generates an image based on a prompt.'});
+        }
+        // ... internal logic ...
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> { // Simplified run logic
+            const prompt = ctx.session.state['image_prompt'] || 'default prompt';
+            // ... generate image bytes ...
+            const imageBytes = new Uint8Array(); // placeholder
+            const imagePart: Part = {inlineData: {data: Buffer.from(imageBytes).toString('base64'), mimeType: 'image/png'}};
+            yield createEvent({content: {parts: [imagePart]}});
+        }
+
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event, void, void> {
+            // Not implemented for this agent.
+        }
+    }
+
+    const imageAgent = new ImageGeneratorAgent();
+    const imageTool = new AgentTool({agent: imageAgent}); // Wrap the agent
+
+    // Parent agent uses the AgentTool
+    const artistAgent = new LlmAgent({
+        name: 'Artist',
+        model: 'gemini-flash-latest',
+        instruction: 'Create a prompt and use the ImageGen tool to generate the image.',
+        tools: [imageTool] // Include the AgentTool
+    });
+    // Artist LLM generates a prompt, then calls:
+    // {functionCall: {name: 'ImageGen', args: {image_prompt: 'a cat wearing a hat'}}}
+    // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
+    // The resulting image Part is returned to the Artist agent as the tool result.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "fmt"
+        "iter"
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/model"
+        "google.golang.org/adk/session"
+        "google.golang.org/adk/tool"
+        "google.golang.org/adk/tool/agenttool"
+        "google.golang.org/genai"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:agent-as-tool"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Setup: Agent as a Tool
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.AgentTool;
+
+    // Example custom agent (could be LlmAgent or custom BaseAgent)
+    public class ImageGeneratorAgent extends BaseAgent  {
+
+
+      public ImageGeneratorAgent(String name, String description) {
+        super(name, description, List.of(), null, null);
+      }
+
+
+      // ... internal logic ...
+      @Override
+      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) { // Simplified run logic
+        invocationContext.session().state().get("image_prompt");
+        // Generate image bytes
+        // ...
+
+
+        Event responseEvent = Event.builder()
+            .author(this.name())
+            .content(Content.fromParts(Part.fromText("...")))
+            .build();
+
+
+        return Flowable.just(responseEvent);
+      }
+
+
+      @Override
+      protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {
+        return null;
+      }
+    }
+
+    // Wrap the agent using AgentTool
+    ImageGeneratorAgent imageAgent = new ImageGeneratorAgent("image_agent", "generates images");
+    AgentTool imageTool = AgentTool.create(imageAgent);
+
+
+    // Parent agent uses the AgentTool
+    LlmAgent artistAgent = LlmAgent.builder()
+            .name("Artist")
+            .model("gemini-flash-latest")
+            .instruction(
+                    "You are an artist. Create a detailed prompt for an image and then " +
+                            "use the 'ImageGen' tool to generate the image. " +
+                            "The 'ImageGen' tool expects a single string argument named 'request' " +
+                            "containing the image prompt. The tool will return a JSON string in its " +
+                            "'result' field, containing 'image_base64', 'mime_type', and 'status'."
+            )
+            .description("An agent that can create images using a generation tool.")
+            .tools(imageTool) // Include the AgentTool
+            .build();
+
+
+    // Artist LLM generates a prompt, then calls:
+    // FunctionCall(name='ImageGen', args={'imagePrompt': 'a cat wearing a hat'})
+    // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
+    // The resulting image Part is returned to the Artist agent as the tool result.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:agent_as_tool"
+    ```
+
+These primitives provide the flexibility to design multi-agent interactions ranging from tightly coupled sequential workflows to dynamic, LLM-driven delegation networks.
+
+## Design pattern example: StoryFlow Agent
 
 Let's illustrate the power of custom agents with an example pattern: a multi-stage content generation workflow with conditional logic.
 
@@ -4370,7 +5374,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 ---
 
-### Part 1: Simplified custom agent Initialization { #part-1-simplified-custom-agent-initialization }
+### Part 1: Simplified custom agent initialization
 
 === "Python"
 
@@ -4409,7 +5413,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 ---
 
-### Part 2: Defining the Custom Execution Logic { #part-2-defining-the-custom-execution-logic }
+### Part 2: Define custom execution logic
 
 === "Python"
 
@@ -4469,7 +5473,7 @@ Let's illustrate the power of custom agents with an example pattern: a multi-sta
 
 ---
 
-### Part 3: Defining the LLM Sub-Agents { #part-3-defining-the-llm-sub-agents }
+### Part 3: Define LLM sub-agents
 
 These are standard `LlmAgent` definitions, responsible for specific tasks. Their `output key` parameter is crucial for placing results into the `session.state` where other agents or the custom orchestrator can access them.
 
@@ -4503,7 +5507,7 @@ These are standard `LlmAgent` definitions, responsible for specific tasks. Their
 
 ---
 
-### Part 4: Instantiating and Running the custom agent { #part-4-instantiating-and-running-the-custom-agent }
+### Part 4: Instantiate and run the custom agent
 
 Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
 
@@ -4535,7 +5539,7 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
 
 ---
 
-## Full Code Example
+### Storyflow Agent code listing
 
 ???+ "Storyflow Agent"
 
@@ -4577,55 +5581,63 @@ File: docs/agents/index.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
-In Agent Development Kit (ADK), an **Agent** is a self-contained execution unit designed to act autonomously to achieve specific goals. Agents can perform tasks, interact with users, utilize external tools, and coordinate with other agents.
+An ***Agent***, or ***LlmAgent***, in Agent Development Kit (ADK) is a
+self-contained execution unit designed to act autonomously to achieve specific
+goals. Agents can perform tasks, interact with users, utilize external tools,
+and coordinate with other agents. The basic components of an ***Agent*** are an
+artificial intelligence (AI) model, task instructions, and optionally, a set of
+tools to be used by the agent. As agent tasks and complexity grow, you can use
+the ADK development framework to expand them into *workflows*, which allow you
+to combine and orchestrate multiple agents and code execution tasks.
 
-The foundation for all agents in ADK is the `BaseAgent` class. It serves as the fundamental blueprint. To create functional agents, you typically extend `BaseAgent` in one of three main ways, catering to different needs – from intelligent reasoning to structured process control.
+<img src="/assets/agents_overview.svg" alt="Agents and workflows in ADK">
 
-<img src="../assets/agent-types.png" alt="Types of agents in ADK">
+**Figure 1.** Simple Agents and Agent Workflows in ADK
 
-## Core Agent Categories
+Building an agent with just a model, instructions, and tools is a great place
+to start for most developers. As your agent grows in capability and complexity,
+you are likely to want to break up the capabilities of your agent application
+in order to better manage its behavior, work within model operating context limits,
+and modularize your code to keep it manageable. ADK agent ***Workflow*** architectures
+allow you to evolve an agent from a monolithic structure to more modular code and
+project structures.
 
-ADK provides distinct agent categories to build sophisticated applications:
+## Grow from single agent to workflows
 
-1. [**LLM Agents (`LlmAgent`, `Agent`)**](llm-agents.md): These agents utilize Large Language Models (LLMs) as their core engine to understand natural language, reason, plan, generate responses, and dynamically decide how to proceed or which tools to use, making them ideal for flexible, language-centric tasks. [Learn more about LLM Agents...](llm-agents.md)
+In ADK, any agent application that has more than one agent or executable *Node*
+is considered a workflow. ADK does not impose any hard requirements to move from
+a single-agent architecture to a multi-agent or graph-based ***Workflow***
+architecture. You can decide when to make that change based on the needs of your
+project, or as you discover limitations of a single-agent approach, such as:
 
-2. [**Workflow Agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`)**](workflow-agents/index.md): These specialized agents control the execution flow of other agents in predefined, deterministic patterns (sequence, parallel, or loop) without using an LLM for the flow control itself, perfect for structured processes needing predictable execution. [Explore Workflow Agents...](workflow-agents/index.md)
+* **Instruction following performance:** Beyond a certain length or complexity
+  of a multiple step set of instructions, you may discover that a single agent
+  does not reliably complete all instructions, or perform them with the required
+  level of quality or speed.
+* **Context limitations:** You may discover that the amount of data required to
+  perform an agent task exceeds the context window limitations of the AI model you
+  are using.
+* **Agent code modularity:** As the complexity and organization of your agent
+  code grows, you may want to break up the agent capabilities to make your code
+  more manageable or enable re-use of agent code for other agent projects.
+* **Mixing deterministic and non-deterministic tasks:** As you build agents for
+  solving more complex problems, you may want to design and build agents that
+  interweave the non-deterministic functionality of AI models with deterministic
+  code, rather than relying on non-deterministic AI models to manage the full
+  execution of a task. For more details, see
+  [Graph-based workflows](/graphs/).
 
-3. [**Custom Agents**](custom-agents.md): Created by extending `BaseAgent` directly, these agents allow you to implement unique operational logic, specific control flows, or specialized integrations not covered by the standard types, catering to highly tailored application requirements. [Discover how to build Custom Agents...](custom-agents.md)
+For more information about ADK Workflows and agent project architectures, see
+the [Workflows](/workflows/) section.
 
-## Choosing the Right Agent Type
+## Agent features
 
-The following table provides a high-level comparison to help distinguish between the agent types. As you explore each type in more detail in the subsequent sections, these distinctions will become clearer.
+The capabilities of ADK agents can be extended and expanded using the following
+features:
 
-| Feature              | LLM Agent (`LlmAgent`)              | Workflow Agent                              | Custom Agent (`BaseAgent` subclass)      |
-| :------------------- | :---------------------------------- | :------------------------------------------ |:-----------------------------------------|
-| **Primary Function** | Reasoning, Generation, Tool Use     | Controlling Agent Execution Flow            | Implementing Unique Logic/Integrations   |
-| **Core Engine**  | Large Language Model (LLM)          | Predefined Logic (Sequence, Parallel, Loop) | Custom Code                              |
-| **Determinism**  | Non-deterministic (Flexible)        | Deterministic (Predictable)                 | Can be either, based on implementation   |
-| **Primary Use**  | Language tasks, Dynamic decisions   | Structured processes, Orchestration         | Tailored requirements, Specific workflows|
-
-## Agents Working Together: Multi-Agent Systems
-
-While each agent type serves a distinct purpose, the true power often comes from combining them. Complex applications frequently employ [multi-agent architectures](multi-agents.md) where:
-
-* **LLM Agents** handle intelligent, language-based task execution.
-* **Workflow Agents** manage the overall process flow using standard patterns.
-* **Custom Agents** provide specialized capabilities or rules needed for unique integrations.
-
-Understanding these core types is the first step toward building sophisticated, capable AI applications with ADK.
-
-## Extend Agent Capabilities
-
-Beyond the core agent types, ADK allows you to significantly expand what your
-agents can do through several key mechanisms:
-
-*   [**AI Models**](/agents/models/):
+*   [**AI models**](/agents/models/):
     Swap the underlying intelligence of your agents by integrating with
-    different generative AI models from Google and other providers.
-
-*   [**Artifacts**](/artifacts/):
-    Enable agents to create and manage persistent outputs like files, code, or
-    documents that exist beyond the conversation lifecycle.
+    generative AI models from Google and other providers.
 
 *   [**Pre-built tools and integrations**](/integrations/):
     Equip your agents with a wide array tools, plugins, and other integrations
@@ -4636,61 +5648,63 @@ agents can do through several key mechanisms:
     Create your own, task-specific tools for solving specific problems with
     precision and control.
 
-*   [**Plugins**](/plugins/):
-    Integrate complex, pre-packaged behaviors and third-party services directly
-    into your agent's workflow.
+*   [**Artifacts**](/artifacts/):
+    Enable agents to create and manage persistent outputs like files, code, or
+    documents that exist beyond the conversation lifecycle.
 
 *   [**Skills**](/skills/):
     Use prebuilt or custom [Agent Skills](https://agentskills.io/) to extend
     agent capabilities in a way that works efficiently inside AI context window
     limits.
 
+*   [**Plugins**](/plugins/):
+    Integrate complex, pre-packaged behaviors and third-party services directly
+    into your agent's workflow.
+
 *   [**Callbacks**](/callbacks/):
     Hook into specific events during an agent's execution lifecycle to add
     logging, monitoring, or custom side-effects without altering core agent
     logic.
 
-
 ## Next Steps
 
-Now that you have an overview of the different agent types available in ADK, dive deeper into how they work and how to use them effectively:
+Now that you have an overview of the different agent types available in ADK,
+dive deeper into how they work and how to use them effectively:
 
-* [**LLM Agents:**](llm-agents.md) Explore how to configure agents powered by large language models, including setting instructions, providing tools, and enabling advanced features like planning and code execution.
-* [**Workflow Agents:**](workflow-agents/index.md) Learn how to orchestrate tasks using `SequentialAgent`, `ParallelAgent`, and `LoopAgent` for structured and predictable processes.
-* [**Custom Agents:**](custom-agents.md) Discover the principles of extending `BaseAgent` to build agents with unique logic and integrations tailored to your specific needs.
-* [**Multi-Agents:**](multi-agents.md) Understand how to combine different agent types to create sophisticated, collaborative systems capable of tackling complex problems.
-* [**Agent Routing:**](routing.md) Dynamically select between multiple agents at runtime using router functions for fallback, A/B testing, and auto-routing.
-* [**Models:**](/agents/models/) Learn about the different LLM integrations available and how to select the right model for your agents.
+* [**Simple agents:**](/agents/llm-agents/) Explore how to configure agents
+  powered by AI models, including setting instructions, providing tools, and
+  enabling advanced features like planning and code execution.
+* [**Graph workflows:**](/graphs/) Discover how evolve your agents from
+  plain language instructions to composable, reliable execution paths that
+  combine AI reasoning with deterministic code logic.
+* [**Multi-agent workflows:**](/workflows/) Explore how to build agent
+  applications that combine multiple agents, execution nodes, a variety of task
+  execution control mechanisms to fit the needs of your project.
 
 ================
 File: docs/agents/llm-agents.md
 ================
-# LLM Agent
+# Simple agents with LlmAgent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span>
-  <span class="lst-python">Python v0.1.0</span>
-  <span class="lst-typescript">Typescript v0.2.0</span>
-  <span class="lst-go">Go v0.1.0</span>
-  <span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
-The `LlmAgent` (often aliased simply as `Agent`) is a core component in ADK,
-acting as the "thinking" part of your application. It leverages the power of a
-Large Language Model (LLM) for reasoning, understanding natural language, making
-decisions, generating responses, and interacting with tools.
-
-Unlike deterministic [Workflow Agents](workflow-agents/index.md) that follow
-predefined execution paths, `LlmAgent` behavior is non-deterministic. It uses
-the LLM to interpret instructions and context, deciding dynamically how to
-proceed, which tools to use (if any), or whether to transfer control to another
-agent.
+The `LlmAgent` class, often aliased simply as `Agent`, is a core component in
+ADK, acting as the core part of your agent application. It leverages the power
+of a Large Language Model (LLM) or generative AI model for reasoning,
+understanding natural language, making decisions, generating responses, and
+interacting with tools. Since this type of agent uses an AI model interpret
+instructions and context, the AI model dynamically decides how to proceed, which
+tools to use (if any), and what output to provide. As such, the behavior of this
+type of agent is non-deterministic and must be built and evaluated with this
+behavior in mind.
 
 Building an effective `LlmAgent` involves defining its identity, clearly guiding
 its behavior through instructions, and equipping it with the necessary tools and
 capabilities.
 
-## Defining the Agent's Identity and Purpose
+## Define agent identity and purpose
 
 First, you need to establish what the agent *is* and what it's *for*.
 
@@ -4755,7 +5769,13 @@ First, you need to establish what the agent *is* and what it's *for*.
             .build();
     ```
 
-## Guiding the Agent: Instructions (`instruction`)
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:identity"
+    ```
+
+## Guide the Agent: Instructions
 
 The `instruction` parameter is arguably the most critical for shaping an
 `LlmAgent`'s behavior. It's a string (or a function returning a string) that
@@ -4850,20 +5870,25 @@ tells the agent:
             .build();
     ```
 
-*(Note: For instructions that apply to *all* agents in a system, consider using
-`global_instruction` on the root agent, detailed further in the
-[Multi-Agents](multi-agents.md) section.)*
+=== "Kotlin"
 
-## Equipping the Agent: Tools (`tools`)
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:instruction"
+    ```
+
+**Note:** For instructions that apply to *all* agents in a system, consider using
+`global_instruction` on the root agent.
+
+## Equip the Agent: Tools
 
 Tools give your `LlmAgent` capabilities beyond the LLM's built-in knowledge or
 reasoning. They allow the agent to interact with the outside world, perform
 calculations, fetch real-time data, or execute specific actions.
 
 * **`tools` (Optional):** Provide a list of tools the agent can use. Each item in the list can be:
-    * A native function or method (wrapped as a `FunctionTool`). Python ADK automatically wraps the native function into a `FunctionTool` whereas, you must explicitly wrap your Java methods using `FunctionTool.create(...)`
+    * A native function or method (wrapped as a `FunctionTool`). Python ADK automatically wraps the native function into a `FunctionTool` whereas, you must explicitly wrap your Java methods using `FunctionTool.create(...)`. In Kotlin, you can use the `@Tool` annotation to automatically generate a `FunctionTool` at compile-time.
     * An instance of a class inheriting from `BaseTool`.
-    * An instance of another agent (`AgentTool`, enabling agent-to-agent delegation - see [Multi-Agents](multi-agents.md)).
+    * An instance of another agent (`AgentTool`, enabling agent-to-agent delegation - see [Custom agent workflows](/agents/custom-agents/#delegation)).
 
 The LLM uses the function/tool names, descriptions (from docstrings or the
 `description` field), and parameter schemas to decide which tool to call based
@@ -4969,15 +5994,24 @@ on the conversation and its instructions.
             .build();
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:tool_definition"
+
+    // Add the tool to the agent
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:tool_usage"
+    ```
+
 Learn more about Tools in [Custom Tools](/tools-custom/).
 
 ## Advanced Configuration & Control
 
 Beyond the core parameters, `LlmAgent` offers several options for finer control:
 
-### Fine-Tuning LLM Generation (`generate_content_config`)
+### Fine-tune AI model operation
 
-You can adjust how the underlying LLM generates responses using `generate_content_config`.
+You can adjust how the underlying AI model generates responses using `generate_content_config`.
 
 * **`generate_content_config` (Optional):** Pass an instance of [`google.genai.types.GenerateContentConfig`](https://googleapis.github.io/python-genai/genai.html#genai.types.GenerateContentConfig) to control parameters like `temperature` (randomness), `max_output_tokens` (response length), `top_p`, `top_k`, and safety settings.
 
@@ -5040,7 +6074,13 @@ You can adjust how the underlying LLM generates responses using `generate_conten
             .build();
     ```
 
-### Structuring Data (`input_schema`, `output_schema`, `output_key`)
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:gen_config"
+    ```
+
+### Structure data input and output {#data-handling}
 
 For scenarios requiring structured data exchange with an `LLM Agent`, the ADK provides mechanisms to define expected input and desired output formats using schema definitions.
 
@@ -5144,7 +6184,7 @@ For scenarios requiring structured data exchange with an `LLM Agent`, the ADK pr
             .build();
     ```
 
-### Managing Context (`include_contents`)
+### Manage agent context
 
 Control whether the agent receives the prior conversation history.
 
@@ -5391,7 +6431,10 @@ call_agent("If it's raining in New York right now, what is the current temperatu
     --8<-- "examples/java/snippets/src/main/java/tools/CodeExecutionAgentApp.java:full_code"
     ```
 
-## Putting It Together: Example
+## Code example
+
+This following example demonstrates the core concepts discussed in this page.
+More complex agents might incorporate schemas, context control, and planning.
 
 ??? "Code"
     Here's the complete basic `capital_agent`:
@@ -5420,1746 +6463,24 @@ call_agent("If it's raining in New York right now, what is the current temperatu
         --8<-- "examples/java/snippets/src/main/java/agents/LlmAgentExample.java:full_code"
         ```
 
-_(This example demonstrates the core concepts. More complex agents might incorporate schemas, context control, planning, etc.)_
-
-## Related Concepts (Deferred Topics)
-
-While this page covers the core configuration of `LlmAgent`, several related concepts provide more advanced control and are detailed elsewhere:
-
-* **Callbacks:** Intercepting execution points (before/after model calls, before/after tool calls) using `before_model_callback`, `after_model_callback`, etc. See [Callbacks](../callbacks/types-of-callbacks.md).
-* **Multi-Agent Control:** Advanced strategies for agent interaction, including planning (`planner`), controlling agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`), and system-wide instructions (`global_instruction`). See [Multi-Agents](multi-agents.md).
-
-================
-File: docs/agents/multi-agents.md
-================
-# Multi-Agent Systems in ADK
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-As agentic applications grow in complexity, structuring them as a single, monolithic agent can become challenging to develop, maintain, and reason about. The Agent Development Kit (ADK) supports building sophisticated applications by composing multiple, distinct `BaseAgent` instances into a **Multi-Agent System (MAS)**.
-
-In ADK, a multi-agent system is an application where different agents, often forming a hierarchy, collaborate or coordinate to achieve a larger goal. Structuring your application this way offers significant advantages, including enhanced modularity, specialization, reusability, maintainability, and the ability to define structured control flows using dedicated workflow agents.
-
-You can compose various types of agents derived from `BaseAgent` to build these systems:
-
-* **LLM Agents:** Agents powered by large language models. (See [LLM Agents](llm-agents.md))
-* **Workflow Agents:** Specialized agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`) designed to manage the execution flow of their sub-agents. (See [Workflow Agents](workflow-agents/index.md))
-* **Custom agents:** Your own agents inheriting from `BaseAgent` with specialized, non-LLM logic. (See [Custom Agents](custom-agents.md))
-
-The following sections detail the core ADK primitives—such as agent hierarchy, workflow agents, and interaction mechanisms—that enable you to construct and manage these multi-agent systems effectively.
-
-## 1. ADK Primitives for Agent Composition { #adk-primitives-for-agent-composition }
-
-ADK provides core building blocks—primitives—that enable you to structure and manage interactions within your multi-agent system.
-
-!!! Note
-    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `sub_agents` in Python, `subAgents` in Java). Refer to the language-specific API documentation for details.
-
-### 1.1. Agent Hierarchy (Parent agent, Sub Agents) { #agent-hierarchy-parent-agent-sub-agents }
-
-The foundation for structuring multi-agent systems is the parent-child relationship defined in `BaseAgent`.
-
-* **Establishing Hierarchy:** You create a tree structure by passing a list of agent instances to the `sub_agents` argument when initializing a parent agent. ADK automatically sets the `parent_agent` attribute on each child agent during initialization.
-* **Single Parent Rule:** An agent instance can only be added as a sub-agent once. Attempting to assign a second parent will result in a `ValueError`.
-* **Importance:** This hierarchy defines the scope for [Workflow Agents](#workflow-agents-as-orchestrators) and influences the potential targets for LLM-Driven Delegation. You can navigate the hierarchy using `agent.parent_agent` or find descendants using `agent.find_agent(name)`.
-
-=== "Python"
-
-    ```python
-    # Conceptual Example: Defining Hierarchy
-    from google.adk.agents import LlmAgent, BaseAgent
-
-
-    # Define individual agents
-    greeter = LlmAgent(name="Greeter", model="gemini-flash-latest")
-    task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
-
-
-    # Create parent agent and assign children via sub_agents
-    coordinator = LlmAgent(
-        name="Coordinator",
-        model="gemini-flash-latest",
-        description="I coordinate greetings and tasks.",
-        sub_agents=[ # Assign sub_agents here
-            greeter,
-            task_doer
-        ]
-    )
-
-
-    # Framework automatically sets:
-    # assert greeter.parent_agent == coordinator
-    # assert task_doer.parent_agent == coordinator
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Example: Defining Hierarchy
-    import { LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
-    import type { Event, createEventActions } from '@google/adk';
-
-    class TaskExecutorAgent extends BaseAgent {
-      async *runAsyncImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
-        yield {
-          id: 'event-1',
-          invocationId: context.invocationId,
-          author: this.name,
-          content: { parts: [{ text: 'Task completed!' }] },
-          actions: createEventActions(),
-          timestamp: Date.now(),
-        };
-      }
-      async *runLiveImpl(context: InvocationContext): AsyncGenerator<Event, void, void> {
-        this.runAsyncImpl(context);
-      }
-    }
-
-    // Define individual agents
-    const greeter = new LlmAgent({name: 'Greeter', model: 'gemini-flash-latest'});
-    const taskDoer = new TaskExecutorAgent({name: 'TaskExecutor'}); // Custom non-LLM agent
-
-    // Create parent agent and assign children via subAgents
-    const coordinator = new LlmAgent({
-        name: 'Coordinator',
-        model: 'gemini-flash-latest',
-        description: 'I coordinate greetings and tasks.',
-        subAgents: [ // Assign subAgents here
-            greeter,
-            taskDoer
-        ],
-    });
-
-    // Framework automatically sets:
-    // console.assert(greeter.parentAgent === coordinator);
-    // console.assert(taskDoer.parentAgent === coordinator);
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchy"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Example: Defining Hierarchy
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.agents.LlmAgent;
-
-
-    // Define individual agents
-    LlmAgent greeter = LlmAgent.builder().name("Greeter").model("gemini-flash-latest").build();
-    SequentialAgent taskDoer = SequentialAgent.builder().name("TaskExecutor").subAgents(...).build(); // Sequential Agent
-
-
-    // Create parent agent and assign sub_agents
-    LlmAgent coordinator = LlmAgent.builder()
-        .name("Coordinator")
-        .model("gemini-flash-latest")
-        .description("I coordinate greetings and tasks")
-        .subAgents(greeter, taskDoer) // Assign sub_agents here
-        .build();
-
-
-    // Framework automatically sets:
-    // assert greeter.parentAgent().equals(coordinator);
-    // assert taskDoer.parentAgent().equals(coordinator);
-    ```
-
-### 1.2. Workflow Agents as Orchestrators { #workflow-agents-as-orchestrators }
-
-ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
-
-* **[`SequentialAgent`](workflow-agents/sequential-agents.md):** Executes its `sub_agents` one after another in the order they are listed.
-    * **Context:** Passes the *same* [`InvocationContext`](../runtime/index.md) sequentially, allowing agents to easily pass results via shared state.
-
-=== "Python"
-
-    ```python
-    # Conceptual Example: Sequential Pipeline
-    from google.adk.agents import SequentialAgent, LlmAgent
-
-    step1 = LlmAgent(name="Step1_Fetch", output_key="data") # Saves output to state['data']
-    step2 = LlmAgent(name="Step2_Process", instruction="Process data from {data}.")
-
-    pipeline = SequentialAgent(name="MyPipeline", sub_agents=[step1, step2])
-    # When pipeline runs, Step2 can access the state['data'] set by Step1.
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Example: Sequential Pipeline
-    import { SequentialAgent, LlmAgent } from '@google/adk';
-
-    const step1 = new LlmAgent({name: 'Step1_Fetch', outputKey: 'data'}); // Saves output to state['data']
-    const step2 = new LlmAgent({name: 'Step2_Process', instruction: 'Process data from {data}.'});
-
-    const pipeline = new SequentialAgent({name: 'MyPipeline', subAgents: [step1, step2]});
-    // When pipeline runs, Step2 can access the state['data'] set by Step1.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Example: Sequential Pipeline
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.agents.LlmAgent;
-
-    LlmAgent step1 = LlmAgent.builder().name("Step1_Fetch").outputKey("data").build(); // Saves output to state.get("data")
-    LlmAgent step2 = LlmAgent.builder().name("Step2_Process").instruction("Process data from {data}.").build();
-
-    SequentialAgent pipeline = SequentialAgent.builder().name("MyPipeline").subAgents(step1, step2).build();
-    // When pipeline runs, Step2 can access the state.get("data") set by Step1.
-    ```
-
-* **[`ParallelAgent`](workflow-agents/parallel-agents.md):** Executes its `sub_agents` in parallel. Events from sub-agents may be interleaved.
-    * **Context:** Modifies the `InvocationContext.branch` for each child agent (e.g., `ParentBranch.ChildName`), providing a distinct contextual path which can be useful for isolating history in some memory implementations.
-    * **State:** Despite different branches, all parallel children access the *same shared* `session.state`, enabling them to read initial state and write results (use distinct keys to avoid race conditions).
-
-=== "Python"
-
-    ```python
-    # Conceptual Example: Parallel Execution
-    from google.adk.agents import ParallelAgent, LlmAgent
-
-    fetch_weather = LlmAgent(name="WeatherFetcher", output_key="weather")
-    fetch_news = LlmAgent(name="NewsFetcher", output_key="news")
-
-    gatherer = ParallelAgent(name="InfoGatherer", sub_agents=[fetch_weather, fetch_news])
-    # When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
-    # A subsequent agent could read state['weather'] and state['news'].
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Example: Parallel Execution
-    import { ParallelAgent, LlmAgent } from '@google/adk';
-
-    const fetchWeather = new LlmAgent({name: 'WeatherFetcher', outputKey: 'weather'});
-    const fetchNews = new LlmAgent({name: 'NewsFetcher', outputKey: 'news'});
-
-    const gatherer = new ParallelAgent({name: 'InfoGatherer', subAgents: [fetchWeather, fetchNews]});
-    // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
-    // A subsequent agent could read state['weather'] and state['news'].
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/parallelagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-execution"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Example: Parallel Execution
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.ParallelAgent;
-
-
-    LlmAgent fetchWeather = LlmAgent.builder()
-        .name("WeatherFetcher")
-        .outputKey("weather")
-        .build();
-
-
-    LlmAgent fetchNews = LlmAgent.builder()
-        .name("NewsFetcher")
-        .instruction("news")
-        .build();
-
-
-    ParallelAgent gatherer = ParallelAgent.builder()
-        .name("InfoGatherer")
-        .subAgents(fetchWeather, fetchNews)
-        .build();
-
-
-    // When gatherer runs, WeatherFetcher and NewsFetcher run concurrently.
-    // A subsequent agent could read state['weather'] and state['news'].
-    ```
-
-  * **[`LoopAgent`](workflow-agents/loop-agents.md):** Executes its `sub_agents` sequentially in a loop.
-      * **Termination:** The loop stops if the optional `max_iterations` is reached, or if any sub-agent returns an [`Event`](../events/index.md) with `escalate=True` in its Event Actions.
-      * **Context & State:** Passes the *same* `InvocationContext` in each iteration, allowing state changes (e.g., counters, flags) to persist across loops.
-
-=== "Python"
-
-      ```python
-      # Conceptual Example: Loop with Condition
-      from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
-      from google.adk.events import Event, EventActions
-      from google.adk.agents.invocation_context import InvocationContext
-      from typing import AsyncGenerator
-
-      class CheckCondition(BaseAgent): # Custom agent to check state
-          async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-              status = ctx.session.state.get("status", "pending")
-              is_done = (status == "completed")
-              yield Event(author=self.name, actions=EventActions(escalate=is_done)) # Escalate if done
-
-      process_step = LlmAgent(name="ProcessingStep") # Agent that might update state['status']
-
-      poller = LoopAgent(
-          name="StatusPoller",
-          max_iterations=10,
-          sub_agents=[process_step, CheckCondition(name="Checker")]
-      )
-      # When poller runs, it executes process_step then Checker repeatedly
-      # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
-      ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Example: Loop with Condition
-    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
-    import type { Event, createEventActions, EventActions } from '@google/adk';
-
-    class CheckConditionAgent extends BaseAgent { // Custom agent to check state
-        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
-            const status = ctx.session.state['status'] || 'pending';
-            const isDone = status === 'completed';
-            yield createEvent({ author: 'check_condition', actions: createEventActions({ escalate: isDone }) });
-        }
-
-        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
-            // This is not implemented.
-        }
-    };
-
-    const processStep = new LlmAgent({name: 'ProcessingStep'}); // Agent that might update state['status']
-
-    const poller = new LoopAgent({
-        name: 'StatusPoller',
-        maxIterations: 10,
-        // Executes its sub_agents sequentially in a loop
-        subAgents: [processStep, new CheckConditionAgent ({name: 'Checker'})]
-    });
-    // When poller runs, it executes processStep then Checker repeatedly
-    // until Checker escalates (state['status'] === 'completed') or 10 iterations pass.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:loop-with-condition"
-    ```
-
-      ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Example: Loop with Condition
-    // Custom agent to check state and potentially escalate
-    public static class CheckConditionAgent extends BaseAgent {
-      public CheckConditionAgent(String name, String description) {
-        super(name, description, List.of(), null, null);
-      }
-
-
-      @Override
-      protected Flowable<Event> runAsyncImpl(InvocationContext ctx) {
-        String status = (String) ctx.session().state().getOrDefault("status", "pending");
-        boolean isDone = "completed".equalsIgnoreCase(status);
-
-        // Emit an event that signals to escalate (exit the loop) if the condition is met.
-        // If not done, the escalate flag will be false or absent, and the loop continues.
-        Event checkEvent = Event.builder()
-                .author(name())
-                .id(Event.generateEventId()) // Important to give events unique IDs
-                .actions(EventActions.builder().escalate(isDone).build()) // Escalate if done
-                .build();
-        return Flowable.just(checkEvent);
-      }
-    }
-
-
-    // Agent that might update state.put("status")
-    LlmAgent processingStepAgent = LlmAgent.builder().name("ProcessingStep").build();
-    // Custom agent instance for checking the condition
-    CheckConditionAgent conditionCheckerAgent = new CheckConditionAgent(
-        "ConditionChecker",
-        "Checks if the status is 'completed'."
-    );
-    LoopAgent poller = LoopAgent.builder().name("StatusPoller").maxIterations(10).subAgents(processingStepAgent, conditionCheckerAgent).build();
-    // When poller runs, it executes processingStepAgent then conditionCheckerAgent repeatedly
-    // until Checker escalates (state.get("status") == "completed") or 10 iterations pass.
-    ```
-
-### 1.3. Interaction & Communication Mechanisms { #interaction-communication-mechanisms }
-
-Agents within a system often need to exchange data or trigger actions in one another. ADK facilitates this through:
-
-#### a) Shared Session State (`session.state`)
-
-The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](/sessions/session/) object via the `InvocationContext`) to communicate passively.
-
-* **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). State changes are tracked via [`CallbackContext`](../callbacks/index.md).
-* **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
-* **Nature:** Asynchronous, passive communication. Ideal for pipelines orchestrated by `SequentialAgent` or passing data across `LoopAgent` iterations.
-* **See Also:** [State Management](../sessions/state.md)
-
-!!! note "Invocation Context and `temp:` State"
-    When a parent agent invokes a sub-agent, it passes the same `InvocationContext`. This means they share the same temporary (`temp:`) state, which is ideal for passing data that is only relevant for the current turn.
-
-=== "Python"
-
-    ```python
-    # Conceptual Example: Using output_key and reading state
-    from google.adk.agents import LlmAgent, SequentialAgent
-
-
-    agent_A = LlmAgent(name="AgentA", instruction="Find the capital of France.", output_key="capital_city")
-    agent_B = LlmAgent(name="AgentB", instruction="Tell me about the city stored in {capital_city}.")
-
-
-    pipeline = SequentialAgent(name="CityInfo", sub_agents=[agent_A, agent_B])
-    # AgentA runs, saves "Paris" to state['capital_city'].
-    # AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Example: Using outputKey and reading state
-    import { LlmAgent, SequentialAgent } from '@google/adk';
-
-    const agentA = new LlmAgent({name: 'AgentA', instruction: 'Find the capital of France.', outputKey: 'capital_city'});
-    const agentB = new LlmAgent({name: 'AgentB', instruction: 'Tell me about the city stored in {capital_city}.'});
-
-    const pipeline = new SequentialAgent({name: 'CityInfo', subAgents: [agentA, agentB]});
-    // AgentA runs, saves "Paris" to state['capital_city'].
-    // AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:output-key-state"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Example: Using outputKey and reading state
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
-
-
-    LlmAgent agentA = LlmAgent.builder()
-        .name("AgentA")
-        .instruction("Find the capital of France.")
-        .outputKey("capital_city")
-        .build();
-
-
-    LlmAgent agentB = LlmAgent.builder()
-        .name("AgentB")
-        .instruction("Tell me about the city stored in {capital_city}.")
-        .outputKey("capital_city")
-        .build();
-
-
-    SequentialAgent pipeline = SequentialAgent.builder().name("CityInfo").subAgents(agentA, agentB).build();
-    // AgentA runs, saves "Paris" to state('capital_city').
-    // AgentB runs, its instruction processor reads state.get("capital_city") to get "Paris".
-    ```
-
-#### b) LLM-Driven Delegation (Agent Transfer)
-
-Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route tasks to other suitable agents within the hierarchy.
-
-* **Mechanism:** The agent's LLM generates a specific function call: `transfer_to_agent(agent_name='target_agent_name')`.
-* **Handling:** The `AutoFlow`, used by default when sub-agents are present or transfer isn't disallowed, intercepts this call. It identifies the target agent using `root_agent.find_agent()` and updates the `InvocationContext` to switch execution focus.
-* **Requires:** The calling `LlmAgent` needs clear `instructions` on when to transfer, and potential target agents need distinct `description`s for the LLM to make informed decisions. Transfer scope (parent, sub-agent, siblings) can be configured on the `LlmAgent`.
-* **Nature:** Dynamic, flexible routing based on LLM interpretation.
-
-=== "Python"
-
-    ```python
-    # Conceptual Setup: LLM Transfer
-    from google.adk.agents import LlmAgent
-
-
-    booking_agent = LlmAgent(name="Booker", description="Handles flight and hotel bookings.")
-    info_agent = LlmAgent(name="Info", description="Provides general information and answers questions.")
-
-
-    coordinator = LlmAgent(
-        name="Coordinator",
-        model="gemini-flash-latest",
-        instruction="You are an assistant. Delegate booking tasks to Booker and info requests to Info.",
-        description="Main coordinator.",
-        # AutoFlow is typically used implicitly here
-        sub_agents=[booking_agent, info_agent]
-    )
-    # If coordinator receives "Book a flight", its LLM should generate:
-    # FunctionCall(name='transfer_to_agent', args={'agent_name': 'Booker'})
-    # ADK framework then routes execution to booking_agent.
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Setup: LLM Transfer
-    import { LlmAgent } from '@google/adk';
-
-    const bookingAgent = new LlmAgent({name: 'Booker', description: 'Handles flight and hotel bookings.'});
-    const infoAgent = new LlmAgent({name: 'Info', description: 'Provides general information and answers questions.'});
-
-    const coordinator = new LlmAgent({
-        name: 'Coordinator',
-        model: 'gemini-flash-latest',
-        instruction: 'You are an assistant. Delegate booking tasks to Booker and info requests to Info.',
-        description: 'Main coordinator.',
-        // AutoFlow is typically used implicitly here
-        subAgents: [bookingAgent, infoAgent]
-    });
-    // If coordinator receives "Book a flight", its LLM should generate:
-    // {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Booker'}}}
-    // ADK framework then routes execution to bookingAgent.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent/llmagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:llm-transfer"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Setup: LLM Transfer
-    import com.google.adk.agents.LlmAgent;
-
-
-    LlmAgent bookingAgent = LlmAgent.builder()
-        .name("Booker")
-        .description("Handles flight and hotel bookings.")
-        .build();
-
-
-    LlmAgent infoAgent = LlmAgent.builder()
-        .name("Info")
-        .description("Provides general information and answers questions.")
-        .build();
-
-
-    // Define the coordinator agent
-    LlmAgent coordinator = LlmAgent.builder()
-        .name("Coordinator")
-        .model("gemini-flash-latest") // Or your desired model
-        .instruction("You are an assistant. Delegate booking tasks to Booker and info requests to Info.")
-        .description("Main coordinator.")
-        // AutoFlow will be used by default (implicitly) because subAgents are present
-        // and transfer is not disallowed.
-        .subAgents(bookingAgent, infoAgent)
-        .build();
-
-    // If coordinator receives "Book a flight", its LLM should generate:
-    // FunctionCall.builder.name("transferToAgent").args(ImmutableMap.of("agent_name", "Booker")).build()
-    // ADK framework then routes execution to bookingAgent.
-    ```
-
-#### c) Explicit Invocation (`AgentTool`)
-
-Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a callable function or
-[Tool](/tools-custom/).
-
-* **Mechanism:** Wrap the target agent instance in `AgentTool` and include it in the parent `LlmAgent`'s `tools` list. `AgentTool` generates a corresponding function declaration for the LLM.
-* **Handling:** When the parent LLM generates a function call targeting the `AgentTool`, the framework executes `AgentTool.run_async`. This method runs the target agent, captures its final response, forwards any state/artifact changes back to the parent's context, and returns the response as the tool's result.
-* **Nature:** Synchronous (within the parent's flow), explicit, controlled invocation like any other tool.
-* **(Note:** `AgentTool` needs to be imported and used explicitly).
-
-=== "Python"
-
-    ```python
-    # Conceptual Setup: Agent as a Tool
-    from google.adk.agents import LlmAgent, BaseAgent
-    from google.adk.tools import agent_tool
-    from pydantic import BaseModel
-
-
-    # Define a target agent (could be LlmAgent or custom BaseAgent)
-    class ImageGeneratorAgent(BaseAgent): # Example custom agent
-        name: str = "ImageGen"
-        description: str = "Generates an image based on a prompt."
-        # ... internal logic ...
-        async def _run_async_impl(self, ctx): # Simplified run logic
-            prompt = ctx.session.state.get("image_prompt", "default prompt")
-            # ... generate image bytes ...
-            image_bytes = b"..."
-            yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
-
-
-    image_agent = ImageGeneratorAgent()
-    image_tool = agent_tool.AgentTool(agent=image_agent) # Wrap the agent
-
-
-    # Parent agent uses the AgentTool
-    artist_agent = LlmAgent(
-        name="Artist",
-        model="gemini-flash-latest",
-        instruction="Create a prompt and use the ImageGen tool to generate the image.",
-        tools=[image_tool] # Include the AgentTool
-    )
-    # Artist LLM generates a prompt, then calls:
-    # FunctionCall(name='ImageGen', args={'image_prompt': 'a cat wearing a hat'})
-    # Framework calls image_tool.run_async(...), which runs ImageGeneratorAgent.
-    # The resulting image Part is returned to the Artist agent as the tool result.
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Setup: Agent as a Tool
-    import { LlmAgent, BaseAgent, AgentTool, InvocationContext } from '@google/adk';
-    import type { Part, createEvent, Event } from '@google/genai';
-
-    // Define a target agent (could be LlmAgent or custom BaseAgent)
-    class ImageGeneratorAgent extends BaseAgent { // Example custom agent
-        constructor() {
-            super({name: 'ImageGen', description: 'Generates an image based on a prompt.'});
-        }
-        // ... internal logic ...
-        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> { // Simplified run logic
-            const prompt = ctx.session.state['image_prompt'] || 'default prompt';
-            // ... generate image bytes ...
-            const imageBytes = new Uint8Array(); // placeholder
-            const imagePart: Part = {inlineData: {data: Buffer.from(imageBytes).toString('base64'), mimeType: 'image/png'}};
-            yield createEvent({content: {parts: [imagePart]}});
-        }
-
-        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event, void, void> {
-            // Not implemented for this agent.
-        }
-    }
-
-    const imageAgent = new ImageGeneratorAgent();
-    const imageTool = new AgentTool({agent: imageAgent}); // Wrap the agent
-
-    // Parent agent uses the AgentTool
-    const artistAgent = new LlmAgent({
-        name: 'Artist',
-        model: 'gemini-flash-latest',
-        instruction: 'Create a prompt and use the ImageGen tool to generate the image.',
-        tools: [imageTool] // Include the AgentTool
-    });
-    // Artist LLM generates a prompt, then calls:
-    // {functionCall: {name: 'ImageGen', args: {image_prompt: 'a cat wearing a hat'}}}
-    // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
-    // The resulting image Part is returned to the Artist agent as the tool result.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "fmt"
-        "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/model"
-        "google.golang.org/adk/session"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/agenttool"
-        "google.golang.org/genai"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:agent-as-tool"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Setup: Agent as a Tool
-    import com.google.adk.agents.BaseAgent;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.tools.AgentTool;
-
-    // Example custom agent (could be LlmAgent or custom BaseAgent)
-    public class ImageGeneratorAgent extends BaseAgent  {
-
-
-      public ImageGeneratorAgent(String name, String description) {
-        super(name, description, List.of(), null, null);
-      }
-
-
-      // ... internal logic ...
-      @Override
-      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) { // Simplified run logic
-        invocationContext.session().state().get("image_prompt");
-        // Generate image bytes
-        // ...
-
-
-        Event responseEvent = Event.builder()
-            .author(this.name())
-            .content(Content.fromParts(Part.fromText("...")))
-            .build();
-
-
-        return Flowable.just(responseEvent);
-      }
-
-
-      @Override
-      protected Flowable<Event> runLiveImpl(InvocationContext invocationContext) {
-        return null;
-      }
-    }
-
-    // Wrap the agent using AgentTool
-    ImageGeneratorAgent imageAgent = new ImageGeneratorAgent("image_agent", "generates images");
-    AgentTool imageTool = AgentTool.create(imageAgent);
-
-
-    // Parent agent uses the AgentTool
-    LlmAgent artistAgent = LlmAgent.builder()
-            .name("Artist")
-            .model("gemini-flash-latest")
-            .instruction(
-                    "You are an artist. Create a detailed prompt for an image and then " +
-                            "use the 'ImageGen' tool to generate the image. " +
-                            "The 'ImageGen' tool expects a single string argument named 'request' " +
-                            "containing the image prompt. The tool will return a JSON string in its " +
-                            "'result' field, containing 'image_base64', 'mime_type', and 'status'."
-            )
-            .description("An agent that can create images using a generation tool.")
-            .tools(imageTool) // Include the AgentTool
-            .build();
-
-
-    // Artist LLM generates a prompt, then calls:
-    // FunctionCall(name='ImageGen', args={'imagePrompt': 'a cat wearing a hat'})
-    // Framework calls imageTool.runAsync(...), which runs ImageGeneratorAgent.
-    // The resulting image Part is returned to the Artist agent as the tool result.
-    ```
-
-These primitives provide the flexibility to design multi-agent interactions ranging from tightly coupled sequential workflows to dynamic, LLM-driven delegation networks.
-
-## 2. Common Multi-Agent Patterns using ADK Primitives { #common-multi-agent-patterns-using-adk-primitives }
-
-By combining ADK's composition primitives, you can implement various established patterns for multi-agent collaboration.
-
-### Coordinator/Dispatcher Pattern
-
-* **Structure:** A central [`LlmAgent`](llm-agents.md) (Coordinator) manages several specialized `sub_agents`.
-* **Goal:** Route incoming requests to the appropriate specialist agent.
-* **ADK Primitives Used:**
-    * **Hierarchy:** Coordinator has specialists listed in `sub_agents`.
-    * **Interaction:** Primarily uses **LLM-Driven Delegation** (requires clear `description`s on sub-agents and appropriate `instruction` on Coordinator) or **Explicit Invocation (`AgentTool`)** (Coordinator includes `AgentTool`-wrapped specialists in its `tools`).
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Coordinator using LLM Transfer
-    from google.adk.agents import LlmAgent
-
-
-    billing_agent = LlmAgent(name="Billing", description="Handles billing inquiries.")
-    support_agent = LlmAgent(name="Support", description="Handles technical support requests.")
-
-
-    coordinator = LlmAgent(
-        name="HelpDeskCoordinator",
-        model="gemini-flash-latest",
-        instruction="Route user requests: Use Billing agent for payment issues, Support agent for technical problems.",
-        description="Main help desk router.",
-        # allow_transfer=True is often implicit with sub_agents in AutoFlow
-        sub_agents=[billing_agent, support_agent]
-    )
-    # User asks "My payment failed" -> Coordinator's LLM should call transfer_to_agent(agent_name='Billing')
-    # User asks "I can't log in" -> Coordinator's LLM should call transfer_to_agent(agent_name='Support')
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Coordinator using LLM Transfer
-    import { LlmAgent } from '@google/adk';
-
-    const billingAgent = new LlmAgent({name: 'Billing', description: 'Handles billing inquiries.'});
-    const supportAgent = new LlmAgent({name: 'Support', description: 'Handles technical support requests.'});
-
-    const coordinator = new LlmAgent({
-        name: 'HelpDeskCoordinator',
-        model: 'gemini-flash-latest',
-        instruction: 'Route user requests: Use Billing agent for payment issues, Support agent for technical problems.',
-        description: 'Main help desk router.',
-        // allowTransfer=true is often implicit with subAgents in AutoFlow
-        subAgents: [billingAgent, supportAgent]
-    });
-    // User asks "My payment failed" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Billing'}}}
-    // User asks "I can't log in" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Support'}}}
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:coordinator-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Coordinator using LLM Transfer
-    import com.google.adk.agents.LlmAgent;
-
-    LlmAgent billingAgent = LlmAgent.builder()
-        .name("Billing")
-        .description("Handles billing inquiries and payment issues.")
-        .build();
-
-    LlmAgent supportAgent = LlmAgent.builder()
-        .name("Support")
-        .description("Handles technical support requests and login problems.")
-        .build();
-
-    LlmAgent coordinator = LlmAgent.builder()
-        .name("HelpDeskCoordinator")
-        .model("gemini-flash-latest")
-        .instruction("Route user requests: Use Billing agent for payment issues, Support agent for technical problems.")
-        .description("Main help desk router.")
-        .subAgents(billingAgent, supportAgent)
-        // Agent transfer is implicit with sub agents in the Autoflow, unless specified
-        // using .disallowTransferToParent or disallowTransferToPeers
-        .build();
-
-    // User asks "My payment failed" -> Coordinator's LLM should call
-    // transferToAgent(agentName='Billing')
-    // User asks "I can't log in" -> Coordinator's LLM should call
-    // transferToAgent(agentName='Support')
-    ```
-
-### Sequential Pipeline Pattern
-
-* **Structure:** A [`SequentialAgent`](workflow-agents/sequential-agents.md) contains `sub_agents` executed in a fixed order.
-* **Goal:** Implement a multistep process where the output of one-step feeds into the next.
-* **ADK Primitives Used:**
-    * **Workflow:** `SequentialAgent` defines the order.
-    * **Communication:** Primarily uses **Shared Session State**. Earlier agents write results (often via `output_key`), later agents read those results from `context.state`.
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Sequential Data Pipeline
-    from google.adk.agents import SequentialAgent, LlmAgent
-
-
-    validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
-    processor = LlmAgent(name="ProcessData", instruction="Process data if {validation_status} is 'valid'.", output_key="result")
-    reporter = LlmAgent(name="ReportResult", instruction="Report the result from {result}.")
-
-
-    data_pipeline = SequentialAgent(
-        name="DataPipeline",
-        sub_agents=[validator, processor, reporter]
-    )
-    # validator runs -> saves to state['validation_status']
-    # processor runs -> reads state['validation_status'], saves to state['result']
-    # reporter runs -> reads state['result']
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Sequential Data Pipeline
-    import { SequentialAgent, LlmAgent } from '@google/adk';
-
-    const validator = new LlmAgent({name: 'ValidateInput', instruction: 'Validate the input.', outputKey: 'validation_status'});
-    const processor = new LlmAgent({name: 'ProcessData', instruction: 'Process data if {validation_status} is "valid".', outputKey: 'result'});
-    const reporter = new LlmAgent({name: 'ReportResult', instruction: 'Report the result from {result}.'});
-
-    const dataPipeline = new SequentialAgent({
-        name: 'DataPipeline',
-        subAgents: [validator, processor, reporter]
-    });
-    // validator runs -> saves to state['validation_status']
-    // processor runs -> reads state['validation_status'], saves to state['result']
-    // reporter runs -> reads state['result']
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Sequential Data Pipeline
-    import com.google.adk.agents.SequentialAgent;
-
-
-    LlmAgent validator = LlmAgent.builder()
-        .name("ValidateInput")
-        .instruction("Validate the input")
-        .outputKey("validation_status") // Saves its main text output to session.state["validation_status"]
-        .build();
-
-
-    LlmAgent processor = LlmAgent.builder()
-        .name("ProcessData")
-        .instruction("Process data if {validation_status} is 'valid'")
-        .outputKey("result") // Saves its main text output to session.state["result"]
-        .build();
-
-
-    LlmAgent reporter = LlmAgent.builder()
-        .name("ReportResult")
-        .instruction("Report the result from {result}")
-        .build();
-
-
-    SequentialAgent dataPipeline = SequentialAgent.builder()
-        .name("DataPipeline")
-        .subAgents(validator, processor, reporter)
-        .build();
-
-
-    // validator runs -> saves to state['validation_status']
-    // processor runs -> reads state['validation_status'], saves to state['result']
-    // reporter runs -> reads state['result']
-    ```
-
-### Parallel Fan-Out/Gather Pattern
-
-* **Structure:** A [`ParallelAgent`](workflow-agents/parallel-agents.md) runs multiple `sub_agents` concurrently, often followed by a later agent (in a `SequentialAgent`) that aggregates results.
-* **Goal:** Execute independent tasks simultaneously to reduce latency, then combine their outputs.
-* **ADK Primitives Used:**
-    * **Workflow:** `ParallelAgent` for concurrent execution (Fan-Out). Often nested within a `SequentialAgent` to handle the subsequent aggregation step (Gather).
-    * **Communication:** Sub-agents write results to distinct keys in **Shared Session State**. The subsequent "Gather" agent reads multiple state keys.
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Parallel Information Gathering
-    from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
-
-
-    fetch_api1 = LlmAgent(name="API1Fetcher", instruction="Fetch data from API 1.", output_key="api1_data")
-    fetch_api2 = LlmAgent(name="API2Fetcher", instruction="Fetch data from API 2.", output_key="api2_data")
-
-
-    gather_concurrently = ParallelAgent(
-        name="ConcurrentFetch",
-        sub_agents=[fetch_api1, fetch_api2]
-    )
-
-
-    synthesizer = LlmAgent(
-        name="Synthesizer",
-        instruction="Combine results from {api1_data} and {api2_data}."
-    )
-
-
-    overall_workflow = SequentialAgent(
-        name="FetchAndSynthesize",
-        sub_agents=[gather_concurrently, synthesizer] # Run parallel fetch, then synthesize
-    )
-    # fetch_api1 and fetch_api2 run concurrently, saving to state.
-    # synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Parallel Information Gathering
-    import { SequentialAgent, ParallelAgent, LlmAgent } from '@google/adk';
-
-    const fetchApi1 = new LlmAgent({name: 'API1Fetcher', instruction: 'Fetch data from API 1.', outputKey: 'api1_data'});
-    const fetchApi2 = new LlmAgent({name: 'API2Fetcher', instruction: 'Fetch data from API 2.', outputKey: 'api2_data'});
-
-    const gatherConcurrently = new ParallelAgent({
-        name: 'ConcurrentFetch',
-        subAgents: [fetchApi1, fetchApi2]
-    });
-
-    const synthesizer = new LlmAgent({
-        name: 'Synthesizer',
-        instruction: 'Combine results from {api1_data} and {api2_data}.'
-    });
-
-    const overallWorkflow = new SequentialAgent({
-        name: 'FetchAndSynthesize',
-        subAgents: [gatherConcurrently, synthesizer] // Run parallel fetch, then synthesize
-    });
-    // fetchApi1 and fetchApi2 run concurrently, saving to state.
-    // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/parallelagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-gather-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Parallel Information Gathering
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.ParallelAgent;
-    import com.google.adk.agents.SequentialAgent;
-
-    LlmAgent fetchApi1 = LlmAgent.builder()
-        .name("API1Fetcher")
-        .instruction("Fetch data from API 1.")
-        .outputKey("api1_data")
-        .build();
-
-    LlmAgent fetchApi2 = LlmAgent.builder()
-        .name("API2Fetcher")
-        .instruction("Fetch data from API 2.")
-        .outputKey("api2_data")
-        .build();
-
-    ParallelAgent gatherConcurrently = ParallelAgent.builder()
-        .name("ConcurrentFetcher")
-        .subAgents(fetchApi2, fetchApi1)
-        .build();
-
-    LlmAgent synthesizer = LlmAgent.builder()
-        .name("Synthesizer")
-        .instruction("Combine results from {api1_data} and {api2_data}.")
-        .build();
-
-    SequentialAgent overallWorfklow = SequentialAgent.builder()
-        .name("FetchAndSynthesize") // Run parallel fetch, then synthesize
-        .subAgents(gatherConcurrently, synthesizer)
-        .build();
-
-    // fetch_api1 and fetch_api2 run concurrently, saving to state.
-    // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
-    ```
-
-### Hierarchical Task Decomposition
-
-* **Structure:** A multi-level tree of agents where higher-level agents break down complex goals and delegate sub-tasks to lower-level agents.
-* **Goal:** Solve complex problems by recursively breaking them down into simpler, executable steps.
-* **ADK Primitives Used:**
-    * **Hierarchy:** Multi-level `parent_agent`/`sub_agents` structure.
-    * **Interaction:** Primarily **LLM-Driven Delegation** or **Explicit Invocation (`AgentTool`)** used by parent agents to assign tasks to subagents. Results are returned up the hierarchy (via tool responses or state).
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Hierarchical Research Task
-    from google.adk.agents import LlmAgent
-    from google.adk.tools import agent_tool
-
-
-    # Low-level tool-like agents
-    web_searcher = LlmAgent(name="WebSearch", description="Performs web searches for facts.")
-    summarizer = LlmAgent(name="Summarizer", description="Summarizes text.")
-
-
-    # Mid-level agent combining tools
-    research_assistant = LlmAgent(
-        name="ResearchAssistant",
-        model="gemini-flash-latest",
-        description="Finds and summarizes information on a topic.",
-        tools=[agent_tool.AgentTool(agent=web_searcher), agent_tool.AgentTool(agent=summarizer)]
-    )
-
-
-    # High-level agent delegating research
-    report_writer = LlmAgent(
-        name="ReportWriter",
-        model="gemini-flash-latest",
-        instruction="Write a report on topic X. Use the ResearchAssistant to gather information.",
-        tools=[agent_tool.AgentTool(agent=research_assistant)]
-        # Alternatively, could use LLM Transfer if research_assistant is a sub_agent
-    )
-    # User interacts with ReportWriter.
-    # ReportWriter calls ResearchAssistant tool.
-    # ResearchAssistant calls WebSearch and Summarizer tools.
-    # Results flow back up.
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Hierarchical Research Task
-    import { LlmAgent, AgentTool } from '@google/adk';
-
-    // Low-level tool-like agents
-    const webSearcher = new LlmAgent({name: 'WebSearch', description: 'Performs web searches for facts.'});
-    const summarizer = new LlmAgent({name: 'Summarizer', description: 'Summarizes text.'});
-
-    // Mid-level agent combining tools
-    const researchAssistant = new LlmAgent({
-        name: 'ResearchAssistant',
-        model: 'gemini-flash-latest',
-        description: 'Finds and summarizes information on a topic.',
-        tools: [new AgentTool({agent: webSearcher}), new AgentTool({agent: summarizer})]
-    });
-
-    // High-level agent delegating research
-    const reportWriter = new LlmAgent({
-        name: 'ReportWriter',
-        model: 'gemini-flash-latest',
-        instruction: 'Write a report on topic X. Use the ResearchAssistant to gather information.',
-        tools: [new AgentTool({agent: researchAssistant})]
-        // Alternatively, could use LLM Transfer if researchAssistant is a subAgent
-    });
-    // User interacts with ReportWriter.
-    // ReportWriter calls ResearchAssistant tool.
-    // ResearchAssistant calls WebSearch and Summarizer tools.
-    // Results flow back up.
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/agenttool"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchical-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Hierarchical Research Task
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.tools.AgentTool;
-
-
-    // Low-level tool-like agents
-    LlmAgent webSearcher = LlmAgent.builder()
-        .name("WebSearch")
-        .description("Performs web searches for facts.")
-        .build();
-
-
-    LlmAgent summarizer = LlmAgent.builder()
-        .name("Summarizer")
-        .description("Summarizes text.")
-        .build();
-
-
-    // Mid-level agent combining tools
-    LlmAgent researchAssistant = LlmAgent.builder()
-        .name("ResearchAssistant")
-        .model("gemini-flash-latest")
-        .description("Finds and summarizes information on a topic.")
-        .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
-        .build();
-
-
-    // High-level agent delegating research
-    LlmAgent reportWriter = LlmAgent.builder()
-        .name("ReportWriter")
-        .model("gemini-flash-latest")
-        .instruction("Write a report on topic X. Use the ResearchAssistant to gather information.")
-        .tools(AgentTool.create(researchAssistant))
-        // Alternatively, could use LLM Transfer if research_assistant is a subAgent
-        .build();
-
-
-    // User interacts with ReportWriter.
-    // ReportWriter calls ResearchAssistant tool.
-    // ResearchAssistant calls WebSearch and Summarizer tools.
-    // Results flow back up.
-    ```
-
-### Review/Critique Pattern (Generator-Critic)
-
-* **Structure:** Typically involves two agents within a [`SequentialAgent`](workflow-agents/sequential-agents.md): a Generator and a Critic/Reviewer.
-* **Goal:** Improve the quality or validity of generated output by having a dedicated agent review it.
-* **ADK Primitives Used:**
-    * **Workflow:** `SequentialAgent` ensures generation happens before review.
-    * **Communication:** **Shared Session State** (Generator uses `output_key` to save output; Reviewer reads that state key). The Reviewer might save its feedback to another state key for subsequent steps.
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Generator-Critic
-    from google.adk.agents import SequentialAgent, LlmAgent
-
-
-    generator = LlmAgent(
-        name="DraftWriter",
-        instruction="Write a short paragraph about subject X.",
-        output_key="draft_text"
-    )
-
-
-    reviewer = LlmAgent(
-        name="FactChecker",
-        instruction="Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.",
-        output_key="review_status"
-    )
-
-
-    # Optional: Further steps based on review_status
-
-
-    review_pipeline = SequentialAgent(
-        name="WriteAndReview",
-        sub_agents=[generator, reviewer]
-    )
-    # generator runs -> saves draft to state['draft_text']
-    # reviewer runs -> reads state['draft_text'], saves status to state['review_status']
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Generator-Critic
-    import { SequentialAgent, LlmAgent } from '@google/adk';
-
-    const generator = new LlmAgent({
-        name: 'DraftWriter',
-        instruction: 'Write a short paragraph about subject X.',
-        outputKey: 'draft_text'
-    });
-
-    const reviewer = new LlmAgent({
-        name: 'FactChecker',
-        instruction: 'Review the text in {draft_text} for factual accuracy. Output "valid" or "invalid" with reasons.',
-        outputKey: 'review_status'
-    });
-
-    // Optional: Further steps based on review_status
-
-    const reviewPipeline = new SequentialAgent({
-        name: 'WriteAndReview',
-        subAgents: [generator, reviewer]
-    });
-    // generator runs -> saves draft to state['draft_text']
-    // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:generator-critic-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Generator-Critic
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
-
-
-    LlmAgent generator = LlmAgent.builder()
-        .name("DraftWriter")
-        .instruction("Write a short paragraph about subject X.")
-        .outputKey("draft_text")
-        .build();
-
-
-    LlmAgent reviewer = LlmAgent.builder()
-        .name("FactChecker")
-        .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
-        .outputKey("review_status")
-        .build();
-
-
-    // Optional: Further steps based on review_status
-
-
-    SequentialAgent reviewPipeline = SequentialAgent.builder()
-        .name("WriteAndReview")
-        .subAgents(generator, reviewer)
-        .build();
-
-
-    // generator runs -> saves draft to state['draft_text']
-    // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
-    ```
-
-### Iterative Refinement Pattern
-
-* **Structure:** Uses a [`LoopAgent`](workflow-agents/loop-agents.md) containing one or more agents that work on a task over multiple iterations.
-* **Goal:** Progressively improve a result (e.g., code, text, plan) stored in the session state until a quality threshold is met or a maximum number of iterations is reached.
-* **ADK Primitives Used:**
-    * **Workflow:** `LoopAgent` manages the repetition.
-    * **Communication:** **Shared Session State** is essential for agents to read the previous iteration's output and save the refined version.
-    * **Termination:** The loop typically ends based on `max_iterations` or a dedicated checking agent setting `escalate=True` in the `Event Actions` when the result is satisfactory.
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Iterative Code Refinement
-    from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
-    from google.adk.events import Event, EventActions
-    from google.adk.agents.invocation_context import InvocationContext
-    from typing import AsyncGenerator
-
-
-    # Agent to generate/refine code based on state['current_code'] and state['requirements']
-    code_refiner = LlmAgent(
-        name="CodeRefiner",
-        instruction="Read state['current_code'] (if exists) and state['requirements']. Generate/refine Python code to meet requirements. Save to state['current_code'].",
-        output_key="current_code" # Overwrites previous code in state
-    )
-
-
-    # Agent to check if the code meets quality standards
-    quality_checker = LlmAgent(
-        name="QualityChecker",
-        instruction="Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.",
-        output_key="quality_status"
-    )
-
-
-    # Custom agent to check the status and escalate if 'pass'
-    class CheckStatusAndEscalate(BaseAgent):
-        async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-            status = ctx.session.state.get("quality_status", "fail")
-            should_stop = (status == "pass")
-            yield Event(author=self.name, actions=EventActions(escalate=should_stop))
-
-
-    refinement_loop = LoopAgent(
-        name="CodeRefinementLoop",
-        max_iterations=5,
-        sub_agents=[code_refiner, quality_checker, CheckStatusAndEscalate(name="StopChecker")]
-    )
-    # Loop runs: Refiner -> Checker -> StopChecker
-    # State['current_code'] is updated each iteration.
-    # Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Iterative Code Refinement
-    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
-    import type { Event, createEvent, createEventActions } from '@google/genai';
-
-    // Agent to generate/refine code based on state['current_code'] and state['requirements']
-    const codeRefiner = new LlmAgent({
-        name: 'CodeRefiner',
-        instruction: 'Read state["current_code"] (if exists) and state["requirements"]. Generate/refine Typescript code to meet requirements. Save to state["current_code"].',
-        outputKey: 'current_code' // Overwrites previous code in state
-    });
-
-    // Agent to check if the code meets quality standards
-    const qualityChecker = new LlmAgent({
-        name: 'QualityChecker',
-        instruction: 'Evaluate the code in state["current_code"] against state["requirements"]. Output "pass" or "fail".',
-        outputKey: 'quality_status'
-    });
-
-    // Custom agent to check the status and escalate if 'pass'
-    class CheckStatusAndEscalate extends BaseAgent {
-        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
-            const status = ctx.session.state.quality_status;
-            const shouldStop = status === 'pass';
-            if (shouldStop) {
-                yield createEvent({
-                    author: 'StopChecker',
-                    actions: createEventActions(),
-                });
-            }
-        }
-
-        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
-            // This agent doesn't have a live implementation
-            yield createEvent({ author: 'StopChecker' });
-        }
-    }
-
-    // Loop runs: Refiner -> Checker -> StopChecker
-    // State['current_code'] is updated each iteration.
-    // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
-    const refinementLoop = new LoopAgent({
-        name: 'CodeRefinementLoop',
-        maxIterations: 5,
-        subAgents: [codeRefiner, qualityChecker, new CheckStatusAndEscalate({name: 'StopChecker'})]
-    });
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:iterative-refinement-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Iterative Code Refinement
-    import com.google.adk.agents.BaseAgent;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.LoopAgent;
-    import com.google.adk.events.Event;
-    import com.google.adk.events.EventActions;
-    import com.google.adk.agents.InvocationContext;
-    import io.reactivex.rxjava3.core.Flowable;
-    import java.util.List;
-
-
-    // Agent to generate/refine code based on state['current_code'] and state['requirements']
-    LlmAgent codeRefiner = LlmAgent.builder()
-        .name("CodeRefiner")
-        .instruction("Read state['current_code'] (if exists) and state['requirements']. Generate/refine Java code to meet requirements. Save to state['current_code'].")
-        .outputKey("current_code") // Overwrites previous code in state
-        .build();
-
-
-    // Agent to check if the code meets quality standards
-    LlmAgent qualityChecker = LlmAgent.builder()
-        .name("QualityChecker")
-        .instruction("Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.")
-        .outputKey("quality_status")
-        .build();
-
-
-    BaseAgent checkStatusAndEscalate = new BaseAgent(
-        "StopChecker","Checks quality_status and escalates if 'pass'.", List.of(), null, null) {
-
-
-      @Override
-      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
-        String status = (String) invocationContext.session().state().getOrDefault("quality_status", "fail");
-        boolean shouldStop = "pass".equals(status);
-
-
-        EventActions actions = EventActions.builder().escalate(shouldStop).build();
-        Event event = Event.builder()
-            .author(this.name())
-            .actions(actions)
-            .build();
-        return Flowable.just(event);
-      }
-    };
-
-
-    LoopAgent refinementLoop = LoopAgent.builder()
-        .name("CodeRefinementLoop")
-        .maxIterations(5)
-        .subAgents(codeRefiner, qualityChecker, checkStatusAndEscalate)
-        .build();
-
-
-    // Loop runs: Refiner -> Checker -> StopChecker
-    // State['current_code'] is updated each iteration.
-    // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5
-    // iterations.
-    ```
-
-### Human-in-the-Loop Pattern
-
-* **Structure:** Integrates human intervention points within an agent workflow.
-* **Goal:** Allow for human oversight, approval, correction, or tasks that AI cannot perform.
-* **ADK Primitives Used (Conceptual):**
-    * **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
-    * **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
-    * **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
-    * **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
-
-=== "Python"
-
-    ```python
-    # Conceptual Code: Using a Tool for Human Approval
-    from google.adk.agents import LlmAgent, SequentialAgent
-    from google.adk.tools import FunctionTool
-
-
-    # --- Assume external_approval_tool exists ---
-    # This tool would:
-    # 1. Take details (e.g., request_id, amount, reason).
-    # 2. Send these details to a human review system (e.g., via API).
-    # 3. Poll or wait for the human response (approved/rejected).
-    # 4. Return the human's decision.
-    # async def external_approval_tool(amount: float, reason: str) -> str: ...
-    approval_tool = FunctionTool(func=external_approval_tool)
-
-
-    # Agent that prepares the request
-    prepare_request = LlmAgent(
-        name="PrepareApproval",
-        instruction="Prepare the approval request details based on user input. Store amount and reason in state.",
-        # ... likely sets state['approval_amount'] and state['approval_reason'] ...
-    )
-
-
-    # Agent that calls the human approval tool
-    request_approval = LlmAgent(
-        name="RequestHumanApproval",
-        instruction="Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].",
-        tools=[approval_tool],
-        output_key="human_decision"
-    )
-
-
-    # Agent that proceeds based on human decision
-    process_decision = LlmAgent(
-        name="ProcessDecision",
-        instruction="Check {human_decision}. If 'approved', proceed. If 'rejected', inform user."
-    )
-
-
-    approval_workflow = SequentialAgent(
-        name="HumanApprovalWorkflow",
-        sub_agents=[prepare_request, request_approval, process_decision]
-    )
-    ```
-
-=== "Typescript"
-
-    ```typescript
-    // Conceptual Code: Using a Tool for Human Approval
-    import { LlmAgent, SequentialAgent, FunctionTool } from '@google/adk';
-    import { z } from 'zod';
-
-    // --- Assume externalApprovalTool exists ---
-    // This tool would:
-    // 1. Take details (e.g., request_id, amount, reason).
-    // 2. Send these details to a human review system (e.g., via API).
-    // 3. Poll or wait for the human response (approved/rejected).
-    // 4. Return the human's decision.
-    async function externalApprovalTool(params: {amount: number, reason: string}): Promise<{decision: string}> {
-      // ... implementation to call external system
-      return {decision: 'approved'}; // or 'rejected'
-    }
-
-    const approvalTool = new FunctionTool({
-      name: 'external_approval_tool',
-      description: 'Sends a request for human approval.',
-      parameters: z.object({
-        amount: z.number(),
-        reason: z.string(),
-      }),
-      execute: externalApprovalTool,
-    });
-
-
-    // Agent that prepares the request
-    const prepareRequest = new LlmAgent({
-        name: 'PrepareApproval',
-        instruction: 'Prepare the approval request details based on user input. Store amount and reason in state.',
-        // ... likely sets state['approval_amount'] and state['approval_reason'] ...
-    });
-
-    // Agent that calls the human approval tool
-    const requestApproval = new LlmAgent({
-        name: 'RequestHumanApproval',
-        instruction: 'Use the external_approval_tool with amount from state["approval_amount"] and reason from state["approval_reason"].',
-        tools: [approvalTool],
-        outputKey: 'human_decision'
-    });
-
-    // Agent that proceeds based on human decision
-    const processDecision = new LlmAgent({
-        name: 'ProcessDecision',
-        instruction: 'Check {human_decision}. If "approved", proceed. If "rejected", inform user.'
-    });
-
-    const approvalWorkflow = new SequentialAgent({
-        name: 'HumanApprovalWorkflow',
-        subAgents: [prepareRequest, requestApproval, processDecision]
-    });
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-        "google.golang.org/adk/tool"
-    )
-
-    --8<-- "examples/go/snippets/agents/multi-agent/main.go:human-in-loop-pattern"
-    ```
-
-=== "Java"
-
-    ```java
-    // Conceptual Code: Using a Tool for Human Approval
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.agents.SequentialAgent;
-    import com.google.adk.tools.FunctionTool;
-
-
-    // --- Assume external_approval_tool exists ---
-    // This tool would:
-    // 1. Take details (e.g., request_id, amount, reason).
-    // 2. Send these details to a human review system (e.g., via API).
-    // 3. Poll or wait for the human response (approved/rejected).
-    // 4. Return the human's decision.
-    // public boolean externalApprovalTool(float amount, String reason) { ... }
-    FunctionTool approvalTool = FunctionTool.create(externalApprovalTool);
-
-
-    // Agent that prepares the request
-    LlmAgent prepareRequest = LlmAgent.builder()
-        .name("PrepareApproval")
-        .instruction("Prepare the approval request details based on user input. Store amount and reason in state.")
-        // ... likely sets state['approval_amount'] and state['approval_reason'] ...
-        .build();
-
-
-    // Agent that calls the human approval tool
-    LlmAgent requestApproval = LlmAgent.builder()
-        .name("RequestHumanApproval")
-        .instruction("Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].")
-        .tools(approvalTool)
-        .outputKey("human_decision")
-        .build();
-
-
-    // Agent that proceeds based on human decision
-    LlmAgent processDecision = LlmAgent.builder()
-        .name("ProcessDecision")
-        .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
-        .build();
-
-
-    SequentialAgent approvalWorkflow = SequentialAgent.builder()
-        .name("HumanApprovalWorkflow")
-        .subAgents(prepareRequest, requestApproval, processDecision)
-        .build();
-    ```
-
-#### Human in the Loop with Policy
-
-A more advanced and structured way to implement Human-in-the-Loop is by using a `PolicyEngine`. This approach allows you to define policies that can trigger a confirmation step from a user before a tool is executed. The `SecurityPlugin` intercepts a tool call, consults the `PolicyEngine`, and if the policy dictates, it will automatically request user confirmation. This pattern is more robust for enforcing governance and security rules.
-
-Here's how it works:
-
-1.  **`SecurityPlugin`**: You add this plugin to your `Runner`. It acts as an interceptor for all tool calls.
-2.  **`BasePolicyEngine`**: You create a custom class that implements this interface. Its `evaluate()` method contains your logic to decide if a tool call needs confirmation.
-3.  **`PolicyOutcome.CONFIRM`**: When your `evaluate()` method returns this outcome, the `SecurityPlugin` pauses the tool execution and generates a special `FunctionCall` using `getAskUserConfirmationFunctionCalls`.
-4.  **Application Handling**: Your application code receives this special function call and presents the confirmation request to the user.
-5.  **User Confirmation**: Once the user confirms, your application sends a `FunctionResponse` back to the agent, which allows the `SecurityPlugin` to proceed with the original tool execution.
-
-!!! Note "TypeScript Recommended Pattern"
-    The Policy-based pattern is the recommended approach for implementing Human-in-the-Loop workflows in TypeScript. Support in other ADK languages is planned for future releases.
-
-A conceptual example of using a `CustomPolicyEngine` to require user confirmation before executing any tool is shown below.
-
-=== "TypeScript"
-
-    ```typescript
-    const rootAgent = new LlmAgent({
-      name: 'weather_time_agent',
-      model: 'gemini-flash-latest',
-      description:
-          'Agent to answer questions about the time and weather in a city.',
-      instruction:
-          'You are a helpful agent who can answer user questions about the time and weather in a city.',
-      tools: [getWeatherTool],
-    });
-
-    class CustomPolicyEngine implements BasePolicyEngine {
-      async evaluate(_context: ToolCallPolicyContext): Promise<PolicyCheckResult> {
-        // Default permissive implementation
-        return Promise.resolve({
-          outcome: PolicyOutcome.CONFIRM,
-          reason: 'Needs confirmation for tool call',
-        });
-      }
-    }
-
-    const runner = new InMemoryRunner({
-        agent: rootAgent,
-        appName,
-        plugins: [new SecurityPlugin({policyEngine: new CustomPolicyEngine()})]
-    });
-    ```
-
-    You can find the full code sample [here](https://github.com/google/adk-docs/blob/main/examples/typescript/snippets/agents/workflow-agents/hitl_confirmation_agent.ts).
-
-### Combining Patterns
-
-These patterns provide starting points for structuring your multi-agent systems. You can mix and match them as needed to create the most effective architecture for your specific application.
+    === "Kotlin"
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:full_example"
+        ```
+
+## Additional features
+
+ADK provides additonal features for agents not covered in this guide, including
+the following:
+
+* **Callbacks:** Add more controls by intercepting agent execution points,
+  including before and after model calls, and before and after tool calls with
+  [Callbacks](/callbacks/types-of-callbacks/).
+* **Multi-Agent Control:** Advanced strategies for agent interaction, including
+  planning (`planner`), controlling agent transfer
+  (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`), and system-wide
+  instructions (`global_instruction`). See [Custom agent workflows](/agents/custom-agents/).
 
 ================
 File: docs/agents/routing.md
@@ -7186,7 +6507,7 @@ it can select a fallback.
 `RoutedAgent` is different from [workflow agents](workflow-agents/index.md) like
 `SequentialAgent` or `ParallelAgent`, which orchestrate multiple agents in a
 fixed pattern, and from [LLM-driven
-delegation](multi-agents.md#b-llm-driven-delegation-agent-transfer), where the
+delegation](/agents/custom-agents/#delegation), where the
 LLM decides which agent to hand off to. With `RoutedAgent`, you write an
 explicit routing function that selects **one** agent per invocation. For
 model-level routing, see [Model routing](models/routing.md).
@@ -7574,7 +6895,7 @@ File: docs/api-reference/index.md
 ================
 # API Reference
 
-The Agent Development Kit (ADK) provides comprehensive API references for both Python and Java, allowing you to dive deep into all available classes, methods, and functionalities.
+The Agent Development Kit (ADK) provides comprehensive API references across supported languages, allowing you to dive deep into all available classes, methods, and functionalities.
 
 <div class="grid cards" markdown>
 
@@ -7587,6 +6908,17 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
     <!-- Assuming your Python API docs are in a 'python' subdirectory -->
     <!-- Or link to an external ReadTheDocs, etc. -->
     <!-- [:octicons-arrow-right-24: View Python API Docs](python/index.html) -->
+
+<!-- This comment forces a block separation -->
+
+-   :fontawesome-brands-js:{ .lg .middle } **Typescript API Reference**
+
+    ---
+    Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
+
+    [:octicons-arrow-right-24: View Typescript API Docs](https://adk.dev/api-reference/typescript/) <br>
+    <!-- Assuming your Typescript API docs are in a 'typescript' subdirectory -->
+    <!-- [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) -->
 
 <!-- This comment forces a block separation -->
 
@@ -7611,14 +6943,12 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 
 <!-- This comment forces a block separation -->
 
--   :fontawesome-brands-js:{ .lg .middle } **Typescript API Reference**
+-   :simple-kotlin:{ .lg .middle } **Kotlin API Reference**
 
     ---
-    Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
+    Access the complete KDoc documentation for the Kotlin Agent Development Kit. This reference covers all packages, classes, and functions for building AI agents with Kotlin.
 
-    [:octicons-arrow-right-24: View Typescript API Docs](https://adk.dev/api-reference/typescript/) <br>
-    <!-- Assuming your Typescript API docs are in a 'typescript' subdirectory -->
-    <!-- [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) -->
+    [:octicons-arrow-right-24: View Kotlin API Docs](https://adk.dev/api-reference/kotlin/) <br>
 
 <!-- This comment forces a block separation -->
 
@@ -7654,7 +6984,7 @@ The Agent Development Kit (ADK) provides comprehensive API references for both P
 ================
 File: docs/apps/index.md
 ================
-# Apps: workflow management class
+# App workflow management class
 
 <div class="language-support-tag">
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-java">Java v0.1.0</span>
@@ -7836,7 +7166,7 @@ You can use the ***Runner*** class to run your agent workflow using the
 ## Next steps
 
 For a more complete sample code implementation, see the
-[Hello World App](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world_app)
+[Hello World App](https://github.com/google/adk-python/tree/main/contributing/samples/core/app)
 code example.
 
 ================
@@ -7845,7 +7175,7 @@ File: docs/artifacts/index.md
 # Artifacts
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 In ADK, **Artifacts** represent a crucial mechanism for managing named, versioned binary data associated either with a specific user interaction session or persistently with a user across multiple sessions. They allow your agents and tools to handle data beyond simple text strings, enabling richer interactions involving files, images, audio, and other binary formats.
@@ -7936,6 +7266,12 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
                     + "...");
         }
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:representation"
     ```
 
 *   **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts`. ADK provides various implementations, such as:
@@ -8088,6 +7424,12 @@ Understanding artifacts involves grasping a few key components: the service that
     // Now, contexts within runs managed by this runner can use artifact methods
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:configure_runner"
+    ```
+
 ### Artifact Data
 
 * **Standard Representation:** Artifact content is universally represented using the `google.genai.types.Part` object, the same structure used for parts of LLM messages.
@@ -8151,6 +7493,12 @@ Understanding artifacts involves grasping a few key components: the service that
 
     ```java
     --8<-- "examples/java/snippets/src/main/java/artifacts/ArtifactDataExample.java:full_code"
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:artifact_data"
     ```
 
 ### Filename
@@ -8241,6 +7589,12 @@ Understanding artifacts involves grasping a few key components: the service that
     // the ArtifactService implementation should recognize the "user:" prefix
     // and scope it to app_name and user_id, making it accessible across sessions for that user.
     // artifactService.saveArtifact(appName, userId, sessionId1, userConfigFilename, someData);
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:namespacing"
     ```
 
 These core concepts work together to provide a flexible system for managing binary data within the ADK framework.
@@ -8362,6 +7716,15 @@ Before you can use any artifact methods via the context objects, you **must** pr
     }
     ```
 
+=== "Kotlin"
+
+    In Kotlin, you provide this instance when initializing your `Runner`.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:configure_runner"
+    ```
+    If no `artifactService` is configured, calling `saveArtifact`, `loadArtifact`, or `listArtifacts` on the context objects will throw an exception.
+
 ### Accessing Methods
 
 The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks) in Python, Go, and Java and available on the unified `Context` in TypeScript.
@@ -8473,6 +7836,14 @@ The artifact interaction methods are available directly on instances of `Callbac
             // Due to async nature, in a real app, ensure program waits or handles completion.
           }
         }
+        ```
+
+    === "Kotlin"
+
+        In Kotlin, you access the `ArtifactService` from the `ToolContext` (or `CallbackContext` via `invocationContext`) to save an artifact.
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:interaction_save"
         ```
 
 #### Loading Artifacts
@@ -8648,6 +8019,14 @@ The artifact interaction methods are available directly on instances of `Callbac
         }
         ```
 
+    === "Kotlin"
+
+        In Kotlin, you can load an artifact directly from the `ToolContext` (or `CallbackContext`) using `context.loadArtifact(name)`.
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:interaction_load"
+        ```
+
 #### Using `LoadArtifactsTool`
 
 You can add `LoadArtifactsTool` when the model should decide which available
@@ -8709,6 +8088,15 @@ artifact in a later turn.
 
     Make sure the `runner.Config` for this agent includes an
     `ArtifactService`; otherwise artifact listing and loading will fail.
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:load_artifacts_tool"
+    ```
+
+    Make sure the `Runner` for this agent is configured with an
+    `artifactService`; otherwise artifact listing and loading will fail.
 
 #### Listing Artifact Filenames
 
@@ -8861,6 +8249,12 @@ artifact in a later turn.
         }
         ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:listing_artifacts"
+    ```
+
 These methods for saving, loading, and listing provide a convenient and consistent way to manage binary data persistence within ADK, whether using Python's context objects or directly interacting with the `BaseArtifactService` in Java, regardless of the chosen backend storage implementation.
 
 ## Available Implementations
@@ -8940,6 +8334,11 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
         }
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:in_memory_service"
+        ```
 ### GcsArtifactService
 
 
@@ -9007,6 +8406,11 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
         --8<-- "examples/java/snippets/src/main/java/artifacts/GcsServiceSetup.java:full_code"
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:gcs_service"
+        ```
 Choosing the appropriate `ArtifactService` implementation depends on your application's requirements for data persistence, scalability, and operational environment.
 
 ## Best Practices
@@ -9211,7 +8615,7 @@ File: docs/callbacks/index.md
 # Callbacks: Observe, Customize, and Control Agent Behavior
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to hook into an agent's execution process. They allow you to observe, customize, and even control the agent's behavior at specific, predefined points without modifying the core ADK framework code.
@@ -9271,6 +8675,12 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
         --8<-- "examples/java/snippets/src/main/java/callbacks/AgentWithBeforeModelCallback.java:init"
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/callbacks/CallbackBasic.kt:callback_basic"
+        ```
+
 ## The Callback Mechanism: Interception and Control
 
 When the ADK framework encounters a point where a callback can run (e.g., just before calling the LLM), it checks if you provided a corresponding callback function for that agent. If you did, the framework executes your function.
@@ -9281,20 +8691,20 @@ When the ADK framework encounters a point where a callback can run (e.g., just b
 
 1. **`return None` (Allow Default Behavior):**
 
-    * The specific return type can vary depending on the language. In Java, the equivalent return type is `Optional.empty()`. Refer to the API documentation for language specific guidance.
-    * This is the standard way to signal that your callback has finished its work (e.g., logging, inspection, minor modifications to *mutable* input arguments like `llm_request`) and that the ADK agent should **proceed with its normal operation**.
-    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `None` means the next step in the sequence (running the agent logic, calling the LLM, executing the tool) will occur.
-    * For `after_*` callbacks (`after_agent`, `after_model`, `after_tool`), returning `None` means the result just produced by the preceding step (the agent's output, the LLM's response, the tool's result) will be used as is.
+    * The specific return type can vary depending on the language. In Java, the equivalent return type is `Optional.empty()`. In Kotlin, it is `CallbackChoice.Continue(value)` (for `before_*` callbacks) or returning the original object (for `after_*` callbacks). Refer to the API documentation for language specific guidance.
+    * This is the standard way to signal that your callback has finished its work (e.g., logging, inspection, minor modifications to input arguments) and that the ADK agent should **proceed with its normal operation**.
+    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `CallbackChoice.Continue(...)` means the next step in the sequence (running the agent logic, calling the LLM, executing the tool) will occur.
+    * For `after_*` callbacks (`after_agent`, `after_model`, `after_tool`), returning the result just produced (the agent's output, the LLM's response, the tool's result) as is means the framework will continue processing.
 
 2. **`return <Specific Object>` (Override Default Behavior):**
 
-    * Returning a *specific type of object* (instead of `None`) is how you **override** the ADK agent's default behavior. The framework will use the object you return and *skip* the step that would normally follow or *replace* the result that was just generated.
-    * **`before_agent_callback` → `types.Content`**: Skips the agent's main execution logic (`_run_async_impl` / `_run_live_impl`). The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.
-    * **`before_model_callback` → `LlmResponse`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.
-    * **`before_tool_callback` → `dict` or `Map`**: Skips the execution of the actual tool function (or sub-agent). The returned `dict` is used as the result of the tool call, which is then typically passed back to the LLM. Perfect for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.
-    * **`after_agent_callback` → `types.Content`**: *Replaces* the `Content` that the agent's run logic just produced.
+    * Returning a *specific type of object* (instead of signaling "Continue") is how you **override** the ADK agent's default behavior. In Kotlin, this is achieved by returning `CallbackChoice.Break(value)` (for `before_*` callbacks) or a replacement object (for `after_*` callbacks). The framework will use the object you return and *skip* the step that would normally follow or *replace* the result that was just generated.
+    * **`before_agent_callback` → `CallbackChoice.Break(Content)`**: Skips the agent's main execution logic. The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.
+    * **`before_model_callback` → `CallbackChoice.Break(LlmResponse)`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.
+    * **`before_tool_callback` → `CallbackChoice.Break(Map<String, Any>)`**: Skips the execution of the actual tool function (or sub-agent). The returned `Map` is used as the result of the tool call, which is then typically passed back to the LLM. Perfect for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.
+    * **`after_agent_callback` → `Content`**: *Replaces* the `Content` that the agent's run logic just produced.
     * **`after_model_callback` → `LlmResponse`**: *Replaces* the `LlmResponse` received from the LLM. Useful for sanitizing outputs, adding standard disclaimers, or modifying the LLM's response structure.
-    * **`after_tool_callback` → `dict` or `Map`**: *Replaces* the `dict` result returned by the tool. Allows for post-processing or standardization of tool outputs before they are sent back to the LLM.
+    * **`after_tool_callback` → `Map<String, Any>`**: *Replaces* the `Map` result returned by the tool. Allows for post-processing or standardization of tool outputs before they are sent back to the LLM.
 
 **Conceptual Code Example (Guardrail):**
 
@@ -9323,6 +8733,11 @@ This example demonstrates the common pattern for a guardrail using `before_model
     === "Java"
         ```java
         --8<-- "examples/java/snippets/src/main/java/callbacks/BeforeModelGuardrailExample.java:init"
+        ```
+
+    === "Kotlin"
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/callbacks/BeforeModelCallback.kt:before_model_callback"
         ```
 
 By understanding this mechanism of returning `None` versus returning specific objects, you can precisely control the agent's execution path, making callbacks an essential tool for building sophisticated and reliable agents with ADK.
@@ -10141,7 +9556,7 @@ all agents within your app.
 For a full implementation of how to use and test the context caching feature,
 see the following sample:
 
--   [`cache_analysis`](https://github.com/google/adk-python/tree/main/contributing/samples/cache_analysis):
+-   [`cache_analysis`](https://github.com/google/adk-python/tree/main/contributing/samples/context_management/cache_analysis):
     A code sample that demonstrates how to analyze the performance of context
     caching.
 
@@ -10150,7 +9565,7 @@ a session, consider using the `static_instruction` parameter for an agent, which
 allows you to amend the system instructions for a generative model. For more
 details, see this sample code:
 
--   [`static_instruction`](https://github.com/google/adk-python/tree/main/contributing/samples/static_instruction):
+-   [`static_instruction`](https://github.com/google/adk-python/tree/main/contributing/samples/context_management/static_instruction):
     An implementation of a digital pet agent using static instructions.
 
 ================
@@ -15144,7 +14559,7 @@ config = EnvironmentSimulationConfig(
 
 agent = LlmAgent(
     name="my_agent",
-    model="gemini-2.5-flash",
+    model="gemini-flash-latest",
     tools=[get_user_profile],
     before_tool_callback=EnvironmentSimulationFactory.create_callback(config),
 )
@@ -15190,7 +14605,7 @@ The top-level configuration object.
 Field                            | Type                         | Default              | Description
 :------------------------------- | :--------------------------- | :------------------- | :----------
 `tool_simulation_configs`        | `List[ToolSimulationConfig]` | required             | One entry per tool to simulate. Must not be empty, and tool names must be unique.
-`simulation_model`               | `str`                        | `"gemini-2.5-flash"` | The LLM used for tool connection analysis and mock response generation.
+`simulation_model`               | `str`                        | `"gemini-flash-latest"` | The LLM used for tool connection analysis and mock response generation.
 `simulation_model_configuration` | `GenerateContentConfig`      | thinking enabled     | LLM generation config for internal simulator calls.
 `environment_data`               | `str \| None`                | `None`               | Optional environment context (e.g., a JSON database snapshot) passed to mock strategies to generate more realistic responses.
 `tracing`                        | `str \| None`                | `None`               | Tracing data (e.g., a prior agent run trace in JSON string format) to provide historical context.
@@ -16053,7 +15468,7 @@ A `ConversationScenario` consists of the following components:
     expertise or linguistic style.
 
 A sample conversation scenario for the
-[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
 agent is shown below:
 
 ```json
@@ -16121,14 +15536,14 @@ below summarizes the behaviors for each persona:
 | **Troubleshoot Agent Errors** | Once | Never | Never |
 | **Tone** | Professional | Conversational | Conversational |
 
-## Example: Evaluating the [`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world) agent with conversation scenarios
+## Example: Evaluating the [`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world) agent with conversation scenarios
 
 To add evaluation cases containing conversation scenarios to a new or existing
 [`EvalSet`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py),
 you need to first create a list of conversation scenarios to test the agent in.
 
 Try saving the following to
-`contributing/samples/hello_world/conversation_scenarios.json`:
+`contributing/samples/core/hello_world/conversation_scenarios.json`:
 
 ```json
 {
@@ -16150,7 +15565,7 @@ Try saving the following to
 You will also need a session input file containing information used during
 evaluation.
 Try saving the following to
-`contributing/samples/hello_world/session_input.json`:
+`contributing/samples/core/hello_world/session_input.json`:
 
 ```json
 {
@@ -16164,15 +15579,15 @@ Then, you can add the conversation scenarios to an `EvalSet`:
 ```bash
 # (optional) create a new EvalSet
 adk eval_set create \
-  contributing/samples/hello_world \
+  contributing/samples/core/hello_world \
   eval_set_with_scenarios
 
 # add conversation scenarios to the EvalSet as new eval cases
 adk eval_set add_eval_case \
-  contributing/samples/hello_world \
+  contributing/samples/core/hello_world \
   eval_set_with_scenarios \
-  --scenarios_file contributing/samples/hello_world/conversation_scenarios.json \
-  --session_input_file contributing/samples/hello_world/session_input.json
+  --scenarios_file contributing/samples/core/hello_world/conversation_scenarios.json \
+  --session_input_file contributing/samples/core/hello_world/session_input.json
 ```
 
 By default, ADK runs evaluations with metrics that require the agent's expected
@@ -16182,7 +15597,7 @@ Since that is not the case for a dynamic conversation scenario, we will use an
 with some alternate supported metrics.
 
 Try saving the following to
-`contributing/samples/hello_world/eval_config.json`:
+`contributing/samples/core/hello_world/eval_config.json`:
 
 ```json
 {
@@ -16202,8 +15617,8 @@ Finally, you can use the `adk eval` command to run the evaluation:
 
 ```bash
 adk eval \
-    contributing/samples/hello_world \
-    --config_file_path contributing/samples/hello_world/eval_config.json \
+    contributing/samples/core/hello_world \
+    --config_file_path contributing/samples/core/hello_world/eval_config.json \
     eval_set_with_scenarios \
     --print_detailed_results
 ```
@@ -16329,7 +15744,7 @@ File: docs/events/index.md
 # Events
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Events are the fundamental units of information flow within the Agent Development Kit (ADK). They represent every significant occurrence during an agent's interaction lifecycle, from initial user input to the final response and all the steps in between. Understanding events is crucial because they are the primary way components communicate, state is managed, and control flow is directed.
@@ -16445,6 +15860,27 @@ An `Event` in ADK is an immutable record representing a specific point in the ag
     //     // ... other fields like turnComplete, longRunningToolIds etc.
     // }
     ```
+
+=== "Kotlin"
+    In Kotlin, this is an instance of the `com.google.adk.kt.events.Event` class.
+
+    ```kotlin
+    // Conceptual Structure of an Event (Kotlin)
+    // data class Event(
+    //     val author: String,
+    //     val content: Content? = null,
+    //     val actions: EventActions = EventActions(),
+    //     val invocationId: String? = null,
+    //     val branch: String? = null,
+    //     val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
+    //     val id: String = Uuid.random(),
+    //     val partial: Boolean = false,
+    //     val turnComplete: Boolean = false,
+    //     val longRunningToolIds: Set<String> = emptySet()
+    // )
+    ```
+
+
 
 Events are central to ADK's operation for several key reasons:
 
@@ -16648,6 +16084,36 @@ Quickly determine what an event represents by checking:
     //         System.out.println("  Type: Control Signal or Other");
     //     }
     // });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    // Pseudocode: Basic event identification (Kotlin)
+    // runner.runAsync(...).collect { event ->
+    //     println("Event from: ${event.author}")
+    //
+    //     val content = event.content
+    //     if (content != null && content.parts.isNotEmpty()) {
+    //         if (event.functionCalls().isNotEmpty()) {
+    //             println("  Type: Tool Call Request")
+    //         } else if (event.functionResponses().isNotEmpty()) {
+    //             println("  Type: Tool Result")
+    //         } else if (content.parts[0].text != null) {
+    //             if (event.partial) {
+    //                 println("  Type: Streaming Text Chunk")
+    //             } else {
+    //                 println("  Type: Complete Text Message")
+    //             }
+    //         } else {
+    //             println("  Type: Other Content (e.g., code result)")
+    //         }
+    //     } else if (event.actions.stateDelta.isNotEmpty() || event.actions.artifactDelta.isNotEmpty()) {
+    //         println("  Type: State/Artifact Update")
+    //     } else {
+    //         println("  Type: Control Signal or Other")
+    //     }
+    // }
     ```
 
 ### Extracting Key Information
@@ -18503,6 +17969,13 @@ set up and running a simple agent in less than 20 minutes.
 
     [:octicons-arrow-right-24: Start with Python](python.md) <br>
 
+-   :fontawesome-brands-js:{ .lg .middle } **TypeScript Quickstart**
+
+    ---
+    Create your first TypeScript ADK agent in minutes.
+
+    [:octicons-arrow-right-24: Start with TypeScript](typescript.md) <br>
+
 -   :fontawesome-brands-golang:{ .lg .middle } **Go Quickstart**
 
     ---
@@ -18517,12 +17990,12 @@ set up and running a simple agent in less than 20 minutes.
 
     [:octicons-arrow-right-24: Start with Java](java.md) <br>
 
--   :fontawesome-brands-js:{ .lg .middle } **TypeScript Quickstart**
+-   :simple-kotlin:{ .lg .middle } **Kotlin Quickstart**
 
     ---
-    Create your first TypeScript ADK agent in minutes.
+    Create your first Kotlin ADK agent in minutes.
 
-    [:octicons-arrow-right-24: Start with TypeScript](typescript.md) <br>
+    [:octicons-arrow-right-24: Start with Kotlin](kotlin.md) <br>
 </div>
 
 To get started with a technical overview check this [link](about.md).
@@ -18530,11 +18003,20 @@ To get started with a technical overview check this [link](about.md).
 ================
 File: docs/get-started/installation.md
 ================
-# Installing ADK
+---
+hide:
+  - toc
+---
+
+# Advanced setup
+
+This page provides detailed installation and configuration instructions for ADK
+across supported languages. For a guided introduction, start with the
+[quickstart for your language](/get-started/).
 
 === "Python"
 
-    ## Create & activate virtual environment
+    **Create & activate virtual environment**
 
     We recommend creating a virtual Python environment using
     [venv](https://docs.python.org/3/library/venv.html):
@@ -18543,8 +18025,8 @@ File: docs/get-started/installation.md
     python3 -m venv .venv
     ```
 
-    Now, you can activate the virtual environment using the appropriate command for
-    your operating system and environment:
+    Now, you can activate the virtual environment using the appropriate command
+    for your operating system and environment:
 
     ```
     # Mac / Linux
@@ -18557,7 +18039,7 @@ File: docs/get-started/installation.md
     .venv\Scripts\Activate.ps1
     ```
 
-    ### Install ADK
+    **Install ADK**
 
     ```bash
     pip install google-adk
@@ -18571,7 +18053,7 @@ File: docs/get-started/installation.md
 
 === "TypeScript"
 
-    ### Install ADK and ADK DevTools
+    **Install ADK and ADK DevTools**
 
     ```bash
     npm install @google/adk @google/adk-devtools
@@ -18579,7 +18061,7 @@ File: docs/get-started/installation.md
 
 === "Go"
 
-    ## Create a new Go module
+    **Create a new Go module**
 
     If you are starting a new project, you can create a new Go module:
 
@@ -18587,7 +18069,7 @@ File: docs/get-started/installation.md
     go mod init example.com/my-agent
     ```
 
-    ## Install ADK
+    **Install ADK**
 
     To add the ADK to your project, run the following command:
 
@@ -18597,14 +18079,17 @@ File: docs/get-started/installation.md
 
     This will add the ADK as a dependency to your `go.mod` file.
 
-    (Optional) Verify your installation by checking your `go.mod` file for the `google.golang.org/adk` entry.
+    (Optional) Verify your installation by checking your `go.mod` file for the
+    `google.golang.org/adk` entry.
 
 === "Java"
 
-    You can either use maven or gradle to add the `google-adk` and `google-adk-dev` package.
+    You can either use maven or gradle to add the `google-adk` and
+    `google-adk-dev` package.
 
-    `google-adk` is the core Java ADK library. Java ADK also comes with a pluggable example SpringBoot server to run your agents seamlessly. This optional
-    package is present as part of `google-adk-dev`.
+    `google-adk` is the core Java ADK library. Java ADK also comes with a
+    pluggable example SpringBoot server to run your agents seamlessly. This
+    optional package is present as part of `google-adk-dev`.
 
     If you are using maven, add the following to your `pom.xml`:
 
@@ -18644,7 +18129,9 @@ File: docs/get-started/installation.md
     </project>
     ```
 
-    Here's a [complete pom.xml](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run/pom.xml) file for reference.
+    Here's a [complete
+    pom.xml](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run/pom.xml)
+    file for reference.
 
     If you are using gradle, add the dependency to your build.gradle:
 
@@ -18655,11 +18142,31 @@ File: docs/get-started/installation.md
     }
     ```
 
-    You should also configure Gradle to pass `-parameters` to `javac`. (Alternatively, use `@Schema(name = "...")`).
+    You should also configure Gradle to pass `-parameters` to `javac`.
+    (Alternatively, use `@Schema(name = "...")`).
 
-## Next steps
+=== "Kotlin"
 
-* Try creating your first agent with the [**Get started**](/get-started/) guides.
+    **Use ADK Kotlin on the JVM**
+
+    For Kotlin on the JVM, add the ADK core library and the KSP annotation
+    processor to your `build.gradle.kts`:
+
+    ```kotlin title="build.gradle.kts"
+    plugins {
+        kotlin("jvm") version "2.1.20"
+        id("com.google.devtools.ksp") version "2.1.20-2.0.1"
+    }
+
+    dependencies {
+        implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+    }
+    ```
+
+    The KSP processor generates code for the `@Tool` annotation used to
+    register function tools. See the [Kotlin Quickstart](/get-started/kotlin/)
+    for a complete project setup.
 
 ================
 File: docs/get-started/java.md
@@ -18951,6 +18458,310 @@ Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
 *  [Build your agent](/tutorials/)
+
+================
+File: docs/get-started/kotlin.md
+================
+# Kotlin Quickstart for ADK
+
+This guide shows you how to get up and running with Agent Development Kit
+for Kotlin. Before you start, make sure you have the following installed:
+
+- Java 17 or later
+- Gradle 8.0 or later
+
+??? tip "Building for Android?"
+
+    This quickstart covers Kotlin on the JVM. If you're building an Android app,
+    complete this quickstart first to learn the agent API, then see [Build ADK
+    agents for Android](https://developer.android.com/ai/adk) for
+    Android-specific project setup and on-device models.
+
+## Create an agent project
+
+Create an agent project with the following files and directory structure:
+
+```none
+my_agent/
+    src/main/kotlin/com/example/agent/
+                        HelloTimeAgent.kt   # agent definition + tool
+                        Main.kt             # entry point
+    build.gradle.kts                        # project configuration
+    .env                                    # API keys or project IDs
+```
+
+??? tip "Create this project structure using the command line"
+
+    === "Windows"
+
+        ```console
+        mkdir my_agent\src\main\kotlin\com\example\agent
+        type nul > my_agent\src\main\kotlin\com\example\agent\HelloTimeAgent.kt
+        type nul > my_agent\src\main\kotlin\com\example\agent\Main.kt
+        type nul > my_agent\build.gradle.kts
+        type nul > my_agent\.env
+        ```
+
+    === "MacOS / Linux"
+
+        ```bash
+        mkdir -p my_agent/src/main/kotlin/com/example/agent && \
+            touch my_agent/src/main/kotlin/com/example/agent/HelloTimeAgent.kt && \
+            touch my_agent/src/main/kotlin/com/example/agent/Main.kt && \
+            touch my_agent/build.gradle.kts my_agent/.env
+        ```
+
+### Define the agent code
+
+Create the code for a basic agent, including a simple implementation of an ADK
+[Function Tool](/tools-custom/function-tools/), called `getCurrentTime()`.
+Add the following code to the `HelloTimeAgent.kt` file in your project
+directory:
+
+```kotlin title="my_agent/src/main/kotlin/com/example/agent/HelloTimeAgent.kt"
+package com.example.agent
+
+import com.google.adk.kt.agents.Instruction
+import com.google.adk.kt.agents.LlmAgent
+import com.google.adk.kt.annotations.Param
+import com.google.adk.kt.annotations.Tool
+import com.google.adk.kt.models.Gemini
+
+class TimeService {
+    /** Mock tool implementation */
+    @Tool
+    fun getCurrentTime(
+        @Param("Name of the city to get the time for") city: String
+    ): Map<String, String> {
+        return mapOf("city" to city, "time" to "The time is 10:30am.")
+    }
+}
+
+object HelloTimeAgent {
+    @JvmField
+    val rootAgent = LlmAgent(
+        name = "hello_time_agent",
+        description = "Tells the current time in a specified city.",
+        model = Gemini(
+            name = "gemini-flash-latest",
+            apiKey = System.getenv("GOOGLE_API_KEY")
+                ?: error("GOOGLE_API_KEY environment variable not set."),
+        ),
+        instruction = Instruction(
+            "You are a helpful assistant that tells the current time in a city. "
+                + "Use the 'getCurrentTime' tool for this purpose."
+        ),
+        tools = TimeService().generatedTools(),
+    )
+}
+```
+
+!!! note "About `@Tool` and KSP"
+
+    The `@Tool` annotation marks a function as a tool that the agent can
+    call. At compile time, a KSP (Kotlin Symbol Processing) annotation
+    processor generates the `.generatedTools()` extension function used above.
+    This is a zero-reflection approach to function tool registration. The
+    required KSP plugin and processor dependency are included in the
+    `build.gradle.kts` configuration below.
+
+### Configure project and dependencies
+
+An ADK Kotlin agent project requires the following dependencies in your
+`build.gradle.kts` project file:
+
+```kotlin title="my_agent/build.gradle.kts (partial)"
+dependencies {
+    implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+}
+```
+
+??? info "Complete `build.gradle.kts` configuration for project"
+    The following code shows a complete `build.gradle.kts` configuration for
+    this project:
+
+    ```kotlin title="my_agent/build.gradle.kts"
+    plugins {
+        kotlin("jvm") version "2.1.20"
+        id("com.google.devtools.ksp") version "2.1.20-2.0.1"
+        application
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:0.1.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+    }
+
+    kotlin {
+        jvmToolchain(17)
+    }
+
+    application {
+        mainClass.set(
+            project.findProperty("mainClass") as? String
+                ?: "com.example.agent.MainKt"
+        )
+    }
+    ```
+
+### Set your API key
+
+This project uses the Gemini API, which requires an API key. If you
+don't already have Gemini API key, create a key in Google AI Studio on the
+[API Keys](https://aistudio.google.com/app/apikey) page.
+
+In a terminal window, write your API key into your `.env` file of your project
+to set environment variables:
+
+=== "MacOS / Linux"
+
+    ```bash title="Update: my_agent/.env"
+    echo 'export GOOGLE_API_KEY="YOUR_API_KEY"' > .env
+    ```
+
+=== "Windows PowerShell"
+
+    ```console title="Update: my_agent/env.bat"
+    echo 'set GOOGLE_API_KEY="YOUR_API_KEY"' > env.bat
+    ```
+
+=== "Windows Command Prompt"
+
+    ```console title="Update: my_agent/env.bat"
+    echo set GOOGLE_API_KEY="YOUR_API_KEY" > env.bat
+    ```
+
+??? tip "Using other AI models with ADK"
+    ADK supports the use of many generative AI models. For more
+    information on configuring other models in ADK agents, see
+    [Models & Authentication](/agents/models).
+
+### Create an entry point
+
+Create a `Main.kt` file to run and interact with `HelloTimeAgent` from the
+command line. `ReplRunner` provides a built-in interactive REPL that handles
+user input, agent responses, and tool confirmation prompts.
+
+```kotlin title="my_agent/src/main/kotlin/com/example/agent/Main.kt"
+package com.example.agent
+
+import com.google.adk.kt.runners.ReplRunner
+
+fun main() {
+    ReplRunner(HelloTimeAgent.rootAgent).start()
+}
+```
+
+## Run your agent
+
+You can run your ADK agent using the interactive command-line REPL
+or the ADK web user interface provided by `AdkWebServer`. Both options
+allow you to test and interact with your agent.
+
+### Run with command-line interface
+
+Run your agent with the command-line interface using the Gradle `run` task:
+
+```console
+# Remember to load keys and settings: source .env OR env.bat
+gradle run
+```
+
+The agent starts an interactive session. Type a message and press Enter:
+
+```
+Agent hello_time_agent is ready. Type 'exit' to quit.
+
+You > What time is it in New York?
+
+hello_time_agent > The current time in New York is 10:30am.
+
+You > exit
+Exiting agent.
+```
+
+![adk-run.png](/assets/adk-run.png)
+
+### Run with web interface
+
+To run your agent with the ADK web interface, add the webserver dependency
+to your `build.gradle.kts`:
+
+```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
+dependencies {
+    implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:0.1.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+}
+```
+
+Then create a `WebMain.kt` file alongside your `Main.kt`:
+
+```kotlin title="my_agent/src/main/kotlin/com/example/agent/WebMain.kt"
+package com.example.agent
+
+import com.google.adk.kt.artifacts.InMemoryArtifactService
+import com.google.adk.kt.runners.InMemoryRunner
+import com.google.adk.kt.sessions.InMemorySessionService
+import com.google.adk.kt.webserver.AdkWebServer
+import com.google.adk.kt.webserver.loaders.SingleAgentLoader
+import com.google.adk.kt.webserver.telemetry.ApiServerSpanExporter
+
+fun main() {
+    val agent = HelloTimeAgent.rootAgent
+    val sessionService = InMemorySessionService()
+    val artifactService = InMemoryArtifactService()
+
+    val server = AdkWebServer(
+        port = 8080,
+        sessionService = sessionService,
+        artifactService = artifactService,
+        agentLoader = SingleAgentLoader(agent),
+        runner = InMemoryRunner(
+            agent = agent,
+            sessionService = sessionService,
+            artifactService = artifactService,
+        ),
+        apiServerSpanExporter = ApiServerSpanExporter(),
+    )
+
+    println("Starting ADK web server on http://localhost:8080...")
+    server.start(wait = true)
+}
+```
+
+Run the web server using the `-PmainClass` property to select the web
+entry point:
+
+```console
+# Remember to load keys and settings: source .env OR env.bat
+gradle run -PmainClass=com.example.agent.WebMainKt
+```
+
+This command starts a web server with a chat interface for your agent. You can
+access the web interface at (http://localhost:8080). Select your agent at the
+upper left corner and type a request.
+
+![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should
+    use ADK Web for development and debugging purposes only.
+
+## Next: Build your agent
+
+Now that you have ADK installed and your first agent running, try building
+your own agent with our build guides:
+
+- [Build your agent](/tutorials/)
+- [Build ADK agents for Android](https://developer.android.com/ai/adk)
 
 ================
 File: docs/get-started/python.md
@@ -19284,6 +19095,1186 @@ Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
 *  [Build your agent](/tutorials/)
+
+================
+File: docs/graphs/data-handling.md
+================
+# Data handling for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+Structuring and managing data between agents and graph-based nodes is critical
+for building reliable processes with ADK. This guide explains data handling
+within graph-based workflows and collaboration agents, including how information
+is transmitted and received between graph nodes using ***Events***. It covers
+the essential parameters for events, data, content, and state, and explains how
+to implement structured data transfer for both function and agent nodes using
+data format schemas and specific instruction syntax.
+
+## Workflow graph Events
+
+Within a graph-based workflow, you pass data using ***Events***. All execution
+*nodes* in a workflow graph consume and emit Events. This section covers the
+basics of transmitting and receiving data between nodes in a ***Workflow***.
+Events have specific parameters for transmitting different types of data between
+nodes. The key parameters for node data handling are as follows:
+
+-   **`output`**: Parameter for passing information between *nodes*.
+-   **`message`**: Data intended as a response to a user.
+-   **`state`**: Data automatically persisted across nodes via ***Events***
+    throughout an ADK session.
+
+Events also carry additional information about the workflow, including the
+source node of the Event.
+
+### Node input and output with Events
+
+Each node in a graph receives and transmits data through the ***Event*** class.
+Use the ***yield*** syntax to hand off data to the next node, as shown in the
+following code snippet:
+
+```python
+from google.adk import Event
+
+def my_function_node(node_input: str):
+    output_value = node_input.upper()
+    return Event(output=output_value) # "THE RESULT"
+```
+
+Use the ***return*** syntax when outputting ***Event*** data that does not
+require additional processing. When emitting data that requires additional
+processing, or if you are generating more than one data item, you can use more
+than one ***yield*** command. Each ***yield*** call adds to a list of data
+objects on the Event which is passed to the next node of a graph. A ***return***
+or ***yield*** command without a parameter passes a `None` value to the next
+node.
+
+### Event `output` parameter
+
+The ***output*** parameter of an ***Event*** is the standard way to pass data to
+the next node of a graph. The next node receives a ***node input*** object
+containing the data, as shown in the following code sample:
+
+```python
+def my_function_node_1():
+    return Event(output="The Result")
+
+def my_function_node_2(node_input: str):
+    output_value = node_input.lower()
+    return Event(output=output_value) # "the result"
+```
+
+You can pass longer, structured data in a serializable format, as shown in this
+code sample:
+
+```python
+def my_function_node_3():
+    yield Event(
+        output={
+            "city_name": "Paris",
+            "city_time": "10:10 AM",
+        },
+    )
+```
+
+!!! warning "Caution: Event.output limitation"
+
+    Nodes are only allowed to emit a single ***Event.output*** data payload
+    per execution. This limitation means that while you can more than one
+    ***yield*** in a node, having two or more ***yield*** commands with an
+    ***Event.output*** results in a runtime error.
+
+### Event `message` parameter
+
+The ***message*** parameter of an ***Event*** is used to pass data intended as
+a user response. In general, you should not use the ***message*** parameter in
+your agent code unless it is specifically to provide information to a user or
+request information from a user. The following code example show how to provide
+information to a user during workflow execution:
+
+```python
+async def user_message(node_input: str):
+  """Tell user research process is starting."""
+  yield Event(message="Beginning research process...")
+```
+
+### Event `state` parameter
+
+The ***state*** parameter of an ***Event*** is used to maintain a small set of
+data values during an entire ADK session. Values in the state parameter
+automatically persist between Nodes and are meant for guiding the execution of
+more complex workflows. Nodes can modify state values, and the modified state
+values are available to downstream Nodes.The following code example shows how
+state is persisted across nodes:
+
+```python
+async def init_state_node(attempts: int = 0):
+  yield Event(
+      state={
+          "attempts": attempts,
+      },
+  )
+
+async def task_attempt_node(node_input: Content, attempts: int):
+  yield Event(
+      state={
+          "attempts": attempts + 1,
+      },
+  )
+
+async def read_state_node(ctx: Context):
+  print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", init_state_node, task_attempt_node, read_state_node)],
+)
+```
+
+!!! warning "Caution: `state` property data limitations"
+
+    The state parameter *should not be used to persist large amounts of data* between
+    nodes. Use artifacts or other data persistence mechanisms, such as database
+    Tools, to persist large data resources during the life cycle of a Workflow.
+
+## Constrain node data input and output with schemas
+
+You can set input and output data schemas to constrain the input and output data
+formats of any node, including ***FunctionNodes*** and **Agents**. The following
+parameters are optional settings for any node. You can set both or either one of
+these parameters on any workflow node as required by your agent project.
+
+-   **`input_schema`**: Set the expected input schema using a class that
+    extends ***BaseModel***.
+-   **`output_schema`**: Set the required output schema using a class that
+    extends ***BaseModel***.
+
+The code example below shows how to set both input and output schemas for a
+subagent.
+
+```python
+from google.adk import Agent
+from pydantic import BaseModel
+
+class FlightSearchInput(BaseModel):
+    origin: str           # Airport code "SFO"
+    destination: str      # Airport code "CDG"
+    departure_date: date  # date(2026, 3, 15)
+    passengers: int = 1   # Number of passengers
+
+class FlightSearchOutput(BaseModel):
+    flights: list[Flight]
+    cheapest_price: float
+
+flight_searcher = Agent(
+    name="flight_searcher",
+    instruction="Search for available flights.",
+    input_schema=FlightSearchInput,
+    output_schema=FlightSearchOutput,
+    tools=[search_flights_api],
+    mode="single_turn",
+    ...
+)
+
+assistant = Agent(
+    name="assistant",
+    instruction="You help users plan trips.",
+    sub_agents=[flight_searcher],
+    ...
+)
+```
+
+## Access structured data in agents
+
+When you pass structured data into an agent from subagent or a workflow node,
+such as a Function Node, you can use specific syntax to add that data into the
+agent's instructions. Specifically, you can use the curly braces `{ }` to select
+the input schema properties, or `< >` to specify the input schema properties,
+the `from` keyword, and the name of the node providing the data. The following
+code snippet shows two ways to include data passed through an agent
+***input schema***:
+
+```python
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+def lookup_time_function(city: str):
+    """Simulate returning the current time in the specified city."""
+    return Event(output=CityTime(time_info='10:10 AM', city=city))
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-flash-latest",
+    input_schema=CityTime,
+
+    # data selection based on class and parameter
+    # instruction="""
+    #     Return a sentence in the following format:
+    #     It is {CityTime.time_info} in {CityTime.city} right now.
+    # """,
+
+    # more restrictive data selection based on source node name
+    instruction="""
+        Return a sentence in the following format:
+        It is <CityTime.time_info from lookup_time_function> in
+        <CityTime.city from lookup_time_function> right now.
+    """,
+)
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[
+        (START, city_generator_agent, lookup_time_function, city_report_agent)
+    ],
+)
+```
+
+For a complete, but simplified version of this workflow, see
+[Graph-based agent workflows](/graphs/#get-started).
+
+================
+File: docs/graphs/dynamic.md
+================
+# Dynamic agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+The ADK framework provides a programmatic way to define workflows as a more
+flexible and powerful alternative to [graph-based workflows](/graphs/).
+Using a graph-based approach provides a convenient way to compose multi-step,
+static process structures with workflow nodes. However, if the logic path for
+your workflow is more complex, with iterative loops or complex branching logic,
+a graph-based approach may not suit your needs, or may become too unwieldy to
+manage.
+
+Dynamic workflows in ADK allow you to put aside graph-based path structures and
+use the full power of your chosen programming language to build workflows. With
+Dynamic workflows, you can create workflows with simple decorators, invoke
+workflow nodes as functions, and build complex routing logic. Here are some of
+the benefits of dynamic workflows in ADK:
+
+-   **Flexible Control Flow:** Define execution order dynamically using
+    loops, conditionals, and recursion which are difficult or impossible to
+    represent in static graphs.
+-   **Programmatic Experience:** Use familiar constructs like `while` loops
+    and `async/await` instead of graph-based routing.
+-   **Automatic Checkpointing:** Dynamic workflows track each node
+    execution. Successful sub-nodes are automatically skipped when resuming the
+    workflow, making complex logic durable and resumable by default.
+-   **Encapsulation:** Wrap business logic into *parent* nodes that
+    internally compose lower-level nodes, keeping the overall workflow graph
+    clean and manageable.
+
+## Get started
+
+The following dynamic workflow code example shows how to define a basic
+workflow containing a single node with a function:
+
+```python
+from google.adk import Context
+from google.adk import Workflow
+from google.adk.workflow import node
+from typing import Any
+
+@node(name="hello_node")
+def my_node(node_input: Any):
+    return "Hello World"
+
+# define a dynamic workflow node
+@node(rerun_on_resume=True)
+async def my_workflow(ctx: Context, node_input: str) -> str:
+    # run_node executes a node and returns its output
+    result = await ctx.run_node(my_node, node_input="hello")
+    return result
+
+# Run the workflow
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", my_workflow)],
+)
+```
+
+This example uses the [***@node***](#node) annotation for convenience and to
+keep the written code as simple as possible. This annotation generates wrappers
+that allow the code to be run in the context of an ADK dynamic workflow.
+
+## Building blocks: nodes and workflows
+
+Nodes and workflows represent the basic building blocks of ADK's dynamic
+workflows. These classes provide the functionality required to wrap your code so
+it can be integrated into code-based workflows in ADK.
+
+### Nodes and @node {#node}
+
+A dynamic workflow in ADK is composed of *nodes*, which are classes derived
+from ***BaseNode***. A simple version of a usable workflow node is a
+***FunctionNode***, which allows you to wrap code with functionality required to
+run within a ***Workflow***. For convenience, the ADK framework provides the
+***@node*** annotation which generates the node wrapper, keeping boilerplate
+wrapper code to a minimum:
+
+```python
+@node(name="hello_node")
+def my_function_node(node_input: Any):
+    return "Hello World"
+```
+
+The following code snippet shows the equivalent code *without* the
+***@node*** annotation:
+
+```python
+# base function
+def my_function_node(node_input: Any):
+    return "Hello World"
+
+# FunctionNode wrapper with options
+success_node = FunctionNode(
+    my_function_node,
+    name="hello",
+    rerun_on_resume=True,
+)
+```
+
+Creating the node wrapper code yourself can be useful if you are wrapping
+functions from an external library, need to create multiple nodes from the same
+function with different configurations, or if you are managing node references
+in a registry for advanced orchestration.
+
+### Workflows
+
+In an ADK dynamic workflow, you use the ***Workflow*** class as a primary
+container for orchestrating nodes. You use a node to define a dynamic workflow
+with code that manages running nodes and the execution logic (order and paths)
+for those nodes, as shown in the following code sample:
+
+```python
+@node(rerun_on_resume=True)
+async def my_workflow(ctx):
+    # run_node executes a node and returns its output
+    result = await ctx.run_node(my_function_node, node_input="Hello")
+    result_formatted = await ctx.run_node(my_formatting_node, node_input=result)
+    return result_formatted
+
+# Run the workflow
+root_agent = Workflow(
+    name="root_agent",
+    edges=[("START", my_workflow)],
+)
+```
+
+## Data handling
+
+When using dynamic workflows with ADK, passing data is simpler than
+[graph-based workflows](/graphs/) because, with a workflow,
+the ***Context*** class's ***run_node()*** method returns the node's output
+directly. This eliminates the need to directly handle session state or complex
+routing outputs for data transfer. The following code example shows how you can
+pass string data between an agent node and a function node:
+
+```python
+from google.adk import Context
+from google.adk.workflow import node
+
+@node(rerun_on_resume=True)
+async def editorial_workflow(ctx: Context, user_request: str):
+    # Agent Node generates output
+    raw_draft = await ctx.run_node(draft_agent, user_request)
+
+    # Function Node formats text
+    formatted_text = await ctx.run_node(format_function_node, raw_draft)
+
+    return formatted_text
+```
+
+You can also pass specific data schemas using defined class and configure input
+and output schemas, similar to graph-based workflow nodes, as shown in the
+following code example:
+
+```python
+from google.adk import Agent
+from google.adk import Context
+from google.adk.workflow import node
+from pydantic import BaseModel
+
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+@node
+def city_time_function(city: str):
+    """Simulate returning the current time in a specified city."""
+    return CityTime(time_info="10:10 AM", city=city)
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-flash-latest",
+    input_schema=CityTime,
+    instruction="""output the data provided by the previous node.""",
+)
+
+@node # workflow node
+async def city_workflow(ctx: Context):
+    city_time = await ctx.run_node(city_time_function, "Paris")
+    report_text = await ctx.run_node(city_report_agent, city_time)
+
+    return report_text
+```
+
+For more information on data handling between workflow nodes, see
+[Data handling for agent workflows](/graphs/data-handling/).
+
+## Workflow routes
+
+Dynamic workflows in ADK provide more flexibility in terms of routing logic
+compared to [graph-based workflows](/graphs/), including
+iterative loops or more complex branching logic. This section describes some of
+the techniques that you can use for routing.
+
+### Sequence route
+
+You can create sequential task processing with dynamic workflows in ADK, just
+as you can with graph-based workflows. The following code snippet shows a
+dynamic workflow with an agent, a function node, and a second agent:
+
+```python
+@node # workflow node
+async def city_workflow(ctx: Context):
+    city = await ctx.run_node(city_generator_agent)
+    city_time = await ctx.run_node(city_time_function, city)
+    report_text = await ctx.run_node(city_report_agent, city_time)
+
+    return report_text
+```
+
+### Loop route
+
+For workflows where you want to use an iterative loop for a task, dynamic
+workflows offer much more flexibility to define the routing logic you need. The
+following code example shows how to use dynamic workflows to construct a
+workflow loop for generating, reviewing, and updating code:
+
+```python
+from google.adk import Context
+from google.adk import Event
+from google.adk.agents import LlmAgent
+from google.adk.workflow import node
+
+coder_agent = LlmAgent(
+    name="generator_agent",
+    model="gemini-flash-latest",
+    instruction="Write python code for user request.",
+    output_schema=str,
+)
+
+@node(name="lint_reviewer")
+async def compile_lint_check(ctx: Context, code: str):
+    # Simulate API call or lint check
+    class Response:
+        findings = ""
+    return Response()
+
+fixer_agent = LlmAgent(
+    name="fixer_agent",
+    model="gemini-flash-latest",
+    instruction="""Refactor current code {code}.
+        Based on compile & lint review: {findings}""",
+    output_schema=str,
+)
+
+@node # workflow node
+async def code_workflow(ctx: Context, user_request: str):
+  code = await ctx.run_node(coder_agent, user_request)
+  check_resp = await ctx.run_node(compile_lint_check, code)
+
+  while check_resp.findings:
+    yield Event(state={"code": code, "findings": check_resp.findings})
+    code = await ctx.run_node(fixer_agent, {"code": code, "findings": check_resp.findings})
+
+    check_resp = await ctx.run_node(compile_lint_check, code)
+
+  return code
+```
+
+### Parallel execution routes
+
+Dynamic workflows in ADK can support parallel execution, and you can use
+standard asynchronous libraries, such as `asyncio`, to build this
+functionality. The following code example shows how to build a workflow node
+that supports parallel execution using `@node` and `asyncio.gather`:
+
+```python
+import asyncio
+from typing import Any
+from google.adk import Context
+from google.adk.workflow import BaseNode, node
+
+
+@node(rerun_on_resume=True)
+async def parallel_supervisor(
+    ctx: Context, node_input: list[Any], real_node: BaseNode
+):
+    """Runs a worker node in parallel for each item in the input list."""
+    tasks = []
+    for item in node_input:
+        # ctx.run_node returns a future. Append instead of awaiting immediately.
+        tasks.append(ctx.run_node(real_node, item))
+
+    # Collect all results in parallel
+    results = await asyncio.gather(*tasks)
+    return results
+```
+
+!!! tip "Tip: Resuming parallel nodes"
+
+    The workflow framework ensures that if a dynamic workflow is resumed, only
+    failed or interrupted worker nodes are re-executed, including parallel worker
+    nodes.
+
+## Human input
+
+Dynamic workflows in ADK can also include human input or human in the loop
+(HITL) steps. You build human input into workflows by yielding a
+***RequestInput*** from a node, which pauses the workflow and waits for user
+input. The following code example shows how to build a human input node and
+include it in a workflow:
+
+```python
+from typing import Any
+from google.adk import Context
+from google.adk.events import RequestInput
+from google.adk.workflow import node
+
+
+@node(rerun_on_resume=False)
+async def get_user_approval(ctx: Context, node_input: Any):
+    """Yields a RequestInput to pause the workflow and wait for user input."""
+    yield RequestInput(message="Please approve this request (Yes/No)")
+
+
+@node(rerun_on_resume=True)
+async def handle_process(ctx: Context, node_input: Any):
+    """The orchestrator calling the interactive step."""
+    user_response = await ctx.run_node(get_user_approval)
+
+    if user_response.lower() == "yes":
+        return "Approved"
+    return "Denied"
+```
+
+!!! important "Important: Parent nodes with `ctx.run_node`"
+
+    Parent nodes in dynamic workflows that call `ctx.run_node` must set
+    `rerun_on_resume=True` to handle interruptions properly.
+
+## Advanced features
+
+Dynamic workflows offer some advanced features designed to handle more complex
+development scenarios. These capabilities allow for finer control over execution
+and better integration with existing technical infrastructure.
+
+### Execution IDs
+
+The ADK framework generates a deterministic identifier (ID) for child node
+executions based on the parent ID and a counter. ADK workflows use deterministic
+IDs for each scheduled node to identify previous results. These IDs are
+generated based on the order of dynamic node schedules, and are used for
+checkpointing and to re-run tasks in the correct order in the case of a resumed
+or re-run workflow.
+
+#### Custom execution IDs
+
+In some rare cases, you may need to have stable identifiers, such as when
+processing a reorderable list, you can supply a custom ID when running a node.
+In general, you should avoid this due to the impacts to workflow task retries
+and process resumes. Specifically, these IDs are used to check node states and
+skip execution if a node was already run. If you provide custom IDs, make sure
+they are deterministic for workflow re-runs and logically remain the same for
+the input. The following example code shows how to add such an identifier when
+executing node in a workflow:
+
+!!! warning "Warning: Custom execution IDs"
+
+    Avoid creating custom execution IDs. Since execution IDs are used to determine
+    the execution order of nodes, custom execution IDs can cause problems when the
+    system attempts to re-run those nodes in your workflow.
+
+```python
+from google.adk import Context
+from google.adk.workflow import node
+from pydantic import BaseModel
+from typing import Any
+import asyncio
+
+class Order(BaseModel):
+  order_id: str
+  cart_items: list[Product]
+
+@node(rerun_on_resume=True)
+async def process_all_orders(ctx: Context, node_input: Any):
+  orders = await get_orders()
+
+  process_tasks = []
+  for order in orders:
+    # Use run_id to provide a custom identifier.
+    # Custom run_ids must contain at least one non-numeric character
+    # to avoid collision with auto-generated sequential numeric IDs.
+    task = ctx.run_node(process_order, order, run_id=f"order-{order.order_id}")
+    process_tasks.append(task)
+
+  results = await asyncio.gather(*process_tasks)
+  return results
+```
+
+By default, auto-generated run IDs are sequential integers starting from
+`"1"` (represented as strings). Custom `run_id` values must contain at
+least one non-numeric character to avoid collisions with these
+auto-generated IDs.
+
+================
+File: docs/graphs/human-input.md
+================
+# Human input for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+Being able to request human input for data input, decision verification, or
+action permission is an important part of many agent-powered workflows.
+Graph-based workflows in ADK can include human in the loop (HITL) nodes
+specifically built for obtaining input from humans as part of a workflow. These
+nodes do not require artificial intelligence (AI) models to run, which can make
+the input process more predictable and reliable.
+
+## Get started
+
+You can implement a human input node in a graph using the ***RequestInput***
+class and a text prompt for the user. The following code example shows how to
+add a human input node to an Workflow graph:
+
+```python
+from google.adk.events import RequestInput
+from google.adk import Workflow
+
+def step1(): # Human input step
+  yield RequestInput(message="Enter a number:")
+
+def step2(node_input):
+  return node_input * 2
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[('START', step1, step2)],
+)
+```
+
+In this code example, `step1` pauses the execution of the agent until the
+system receives an input from a user. Once the system receives input from the
+user, that input is passed to the next node.
+
+## Configuration options
+
+Human input nodes can use the ***RequestInput*** class with the following
+configuration options:
+
+-   **`message`:** Text provided to the user to explain the human input
+    request.
+-   **`payload`:** Structured data to be used as part of the human input
+    request.
+-   **`response_schema`:** A data structure the human response must conform to.
+
+!!! note "Note: Response schema input limitations"
+
+    For the **response_schema** setting, the ***RequestInput*** class does not
+    automatically reformat human responses to fit a specified data structure. The
+    human response must be provided in the specified format. For a better user
+    experience, consider providing a user interface to collect structured data
+    or use an Agent node to conform unstructured data to the format required.
+
+## Human input examples
+
+The following code examples demonstrate more detailed human input requests,
+including the use of ***message***, ***payload*** and ***response schema***
+parameters.
+
+### Request input with response schema
+
+The following code sample shows how to construct a ***RequestInput*** object in
+a workflow node, including a ***response schema***:
+
+```python
+async def initial_prompt(ctx: Context):
+   """Ask the user for itinerary information"""
+   input_message = """
+       This is an interactive concierge workflow tasked with making you a great
+       itinerary for you in your city of choice. If you give some details about
+       yourself or what you are generally looking for I can better personalize
+       your itinerary.
+       For example, input your:
+           City (Required),
+           Age,
+           Hobby,
+           Example of attraction you liked
+   """
+   yield RequestInput(message=input_message, response_schema=str)
+```
+
+### Request input with data payload
+
+The following code sample shows how to construct a ***RequestInput*** object in
+a workflow node, including a ***payload*** and ***response schema***. In this
+example, the `ActivitiesList` is expected to be completed by an agent node that
+composes a list of activities, and the `get_user_feedback()` node requests
+feedback for the user.
+
+```python
+class ActivitiesList(BaseModel):
+   """Itinerary should be a list of dictionaries for each activity. Each
+   activity has a name and a description"""
+   itinerary: List[Dict[str, str]]
+
+class UserFeedback(BaseModel):
+   """Expected response structure from the user."""
+   user_response: str
+
+async def get_user_feedback(node_input: ActivitiesList):
+   """
+   Retrieves the user's thoughts on the agents initial itinerary in order to
+   either expand on, change the list, or exit the loop
+   """
+   message = (
+       f"""
+       Here is your recommended base itinerary:\n{node_input}\n\n
+       Which of these items appeal to you (if any)?
+       """
+   )
+
+   yield RequestInput(
+       message=message,
+       payload=node_input,
+        response_schema=UserFeedback,
+   )
+```
+
+================
+File: docs/graphs/index.md
+================
+# Graph-based agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+Graph-based agent workflows in ADK let you build agents with more precise control,
+creating deterministic processes that combine code logic and AI reasoning
+capabilities. Graph-based workflows allow you to define your agent logic as a
+graph of execution nodes and edges, combining AI-powered agent reasoning with
+deterministic tools and code.
+
+![Graph-based flight upgrade agent](/assets/workflow-design.svg)
+
+**Figure 1.** A graph-based agent design for flight upgrades, combining workflow
+nodes of different types, including Functions, human input, Tools, and LLM
+capabilities.
+
+Prebuilt ADK [template workflows](/agents/workflow-agents/),
+such as [Sequential Agents](/agents/workflow-agents/sequential-agents/),
+provide a defined process flow control only across a set of agents. You can continue to
+build standard ADK agents with long prompts, tools, and use them in graph-based
+workflow agents. When you need more precise control, workflow agent graphs give
+you more flexibility over how tasks are routed and executed. Graph-based workflows
+provide the following advantages:
+
+-   **Define precise logic:** Explicitly map out routing logic to manage
+    transitions between different nodes.
+-   **Implement complex structures:** Build agent workflows that support
+    branching and state management.
+-   **Run chains of functions without AI:** Call agent tools and your own
+    code without invoking a generative AI model.
+-   **Enhance reliability:** Improve the predictability of your agents by
+    relying on structured node definitions rather than prompts alone.
+
+## Get started
+
+This section describes how to get started with graph-based agents. The following
+example shows how to create a sequential graph-based agent workflow that
+generates a city name, looks up the current time in that city with code
+function, and the final agent reports the information.
+
+```python
+from google.adk import Agent
+from google.adk import Workflow
+from google.adk import Event
+from pydantic import BaseModel
+
+city_generator_agent = Agent(
+    name="city_generator_agent",
+    model="gemini-flash-latest",
+    instruction="""Return the name of a random city.
+      Return only the name, nothing else.""",
+    output_schema=str,
+)
+
+class CityTime(BaseModel):
+    time_info: str  # time information
+    city: str       # city name
+
+def lookup_time_function(node_input: str):
+    """Simulate returning the current time in the specified city."""
+    return CityTime(time_info="10:10 AM", city=node_input)
+
+city_report_agent = Agent(
+    name="city_report_agent",
+    model="gemini-flash-latest",
+    input_schema=CityTime,
+    instruction="""Output following line:
+    It is {CityTime.time_info} in {CityTime.city} right now.""",
+    output_schema=str,
+)
+
+def completed_message_function(node_input: str):
+    return Event(
+        message=f"{node_input}\n WORKFLOW COMPLETED.",
+    )
+
+root_agent = Workflow(
+    name="root_agent",
+    edges=[
+        ("START", city_generator_agent, lookup_time_function,
+          city_report_agent, completed_message_function)
+    ],
+)
+```
+
+This sample code demonstrates how you can use the ***Workflow*** class to
+assemble a simple, sequential workflow and alternate between AI agent processing
+and code execution. While you could perform these steps using a single agent
+with a longer prompt and a tool call, the graph-based approach gives you precise
+control over the task execution order and the data output from each step.
+
+For more information about data handling with graph-based workflows, see
+[Data handling with workflow nodes and agents](/graphs/data-handling/).
+
+## Build processes with graphs
+
+You can use prompt-based agents to define multiple step processes with
+descriptions of tasks and procedures using the instructions field of an ADK
+agent. However, as your instructions and procedures become longer and more
+complicated, making sure that the agent is following each step and guideline
+becomes more complicated and less reliable.
+
+Graph-based workflow agents provide a significant advantage over prompt-based
+agents by allowing you to specifically define the overall process workflow in
+code. With graph-based agent workflows, each step of the process can be defined
+as an execution ***Node*** in a graph and each node can be an AI agent, Tool, or
+your programmed code. The following diagram illustrates how a simple
+prompt-based agent would translate into a workflow agent graph:
+
+![Prompt-based agent to graph-based workflow](/assets/prompts-to-graphs.svg)
+
+**Figure 2.** Structure of prompt-based agent instructions translated into a
+graph-based workflow.
+
+Moving from prompt-based agents to graph-based workflow agents allows you to
+explicitly break out the tasks of a procedure to define a specific execution
+flow. Once defined, the agent application flows the steps in the graph,
+switching between non-deterministic AI-powered agents and deterministic code as
+needed.
+
+The following code sample shows how the workflow graph in Figure 2 could be
+translated into a graph-based agent using the ***Workflow*** class:
+
+```python
+process_message = Agent(
+    name="process_message",
+    model="gemini-flash-latest",
+    instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
+      or "LOGISTICS". If you think a message applies to more than one category,
+      reply with a comma separated list of categories.
+   """,
+    output_schema=str,
+)
+
+def router(node_input: str):
+    routes = node_input.split(",")
+    routes = [route.strip() for route in routes]
+    return Event(route=routes)
+
+def response_1_bug():
+    return Event(message="Handling bug...")
+
+def response_2_support():
+    return Event(message="Handling customer support...")
+
+def response_3_logistics():
+    return Event(message="Handling logistics...")
+
+root_agent = Workflow(
+   name="routing_workflow",
+   edges=[
+       ("START", process_message, router),
+       ( router,
+           {
+               "BUG": response_1_bug,
+               "CUSTOMER_SUPPORT": response_2_support,
+               "LOGISTICS": response_3_logistics,
+           }
+       )
+   ],
+)
+```
+
+This sample code demonstrates how you can use an ***edges*** array to define a
+graph with routes between a set of *nodes*, which are discrete tasks that can
+include agents, Tools, your code, and even additional ***Workflows***. For
+information about building advanced graphs for workflows, see
+[Build graph routes for workflow agents](/graphs/routes/).
+
+## Known limitations {#known-limitations}
+
+There are some known limitations with graph-based workflows. They
+are *not compatible* with the following ADK features:
+
+-   **Live Streaming** functionality is not compatible with graph-based
+    workflows.
+-   **Integrations:** Some third-party
+    [Integrations](/integrations/) may not be
+    compatible with graph-based workflows.
+
+================
+File: docs/graphs/routes.md
+================
+# Build graph routes for agent workflows
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+Graph-based workflows in ADK define agent logic as a graph of execution nodes
+and edges, allowing you to build more reliable processes that combine artificial
+intelligence (AI) reasoning and code logic. These workflows allow you to create
+logical routes of execution nodes that can encapsulate code functions,
+AI-powered agents, Tools, and human input. By explicitly mapping out routing
+logic, this approach allows you to define a specific, step-wise process workflow
+in code, providing improved precision and reliability over purely prompt-based
+agents.
+
+![Graph-based flight upgrade agent](/assets/graph-workflow-router.svg)
+
+```python
+root_agent = Workflow(
+  name="routing_workflow",
+  edges=[
+    ("START", process_message, router),
+    (router,
+      {
+        "output-1": response_1,
+        "output-2": response_2,
+        "output-3": response_3,
+      },
+    ),
+  ],
+)
+```
+
+**Figure 1.** Visualization of a task graph and the ***Workflow*** code to
+implement it.
+
+The advantage of using a graph-based agent workflow is the significant increase
+in control, predictability, and reliability over prompt-based agents. By
+defining the overall process workflow in code, you gain more control over how
+tasks are routed and executed. This structured node definition improves the
+predictability of agents and enhances reliability for complex tasks that require
+defined steps and process management.
+
+Get started with graph-based workflows in ADK by checking out
+[Graph-based agent workflows](/graphs/).
+
+## Nodes
+
+A graph is composed of execution nodes. These *nodes* can be ***Agents***, ADK
+***Tools***, human input tasks, or code functions you write. Nodes can take
+inputs from previously executed nodes, and emit data through ***Event***
+objects. The following shows a simple ***FunctionNode*** that handles text
+inputs and sends a text output:
+
+```python
+from google.adk import Event
+
+def my_function_node(node_input: str):
+    input_text_modified = node_input.upper()
+    return Event(output=input_text_modified)
+```
+
+For more information about transferring data between nodes, see .
+[Data handling for agent workflows](/graphs/data-handling/).
+
+## Workflow graphs syntax
+
+You define a graph by creating an ***edges*** array, which defines a logical
+execution path of *nodes* and conditions to be followed. This section
+provides an overview of graph syntax in an ***edges*** array. The following code
+example shows a basic workflow with two nodes to be executed in order:
+
+```python
+from google.adk import Workflow
+
+root_agent = Workflow(
+    name="sequential_workflow",
+    edges=[("START", task_A_node, task_B_node)],
+)
+```
+
+!!! caution "Caution: Workflows and agent limitations"
+
+    You can add ***Agents***, or ***LlmAgents***, to graph-based workflows,
+    however they must be set to a task or single-turn mode. For more
+    information about agent modes, see
+    [Build collaborative agent teams](/workflows/collaboration/#mode-configuration-and-behaviors).
+
+### Route sequences
+
+The ***edges*** array executes nodes based on the order or nodes presented in
+the array, starting with the first row and proceeding through the subsequent
+rows until execution is complete. The first row of the ***edges*** array uses
+the ***START*** keyword to indicate the beginning of a graph execution, with
+each listed node executed in sequence, as shown in the following code
+snippets:
+
+```python
+edges=[("START", task_A_node)]  # single node run
+edges=[("START",
+        task_A_node,
+        task_B_node,
+        task_C_node)]           # 3 nodes run in order
+```
+
+You can also use ***START*** more than once to initiate parallel tasks at the
+beginning of a workflow graph, as shown in the following code snippet:
+
+```python
+edges=[
+    ("START", parallel_task_A),
+    ("START", parallel_task_B),
+    ("START", parallel_task_C),
+]
+```
+
+!!! warning "Caution: Limitations on parallel nodes"
+
+    Not all workflow nodes or subagents can be run in parallel. In particular,
+    you cannot run multiple interactive chat sessions within the same agent
+    session.
+
+### Route branches
+
+The subsequent rows of the ***edges*** arrays after the START keyword define
+additional execution logic for nodes. For branching paths, you define a node,
+usually a ***FunctionNode***, that outputs a ***route*** with one or more route
+values. In the edges graph, you define the execution logic with route values and
+target nodes, as shown in the following code example:
+
+```python
+def router(node_input: str):
+    """Simulate a routing decision"""
+    return Event(route="RUN_TASK_C")
+
+root_agent = Workflow(
+    name="routing_workflow",
+    edges=[
+        ("START", task_A_node, router),
+        (router,
+          {
+            # "route value": node_to_run
+            "RUN_TASK_B": task_B_node,
+            "RUN_TASK_C": task_C_node,
+          },
+        ),
+    ],
+)
+```
+
+## Parallel tasks: fan out and join paths
+
+You can create graphs that split execution across multiple, parallel nodes, and
+typically you need to assemble the output of each node for further processing.
+You accomplish this by using a ***JoinNode*** object, which waits for each
+parallel task to complete and then passes the collection of outputs from these
+nodes to the next node.
+
+![Tasks connecting to a JoinNode](/assets/graph-joinnode.svg)
+
+**Figure 2.** The output of parallel task nodes can be assembled using a
+JoinNode object.
+
+The following code snippet shows how to implement a basic ***JoinNode*** object
+and use it to assemble output of all the nodes:
+
+```python
+​​from google.adk.workflow import JoinNode
+
+my_join_node = JoinNode(name="my_join_node")
+
+edges=[
+    ("START", parallel_task_A, my_join_node),
+    ("START", parallel_task_B, my_join_node),
+    ("START", parallel_task_C, my_join_node),
+    (my_join_node, final_task_D),
+]
+```
+
+!!! warning "Caution: Stuck JoinNode from incomplete nodes"
+
+    The ***JoinNode*** object proceeds only after all its upstream nodes have
+    provided an Event output. If one of the upstream nodes fails to provide output,
+    the JoinNode is stuck and workflow execution stops. Make sure to include
+    failsafe output from any node that outputs to a ***JoinNode***.
+
+## Nested workflows
+
+When building more complex workflows, you may want to encapsulate the
+functionality for specific tasks into reusable workflows. One or more
+***Workflow*** objects can be used as a node within the graph of another
+workflow agent to accomplish this goal.
+
+![Nested Workflows inside a parent Workflow](/assets/graph-workflow-nodes.svg)
+
+**Figure 3.** Nested ***Workflows*** as nodes inside a parent ***Workflow***.
+
+The following code snippet shows how to implement a workflow agent with two
+nested more ***Workflow*** objects (workflow_B, workflow_C) as nodes in the
+graph:
+
+```python
+from google.adk import Workflow
+
+root_agent = Workflow(
+    name="parent_workflow",
+    edges=[
+       ("START", task_A1, router),
+       (router, {
+            "RUN_WORKFLOW_B": workflow_B,
+            "RUN_WORKFLOW_C": workflow_C,
+            },
+       ),
+    ],
+)
+```
+
+### Nested workflow data output
+
+Output for nested Workflow objects works slightly differently from individual
+nodes. When the nested workflow completes one of its nodes, it transmits data
+to the next node in the nested workflow's graph *and* the system bubbles up the
+Event for that node to the parent workflow for process traceability. When the
+nested workflow completes the last node in its process, the parent node extracts
+data from the final leaf nodes and emits it as the output of the nested
+workflow.
 
 ================
 File: docs/grounding/google_search_grounding.md
@@ -20434,7 +21425,7 @@ object, then pass it to the `auth_scheme` parameter of any supported `Tool` or
 `Toolset`. The following example shows usage with `McpToolset`, but
 `GcpAuthProviderScheme` also works with other tools like
 `AuthenticatedFunctionTool`. See the [GCP Auth
-sample](https://github.com/google/adk-python/tree/main/contributing/samples/gcp_auth)
+sample](https://github.com/google/adk-python/tree/main/src/google/adk/integrations/agent_identity)
 for a complete example.
 
 ```python
@@ -20486,7 +21477,7 @@ toolset = McpToolset(
 - [2-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-2lo)
 - [3-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-3lo)
 - [API key auth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-api-key)
-- [Sample agent code](https://github.com/google/adk-python/tree/main/contributing/samples/gcp_auth)
+- [Sample agent code](https://github.com/google/adk-python/tree/main/src/google/adk/integrations/agent_identity)
 
 ================
 File: docs/integrations/agent-registry.md
@@ -20706,7 +21697,7 @@ The AgentRegistry constructor accepts the following arguments:
   Registry API itself.
 
 ## Additional resources
-- [Sample Agent Code](https://github.com/google/adk-python/tree/main/contributing/samples/agent_registry_agent)
+- [Sample Agent Code](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/agent_registry_agent)
 - [Agent Registry Client](https://github.com/google/adk-python/blob/main/src/google/adk/integrations/agent_registry/agent_registry.py)
 - [Google Auth Library](https://google-auth.readthedocs.io/en/latest/)
 
@@ -21035,7 +22026,7 @@ By integrating AgentOps, ADK developers can significantly enhance their ability 
 To get started, [create an AgentOps account](http://app.agentops.ai). For feature requests or bug reports, please reach out to the AgentOps team on the [AgentOps Repo](https://github.com/AgentOps-AI/agentops).
 
 ### Extra links
-🐦 [Twitter](http://x.com/agentopsai)   •   📢 [Discord](http://x.com/agentopsai)   •   🖇️ [AgentOps Dashboard](http://app.agentops.ai)   •   📙 [Documentation](http://docs.agentops.ai)
+🐦 [X](http://x.com/agentopsai)   •   📢 [Discord](https://discord.gg/UgJyyxx7uc)   •   🖇️ [AgentOps Dashboard](http://app.agentops.ai)   •   📙 [Documentation](http://docs.agentops.ai)
 
 ================
 File: docs/integrations/agentphone.md
@@ -21397,7 +22388,7 @@ Help user access their BigQuery data using the available tools.
 ```
 
 For the complete code for this example, see the
-[api_registry_agent](https://github.com/google/adk-python/tree/main/contributing/samples/api_registry_agent/)
+[api_registry_agent](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/api_registry_agent/)
 sample. For information on the configuration options, see
 [Configuration](#configuration).
 For information on the authentication for this tool, see
@@ -21472,7 +22463,7 @@ The `get_toolset()` function has the following configuration options:
 
 ## Additional resources
 
--   [api_registry_agent](https://github.com/google/adk-python/tree/main/contributing/samples/api_registry_agent/)
+-   [api_registry_agent](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/api_registry_agent/)
     ADK code sample
 -   [Google Cloud API Registry](https://docs.cloud.google.com/api-registry/docs/overview)
     documentation
@@ -24280,7 +25271,7 @@ The following sample code demonstrates how to use the `BigQueryToolset` in an AD
 
 ## Sample Agent
 
-For a complete, ready-to-run sample of a BigQuery-powered agent with detailed authentication examples, see the [BigQuery Sample Agent](https://github.com/google/adk-python/tree/main/contributing/samples/bigquery) on GitHub.
+For a complete, ready-to-run sample of a BigQuery-powered agent with detailed authentication examples, see the [BigQuery Sample Agent](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/bigquery) on GitHub.
 
 Note: If you want to access a BigQuery data agent as a tool, see [Data Agents tools for ADK](data-agent.md).
 
@@ -25136,7 +26127,7 @@ alternative `agent_engine_resource_name` parameter, see [Configuration
 parameters](#config-parameters). For a more advanced example, including
 recommended system instructions for the tool, see the [Advanced
 example](#advanced-example) or the full
-[agent code example](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
+[agent code example](https://github.com/google/adk-python/tree/main/contributing/samples/code_execution/agent_engine_code_execution).
 
 ## How it works
 
@@ -25305,7 +26296,7 @@ When plotting trends, you should make sure to sort and order the data by the x-a
 ```
 
 For a complete version of an ADK agent using this example code, see the
-[agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/agent_engine_code_execution).
+[agent_engine_code_execution sample](https://github.com/google/adk-python/tree/main/contributing/samples/code_execution/agent_engine_code_execution).
 
 ================
 File: docs/integrations/code-execution.md
@@ -25432,7 +26423,7 @@ configure the tool, you must provide a implementation of the `BaseComputer`
 class which defines an interface for an agent to use a computer. In the
 following example, the `PlaywrightComputer` class is defined for this purpose.
 You can find the code for this implementation in `playwright.py` file of the
-[computer_use](https://github.com/google/adk-python/blob/main/contributing/samples/computer_use/playwright.py)
+[computer_use](https://github.com/google/adk-python/blob/main/contributing/samples/multimodal/computer_use/playwright.py)
 agent sample project.
 
 ```python
@@ -25458,7 +26449,7 @@ root_agent = Agent(
 ```
 
 For a complete code example, see the
-[computer_use](https://github.com/google/adk-python/tree/main/contributing/samples/computer_use)
+[computer_use](https://github.com/google/adk-python/tree/main/contributing/samples/multimodal/computer_use)
 agent sample project.
 
 ================
@@ -26072,8 +27063,7 @@ catalog_tags: ["observability"]
 # Datadog Observability for ADK
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in:</span>
-    <span class="lst-python">Python</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
 [Datadog LLM
@@ -26112,11 +27102,11 @@ pip install ddtrace
 
 ## Setup
 
-### Create an Application using the Google ADK
+### Create an Application using ADK
 
-If you do not have an application using the Google ADK, follow the steps in the
-[ADK Getting Started Guide](https://google.github.io/adk-docs/get-started/) to
-create a sample ADK agent.
+If you do not have an application using ADK, follow the steps in the [ADK
+Getting Started Guide](https://adk.dev/get-started/) to create a sample ADK
+agent.
 
 ### Configure Environment Variables
 
@@ -26832,7 +27822,7 @@ root_agent = Agent(
 ```
 
 For a full implementation example, see the
-[Local environment sample](https://github.com/google/adk-python/tree/main/contributing/samples/local_environment).
+[Local environment sample](https://github.com/google/adk-python/tree/main/contributing/samples/environment_and_skills/local_environment).
 
 ### Try with agent
 
@@ -28016,7 +29006,7 @@ with the GKE Code Executor tool:
 - GKE cluster with a **gVisor-enabled node pool** (required for both Job Mode's default image and typical Agent Sandbox templates).
 - Agent's service account requires specific **RBAC permissions**:
     - **Job Mode:** Create, watch, and delete **Jobs**; Manage **ConfigMaps**; List **Pods** and read their **logs**. For a complete, ready-to-use configuration for Job Mode, see the
-[deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/gke_agent_sandbox/deployment_rbac.yaml)
+[deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/integrations/gke_agent_sandbox/deployment_rbac.yaml)
 sample.
     - **Sandbox Mode:** Permissions to create, get, watch, and delete **SandboxClaim** and **Sandbox** resources within the namespace where the Agent Sandbox is deployed.
 - Install the client library with the appropriate extras: `pip install google-adk[gke]`
@@ -32237,9 +33227,9 @@ error_handling_plugin = CustomRetryPlugin(max_retries=5)
 
 For complete code samples using the Reflect and Retry plugin, see the following:
 
-*   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/basic)
+*   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_reflect_tool_retry/basic)
     code sample
-*   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_reflect_tool_retry/hallucinating_func_name)
+*   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_reflect_tool_retry/hallucinating_func_name)
     code sample
 
 ================
@@ -32399,6 +33389,165 @@ The Restate plugin provides the following capabilities for your ADK agents:
 - [Restate ADK tutorial](https://docs.restate.dev/tour/google-adk) - Walkthrough of agent development with Restate and ADK
 - [Restate AI documentation](https://docs.restate.dev/ai) - Full reference for durable AI agent patterns
 - [Restate SDK on PyPI](https://pypi.org/project/restate-sdk/) - Python package
+
+================
+File: docs/integrations/skills-registry.md
+================
+---
+catalog_title: Google Cloud Skill Registry
+catalog_description: Dynamically search, discover, and fetch remote Skills
+catalog_icon: /integrations/assets/agent-platform.svg
+catalog_tags: ["google", "skills", "connectors"]
+---
+
+# Google Cloud Skill Registry
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.27.0</span><span class="lst-preview">Preview</span>
+</div>
+
+The **Google Cloud Skill Registry** integration within the Agent Development Kit (ADK) allows developers to dynamically search, discover, and fetch remote Skills cataloged within a central repository. 
+
+Rather than statically injecting every available skill into your agent's context window at initialization, the Skill Registry enables **on-demand targeted retrieval**. As your catalog of specialized capabilities scales to hundreds or thousands of skills, agents can dynamically discover, download, and activate the exact instructions and tools they need based on user intent. For more information about the Skills Registry service, see the [Google Cloud Skills Registry](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/skill-registry) documentation.
+
+!!! example "Preview release"
+    The Google Cloud Skills Registry feature is a Preview release. For
+    more information, see the
+    [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
+
+---
+
+## Use Cases
+
+*   **Context Window Optimization**: Save valuable tokens by only loading a skill's system instructions and tools when the user's prompt actually requires them.
+*   **Enterprise Reusability**: Build a central, managed repository of shared and private skills that multiple agents across different applications can consume.
+*   **Secure Isolation**: Automatically cache dynamically loaded skills within the agent's specific session state or isolated sandbox environments.
+
+---
+
+## Prerequisites
+
+*   A [Google Cloud project](https://docs.cloud.google.com/resource-manager/docs/creating-managing-projects).
+*   The **Skill Registry API** enabled in your Google Cloud project.
+*   Authentication configured for your environment. We recommend logging in using [Application Default Credentials](https://docs.cloud.google.com/docs/authentication/application-default-credentials) (`gcloud auth application-default login`).
+*   Environment variables `GOOGLE_CLOUD_PROJECT` set to your project ID and `GOOGLE_CLOUD_LOCATION` set to your deployment region (e.g., `us-central1`).
+
+!!! warning "Internet Access Requirements"
+    Since the GCP Skill Registry interacts with Vertex AI services using the Vertex AI Client SDK, agents running in sandboxed environments without outbound network access to Vertex AI endpoints will fail to reach the registry. Ensure proper network access is configured, or else the system falls back to local, filesystem-loaded skills.
+
+---
+
+## Installation
+
+The Skill Registry client is included in the core ADK library. Install it via pip:
+
+```bash
+pip install google-adk
+```
+
+---
+
+## Use with Agent
+
+To configure an agent to dynamically discover and load skills on demand, instantiate a `GCPSkillRegistry` and pass it as the `registry` parameter in your `SkillToolset`.
+
+```python
+import os
+from google.adk import Agent
+from google.adk.integrations.gcp_skill_registry import GCPSkillRegistry
+from google.adk.tools.skill_toolset import SkillToolset
+
+# 1. Initialize the GCP Skill Registry
+# Project ID and location can also be set via GOOGLE_CLOUD_PROJECT
+# and GOOGLE_CLOUD_LOCATION environment variables.
+registry = GCPSkillRegistry(
+    project_id=os.environ.get("GOOGLE_CLOUD_PROJECT"),
+    location=os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1"),
+)
+
+# 2. Create the SkillToolset with the Registry
+# You can optionally pre-load some local skills as well.
+skill_toolset = SkillToolset(
+    skills=[], 
+    registry=registry
+)
+
+# 3. Define your Agent with the SkillToolset
+agent = Agent(
+    model="gemini-flash-latest",
+    name="registry_agent",
+    description="An agent that can dynamically discover and execute skills.",
+    instruction="You are a helpful assistant. Use search_skills and load_skill to leverage remote capabilities.",
+    tools=[skill_toolset],
+)
+```
+
+---
+
+## How it Works
+
+When you configure a `SkillToolset` with a remote registry, ADK automatically equips your agent with two built-in tools to manage the skill lifecycle:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant Agent as ADK Agent (LLM)
+    participant Toolset as SkillToolset
+    participant Registry as Vertex AI SDK
+
+    User->>Agent: "How to optimize a BigQuery query?"
+    Note over Agent: LLM realizes it does not have<br/>instructions for BigQuery locally.
+    
+    Agent->>Toolset: search_skills(query="BigQuery optimization")
+    Toolset->>Registry: Search matching skills
+    Registry-->>Toolset: Returns frontmatters (e.g., "bigquery")
+    Toolset-->>Agent: Returns list of matches (filtered)
+    
+    Note over Agent: LLM identifies "bigquery" as<br/>the best candidate.
+    
+    Agent->>Toolset: load_skill(skill_name="bigquery")
+    Toolset->>Registry: Fetch remote skill details
+    Registry-->>Toolset: Returns skill payload
+    Note over Toolset: Unpacks payload &<br/>caches skill in Session State
+    Toolset-->>Agent: Success. Skill loaded.
+    
+    Note over Agent: LLM appends skill instructions to system prompt,<br/>making tools available.
+    Agent-->>User: Fulfills request utilizing BigQuery skill instructions!
+```
+
+### Semantic Discovery (`search_skills`)
+If the agent determines that its current system instructions are insufficient to answer a user query, it automatically invokes the `search_skills` tool. 
+
+*   **Collision Prevention**: To prevent namespace conflicts, ADK automatically filters out registry skills that duplicate the name of any locally loaded skills.
+
+### On-Demand Loading (`load_skill`)
+Once the agent identifies a matching remote skill (e.g., `"bigquery"`), it invokes the `load_skill` tool.
+
+*   **SDK Fetch**: ADK calls the Vertex AI Client SDK to retrieve the remote skill.
+*   **Extraction & Parsing**: The remote payload is unpacked and parsed into an executable `Skill` object.
+*   **Agent Session Caching**: The skill instructions and resources are cached in the current agent session state so subsequent turns do not require additional remote API calls.
+*   **Prompt Enrichment**: The skill's instructions are appended to the system prompt, and any scripts or tools provided by the skill become instantly executable.
+
+---
+
+## Configuration & API Reference
+
+### `GCPSkillRegistry` Configuration
+
+The `GCPSkillRegistry` client constructor accepts the following options:
+
+| Parameter | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `project_id` | `str` | `None` | The Google Cloud project ID. If omitted, falls back to `GOOGLE_CLOUD_PROJECT` env variable. |
+| `location` | `str` | `None` | The Google Cloud region/location. If omitted, falls back to `GOOGLE_CLOUD_LOCATION` env variable. |
+
+### Methods
+
+*   **`search_skills(query: str) -> List[Frontmatter]`**:
+    Performs a semantic or keyword query against the registry catalog, returning a list of skill frontmatter metadata (names and descriptions).
+*   **`get_skill(name: str, version: Optional[str] = None) -> Skill`**:
+    Fetches the remote skill payload using the Vertex AI Client SDK for a specific skill name (and optional revision/version), unpacks it, and returns a loaded `Skill` object.
 
 ================
 File: docs/integrations/spanner.md
@@ -33898,6 +35047,10 @@ File: docs/observability/index.md
 ================
 # Observability for agents
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+</div>
+
 Observability for agents enables measurement of a system's internal
 state, including reasoning traces, tool calls, and latent model outputs, by
 analyzing its external telemetry and structured logs. When building
@@ -33911,6 +35064,14 @@ Agent Development Kit (ADK) provides built-in observability through
 advanced [observability ADK Integrations](/integrations/?topic=observability)
 for monitoring and analysis.
 
+## Quick Start: Enabling Observability in Kotlin
+
+In Kotlin, you can enable comprehensive observability by configuring OpenTelemetry for traces and using the `LoggingPlugin` for detailed console output.
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/SetupExample.kt:full_example"
+```
+
 !!! tip "ADK Integrations for observability"
     For a list of pre-built observability libraries for ADK, see
     [Tools and Integrations](/integrations/?topic=observability).
@@ -33921,7 +35082,7 @@ File: docs/observability/logging.md
 # Agent activity logging
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Agent Development Kit (ADK) provides flexible and powerful logging capabilities
@@ -34096,6 +35257,27 @@ os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
 maybe_set_otel_providers([gcp_exporters])
 ```
 
+### Kotlin programmatic setup
+
+In Kotlin, ADK uses standard JVM logging facilities (defaulting to Flogger) and OpenTelemetry for structured GenAI logs.
+
+#### Capture prompt content
+
+You can enable full prompt logging by configuring the global `TelemetryConfig`:
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:
+capture_content"
+```
+
+#### Activity logging with Plugins
+
+To get detailed logs of agent activity (user messages, model requests/responses, tool calls) in the console, use the `LoggingPlugin`:
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:logging_plugin"
+```
+
 ### Go programmatic setup
 
 In Go, ADK uses the `google.golang.org/adk/telemetry` package for OpenTelemetry
@@ -34230,7 +35412,7 @@ File: docs/observability/metrics.md
 # Agent activity metrics
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.32.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.32.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Agent Development Kit (ADK) provides built-in, vendor-neutral metrics collection to help you understand the performance, cost, and usage patterns of your agents. While logs provide a detailed narrative of *what* happened, metrics give you aggregated, quantitative data to answer *how often* and *how fast* things are happening.
@@ -34321,13 +35503,25 @@ os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
 maybe_set_otel_providers([gcp_exporters])
 ```
 
+### Kotlin programmatic setup
+
+In Kotlin, ADK uses the standard `GlobalOpenTelemetry` to manage metrics. Configuring your OpenTelemetry SDK with a `MeterProvider` will enable metric collection.
+
+#### OTLP export setup
+
+To enable metrics and export them to an OpenTelemetry Collector, configure the OpenTelemetry SDK with the appropriate metrics exporter:
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/SetupExample.kt:full_example"
+```
+
 ================
 File: docs/observability/traces.md
 ================
 # Agent activity traces
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-go">Go v1.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-go">Go v1.0.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Agent Development Kit (ADK) provides distributed tracing capabilities to help you visualize the end-to-end journey of a request as it travels through your agent's architecture. While metrics tell you *how long* a process took and logs tell you *what* happened, traces connect these events, showing you exactly *where* the time was spent and the hierarchical relationship between LLM reasoning, tool calls, and external APIs.
@@ -34417,6 +35611,18 @@ os.environ["OTEL_RESOURCE_ATTRIBUTES"] = "key1=value1,key2=value2"
 maybe_set_otel_providers([gcp_exporters])
 ```
 
+### Kotlin programmatic setup
+
+In Kotlin, ADK automatically uses the `GlobalOpenTelemetry` instance to export traces. You should configure your OpenTelemetry SDK before starting the agent.
+
+#### OTLP export setup
+
+To enable tracing and export spans to an OpenTelemetry Collector, configure the OpenTelemetry SDK and register it globally:
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/SetupExample.kt:full_example"
+```
+
 ================
 File: docs/optimize/index.md
 ================
@@ -34446,7 +35652,7 @@ the sampler and uses them to improve the agent.
 
 In this example, we will use the `adk optimize` command to update the
 instructions of the
-[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
 sample agent based on evaluation results over a small eval set.
 
 ### Step 1: Specify the Example Dataset {#exampledataset}
@@ -34459,7 +35665,7 @@ The optimizer is expected to derive this new rule and add it to the agent
 instructions.
 
 Create a file `train_eval_set.evalset.json` in
-[`contributing/samples/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+[`contributing/samples/core/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
 with the following contents:
 
 ```json
@@ -34540,7 +35746,7 @@ also specifies the eval set to use for optimizing the agent.
 
 The full list of configuration options is available [below](#localevalsampler);
 for now, simply create a file `sampler_config.json` in
-[`contributing/samples/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+[`contributing/samples/core/hello_world/`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
 with the following contents:
 
 ```json
@@ -34561,8 +35767,8 @@ Run the `adk optimize` command, pointing it to the `hello_world` agent's
 directory and passing the configuration file created above.
 
 ```bash
-adk optimize contributing/samples/hello_world \
---sampler_config_file_path contributing/samples/hello_world/sampler_config.json
+adk optimize contributing/samples/core/hello_world \
+--sampler_config_file_path contributing/samples/core/hello_world/sampler_config.json
 ```
 
 The final output varies, but might look similar to the following:
@@ -34592,7 +35798,7 @@ adk optimize [OPTIONS] AGENT_MODULE_FILE_PATH
 module by the name `agent`.
 The `agent` module must contain a `root_agent`.
 For an example of a valid setup, examine the
-[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world)
+[`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
 agent.
 * `--sampler_config_file_path PATH`: The path to the config for the sampler.
 The sampler implementation and config format are described
@@ -34801,7 +36007,7 @@ The following reference code replicates the functionality of the `adk optimize`
 command for the above [example](#example).
 To use it, create the [dataset](#exampledataset) as shown in the example and run
 this code from a Python script within the
-[same directory](https://github.com/google/adk-python/tree/main/contributing/samples/hello_world):
+[same directory](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world):
 
 ```python
 import asyncio
@@ -34936,7 +36142,7 @@ immediately:
 
 This section explains how to define Plugin classes and register them as part of
 your agent workflow. For a complete code example, see
-[Plugin Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin_basic)
+[Plugin Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_basic)
 in the repository.
 
 ### Create Plugin class
@@ -35994,6 +37200,125 @@ projects:
     [ADK Samples repository](https://github.com/google/adk-samples).
 -   For information on applying Plugins for security purposes, see
     [Callbacks and Plugins for Security Guardrails](/safety/#callbacks-and-plugins-for-security-guardrails).
+
+================
+File: docs/runtime/web-interface/index.md
+================
+# Use the Web Interface
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+</div>
+
+The ADK web interface lets you test your agents directly in the browser. This
+tool provides a simple way to interactively develop and debug your agents.
+
+![ADK Web Interface](../../assets/adk-web-dev-ui-chat.png)
+
+!!! warning "Caution: ADK Web for development only"
+
+    ADK Web is ***not meant for use in production deployments***. You should use
+    ADK Web for development and debugging purposes only.
+
+Key features of the ADK web interface include:
+
+- **Chat interface**: Send messages to your agents and view responses in
+  real-time
+- **Session management**: Create and switch between sessions
+- **State inspection**: View and modify session state during development
+- **Event history**: Inspect all events generated during agent execution
+- **Visual Builder**: Design agents visually with a drag-and-drop workflow
+  editor and an AI-powered assistant (Python only, [learn
+  more](/visual-builder/))
+
+## Start the web interface
+
+Use the following command to start the ADK web interface:
+
+=== "Python"
+
+    ```shell
+    adk web
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    npx adk web
+    ```
+
+=== "Go"
+
+    ```shell
+    go run agent.go web api webui
+    ```
+
+=== "Java"
+
+    Make sure to update the port number.
+    === "Maven"
+        With Maven, compile and run the ADK web server:
+        ```console
+        mvn compile exec:java \
+         -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8000"
+        ```
+    === "Gradle"
+        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
+
+        ```groovy
+        plugins {
+            id('java')
+            // other plugins
+        }
+        ```
+        Then, elsewhere in the build file, at the top-level, create a new task:
+
+        ```groovy
+        tasks.register('runADKWebServer', JavaExec) {
+            dependsOn classes
+            classpath = sourceSets.main.runtimeClasspath
+            mainClass = 'com.google.adk.web.AdkWebServer'
+            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8000'
+        }
+        ```
+
+        Finally, on the command-line, run the following command:
+        ```console
+        gradle runADKWebServer
+        ```
+
+
+    In Java, the web interface and the API server are bundled together.
+
+Once started, the server prints the access URL to the console. Open it in your
+browser to use the web interface:
+
+```shell
++-----------------------------------------------------------------------------+
+| ADK Web Server started                                                      |
+|                                                                             |
+| For local testing, access at http://localhost:8000.                         |
++-----------------------------------------------------------------------------+
+```
+
+## Common options
+
+Here are some commonly used options for the `adk web` command. Run `adk web
+--help` to see all available options.
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--port` | Port to run the server on | `8000` |
+| `--host` | Host binding address | `127.0.0.1` |
+| `--session_service_uri` | Custom session storage URI | In-memory |
+| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+| `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
+
+For example:
+
+```shell
+adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
+```
 
 ================
 File: docs/runtime/ambient-agents.md
@@ -37979,7 +39304,7 @@ the method that best fits your development workflow.
     Use `adk web` to launch a browser-based interface for interacting with your
     agents.
 
-    [:octicons-arrow-right-24: Use the Web Interface](web-interface.md)
+    [:octicons-arrow-right-24: Use the Web Interface](web-interface/index.md)
 
 -   :material-console:{ .lg .middle } **Command Line**
 
@@ -38592,119 +39917,6 @@ your language:
 - [Java API reference](../api-reference/java/com/google/adk/agents/RunConfig.html)
 
 ================
-File: docs/runtime/web-interface.md
-================
-# Use the Web Interface
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
-</div>
-
-The ADK web interface lets you test your agents directly in the browser. This
-tool provides a simple way to interactively develop and debug your agents.
-
-![ADK Web Interface](../assets/adk-web-dev-ui-chat.png)
-
-!!! warning "Caution: ADK Web for development only"
-
-    ADK Web is ***not meant for use in production deployments***. You should
-    use ADK Web for development and debugging purposes only.
-
-## Start the web interface
-
-Use the following command to run your agent in the ADK web interface:
-
-=== "Python"
-
-    ```shell
-    adk web
-    ```
-
-=== "TypeScript"
-
-    ```shell
-    npx adk web
-    ```
-
-=== "Go"
-
-    ```shell
-    go run agent.go web api webui
-    ```
-
-=== "Java"
-
-    Make sure to update the port number.
-    === "Maven"
-        With Maven, compile and run the ADK web server:
-        ```console
-        mvn compile exec:java \
-         -Dexec.args="--adk.agents.source-dir=src/main/java/agents --server.port=8080"
-        ```
-    === "Gradle"
-        With Gradle, the `build.gradle` or `build.gradle.kts` build file should have the following Java plugin in its plugins section:
-
-        ```groovy
-        plugins {
-            id('java')
-            // other plugins
-        }
-        ```
-        Then, elsewhere in the build file, at the top-level, create a new task:
-
-        ```groovy
-        tasks.register('runADKWebServer', JavaExec) {
-            dependsOn classes
-            classpath = sourceSets.main.runtimeClasspath
-            mainClass = 'com.google.adk.web.AdkWebServer'
-            args '--adk.agents.source-dir=src/main/java/agents', '--server.port=8080'
-        }
-        ```
-
-        Finally, on the command-line, run the following command:
-        ```console
-        gradle runADKWebServer
-        ```
-
-
-    In Java, the Web Interface and the API server are bundled together.
-
-The server starts on `http://localhost:8000` by default:
-
-```shell
-+-----------------------------------------------------------------------------+
-| ADK Web Server started                                                      |
-|                                                                             |
-| For local testing, access at http://localhost:8000.                         |
-+-----------------------------------------------------------------------------+
-```
-
-## Features
-
-Key features of the ADK web interface include:
-
-- **Chat interface**: Send messages to your agents and view responses in real-time
-- **Session management**: Create and switch between sessions
-- **State inspection**: View and modify session state during development
-- **Event history**: Inspect all events generated during agent execution
-
-## Common options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--port` | Port to run the server on | `8000` |
-| `--host` | Host binding address | `127.0.0.1` |
-| `--session_service_uri` | Custom session storage URI | In-memory |
-| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
-| `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
-
-### Example with options
-
-```shell
-adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
-```
-
-================
 File: docs/safety/index.md
 ================
 # Safety and Security for AI Agents
@@ -39293,7 +40505,7 @@ File: docs/sessions/session/index.md
 # Session: Tracking Individual Conversations
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Following our Introduction, let's dive into the `Session`. Think back to the
@@ -39423,6 +40635,36 @@ are its key properties:
         var unused = exampleSessionService.deleteSession(appName, userId, sessionId);
        ```
 
+=== "Kotlin"
+
+       ```kotlin
+        import com.google.adk.kt.sessions.InMemorySessionService
+        import com.google.adk.kt.sessions.SessionKey
+
+        val sessionId = "123"
+        val appName = "example-app"
+        val userId = "example-user"
+        val initialState = mapOf("newKey" to "newValue")
+        val sessionService = InMemorySessionService()
+
+        // Create Session
+        val exampleSession = sessionService.createSession(
+            key = SessionKey(appName, userId, sessionId),
+            state = initialState
+        )
+        println("Session created successfully.")
+
+        println("--- Examining Session Properties ---")
+        println("ID (`id`):                ${exampleSession.key.id}")
+        println("Application Name (`appName`): ${exampleSession.key.appName}")
+        println("User ID (`userId`):         ${exampleSession.key.userId}")
+        println("State (`state`):           ${exampleSession.state}")
+        println("------------------------------------")
+
+        // Clean up (optional for this example)
+        sessionService.deleteSession(exampleSession.key)
+       ```
+
 *(**Note:** The state shown above is only the initial state. State updates
 happen via events, as discussed in the State section.)*
 
@@ -39486,6 +40728,13 @@ the storage backend that best suits your needs:
       ```java
         import com.google.adk.sessions.InMemorySessionService;
         InMemorySessionService exampleSessionService = new InMemorySessionService();
+      ```
+
+=== "Kotlin"
+
+      ```kotlin
+        import com.google.adk.kt.sessions.InMemorySessionService
+        val sessionService = InMemorySessionService()
       ```
 
 ### `VertexAiSessionService`
@@ -39748,7 +40997,7 @@ are restored to the state they were in *before* the request you specified with
 the ***invocation id***. However, global resources, such as app-level or
 user-level state and artifacts, are not restored. For a complete example of an
 agent session rewind, see the
-[rewind_session](https://github.com/google/adk-python/tree/main/contributing/samples/rewind_session)
+[rewind_session](https://github.com/google/adk-python/tree/main/contributing/samples/context_management/rewind_session)
 sample code. For more information on the limitations of the Rewind feature,
 see [Limitations](#limitations).
 
@@ -39786,7 +41035,7 @@ File: docs/sessions/index.md
 # Introduction to Conversational Context: Session, State, and Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Meaningful, multi-turn conversations require agents to understand context. Just
@@ -39877,7 +41126,7 @@ File: docs/sessions/memory.md
 # Memory: Long-Term Knowledge with `MemoryService`
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
@@ -39950,6 +41199,11 @@ The `InMemoryMemoryService` stores session information in the application's memo
     import com.google.adk.memory.InMemoryMemoryService;
 
     InMemoryMemoryService memoryService = new InMemoryMemoryService();
+    ```
+
+=== "Kotlin"
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:instantiate_service"
     ```
 
 
@@ -40068,93 +41322,13 @@ This example demonstrates the basic flow using the `InMemoryMemoryService` for s
 
     ```java
     package com.google.adk.examples.sessions;
+    ...
+    ```
 
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.memory.InMemoryMemoryService;
-    import com.google.adk.runner.Runner;
-    import com.google.adk.sessions.InMemorySessionService;
-    import com.google.adk.sessions.Session;
-    import com.google.adk.tools.LoadMemoryTool;
-    import com.google.genai.types.Content;
-    import com.google.genai.types.Part;
-    import java.util.Optional;
+=== "Kotlin"
 
-    public class MemoryExample {
-
-      private static final String APP_NAME = "memory_example_app";
-      private static final String USER_ID = "mem_user";
-      private static final String MODEL = "gemini-flash-latest";
-
-      public static void main(String[] args) {
-        // Services
-        InMemorySessionService sessionService = new InMemorySessionService();
-        InMemoryMemoryService memoryService = new InMemoryMemoryService();
-
-        // Agent 1: Capture
-        LlmAgent infoCaptureAgent = new LlmAgent.Builder()
-            .model(MODEL)
-            .name("InfoCaptureAgent")
-            .instruction("Acknowledge the user's statement.")
-            .build();
-
-        // Agent 2: Recall
-        LlmAgent memoryRecallAgent = new LlmAgent.Builder()
-            .model(MODEL)
-            .name("MemoryRecallAgent")
-            .instruction("Answer the user's question. Use the 'load_memory' tool if the answer might be in past conversations.")
-            .tools(new LoadMemoryTool())
-            .build();
-
-        // Turn 1
-        System.out.println("--- Turn 1: Capturing Information ---");
-        Runner runner1 = new Runner.Builder()
-            .agent(infoCaptureAgent)
-            .appName(APP_NAME)
-            .sessionService(sessionService)
-            .memoryService(memoryService)
-            .build();
-
-        String session1Id = "session_info";
-        // Create session
-        sessionService.createSession(APP_NAME, USER_ID, null, session1Id).blockingGet();
-
-        Content userInput1 = Content.fromParts(Part.fromText("My favorite project is Project Alpha."));
-
-        runner1.runAsync(USER_ID, session1Id, userInput1)
-            .blockingForEach(event -> {
-               if (event.finalResponse() && event.content().isPresent()) {
-                 System.out.println("Agent 1 Response: " + event.content().get().parts().get(0).text().get());
-               }
-            });
-
-        // Add to memory
-        System.out.println("\n--- Adding Session 1 to Memory ---");
-        Session completedSession1 = sessionService.getSession(APP_NAME, USER_ID, session1Id, Optional.empty()).blockingGet();
-        memoryService.addSessionToMemory(completedSession1).blockingAwait();
-        System.out.println("Session added to memory.");
-
-        // Turn 2
-        System.out.println("\n--- Turn 2: Recalling Information ---");
-        Runner runner2 = new Runner.Builder()
-            .agent(memoryRecallAgent)
-            .appName(APP_NAME)
-            .sessionService(sessionService)
-            .memoryService(memoryService)
-            .build();
-
-        String session2Id = "session_recall";
-        sessionService.createSession(APP_NAME, USER_ID, null, session2Id).blockingGet();
-
-        Content userInput2 = Content.fromParts(Part.fromText("What is my favorite project?"));
-
-        runner2.runAsync(USER_ID, session2Id, userInput2)
-            .blockingForEach(event -> {
-               if (event.finalResponse() && event.content().isPresent()) {
-                 System.out.println("Agent 2 Response: " + event.content().get().parts().get(0).text().get());
-               }
-            });
-      }
-    }
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:full_example"
     ```
 
 
@@ -40213,6 +41387,12 @@ You can also search memory from within a custom tool by using the tool context.
               return new ToolOutput(response.memories().toString());
           });
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:search_within_tool"
     ```
 
 ## Memory Bank
@@ -40350,6 +41530,11 @@ When a memory service is configured, your agent can use a tool or callback to re
         .build();
     ```
 
+=== "Kotlin"
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:preload_memory_agent"
+    ```
+
 To extract memories from your session, you need to call `add_session_to_memory`. For example, you can automate this via a callback:
 
 === "Python"
@@ -40415,6 +41600,11 @@ To extract memories from your session, you need to call `add_session_to_memory`.
         Tools:               []tool.Tool{loadmemorytool.New()},
         AfterAgentCallbacks: []agent.AfterAgentCallback{autoSaveSessionToMemoryCallback},
     })
+    ```
+
+=== "Kotlin"
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:auto_save_callback"
     ```
 
 
@@ -40491,7 +41681,7 @@ File: docs/sessions/state.md
 # State: The Session's Scratchpad
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Within each `Session` (our conversation thread), the **`state`** attribute acts like the agent's dedicated scratchpad for that specific interaction. While `session.events` holds the full history, `session.state` is where the agent stores and updates dynamic details needed *during* the conversation.
@@ -40621,13 +41811,19 @@ To inject a value from the session state, enclose the key of the desired state v
 
     LlmAgent storyGenerator = LlmAgent.builder()
         .name("StoryGenerator")
-        .model("gemini-flash-latest")
+        .model(geminiModel)
         .instruction("Write a short story about a cat, focusing on the theme: " + topic)
         .build();
 
     // Assuming session.state().put("topic", "friendship"), the LLM
     // will receive the following instruction:
     // "Write a short story about a cat, focusing on the theme: friendship."
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/StateExample.kt:instruction_templating"
     ```
 
 #### Important Considerations
@@ -40710,6 +41906,12 @@ The `InstructionProvider` function receives a `ReadonlyContext` object, which yo
         .name("template_helper_agent")
         .instruction(myInstructionProvider)
         .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/StateExample.kt:instruction_provider"
     ```
 
 If you want to both use an `InstructionProvider` *and* inject state into your instructions, you can use the `inject_session_state` utility function. Only `{key}` placeholders matching valid state variable names will be replaced; other text (including curly braces that don't match valid identifiers) will be left as-is.
@@ -41021,6 +42223,12 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
     --8<-- "examples/java/snippets/src/main/java/state/ManualStateUpdateExample.java:full_code"
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/StateExample.kt:full_example"
+    ```
+
 **3. Via `CallbackContext` or `ToolContext` (Recommended for Callbacks and Tools)**
 
 *(Note: In TypeScript, this is done via the unified `Context` type.)*
@@ -41104,6 +42312,12 @@ For more comprehensive details on context objects, refer to the [Context documen
             // ... rest of callback logic ...
         }
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/StateExample.kt:state_updates_context"
     ```
 
 **What `append_event` Does:**
@@ -41199,7 +42413,7 @@ You can define [skills in code](#inline-skills) or load
 
     For a complete code example of an ADK agent with a Skill, including both
     file-based and in-line Skill definitions, see the code sample
-    [skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent).
+    [skills_agent](https://github.com/google/adk-python/tree/main/contributing/samples/environment_and_skills/skills_agent).
 
 === "TypeScript"
 
@@ -41459,7 +42673,7 @@ You can define Skills within the code of your agent, as shown below.
 
 Check out these resources for building agents with Skills:
 
-- [Skills in Python - code sample](https://github.com/google/adk-python/tree/main/contributing/samples/skills_agent)
+- [Skills in Python - code sample](https://github.com/google/adk-python/tree/main/contributing/samples/environment_and_skills/skills_agent)
 - [Skills in Go - code sample](https://github.com/google/adk-go/tree/main/examples/skills)
 - Agent Skills [specification documentation](https://agentskills.io/)
 
@@ -47265,10 +48479,21 @@ other tools, within a single agent, is ***not supported***:
                 .build();
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    val searchAgent = LlmAgent(
+        name = "SearchAgent",
+        model = Gemini(name = "gemini-flash-latest"),
+        instruction = Instruction("You're a specialist in Google Search"),
+        tools = listOf(GoogleSearchTool(), YourCustomTool()) // <-- NOT supported
+    )
+    ```
+
 ### Workaround #1: AgentTool.create() method
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript (v0.6.1+)</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript (v0.6.1+)</span><span class="lst-java">Java</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The following code sample demonstrates how to use multiple built-in tools or how
@@ -47391,16 +48616,22 @@ to use built-in tools with other tools by using multiple agents:
     }
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/LimitationsWorkaround.kt:workaround_1"
+    ```
+
 ### Workaround #2: bypass_multi_tools_limit
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 ADK Python has a built-in workaround which bypasses this limitation for
 `GoogleSearchTool` and `VertexAiSearchTool` (use `bypass_multi_tools_limit=True` to enable it),
 as shown in the
-[built_in_multi_tools](https://github.com/google/adk-python/tree/main/contributing/samples/built_in_multi_tools).
+[built_in_multi_tools](https://github.com/google/adk-python/tree/main/contributing/samples/tools/built_in_multi_tools).
 sample agent.
 
 !!! warning
@@ -47496,6 +48727,32 @@ is **not supported**:
             .description("Root Agent")
             .subAgents(searchAgent, codingAgent) // Not supported, as the sub agents use built in tools.
             .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    val searchAgent = LlmAgent(
+        model = Gemini(name = "gemini-flash-latest"),
+        name = "SearchAgent",
+        instruction = Instruction("You're a specialist in Google Search"),
+        tools = listOf(GoogleSearchTool())
+    )
+
+    val codingAgent = LlmAgent(
+        model = Gemini(name = "gemini-flash-latest"),
+        name = "CodeAgent",
+        instruction = Instruction("You're a specialist in Code Execution")
+        // Kotlin currently doesn't have a BuiltInCodeExecutionTool in core
+    )
+
+
+    val rootAgent = LlmAgent(
+        name = "RootAgent",
+        model = Gemini(name = "gemini-flash-latest"),
+        description = "Root Agent",
+        subAgents = listOf(searchAgent, codingAgent) // Not supported when sub-agents use built-in tools
+    )
     ```
 
 ================
@@ -48357,7 +49614,7 @@ scenarios. For a complete code sample, see the
 [human_tool_confirmation](https://github.com/google/adk-python/blob/fc90ce968f114f84b14829f8117797a4c256d710/contributing/samples/human_tool_confirmation/agent.py)
 example. There are additional ways to incorporate human input into your agent
 workflow, for more details, see the
-[Human-in-the-loop](/agents/multi-agents/#human-in-the-loop-pattern)
+[Human-in-the-loop](/workflows/patterns/#human-in-the-loop)
 agent pattern.
 
 ## Boolean confirmation {#boolean-confirmation}
@@ -48732,7 +49989,7 @@ File: docs/tools-custom/function-tools.md
 # Function tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 When pre-built ADK tools don't meet your requirements, you can create custom *function tools*. Building function tools allows you to create tailored functionality, such as connecting to proprietary databases or implementing unique algorithms.
@@ -48820,6 +50077,17 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         ```
     In this example, both `location` and `unit` are mandatory.
 
+=== "Kotlin"
+    In Kotlin, parameters are considered **required** by default if they are of a non-nullable type and have no default value. The LLM must provide a value for these arguments.
+
+    The `@Param` annotation is used to provide the argument's description. This is crucial for the LLM to understand what the argument is for.
+
+    ???+ "Example: Required Parameters"
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/tools/function-tools/RequiredParams.kt:required_params"
+        ```
+    In this example, both `location` and `unit` are mandatory.
+
 ##### Optional Parameters
 
 === "Python"
@@ -48892,6 +50160,15 @@ A well-defined function signature is crucial for the LLM to use your tool correc
         ```
     Here, `flexibleDays` is optional. The LLM can choose to provide it, but it's not required.
 
+=== "Kotlin"
+    In Kotlin, a parameter is considered **optional** if it is of a **nullable type** or if it has a **default value**.
+
+    ???+ "Example: Optional Parameters"
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/tools/function-tools/OptionalParams.kt:optional_params"
+        ```
+    Here, `flexibleDays` is optional. The LLM can choose to provide it, but it's not required.
+
 ##### Optional Parameters with `typing.Optional`
 You can also mark a parameter as optional using `typing.Optional[SomeType]` or the `| None` syntax (Python 3.10+). This signals that the parameter can be `None`. When combined with a default value of `None`, it behaves as a standard optional parameter.
 
@@ -48919,13 +50196,13 @@ While you can include `*args` (variable positional arguments) and `**kwargs` (va
 
 #### Return Type
 
-The preferred return type for a Function Tool is a **dictionary** in Python, a **Map** or custom **Record or POJO** in Java, or an **object** in TypeScript. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary or map, the framework automatically wraps it into a dictionary with a single key named **"result"**.
+The preferred return type for a Function Tool is a **dictionary** in Python, a **Map** or custom **Record or POJO** in Java, an **object** in TypeScript, or a **Map** or **Data Class** in Kotlin. This allows you to structure the response with key-value pairs, providing context and clarity to the LLM. If your function returns a type other than a dictionary or map, the framework automatically wraps it into a dictionary with a single key named **"result"**.
 
 Strive to make your return values as descriptive as possible. *For example,* instead of returning a numeric error code, return a dictionary with an "error_message" key containing a human-readable explanation. **Remember that the LLM**, not a piece of code, needs to understand the result. As a best practice, include a "status" key in your return dictionary to indicate the overall outcome (e.g., "success", "error", "pending"), providing the LLM with a clear signal about the operation's state.
 
 #### Docstrings
 
-The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values. In Java, you can use Javadoc comments or the `@Schema(description="...")` annotation on your method to serve as this description.
+The docstring of your function serves as the tool's **description** and is sent to the LLM. Therefore, a well-written and comprehensive docstring is crucial for the LLM to understand how to use the tool effectively. Clearly explain the purpose of the function, the meaning of its parameters, and the expected return values. In Java, you can use Javadoc comments or the `@Schema(description="...")` annotation on your method to serve as this description. In Kotlin, you can use KDoc comments or the `@Tool(description="...")` and `@Param(description="...")` annotations to provide these descriptions.
 
 ### Passing Data Between Tools
 
@@ -49007,6 +50284,20 @@ A tool can write data to a `temp:` variable, and a subsequent tool can read it. 
 
         ```json
         For input `GOOG`: {"symbol": "GOOG", "price": "1.0"}
+        ```
+
+    === "Kotlin"
+
+        This tool retrieves the mocked value of a stock price.
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/tools/function-tools/FuncTool.kt:full_example"
+        ```
+
+        The return value from this tool will be a Map.
+
+        ```json
+        For input `GOOG`: {"symbol": "GOOG", "price": 123.45}
         ```
 
 ### Best Practices
@@ -49121,6 +50412,14 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
                 .build();
       }
     }
+    ```
+
+=== "Kotlin"
+
+    In Kotlin, you can create a long-running function tool by setting the `isLongRunning` property to `true` in the `@Tool` annotation.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/function-tools/LongRunningTool.kt:long_running_tool"
     ```
 
 ### Intermediate / Final result Updates
@@ -49253,11 +50552,17 @@ To use an agent as a tool, wrap the agent with the AgentTool class.
     AgentTool.create(agent)
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    AgentTool(agent = agentB)
+    ```
+
 ### Customization
 
 The `AgentTool` class provides the following attributes for customizing its behavior:
 
-* **skip\_summarization: bool:** If set to True, the framework will **bypass the LLM-based summarization** of the tool agent's response. This can be useful when the tool's response is already well-formatted and requires no further processing.
+* **skip\_summarization** (Python/TypeScript) / **skipSummarization** (Kotlin/Java): (boolean) If set to True, the framework will **bypass the LLM-based summarization** of the tool agent's response. This can be useful when the tool's response is already well-formatted and requires no further processing.
 
 ??? "Example"
 
@@ -49292,6 +50597,12 @@ The `AgentTool` class provides the following attributes for customizing its beha
 
         ```java
         --8<-- "examples/java/snippets/src/main/java/tools/AgentToolCustomization.java:full_code"
+        ```
+
+    === "Kotlin"
+
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/tools/function-tools/AgentTool.kt:agent_tool"
         ```
 
 ### How it works
@@ -51408,7 +52719,7 @@ For more information on building Tools for agents and function calling, see
 [Function Tools](/tools-custom/function-tools/). For
 more detailed examples of tools that take advantage of parallel processing, see
 the samples in the
-[adk-python](https://github.com/google/adk-python/tree/main/contributing/samples/parallel_functions)
+[adk-python](https://github.com/google/adk-python/tree/main/contributing/samples/tools/parallel_functions)
 repository.
 
 ================
@@ -51416,43 +52727,10 @@ File: docs/tutorials/agent-team.md
 ================
 # Build Your First Intelligent Agent Team: A Progressive Weather Bot with ADK
 
-<!-- Optional outer container for overall padding/spacing -->
-<div style="padding: 10px 0;">
-
-  <!-- Line 1: Open in Colab -->
-  <!-- This div ensures the link takes up its own line and adds space below -->
-  <div style="margin-bottom: 10px;">
-    <a href="https://colab.research.google.com/github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: #4285F4;">
-      <img width="32px" src="https://www.gstatic.com/pantheon/images/bigquery/welcome_page/colab-logo.svg" alt="Google Colaboratory logo">
-      <span>Open in Colab</span>
-    </a>
-  </div>
-
-  <!-- Line 2: Share Links -->
-  <!-- This div acts as a flex container for the "Share to" text and icons -->
-  <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-    <!-- Share Text -->
-    <span style="font-weight: bold;">Share to:</span>
-
-    <!-- Social Media Links -->
-    <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A//github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" title="Share on LinkedIn">
-      <img width="20px" src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn logo" style="vertical-align: middle;">
-    </a>
-    <a href="https://bsky.app/intent/compose?text=https%3A//github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" title="Share on Bluesky">
-      <img width="20px" src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Bluesky_Logo.svg" alt="Bluesky logo" style="vertical-align: middle;">
-    </a>
-    <a href="https://twitter.com/intent/tweet?url=https%3A//github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" title="Share on X (Twitter)">
-      <img width="20px" src="https://upload.wikimedia.org/wikipedia/commons/5/5a/X_icon_2.svg" alt="X logo" style="vertical-align: middle;">
-    </a>
-    <a href="https://reddit.com/submit?url=https%3A//github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" title="Share on Reddit">
-      <img width="20px" src="https://redditinc.com/hubfs/Reddit%20Inc/Brand/Reddit_Logo.png" alt="Reddit logo" style="vertical-align: middle;">
-    </a>
-    <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A//github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" title="Share on Facebook">
-      <img width="20px" src="https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg" alt="Facebook logo" style="vertical-align: middle;">
-    </a>
-  </div>
-
-</div>
+<a href="https://colab.research.google.com/github/google/adk-docs/blob/main/examples/python/tutorial/agent_team/adk_tutorial.ipynb" target="_blank" style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none; color: #4285F4;">
+  <img width="32px" src="https://www.gstatic.com/pantheon/images/bigquery/welcome_page/colab-logo.svg" alt="Google Colaboratory logo">
+  <span>Open in Colab</span>
+</a>
 
 This tutorial extends from the [Multi-tool agent](/tutorials/multi-tool-agent/) project. Now, you're ready to dive deeper and construct a more sophisticated, **multi-agent system**.
 
@@ -53561,6 +54839,10 @@ File: docs/tutorials/multi-tool-agent.md
 ================
 # Build a multi-tool agent
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+</div>
+
 This quickstart guides you through installing the Agent Development Kit (ADK),
 setting up a basic agent with multiple tools, and running it locally either in the terminal or in the interactive, browser-based dev UI.
 
@@ -53619,11 +54901,7 @@ application entirely on your machine and is recommended for internal development
       }
     }
     ```
-
-=== "Java"
-
-    To install ADK and setup the environment, proceed to the following steps.
-
+    
 === "Go"
 
     ## Create a new Go module
@@ -53645,6 +54923,20 @@ application entirely on your machine and is recommended for internal development
     ```
 
     This will add the ADK as a dependency to your `go.mod` file.
+
+=== "Java"
+
+    To install ADK and setup the environment, proceed to the following steps.
+
+=== "Kotlin"
+
+    Create a new Kotlin project (e.g., using IntelliJ IDEA or Gradle) and add the following dependency to your `build.gradle.kts`:
+
+    ```kotlin
+    dependencies {
+        implementation("com.google.adk:google-adk-kotlin-core:0.1.0") // Replace with actual version
+    }
+    ```
 
 ## 2. Create Agent Project { #create-agent-project }
 
@@ -53773,32 +55065,6 @@ application entirely on your machine and is recommended for internal development
 
     More instructions about this file are described in the next section on [Set up the model](#set-up-the-model).
 
-=== "Java"
-
-    Java projects generally feature the following project structure:
-
-    ```console
-    project_folder/
-    ├── pom.xml (or build.gradle)
-    ├── src/
-    ├── └── main/
-    │       └── java/
-    │           └── agents/
-    │               └── multitool/
-    └── test/
-    ```
-
-    ### Create `MultiToolAgent.java`
-
-    Create a `MultiToolAgent.java` source file in the `agents.multitool` package
-    in the `src/main/java/agents/multitool/` directory.
-
-    Copy and paste the following code into `MultiToolAgent.java`:
-
-    ```java title="agents/multitool/MultiToolAgent.java"
-    --8<-- "examples/java/cloud-run/src/main/java/agents/multitool/MultiToolAgent.java:full_code"
-    ```
-
 === "Go"
 
     You will need to create the following project structure:
@@ -53843,6 +55109,56 @@ application entirely on your machine and is recommended for internal development
         ```console
         type nul > .env
         ```
+
+=== "Java"
+
+    Java projects generally feature the following project structure:
+
+    ```console
+    project_folder/
+    ├── pom.xml (or build.gradle)
+    ├── src/
+    ├── └── main/
+    │       └── java/
+    │           └── agents/
+    │               └── multitool/
+    └── test/
+    ```
+
+    ### Create `MultiToolAgent.java`
+
+    Create a `MultiToolAgent.java` source file in the `agents.multitool` package
+    in the `src/main/java/agents/multitool/` directory.
+
+    Copy and paste the following code into `MultiToolAgent.java`:
+
+    ```java title="agents/multitool/MultiToolAgent.java"
+    --8<-- "examples/java/cloud-run/src/main/java/agents/multitool/MultiToolAgent.java:full_code"
+    ```
+
+=== "Kotlin"
+
+    Kotlin projects generally feature the following project structure:
+
+    ```console
+    project_folder/
+    ├── build.gradle.kts
+    ├── src/
+    ├── └── main/
+    │       └── kotlin/
+    │           └── agents/
+    │               └── multitool/
+    ```
+
+    ### Create `MultiToolAgent.kt`
+
+    Create a `MultiToolAgent.kt` source file in the `src/main/kotlin/agents/multitool/` directory.
+
+    Copy and paste the following code into `MultiToolAgent.kt`:
+
+    ```kotlin title="src/main/kotlin/agents/multitool/MultiToolAgent.kt"
+    --8<-- "examples/kotlin/snippets/get-started/multi_tool_agent/MultiToolAgent.kt"
+    ```
 
 ![intro_components.png](../assets/quickstart-flow-tool.png)
 
@@ -54288,6 +55604,31 @@ agent will be unable to function.
         gradle runAgent
         ```
 
+=== "Kotlin"
+
+    Using the terminal, navigate to your agent project directory:
+
+    ```console
+    project_folder/                <-- navigate to this directory
+    ├── build.gradle.kts
+    ├── src/
+    ├── └── main/
+    │       └── kotlin/
+    │           └── agents/
+    │               └── multitool/
+    │                   └── MultiToolAgent.kt
+    ```
+
+    ### Run your Agent
+
+    You can run the `main()` method of your Kotlin class using Gradle:
+
+    ```console
+    ./gradlew run
+    ```
+
+    Or if you are using IntelliJ IDEA, you can just click the green run arrow next to the `main()` function.
+
 ### 📝 Example prompts to try
 
 * What is the weather in New York?
@@ -54314,38 +55655,39 @@ You've successfully created and interacted with your first agent using ADK!
 ================
 File: docs/visual-builder/index.md
 ================
-# Visual Builder for agents
+# Use the Visual Builder
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.18.0</span><span class="lst-preview">Experimental</span>
 </div>
 
-The ADK Visual Builder is a web-based tool that provides a visual workflow
-design environment for creating and managing ADK agents. It allows you to
-design, build, and test your agents in a beginner-friendly graphical interface,
-and includes an AI-powered assistant to help you build agents.
+The ADK Visual Builder is a feature of the ADK web interface that provides a
+visual workflow design environment for creating and managing agents. The Visual
+Builder allows you to design, build, and test agents in a beginner-friendly
+graphical interface, and includes an AI-powered assistant to help you build
+agents.
 
 ![Visual Agent Builder](../assets/visual-builder.png)
 
 !!! example "Experimental"
+
     The Visual Builder feature is an experimental release. We welcome your
     [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md)!
 
-## Get started
+## Create an agent
 
-The Visual Builder interface is part of the ADK Web tool user interface.
-Make sure you have ADK library
-[installed](/get-started/installation/#python)
-and then run the ADK Web user interface.
+To use the Visual Builder, start the ADK web interface:
 
 ```console
-adk web --port 8000
+adk web
 ```
+
+Then follow the steps below to create an agent.
 
 ??? tip "Tip: Run from a code development directory"
 
     The Visual Builder tool writes project files to new subdirectories located
-    in the directory where you run the ADK Web tool. Make sure you run this
+    in the directory where you run ADK Web. Make sure you run this
     command from a developer directory location where you have write access.
 
 ![Visual Agent Builder start](../assets/visual-builder-start.png)
@@ -54357,13 +55699,13 @@ To create an agent with Visual Builder:
 1.  Type a name for your agent application and select **Create**.
 1.  Edit your agent by doing any of the following:
     *   In the left panel, edit agent component values.
-    *   In the central panel, add new agent components .
+    *   In the central panel, add new agent components.
     *   In the right panel, use prompts to modify the agent or get help.
 1.  In bottom left corner, select **Save** to save your agent.
 1.  Interact with your new agent to test it.
 1.  In top left of the page, select the pencil icon, as shown in *Figure 1*, to continue editing your agent.
 
-Here are few things to note when using Visual Builder:
+Here are a few things to note when using Visual Builder:
 
 *   **Create agent and save:** When creating an agent, make sure you select
     **Save** before exiting the editing interface, otherwise your new agent may
@@ -54373,11 +55715,19 @@ Here are few things to note when using Visual Builder:
 *   **Add tools:** When adding existing custom Tools to a Visual Builder
     agent, specify a fully-qualified Python function name.
 
-## Workflow component support
+??? tip "Try this prompt with the Visual Builder assistant"
 
-The Visual Builder tool provides a drag-and-drop user interface for constructing agents, as
-well as an AI-powered development Assistant that can answer questions and edit your agent workflow.
-The tool supports all the essential components for building an ADK agent workflow, including:
+    ```none
+    Help me add a dice roll tool to my current agent.
+    Use the default model if you need to configure that.
+    ```
+
+## Supported components
+
+The Visual Builder tool provides a drag-and-drop user interface for constructing
+agents, as well as an AI-powered development Assistant that can answer questions
+and edit your agent workflow. The tool supports all the essential components for
+building an ADK agent workflow, including:
 
 *   **Agents**
     *   **Root Agent**: The primary controlling agent for a workflow. All other agents in
@@ -54401,15 +55751,15 @@ The tool supports all the essential components for building an ADK agent workflo
         and end of agent workflow events.
 
 Some advanced ADK features are not supported by Visual Builder due to
-limitations of the Agent Config feature. For more information, see the
-Agent Config [Known limitations](/agents/config/#known-limitations).
+limitations of the Agent Config feature. For more information, see the Agent
+Config [Known limitations](/agents/config/#known-limitations).
 
-## Project code output
+## Generated project structure
 
 The Visual Builder tool generates code in the [Agent Config](/agents/config/)
 format, using `.yaml` configuration files for agents and Python code for custom
 tools. These files are generated in a subfolder of the directory where you ran
-the ADK Web interface. The following listing shows an example layout for a
+the ADK web interface. The following listing shows an example layout for a
 DiceAgent project:
 
 ```none
@@ -54426,21 +55776,9 @@ DiceAgent/
     You can edit the generated files in your development environment. However,
     some changes may not be compatible with Visual Builder.
 
-## Next steps
-
-Using the Visual Builder development Assistant, try building a new agent using
-this prompt:
-
-```none
-Help me add a dice roll tool to my current agent.
-Use the default model if you need to configure that.
-```
-
-Check out more information on the Agent Config code format used by Visual Builder
-and the available options:
-
-*   [Agent Config](/agents/config/)
-*   [Agent Config YAML schema](/api-reference/agentconfig/)
+For more information on the Agent Config code format used by Visual Builder, see
+[Agent Config](/agents/config/) and [Agent Config YAML
+schema](/api-reference/agentconfig/).
 
 ================
 File: docs/workflows/collaboration.md
@@ -54448,7 +55786,7 @@ File: docs/workflows/collaboration.md
 # Build collaborative agent teams
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
 </div>
 
 Some complex tasks may require multiple agents with specific responsibilities
@@ -54475,13 +55813,11 @@ available for collaboration modes:
 This guide covers how to use modes for your subagents and how these modes impact
 agent behavior.
 
-!!! example "Beta Release"
+!!! warning "Disabled: Task mode in graph-based workflows"
 
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+    The collaborative mode `task` behavior is disabled for use in
+    graph-based workflows in ADK Python v2.0.0. This feature
+    is expected to be re-enabled in a future release.
 
 ## Get started
 
@@ -54515,7 +55851,7 @@ identifies and assigns tasks to the subagents. When a subagent completes
 a task, it automatically returns to the coordinator agent.
 For more information about structuring data using ***input_schema*** and
 ***output_schema*** with agents, subagents, and workflow nodes, see
-[Data handling for agent workflows](/workflows/data-handling/).
+[Data handling for agent workflows](/graphs/data-handling/).
 
 ## Mode configuration and behaviors
 
@@ -54638,1232 +55974,1086 @@ There are some known limitations with agent collaboration modes:
 -   ***Task* mode agents** must be leaf agents and cannot have subagents.
 
 ================
-File: docs/workflows/data-handling.md
-================
-# Data handling for agent workflows
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
-</div>
-
-Structuring and managing data between agents and graph-based nodes is critical
-for building reliable processes with ADK. This guide explains data handling
-within graph-based workflows and collaboration agents, including how information
-is transmitted and received between graph nodes using ***Events***. It covers
-the essential parameters for events, data, content, and state, and explains how
-to implement structured data transfer for both function and agent nodes using
-data format schemas and specific instruction syntax.
-
-!!! example "Beta Release"
-
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
-
-
-## Workflow graph Events
-
-Within a graph-based workflow, you pass data using ***Events***. All execution
-*nodes* in a workflow graph consume and emit Events. This section covers the
-basics of transmitting and receiving data between nodes in a ***Workflow***.
-Events have specific parameters for transmitting different types of data between
-nodes. The key parameters for node data handling are as follows:
-
--   **`output`**: Parameter for passing information between *nodes*.
--   **`message`**: Data intended as a response to a user.
--   **`state`**: Data automatically persisted across nodes via ***Events***
-    throughout an ADK session.
-
-Events also carry additional information about the workflow, including the
-source node of the Event.
-
-### Node input and output with Events
-
-Each node in a graph receives and transmits data through the ***Event*** class.
-Use the ***yield*** syntax to hand off data to the next node, as shown in the
-following code snippet:
-
-```python
-from google.adk import Event
-
-def my_function_node(node_input: str):
-    output_value = node_input.upper()
-    return Event(output=output_value) # "THE RESULT"
-```
-
-Use the ***return*** syntax when outputting ***Event*** data that does not
-require additional processing. When emitting data that requires additional
-processing, or if you are generating more than one data item, you can use more
-than one ***yield*** command. Each ***yield*** call adds to a list of data
-objects on the Event which is passed to the next node of a graph. A ***return***
-or ***yield*** command without a parameter passes a `None` value to the next
-node.
-
-### Event `output` parameter
-
-The ***output*** parameter of an ***Event*** is the standard way to pass data to
-the next node of a graph. The next node receives a ***node input*** object
-containing the data, as shown in the following code sample:
-
-```python
-def my_function_node_1():
-    return Event(output="The Result")
-
-def my_function_node_2(node_input: str):
-    output_value = node_input.lower()
-    return Event(output=output_value) # "the result"
-```
-
-You can pass longer, structured data in a serializable format, as shown in this
-code sample:
-
-```python
-def my_function_node_3():
-    yield Event(
-        output={
-            "city_name": "Paris",
-            "city_time": "10:10 AM",
-        },
-    )
-```
-
-!!! warning "Caution: Event.output limitation"
-
-    Nodes are only allowed to emit a single ***Event.output*** data payload
-    per execution. This limitation means that while you can more than one
-    ***yield*** in a node, having two or more ***yield*** commands with an
-    ***Event.output*** results in a runtime error.
-
-### Event `message` parameter
-
-The ***message*** parameter of an ***Event*** is used to pass data intended as
-a user response. In general, you should not use the ***message*** parameter in
-your agent code unless it is specifically to provide information to a user or
-request information from a user. The following code example show how to provide
-information to a user during workflow execution:
-
-```python
-async def user_message(node_input: str):
-  """Tell user research process is starting."""
-  yield Event(message="Beginning research process...")
-```
-
-### Event `state` parameter
-
-The ***state*** parameter of an ***Event*** is used to maintain a small set of
-data values during an entire ADK session. Values in the state parameter
-automatically persist between Nodes and are meant for guiding the execution of
-more complex workflows. Nodes can modify state values, and the modified state
-values are available to downstream Nodes.The following code example shows how
-state is persisted across nodes:
-
-```python
-async def init_state_node(attempts: int = 0):
-  yield Event(
-      state={
-          "attempts": attempts,
-      },
-  )
-
-async def task_attempt_node(node_input: Content, attempts: int):
-  yield Event(
-      state={
-          "attempts": attempts + 1,
-      },
-  )
-
-async def read_state_node(ctx: Context):
-  print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
-
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", init_state_node, task_attempt_node, read_state_node)],
-)
-```
-
-!!! warning "Caution: `state` property data limitations"
-
-    The state parameter *should not be used to persist large amounts of data* between
-    nodes. Use artifacts or other data persistence mechanisms, such as database
-    Tools, to persist large data resources during the life cycle of a Workflow.
-
-## Constrain node data input and output with schemas
-
-You can set input and output data schemas to constrain the input and output data
-formats of any node, including ***FunctionNodes*** and **Agents**. The following
-parameters are optional settings for any node. You can set both or either one of
-these parameters on any workflow node as required by your agent project.
-
--   **`input_schema`**: Set the expected input schema using a class that
-    extends ***BaseModel***.
--   **`output_schema`**: Set the required output schema using a class that
-    extends ***BaseModel***.
-
-The code example below shows how to set both input and output schemas for a
-subagent.
-
-```python
-from google.adk import Agent
-from pydantic import BaseModel
-
-class FlightSearchInput(BaseModel):
-    origin: str           # Airport code "SFO"
-    destination: str      # Airport code "CDG"
-    departure_date: date  # date(2026, 3, 15)
-    passengers: int = 1   # Number of passengers
-
-class FlightSearchOutput(BaseModel):
-    flights: list[Flight]
-    cheapest_price: float
-
-flight_searcher = Agent(
-    name="flight_searcher",
-    instruction="Search for available flights.",
-    input_schema=FlightSearchInput,
-    output_schema=FlightSearchOutput,
-    tools=[search_flights_api],
-    mode="single_turn",
-    ...
-)
-
-assistant = Agent(
-    name="assistant",
-    instruction="You help users plan trips.",
-    sub_agents=[flight_searcher],
-    ...
-)
-```
-
-## Access structured data in agents
-
-When you pass structured data into an agent from subagent or a workflow node,
-such as a Function Node, you can use specific syntax to add that data into the
-agent's instructions. Specifically, you can use the curly braces `{ }` to select
-the input schema properties, or `< >` to specify the input schema properties,
-the `from` keyword, and the name of the node providing the data. The following
-code snippet shows two ways to include data passed through an agent
-***input schema***:
-
-```python
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
-
-def lookup_time_function(city: str):
-    """Simulate returning the current time in the specified city."""
-    return Event(output=CityTime(time_info='10:10 AM', city=city))
-
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
-
-    # data selection based on class and parameter
-    # instruction="""
-    #     Return a sentence in the following format:
-    #     It is {CityTime.time_info} in {CityTime.city} right now.
-    # """,
-
-    # more restrictive data selection based on source node name
-    instruction="""
-        Return a sentence in the following format:
-        It is <CityTime.time_info from lookup_time_function> in
-        <CityTime.city from lookup_time_function> right now.
-    """,
-)
-
-root_agent = Workflow(
-    name="root_agent",
-    edges=[
-        (START, city_generator_agent, lookup_time_function, city_report_agent)
-    ],
-)
-```
-
-For a complete, but simplified version of this workflow, see
-[Graph-based agent workflows](/workflows/#get-started).
-
-================
-File: docs/workflows/dynamic.md
-================
-# Dynamic workflows
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
-</div>
-
-The ADK framework provides a programmatic way to define workflows as a more
-flexible and powerful alternative to [graph-based workflows](/workflows/).
-Using a graph-based approach provides a convenient way to compose multi-step,
-static process structures with workflow nodes. However, if the logic path for
-your workflow is more complex, with iterative loops or complex branching logic,
-a graph-based approach may not suit your needs, or may become too unwieldy to
-manage.
-
-Dynamic workflows in ADK allow you to put aside graph-based path structures and
-use the full power of your chosen programming language to build workflows. With
-Dynamic workflows, you can create workflows with simple decorators, invoke
-workflow nodes as functions, and build complex routing logic. Here are some of
-the benefits of dynamic workflows in ADK:
-
--   **Flexible Control Flow:** Define execution order dynamically using
-    loops, conditionals, and recursion which are difficult or impossible to
-    represent in static graphs.
--   **Programmatic Experience:** Use familiar constructs like `while` loops
-    and `async/await` instead of graph-based routing.
--   **Automatic Checkpointing:** Dynamic workflows track each node
-    execution. Successful sub-nodes are automatically skipped when resuming the
-    workflow, making complex logic durable and resumable by default.
--   **Encapsulation:** Wrap business logic into *parent* nodes that
-    internally compose lower-level nodes, keeping the overall workflow graph
-    clean and manageable.
-
-!!! example "Beta Release"
-
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
-
-For information on installing ADK 2.0 to test this feature, see
-[Welcome to ADK 2.0](/2.0/).
-
-## Get started
-
-The following dynamic workflow code example shows how to define a basic
-workflow containing a single node with a function:
-
-```python
-from google.adk import Context
-from google.adk import Workflow
-from google.adk.workflow import node
-from typing import Any
-
-@node(name="hello_node")
-def my_node(node_input: Any):
-    return "Hello World"
-
-# define a dynamic workflow node
-@node(rerun_on_resume=True)
-async def my_workflow(ctx: Context, node_input: str) -> str:
-    # run_node executes a node and returns its output
-    result = await ctx.run_node(my_node, node_input="hello")
-    return result
-
-# Run the workflow
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", my_workflow)],
-)
-```
-
-This example uses the [***@node***](#node) annotation for convenience and to
-keep the written code as simple as possible. This annotation generates wrappers
-that allow the code to be run in the context of an ADK dynamic workflow.
-
-## Building blocks: nodes and workflows
-
-Nodes and workflows represent the basic building blocks of ADK's dynamic
-workflows. These classes provide the functionality required to wrap your code so
-it can be integrated into code-based workflows in ADK.
-
-### Nodes and @node {#node}
-
-A dynamic workflow in ADK is composed of *nodes*, which are classes derived
-from ***BaseNode***. A simple version of a usable workflow node is a
-***FunctionNode***, which allows you to wrap code with functionality required to
-run within a ***Workflow***. For convenience, the ADK framework provides the
-***@node*** annotation which generates the node wrapper, keeping boilerplate
-wrapper code to a minimum:
-
-```python
-@node(name="hello_node")
-def my_function_node(node_input: Any):
-    return "Hello World"
-```
-
-The following code snippet shows the equivalent code *without* the
-***@node*** annotation:
-
-```python
-# base function
-def my_function_node(node_input: Any):
-    return "Hello World"
-
-# FunctionNode wrapper with options
-success_node = FunctionNode(
-    my_function_node,
-    name="hello",
-    rerun_on_resume=True,
-)
-```
-
-Creating the node wrapper code yourself can be useful if you are wrapping
-functions from an external library, need to create multiple nodes from the same
-function with different configurations, or if you are managing node references
-in a registry for advanced orchestration.
-
-### Workflows
-
-In an ADK dynamic workflow, you use the ***Workflow*** class as a primary
-container for orchestrating nodes. You use a node to define a dynamic workflow
-with code that manages running nodes and the execution logic (order and paths)
-for those nodes, as shown in the following code sample:
-
-```python
-@node(rerun_on_resume=True)
-async def my_workflow(ctx):
-    # run_node executes a node and returns its output
-    result = await ctx.run_node(my_function_node, node_input="Hello")
-    result_formatted = await ctx.run_node(my_formatting_node, node_input=result)
-    return result_formatted
-
-# Run the workflow
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", my_workflow)],
-)
-```
-
-## Data handling
-
-When using dynamic workflows with ADK, passing data is simpler than
-[graph-based workflows](/workflows/) because, with a workflow,
-the ***Context*** class's ***run_node()*** method returns the node's output
-directly. This eliminates the need to directly handle session state or complex
-routing outputs for data transfer. The following code example shows how you can
-pass string data between an agent node and a function node:
-
-```python
-from google.adk import Context
-from google.adk.workflow import node
-
-@node(rerun_on_resume=True)
-async def editorial_workflow(ctx: Context, user_request: str):
-    # Agent Node generates output
-    raw_draft = await ctx.run_node(draft_agent, user_request)
-
-    # Function Node formats text
-    formatted_text = await ctx.run_node(format_function_node, raw_draft)
-
-    return formatted_text
-```
-
-You can also pass specific data schemas using defined class and configure input
-and output schemas, similar to graph-based workflow nodes, as shown in the
-following code example:
-
-```python
-from google.adk import Agent
-from google.adk import Context
-from google.adk.workflow import node
-from pydantic import BaseModel
-
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
-
-@node
-def city_time_function(city: str):
-    """Simulate returning the current time in a specified city."""
-    return CityTime(time_info="10:10 AM", city=city)
-
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
-    instruction="""output the data provided by the previous node.""",
-)
-
-@node # workflow node
-async def city_workflow(ctx: Context):
-    city_time = await ctx.run_node(city_time_function, "Paris")
-    report_text = await ctx.run_node(city_report_agent, city_time)
-
-    return report_text
-```
-
-For more information on data handling between workflow nodes, see
-[Data handling for agent workflows](/workflows/data-handling/).
-
-## Workflow routes
-
-Dynamic workflows in ADK provide more flexibility in terms of routing logic
-compared to [graph-based workflows](/workflows/), including
-iterative loops or more complex branching logic. This section describes some of
-the techniques that you can use for routing.
-
-### Sequence route
-
-You can create sequential task processing with dynamic workflows in ADK, just
-as you can with graph-based workflows. The following code snippet shows a
-dynamic workflow with an agent, a function node, and a second agent:
-
-```python
-@node # workflow node
-async def city_workflow(ctx: Context):
-    city = await ctx.run_node(city_generator_agent)
-    city_time = await ctx.run_node(city_time_function, city)
-    report_text = await ctx.run_node(city_report_agent, city_time)
-
-    return report_text
-```
-
-### Loop route
-
-For workflows where you want to use an iterative loop for a task, dynamic
-workflows offer much more flexibility to define the routing logic you need. The
-following code example shows how to use dynamic workflows to construct a
-workflow loop for generating, reviewing, and updating code:
-
-```python
-from google.adk import Context
-from google.adk import Event
-from google.adk.agents import LlmAgent
-from google.adk.workflow import node
-
-coder_agent = LlmAgent(
-    name="generator_agent",
-    model="gemini-flash-latest",
-    instruction="Write python code for user request.",
-    output_schema=str,
-)
-
-@node(name="lint_reviewer")
-async def compile_lint_check(ctx: Context, code: str):
-    # Simulate API call or lint check
-    class Response:
-        findings = ""
-    return Response()
-
-fixer_agent = LlmAgent(
-    name="fixer_agent",
-    model="gemini-flash-latest",
-    instruction="""Refactor current code {code}.
-        Based on compile & lint review: {findings}""",
-    output_schema=str,
-)
-
-@node # workflow node
-async def code_workflow(ctx: Context, user_request: str):
-  code = await ctx.run_node(coder_agent, user_request)
-  check_resp = await ctx.run_node(compile_lint_check, code)
-
-  while check_resp.findings:
-    yield Event(state={"code": code, "findings": check_resp.findings})
-    code = await ctx.run_node(fixer_agent, {"code": code, "findings": check_resp.findings})
-
-    check_resp = await ctx.run_node(compile_lint_check, code)
-
-  return code
-```
-
-### Parallel execution routes
-
-Dynamic workflows in ADK can support parallel execution, and you can use
-standard asynchronous libraries, such as `asyncio`, to build this
-functionality. The following code example shows how to build a workflow node
-that supports parallel execution using `@node` and `asyncio.gather`:
-
-```python
-import asyncio
-from typing import Any
-from google.adk import Context
-from google.adk.workflow import BaseNode, node
-
-
-@node(rerun_on_resume=True)
-async def parallel_supervisor(
-    ctx: Context, node_input: list[Any], real_node: BaseNode
-):
-    """Runs a worker node in parallel for each item in the input list."""
-    tasks = []
-    for item in node_input:
-        # ctx.run_node returns a future. Append instead of awaiting immediately.
-        tasks.append(ctx.run_node(real_node, item))
-
-    # Collect all results in parallel
-    results = await asyncio.gather(*tasks)
-    return results
-```
-
-!!! tip "Tip: Resuming parallel nodes"
-
-    The workflow framework ensures that if a dynamic workflow is resumed, only
-    failed or interrupted worker nodes are re-executed, including parallel worker
-    nodes.
-
-## Human input
-
-Dynamic workflows in ADK can also include human input or human in the loop
-(HITL) steps. You build human input into workflows by yielding a
-***RequestInput*** from a node, which pauses the workflow and waits for user
-input. The following code example shows how to build a human input node and
-include it in a workflow:
-
-```python
-from typing import Any
-from google.adk import Context
-from google.adk.events import RequestInput
-from google.adk.workflow import node
-
-
-@node(rerun_on_resume=False)
-async def get_user_approval(ctx: Context, node_input: Any):
-    """Yields a RequestInput to pause the workflow and wait for user input."""
-    yield RequestInput(message="Please approve this request (Yes/No)")
-
-
-@node(rerun_on_resume=True)
-async def handle_process(ctx: Context, node_input: Any):
-    """The orchestrator calling the interactive step."""
-    user_response = await ctx.run_node(get_user_approval)
-
-    if user_response.lower() == "yes":
-        return "Approved"
-    return "Denied"
-```
-
-!!! important "Important: Parent nodes with `ctx.run_node`"
-
-    Parent nodes in dynamic workflows that call `ctx.run_node` must set
-    `rerun_on_resume=True` to handle interruptions properly.
-
-## Advanced features
-
-Dynamic workflows offer some advanced features designed to handle more complex
-development scenarios. These capabilities allow for finer control over execution
-and better integration with existing technical infrastructure.
-
-### Execution IDs
-
-The ADK framework generates a deterministic identifier (ID) for child node
-executions based on the parent ID and a counter. ADK workflows use deterministic
-IDs for each scheduled node to identify previous results. These IDs are
-generated based on the order of dynamic node schedules, and are used for
-checkpointing and to re-run tasks in the correct order in the case of a resumed
-or re-run workflow.
-
-#### Custom execution IDs
-
-In some rare cases, you may need to have stable identifiers, such as when
-processing a reorderable list, you can supply a custom ID when running a node.
-In general, you should avoid this due to the impacts to workflow task retries
-and process resumes. Specifically, these IDs are used to check node states and
-skip execution if a node was already run. If you provide custom IDs, make sure
-they are deterministic for workflow re-runs and logically remain the same for
-the input. The following example code shows how to add such an identifier when
-executing node in a workflow:
-
-!!! warning "Warning: Custom execution IDs"
-
-    Avoid creating custom execution IDs. Since execution IDs are used to determine
-    the execution order of nodes, custom execution IDs can cause problems when the
-    system attempts to re-run those nodes in your workflow.
-
-```python
-from google.adk import Context
-from google.adk.workflow import node
-from pydantic import BaseModel
-from typing import Any
-import asyncio
-
-class Order(BaseModel):
-  order_id: str
-  cart_items: list[Product]
-
-@node(rerun_on_resume=True)
-async def process_all_orders(ctx: Context, node_input: Any):
-  orders = await get_orders()
-
-  process_tasks = []
-  for order in orders:
-    # Use run_id to provide a custom identifier.
-    # Custom run_ids must contain at least one non-numeric character
-    # to avoid collision with auto-generated sequential numeric IDs.
-    task = ctx.run_node(process_order, order, run_id=f"order-{order.order_id}")
-    process_tasks.append(task)
-
-  results = await asyncio.gather(*process_tasks)
-  return results
-```
-
-By default, auto-generated run IDs are sequential integers starting from
-`"1"` (represented as strings). Custom `run_id` values must contain at
-least one non-numeric character to avoid collisions with these
-auto-generated IDs.
-
-================
-File: docs/workflows/graph-routes.md
-================
-# Build graph routes for agent workflows
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
-</div>
-
-Graph-based workflows in ADK define agent logic as a graph of execution nodes
-and edges, allowing you to build more reliable processes that combine artificial
-intelligence (AI) reasoning and code logic. These workflows allow you to create
-logical routes of execution nodes that can encapsulate code functions,
-AI-powered agents, Tools, and human input. By explicitly mapping out routing
-logic, this approach allows you to define a specific, step-wise process workflow
-in code, providing improved precision and reliability over purely prompt-based
-agents.
-
-![Graph-based flight upgrade agent](/assets/graph-workflow-router.svg)
-
-```python
-root_agent = Workflow(
-  name="routing_workflow",
-  edges=[
-    ("START", process_message, router),
-    (router,
-      {
-        "output-1": response_1,
-        "output-2": response_2,
-        "output-3": response_3,
-      },
-    ),
-  ],
-)
-```
-
-**Figure 1.** Visualization of a task graph and the ***Workflow*** code to
-implement it.
-
-The advantage of using a graph-based agent workflow is the significant increase
-in control, predictability, and reliability over prompt-based agents. By
-defining the overall process workflow in code, you gain more control over how
-tasks are routed and executed. This structured node definition improves the
-predictability of agents and enhances reliability for complex tasks that require
-defined steps and process management.
-
-!!! example "Beta Release"
-
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
-
-Get started with graph-based workflows in ADK by checking out
-[Graph-based agent workflows](/workflows/).
-
-## Nodes
-
-A graph is composed of execution nodes. These *nodes* can be ***Agents***, ADK
-***Tools***, human input tasks, or code functions you write. Nodes can take
-inputs from previously executed nodes, and emit data through ***Event***
-objects. The following shows a simple ***FunctionNode*** that handles text
-inputs and sends a text output:
-
-```python
-from google.adk import Event
-
-def my_function_node(node_input: str):
-    input_text_modified = node_input.upper()
-    return Event(output=input_text_modified)
-```
-
-For more information about transferring data between nodes, see .
-[Data handling for agent workflows](/workflows/data-handling/).
-
-## Workflow graphs syntax
-
-You define a graph by creating an ***edges*** array, which defines a logical
-execution path of *nodes* and conditions to be followed. This section
-provides an overview of graph syntax in an ***edges*** array. The following code
-example shows a basic workflow with two nodes to be executed in order:
-
-```python
-from google.adk import Workflow
-
-root_agent = Workflow(
-    name="sequential_workflow",
-    edges=[("START", task_A_node, task_B_node)],
-)
-```
-
-!!! caution "Caution: Workflows and agent limitations"
-
-    You can add ***Agents***, or ***LlmAgents***, to graph-based workflows,
-    however they must be set to a task or single-turn mode. For more
-    information about agent modes, see
-    [Build collaborative agent teams](/workflows/collaboration/#mode-configuration-and-behaviors).
-
-### Route sequences
-
-The ***edges*** array executes nodes based on the order or nodes presented in
-the array, starting with the first row and proceeding through the subsequent
-rows until execution is complete. The first row of the ***edges*** array uses
-the ***START*** keyword to indicate the beginning of a graph execution, with
-each listed node executed in sequence, as shown in the following code
-snippets:
-
-```python
-edges=[("START", task_A_node)]  # single node run
-edges=[("START",
-        task_A_node,
-        task_B_node,
-        task_C_node)]           # 3 nodes run in order
-```
-
-You can also use ***START*** more than once to initiate parallel tasks at the
-beginning of a workflow graph, as shown in the following code snippet:
-
-```python
-edges=[
-    ("START", parallel_task_A),
-    ("START", parallel_task_B),
-    ("START", parallel_task_C),
-]
-```
-
-!!! warning "Caution: Limitations on parallel nodes"
-
-    Not all workflow nodes or subagents can be run in parallel. In particular,
-    you cannot run multiple interactive chat sessions within the same agent
-    session.
-
-### Route branches
-
-The subsequent rows of the ***edges*** arrays after the START keyword define
-additional execution logic for nodes. For branching paths, you define a node,
-usually a ***FunctionNode***, that outputs a ***route*** with one or more route
-values. In the edges graph, you define the execution logic with route values and
-target nodes, as shown in the following code example:
-
-```python
-def router(node_input: str):
-    """Simulate a routing decision"""
-    return Event(route="RUN_TASK_C")
-
-root_agent = Workflow(
-    name="routing_workflow",
-    edges=[
-        ("START", task_A_node, router),
-        (router,
-          {
-            # "route value": node_to_run
-            "RUN_TASK_B": task_B_node,
-            "RUN_TASK_C": task_C_node,
-          },
-        ),
-    ],
-)
-```
-
-## Parallel tasks: fan out and join paths
-
-You can create graphs that split execution across multiple, parallel nodes, and
-typically you need to assemble the output of each node for further processing.
-You accomplish this by using a ***JoinNode*** object, which waits for each
-parallel task to complete and then passes the collection of outputs from these
-nodes to the next node.
-
-![Tasks connecting to a JoinNode](/assets/graph-joinnode.svg)
-
-**Figure 2.** The output of parallel task nodes can be assembled using a
-JoinNode object.
-
-The following code snippet shows how to implement a basic ***JoinNode*** object
-and use it to assemble output of all the nodes:
-
-```python
-​​from google.adk.workflow import JoinNode
-
-my_join_node = JoinNode(name="my_join_node")
-
-edges=[
-    ("START", parallel_task_A, my_join_node),
-    ("START", parallel_task_B, my_join_node),
-    ("START", parallel_task_C, my_join_node),
-    (my_join_node, final_task_D),
-]
-```
-
-!!! warning "Caution: Stuck JoinNode from incomplete nodes"
-
-    The ***JoinNode*** object proceeds only after all its upstream nodes have
-    provided an Event output. If one of the upstream nodes fails to provide output,
-    the JoinNode is stuck and workflow execution stops. Make sure to include
-    failsafe output from any node that outputs to a ***JoinNode***.
-
-## Nested workflows
-
-When building more complex workflows, you may want to encapsulate the
-functionality for specific tasks into reusable workflows. One or more
-***Workflow*** objects can be used as a node within the graph of another
-workflow agent to accomplish this goal.
-
-![Nested Workflows inside a parent Workflow](/assets/graph-workflow-nodes.svg)
-
-**Figure 3.** Nested ***Workflows*** as nodes inside a parent ***Workflow***.
-
-The following code snippet shows how to implement a workflow agent with two
-nested more ***Workflow*** objects (workflow_B, workflow_C) as nodes in the
-graph:
-
-```python
-from google.adk import Workflow
-
-root_agent = Workflow(
-    name="parent_workflow",
-    edges=[
-       ("START", task_A1, router),
-       (router, {
-            "RUN_WORKFLOW_B": workflow_B,
-            "RUN_WORKFLOW_C": workflow_C,
-            },
-       ),
-    ],
-)
-```
-
-### Nested workflow data output
-
-Output for nested Workflow objects works slightly differently from individual
-nodes. When the nested workflow completes one of its nodes, it transmits data
-to the next node in the nested workflow's graph *and* the system bubbles up the
-Event for that node to the parent workflow for process traceability. When the
-nested workflow completes the last node in its process, the parent node extracts
-data from the final leaf nodes and emits it as the output of the nested
-workflow.
-
-================
-File: docs/workflows/human-input.md
-================
-# Human input for agent workflows
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
-</div>
-
-Being able to request human input for data input, decision verification, or
-action permission is an important part of many agent-powered workflows.
-Graph-based workflows in ADK can include human in the loop (HITL) nodes
-specifically built for obtaining input from humans as part of a workflow. These
-nodes do not require artificial intelligence (AI) models to run, which can make
-the input process more predictable and reliable.
-
-!!! example "Beta Release"
-
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
-
-
-## Get started
-
-You can implement a human input node in a graph using the ***RequestInput***
-class and a text prompt for the user. The following code example shows how to
-add a human input node to an Workflow graph:
-
-```python
-from google.adk.events import RequestInput
-from google.adk import Workflow
-
-def step1(): # Human input step
-  yield RequestInput(message="Enter a number:")
-
-def step2(node_input):
-  return node_input * 2
-
-root_agent = Workflow(
-    name="root_agent",
-    edges=[('START', step1, step2)],
-)
-```
-
-In this code example, `step1` pauses the execution of the agent until the
-system receives an input from a user. Once the system receives input from the
-user, that input is passed to the next node.
-
-## Configuration options
-
-Human input nodes can use the ***RequestInput*** class with the following
-configuration options:
-
--   **`message`:** Text provided to the user to explain the human input
-    request.
--   **`payload`:** Structured data to be used as part of the human input
-    request.
--   **`response_schema`:** A data structure the human response must conform to.
-
-!!! note "Note: Response schema input limitations"
-
-    For the **response_schema** setting, the ***RequestInput*** class does not
-    automatically reformat human responses to fit a specified data structure. The
-    human response must be provided in the specified format. For a better user
-    experience, consider providing a user interface to collect structured data
-    or use an Agent node to conform unstructured data to the format required.
-
-## Human input examples
-
-The following code examples demonstrate more detailed human input requests,
-including the use of ***message***, ***payload*** and ***response schema***
-parameters.
-
-### Request input with response schema
-
-The following code sample shows how to construct a ***RequestInput*** object in
-a workflow node, including a ***response schema***:
-
-```python
-async def initial_prompt(ctx: Context):
-   """Ask the user for itinerary information"""
-   input_message = """
-       This is an interactive concierge workflow tasked with making you a great
-       itinerary for you in your city of choice. If you give some details about
-       yourself or what you are generally looking for I can better personalize
-       your itinerary.
-       For example, input your:
-           City (Required),
-           Age,
-           Hobby,
-           Example of attraction you liked
-   """
-   yield RequestInput(message=input_message, response_schema=str)
-```
-
-### Request input with data payload
-
-The following code sample shows how to construct a ***RequestInput*** object in
-a workflow node, including a ***payload*** and ***response schema***. In this
-example, the `ActivitiesList` is expected to be completed by an agent node that
-composes a list of activities, and the `get_user_feedback()` node requests
-feedback for the user.
-
-```python
-class ActivitiesList(BaseModel):
-   """Itinerary should be a list of dictionaries for each activity. Each
-   activity has a name and a description"""
-   itinerary: List[Dict[str, str]]
-
-class UserFeedback(BaseModel):
-   """Expected response structure from the user."""
-   user_response: str
-
-async def get_user_feedback(node_input: ActivitiesList):
-   """
-   Retrieves the user's thoughts on the agents initial itinerary in order to
-   either expand on, change the list, or exit the loop
-   """
-   message = (
-       f"""
-       Here is your recommended base itinerary:\n{node_input}\n\n
-       Which of these items appeal to you (if any)?
-       """
-   )
-
-   yield RequestInput(
-       message=message,
-       payload=node_input,
-        response_schema=UserFeedback,
-   )
-```
-
-================
 File: docs/workflows/index.md
 ================
-# Graph-based agent workflows
+# Workflows: multi-agent, multi-node applications
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-preview">Beta</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-Graph-based workflows in ADK let you build agents with more precise control,
-creating deterministic processes that combine code logic and AI reasoning
-capabilities. Graph-based workflows allow you to define your agent logic as a
-graph of execution nodes and edges, combining AI-powered agents with
-deterministic tools and code.
+As agentic applications grow in complexity, structuring them as a single,
+monolithic agent can become challenging to develop, evaluate, and maintain.
+Agent Development Kit (ADK) supports building sophisticated agent applications
+by composing multiple agents and executable nodes into *agent
+workflows*. Structuring agents using multiple elements can provide a number
+of benefits as your agent applications grow more complex and sophisticated:
 
-![Graph-based flight upgrade agent](/assets/workflow-design.svg)
+* **Predictability:** Create more controlled task execution flow using templated
+  logic or graph-based execution mechanisms.
+* **Reliability:** Ensure tasks run in the required order or pattern
+  consistently.
+* **Structure:** Build complex processes more manageably by composing agents
+  elements, separating task responsibilities, and limiting data contexts for
+  given tasks.
 
-**Figure 1.** A graph-based agent design for flight upgrades, combining workflow
-nodes of different types, including Functions, human input, Tools, and LLM
-capabilities.
+Workflows can be built using several structures and architectures, as
+illustrated in the following diagram:
 
-Prebuilt ADK [workflow agents](/agents/workflow-agents/),
-such as [Sequential Agents](/agents/workflow-agents/sequential-agents/),
-provide a defined process flow control only across a set of agents. You can continue to
-build standard ADK agents with long prompts, tools, and use them in graph-based
-workflow agents. When you need more precise control, workflow agent graphs give
-you more flexibility over how tasks are routed and executed. Graph-based workflows
-provide the following advantages:
+<img src="/assets/workflows_overview.svg" alt="Workflow types in ADK">
 
--   **Define precise logic:** Explicitly map out routing logic to manage
-    transitions between different nodes.
--   **Implement complex structures:** Build agent workflows that support
-    branching and state management.
--   **Run chains of functions without AI:** Call agent tools and your own
-    code without invoking a generative AI model.
--   **Enhance reliability:** Improve the predictability of your agents by
-    relying on structured node definitions rather than prompts alone.
+**Figure 1.** ADK workflows can have flexible execution paths, or follow
+specific, templated execution patterns.
 
-!!! example "Beta Release"
+The following is a quick guide to the multiple methods for building workflows
+for your agent application with ADK:
 
-    ADK 2.0 is a Beta release and may cause breaking changes when used with prior
-    versions of ADK. Do not use ADK 2.0 if you require backwards compatibility, such
-    as in production environments. We encourage you to test this release and we
-    welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+*   [**Graph-based workflows:**](/graphs/) (ADK 2.0 and higher)
+    This workflow type allows you to compose both AI-powered agents and deterministic
+    execution nodes into a flexible execution graph that can include decision branching.
 
-Follow the instructions for [installing ADK 2.0](/2.0/#install) and then
-check out the instructions below to get started with graph-based workflows.
+*   [**Dynamic workflows:**](/workflows/collaboration/) (ADK 2.0 and higher)
+    This workflow type allows you to compose AI-powered agents and deterministic
+    execution nodes using full programmatic code logic.
 
-## Get started
+*   [**Collaborative workflows:**](/workflows/collaboration/) (ADK 2.0 and higher)
+    This workflow type allows a single agent to act in a dynamic coordinator role
+    to accomplish tasks with a set of specified sub-agents.
 
-This section describes how to get started with graph-based agents. The following
-example shows how to create a sequential graph-based agent workflow that
-generates a city name, looks up the current time in that city with code
-function, and the final agent reports the information.
+*   [**Template workflows:**](/agents/workflow-agents/)
+    These pre-built workflows are extended from ***BaseAgent*** and provide fixed
+    execution logic structures including sequences, loops, and parallel execution.
 
-```python
-from google.adk import Agent
-from google.adk import Workflow
-from google.adk import Event
-from pydantic import BaseModel
+Follow the links provide above for more information about each type of ADK workflow
+architecture.
 
-city_generator_agent = Agent(
-    name="city_generator_agent",
-    model="gemini-flash-latest",
-    instruction="""Return the name of a random city.
-      Return only the name, nothing else.""",
-    output_schema=str,
-)
+!!! example "Experimental: Agent Routing"
 
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
+    Agent Routing is an experimental feature that allows you to select between
+    multiple agents at runtime using router functions for fallback,
+    A/B testing, and auto-routing. For more information, see
+    [Agent Routing](/agents/routing/).
 
-def lookup_time_function(node_input: str):
-    """Simulate returning the current time in the specified city."""
-    return CityTime(time_info="10:10 AM", city=node_input)
+================
+File: docs/workflows/patterns.md
+================
+# Multi-agent workflow patterns
 
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
-    instruction="""Output following line:
-    It is {CityTime.time_info} in {CityTime.city} right now.""",
-    output_schema=str,
-)
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+</div>
 
-def completed_message_function(node_input: str):
-    return Event(
-        message=f"{node_input}\n WORKFLOW COMPLETED.",
+This guide provides a number of agent patterns which you can implement with
+Agent Development Kit (ADK), including code examples. These patterns are useful
+across a broad set of applications and you should evaluate and test them against
+your project requirements before committing to a full implementation.
+
+## Coordinator and dispatcher
+
+* **Structure:** A central [`LlmAgent`](/agents/llm-agents/) (Coordinator) manages several specialized `sub_agents`.
+* **Goal:** Route incoming requests to the appropriate specialist agent.
+* **ADK Primitives Used:**
+    * **Hierarchy:** Coordinator has specialists listed in `sub_agents`.
+    * **Interaction:** Primarily uses **LLM-Driven Delegation** (requires clear `description`s on sub-agents and appropriate `instruction` on Coordinator) or **Explicit Invocation (`AgentTool`)** (Coordinator includes `AgentTool`-wrapped specialists in its `tools`).
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Coordinator using LLM Transfer
+    from google.adk.agents import LlmAgent
+
+
+    billing_agent = LlmAgent(name="Billing", description="Handles billing inquiries.")
+    support_agent = LlmAgent(name="Support", description="Handles technical support requests.")
+
+
+    coordinator = LlmAgent(
+        name="HelpDeskCoordinator",
+        model="gemini-flash-latest",
+        instruction="Route user requests: Use Billing agent for payment issues, Support agent for technical problems.",
+        description="Main help desk router.",
+        # allow_transfer=True is often implicit with sub_agents in AutoFlow
+        sub_agents=[billing_agent, support_agent]
+    )
+    # User asks "My payment failed" -> Coordinator's LLM should call transfer_to_agent(agent_name='Billing')
+    # User asks "I can't log in" -> Coordinator's LLM should call transfer_to_agent(agent_name='Support')
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Coordinator using LLM Transfer
+    import { LlmAgent } from '@google/adk';
+
+    const billingAgent = new LlmAgent({name: 'Billing', description: 'Handles billing inquiries.'});
+    const supportAgent = new LlmAgent({name: 'Support', description: 'Handles technical support requests.'});
+
+    const coordinator = new LlmAgent({
+        name: 'HelpDeskCoordinator',
+        model: 'gemini-flash-latest',
+        instruction: 'Route user requests: Use Billing agent for payment issues, Support agent for technical problems.',
+        description: 'Main help desk router.',
+        // allowTransfer=true is often implicit with subAgents in AutoFlow
+        subAgents: [billingAgent, supportAgent]
+    });
+    // User asks "My payment failed" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Billing'}}}
+    // User asks "I can't log in" -> Coordinator's LLM should call {functionCall: {name: 'transfer_to_agent', args: {agent_name: 'Support'}}}
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
     )
 
-root_agent = Workflow(
-    name="root_agent",
-    edges=[
-        ("START", city_generator_agent, lookup_time_function,
-          city_report_agent, completed_message_function)
-    ],
-)
-```
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:coordinator-pattern"
+    ```
 
-This sample code demonstrates how you can use the ***Workflow*** class to
-assemble a simple, sequential workflow and alternate between AI agent processing
-and code execution. While you could perform these steps using a single agent
-with a longer prompt and a tool call, the graph-based approach gives you precise
-control over the task execution order and the data output from each step.
+=== "Java"
 
-For more information about data handling with graph-based workflows, see
-[Data handling with workflow nodes and agents](/workflows/data-handling/).
+    ```java
+    // Conceptual Code: Coordinator using LLM Transfer
+    import com.google.adk.agents.LlmAgent;
 
-## Build processes with graphs
+    LlmAgent billingAgent = LlmAgent.builder()
+        .name("Billing")
+        .description("Handles billing inquiries and payment issues.")
+        .build();
 
-You can use prompt-based agents to define multiple step processes with
-descriptions of tasks and procedures using the instructions field of an ADK
-agent. However, as your instructions and procedures become longer and more
-complicated, making sure that the agent is following each step and guideline
-becomes more complicated and less reliable.
+    LlmAgent supportAgent = LlmAgent.builder()
+        .name("Support")
+        .description("Handles technical support requests and login problems.")
+        .build();
 
-Graph-based workflow agents provide a significant advantage over prompt-based
-agents by allowing you to specifically define the overall process workflow in
-code. With graph-based agent workflows, each step of the process can be defined
-as an execution ***Node*** in a graph and each node can be an AI agent, Tool, or
-your programmed code. The following diagram illustrates how a simple
-prompt-based agent would translate into a workflow agent graph:
+    LlmAgent coordinator = LlmAgent.builder()
+        .name("HelpDeskCoordinator")
+        .model("gemini-flash-latest")
+        .instruction("Route user requests: Use Billing agent for payment issues, Support agent for technical problems.")
+        .description("Main help desk router.")
+        .subAgents(billingAgent, supportAgent)
+        // Agent transfer is implicit with sub agents in the Autoflow, unless specified
+        // using .disallowTransferToParent or disallowTransferToPeers
+        .build();
 
-![Prompt-based agent to graph-based workflow](/assets/prompts-to-graphs.svg)
+    // User asks "My payment failed" -> Coordinator's LLM should call
+    // transferToAgent(agentName='Billing')
+    // User asks "I can't log in" -> Coordinator's LLM should call
+    // transferToAgent(agentName='Support')
+    ```
 
-**Figure 2.** Structure of prompt-based agent instructions translated into a
-graph-based workflow.
+=== "Kotlin"
 
-Moving from prompt-based agents to graph-based workflow agents allows you to
-explicitly break out the tasks of a procedure to define a specific execution
-flow. Once defined, the agent application flows the steps in the graph,
-switching between non-deterministic AI-powered agents and deterministic code as
-needed.
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:coordinator_pattern"
+    ```
 
-The following code sample shows how the workflow graph in Figure 2 could be
-translated into a graph-based agent using the ***Workflow*** class:
+## Sequential pipeline
 
-```python
-process_message = Agent(
-    name="process_message",
-    model="gemini-flash-latest",
-    instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
-      or "LOGISTICS". If you think a message applies to more than one category,
-      reply with a comma separated list of categories.
-   """,
-    output_schema=str,
-)
+* **Structure:** A [`SequentialAgent`](/agents/workflow-agents/sequential-agents/) contains `sub_agents` executed in a fixed order.
+* **Goal:** Implement a multistep process where the output of one-step feeds into the next.
+* **ADK Primitives Used:**
+    * **Workflow:** `SequentialAgent` defines the order.
+    * **Communication:** Primarily uses **Shared Session State**. Earlier agents write results (often via `output_key`), later agents read those results from `context.state`.
 
-def router(node_input: str):
-    routes = node_input.split(",")
-    routes = [route.strip() for route in routes]
-    return Event(route=routes)
+=== "Python"
 
-def response_1_bug():
-    return Event(message="Handling bug...")
+    ```python
+    # Conceptual Code: Sequential Data Pipeline
+    from google.adk.agents import SequentialAgent, LlmAgent
 
-def response_2_support():
-    return Event(message="Handling customer support...")
 
-def response_3_logistics():
-    return Event(message="Handling logistics...")
+    validator = LlmAgent(name="ValidateInput", instruction="Validate the input.", output_key="validation_status")
+    processor = LlmAgent(name="ProcessData", instruction="Process data if {validation_status} is 'valid'.", output_key="result")
+    reporter = LlmAgent(name="ReportResult", instruction="Report the result from {result}.")
 
-root_agent = Workflow(
-   name="routing_workflow",
-   edges=[
-       ("START", process_message, router),
-       ( router,
-           {
-               "BUG": response_1_bug,
-               "CUSTOMER_SUPPORT": response_2_support,
-               "LOGISTICS": response_3_logistics,
-           }
-       )
-   ],
-)
-```
 
-This sample code demonstrates how you can use an ***edges*** array to define a
-graph with routes between a set of *nodes*, which are discrete tasks that can
-include agents, Tools, your code, and even additional ***Workflows***. For
-information about building advanced graphs for workflows, see
-[Build graph routes for workflow agents](/workflows/graph-routes/).
+    data_pipeline = SequentialAgent(
+        name="DataPipeline",
+        sub_agents=[validator, processor, reporter]
+    )
+    # validator runs -> saves to state['validation_status']
+    # processor runs -> reads state['validation_status'], saves to state['result']
+    # reporter runs -> reads state['result']
+    ```
 
-## Known limitations {#known-limitations}
+=== "Typescript"
 
-There are some known limitations with graph-based workflows. They
-are *not compatible* with the following ADK features:
+    ```typescript
+    // Conceptual Code: Sequential Data Pipeline
+    import { SequentialAgent, LlmAgent } from '@google/adk';
 
--   **Live Streaming** functionality is not compatible with graph-based
-    workflows.
--   **Integrations:** Some third-party
-    [Integrations](/integrations/) may not be
-    compatible with graph-based workflows.
+    const validator = new LlmAgent({name: 'ValidateInput', instruction: 'Validate the input.', outputKey: 'validation_status'});
+    const processor = new LlmAgent({name: 'ProcessData', instruction: 'Process data if {validation_status} is "valid".', outputKey: 'result'});
+    const reporter = new LlmAgent({name: 'ReportResult', instruction: 'Report the result from {result}.'});
+
+    const dataPipeline = new SequentialAgent({
+        name: 'DataPipeline',
+        subAgents: [validator, processor, reporter]
+    });
+    // validator runs -> saves to state['validation_status']
+    // processor runs -> reads state['validation_status'], saves to state['result']
+    // reporter runs -> reads state['result']
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Sequential Data Pipeline
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent validator = LlmAgent.builder()
+        .name("ValidateInput")
+        .instruction("Validate the input")
+        .outputKey("validation_status") // Saves its main text output to session.state["validation_status"]
+        .build();
+
+
+    LlmAgent processor = LlmAgent.builder()
+        .name("ProcessData")
+        .instruction("Process data if {validation_status} is 'valid'")
+        .outputKey("result") // Saves its main text output to session.state["result"]
+        .build();
+
+
+    LlmAgent reporter = LlmAgent.builder()
+        .name("ReportResult")
+        .instruction("Report the result from {result}")
+        .build();
+
+
+    SequentialAgent dataPipeline = SequentialAgent.builder()
+        .name("DataPipeline")
+        .subAgents(validator, processor, reporter)
+        .build();
+
+
+    // validator runs -> saves to state['validation_status']
+    // processor runs -> reads state['validation_status'], saves to state['result']
+    // reporter runs -> reads state['result']
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:sequential_pipeline_pattern"
+    ```
+
+## Parallel fan-out and gather
+
+* **Structure:** A [`ParallelAgent`](/agents/workflow-agents/parallel-agents/) runs multiple `sub_agents` concurrently, often followed by a later agent (in a `SequentialAgent`) that aggregates results.
+* **Goal:** Execute independent tasks simultaneously to reduce latency, then combine their outputs.
+* **ADK Primitives Used:**
+    * **Workflow:** `ParallelAgent` for concurrent execution (Fan-Out). Often nested within a `SequentialAgent` to handle the subsequent aggregation step (Gather).
+    * **Communication:** Sub-agents write results to distinct keys in **Shared Session State**. The subsequent "Gather" agent reads multiple state keys.
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Parallel Information Gathering
+    from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
+
+
+    fetch_api1 = LlmAgent(name="API1Fetcher", instruction="Fetch data from API 1.", output_key="api1_data")
+    fetch_api2 = LlmAgent(name="API2Fetcher", instruction="Fetch data from API 2.", output_key="api2_data")
+
+
+    gather_concurrently = ParallelAgent(
+        name="ConcurrentFetch",
+        sub_agents=[fetch_api1, fetch_api2]
+    )
+
+
+    synthesizer = LlmAgent(
+        name="Synthesizer",
+        instruction="Combine results from {api1_data} and {api2_data}."
+    )
+
+
+    overall_workflow = SequentialAgent(
+        name="FetchAndSynthesize",
+        sub_agents=[gather_concurrently, synthesizer] # Run parallel fetch, then synthesize
+    )
+    # fetch_api1 and fetch_api2 run concurrently, saving to state.
+    # synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Parallel Information Gathering
+    import { SequentialAgent, ParallelAgent, LlmAgent } from '@google/adk';
+
+    const fetchApi1 = new LlmAgent({name: 'API1Fetcher', instruction: 'Fetch data from API 1.', outputKey: 'api1_data'});
+    const fetchApi2 = new LlmAgent({name: 'API2Fetcher', instruction: 'Fetch data from API 2.', outputKey: 'api2_data'});
+
+    const gatherConcurrently = new ParallelAgent({
+        name: 'ConcurrentFetch',
+        subAgents: [fetchApi1, fetchApi2]
+    });
+
+    const synthesizer = new LlmAgent({
+        name: 'Synthesizer',
+        instruction: 'Combine results from {api1_data} and {api2_data}.'
+    });
+
+    const overallWorkflow = new SequentialAgent({
+        name: 'FetchAndSynthesize',
+        subAgents: [gatherConcurrently, synthesizer] // Run parallel fetch, then synthesize
+    });
+    // fetchApi1 and fetchApi2 run concurrently, saving to state.
+    // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/parallelagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-gather-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Parallel Information Gathering
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.ParallelAgent;
+    import com.google.adk.agents.SequentialAgent;
+
+    LlmAgent fetchApi1 = LlmAgent.builder()
+        .name("API1Fetcher")
+        .instruction("Fetch data from API 1.")
+        .outputKey("api1_data")
+        .build();
+
+    LlmAgent fetchApi2 = LlmAgent.builder()
+        .name("API2Fetcher")
+        .instruction("Fetch data from API 2.")
+        .outputKey("api2_data")
+        .build();
+
+    ParallelAgent gatherConcurrently = ParallelAgent.builder()
+        .name("ConcurrentFetcher")
+        .subAgents(fetchApi2, fetchApi1)
+        .build();
+
+    LlmAgent synthesizer = LlmAgent.builder()
+        .name("Synthesizer")
+        .instruction("Combine results from {api1_data} and {api2_data}.")
+        .build();
+
+    SequentialAgent overallWorfklow = SequentialAgent.builder()
+        .name("FetchAndSynthesize") // Run parallel fetch, then synthesize
+        .subAgents(gatherConcurrently, synthesizer)
+        .build();
+
+    // fetch_api1 and fetch_api2 run concurrently, saving to state.
+    // synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:parallel_gather_pattern"
+    ```
+
+## Hierarchical task decomposition
+
+* **Structure:** A multi-level tree of agents where higher-level agents break down complex goals and delegate sub-tasks to lower-level agents.
+* **Goal:** Solve complex problems by recursively breaking them down into simpler, executable steps.
+* **ADK Primitives Used:**
+    * **Hierarchy:** Multi-level `parent_agent`/`sub_agents` structure.
+    * **Interaction:** Primarily **LLM-Driven Delegation** or **Explicit Invocation (`AgentTool`)** used by parent agents to assign tasks to subagents. Results are returned up the hierarchy (via tool responses or state).
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Hierarchical Research Task
+    from google.adk.agents import LlmAgent
+    from google.adk.tools import agent_tool
+
+
+    # Low-level tool-like agents
+    web_searcher = LlmAgent(name="WebSearch", description="Performs web searches for facts.")
+    summarizer = LlmAgent(name="Summarizer", description="Summarizes text.")
+
+
+    # Mid-level agent combining tools
+    research_assistant = LlmAgent(
+        name="ResearchAssistant",
+        model="gemini-flash-latest",
+        description="Finds and summarizes information on a topic.",
+        tools=[agent_tool.AgentTool(agent=web_searcher), agent_tool.AgentTool(agent=summarizer)]
+    )
+
+
+    # High-level agent delegating research
+    report_writer = LlmAgent(
+        name="ReportWriter",
+        model="gemini-flash-latest",
+        instruction="Write a report on topic X. Use the ResearchAssistant to gather information.",
+        tools=[agent_tool.AgentTool(agent=research_assistant)]
+        # Alternatively, could use LLM Transfer if research_assistant is a sub_agent
+    )
+    # User interacts with ReportWriter.
+    # ReportWriter calls ResearchAssistant tool.
+    # ResearchAssistant calls WebSearch and Summarizer tools.
+    # Results flow back up.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Hierarchical Research Task
+    import { LlmAgent, AgentTool } from '@google/adk';
+
+    // Low-level tool-like agents
+    const webSearcher = new LlmAgent({name: 'WebSearch', description: 'Performs web searches for facts.'});
+    const summarizer = new LlmAgent({name: 'Summarizer', description: 'Summarizes text.'});
+
+    // Mid-level agent combining tools
+    const researchAssistant = new LlmAgent({
+        name: 'ResearchAssistant',
+        model: 'gemini-flash-latest',
+        description: 'Finds and summarizes information on a topic.',
+        tools: [new AgentTool({agent: webSearcher}), new AgentTool({agent: summarizer})]
+    });
+
+    // High-level agent delegating research
+    const reportWriter = new LlmAgent({
+        name: 'ReportWriter',
+        model: 'gemini-flash-latest',
+        instruction: 'Write a report on topic X. Use the ResearchAssistant to gather information.',
+        tools: [new AgentTool({agent: researchAssistant})]
+        // Alternatively, could use LLM Transfer if researchAssistant is a subAgent
+    });
+    // User interacts with ReportWriter.
+    // ReportWriter calls ResearchAssistant tool.
+    // ResearchAssistant calls WebSearch and Summarizer tools.
+    // Results flow back up.
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/tool"
+        "google.golang.org/adk/tool/agenttool"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchical-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Hierarchical Research Task
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.tools.AgentTool;
+
+
+    // Low-level tool-like agents
+    LlmAgent webSearcher = LlmAgent.builder()
+        .name("WebSearch")
+        .description("Performs web searches for facts.")
+        .build();
+
+
+    LlmAgent summarizer = LlmAgent.builder()
+        .name("Summarizer")
+        .description("Summarizes text.")
+        .build();
+
+
+    // Mid-level agent combining tools
+    LlmAgent researchAssistant = LlmAgent.builder()
+        .name("ResearchAssistant")
+        .model("gemini-flash-latest")
+        .description("Finds and summarizes information on a topic.")
+        .tools(AgentTool.create(webSearcher), AgentTool.create(summarizer))
+        .build();
+
+
+    // High-level agent delegating research
+    LlmAgent reportWriter = LlmAgent.builder()
+        .name("ReportWriter")
+        .model("gemini-flash-latest")
+        .instruction("Write a report on topic X. Use the ResearchAssistant to gather information.")
+        .tools(AgentTool.create(researchAssistant))
+        // Alternatively, could use LLM Transfer if research_assistant is a subAgent
+        .build();
+
+
+    // User interacts with ReportWriter.
+    // ReportWriter calls ResearchAssistant tool.
+    // ResearchAssistant calls WebSearch and Summarizer tools.
+    // Results flow back up.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:hierarchical_pattern"
+    ```
+
+## Generate and review pattern
+
+* **Structure:** Typically involves two agents within a [`SequentialAgent`](/agents/workflow-agents/sequential-agents/): a generator agent and a critic reviewer agent.
+* **Goal:** Improve the quality or validity of generated output by having a dedicated agent review it.
+* **ADK Primitives Used:**
+    * **Workflow:** `SequentialAgent` ensures generation happens before review.
+    * **Communication:** **Shared Session State** (Generator uses `output_key` to save output; Reviewer reads that state key). The Reviewer might save its feedback to another state key for subsequent steps.
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Generator-Critic
+    from google.adk.agents import SequentialAgent, LlmAgent
+
+
+    generator = LlmAgent(
+        name="DraftWriter",
+        instruction="Write a short paragraph about subject X.",
+        output_key="draft_text"
+    )
+
+
+    reviewer = LlmAgent(
+        name="FactChecker",
+        instruction="Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.",
+        output_key="review_status"
+    )
+
+
+    # Optional: Further steps based on review_status
+
+
+    review_pipeline = SequentialAgent(
+        name="WriteAndReview",
+        sub_agents=[generator, reviewer]
+    )
+    # generator runs -> saves draft to state['draft_text']
+    # reviewer runs -> reads state['draft_text'], saves status to state['review_status']
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Generator-Critic
+    import { SequentialAgent, LlmAgent } from '@google/adk';
+
+    const generator = new LlmAgent({
+        name: 'DraftWriter',
+        instruction: 'Write a short paragraph about subject X.',
+        outputKey: 'draft_text'
+    });
+
+    const reviewer = new LlmAgent({
+        name: 'FactChecker',
+        instruction: 'Review the text in {draft_text} for factual accuracy. Output "valid" or "invalid" with reasons.',
+        outputKey: 'review_status'
+    });
+
+    // Optional: Further steps based on review_status
+
+    const reviewPipeline = new SequentialAgent({
+        name: 'WriteAndReview',
+        subAgents: [generator, reviewer]
+    });
+    // generator runs -> saves draft to state['draft_text']
+    // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:generator-critic-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Generator-Critic
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+
+
+    LlmAgent generator = LlmAgent.builder()
+        .name("DraftWriter")
+        .instruction("Write a short paragraph about subject X.")
+        .outputKey("draft_text")
+        .build();
+
+
+    LlmAgent reviewer = LlmAgent.builder()
+        .name("FactChecker")
+        .instruction("Review the text in {draft_text} for factual accuracy. Output 'valid' or 'invalid' with reasons.")
+        .outputKey("review_status")
+        .build();
+
+
+    // Optional: Further steps based on review_status
+
+
+    SequentialAgent reviewPipeline = SequentialAgent.builder()
+        .name("WriteAndReview")
+        .subAgents(generator, reviewer)
+        .build();
+
+
+    // generator runs -> saves draft to state['draft_text']
+    // reviewer runs -> reads state['draft_text'], saves status to state['review_status']
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:generator_critic_pattern"
+    ```
+
+## Iterative refinement
+
+* **Structure:** Uses a [`LoopAgent`](/agents/workflow-agents/loop-agents/) containing one or more agents that work on a task over multiple iterations.
+* **Goal:** Progressively improve a result (e.g., code, text, plan) stored in the session state until a quality threshold is met or a maximum number of iterations is reached.
+* **ADK Primitives Used:**
+    * **Workflow:** `LoopAgent` manages the repetition.
+    * **Communication:** **Shared Session State** is essential for agents to read the previous iteration's output and save the refined version.
+    * **Termination:** The loop typically ends based on `max_iterations` or a dedicated checking agent setting `escalate=True` in the `Event Actions` when the result is satisfactory.
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Iterative Code Refinement
+    from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+    from google.adk.events import Event, EventActions
+    from google.adk.agents.invocation_context import InvocationContext
+    from typing import AsyncGenerator
+
+
+    # Agent to generate/refine code based on state['current_code'] and state['requirements']
+    code_refiner = LlmAgent(
+        name="CodeRefiner",
+        instruction="Read state['current_code'] (if exists) and state['requirements']. Generate/refine Python code to meet requirements. Save to state['current_code'].",
+        output_key="current_code" # Overwrites previous code in state
+    )
+
+
+    # Agent to check if the code meets quality standards
+    quality_checker = LlmAgent(
+        name="QualityChecker",
+        instruction="Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.",
+        output_key="quality_status"
+    )
+
+
+    # Custom agent to check the status and escalate if 'pass'
+    class CheckStatusAndEscalate(BaseAgent):
+        async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+            status = ctx.session.state.get("quality_status", "fail")
+            should_stop = (status == "pass")
+            yield Event(author=self.name, actions=EventActions(escalate=should_stop))
+
+
+    refinement_loop = LoopAgent(
+        name="CodeRefinementLoop",
+        max_iterations=5,
+        sub_agents=[code_refiner, quality_checker, CheckStatusAndEscalate(name="StopChecker")]
+    )
+    # Loop runs: Refiner -> Checker -> StopChecker
+    # State['current_code'] is updated each iteration.
+    # Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Iterative Code Refinement
+    import { LoopAgent, LlmAgent, BaseAgent, InvocationContext } from '@google/adk';
+    import type { Event, createEvent, createEventActions } from '@google/genai';
+
+    // Agent to generate/refine code based on state['current_code'] and state['requirements']
+    const codeRefiner = new LlmAgent({
+        name: 'CodeRefiner',
+        instruction: 'Read state["current_code"] (if exists) and state["requirements"]. Generate/refine Typescript code to meet requirements. Save to state["current_code"].',
+        outputKey: 'current_code' // Overwrites previous code in state
+    });
+
+    // Agent to check if the code meets quality standards
+    const qualityChecker = new LlmAgent({
+        name: 'QualityChecker',
+        instruction: 'Evaluate the code in state["current_code"] against state["requirements"]. Output "pass" or "fail".',
+        outputKey: 'quality_status'
+    });
+
+    // Custom agent to check the status and escalate if 'pass'
+    class CheckStatusAndEscalate extends BaseAgent {
+        async *runAsyncImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            const status = ctx.session.state.quality_status;
+            const shouldStop = status === 'pass';
+            if (shouldStop) {
+                yield createEvent({
+                    author: 'StopChecker',
+                    actions: createEventActions(),
+                });
+            }
+        }
+
+        async *runLiveImpl(ctx: InvocationContext): AsyncGenerator<Event> {
+            // This agent doesn't have a live implementation
+            yield createEvent({ author: 'StopChecker' });
+        }
+    }
+
+    // Loop runs: Refiner -> Checker -> StopChecker
+    // State['current_code'] is updated each iteration.
+    // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
+    const refinementLoop = new LoopAgent({
+        name: 'CodeRefinementLoop',
+        maxIterations: 5,
+        subAgents: [codeRefiner, qualityChecker, new CheckStatusAndEscalate({name: 'StopChecker'})]
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "iter"
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/loopagent"
+        "google.golang.org/adk/session"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:iterative-refinement-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Iterative Code Refinement
+    import com.google.adk.agents.BaseAgent;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.LoopAgent;
+    import com.google.adk.events.Event;
+    import com.google.adk.events.EventActions;
+    import com.google.adk.agents.InvocationContext;
+    import io.reactivex.rxjava3.core.Flowable;
+    import java.util.List;
+
+
+    // Agent to generate/refine code based on state['current_code'] and state['requirements']
+    LlmAgent codeRefiner = LlmAgent.builder()
+        .name("CodeRefiner")
+        .instruction("Read state['current_code'] (if exists) and state['requirements']. Generate/refine Java code to meet requirements. Save to state['current_code'].")
+        .outputKey("current_code") // Overwrites previous code in state
+        .build();
+
+
+    // Agent to check if the code meets quality standards
+    LlmAgent qualityChecker = LlmAgent.builder()
+        .name("QualityChecker")
+        .instruction("Evaluate the code in state['current_code'] against state['requirements']. Output 'pass' or 'fail'.")
+        .outputKey("quality_status")
+        .build();
+
+
+    BaseAgent checkStatusAndEscalate = new BaseAgent(
+        "StopChecker","Checks quality_status and escalates if 'pass'.", List.of(), null, null) {
+
+
+      @Override
+      protected Flowable<Event> runAsyncImpl(InvocationContext invocationContext) {
+        String status = (String) invocationContext.session().state().getOrDefault("quality_status", "fail");
+        boolean shouldStop = "pass".equals(status);
+
+
+        EventActions actions = EventActions.builder().escalate(shouldStop).build();
+        Event event = Event.builder()
+            .author(this.name())
+            .actions(actions)
+            .build();
+        return Flowable.just(event);
+      }
+    };
+
+
+    LoopAgent refinementLoop = LoopAgent.builder()
+        .name("CodeRefinementLoop")
+        .maxIterations(5)
+        .subAgents(codeRefiner, qualityChecker, checkStatusAndEscalate)
+        .build();
+
+
+    // Loop runs: Refiner -> Checker -> StopChecker
+    // State['current_code'] is updated each iteration.
+    // Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5
+    // iterations.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:iterative_refinement_pattern"
+    ```
+
+## Human-in-the-loop
+
+* **Structure:** Integrates human intervention points within an agent workflow.
+* **Goal:** Allow for human oversight, approval, correction, or tasks that AI cannot perform.
+* **ADK Primitives Used (Conceptual):**
+    * **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
+    * **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
+    * **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
+    * **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
+
+=== "Python"
+
+    ```python
+    # Conceptual Code: Using a Tool for Human Approval
+    from google.adk.agents import LlmAgent, SequentialAgent
+    from google.adk.tools import FunctionTool
+
+
+    # --- Assume external_approval_tool exists ---
+    # This tool would:
+    # 1. Take details (e.g., request_id, amount, reason).
+    # 2. Send these details to a human review system (e.g., via API).
+    # 3. Poll or wait for the human response (approved/rejected).
+    # 4. Return the human's decision.
+    # async def external_approval_tool(amount: float, reason: str) -> str: ...
+    approval_tool = FunctionTool(func=external_approval_tool)
+
+
+    # Agent that prepares the request
+    prepare_request = LlmAgent(
+        name="PrepareApproval",
+        instruction="Prepare the approval request details based on user input. Store amount and reason in state.",
+        # ... likely sets state['approval_amount'] and state['approval_reason'] ...
+    )
+
+
+    # Agent that calls the human approval tool
+    request_approval = LlmAgent(
+        name="RequestHumanApproval",
+        instruction="Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].",
+        tools=[approval_tool],
+        output_key="human_decision"
+    )
+
+
+    # Agent that proceeds based on human decision
+    process_decision = LlmAgent(
+        name="ProcessDecision",
+        instruction="Check {human_decision}. If 'approved', proceed. If 'rejected', inform user."
+    )
+
+
+    approval_workflow = SequentialAgent(
+        name="HumanApprovalWorkflow",
+        sub_agents=[prepare_request, request_approval, process_decision]
+    )
+    ```
+
+=== "Typescript"
+
+    ```typescript
+    // Conceptual Code: Using a Tool for Human Approval
+    import { LlmAgent, SequentialAgent, FunctionTool } from '@google/adk';
+    import { z } from 'zod';
+
+    // --- Assume externalApprovalTool exists ---
+    // This tool would:
+    // 1. Take details (e.g., request_id, amount, reason).
+    // 2. Send these details to a human review system (e.g., via API).
+    // 3. Poll or wait for the human response (approved/rejected).
+    // 4. Return the human's decision.
+    async function externalApprovalTool(params: {amount: number, reason: string}): Promise<{decision: string}> {
+      // ... implementation to call external system
+      return {decision: 'approved'}; // or 'rejected'
+    }
+
+    const approvalTool = new FunctionTool({
+      name: 'external_approval_tool',
+      description: 'Sends a request for human approval.',
+      parameters: z.object({
+        amount: z.number(),
+        reason: z.string(),
+      }),
+      execute: externalApprovalTool,
+    });
+
+
+    // Agent that prepares the request
+    const prepareRequest = new LlmAgent({
+        name: 'PrepareApproval',
+        instruction: 'Prepare the approval request details based on user input. Store amount and reason in state.',
+        // ... likely sets state['approval_amount'] and state['approval_reason'] ...
+    });
+
+    // Agent that calls the human approval tool
+    const requestApproval = new LlmAgent({
+        name: 'RequestHumanApproval',
+        instruction: 'Use the external_approval_tool with amount from state["approval_amount"] and reason from state["approval_reason"].',
+        tools: [approvalTool],
+        outputKey: 'human_decision'
+    });
+
+    // Agent that proceeds based on human decision
+    const processDecision = new LlmAgent({
+        name: 'ProcessDecision',
+        instruction: 'Check {human_decision}. If "approved", proceed. If "rejected", inform user.'
+    });
+
+    const approvalWorkflow = new SequentialAgent({
+        name: 'HumanApprovalWorkflow',
+        subAgents: [prepareRequest, requestApproval, processDecision]
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/agent"
+        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/tool"
+    )
+
+    --8<-- "examples/go/snippets/agents/multi-agent/main.go:human-in-loop-pattern"
+    ```
+
+=== "Java"
+
+    ```java
+    // Conceptual Code: Using a Tool for Human Approval
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.agents.SequentialAgent;
+    import com.google.adk.tools.FunctionTool;
+
+
+    // --- Assume external_approval_tool exists ---
+    // This tool would:
+    // 1. Take details (e.g., request_id, amount, reason).
+    // 2. Send these details to a human review system (e.g., via API).
+    // 3. Poll or wait for the human response (approved/rejected).
+    // 4. Return the human's decision.
+    // public boolean externalApprovalTool(float amount, String reason) { ... }
+    FunctionTool approvalTool = FunctionTool.create(externalApprovalTool);
+
+
+    // Agent that prepares the request
+    LlmAgent prepareRequest = LlmAgent.builder()
+        .name("PrepareApproval")
+        .instruction("Prepare the approval request details based on user input. Store amount and reason in state.")
+        // ... likely sets state['approval_amount'] and state['approval_reason'] ...
+        .build();
+
+
+    // Agent that calls the human approval tool
+    LlmAgent requestApproval = LlmAgent.builder()
+        .name("RequestHumanApproval")
+        .instruction("Use the external_approval_tool with amount from state['approval_amount'] and reason from state['approval_reason'].")
+        .tools(approvalTool)
+        .outputKey("human_decision")
+        .build();
+
+
+    // Agent that proceeds based on human decision
+    LlmAgent processDecision = LlmAgent.builder()
+        .name("ProcessDecision")
+        .instruction("Check {human_decision}. If 'approved', proceed. If 'rejected', inform user.")
+        .build();
+
+
+    SequentialAgent approvalWorkflow = SequentialAgent.builder()
+        .name("HumanApprovalWorkflow")
+        .subAgents(prepareRequest, requestApproval, processDecision)
+        .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/multi-agent/MultiAgentExample.kt:human_in_loop_pattern"
+    ```
+
+### Human in the loop with Policy
+
+A more advanced and structured way to implement Human-in-the-Loop is by using a `PolicyEngine`. This approach allows you to define policies that can trigger a confirmation step from a user before a tool is executed. The `SecurityPlugin` intercepts a tool call, consults the `PolicyEngine`, and if the policy dictates, it will automatically request user confirmation. This pattern is more robust for enforcing governance and security rules.
+
+Here's how it works:
+
+1.  **`SecurityPlugin`**: You add this plugin to your `Runner`. It acts as an interceptor for all tool calls.
+2.  **`BasePolicyEngine`**: You create a custom class that implements this interface. Its `evaluate()` method contains your logic to decide if a tool call needs confirmation.
+3.  **`PolicyOutcome.CONFIRM`**: When your `evaluate()` method returns this outcome, the `SecurityPlugin` pauses the tool execution and generates a special `FunctionCall` using `getAskUserConfirmationFunctionCalls`.
+4.  **Application Handling**: Your application code receives this special function call and presents the confirmation request to the user.
+5.  **User Confirmation**: Once the user confirms, your application sends a `FunctionResponse` back to the agent, which allows the `SecurityPlugin` to proceed with the original tool execution.
+
+!!! Note "TypeScript Recommended Pattern"
+    The Policy-based pattern is the recommended approach for implementing Human-in-the-Loop workflows in TypeScript. Support in other ADK languages is planned for future releases.
+
+A conceptual example of using a `CustomPolicyEngine` to require user confirmation before executing any tool is shown below.
+
+=== "TypeScript"
+
+    ```typescript
+    const rootAgent = new LlmAgent({
+      name: 'weather_time_agent',
+      model: 'gemini-flash-latest',
+      description:
+          'Agent to answer questions about the time and weather in a city.',
+      instruction:
+          'You are a helpful agent who can answer user questions about the time and weather in a city.',
+      tools: [getWeatherTool],
+    });
+
+    class CustomPolicyEngine implements BasePolicyEngine {
+      async evaluate(_context: ToolCallPolicyContext): Promise<PolicyCheckResult> {
+        // Default permissive implementation
+        return Promise.resolve({
+          outcome: PolicyOutcome.CONFIRM,
+          reason: 'Needs confirmation for tool call',
+        });
+      }
+    }
+
+    const runner = new InMemoryRunner({
+        agent: rootAgent,
+        appName,
+        plugins: [new SecurityPlugin({policyEngine: new CustomPolicyEngine()})]
+    });
+    ```
+
+    You can find the full code sample [here](https://github.com/google/adk-docs/blob/main/examples/typescript/snippets/agents/workflow-agents/hitl_confirmation_agent.ts).
 
 ================
 File: docs/index.md
@@ -55877,7 +57067,7 @@ hide:
 <link rel="stylesheet" type="text/css" href="stylesheets/homepage.css" />
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/asciinema-player@3.9.0/dist/bundle/asciinema-player.css" />
 <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3.9.0/dist/bundle/asciinema-player.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script>document.body.classList.add('adk-landing-page');</script>
 
 <div class="adk-landing">
@@ -55890,6 +57080,9 @@ hide:
 <!-- Hero Section -->
 {{% include '_includes/homepage/_hero.md' %}}
 
+<!-- Graphs -->
+{{% include '_includes/homepage/_graphs.md' %}}
+
 <!-- Framework -->
 {{% include '_includes/homepage/_framework.md' %}}
 
@@ -55898,9 +57091,6 @@ hide:
 
 <!-- AI Dev Tools -->
 {{% include '_includes/homepage/_ai-dev-tools.md' %}}
-
-<!-- Eval Section -->
-{{% include '_includes/homepage/_eval.md' %}}
 
 <!-- Ready to Build CTA Section -->
 {{% include '_includes/homepage/_build-cta.md' %}}
@@ -55939,7 +57129,7 @@ document.addEventListener('click', function(e) {
   if (tab) {
     var lang = tab.getAttribute('data-lang');
     var allTabs = document.querySelectorAll('.iterm-tab');
-    var langs = ['python', 'go', 'java', 'typescript'];
+    var langs = ['python', 'go', 'java', 'typescript', 'kotlin'];
     allTabs.forEach(function(t) { t.classList.remove('active'); });
     tab.classList.add('active');
     langs.forEach(function(l) {
@@ -55984,6 +57174,7 @@ language. For detailed information on ADK releases, see these locations:
 *   [ADK TypeScript release notes](https://github.com/google/adk-js/releases)
 *   [ADK Go release notes](https://github.com/google/adk-go/releases)
 *   [ADK Java release notes](https://github.com/google/adk-java/releases)
+*   [ADK Kotlin release notes](https://github.com/google/adk-kotlin/releases)
 
 
 
