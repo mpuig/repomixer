@@ -28489,6 +28489,143 @@ is a code example for executing a batch test on Freeplay with ADK.
 Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
 
 ================
+File: docs/integrations/future-agi.md
+================
+---
+catalog_title: Future AGI
+catalog_description: Trace, evaluate, and improve ADK agents with the traceAI OpenTelemetry integration
+catalog_icon: /integrations/assets/futureagi.png
+catalog_tags: ["observability"]
+---
+
+# Future AGI observability for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[Future AGI](https://futureagi.com) is an observability and evaluation platform
+for AI agents. The
+[`traceai-google-adk`](https://pypi.org/project/traceai-google-adk/) package
+auto-instruments ADK agents and exports every agent run, model call, tool
+execution, and event-loop cycle to Future AGI as OpenTelemetry spans, where you
+can inspect the run tree, evaluate behavior, and run experiments.
+
+![Future AGI ADK traces](assets/future_agi_traces.png)
+
+## Overview
+
+The `traceai-google-adk` package adds OpenTelemetry instrumentation for ADK,
+allowing you to:
+
+- **Trace agent runs:** Capture every agent invocation, tool call, model
+  request, and response with prompts, completions, parameters, and token usage.
+- **Evaluate behavior:** Run pre-built or custom evaluators against the captured
+  traces.
+- **Debug agents:** Drill into hierarchical run trees to find failed tool calls,
+  latency hotspots, and unexpected branches.
+
+## Prerequisites
+
+1. Sign up at [app.futureagi.com](https://app.futureagi.com).
+2. Copy your `FI_API_KEY` and `FI_SECRET_KEY` from the dashboard.
+3. Set the environment variables:
+
+   ```bash
+   export FI_API_KEY=<your-fi-api-key>
+   export FI_SECRET_KEY=<your-fi-secret-key>
+   export GOOGLE_API_KEY=<your-google-api-key>
+   ```
+
+## Installation
+
+```bash
+pip install traceai-google-adk
+```
+
+The `traceai-google-adk` package declares `google-adk` and `google-genai` as
+runtime dependencies, so they install transitively.
+
+## Sending Traces to Future AGI
+
+Register the Future AGI tracer once at startup and attach the
+`GoogleADKInstrumentor` **before** running any agent. Every subsequent ADK agent
+invocation is captured automatically.
+
+```python
+import asyncio
+
+from fi_instrumentation import register
+from fi_instrumentation.fi_types import ProjectType
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+from traceai_google_adk import GoogleADKInstrumentor
+
+tracer_provider = register(
+    project_type=ProjectType.OBSERVE,
+    project_name="adk-weather-agent",
+)
+GoogleADKInstrumentor().instrument(tracer_provider=tracer_provider)
+
+
+def get_weather(city: str) -> dict:
+    """Retrieves the current weather report for a specified city."""
+    if city.lower() == "new york":
+        return {
+            "status": "success",
+            "report": "The weather in New York is sunny with a temperature of 25°C.",
+        }
+    return {
+        "status": "error",
+        "error_message": f"Weather information for '{city}' is not available.",
+    }
+
+
+agent = Agent(
+    name="weather_agent",
+    model="gemini-flash-latest",
+    description="Agent to answer weather questions.",
+    instruction="You must use the available tools to find an answer.",
+    tools=[get_weather],
+)
+
+
+async def main():
+    runner = InMemoryRunner(agent=agent, app_name="weather_app")
+    await runner.session_service.create_session(
+        app_name="weather_app", user_id="user", session_id="session"
+    )
+    async for event in runner.run_async(
+        user_id="user",
+        session_id="session",
+        new_message=types.Content(
+            role="user",
+            parts=[types.Part(text="What is the weather in New York?")],
+        ),
+    ):
+        if event.is_final_response():
+            print(event.content.parts[0].text.strip())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## View Traces in the Dashboard
+
+Run the agent, then open your project in the [Future AGI
+dashboard](https://app.futureagi.com). Each ADK agent run produces a
+hierarchical trace with prompts, completions, model parameters, token usage,
+tool inputs and outputs, and event-loop cycles laid out for inspection.
+
+## Resources
+
+- [`traceai-google-adk` on PyPI](https://pypi.org/project/traceai-google-adk/)
+- [`traceAI` on GitHub](https://github.com/future-agi/traceAI/tree/main/python/frameworks/google-adk)
+- [Future AGI documentation](https://docs.futureagi.com)
+
+================
 File: docs/integrations/galileo.md
 ================
 ---
@@ -30826,7 +30963,7 @@ MCP Toolbox provides out-of-the-box toolsets for the following databases and dat
 *   [Cloud SQL Admin](https://mcp-toolbox.dev/integrations/cloud-sql-admin/source/)
 *   [Firestore](https://mcp-toolbox.dev/integrations/firestore/source/)
 *   [Bigtable](https://mcp-toolbox.dev/integrations/bigtable/source/)
-*   [Dataplex](https://mcp-toolbox.dev/integrations/dataplex/source/) (for data discovery and metadata search)
+*   [Knowledge Catalog (previously known as Dataplex)](https://mcp-toolbox.dev/integrations/knowledge-catalog/source/) (for data discovery and metadata search)
 *   [Cloud Monitoring](https://mcp-toolbox.dev/integrations/cloudmonitoring/source/)
 *   [Cloud Healthcare](https://mcp-toolbox.dev/integrations/cloudhealthcare/source/)
 *   [Cloud Logging Admin](https://mcp-toolbox.dev/integrations/cloudloggingadmin/source/)
@@ -33112,6 +33249,386 @@ env={
 - [Qdrant MCP Server Repository](https://github.com/qdrant/mcp-server-qdrant)
 - [Qdrant Documentation](https://qdrant.tech/documentation/)
 - [Qdrant Cloud](https://cloud.qdrant.io/)
+
+================
+File: docs/integrations/redis.md
+================
+---
+catalog_title: Redis
+catalog_description: Vector, hybrid, and SQL search plus session, memory, and semantic cache for agents
+catalog_icon: /integrations/assets/redis.svg
+catalog_tags: ["data","mcp"]
+---
+
+# Redis integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [adk-redis integration](https://github.com/redis-developer/adk-redis)
+connects your ADK agent to [Redis](https://redis.io/), giving it
+RedisVL-backed search tools
+over a Redis index, persistent sessions and long-term memory via
+[Redis Agent Memory Server](https://github.com/redis/agent-memory-server),
+and semantic caching for LLM responses and tool results. Redis runs as a
+managed service or self-hosted (Redis 8.4+ with the RediSearch module).
+
+There are several ways to use this integration:
+
+| Approach | Description |
+|----------|-------------|
+| **RedisVL MCP** | Connect ADK's native `McpToolset` to a running [`rvl mcp`](https://docs.redisvl.com/en/latest/user_guide/how_to_guides/mcp.html) server. Exposes `search-records` (vector / fulltext / hybrid) and `upsert-records` with schema-aware filter and return-field hints. |
+| **Session + Memory services** | `RedisWorkingMemorySessionService` and `RedisLongTermMemoryService` that implement ADK's `BaseSessionService` and `BaseMemoryService`, backed by Agent Memory Server. |
+| **Sessions + Memory MCP** | Connect ADK's native `McpToolset` to [Agent Memory Server](https://github.com/redis/agent-memory-server)'s MCP endpoint over SSE. Gives the agent direct tool access to `search_long_term_memory`, `create_long_term_memories`, and `memory_prompt`. |
+| **Search tools** | Five `BaseTool` subclasses (`RedisVectorSearchTool`, `RedisHybridSearchTool`, `RedisRangeSearchTool`, `RedisTextSearchTool`, `RedisSQLSearchTool`) over RedisVL queries against a bound index. |
+
+## Use cases
+
+- **RAG over your data**: Run vector, hybrid, range, BM25 text, or SQL search
+  against a Redis index. Hybrid search uses native `FT.HYBRID` on Redis 8.4+
+  and falls back to client-side aggregation elsewhere.
+- **Persistent multi-turn agents**: Slot the session and memory services into
+  any ADK `Runner` to retain conversation state, auto-summarize when the
+  context window fills, and promote durable facts to long-term memory.
+- **Schema-aware MCP tools**: Stand up one Redis index per `rvl mcp` server
+  and connect any number of agents to it over `stdio`, `sse`, or
+  `streamable-http`. The MCP tool descriptions include filter and
+  return-field hints derived from the index schema.
+- **Latency and cost reduction**: Wrap an LLM call site with semantic caching
+  so repeat or near-duplicate prompts skip the model.
+
+## Prerequisites
+
+- Python 3.10+
+- Redis 8.4+ (or [Redis Cloud](https://redis.io/cloud/)) with the
+  RediSearch module enabled
+- For session and memory services:
+  [Redis Agent Memory Server](https://github.com/redis/agent-memory-server)
+  running locally or in your environment
+- For the LangCache cache provider: a
+  [Redis LangCache](https://redis.io/langcache) cache and API key
+
+## Installation
+
+Install the components you need:
+
+```bash
+pip install 'adk-redis[memory]'      # session + long-term memory services
+pip install 'adk-redis[search]'      # RedisVL-backed search tools
+pip install 'adk-redis[sql]'         # RedisSQLSearchTool (sql-redis)
+pip install 'adk-redis[langcache]'   # managed semantic cache provider
+pip install 'adk-redis[all]'         # everything above
+
+# For the RedisVL MCP server (used with ADK's native McpToolset):
+pip install 'redisvl[mcp]>=0.18.2'
+```
+
+## Use with agent
+
+=== "RedisVL MCP server"
+
+    Start the [RedisVL MCP server](https://docs.redisvl.com/en/latest/user_guide/how_to_guides/mcp.html) (`rvl mcp`) pointed
+    at your Redis index, then connect ADK's native `McpToolset` to it. The
+    example below uses the stdio transport so no separate server process is
+    needed; swap in `StreamableHTTPConnectionParams` or `SseConnectionParams` to
+    connect to a long-running remote server.
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="redis_mcp_agent",
+        instruction="Use the search-records tool to answer questions.",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="rvl",
+                        args=[
+                            "mcp",
+                            "--config",
+                            "/path/to/mcp_config.yaml",
+                            "--read-only",
+                        ],
+                    ),
+                    timeout=30,
+                ),
+                tool_filter=["search-records"],
+            ),
+        ],
+    )
+    ```
+
+    !!! note
+
+        To connect to this MCP server from other ADK languages, see [MCP
+        Tools](/tools-custom/mcp-tools/).
+
+=== "Sessions + Memory"
+
+    Plug [Agent Memory Server](https://github.com/redis/agent-memory-server)
+    into any ADK `Runner` via the REST-based session and memory services.
+    Working memory handles per-session state with auto-summarization;
+    long-term memory provides cross-session hybrid search.
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.runners import Runner
+
+    from adk_redis import (
+        RedisLongTermMemoryService,
+        RedisLongTermMemoryServiceConfig,
+        RedisWorkingMemorySessionService,
+        RedisWorkingMemorySessionServiceConfig,
+    )
+
+    session_service = RedisWorkingMemorySessionService(
+        config=RedisWorkingMemorySessionServiceConfig(
+            api_base_url="http://localhost:8000",
+        ),
+    )
+    memory_service = RedisLongTermMemoryService(
+        config=RedisLongTermMemoryServiceConfig(
+            api_base_url="http://localhost:8000",
+            recency_boost=True,
+        ),
+    )
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="redis_memory_agent",
+        instruction="Use long-term memory to personalize responses.",
+    )
+
+    runner = Runner(
+        app_name="redis_memory_app",
+        agent=root_agent,
+        session_service=session_service,
+        memory_service=memory_service,
+    )
+    ```
+
+=== "Sessions + Memory MCP server"
+
+    Connect ADK's native `McpToolset` to
+    [Agent Memory Server](https://github.com/redis/agent-memory-server)'s
+    MCP endpoint over SSE. This gives the agent direct tool access to
+    long-term memory operations without using the REST-based services.
+
+    ```python
+    import os
+
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import SseConnectionParams
+
+    MEMORY_MCP_URL = os.getenv("MEMORY_MCP_URL", "http://localhost:9000")
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="memory_mcp_agent",
+        instruction="Use memory tools to personalize responses.",
+        tools=[
+            McpToolset(
+                connection_params=SseConnectionParams(
+                    url=f"{MEMORY_MCP_URL.rstrip('/')}/sse",
+                ),
+                tool_filter=[
+                    "search_long_term_memory",
+                    "create_long_term_memories",
+                    "memory_prompt",
+                ],
+            ),
+        ],
+    )
+    ```
+
+    !!! note
+
+        Agent Memory Server exposes its MCP endpoint on a separate port
+        from the REST API. See the
+        [fitness_coach_mcp example](https://github.com/redis-developer/adk-redis/tree/main/examples/fitness_coach_mcp)
+        for a complete working setup with Docker Compose.
+
+=== "Search tools"
+
+    Use RedisVL-backed `BaseTool` subclasses to run vector, hybrid, range,
+    text, or SQL searches against a Redis index. Bind a tool to an existing
+    index and pass it directly to your agent.
+
+    ```python
+    from google.adk.agents import Agent
+    from redisvl.index import SearchIndex
+    from redisvl.utils.vectorize import HFTextVectorizer
+
+    from adk_redis import RedisVectorQueryConfig, RedisVectorSearchTool
+
+    vectorizer = HFTextVectorizer(model="redis/langcache-embed-v2")
+    index = SearchIndex.from_existing("products", redis_url="redis://localhost:6379")
+
+    search_tool = RedisVectorSearchTool(
+        index=index,
+        vectorizer=vectorizer,
+        config=RedisVectorQueryConfig(num_results=5),
+        return_fields=["title", "price", "category"],
+        name="search_products",
+        description="Semantic search over the product catalog.",
+    )
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="redis_search_agent",
+        instruction="Help users find products using semantic search.",
+        tools=[search_tool],
+    )
+    ```
+
+## Semantic caching
+
+Wrap any LLM call site with semantic caching so repeat or near-duplicate
+prompts skip the model. Choose self-hosted (bring your own Redis and
+vectorizer) or managed via [Redis LangCache](https://redis.io/langcache).
+
+=== "Semantic cache (self-hosted)"
+
+    Use `RedisVLCacheProvider` with a local vectorizer and your own Redis
+    instance for self-hosted semantic caching.
+
+    ```python
+    from google.adk.agents import Agent
+    from redisvl.utils.vectorize import HFTextVectorizer
+
+    from adk_redis import (
+        LLMResponseCache,
+        RedisVLCacheProvider,
+        RedisVLCacheProviderConfig,
+        create_llm_cache_callbacks,
+    )
+
+    provider = RedisVLCacheProvider(
+        config=RedisVLCacheProviderConfig(
+            redis_url="redis://localhost:6379",
+            ttl=3600,
+            distance_threshold=0.1,
+        ),
+        vectorizer=HFTextVectorizer(
+            model="redis/langcache-embed-v2",
+        ),
+    )
+
+    llm_cache = LLMResponseCache(provider=provider)
+    before_model_cb, after_model_cb = create_llm_cache_callbacks(llm_cache)
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="cached_agent",
+        instruction="You are a helpful assistant with semantic caching enabled.",
+        before_model_callback=before_model_cb,
+        after_model_callback=after_model_cb,
+    )
+    ```
+
+=== "Semantic cache (LangCache)"
+
+    Use `LangCacheProvider` with [Redis LangCache](https://redis.io/langcache),
+    a managed semantic caching service. No local vectorizer is needed as
+    embeddings are handled server-side.
+
+    ```python
+    import os
+
+    from google.adk.agents import Agent
+
+    from adk_redis import (
+        LLMResponseCache,
+        LangCacheProvider,
+        LangCacheProviderConfig,
+        create_llm_cache_callbacks,
+    )
+
+    provider = LangCacheProvider(
+        config=LangCacheProviderConfig(
+            cache_id=os.environ["LANGCACHE_CACHE_ID"],
+            api_key=os.environ["LANGCACHE_API_KEY"],
+            server_url=os.getenv(
+                "LANGCACHE_SERVER_URL",
+                "https://aws-us-east-1.langcache.redis.io",
+            ),
+            ttl=3600,
+        ),
+    )
+
+    llm_cache = LLMResponseCache(provider=provider)
+    before_model_cb, after_model_cb = create_llm_cache_callbacks(llm_cache)
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="cached_agent",
+        instruction="You are a helpful assistant with semantic caching enabled.",
+        before_model_callback=before_model_cb,
+        after_model_callback=after_model_cb,
+    )
+    ```
+
+## Available tools
+
+### Search tools
+
+Tool | Description
+---- | -----------
+`RedisVectorSearchTool` | Vector similarity (KNN) search via RedisVL `VectorQuery`.
+`RedisHybridSearchTool` | Vector + BM25 hybrid search. Uses native `FT.HYBRID` on Redis 8.4+; falls back to client-side aggregation otherwise.
+`RedisRangeSearchTool` | Returns all documents within a vector distance threshold.
+`RedisTextSearchTool` | BM25 keyword full-text search. No vectorizer required.
+`RedisSQLSearchTool` | SQL `SELECT` against a bound index via `redisvl.query.SQLQuery`. Supports `:name` parameter placeholders. Requires `adk-redis[sql]`.
+
+### MCP
+
+Source | Description
+------ | -----------
+[RedisVL MCP server](https://docs.redisvl.com/en/latest/user_guide/how_to_guides/mcp.html) (`rvl mcp`) | Connect ADK's native `McpToolset` to a running `rvl mcp` server. The server exposes `search-records` (vector / fulltext / hybrid, chosen per server via YAML) and `upsert-records`, with schema-aware filter and return-field hints derived from the index. Supports `stdio`, `sse`, and `streamable-http`; bearer auth on HTTP; suppress writes with `--read-only` on the server or `tool_filter=["search-records"]` on the `McpToolset`.
+[Sessions + Memory MCP server](https://github.com/redis/agent-memory-server) | Connect ADK's native `McpToolset` to Agent Memory Server's MCP endpoint over SSE. Exposes `search_long_term_memory`, `create_long_term_memories`, `edit_long_term_memory`, `delete_long_term_memories`, and `memory_prompt`. Runs on a separate port from the REST API.
+
+### Memory tools
+
+Tool | Description
+---- | -----------
+`MemoryPromptTool` | Enrich the agent prompt with relevant memories.
+`SearchMemoryTool` | Search long-term memories by query.
+`CreateMemoryTool` | Store new long-term memories.
+`UpdateMemoryTool` | Update an existing memory by ID.
+`DeleteMemoryTool` | Delete memories by ID.
+`GetMemoryTool` | Fetch a single memory by ID.
+
+### Services
+
+Service | Description
+------- | -----------
+`RedisWorkingMemorySessionService` | `BaseSessionService` backed by Agent Memory Server working memory. Auto-summarizes when context window is exceeded.
+`RedisLongTermMemoryService` | `BaseMemoryService` backed by Agent Memory Server long-term memory with recency-boosted semantic search.
+
+### Cache providers
+
+Provider | Description
+-------- | -----------
+`RedisVLCacheProvider` | Self-hosted semantic cache via RedisVL `SemanticCache`. Bring your own vectorizer.
+`LangCacheProvider` | Managed semantic cache via [Redis LangCache](https://redis.io/langcache). Embeddings are handled server-side.
+
+## Additional resources
+
+- [adk-redis on GitHub](https://github.com/redis-developer/adk-redis)
+- [adk-redis on PyPI](https://pypi.org/project/adk-redis/)
+- [adk-redis documentation](https://redis-developer.github.io/adk-redis/)
+- [ADK + Redis on redis.io](https://redis.io/docs/latest/integrate/google-adk/)
+- [Runnable examples](https://github.com/redis-developer/adk-redis/tree/main/examples)
+- [Redis Agent Memory Server](https://github.com/redis/agent-memory-server)
+- [RedisVL documentation](https://docs.redisvl.com)
+- [Redis LangCache](https://redis.io/langcache)
 
 ================
 File: docs/integrations/reflect-and-retry.md
