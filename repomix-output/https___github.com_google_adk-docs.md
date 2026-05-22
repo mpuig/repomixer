@@ -12665,12 +12665,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>1.2.0</version>
+             <version>1.3.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>1.2.0</version>
+             <version>1.3.0</version>
           </dependency>
         </dependencies>
 
@@ -17083,7 +17083,7 @@ Replace your existing pom.xml with the following.
     <auto-value.version>1.11.0</auto-value.version>
     <!-- Main class for exec-maven-plugin -->
     <exec.mainClass>samples.liveaudio.LiveAudioRun</exec.mainClass>
-    <google-adk.version>1.2.0</google-adk.version>
+    <google-adk.version>1.3.0</google-adk.version>
   </properties>
 
   <dependencyManagement>
@@ -18116,13 +18116,13 @@ across supported languages. For a guided introduction, start with the
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.2.0</version>
+                <version>1.3.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.2.0</version>
+                <version>1.3.0</version>
             </dependency>
         </dependencies>
 
@@ -18137,8 +18137,8 @@ across supported languages. For a guided introduction, start with the
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:1.2.0'
-        implementation 'com.google.adk:google-adk-dev:1.2.0'
+        implementation 'com.google.adk:google-adk:1.3.0'
+        implementation 'com.google.adk:google-adk-dev:1.3.0'
     }
     ```
 
@@ -18276,7 +18276,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -18311,13 +18311,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.2.0</version>
+                <version>1.3.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.2.0</version>
+                <version>1.3.0</version>
             </dependency>
         </dependencies>
 
@@ -20171,18 +20171,24 @@ edges=[
     you cannot run multiple interactive chat sessions within the same agent
     session.
 
-### Route branches
+### Route branches and conditional execution
 
 The subsequent rows of the ***edges*** arrays after the START keyword define
-additional execution logic for nodes. For branching paths, you define a node,
-usually a ***FunctionNode***, that outputs a ***route*** with one or more route
-values. In the edges graph, you define the execution logic with route values and
-target nodes, as shown in the following code example:
+additional execution logic for nodes. For branching paths, which is how you create a conditional node, you define a node,
+usually a ***FunctionNode***, that outputs an Event with a specific  ***route*** value. In the edges graph, you then define the conditional execution logic by mapping these route values to target nodes, as shown in the following code example:
 
 ```python
 def router(node_input: str):
-    """Simulate a routing decision"""
-    return Event(route="RUN_TASK_C")
+    """Route to task B or C based on node_input."""
+    if condition(node_input):
+        return Event(route="RUN_TASK_C")
+    return Event(route="RUN_TASK_B")
+
+task_B_node = Agent(name="task_B_agent") # An agent to execute node B
+
+def task_C_node(node_input: str):
+    """A FunctionNode to execute node C."""
+    return Event(output="Task C completed")
 
 root_agent = Workflow(
     name="routing_workflow",
@@ -28116,7 +28122,7 @@ ADK provides a native integration for managing persistent agent session states u
 
     Ensure you use the same version for both `google-adk` and `google-adk-firestore-session-service` to guarantee compatibility.
 
-Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Gradle), replacing `1.2.0` with your target ADK version:
+Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Gradle), replacing `1.3.0` with your target ADK version:
 
 ### Maven
 
@@ -28126,13 +28132,13 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Grad
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
     <!-- Firestore Session Service -->
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk-firestore-session-service</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
     </dependency>
 </dependencies>
 ```
@@ -28142,9 +28148,9 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle` (Grad
 ```gradle
 dependencies {
     // ADK Core
-    implementation 'com.google.adk:google-adk:1.2.0'
+    implementation 'com.google.adk:google-adk:1.3.0'
     // Firestore Session Service
-    implementation 'com.google.adk:google-adk-firestore-session-service:1.2.0'
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.3.0'
 }
 ```
 
@@ -39105,7 +39111,7 @@ File: docs/runtime/event-loop.md
 # Runtime Event Loop
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The ADK Runtime is the underlying engine that powers your agent application during user interactions. It's the system that takes your defined agents, tools, and callbacks and orchestrates their execution in response to user input, managing the flow of information, state changes, and interactions with external services like LLMs or storage.
@@ -39281,6 +39287,12 @@ The `Runner` acts as the central coordinator for a single user invocation. Its r
             return event;
         });
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunnerLoop.kt:conceptual_loop"
     ```
 
 ### Execution Logic's Role (Agent, Tool, Callback)
@@ -39474,6 +39486,12 @@ Your code within agents, tools, and callbacks is responsible for the actual comp
 
             // ... subsequent code continues ...
             // If this subsequent code needs to yield another event, it would do so here.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunnerLoop.kt:execution_logic"
     ```
 
 This cooperative yield/pause/resume cycle between the `Runner` and your Execution Logic, mediated by `Event` objects, forms the core of the ADK Runtime.
@@ -39692,6 +39710,12 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
     // or emitting more events based on the now-updated `ctx.session().state()`.
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunnerLoop.kt:state_update_timing"
+    ```
+
 ### "Dirty Reads" of Session State
 
 * **Definition:** While commitment happens *after* the yield, code running *later within the same invocation*, but *before* the state-changing event is actually yielded and processed, **can often see the local, uncommitted changes**. This is sometimes called a "dirty read".
@@ -39770,6 +39794,12 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
     // is yielded *after* this tool runs and is processed by the Runner.
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunnerLoop.kt:dirty_read"
+    ```
+
 * **Implications:**
   * **Benefit:** Allows different parts of your logic within a single complex step (e.g., multiple callbacks or tool calls before the next LLM turn) to coordinate using state without waiting for a full yield/commit cycle.
   * **Caveat:** Relying heavily on dirty reads for critical logic can be risky. If the invocation fails *before* the event carrying the `state_delta` is yielded and processed by the `Runner`, the uncommitted state change will be lost. For critical state transitions, ensure they are associated with an event that gets successfully processed.
@@ -39804,7 +39834,7 @@ File: docs/runtime/index.md
 # Agent Runtime
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 ADK provides several ways to run and test your agents during development. Choose
@@ -39870,7 +39900,7 @@ File: docs/runtime/resume.md
 # Resume stopped agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 An ADK agent's execution can be interrupted by various factors including
@@ -39892,16 +39922,24 @@ Enable the Resume function for an agent workflow by applying a Resumability
 configuration to the App object of your ADK workflow, as shown in the following
 code example:
 
-```python
-app = App(
-    name='my_resumable_agent',
-    root_agent=root_agent,
-    # Set the resumability config to enable resumability.
-    resumability_config=ResumabilityConfig(
-        is_resumable=True,
-    ),
-)
-```
+=== "Python"
+
+    ```python
+    app = App(
+        name='my_resumable_agent',
+        root_agent=root_agent,
+        # Set the resumability config to enable resumability.
+        resumability_config=ResumabilityConfig(
+            is_resumable=True,
+        ),
+    )
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunConfigExample.kt:resumability_config"
+    ```
 
 !!! warning "Caution: Long Running Functions, Confirmations, Authentication"
     For agents that use
@@ -39946,13 +39984,21 @@ curl -X POST http://localhost:8000/run_sse \
 You can also resume a workflow using the Runner object Run Async method, as
 shown below:
 
-```python
-runner.run_async(user_id='u_123', session_id='s_abc',
-    invocation_id='invocation-123')
+=== "Python"
 
-# When new_message is set to a function response,
-# we are trying to resume a long running function.
-```
+    ```python
+    runner.run_async(user_id='u_123', session_id='s_abc',
+        invocation_id='invocation-123')
+
+    # When new_message is set to a function response,
+    # we are trying to resume a long running function.
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunConfigExample.kt:resume_usage"
+    ```
 
 !!! info "Note"
     Resuming a workflow from the ADK Web user interface or using the ADK
@@ -40119,7 +40165,7 @@ File: docs/runtime/runconfig.md
 # Runtime Configuration
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 `RunConfig` controls how agents behave at runtime, including streaming mode,
@@ -40174,6 +40220,12 @@ to `runner.run_async()` or `runner.run_live()` to override default behavior.
         .streamingMode(StreamingMode.SSE)
         .maxLlmCalls(200)
         .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunConfigExample.kt:basic_usage"
     ```
 
 ## Manage sessions and context
@@ -40267,6 +40319,12 @@ execute function calls. CFC uses the Live API under the hood.
         .streamingMode(StreamingMode.SSE)
         .maxLlmCalls(150)
         .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/runtime/RunConfigExample.kt:streaming_config"
     ```
 
 ## Configure audio and speech
@@ -41643,7 +41701,7 @@ File: docs/sessions/memory.md
 # Memory: Long-Term Knowledge with `MemoryService`
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 We've seen how `Session` tracks the history (`events`) and temporary data (`state`) for a *single, ongoing conversation*. But what if an agent needs to recall information from *past* conversations? This is where the concept of **Long-Term Knowledge** and the **`MemoryService`** come into play.
@@ -41872,12 +41930,6 @@ You can also search memory from within a custom tool by using the tool context.
         }
     ```
 
-=== "Go"
-
-    ```go
-    --8<-- "examples/go/snippets/sessions/memory_example/memory_example.go:tool_search"
-    ```
-
 === "TypeScript"
 
     ```typescript
@@ -41890,6 +41942,12 @@ You can also search memory from within a custom tool by using the tool context.
         memories: response.memories.map(m => m.content.parts?.map(p => p.text).join(' ')).join('\n')
       };
     }
+    ```
+
+=== "Go"
+
+    ```go
+    --8<-- "examples/go/snippets/sessions/memory_example/memory_example.go:tool_search"
     ```
 
 === "Java"
@@ -42150,6 +42208,7 @@ For example, your agent can use the framework-configured `InMemoryMemoryService`
 #### Example: Using Two Memory Services
 
 === "Python"
+
     ```python
     from google.adk.agents import Agent
     from google.adk.memory import InMemoryMemoryService
@@ -42190,6 +42249,12 @@ For example, your agent can use the framework-configured `InMemoryMemoryService`
         ),
         tools=[search_all_memory],
     )
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:multi_memory"
     ```
 
 ================
