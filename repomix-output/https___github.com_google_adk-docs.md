@@ -18159,8 +18159,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.2.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.2.0")
     }
     ```
 
@@ -18572,8 +18572,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.2.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.2.0")
 }
 ```
 
@@ -18593,9 +18593,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:0.1.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.2.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:0.2.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.2.0")
     }
 
     kotlin {
@@ -18695,9 +18695,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.1.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:0.1.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.1.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.2.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:0.2.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.2.0")
 }
 ```
 
@@ -18707,7 +18707,6 @@ Then create a `WebMain.kt` file alongside your `Main.kt`:
 package com.example.agent
 
 import com.google.adk.kt.artifacts.InMemoryArtifactService
-import com.google.adk.kt.runners.InMemoryRunner
 import com.google.adk.kt.sessions.InMemorySessionService
 import com.google.adk.kt.webserver.AdkWebServer
 import com.google.adk.kt.webserver.loaders.SingleAgentLoader
@@ -18723,11 +18722,6 @@ fun main() {
         sessionService = sessionService,
         artifactService = artifactService,
         agentLoader = SingleAgentLoader(agent),
-        runner = InMemoryRunner(
-            agent = agent,
-            sessionService = sessionService,
-            artifactService = artifactService,
-        ),
         apiServerSpanExporter = ApiServerSpanExporter(),
     )
 
@@ -55500,14 +55494,15 @@ File: docs/tutorials/multi-tool-agent.md
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
-This quickstart guides you through installing the Agent Development Kit (ADK),
-setting up a basic agent with multiple tools, and running it locally either in the terminal or in the interactive, browser-based dev UI.
+This quickstart guides you through installing Agent Development Kit (ADK),
+setting up a basic agent with multiple tools, and running it locally either in
+the terminal or in the interactive, browser-based dev UI.
 
 <!-- <img src="../../assets/quickstart.png" alt="Quickstart setup"> -->
 
-This quickstart assumes a local IDE (VS Code, PyCharm, IntelliJ IDEA, etc.)
-with Python 3.10+ or Java 17+ and terminal access. This method runs the
-application entirely on your machine and is recommended for internal development.
+This quickstart assumes a local IDE (VS Code, PyCharm, IntelliJ IDEA, etc.) with
+Python 3.10+ or Java 17+ and terminal access. This method runs the application
+entirely on your machine and is recommended for internal development.
 
 ## 1. Set up Environment & Install ADK { #set-up-environment-install-adk }
 
@@ -55542,7 +55537,8 @@ application entirely on your machine and is recommended for internal development
     npm install -D typescript
     ```
 
-    Create a `tsconfig.json` file with the following content. This configuration ensures your project correctly handles modern Node.js modules.
+    Create a `tsconfig.json` file with the following content. This configuration
+    ensures your project correctly handles modern Node.js modules.
 
     ```json title="tsconfig.json"
     {
@@ -55558,7 +55554,7 @@ application entirely on your machine and is recommended for internal development
       }
     }
     ```
-    
+
 === "Go"
 
     ## Create a new Go module
@@ -55583,17 +55579,13 @@ application entirely on your machine and is recommended for internal development
 
 === "Java"
 
-    To install ADK and setup the environment, proceed to the following steps.
+    To install ADK Java and set up the environment, see the [Java
+    Quickstart](/get-started/java/).
 
 === "Kotlin"
 
-    Create a new Kotlin project (e.g., using IntelliJ IDEA or Gradle) and add the following dependency to your `build.gradle.kts`:
-
-    ```kotlin
-    dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.1.0") // Replace with actual version
-    }
-    ```
+    To install ADK Kotlin and set up the environment, see the [Kotlin
+    Quickstart](/get-started/kotlin/).
 
 ## 2. Create Agent Project { #create-agent-project }
 
