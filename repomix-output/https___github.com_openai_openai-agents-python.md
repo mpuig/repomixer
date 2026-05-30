@@ -548,10 +548,6 @@ search:
 
 이 가이드는 OpenAI Agents SDK의 실시간 레이어가 OpenAI Realtime API에 어떻게 대응되는지, 그리고 Python SDK가 그 위에 어떤 추가 동작을 더하는지 설명합니다.
 
-!!! warning "베타 기능"
-
-    실시간 에이전트는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
-
 !!! note "시작점"
 
     기본 Python 경로를 원한다면 먼저 [빠른 시작](quickstart.md)을 읽어보세요. 앱에서 서버 측 WebSocket 또는 SIP를 사용해야 할지 결정하는 중이라면 [실시간 전송](transport.md)을 읽어보세요. 브라우저 WebRTC 전송은 Python SDK의 일부가 아닙니다.
@@ -900,10 +896,6 @@ search:
 # 빠른 시작
 
 Realtime agents는 WebSocket 전송을 통한 OpenAI Realtime API 기반의 서버 측 저지연 에이전트입니다.
-
-!!! warning "베타 기능"
-
-    Realtime agents는 베타입니다. 구현을 개선하는 과정에서 일부 호환성이 깨지는 변경이 있을 수 있습니다.
 
 !!! note "Python SDK 범위"
 
@@ -8633,10 +8625,6 @@ File: docs/realtime/guide.md
 
 This guide explains how the OpenAI Agents SDK's realtime layer maps onto the OpenAI Realtime API, and what extra behavior the Python SDK adds on top.
 
-!!! warning "Beta feature"
-
-    Realtime agents are in beta. Expect some breaking changes as we improve the implementation.
-
 !!! note "Start here"
 
     If you want the default Python path, read the [quickstart](quickstart.md) first. If you are deciding whether your app should use server-side WebSocket or SIP, read [Realtime transport](transport.md). Browser WebRTC transport is not part of the Python SDK.
@@ -8981,10 +8969,6 @@ File: docs/realtime/quickstart.md
 # Quickstart
 
 Realtime agents in the Python SDK are server-side, low-latency agents built on the OpenAI Realtime API over WebSocket transport.
-
-!!! warning "Beta feature"
-
-    Realtime agents are in beta. Expect some breaking changes as we improve the implementation.
 
 !!! note "Python SDK boundary"
 
@@ -13667,10 +13651,6 @@ search:
 
 本指南说明 OpenAI Agents SDK的Realtime层如何映射到 OpenAI Realtime API，以及 Python SDK 在其之上增加了哪些额外行为。
 
-!!! warning "Beta 功能"
-
-    Realtime 智能体处于 beta 阶段。随着我们改进实现，可能会出现一些破坏性变更。
-
 !!! note "从这里开始"
 
     如果你想使用默认的 Python 路径，请先阅读[快速入门](quickstart.md)。如果你正在决定你的应用应使用服务端 WebSocket 还是 SIP，请阅读 [Realtime 传输](transport.md)。浏览器 WebRTC 传输不属于 Python SDK 的一部分。
@@ -14019,10 +13999,6 @@ search:
 # 快速入门
 
 Python SDK 中的实时智能体是基于通过 WebSocket 传输的 OpenAI Realtime API 构建的服务端低延迟智能体。
-
-!!! warning "Beta 功能"
-
-    实时智能体目前处于 Beta 阶段。随着我们改进实现，预计可能会有一些破坏性变更。
 
 !!! note "Python SDK 边界"
 
