@@ -3,6 +3,24 @@ Files
 ================================================================
 
 ================
+File: docs/_includes/homepage/_agent-cli.md
+================
+<!-- Developer Tools -->
+<div class="feature-split reverse">
+  <div class="feature-text">
+    <span class="feature-badge">Agents CLI</span>
+    <h2>Build agents <i>with</i> agents.</h2>
+    <p>Go from idea to coded ADK agent in minutes. Use your favorite AI-enabled developer environment to scaffold, build, test, evaluate, and deploy with Agents CLI.</p>
+    <a href="tutorials/coding-with-ai/#agents-cli" class="btn btn-accent" style="margin-top:12px">Learn more</a>
+  </div>
+  <div class="feature-visual">
+    <div class="ui-wrapper">
+      <img src="assets/agent-cli.gif" alt="Agent CLI for building ADK agents" class="devui-img">
+    </div>
+  </div>
+</div>
+
+================
 File: docs/_includes/homepage/_ai-dev-tools.md
 ================
 <!-- Developer Tools -->
@@ -63,7 +81,7 @@ File: docs/_includes/homepage/_community.md
 File: docs/_includes/homepage/_ecosystem.md
 ================
 <!-- Ecosystem -->
-<div class="feature-split reverse">
+<div class="feature-split">
   <div class="feature-text">
     <span class="feature-badge">Ecosystem</span>
     <h2>Open ecosystem. Connect everything.</h2>
@@ -142,7 +160,7 @@ File: docs/_includes/homepage/_faq.md
 File: docs/_includes/homepage/_framework.md
 ================
 <!-- Developer Tools -->
-<div class="feature-split">
+<div class="feature-split reverse">
   <div class="feature-text">
     <span class="feature-badge">Framework</span>
     <h2>Powerful simplicity. Built for scale.</h2>
@@ -160,7 +178,7 @@ File: docs/_includes/homepage/_framework.md
 File: docs/_includes/homepage/_graphs.md
 ================
 <!-- Developer Tools -->
-<div class="feature-split reverse">
+<div class="feature-split">
   <div class="feature-text">
     <span class="feature-badge">Graph Workflows</span>
     <h2>Reliable logic. Intelligent reasoning.</h2>
@@ -9231,6 +9249,16 @@ for updates on the next call. Recent recordings are below, or browse the full
 playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
 
 <div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=vbqKmK0rArI" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/vbqKmK0rArI/maxresdefault.jpg" alt="ADK Community Call May 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 May 2026 Recording</h3>
+      <p>Discussions include the ADK Python 2.0 GA release, initial release of ADK for Kotlin and Android, demos of Agents CLI and Skills for dynamic capability loading, and a community spotlight on Beever Atlas.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
     <div class="card-image-wrapper">
       <img src="https://img.youtube.com/vi/bPngDY7EuOQ/maxresdefault.jpg" alt="ADK Community Call Mar 2026">
@@ -9249,16 +9277,6 @@ playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5R
       <div class="type">Community Call</div>
       <h3>📞 Feb 2026 Recording</h3>
       <p>Discussions include ADK evaluations with built-in metrics, token-based context compaction, the BigQuery observability plugin, and a community spotlight on Redis integration.</p>
-    </div>
-  </a>
-  <a href="https://www.youtube.com/watch?v=h9Lueiqo89E" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/h9Lueiqo89E/maxresdefault.jpg" alt="ADK Community Call Jan 2026">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Jan 2026 Recording</h3>
-      <p>Discussions include Session Service schema for cross-language support, TypeScript multi-agent demo, API Registry for MCP servers, and third-party tool integrations.</p>
     </div>
   </a>
 
@@ -21581,7 +21599,7 @@ catalog_tags: ["google", "mcp", "connectors"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.26.0</span><span class="lst-preview">Preview</span>
 </div>
 
-The Agent Registry client library withins Agent Development Kit (ADK) allows
+The Agent Registry client library within Agent Development Kit (ADK) allows
 developers to discover, look up, and connect to AI Agents and MCP Servers
 cataloged within the [Google Cloud Agent
 Registry](https://docs.cloud.google.com/agent-registry/overview). This enables
@@ -36494,16 +36512,13 @@ Valid options are `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.
 
 ## Available Samplers and Agent Optimizers
 
-The following samplers and agent optimizers are provided with ADK.
-The `adk optimize` command uses the `LocalEvalSampler` and
-`GEPARootAgentPromptOptimizer` described below.
-You can also use these samplers and agent optimizers in your own scripts.
+ADK provides several samplers and agent optimizers which you can run using the `adk optimize` command line. The available options are as follows: 
 
 ### `LocalEvalSampler` {#localevalsampler}
 
 The
 [`LocalEvalSampler`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/local_eval_sampler.py)
-evaluates candidate agents using the ADK's
+evaluates candidate agents using ADK's
 [`LocalEvalService`](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/local_eval_service.py).
 It provides eval results as an [`UnstructuredSamplingResult`](#sampler-results).
 You can configure the `LocalEvalSampler` with a `LocalEvalSamplerConfig` that
@@ -36563,6 +36578,52 @@ Defaults to 3.
 * `run_dir` (optional): The directory to save intermediate and final
 optimization results if desired.
 Facilitates warm starts.
+
+### `SimplePromptOptimizer` {#simplepromptoptimizer}
+
+The `SimplePromptOptimizer` is an automated, iterative prompt-tuning component designed
+to systematically improve an agent's root system instructions using empirical evaluation data.
+Unlike the GEPA-based optimizers that maintain a diverse Pareto frontier of multiple candidate 
+agents, the `SimplePromptOptimizer` executes a direct, sequential optimization loop focused entirely on 
+refining a single primary prompt across a series of specified iterations.
+
+The optimizer automatically executes an asynchronous, four-stage feedback loop:
+
+1. **Execute:** The target agent processes a specific batch of evaluation tasks managed by an implementation of the `Sampler` class.  
+2. **Evaluate**: The Sampler scores the agent's outputs against your evaluation datasets and returns a structured `SamplingResult`.  
+3. **Critique**: An underlying optimization large language model (LLM) (defaulting to Gemini-2.5-flash) analyzes the historical evaluation scores alongside the current prompt to isolate specific behavioral weaknesses or gaps.  
+4. **Rewrite**: The optimization model generates an updated variation of the system prompt tailored to address the discovered weaknesses. This new prompt is then fed directly into the next iteration.
+
+**Note:** The optimization loop does not mutate your initial agent instance in place. Upon completion, it returns an `OptimizerResult` containing the highest-scoring agent variation extracted during the process.
+
+### Configuration
+
+Configure the behavior of the loop by passing a `SimplePromptOptimizerConfig` instance to the optimizer.
+
+| Parameter | Type | Default | Description |
+| :---- | :---- | :---- | :---- |
+| `num_iterations` | int | *Required* | The total number of optimization rounds to execute. |
+| `batch_size` | int | *Required* | The number of evaluation sample cases processed by the sampler during each individual iteration. |
+
+### Implementation Example
+
+Once your configuration is defined, run the optimization with:
+
+```python
+from google.adk.optimization import SimplePromptOptimizer, SimplePromptOptimizerConfig
+
+# Define your Agent and Sampler first...
+
+# Configure the optimizer
+config = SimplePromptOptimizerConfig(
+    num_iterations=5,
+    batch_size=10
+)
+
+# Run optimization
+optimizer = SimplePromptOptimizer(config=config)
+optimized_result = await optimizer.optimize(agent, sampler)
+```
 
 ## Key Data Types
 
@@ -55381,12 +55442,22 @@ server.
 - [**ADK Docs Index**](#adk-docs-index): Machine-readable documentation files
   following the `llms.txt` standard.
 
-## agents-cli
+## Agents CLI {#agents-cli}
 
-[Agents CLI in Agent Platform](https://google.github.io/agents-cli/) is the command-line tool for
-ADK development. It provides scaffolding commands, deployment tools, and
-development skills that work with any compatible coding assistant, including
-Gemini CLI, Antigravity, Claude Code, and Cursor.
+The [Agents CLI](https://google.github.io/agents-cli/) tool set lets you plug
+ADK agent expertise into your favorite AI-coding environments including
+Antigravity, Gemini CLI, Claude Code, and Cursor. Install Agents CLI into your
+current AI-powered development environment to scaffold, build, test, evaluate,
+and deploy ADK agents. Enable your development environment with these
+Agents CLI Skills:
+
+*   Development lifecycle and coding guidelines
+*   Project scaffolding
+*   Evaluation methodology and scoring
+*   Agent Runtime, Cloud Run, and GKE deployment
+*   Gemini Enterprise agent publishing
+*   Trace, logging, and integrations
+*   Python API quick reference and docs index
 
 To install Agents CLI and set up ADK development skills:
 
@@ -55394,32 +55465,9 @@ To install Agents CLI and set up ADK development skills:
 uvx google-agents-cli setup
 ```
 
-This installs both the CLI and coding skills. Browse the [Agents CLI
-documentation](https://google.github.io/agents-cli/) for more details.
-
-### CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `agents-cli scaffold create` | Create a new ADK agent project |
-| `agents-cli scaffold enhance` | Add deployment to existing project |
-| `agents-cli eval` | Run agent evaluations |
-| `agents-cli deploy` | Deploy to Agent Runtime, Cloud Run, or GKE |
-| `agents-cli publish` | Publish to Gemini Enterprise |
-
-### Development Skills
-
-After setup, the following skills are available in your coding tool:
-
-| Skill | Description |
-|-------|-------------|
-| `google-agents-cli-workflow` | Development lifecycle and coding guidelines |
-| `google-agents-cli-adk-code` | Python API quick reference and docs index |
-| `google-agents-cli-scaffold` | Project scaffolding |
-| `google-agents-cli-eval` | Evaluation methodology and scoring |
-| `google-agents-cli-deploy` | Agent Runtime, Cloud Run, and GKE deployment |
-| `google-agents-cli-publish` | Gemini Enterprise registration |
-| `google-agents-cli-observability` | Tracing, logging, and integrations |
+For more information on installing Agents CLI and using it in your development
+environment, see the
+[Agents CLI documentation](https://google.github.io/agents-cli/).
 
 ## ADK Docs MCP Server
 
@@ -57815,6 +57863,9 @@ hide:
 <!-- Hero Section -->
 {{% include '_includes/homepage/_hero.md' %}}
 
+<!-- Agent CLI -->
+{{% include '_includes/homepage/_agent-cli.md' %}}
+
 <!-- Graphs -->
 {{% include '_includes/homepage/_graphs.md' %}}
 
@@ -57823,9 +57874,6 @@ hide:
 
 <!-- Ecosystem -->
 {{% include '_includes/homepage/_ecosystem.md' %}}
-
-<!-- AI Dev Tools -->
-{{% include '_includes/homepage/_ai-dev-tools.md' %}}
 
 <!-- Ready to Build CTA Section -->
 {{% include '_includes/homepage/_build-cta.md' %}}
