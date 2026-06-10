@@ -28047,6 +28047,7 @@ The ***LocalEnvironment*** class supports the following parameters:
     more details, see [File persistence](#file-persistence).
 -   **env_vars**: (optional) A dictionary of environment variables to be set
     for the execution context.
+- **max_output chars**: (optional) A parameter to use with `EnvironmentToolset` to limit the maximum number of characters returned from file reads or command executions. This helps prevent large file contents or command outputs from exceeding the agent's context window limit.
 
 The following code sample shows how to set these options for a
 ***LocalEnvironment*** object:
@@ -41630,6 +41631,20 @@ from google.adk.sessions import DatabaseSessionService
 db_url = "sqlite+aiosqlite:///./my_agent_data.db"
 session_service = DatabaseSessionService(db_url=db_url)
 ```
+
+#### Concurrency and locking
+
+The `DatabaseSessionService` ensures data integrity during concurrent operations through a
+two-tiered locking architecture:
+
+* **In-Process locking:** The service uses an internal, in-process lock to
+        serialize `append_event` calls for the same session. This prevents race
+        conditions when multiple requests try to update the same session
+        simultaneously within the same process.
+* **Row-Level locking:** For PostgreSQL, MySQL, and MariaDB, the service
+        uses row-level locking (via `SELECT ... FOR UPDATE`) to prevent race
+        conditions when multiple processes or replicas try to update the same
+        session simultaneously.
 
 !!! warning "Async Driver Requirement"
 
