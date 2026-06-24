@@ -21508,6 +21508,403 @@ TikTok Ads | 4 | Campaign management and performance analysis
 - [Ad Platform Guides](https://www.adspirer.com/docs)
 
 ================
+File: docs/integrations/aerospike.md
+================
+---
+catalog_title: Aerospike
+catalog_description: Store sessions, memory, and artifacts for ADK agents on one Aerospike cluster
+catalog_icon: /integrations/assets/aerospike.png
+catalog_tags: ["data"]
+---
+
+# Aerospike integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [`adk-aerospike`](https://github.com/aerospike-community/adk-aerospike)
+integration connects your ADK agent to [Aerospike](https://aerospike.com/), a
+distributed real-time key-value database. It implements all three ADK Python
+storage interfaces on a single cluster using the native Aerospike client in your
+application process. Register the `aerospike://` URI scheme once and the `adk`
+CLI can use Aerospike for sessions, artifacts, and memory.
+
+There are several ways to use this integration:
+
+| Approach | Description |
+| -------- | ----------- |
+| **Session service** | `AerospikeSessionService`: Scoped state (`app:`, `user:`, session), event history with chunked storage, atomic `append_event`. |
+| **Memory service** | `AerospikeMemoryService`: Lexical word-overlap search via per-token posting-list keys; same semantics as `InMemoryMemoryService`. |
+| **Artifact service** | `AerospikeArtifactService`: Versioned blobs per session or `user:` namespace. |
+| **Full stack** | Wire all three services into one `Runner`, or pass matching `aerospike://` URIs to `adk web` / `adk run`. |
+
+## Use cases
+
+- **Production agent persistence**: Keep conversation state, tool outputs, and
+  user-scoped data across restarts and replicas without operating a separate
+  memory service.
+- **High-throughput agents**: Sub-millisecond reads and writes for chat, voice,
+  and real-time orchestration where session append latency matters.
+- **Lexical long-term memory**: Tokenize text at write time; search with point
+  reads on posting-list keys (`app:user:kw:<token>`) and hydrate memory rows,
+  with no embedding model required.
+- **Multimodal artifacts**: Store images, files, and generated outputs with
+  version history; `user:` filenames are visible across sessions (ADK contract).
+- **Self-hosted and multi-tenant**: One namespace, composite secondary indexes
+  for tenant-scoped artifact and memory operations; Community or Enterprise
+  on-prem or cloud.
+
+## Prerequisites
+
+- Python 3.11 or later
+- [ADK for Python](/get-started/python/) (`google-adk`)
+- Aerospike Database 7.x or 8.x (Community or Enterprise)
+- A reachable cluster (local Docker example below)
+
+Local Aerospike for development:
+
+```bash
+docker run --rm -d --name aerospike -p 3000-3003:3000-3003 aerospike/aerospike-server:latest
+```
+
+For model calls in the runnable examples, set `GOOGLE_API_KEY` (or your model
+provider credentials).
+
+## Installation
+
+```bash
+pip install google-adk adk-aerospike
+```
+
+## Use with agent
+
+=== "Session + Runner"
+
+    Plug `AerospikeSessionService` into any ADK `Runner` for a full multi-turn
+    agent with persisted sessions.
+
+    ```python
+    import asyncio
+
+    from adk_aerospike import AerospikeSessionService
+    from google.adk.agents import LlmAgent
+    from google.adk.runners import Runner
+    from google.genai import types
+
+    async def main() -> None:
+        session_service = AerospikeSessionService.from_uri(
+            "aerospike://localhost:3000/adk"
+        )
+        agent = LlmAgent(
+            name="assistant",
+            model="gemini-flash-latest",
+            instruction="Be helpful. Keep replies under 30 words.",
+        )
+        runner = Runner(
+            agent=agent,
+            app_name="myapp",
+            session_service=session_service,
+        )
+
+        session = await session_service.create_session(
+            app_name="myapp", user_id="user-1"
+        )
+        async for event in runner.run_async(
+            user_id="user-1",
+            session_id=session.id,
+            new_message=types.Content(
+                role="user", parts=[types.Part(text="Hello")]
+            ),
+        ):
+            if event.content:
+                for part in event.content.parts or []:
+                    if part.text:
+                        print(part.text)
+
+        session_service.close()
+
+    asyncio.run(main())
+    ```
+
+=== "Session API"
+
+    Use the session service directly for state, events, and listing. Scoped
+    keys follow ADK conventions (`app:`, `user:`, `temp:`).
+
+    ```python
+    import asyncio
+
+    from adk_aerospike import AerospikeSessionService
+    from google.adk.events import Event, EventActions
+    from google.genai import types
+
+    async def main() -> None:
+        svc = AerospikeSessionService.from_uri("aerospike://localhost:3000/adk")
+
+        session = await svc.create_session(
+            app_name="support_bot",
+            user_id="alice",
+            state={
+                "topic": "billing",
+                "app:tenant": "acme-corp",
+                "user:nickname": "Allie",
+                "temp:scratch": "throwaway",
+            },
+        )
+
+        await svc.append_event(
+            session,
+            Event(
+                invocation_id="i1",
+                author="user",
+                content=types.Content(
+                    role="user",
+                    parts=[types.Part(text="Where is my invoice?")],
+                ),
+                actions=EventActions(state_delta={"turn": 1}),
+            ),
+        )
+
+        fetched = await svc.get_session(
+            app_name="support_bot",
+            user_id="alice",
+            session_id=session.id,
+        )
+        print(fetched.state)
+        # topic, turn, app:tenant, user:nickname — temp: keys are not persisted
+
+        svc.close()
+
+    asyncio.run(main())
+    ```
+
+=== "Memory service"
+
+    Persist text-bearing session events, then search with word overlap (no
+    vector index).
+
+    ```python
+    import asyncio
+
+    from adk_aerospike import AerospikeMemoryService
+    from google.adk.events import Event, EventActions
+    from google.adk.sessions import Session
+    from google.genai import types
+
+    async def main() -> None:
+        memory = AerospikeMemoryService.from_uri(
+            "aerospike://localhost:3000/adk", top_k=10
+        )
+
+        session = Session(
+            id="s-1",
+            app_name="support_bot",
+            user_id="alice",
+            events=[
+                Event(
+                    invocation_id="i",
+                    author="user",
+                    content=types.Content(
+                        role="user",
+                        parts=[types.Part(text="Python uses duck typing.")],
+                    ),
+                    actions=EventActions(),
+                ),
+            ],
+        )
+        await memory.add_session_to_memory(session)
+
+        resp = await memory.search_memory(
+            app_name="support_bot",
+            user_id="alice",
+            query="python duck typing",
+        )
+        for m in resp.memories:
+            print(m.content.parts[0].text)
+
+        memory.close()
+
+    asyncio.run(main())
+    ```
+
+=== "Artifact service"
+
+    Save versioned artifacts per session; use a `user:` filename prefix for
+    cross-session visibility.
+
+    ```python
+    import asyncio
+
+    from adk_aerospike import AerospikeArtifactService
+    from google.genai import types
+
+    async def main() -> None:
+        svc = AerospikeArtifactService.from_uri(
+            "aerospike://localhost:3000/adk"
+        )
+
+        await svc.save_artifact(
+            app_name="support_bot",
+            user_id="alice",
+            session_id="s-1",
+            filename="report.pdf",
+            artifact=types.Part(
+                inline_data=types.Blob(
+                    mime_type="application/pdf", data=b"%PDF-1.4..."
+                ),
+            ),
+        )
+
+        latest = await svc.load_artifact(
+            app_name="support_bot",
+            user_id="alice",
+            session_id="s-1",
+            filename="report.pdf",
+        )
+        print(latest.inline_data.mime_type)
+
+        svc.close()
+
+    asyncio.run(main())
+    ```
+
+=== "All three services"
+
+    ```python
+    from adk_aerospike import (
+        AerospikeArtifactService,
+        AerospikeMemoryService,
+        AerospikeSessionService,
+    )
+    from google.adk.agents import LlmAgent
+    from google.adk.runners import Runner
+
+    uri = "aerospike://localhost:3000/adk"
+
+    session_service = AerospikeSessionService.from_uri(uri)
+    artifact_service = AerospikeArtifactService.from_uri(uri)
+    memory_service = AerospikeMemoryService.from_uri(uri)
+
+    agent = LlmAgent(name="assistant", model="gemini-flash-latest")
+    runner = Runner(
+        agent=agent,
+        app_name="myapp",
+        session_service=session_service,
+        artifact_service=artifact_service,
+        memory_service=memory_service,
+    )
+    ```
+
+=== "`adk web` and `adk run`"
+
+    Register URI schemes once (for example in `services.py` next to your agent):
+
+    ```python
+    import adk_aerospike
+
+    adk_aerospike.register()
+    ```
+
+    Then point the CLI at the same namespace for each storage role:
+
+    ```bash
+    adk web \
+      --session_service_uri=aerospike://localhost:3000/adk \
+      --artifact_service_uri=aerospike://localhost:3000/adk \
+      --memory_service_uri=aerospike://localhost:3000/adk
+    ```
+
+    !!! note
+
+        `register()` wires `aerospike://` into ADK's service registry so the dev
+        UI and CLI resolve these URLs without custom factory code.
+
+## Configuration
+
+### Connection URI
+
+All three services share one URI format:
+
+```text
+aerospike://[user:pass@]host[:port][,host2[:port],…]/<namespace>[?option=value]
+```
+
+Examples:
+
+```text
+aerospike://localhost:3000/adk
+aerospike://user:pass@node1:3000,node2:3000/prod?set_prefix=prod_&tls=true
+```
+
+| Query parameter | Description |
+| --------------- | ----------- |
+| `set_prefix` | Prefix for Aerospike set names (default `adk_`). Multiple apps can share one namespace. |
+| `tls=true` | Enable TLS. Pass `tls_config={...}` to `from_uri` for mTLS details. |
+| `auth_mode` | `INTERNAL` (default), `EXTERNAL`, `EXTERNAL_INSECURE`, or `PKI`. |
+
+You can also construct services with an existing `aerospike.Client` and `Schema`
+for shared connection pools across services.
+
+### State scoping
+
+Session `state` uses key prefixes (same as
+[`google.adk.sessions.state.State`](https://github.com/google/adk-python)):
+
+| Prefix | Stored in | Visibility |
+| ------ | --------- | ---------- |
+| `app:foo` | `adk_app_state` | All users of the app |
+| `user:foo` | `adk_user_state` | This user across sessions |
+| `temp:foo` | Not persisted | Current invocation only |
+| _(unprefixed)_ | Session record | This session only |
+
+`get_session` merges all scopes into one dict with prefixes restored for ADK
+compatibility.
+
+## Available services
+
+### Services
+
+| Service | ADK interface | Description |
+| ------- | ------------- | ----------- |
+| `AerospikeSessionService` | `BaseSessionService` | Sessions, events, scoped state. Hot event tail on the session record; sealed chunks at 256 KiB. Most appends are one atomic `operate()`; `get_session` uses `batch_read` for session + app + user state in one RTT. |
+| `AerospikeArtifactService` | `BaseArtifactService` | Versioned artifacts per `(app, user, session, filename)`. Inline payload up to 8 MiB per version. `user:` filenames use the ADK user namespace sentinel. |
+| `AerospikeMemoryService` | `BaseMemoryService` | One memory row per text-bearing event; posting-list PK per token. `search_memory` ranks by query token overlap. |
+
+### URI registration
+
+| Function | Description |
+| -------- | ----------- |
+| `adk_aerospike.register()` | Registers `aerospike://` with ADK's service registry for CLI and `adk web`. |
+
+## Storage layout
+
+Default set prefix `adk_` in your namespace:
+
+| Set | Key pattern | Purpose |
+| --- | ----------- | ------- |
+| `adk_sessions` | `app:user:session` | Session record (state + hot event tail) |
+| `adk_sessions` | `app:user:session:c:NNNNNNNN` | Sealed event chunks |
+| `adk_sessions` | `app:user:sl` | Session list manifest for `list_sessions` |
+| `adk_app_state` | `app` | App-scoped state |
+| `adk_user_state` | `app:user` | User-scoped state |
+| `adk_artifacts` | `app:user:session:fname:ver` | Artifact versions |
+| `adk_memory` | `app:user:session:event_id` | Memory row |
+| `adk_memory` | `app:user:kw:token` | Posting list for lexical search |
+
+See the
+[data model](https://github.com/aerospike-community/adk-aerospike/blob/main/docs/data-model.md)
+in the repository for indexes, chunking invariants, and operational notes.
+
+## Additional resources
+
+- [adk-aerospike on GitHub](https://github.com/aerospike-community/adk-aerospike)
+- [adk-aerospike on PyPI](https://pypi.org/project/adk-aerospike/)
+- [Runnable examples](https://github.com/aerospike-community/adk-aerospike/tree/main/examples)
+- [Aerospike documentation](https://aerospike.com/docs/)
+- [ADK sessions and memory](/sessions/)
+
+================
 File: docs/integrations/ag-ui.md
 ================
 ---
@@ -33547,6 +33944,176 @@ Tool <img width="200px"/> | Description
 
 - [Notion MCP Server Documentation](https://developers.notion.com/docs/mcp)
 - [Notion MCP Server Repository](https://github.com/makenotion/notion-mcp-server)
+
+================
+File: docs/integrations/parameter-manager.md
+================
+---
+catalog_title: Google Cloud Parameter Manager
+catalog_description: Manage and retrieve runtime configuration parameters and secrets securely for ADK agents.
+catalog_icon: /integrations/assets/parameter_manager.png
+catalog_tags: ["google"]
+---
+
+# Parameter Manager for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.30.0</span>
+</div>
+
+The [Google Cloud Parameter
+Manager](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/overview)
+integration provides a standard interface for Agent Development Kit (ADK) agents to connect with the Google Cloud Parameter Manager service
+and retrieve rendered parameter values at runtime. This module lets you use the
+Google Cloud Parameter Manager service as the single source of truth for agent instructions and tool
+configurations.
+
+## Use cases
+
+The Parameter Manager integration supports several operations:
+
+*   **Dynamic instruction updates**: You can publish parameters instantly to
+    defend against prompt injection attacks, update mandatory disclaimer
+    resources, or automatically adjust the agent tone without a full code
+    redeployment.
+*   **Feature flag and parameter management**: You can store configurations as a
+    JSON payload and retrieve them through the tool context to lower query rates
+    or switch between experimental and production API endpoints.
+*   **Accuracy improvement with input and output pairs**: You can store few-shot
+    examples as YAML files and load them into the session state to improve agent
+    performance over time.
+*   **Just-in-time tool authorization**: You can load secrets into memory on
+    demand rather than using insecure static API keys in initialization code.
+*   **Secure multi-tenant workflows**: You can store Parameter Manager IDs that
+    map to users and use callbacks to rehydrate the session state with resolved
+    OAuth tokens.
+*   **Encrypted system tasks**: You can prevent primary database passwords from
+    entering the large language model (LLM) conversation history during
+    background polling tasks.
+*   **Multi-region deployments**: You can maintain shared logic across global
+    deployments while using regional Parameter Manager overrides to apply local
+    currency and contact information.
+
+## Prerequisites
+
+You must meet the following requirements before you configure the integration:
+
+- **Required Software Versions**: ADK Python version v1.30.0 or higher
+- **Required Accounts / APIs**: A [Google Cloud Project](https://docs.cloud.google.com/resource-manager/docs/creating-managing-projects) with the [**Parameter Manager API**](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/prepare-environment#enable_api), [**Secret Manager API**](https://docs.cloud.google.com/secret-manager/docs/configuring-secret-manager), and **Agent Development Kit API** enabled.
+
+Complete the following setup steps:
+
+1.  [Set up an agent with ADK](/get-started/).
+1.  [Create a parameter](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/create-parameter).
+1.  Grant the [Parameter Manager Parameter Accessor](https://docs.cloud.google.com/iam/docs/roles-permissions/parametermanager#parametermanager.parameterAccessor) role
+    (`roles/parametermanager.parameterAccessor`)
+    IAM role to your agent identity. This role allows your agent to render the parameter configuration at runtime.
+1.  If your parameter contains embedded secrets, grant the [Secret Manager Secret Accessor](https://docs.cloud.google.com/iam/docs/roles-permissions/secretmanager#secretmanager.secretAccessor) role                 (`roles/secretmanager.secretAccessor`) to your parameter resource. This cross-service permission allows Parameter Manager to resolve the referenced secrets on behalf of the agent. For more information, [Grant the Secret Manager Secret Accessor role to the parameter](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/reference-secrets-in-parameter#grant_the_secret_manager_secret_accessor_role_to_the_parameter).
+
+## Installation
+
+Install the ADK extensions package to enable the Parameter Manager integration:
+
+```bash
+pip install "google-adk[extensions]"
+```
+
+## Use with agent
+
+The following examples show complete, working code to retrieve a parameter
+securely within an ADK agent using either global or regional endpoints.
+
+### Global parameters
+
+```python
+
+import os
+
+from google.adk import Agent
+from google.adk.integrations.parameter_manager.parameter_client import ParameterManagerClient
+
+# Fetch parameter from global Parameter Manager
+project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+parameter_id = os.environ.get("ADK_TEST_PARAMETER_ID")
+parameter_version = os.environ.get("ADK_TEST_PARAMETER_VERSION", "latest")
+
+if not project_id or not parameter_id:
+    raise ValueError("GOOGLE_CLOUD_PROJECT and ADK_TEST_PARAMETER_ID environment variables must be set.")
+
+resource_name = f"projects/{project_id}/locations/global/parameters/{parameter_id}/versions/{parameter_version}"
+
+print("Fetching parameter from global Parameter Manager...")
+# Initialize Parameter Manager Client
+client = ParameterManagerClient()
+
+# Fetch parameter
+try:
+    parameter_payload = client.get_parameter(resource_name)
+    print("Successfully fetched parameter.")
+except Exception as e:
+    print(f"Error fetching parameter: {e}")
+    raise e
+
+# Initialize Agent
+root_agent = Agent(
+    model='gemini-2.5-flash',
+    name='root_agent',
+    description='A helpful assistant for user questions.',
+    instruction='Answer user questions to the best of your knowledge',
+)
+
+print("Agent initialized successfully.")
+```
+
+### Regional parameters
+
+```python
+
+import os
+
+from google.adk import Agent
+from google.adk.integrations.parameter_manager.parameter_client import ParameterManagerClient
+
+# Fetch parameter from regional Parameter Manager
+project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+location = os.environ.get("GOOGLE_CLOUD_PROJECT_LOCATION")
+parameter_id = os.environ.get("ADK_TEST_PARAMETER_ID")
+parameter_version = os.environ.get("ADK_TEST_PARAMETER_VERSION", "latest")
+
+if not project_id or not location or not parameter_id:
+    raise ValueError("GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_PROJECT_LOCATION, and ADK_TEST_PARAMETER_ID environment variables must be set.")
+
+resource_name = f"projects/{project_id}/locations/{location}/parameters/{parameter_id}/versions/{parameter_version}"
+
+print(f"Fetching parameter from regional Parameter Manager ({location})...")
+# Initialize Parameter Manager Client (Regional)
+client = ParameterManagerClient(location=location)
+
+# Fetch parameter
+try:
+    parameter_payload = client.get_parameter(resource_name)
+    print("Successfully fetched parameter.")
+except Exception as e:
+    print(f"Error fetching parameter: {e}")
+    raise e
+
+# Initialize Agent
+root_agent = Agent(
+    model='gemini-2.5-flash',
+    name='root_agent',
+    description='A helpful assistant for user questions.',
+    instruction='Answer user questions to the best of your knowledge',
+)
+
+print("Agent initialized successfully.")
+```
+
+## Resources
+
+-   [Parameter Manager
+    documentation](https://docs.cloud.google.com/secret-manager/parameter-manager/docs/overview)
+-   [ADK GitHub repository](https://github.com/google/adk-python)
+-   [Include few-shot examples](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/prompts/few-shot-examples)
 
 ================
 File: docs/integrations/paypal.md
