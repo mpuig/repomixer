@@ -1699,7 +1699,7 @@ from google.adk.a2a.utils.agent_to_a2a import to_a2a
 a2a_app = to_a2a(root_agent, port=8001)
 ```
 
-The `to_a2a()` function will even auto-generate an agent card in-memory behind-the-scenes by [extracting skills, capabilities, and metadata from the ADK agent](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/utils/agent_card_builder.py), so that the well-known agent card is made available when the agent endpoint is served using `uvicorn`.
+The `to_a2a()` function will even auto-generate an agent card in-memory behind-the-scenes by [extracting skills, capabilities, and metadata from ADK agent](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/utils/agent_card_builder.py), so that the well-known agent card is made available when the agent endpoint is served using `uvicorn`.
 
 You can also provide your own agent card by using the `agent_card` parameter. The value can be an `AgentCard` object or a path to an agent card JSON file.
 
@@ -1733,16 +1733,20 @@ a2a_app = to_a2a(root_agent, port=8001, agent_card="/path/to/your/agent-card.jso
 
 ### Under the hood: to_a2a() method
 
-When you call `to_a2a()`, the ADK automatically handles several setup steps to expose your agent:
+When you call `to_a2a()`, ADK automatically handles several setup steps to expose your agent:
 
-* **`A2aAgentExecutor` setup:** An `A2aAgentExecutor` is initialized to act as the bridge between the A2A protocol and your ADK agent. If you don't provide a custom `Runner`, it automatically creates a default one backed by in-memory services (for artifacts, sessions, memory, and credentials).
-* **State Management:** It creates an `InMemoryTaskStore` to track A2A tasks and an `InMemoryPushNotificationConfigStore` for handling push notifications.
-* **Request Handling:** A `DefaultRequestHandler` is created to route incoming A2A HTTP requests to the `A2aAgentExecutor` and the state stores.
-* **Starlette App & Agent Card:** It creates a Starlette application. During the application's startup phase, it either loads your provided Agent Card or automatically builds one from your agent's configuration using an `AgentCardBuilder`. It then mounts all the necessary A2A API routes.
+* **A2aAgentExecutor setup:** An `A2aAgentExecutor` acts as the bridge between the A2A protocol and your ADK agent. If you don't provide a custom `Runner`, it automatically creates a default one backed by in-memory services (for artifacts, sessions, memory, and credentials).
+* **State Management:** Creates an `InMemoryTaskStore` to track A2A tasks and an `InMemoryPushNotificationConfigStore` for handling push notifications.
+* **Request Handling:** Creates a `DefaultRequestHandler` to route incoming A2A HTTP requests to the `A2aAgentExecutor` and the state stores.
+* **Starlette App & Agent Card:** Creates a Starlette application. During the startup phase, it either loads your provided Agent Card or automatically builds one from your agent's configuration using an `AgentCardBuilder`. It then mounts all the necessary A2A API routes.
 
-Now let's dive into the sample code.
-
-### 1. Getting the Sample Code { #getting-the-sample-code }
+#### Parameters
+* **`root_agent` (required):** The primary ADK agent instance you want to expose via the A2A protocol.
+* **`port` (optional):**  The port number the application will run on.
+* **`push_config_store` (optional):** A custom store implementation for managing A2A push notifications. If not provided, the system defaults to an in-memory store (`InMemoryPushNotificationConfigStore`).
+* **`agent_card` (optional):** An `AgentCard` object or a path to a JSON file. If omitted, ADK automatically generates an agent card from your agent's code.
+  
+### Getting the Sample Code { #getting-the-sample-code }
 
 First, make sure you have the necessary dependencies installed:
 
@@ -1780,7 +1784,7 @@ a2a_root/
 - **`root_agent`**: The main agent with comprehensive instructions
 - **`a2a_app`**: The A2A application created using `to_a2a()` utility
 
-### 2. Start the Remote A2A Agent server { #start-the-remote-a2a-agent-server }
+### Start the Remote A2A Agent server { #start-the-remote-a2a-agent-server }
 
 You can now start the remote agent server, which will host the `a2a_app` within the hello_world agent:
 
@@ -1802,7 +1806,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:8001 (Press CTRL+C to quit)
 ```
 
-### 3. Check that your remote agent is running { #check-that-your-remote-agent-is-running }
+### Check that your remote agent is running { #check-that-your-remote-agent-is-running }
 
 You can check that your agent is up and running by visiting the agent card that was auto-generated earlier as part of your `to_a2a()` function in `a2a_root/remote_a2a/hello_world/agent.py`:
 
@@ -1814,7 +1818,7 @@ You should see the contents of the agent card, which should look like:
 {"capabilities":{},"defaultInputModes":["text/plain"],"defaultOutputModes":["text/plain"],"description":"hello world agent that can roll a dice of 8 sides and check prime numbers.","name":"hello_world_agent","protocolVersion":"0.2.6","skills":[{"description":"hello world agent that can roll a dice of 8 sides and check prime numbers. \n      I roll dice and answer questions about the outcome of the dice rolls.\n      I can roll dice of different sizes.\n      I can use multiple tools in parallel by calling functions in parallel(in one request and in one round).\n      It is ok to discuss previous dice roles, and comment on the dice rolls.\n      When I are asked to roll a die, I must call the roll_die tool with the number of sides. Be sure to pass in an integer. Do not pass in a string.\n      I should never roll a die on my own.\n      When checking prime numbers, call the check_prime tool with a list of integers. Be sure to pass in a list of integers. I should never pass in a string.\n      I should not check prime numbers before calling the tool.\n      When I are asked to roll a die and check prime numbers, I should always make the following two function calls:\n      1. I should first call the roll_die tool to get a roll. Wait for the function response before calling the check_prime tool.\n      2. After I get the function response from roll_die tool, I should call the check_prime tool with the roll_die result.\n        2.1 If user asks I to check primes based on previous rolls, make sure I include the previous rolls in the list.\n      3. When I respond, I must include the roll_die result from step 1.\n      I should always perform the previous 3 steps when asking for a roll and checking prime numbers.\n      I should not rely on the previous history on prime results.\n    ","id":"hello_world_agent","name":"model","tags":["llm"]},{"description":"Roll a die and return the rolled result.\n\nArgs:\n  sides: The integer number of sides the die has.\n  tool_context: the tool context\nReturns:\n  An integer of the result of rolling the die.","id":"hello_world_agent-roll_die","name":"roll_die","tags":["llm","tools"]},{"description":"Check if a given list of numbers are prime.\n\nArgs:\n  nums: The list of numbers to check.\n\nReturns:\n  A str indicating which number is prime.","id":"hello_world_agent-check_prime","name":"check_prime","tags":["llm","tools"]}],"supportsAuthenticatedExtendedCard":false,"url":"http://localhost:8001","version":"0.0.1"}
 ```
 
-### 4. Run the Main (Consuming) Agent { #run-the-main-consuming-agent }
+### Run the Main (Consuming) Agent { #run-the-main-consuming-agent }
 
 Now that your remote agent is running, you can launch the dev UI and select "a2a_root" as your agent.
 
@@ -32260,6 +32264,151 @@ def run_agent(user_message: str):
 - [Community Discord](https://discord.gg/langwatch)
 
 ================
+File: docs/integrations/latitude.md
+================
+---
+catalog_title: Latitude
+catalog_description: Open-source observability and evaluation for ADK agents
+catalog_icon: /integrations/assets/latitude.png
+catalog_tags: ["observability", "evaluation"]
+---
+
+# Latitude observability for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+[Latitude](https://latitude.so) is an open-source observability and evaluation
+platform for LLM applications. Its
+[`latitude-telemetry`](https://pypi.org/project/latitude-telemetry/) Python SDK
+ships dedicated instrumentation for the Agent Development Kit, so every agent
+run, model generation, and tool call is exported as an OpenTelemetry trace you
+can inspect, search, and evaluate.
+
+## Why Latitude for ADK?
+
+ADK includes its own OpenTelemetry-based tracing. Latitude builds on it with a
+hosted (or self-hosted) platform purpose-built for agents:
+
+- **Full agent traces:** The nested agent, generation, and tool-call hierarchy,
+  captured automatically with no changes to how you call ADK.
+- **Cost, tokens, and latency:** Aggregated at every level of the trace.
+- **Sessions:** Group multi-turn conversations and multi-step agent runs into a
+  single session.
+- **Evaluations:** Score agent outputs offline or in production with
+  LLM-as-judge or code-based evaluators.
+- **Open source:** Run it fully self-hosted, or use the managed cloud.
+
+## Prerequisites
+
+- A **Latitude account** and **API key** (sign up at
+  [console.latitude.so](https://console.latitude.so/login), or self-host).
+- A **Latitude project slug**.
+- A **Gemini API key** set as `GOOGLE_API_KEY`.
+
+## Installation
+
+```bash
+pip install latitude-telemetry google-adk
+```
+
+Set the required environment variables:
+
+```bash
+export LATITUDE_API_KEY="your-api-key"
+export LATITUDE_PROJECT="your-project-slug"
+export GOOGLE_API_KEY="your-gemini-api-key"
+```
+
+`LATITUDE_API_KEY` and `LATITUDE_PROJECT` send traces to your Latitude project.
+`GOOGLE_API_KEY` is used by ADK's Gemini model calls.
+
+## Use with agent
+
+Pass the `google.adk` module to the Latitude SDK under the `google_adk`
+instrumentation key. Latitude registers an OpenTelemetry tracer provider and
+instruments ADK; you keep calling ADK exactly as you do today.
+
+```python
+import asyncio
+import os
+
+import google.adk
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+from google.genai import types
+
+from latitude_telemetry import Latitude, capture
+
+latitude = Latitude(
+    api_key=os.environ["LATITUDE_API_KEY"],
+    project=os.environ["LATITUDE_PROJECT"],
+    instrumentations={"google_adk": google.adk},
+)
+
+
+def get_weather(city: str) -> dict:
+    """Returns the current weather for a city."""
+    return {"status": "success", "report": f"The weather in {city} is sunny."}
+
+
+agent = Agent(
+    name="weather_agent",
+    model="gemini-flash-latest",
+    description="Agent that answers weather questions using tools.",
+    instruction="Answer weather questions using get_weather.",
+    tools=[get_weather],
+)
+
+
+async def weather_agent_run():
+    runner = InMemoryRunner(agent=agent, app_name="weather_app")
+    await runner.session_service.create_session(
+        app_name="weather_app",
+        user_id="user_123",
+        session_id="session_abc",
+    )
+
+    async for event in runner.run_async(
+        user_id="user_123",
+        session_id="session_abc",
+        new_message=types.Content(
+            role="user",
+            parts=[types.Part(text="What's the weather in Barcelona?")],
+        ),
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            return event.content.parts[0].text
+
+
+# Wrap a request or job with capture() to attach a user_id, session_id, tags,
+# or metadata to every span produced inside it.
+capture("weather-agent-run", lambda: asyncio.run(weather_agent_run()))
+
+# Flush any pending spans and shut down before the process exits.
+latitude.shutdown()
+```
+
+## What you get
+
+Each agent run shows up in Latitude as a trace with nested spans:
+
+- **Agent spans:** agent name, instructions, and configured tools
+- **Generation spans:** model, input/output messages, and token usage
+- **Tool spans:** tool calls with input arguments and output
+
+Open your project in the [Latitude dashboard](https://console.latitude.so/login)
+to see the full agent, generation, and tool hierarchy, with token usage and
+latency aggregated at every level.
+
+## Resources
+
+- [Latitude documentation](https://docs.latitude.so)
+- [Latitude ADK integration guide](https://docs.latitude.so/telemetry/frameworks/google-adk)
+- [Latitude on GitHub](https://github.com/latitude-dev/latitude-llm)
+
+================
 File: docs/integrations/linear.md
 ================
 ---
@@ -54617,6 +54766,28 @@ This guide covers two primary integration patterns:
 1. **Using Existing MCP Servers within ADK:** An ADK agent acts as an MCP client, leveraging tools provided by external MCP servers.
 2. **Exposing ADK Tools via an MCP Server:** Building an MCP server that wraps ADK tools, making them accessible to any MCP client.
 
+## Key considerations
+
+When you start building with the Model Context Protocol (MCP) and ADK, these key architectural differences will help you design more stable and efficient agents:
+
+* **Protocol vs. Library:** MCP is a protocol specification, defining communication rules. ADK is a Python library/framework for building agents. McpToolset bridges these by implementing the client side of the MCP protocol within the ADK framework. Conversely, building an MCP server in Python requires using the model-context-protocol library.
+
+* **ADK Tools vs. MCP Tools:**
+
+    * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.
+    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. McpToolset makes these look like ADK tools to an LlmAgent.
+
+* **Asynchronous nature:** Both ADK and the MCP Python library are heavily based on the asyncio Python library. Tool implementations and server handlers should generally be async functions.
+
+* **Stateful sessions (MCP):** MCP establishes stateful, persistent connections between a client and server instance. This differs from typical stateless REST APIs.
+
+    * **Deployment:** This statefulness can pose challenges for scaling and deployment, especially for remote servers handling many users. The original MCP design often assumed client and server were co-located. Managing these persistent connections requires careful infrastructure considerations (e.g., load balancing, session affinity).
+    * **ADK McpToolset:** Manages this connection lifecycle. The exit\_stack pattern shown in the examples is crucial for ensuring the connection (and potentially the server process) is properly terminated when the ADK agent finishes.
+ 
+* **Session persistence**: The `MCPToolset` supports object serialization via `getstate` and `setstate` methods. This feature helps your agent maintain its context when deployed to managed environments like Cloud Run or Google Kubernetes Engine (GKE).
+
+!!! Note: While the agent preserves its session state during lifecycle events, active MCP connections are not automatically re-established upon restoration. The agent will re-initialize its connection to the MCP server as needed after the process is restored to ensure a reliable and up-to-date link.
+
 ## Prerequisites
 
 Before you begin, ensure you have the following set up:
@@ -55090,7 +55261,7 @@ export const rootAgent = new LlmAgent({
 });
 ```
 
-## 2. Building an MCP server with ADK tools (MCP server exposing ADK)
+## 2. Build an MCP server with ADK tools (MCP server exposing ADK)
 
 This pattern allows you to wrap existing ADK tools and make them available to any standard MCP client application. The example in this section exposes the ADK `load_web_page` tool through a custom-built MCP server.
 
@@ -55313,7 +55484,7 @@ This example demonstrates how ADK tools can be encapsulated within an MCP server
 
 Refer to the [documentation](https://modelcontextprotocol.io/quickstart/server#core-mcp-concepts), to try it out with Claude Desktop.
 
-## Using MCP Tools in your own Agent out of `adk web`
+## Use MCP Tools in your own Agent out of `adk web`
 
 This section is relevant to you if:
 
@@ -55425,26 +55596,7 @@ if __name__ == '__main__':
     print(f"An error occurred: {e}")
 ```
 
-
-## Key considerations
-
-When working with MCP and ADK, keep these points in mind:
-
-* **Protocol vs. Library:** MCP is a protocol specification, defining communication rules. ADK is a Python library/framework for building agents. McpToolset bridges these by implementing the client side of the MCP protocol within the ADK framework. Conversely, building an MCP server in Python requires using the model-context-protocol library.
-
-* **ADK Tools vs. MCP Tools:**
-
-    * ADK Tools (BaseTool, FunctionTool, AgentTool, etc.) are Python objects designed for direct use within the ADK's LlmAgent and Runner.
-    * MCP Tools are capabilities exposed by an MCP Server according to the protocol's schema. McpToolset makes these look like ADK tools to an LlmAgent.
-
-* **Asynchronous nature:** Both ADK and the MCP Python library are heavily based on the asyncio Python library. Tool implementations and server handlers should generally be async functions.
-
-* **Stateful sessions (MCP):** MCP establishes stateful, persistent connections between a client and server instance. This differs from typical stateless REST APIs.
-
-    * **Deployment:** This statefulness can pose challenges for scaling and deployment, especially for remote servers handling many users. The original MCP design often assumed client and server were co-located. Managing these persistent connections requires careful infrastructure considerations (e.g., load balancing, session affinity).
-    * **ADK McpToolset:** Manages this connection lifecycle. The exit\_stack pattern shown in the examples is crucial for ensuring the connection (and potentially the server process) is properly terminated when the ADK agent finishes.
-
-## Deploying Agents with MCP Tools
+## Deploy Agents with MCP Tools
 
 When deploying ADK agents that use MCP tools to production environments like Cloud Run, GKE, or Agent Runtime, you need to consider how MCP connections will work in containerized and distributed environments.
 
