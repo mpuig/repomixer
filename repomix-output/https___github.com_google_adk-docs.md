@@ -1918,27 +1918,9 @@ This includes models from Model Garden or your own fine-tuned models.
 
 ## Agent Platform Setup
 
-Ensure your environment is configured for Agent Platform:
-
-1. **Authentication:** Use Application Default Credentials (ADC):
-
-    ```shell
-    gcloud auth application-default login
-    ```
-
-2. **Environment Variables:** Set your project and location:
-
-    ```shell
-    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
-    ```
-
-3. **Enable Agent Platform Backend:** Crucially, ensure the `google-genai` library
-   targets Agent Platform:
-
-    ```shell
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-    ```
+For more details on connecting ADK agents to Google Cloud hosted models and services,
+including Gemini Enterprise Agent Platform, see the
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/) guide.
 
 ## Model Garden Deployments
 
@@ -2349,13 +2331,12 @@ Apigee proxy, you immediately gain enterprise-grade capabilities:
 
 - **Monitoring & Visibility:** Get granular monitoring, analysis, and auditing of all your AI requests.
 
-!!! note
+   The `ApigeeLLM` wrapper is designed for use with Agent Platform
+   and the Gemini API (generateContent). We are continually expanding support for
+   other models and interfaces. For OpenAI compatible models, including self-hosted or 
+   other providers, use the `CompletionsHTTPClient` to route traffic through your Apigee proxy.
 
-    The `ApigeeLLM` wrapper is currently designed for use with Agent Platform
-    and the Gemini API (generateContent). We are continually expanding support for
-    other models and interfaces.
-
-## Example implementation
+## Implementation example
 
 Integrate Apigee's governance into your agent's workflow by instantiating the
 `ApigeeLlm` wrapper object and pass it to an `LlmAgent` or other agent type.
@@ -2415,6 +2396,45 @@ Apigee first, where all necessary policies (security, rate limiting, logging)
 are executed before the request is securely forwarded to the underlying AI model
 endpoint. For a full code example using the Apigee proxy, see
 [Hello World Apigee LLM](https://github.com/google/adk-python/tree/main/contributing/samples/models/hello_world_apigeellm).
+
+## Compatibility with OpenAI
+
+The `CompletionsHTTPClient` is a generic HTTP client designed for compatibility with the OpenAI API format. It allows you to route requests through proxies (such as Apigee) that expect standard OpenAI-compatible `/chat/completions` endpoints, rather than native Gemini or Vertex AI protocols. This client handles:
+
+- **Payload construction**: Converts LlmRequest objects into the format required by OpenAI-compatible APIs.
+- **Response handling**: Manages streaming and non-streaming responses from the proxy.
+- **Reliability**: Uses `tenacity` for built-in retry logic.
+- **Normalization**: Parses responses and streaming chunks into the standard format expected by the rest of the ADK framework.
+
+### Implementation example
+
+```python
+
+import asyncio
+from google.adk.models.apigee_llm import CompletionsHTTPClient
+from google.adk.models.llm_request import LlmRequest
+from google.genai import types
+
+async def test_client():
+    # 1. Initialize the client
+    client = CompletionsHTTPClient(
+        base_url="https://your-apigee-proxy-url.com/v1",
+        headers={"Authorization": "Bearer YOUR_API_KEY"}
+    )
+
+    # 2. Construct a minimal request
+    request = LlmRequest(
+        model="gpt-4o",  # Replace with your target model ID
+        contents=[types.Content(role="user", parts=[types.Part.from_text(text="Hello!")])]
+    )
+
+    # 3. Execute a non-streaming generation
+    async for response in client.generate_content_async(request, stream=False):
+        print(f"Response: {response.text}")
+
+if __name__ == "__main__":
+    asyncio.run(test_client())
+```
 
 ================
 File: docs/agents/models/google-gemini.md
@@ -2523,110 +2543,100 @@ in your agents:
 
 ## Gemini model authentication
 
-This section covers authenticating with Google's Gemini models, either through Google AI Studio for rapid development or Google Cloud Agent Platform for enterprise applications. This is the most direct way to use Google's flagship models within ADK.
+When using an AI model through a service, such as the Gemini API or Gemini
+Enterprise Agent Platform on Google Cloud, you must provide an API key or
+authenticate with the service. The most direct way to provide this information
+is to use environment variables or an `.env` file. The following examples show
+the most common way to configure an agent for use with the Gemini API or Gemini
+Enterprise Agent Platform.
 
-**Integration Method:** Once you are authenticated using one of the below methods, you can pass the model's identifier string directly to the
-`model` parameter of `LlmAgent`.
+=== "Gemini API"
 
-
-!!! tip
-
-    The `google-genai` library, used internally by ADK for Gemini models, can connect
-    through either Google AI Studio or Agent Platform.
-
-    **Model support for voice/video streaming**
-
-    In order to use voice/video streaming in ADK, you will need to use Gemini
-    models that support the Live API. You can find the **model ID(s)** that
-    support the Gemini Live API in the documentation:
-
-    - [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-    - [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
-
-### Google AI Studio
-
-This is the simplest method and is recommended for getting started quickly.
-
-*   **Authentication Method:** API Key
-*   **Setup:**
-    1.  **Get an API key:** Obtain your key from [Google AI Studio](https://aistudio.google.com/apikey).
-    2.  **Set environment variables:** Create a `.env` file (Python) or `.properties` (Java) in your project's root directory and add the following lines. ADK will automatically load this file.
-
-        ```shell
-        export GOOGLE_API_KEY="YOUR_GOOGLE_API_KEY"
-        export GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        ```
-
-        (or)
-
-        Pass these variables during the model initialization via the `Client` (see example below).
-
-* **Models:** Find all available models on the
-  [Google AI for Developers site](https://ai.google.dev/gemini-api/docs/models).
-
-### Google Cloud Agent Platform
-
-For scalable and production-oriented use cases, Agent Platform is the recommended platform. Gemini on Agent Platform supports enterprise-grade features, security, and compliance controls. Based on your development environment and usecase, *choose one of the below methods to authenticate*.
-
-**Pre-requisites:** A Google Cloud Project with [Agent Platform enabled](https://console.cloud.google.com/apis/enableflow;apiid=aiplatform.googleapis.com).
-
-### **Method A: User Credentials (for Local Development)**
-
-1.  **Install the gcloud CLI:** Follow the official [installation instructions](https://cloud.google.com/sdk/docs/install).
-2.  **Log in using ADC:** This command opens a browser to authenticate your user account for local development.
-    ```bash
-    gcloud auth application-default login
     ```
-3.  **Set environment variables:**
-    ```shell
-    export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
-    export GOOGLE_CLOUD_LOCATION="YOUR_VERTEX_AI_LOCATION" # e.g., us-central1
+    # .env configuration file
+    GOOGLE_API_KEY="PASTE_YOUR_GEMINI_API_KEY_HERE"
     ```
 
-    Explicitly tell the library to use Agent Platform:
+=== "Google Cloud Agent Platform"
 
-    ```shell
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+    ```
+    # .env configuration file
+    GOOGLE_CLOUD_PROJECT=your-project-id
+    GOOGLE_CLOUD_LOCATION=location-code        # example: us-central1
+    GOOGLE_GENAI_USE_ENTERPRISE=True
     ```
 
-4. **Models:** Find available model IDs in the
-  [Agent Platform documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models).
+For more details on connecting ADK agents to Google Cloud hosted models and services,
+including Gemini Enterprise Agent Platform, see the
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/) guide.
 
-### **Method B: Agent Platform Express Mode**
-[Agent Platform Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview) offers a simplified, API-key-based setup for rapid prototyping.
+## Voice and video streaming support
 
-1.  **Sign up for Express Mode** to get your API key.
-2.  **Set environment variables:**
-    ```shell
-    export GOOGLE_GENAI_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
-    export GOOGLE_GENAI_USE_VERTEXAI=TRUE
+In order to use voice/video streaming in ADK, you will need to use Gemini
+models that support the Live API. You can find the **model ID(s)** that
+support the Gemini Live API in the documentation:
+
+- [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
+- [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+
+## Gemini Interactions API {#interactions-api}
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
+</div>
+
+The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
+is an alternative to the ***generateContent*** inference API, which provides
+stateful conversation capabilities, allowing you to chain interactions using a
+`previous_interaction_id` instead of sending the full conversation history with
+each request. Using this feature can be more efficient for long conversations.
+
+You can enable the Interactions API by setting the `use_interactions_api=True`
+parameter in the Gemini model configuration, as shown in the following code
+snippet:
+
+=== "Python"
+
+    ```python
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.models.google_llm import Gemini
+    from google.adk.tools.google_search_tool import GoogleSearchTool
+
+    root_agent = Agent(
+        model=Gemini(
+            model="gemini-flash-latest",
+            use_interactions_api=True,  # Enable Interactions API
+        ),
+        name="interactions_test_agent",
+        tools=[
+            GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
+            get_current_weather,  # Custom function tool
+        ],
+    )
     ```
 
-### **Method C: Service Account (for Production & Automation)**
+For a complete code sample, see the
+[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api).
 
-For deployed applications, a service account is the standard method.
+### Known limitations
 
-1.  [**Create a Service Account**](https://cloud.google.com/iam/docs/service-accounts-create#console) and grant it the `Agent Platform User` role.
-2.  **Provide credentials to your application:**
-    *   **On Google Cloud:** If you are running the agent in Cloud Run, GKE, VM or other Google Cloud services, the environment can automatically provide the service account credentials. You don't have to create a key file.
-    *   **Elsewhere:** Create a [service account key file](https://cloud.google.com/iam/docs/keys-create-delete#console) and point to it with an environment variable:
-        ```bash
-        export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/keyfile.json"
-        ```
-    Instead of the key file, you can also authenticate the service account using Workload Identity. But this is outside the scope of this guide.
+The Interactions API **does not** support mixing custom function calling tools with
+built-in tools, such as the
+[Google Search](/integrations/google-search/),
+tool, within the same agent. You can work around this limitation by configuring the
+built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
+parameter:
 
-!!! warning "Secure Your Credentials"
+=== "Python"
 
-    Service account credentials or API keys are powerful credentials. Never
-    expose them publicly. Use a secret manager such as [Google Cloud Secret
-    Manager](https://cloud.google.com/security/products/secret-manager) to store
-    and access them securely in production.
+    ```python
+    # Use bypass_multi_tools_limit=True to convert google_search to a function tool
+    GoogleSearchTool(bypass_multi_tools_limit=True)
+    ```
 
-!!! note "Gemini model versions"
-
-    Always check the official Gemini documentation for the latest model names,
-    including specific preview versions if needed. Preview models might have
-    different availability or quota limitations.
+In this example, this option converts the built-in `google_search` to a function
+calling tool (via `GoogleSearchAgentTool`), which allows it to work alongside
+custom function tools.
 
 ## Troubleshooting
 
@@ -2757,65 +2767,6 @@ To mitigate this, you can do one of the following:
             // ...
         )
         ```
-
-## Gemini Interactions API {#interactions-api}
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
-</div>
-
-The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
-is an alternative to the ***generateContent*** inference API, which provides
-stateful conversation capabilities, allowing you to chain interactions using a
-`previous_interaction_id` instead of sending the full conversation history with
-each request. Using this feature can be more efficient for long conversations.
-
-You can enable the Interactions API by setting the `use_interactions_api=True`
-parameter in the Gemini model configuration, as shown in the following code
-snippet:
-
-=== "Python"
-
-    ```python
-    from google.adk.agents.llm_agent import Agent
-    from google.adk.models.google_llm import Gemini
-    from google.adk.tools.google_search_tool import GoogleSearchTool
-
-    root_agent = Agent(
-        model=Gemini(
-            model="gemini-flash-latest",
-            use_interactions_api=True,  # Enable Interactions API
-        ),
-        name="interactions_test_agent",
-        tools=[
-            GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
-            get_current_weather,  # Custom function tool
-        ],
-    )
-    ```
-
-For a complete code sample, see the
-[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api).
-
-### Known limitations
-
-The Interactions API **does not** support mixing custom function calling tools with
-built-in tools, such as the
-[Google Search](/integrations/google-search/),
-tool, within the same agent. You can work around this limitation by configuring the
-the built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
-parameter:
-
-=== "Python"
-
-    ```python
-    # Use bypass_multi_tools_limit=True to convert google_search to a function tool
-    GoogleSearchTool(bypass_multi_tools_limit=True)
-    ```
-
-In this example, this option converts the built-in `google_search` to a function
-calling tool (via `GoogleSearchAgentTool`), which allows it to work alongside
-custom function tools.
 
 ================
 File: docs/agents/models/google-gemma.md
@@ -4138,9 +4089,10 @@ To create an ADK project for use with Agent Config:
             GOOGLE_CLOUD_PROJECT=<your_gcp_project>
             GOOGLE_CLOUD_LOCATION=us-central1
 
-        For information on creating a Cloud Project, see the Google Cloud docs
-        for
+        For information on creating a Cloud Project, see the Google Cloud docs for
         [Creating and managing projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
+        For more information on connecting to Google Cloud from ADK agents, see
+        [Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 1.  Using text editor, edit the Agent Config file
     `my_agent/root_agent.yaml`, as shown below:
@@ -12359,17 +12311,8 @@ export GOOGLE_CLOUD_LOCATION=us-central1 # Or your preferred location
 export GOOGLE_GENAI_USE_VERTEXAI=True
 ```
 
-_(Replace `your-project-id` with your actual GCP project ID)_
-
-Alternatively you can also use an API key from AI Studio
-
-```bash
-export GOOGLE_CLOUD_PROJECT=your-project-id
-export GOOGLE_CLOUD_LOCATION=us-central1 # Or your preferred location
-export GOOGLE_GENAI_USE_VERTEXAI=FALSE
-export GOOGLE_API_KEY=your-api-key
-```
-*(Replace `your-project-id` with your actual GCP project ID and `your-api-key` with your actual API key from AI Studio)*
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 ## Prerequisites
 
@@ -12377,7 +12320,7 @@ export GOOGLE_API_KEY=your-api-key
     1. Project name (i.e. "my-project")
     1. Project location (i.e. "us-central1")
     1. Service account (i.e. "1234567890-compute@developer.gserviceaccount.com")
-    1. GOOGLE_API_KEY 
+    1. GOOGLE_API_KEY
 
 ## Secret
 
@@ -12832,8 +12775,8 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
            * The definition of the agent can be exposed in a static method or inlined during declaration.
 
-        See the code for the `CapitalAgent` example in the 
-        [examples](https://github.com/google/adk-docs/blob/main/examples/java/cloud-run/src/main/java/agents/capitalagent/CapitalAgent.java) 
+        See the code for the `CapitalAgent` example in the
+        [examples](https://github.com/google/adk-docs/blob/main/examples/java/cloud-run/src/main/java/agents/capitalagent/CapitalAgent.java)
         repository.
 
     2. Add the following dependencies and plugin to the pom.xml file.
@@ -14185,8 +14128,10 @@ the Agent Platform Eval SDK.
 
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
-typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
-function correctly.
+typically in an `.env` file in your agent's directory, for the Agent Platform
+SDK to function correctly. For more information on connecting to Google Cloud
+from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 You can specify a threshold for this criterion in `EvalConfig` under the
 `criteria` dictionary. The value should be a float between 0.0 and 1.0,
@@ -14284,7 +14229,8 @@ to the Agent Platform Eval SDK.
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
 typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
-function correctly.
+function correctly. For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 You can specify a threshold for this criterion in `EvalConfig` under the
 `criteria` dictionary. The value should be a float between 0.0 and 1.0,
@@ -14321,7 +14267,7 @@ steps taken during the conversation.
 
 #### Details
 
-This criterion is a reference-free metric that assesses the quality of the 
+This criterion is a reference-free metric that assesses the quality of the
 interaction trajectory across multiple turns. It delegates the evaluation to the
 Agent Platform Eval SDK.
 
@@ -14330,7 +14276,8 @@ Agent Platform Eval SDK.
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
 typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
-function correctly.
+function correctly. For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 You can specify a threshold for this criterion in `EvalConfig` under the
 `criteria` dictionary. The value should be a float between 0.0 and 1.0,
@@ -14376,7 +14323,8 @@ AI General AI Eval SDK.
 Using this criterion requires a Google Cloud Project. You must have
 `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` environment variables set,
 typically in an `.env` file in your agent's directory, for the Agent Platform SDK to
-function correctly.
+function correctly. For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 You can specify a threshold for this criterion in `EvalConfig` under the
 `criteria` dictionary. The value should be a float between 0.0 and 1.0,
@@ -17895,6 +17843,9 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
         GOOGLE_CLOUD_LOCATION=us-central1
         ```
 
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
+
 ## 4. Try the agent with `adk web` { #try-the-agent-with-adk-web }
 
 Now it's ready to try the agent. Run the following command to launch the **dev UI**. First, make sure to set the current directory to `app`:
@@ -18255,6 +18206,157 @@ Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
 *  [Build your agent](/tutorials/)
+
+================
+File: docs/get-started/google-cloud.md
+================
+# Connect to Google Cloud and Agent Platform
+
+This guide explains how to connect and authenticate your ADK agents with
+Google Cloud Platform (GCP) services, models running on Google Cloud Agent
+Platform, and Agent Platform services.
+
+## Setup Google Cloud Agent Platform
+
+Before attempting to connect an agent with Google Cloud or Agent Platform
+services, make sure you have completed the following prerequisites:
+
+*  Google Cloud Project with the **Agent Platform API** (`aiplatform.googleapis.com`) enabled.
+*  Install the [gcloud CLI](https://cloud.google.com/sdk/docs/install) tool.
+
+## Google Cloud authentication options
+
+You have a few options for authentication when connecting your ADK agent to Google Cloud,
+as described in the table below.
+
+| Method | Best Used For | Authentication Mechanism | Environment |
+| :--- | :--- | :--- | :--- |
+| [**User Credentials**](#user-credentials) | Local development and testing | Application Default Credentials via `gcloud` | Local workstation |
+| [**Service Account**](#service-account) | Production deployment and CI/CD | Google IAM Service Account Key / Workload Identity | Google Cloud (Agent Runtime, Cloud Run, GKE) or external servers |
+| [**Express Mode**](#express-mode) | Rapid prototyping and testing | API Key | Local or cloud environments |
+| [**Agent Identity**](/integrations/agent-identity) | Production deployment and CI/CD | Google IAM Service Account Key / Workload Identity | Google Cloud (Agent Runtime, Cloud Run, GKE) |
+
+!!! warning "Warning: Protect your credentials"
+
+    User credentials, service account credentials, and API keys are highly sensitive. Never commit
+    credential files or keys directly to your codebase. Whenever possible use secure secret
+    managers such as
+    [Google Cloud Agent Identity](/integrations/agent-identity/),
+    [Google Cloud Secret Manager](https://cloud.google.com/security/products/secret-manager)
+    or other similar products.
+
+### User credentials for local development {#user-credentials}
+
+Connect to Google Cloud with user credentials authentication method working with
+local development environments.
+
+1.  Authenticate your local workstation using Application Default Credentials
+    (ADC) *before* running your ADK agent application:
+    ```bash
+    gcloud auth application-default login
+    ```
+2.  Set your environment variables to enable Agent Platform and specify your
+    project details:
+
+    === ".env file"
+
+        ```console
+        # Add to ADK code project but NOT source control
+        GOOGLE_GENAI_USE_ENTERPRISE=TRUE
+        GOOGLE_CLOUD_PROJECT=your-project-id
+        GOOGLE_CLOUD_LOCATION=cloud-location   # example: us-central1
+        ```
+
+    === "Terminal"
+
+        ```bash
+        export GOOGLE_GENAI_USE_ENTERPRISE=TRUE
+        export GOOGLE_CLOUD_PROJECT="your-project-id"
+        export GOOGLE_CLOUD_LOCATION="cloud-location"   # example: us-central1
+        ```
+
+!!! note "`GOOGLE_GENAI_USE_ENTERPRISE` was previously `GOOGLE_GENAI_USE_VERTEXAI`"
+
+    These variable names are equivalent and do the same thing.
+    If you set `GOOGLE_GENAI_USE_ENTERPRISE` and your agent
+    does not connect to Agent Platform, you're on an older ADK version. Use
+    `GOOGLE_GENAI_USE_VERTEXAI` instead, or update to a newer version of ADK.
+
+### Service account for production {#service-account}
+
+When deploying to secure hosted environments, use a service account for
+connection authentication:
+
+1.  Create a [Service Account](https://docs.cloud.google.com/iam/docs/service-account-overview)
+    and grant it the `Agent Platform User` role.
+2.  Provide the credentials to your agent application according to your
+    deployment strategy:
+    * **Deployed on Google Cloud (Agent Runtime, Cloud Run, GKE):**
+        The environment automatically provides the credentials. No key file
+        configuration is necessary.
+    * **Running externally:** Generate a
+        [service account key file](https://cloud.google.com/iam/docs/keys-create-delete#console)
+        (`.json`) and configure the `GOOGLE_APPLICATION_CREDENTIALS`
+        environment variable:
+        ```bash
+        export GOOGLE_APPLICATION_CREDENTIALS="/path/to/your/service-account-key.json"
+        ```
+
+!!! tip "Workload Identity option"
+
+    Instead of the key file, you can also authenticate the service account using
+    [Workload Identity](https://docs.cloud.google.com/kubernetes-engine/docs/how-to/workload-identity).
+
+### Agent Platform express mode for testing {#express-mode}
+
+Express Mode offers a simplified, API-key-based setup for prototyping without full gcloud authentication.
+
+1.  Sign up for [express mode](https://console.cloud.google.com/expressmode) to get an API key.
+2.  Set the following environment variables:
+
+    === ".env file"
+
+        ```console
+        # Add to ADK code project but NOT source control
+        GOOGLE_GENAI_USE_ENTERPRISE=TRUE
+        GOOGLE_GENAI_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
+        ```
+
+    === "Terminal"
+
+        ```bash
+        export GOOGLE_GENAI_USE_ENTERPRISE=TRUE
+        export GOOGLE_GENAI_API_KEY="PASTE_YOUR_EXPRESS_MODE_API_KEY_HERE"
+        ```
+
+## Google Cloud hosted models
+
+Google Cloud Agent Platform hosts a wide array of AI models you can connect to
+your ADK agents, including Gemini models, third-party AI models, open weight
+models, and models custom-tuned for your organization. Once you have connected
+your ADK agent to Google Cloud and Agent Platform, you have access to AI models
+to fit your application requirements. Check out these resources to explore and
+find the model that's right for your project:
+
+*   Get more information about using [Gemini models](/agents/models/google-gemini/)
+    with ADK agents.
+*   Explore third party and custom model options in
+    [Agent Platform hosted models](/agents/models/agent-platform/)
+    for use with ADK agents.
+*   Find available models and model IDs from Google Cloud in the
+    [Agent Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/google-models)
+    documentation.
+
+## Additional Google Cloud services connections
+
+Many Google Cloud services provide ADK integrations with authentication helpers
+for accessing GCP APIs or resources with an ADK agent. For more information,
+see the following pages:
+
+* [Google Cloud Application Integration](/integrations/application-integration/)
+* [BigQuery Toolset](/integrations/bigquery/)
+* [BigQuery Agent Analytics](/integrations/bigquery-agent-analytics/)
+* [Data Agent](/integrations/data-agent/)
 
 ================
 File: docs/get-started/index.md
@@ -20777,6 +20879,9 @@ GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
 GOOGLE_CLOUD_LOCATION=LOCATION
 ```
 
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
+
 ## Creating a Grounded Agent
 
 To enable Grounding with Search, you include the search tool in your agent definition, providing the `data_store_id`.
@@ -22449,6 +22554,9 @@ dynamic composition of agent-based applications using governed components.
   `GOOGLE_CLOUD_LOCATION` set to the appropriate region (e.g., `global`,
   `us-central1`).
 - `google-adk` library installed.
+
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 ## Installation
 
@@ -24670,7 +24778,7 @@ catalog_tags: ["observability", "google"]
 # BigQuery Agent Analytics plugin for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span><span class="lst-java">Java v1.4.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span><span class="lst-java">Java v1.5.0</span>
 </div>
 
 !!! important "Version Requirement"
@@ -26568,6 +26676,7 @@ Provide a custom `content_formatter` function in `BigQueryLoggerConfig` to strip
 or mask sensitive fields before they are written:
 
 
+=== "Python"
 
     ```python
     import json
@@ -26602,28 +26711,101 @@ or mask sensitive fields before they are written:
 === "Java"
 
     ```java
-    import com.google.adk.plugins.agentanalytics.BigQueryLoggerConfig;
-    import java.util.function.BiFunction;
-    import java.util.Set;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Gemini;
+    import com.google.adk.models.LlmRequest;
+    import com.google.adk.models.LlmResponse;
+    import com.google.adk.runner.Runner;
+    import com.google.genai.types.Content;
+    import com.google.genai.types.GenerateContentConfig;
+    import com.google.genai.types.Part;
+    import java.util.ArrayList;
+    import java.util.List;
 
-    Set<String> SENSITIVE_KEYS = Set.of("client_secret", "access_token", "refresh_token", "api_key", "secret");
+    public final class AgentContentFormatter {
+      private static final String PROJECT_ID = "your-gcp-project-id";
+      private static final String DATASET_ID = "your-gcp-dataset_id";
+      private static final String TABLE_ID = "your-gcp-table";
+      private static final String API_KEY = "your-api_key";
+      private static final String GCS_BUCKET_NAME = "your-gcs-bucket-name";
 
-    BiFunction<Object, String, Object> redactCredentials = (content, eventType) -> {
-      String text = content.toString();
-      for (String key : SENSITIVE_KEYS) {
-        // Redact values in JSON-like strings: "client_secret": "GOCSPX-xxx"
-        text = text.replaceAll(
-            "(?i)(\"" + key + "\"\\s*:\\s*)\"[^\"]*\"",
-            "$1\"[REDACTED]\""
-        );
+      /** Returns the formatter logic you want to test. */
+      private static Object formatter(Object content, String eventType) {
+        if (content instanceof LlmRequest req) {
+          List<Content> maskedContents = new ArrayList<>();
+          for (Content c : req.contents()) {
+            maskedContents.add(maskContent(c));
+          }
+          return req.toBuilder().contents(maskedContents).build();
+        } else if (content instanceof LlmResponse res) {
+          if (res.content().isPresent()) {
+            return res.toBuilder().content(maskContent(res.content().get())).build();
+          }
+          return res;
+        } else if (content instanceof Content content2) {
+          return maskContent(content2);
+        } else if (content instanceof Map<?, ?> map) {
+          Map<Object, Object> maskedMap = new LinkedHashMap<>();
+          for (Map.Entry<?, ?> entry : map.entrySet()) {
+            maskedMap.put(entry.getKey(), formatter(entry.getValue(), eventType));
+          }
+          return maskedMap;
+        }
+        return content;
       }
-      return text;
-    };
 
-    BigQueryLoggerConfig config = BigQueryLoggerConfig.builder()
-        .contentFormatter(redactCredentials)
-        // ... other options
-        .build();
+      private static Content maskContent(Content originalContent) {
+        if (originalContent.parts().isPresent()) {
+          List<Part> maskedParts = new ArrayList<>();
+          for (Part part : originalContent.parts().get()) {
+            if (part.text().isPresent() && part.text().get().contains("secret")) {
+              String maskedText = part.text().get().replace("secret", "****");
+              maskedParts.add(part.toBuilder().text(maskedText).build());
+            } else {
+              maskedParts.add(part);
+            }
+          }
+          return originalContent.toBuilder().parts(maskedParts).build();
+        }
+        return originalContent;
+      }
+
+      public static void main(String[] args) throws Exception {
+        // 1. Setup Config with custom formatter
+        BigQueryLoggerConfig config =
+            BigQueryLoggerConfig.builder()
+                .projectId(PROJECT_ID)
+                .datasetId(DATASET_ID)
+                .tableName(TABLE_ID)
+                .gcsBucketName(GCS_BUCKET_NAME)
+                .contentFormatter(AgentContentFormatter::formatter)
+                .logMultiModalContent(true)
+                .build();
+
+        // 2. Setup Plugin
+        BigQueryAgentAnalyticsPlugin plugin = new BigQueryAgentAnalyticsPlugin(config);
+
+        // 3. Setup Agent that responds
+        LlmAgent agent =
+            LlmAgent.builder()
+                .model(
+                    Gemini.builder()
+                        .modelName("gemini-3-flash-preview") // use appropriate model
+                        .apiKey(API_KEY)
+                        .build())
+                .name("bq_demo_agent")
+                .instruction("You are a helpful assistant")
+                .generateContentConfig(GenerateContentConfig.builder().temperature(0.5f).build())
+                .build();
+
+        // 4. Setup Runner
+        Runner runner = Runner.builder().agent(agent).appName("test_app").plugins(plugin).build();
+        // 5. Use runner to run some scenarios
+        ...
+      }
+
+      private AgentContentFormatter() {}
+    }
     ```
 
 ### Use `event_denylist` to skip credential events
@@ -27774,6 +27956,7 @@ If you click on one of the traces, you will see a waterfall view of the detailed
 
 - [Google Cloud Trace Documentation](https://cloud.google.com/trace)
 - [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
+- [Connect to Google Cloud and Agent Platform](/get-started/google-cloud/)
 
 ================
 File: docs/integrations/code-exec-agent-runtime.md
@@ -33371,6 +33554,158 @@ For more information, read more about the following features:
 * [OpenTelemetry](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry): get metrics and tracing from Toolbox with OpenTelemetry
 
 ================
+File: docs/integrations/mimir.md
+================
+---
+catalog_title: Mimir Memory
+catalog_description: Add persistent, local, encrypted cross-session memory to ADK agents
+catalog_icon: /integrations/assets/mimir.svg
+catalog_tags: ["data"]
+---
+
+# Mimir Memory integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [`adk-mimir-memory`](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
+integration connects your ADK agent to
+[Mimir](https://github.com/Perseus-Computing-LLC/mimir), a persistent,
+cross-session memory backend. Backed by a single Rust binary with an embedded
+SQLite database, it requires **zero cloud dependencies**, and everything runs
+locally. Memory is encrypted at rest with AES-256-GCM, and search combines FTS5
+keyword matching with dense vector retrieval.
+
+## Use cases
+
+- **Persistent agent memory across restarts**: Sessions survive process
+  restarts, and agents recall past conversations automatically
+- **Private, air-gapped deployments**: No cloud dependency, and Mimir runs
+  entirely on your machine with optional AES-256-GCM encryption
+- **Hybrid search across memories**: Combine keyword (FTS5/BM25) and semantic
+  (dense vector) search to find relevant past interactions
+- **Workspace-aware agents**: Pair with Perseus for agents that know about your
+  project files, git state, and configuration
+
+## Prerequisites
+
+- Python 3.10+
+- The `mimir` binary (see [Installation](#installation))
+- `google-adk>=1.0.0`
+
+## Installation
+
+Install the Python package:
+
+```bash
+pip install adk-mimir-memory
+```
+
+Then install the `mimir` binary: download the build for your platform from the
+[Mimir releases page](https://github.com/Perseus-Computing-LLC/mimir/releases)
+and place it on your `PATH`. The service looks for `mimir` by default, or pass
+`mimir_binary="/absolute/path/to/mimir"` to `MimirMemoryService`.
+
+## Use with agent
+
+Create the `MimirMemoryService`, pass it to your `Runner`, and give the agent
+the `load_memory` tool so it can recall past sessions:
+
+```python
+from adk_mimir_memory import MimirMemoryService
+from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.tools import load_memory
+
+agent = Agent(
+    name="memory_assistant",
+    model="gemini-flash-latest",
+    instruction="You are a helpful assistant with long-term memory.",
+    tools=[load_memory],
+)
+
+runner = Runner(
+    agent=agent,
+    app_name="mimir_app",
+    session_service=InMemorySessionService(),
+    memory_service=MimirMemoryService(db_path="~/.adk/mimir.db"),
+)
+```
+
+After a session completes, call
+`await memory_service.add_session_to_memory(session)` to persist it. The agent
+recalls relevant memories in later sessions through the `load_memory` tool. See
+[ADK memory](/sessions/memory/) for the full ingest-and-recall flow.
+
+### Perseus live context (optional)
+
+For live workspace awareness, install the `perseus` extra:
+
+```bash
+pip install adk-mimir-memory[perseus]
+```
+
+Then use the prebuilt `perseus_context_agent`, which resolves `@file`,
+`@search`, and `@memory` directives at inference time:
+
+```python
+from adk_mimir_memory.perseus_context import perseus_context_agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+# The pre-built agent ships without a model; set one before use.
+perseus_context_agent.model = "gemini-flash-latest"
+
+runner = Runner(
+    agent=perseus_context_agent,
+    app_name="perseus_app",
+    session_service=InMemorySessionService(),
+    memory_service=MimirMemoryService(db_path="~/.adk/mimir.db"),
+)
+```
+
+Set Perseus directives via session state when creating the session (inside an
+async function):
+
+```python
+session = await runner.session_service.create_session(
+    app_name="perseus_app",
+    user_id="user",
+    state={
+        "_perseus_directives": "@file AGENTS.md @file README.md @memory deployment",
+        "_perseus_workspace": "/path/to/project",
+    },
+)
+```
+
+## Available memory operations
+
+| Method | Description |
+|---|---|
+| `add_session_to_memory(session)` | Persist a full session's events |
+| `add_events_to_memory(...)` | Append incremental event deltas |
+| `add_memory(...)` | Store explicit memory entries |
+| `search_memory(...)` | FTS5 keyword search across memories |
+
+## Backend comparison
+
+| Backend | Dependencies | At-rest encryption | Search | Hosting |
+|---|---|---|---|---|
+| **InMemoryMemoryService** | None | Not persisted | Keyword | Local (ephemeral) |
+| **VertexAiMemoryBankService** | Google Cloud | Google-managed (CMEK optional) | Semantic (Gemini) | Google Cloud |
+| **VertexAiRagMemoryService** | Google Cloud | Google-managed (CMEK optional) | Vector similarity | Google Cloud |
+| **MimirMemoryService** | `mimir` binary | Local AES-256-GCM (optional) | Hybrid (FTS5 + dense) | Local |
+
+## Resources
+
+- [adk-mimir-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
+- [adk-mimir-memory on PyPI](https://pypi.org/project/adk-mimir-memory/)
+- [Mimir (backing service)](https://github.com/Perseus-Computing-LLC/mimir)
+- [Perseus (context engine)](https://github.com/Perseus-Computing-LLC/perseus)
+
+================
 File: docs/integrations/mlflow-gateway.md
 ================
 ---
@@ -35082,7 +35417,7 @@ catalog_tags: ["observability", "evaluation"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[Phoenix](https://arize.com/docs/phoenix) is an open-source, self-hosted observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://phoenix.arize.com/).
+[Phoenix](https://arize.com/docs/phoenix) is an open-source, self-hosted observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://arize.com/phoenix/).
 
 
 ## Overview
@@ -35108,7 +35443,7 @@ pip install openinference-instrumentation-google-adk google-adk arize-phoenix-ot
 
 These instructions show you how to use Phoenix Cloud. You can also [launch Phoenix](https://arize.com/docs/phoenix/integrations/llm-providers/google-gen-ai/google-adk-tracing) in a notebook, from your terminal, or self-host it using a container.
 
-1. Sign up for a [free Phoenix account](https://phoenix.arize.com/).
+1. Sign up for a [free Phoenix account](https://arize.com/phoenix/).
 2. From the Settings page of your new Phoenix Space, create your API key
 3. Copy your endpoint which should look like: https://app.phoenix.arize.com/s/[your-space-name]
 
@@ -36737,7 +37072,7 @@ catalog_tags: ["google", "connectors"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.27.0</span><span class="lst-preview">Preview</span>
 </div>
 
-The **Google Cloud Skill Registry** integration within the Agent Development Kit (ADK) allows developers to dynamically search, discover, and fetch remote Skills cataloged within a central repository. 
+The **Google Cloud Skill Registry** integration within the Agent Development Kit (ADK) allows developers to dynamically search, discover, and fetch remote Skills cataloged within a central repository.
 
 Rather than statically injecting every available skill into your agent's context window at initialization, the Skill Registry enables **on-demand targeted retrieval**. As your catalog of specialized capabilities scales to hundreds or thousands of skills, agents can dynamically discover, download, and activate the exact instructions and tools they need based on user intent. For more information about the Skills Registry service, see the [Google Cloud Skills Registry](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/skill-registry) documentation.
 
@@ -36745,8 +37080,6 @@ Rather than statically injecting every available skill into your agent's context
     The Google Cloud Skills Registry feature is a Preview release. For
     more information, see the
     [launch stage descriptions](https://cloud.google.com/products#product-launch-stages).
-
----
 
 ## Use Cases
 
@@ -36766,7 +37099,8 @@ Rather than statically injecting every available skill into your agent's context
 !!! warning "Internet Access Requirements"
     Since the GCP Skill Registry interacts with Vertex AI services using the Vertex AI Client SDK, agents running in sandboxed environments without outbound network access to Vertex AI endpoints will fail to reach the registry. Ensure proper network access is configured, or else the system falls back to local, filesystem-loaded skills.
 
----
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 ## Installation
 
@@ -36799,7 +37133,7 @@ registry = GCPSkillRegistry(
 # 2. Create the SkillToolset with the Registry
 # You can optionally pre-load some local skills as well.
 skill_toolset = SkillToolset(
-    skills=[], 
+    skills=[],
     registry=registry
 )
 
@@ -36829,26 +37163,26 @@ sequenceDiagram
 
     User->>Agent: "How to optimize a BigQuery query?"
     Note over Agent: LLM realizes it does not have<br/>instructions for BigQuery locally.
-    
+
     Agent->>Toolset: search_skills(query="BigQuery optimization")
     Toolset->>Registry: Search matching skills
     Registry-->>Toolset: Returns frontmatters (e.g., "bigquery")
     Toolset-->>Agent: Returns list of matches (filtered)
-    
+
     Note over Agent: LLM identifies "bigquery" as<br/>the best candidate.
-    
+
     Agent->>Toolset: load_skill(skill_name="bigquery")
     Toolset->>Registry: Fetch remote skill details
     Registry-->>Toolset: Returns skill payload
     Note over Toolset: Unpacks payload &<br/>caches skill in Session State
     Toolset-->>Agent: Success. Skill loaded.
-    
+
     Note over Agent: LLM appends skill instructions to system prompt,<br/>making tools available.
     Agent-->>User: Fulfills request utilizing BigQuery skill instructions!
 ```
 
 ### Semantic Discovery (`search_skills`)
-If the agent determines that its current system instructions are insufficient to answer a user query, it automatically invokes the `search_skills` tool. 
+If the agent determines that its current system instructions are insufficient to answer a user query, it automatically invokes the `search_skills` tool.
 
 *   **Collision Prevention**: To prevent namespace conflicts, ADK automatically filters out registry skills that duplicate the name of any locally loaded skills.
 
@@ -44354,6 +44688,9 @@ the storage backend that best suits your needs:
             .blockingGet();
     ```
 
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
+
 ### `DatabaseSessionService`
 
 <div class="language-support-tag">
@@ -44971,6 +45308,9 @@ Before you can use this feature, you must have:
     export GOOGLE_CLOUD_PROJECT="your-gcp-project-id"
     export GOOGLE_CLOUD_LOCATION="your-gcp-location"
     ```
+
+For more information on connecting to Google Cloud from ADK agents, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
 
 ### Configuration
 
@@ -58710,118 +59050,39 @@ entirely on your machine and is recommended for internal development.
 ## 3. Set up the model { #set-up-the-model }
 
 Your agent's ability to understand user requests and generate responses is
-powered by a Large Language Model (LLM). Your agent needs to make secure calls
-to this external LLM service, which **requires authentication credentials**. Without
-valid authentication, the LLM service will deny the agent's requests, and the
-agent will be unable to function.
+powered by a generative AI model or Large Language Model (LLM). This guide uses Gemini models as
+examples, but ADK is compatible with many AI models from Google and other
+providers. For more information on available models and how to configure
+them, see [AI Models for ADK agents](/agents/models/).
 
-!!!tip "Model Authentication guide"
-    For a detailed guide on authenticating to different models, see the [Authentication guide](/agents/models/google-gemini#google-ai-studio).
-    This is a critical step to ensure your agent can make calls to the LLM service.
+### Model connection and authentication
 
-=== "Gemini - Google AI Studio"
-    1. Get an API key from [Google AI Studio](https://aistudio.google.com/apikey).
-    2. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`)
-    and copy-paste the following code.
+When using an AI model through a service, such as the Gemini API or Gemini
+Enterprise Agent Platform on Google Cloud, you must provide an API key or
+authenticate with the service. The most direct way to provide this information
+is to use environment variables or an `.env` file. The following examples show
+the most common way to configure an agent for use with the Gemini API or Gemini
+Enterprise Agent Platform.
 
-        ```env title="multi_tool_agent/.env"
-        GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
-        ```
+=== "Gemini API"
 
-        When using Java, define environment variables:
+    ```
+    # .env configuration file
+    GOOGLE_API_KEY="PASTE_YOUR_GEMINI_API_KEY_HERE"
+    ```
 
-        ```console title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
-        ```
+=== "Google Cloud Agent Platform"
 
-        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
+    ```
+    # .env configuration file
+    GOOGLE_CLOUD_PROJECT=your-project-id
+    GOOGLE_CLOUD_LOCATION=location-code        # example: us-central1
+    GOOGLE_GENAI_USE_ENTERPRISE=True
+    ```
 
-        ```env title="multi_tool_agent/.env"
-        GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        GOOGLE_GENAI_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
-        ```
-
-        When using Go, define environment variables in your terminal or use a `.env` file:
-
-        ```bash title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=FALSE
-        export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
-        ```
-
-    3. Replace `PASTE_YOUR_ACTUAL_API_KEY_HERE` with your actual `API KEY`.
-
-=== "Gemini - Google Cloud Agent Platform"
-    1. Set up a [Google Cloud project](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-gcp) and [enable the Agent Platform API](https://console.cloud.google.com/flows/enableapi?apiid=aiplatform.googleapis.com).
-    2. Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local).
-    3. Authenticate to Google Cloud from the terminal by running `gcloud auth application-default login`.
-    4. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
-    the following code and update the project ID and location.
-
-        ```env title="multi_tool_agent/.env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-        GOOGLE_CLOUD_LOCATION=LOCATION
-        ```
-
-        When using Java, define environment variables:
-
-        ```console title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-        export GOOGLE_CLOUD_LOCATION=LOCATION
-        ```
-
-        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
-
-        ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-        GOOGLE_CLOUD_LOCATION=LOCATION
-        ```
-
-        When using Go, define environment variables in your terminal or use a `.env` file:
-
-        ```bash title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        export GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
-        export GOOGLE_CLOUD_LOCATION=LOCATION
-        ```
-
-=== "Gemini - Google Cloud Agent Platform with Express Mode"
-    1. You can sign up for a free Google Cloud project and use Gemini for free with an eligible account!
-        * Set up a
-          [Google Cloud project with Agent Platform Express Mode](https://cloud.google.com/vertex-ai/generative-ai/docs/start/express-mode/overview)
-        * Get an API key from your Express mode project. This key can be used with ADK to use Gemini models for free, as well as access to Agent Runtime services.
-    2. When using Python, open the **`.env`** file located inside (`multi_tool_agent/`). Copy-paste
-    the following code and update the project ID and location.
-
-        ```env title="multi_tool_agent/.env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-        ```
-
-        When using Java, define environment variables:
-
-        ```console title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-        ```
-
-        When using TypeScript, the `.env` file is automatically loaded by the `import 'dotenv/config';` line at the top of your `agent.ts` file.
-
-        ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        GOOGLE_GENAI_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-        ```
-
-        When using Go, define environment variables in your terminal or use a `.env` file:
-
-        ```bash title="terminal"
-        export GOOGLE_GENAI_USE_VERTEXAI=TRUE
-        export GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
-        ```
+For more details on connecting ADK agents to Google Cloud hosted models and services,
+including Gemini Enterprise Agent Platform, see the
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/) guide.
 
 ## 4. Run Your Agent { #run-your-agent }
 
