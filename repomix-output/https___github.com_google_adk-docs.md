@@ -35402,6 +35402,177 @@ specific tool identifiers.
 - [PayPal Agent Tools Reference](https://docs.paypal.ai/developer/tools/ai/agent-tools-ref)
 
 ================
+File: docs/integrations/perseus.md
+================
+---
+catalog_title: Perseus Context
+catalog_description: Compile deterministic, workspace-aware context for ADK agents
+catalog_icon: /integrations/assets/perseus.svg
+catalog_tags: ["data", "mcp"]
+---
+
+# Perseus Context integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [`adk-perseus-context`](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
+integration injects a deterministically compiled context into your ADK agent's
+system instruction. It is powered by
+[Perseus](https://github.com/Perseus-Computing-LLC/perseus), an open-source
+context compiler: Perseus resolves directives like `@file`, `@search`, and
+`@memory` into one byte-stable context string at inference time, with no
+retrieval index, no embeddings, and no extra LLM round-trip. Everything runs
+locally.
+
+Perseus is a context compiler, not a memory or RAG backend. For persistent
+cross-session memory, pair it with its companion, [Mimir](/integrations/mimir/).
+
+## Use cases
+
+- **Deterministic context assembly**: The same inputs always compile to the same
+  context, with byte-identical builds and no per-query retrieval variance
+- **Workspace-aware agents**: Resolve `@file`, `@include`, `@search`, and
+  `@memory` directives so the agent sees current project files and state
+- **Index-free, local context**: No vector store, no embeddings, no cloud. The
+  context is compiled on the machine that runs the agent
+- **Full coverage at a fixed size**: Pull in exactly the context you declared,
+  rather than a top-k slice
+
+## Prerequisites
+
+- Python 3.10+
+- `google-adk>=1.14.0`
+- `perseus-ctx>=1.0.10` (installed automatically with `adk-perseus-context`)
+
+## Installation
+
+```bash
+pip install adk-perseus-context
+```
+
+## Use with agent
+
+There are two ways to inject a compiled Perseus context. Use the plugin for a
+context shared across every agent in a `Runner`, or the callback for a single
+agent. `source` is a path to a `.perseus` file or an inline string starting with
+`@perseus`.
+
+### Runner-wide (plugin)
+
+```python
+from adk_perseus_context import PerseusContextPlugin
+from google.adk.agents import Agent
+from google.adk.apps import App
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+agent = Agent(
+    name="assistant",
+    model="gemini-flash-latest",
+    instruction="Help the user.",
+)
+
+app = App(
+    name="perseus_app",
+    root_agent=agent,
+    plugins=[PerseusContextPlugin("context.perseus")],
+)
+
+runner = Runner(
+    app=app,
+    session_service=InMemorySessionService(),
+)
+```
+
+### Single agent (callback)
+
+```python
+from adk_perseus_context import perseus_before_model_callback
+from google.adk.agents import Agent
+
+agent = Agent(
+    name="assistant",
+    model="gemini-flash-latest",
+    instruction="Help the user.",
+    before_model_callback=perseus_before_model_callback("context.perseus"),
+)
+```
+
+Either way, the compiled context is appended to the request's system instruction
+(via ADK's `LlmRequest.append_instructions`) on every model call. If Perseus is
+unavailable or a compile fails, the request proceeds without injected context
+and a warning is logged (`fail_open=True` by default).
+
+### Per-session context
+
+Override the source per session through session state. This is useful when each
+user or task targets a different workspace or directive set. Create the session
+inside an async function:
+
+```python
+session = await runner.session_service.create_session(
+    app_name="perseus_app",
+    user_id="user",
+    state={
+        "_perseus_source": "@perseus\n@file AGENTS.md\n@memory deployment",
+        "_perseus_workspace": "/path/to/project",
+    },
+)
+```
+
+## Use as an MCP server (optional)
+
+Perseus also ships an MCP server that exposes its directives as tools, so you
+can consume it through ADK's `McpToolset` instead of (or alongside) the plugin:
+
+```python
+from google.adk.agents import Agent
+from google.adk.tools.mcp_tool import McpToolset, StdioConnectionParams
+from mcp import StdioServerParameters
+
+perseus_tools = McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="perseus",
+            args=["mcp", "serve", "--workspace", "."],
+        )
+    )
+)
+
+agent = Agent(
+    name="assistant",
+    model="gemini-flash-latest",
+    instruction="Use Perseus tools to read workspace context.",
+    tools=[perseus_tools],
+)
+```
+
+## Plugin reference
+
+| Entry point | Scope | Description |
+|---|---|---|
+| `PerseusContextPlugin(source)` | Runner-wide | Injects the compiled context into every agent's model request |
+| `perseus_before_model_callback(source)` | Single agent | A `before_model_callback` that injects the compiled context |
+| `_perseus_source` / `_perseus_workspace` | Session state | Per-session overrides of the source and workspace |
+
+## Comparison
+
+| Approach | Index / embeddings | Extra model call | Output stability | Coverage |
+|---|---|---|---|---|
+| Naive context dump | None | No | Stable | Everything in the prompt |
+| RAG / vector retrieval | Required | Query embedding | Varies with query | Top-k results |
+| Perseus compile | None | No | Byte-identical | Full, declared |
+
+## Resources
+
+- [adk-perseus-context on GitHub](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
+- [adk-perseus-context on PyPI](https://pypi.org/project/adk-perseus-context/)
+- [Perseus (context engine)](https://github.com/Perseus-Computing-LLC/perseus)
+- [Mimir Memory integration](/integrations/mimir/)
+
+================
 File: docs/integrations/phoenix.md
 ================
 ---
@@ -36131,9 +36302,12 @@ catalog_tags: ["data","mcp"]
 The [adk-redis integration](https://github.com/redis-developer/adk-redis)
 connects your ADK agent to [Redis](https://redis.io/), giving it
 RedisVL-backed search tools
-over a Redis index, persistent sessions and long-term memory via
-[Redis Agent Memory Server](https://github.com/redis/agent-memory-server),
-and semantic caching for LLM responses and tool results. Redis runs as a
+over a Redis index, persistent sessions and long-term memory, and semantic
+caching for LLM responses and tool results. Sessions and memory run on either
+managed [Redis Agent Memory](https://redis.io/docs/latest/integrate/google-adk/redis-agent-memory/)
+(the default) or the self-hosted
+[Agent Memory Server](https://github.com/redis/agent-memory-server),
+selected per service with a `backend` field. Redis runs as a
 managed service or self-hosted (Redis 8.4+ with the RediSearch module).
 
 There are several ways to use this integration:
@@ -36141,8 +36315,9 @@ There are several ways to use this integration:
 | Approach | Description |
 |----------|-------------|
 | **RedisVL MCP** | Connect ADK's native `McpToolset` to a running [`rvl mcp`](https://docs.redisvl.com/en/latest/user_guide/how_to_guides/mcp.html) server. Exposes `search-records` (vector / fulltext / hybrid) and `upsert-records` with schema-aware filter and return-field hints. |
-| **Session + Memory services** | `RedisWorkingMemorySessionService` and `RedisLongTermMemoryService` that implement ADK's `BaseSessionService` and `BaseMemoryService`, backed by Agent Memory Server. |
-| **Sessions + Memory MCP** | Connect ADK's native `McpToolset` to [Agent Memory Server](https://github.com/redis/agent-memory-server)'s MCP endpoint over SSE. Gives the agent direct tool access to `search_long_term_memory`, `create_long_term_memories`, and `memory_prompt`. |
+| **Session + Memory services** | `RedisSessionMemoryService` and `RedisLongTermMemoryService` that implement ADK's `BaseSessionService` and `BaseMemoryService`, backed by managed Redis Agent Memory (default) or the self-hosted Agent Memory Server, selected with a `backend` field. |
+| **Memory tools** | Six `BaseTool` subclasses (`SearchMemoryTool`, `CreateMemoryTool`, `GetMemoryTool`, `UpdateMemoryTool`, `DeleteMemoryTool`, `MemoryPromptTool`) that let the LLM search, create, and manage long-term memories. Work against either backend. |
+| **Sessions + Memory MCP** | Connect ADK's native `McpToolset` to [Agent Memory Server](https://github.com/redis/agent-memory-server)'s MCP endpoint over SSE. Gives the agent direct tool access to `search_long_term_memory`, `create_long_term_memories`, and `memory_prompt`. Self-hosted backend only. |
 | **Search tools** | Five `BaseTool` subclasses (`RedisVectorSearchTool`, `RedisHybridSearchTool`, `RedisRangeSearchTool`, `RedisTextSearchTool`, `RedisSQLSearchTool`) over RedisVL queries against a bound index. |
 
 ## Use cases
@@ -36165,9 +36340,13 @@ There are several ways to use this integration:
 - Python 3.10+
 - Redis 8.4+ (or [Redis Cloud](https://redis.io/cloud/)) with the
   RediSearch module enabled
-- For session and memory services:
-  [Redis Agent Memory Server](https://github.com/redis/agent-memory-server)
-  running locally or in your environment
+- For session and memory services, one memory backend:
+    - Managed
+      [Redis Agent Memory](https://redis.io/docs/latest/integrate/google-adk/redis-agent-memory/)
+      (default), which provides an API base URL, API key, and store ID, or
+    - Self-hosted
+      [Agent Memory Server](https://github.com/redis/agent-memory-server)
+      running locally or in your environment
 - For the LangCache cache provider: a
   [Redis LangCache](https://redis.io/langcache) cache and API key
 
@@ -36233,10 +36412,13 @@ pip install 'redisvl[mcp]>=0.18.2'
 
 === "Sessions + Memory"
 
-    Plug [Agent Memory Server](https://github.com/redis/agent-memory-server)
-    into any ADK `Runner` via the REST-based session and memory services.
-    Working memory handles per-session state with auto-summarization;
-    long-term memory provides cross-session hybrid search.
+    Plug the session and memory services into any ADK `Runner`. Both pick a
+    backend with the `backend` field: `"redis-agent-memory"` (default) for
+    managed [Redis Agent Memory](https://redis.io/docs/latest/integrate/google-adk/redis-agent-memory/),
+    or `"opensource-agent-memory"` for the self-hosted
+    [Agent Memory Server](https://github.com/redis/agent-memory-server).
+    Working memory handles per-session state; long-term memory provides
+    cross-session search.
 
     ```python
     from google.adk.agents import Agent
@@ -36245,19 +36427,27 @@ pip install 'redisvl[mcp]>=0.18.2'
     from adk_redis import (
         RedisLongTermMemoryService,
         RedisLongTermMemoryServiceConfig,
-        RedisWorkingMemorySessionService,
-        RedisWorkingMemorySessionServiceConfig,
+        RedisSessionMemoryService,
+        RedisSessionMemoryServiceConfig,
     )
 
-    session_service = RedisWorkingMemorySessionService(
-        config=RedisWorkingMemorySessionServiceConfig(
-            api_base_url="http://localhost:8000",
+    # Managed Redis Agent Memory (the default backend).
+    session_service = RedisSessionMemoryService(
+        config=RedisSessionMemoryServiceConfig(
+            backend="redis-agent-memory",
+            api_base_url="https://your-endpoint.redis.io",
+            api_key="...",
+            store_id="...",
+            default_namespace="my_app",
         ),
     )
     memory_service = RedisLongTermMemoryService(
         config=RedisLongTermMemoryServiceConfig(
-            api_base_url="http://localhost:8000",
-            recency_boost=True,
+            backend="redis-agent-memory",
+            api_base_url="https://your-endpoint.redis.io",
+            api_key="...",
+            store_id="...",
+            default_namespace="my_app",
         ),
     )
 
@@ -36272,6 +36462,55 @@ pip install 'redisvl[mcp]>=0.18.2'
         agent=root_agent,
         session_service=session_service,
         memory_service=memory_service,
+    )
+    ```
+
+    !!! note "Self-hosted backend"
+
+        To use the self-hosted Agent Memory Server, set
+        `backend="opensource-agent-memory"`, point `api_base_url` at the server
+        (for example `http://localhost:8000`), and omit `api_key` and `store_id`
+        unless your server requires them. Auto-summarization and recency-boosted
+        search (`recency_boost=True`) are available on the self-hosted backend.
+
+=== "Memory tools"
+
+    Give the LLM direct control over long-term memory with the `BaseTool`
+    subclasses. The agent decides when to search, create, update, or delete
+    memories. The tools share a `MemoryToolConfig` and work against either
+    backend via the same `backend` field.
+
+    ```python
+    from google.adk.agents import Agent
+
+    from adk_redis import (
+        CreateMemoryTool,
+        DeleteMemoryTool,
+        MemoryPromptTool,
+        MemoryToolConfig,
+        SearchMemoryTool,
+        UpdateMemoryTool,
+    )
+
+    config = MemoryToolConfig(
+        backend="redis-agent-memory",
+        api_base_url="https://your-endpoint.redis.io",
+        api_key="...",
+        store_id="...",
+        default_namespace="my_app",
+    )
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="redis_memory_tools_agent",
+        instruction="Search memory before answering. Store important facts.",
+        tools=[
+            SearchMemoryTool(config=config),
+            CreateMemoryTool(config=config),
+            UpdateMemoryTool(config=config),
+            DeleteMemoryTool(config=config),
+            MemoryPromptTool(config=config),
+        ],
     )
     ```
 
@@ -36471,8 +36710,8 @@ Tool | Description
 
 Service | Description
 ------- | -----------
-`RedisWorkingMemorySessionService` | `BaseSessionService` backed by Agent Memory Server working memory. Auto-summarizes when context window is exceeded.
-`RedisLongTermMemoryService` | `BaseMemoryService` backed by Agent Memory Server long-term memory with recency-boosted semantic search.
+`RedisSessionMemoryService` | `BaseSessionService` backed by managed Redis Agent Memory or the self-hosted Agent Memory Server working memory. The self-hosted backend auto-summarizes when the context window is exceeded.
+`RedisLongTermMemoryService` | `BaseMemoryService` backed by managed Redis Agent Memory or the self-hosted Agent Memory Server long-term memory. Recency-boosted semantic search is available on the self-hosted backend.
 
 ### Cache providers
 
@@ -36488,7 +36727,8 @@ Provider | Description
 - [adk-redis documentation](https://redis-developer.github.io/adk-redis/)
 - [ADK + Redis on redis.io](https://redis.io/docs/latest/integrate/google-adk/)
 - [Runnable examples](https://github.com/redis-developer/adk-redis/tree/main/examples)
-- [Redis Agent Memory Server](https://github.com/redis/agent-memory-server)
+- [Managed Redis Agent Memory](https://redis.io/docs/latest/integrate/google-adk/redis-agent-memory/)
+- [Agent Memory Server (self-hosted)](https://github.com/redis/agent-memory-server)
 - [RedisVL documentation](https://docs.redisvl.com)
 - [Redis LangCache](https://redis.io/langcache)
 
@@ -38608,6 +38848,315 @@ Windsor.ai connects to 325+ platforms, including:
 - [Windsor.ai Documentation](https://windsor.ai/documentation/windsor-mcp/)
 - [Windsor MCP Introduction](https://windsor.ai/introducing-windsor-mcp/)
 - [Windsor MCP Use Cases & Examples](https://windsor.ai/how-to-use-windsor-mcp-examples-use-cases/)
+
+================
+File: docs/integrations/zespan.md
+================
+---
+catalog_title: Zespan
+catalog_description: Agent reliability platform to trace, evaluate, and monitor ADK agents
+catalog_icon: /integrations/assets/zespan_logo.png
+catalog_tags: ["observability", "evaluation"]
+---
+
+# Zespan observability for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+[Zespan](https://zespan.com) is an agent reliability platform for AI
+applications. The Zespan SDK instruments ADK agents natively by capturing every
+agent invocation, model call, tool execution, and multi-agent delegation as
+linked spans, then shipping them to the [Zespan
+dashboard](https://app.zespan.com) for inspection, cost attribution, and
+evaluation.
+
+## Overview
+
+Once your ADK agents are instrumented, the Zespan platform provides:
+
+- **Tracing:** Capture every agent, model, tool, and delegation span with
+  latency, tokens, and cost.
+- **Cost attribution:** Break down spend by model, agent, and time period.
+- **Evaluations:** Score agent behavior with custom metrics, datasets, and
+  simulations.
+- **Guardrails:** Block, redact, or flag unsafe inputs and outputs at runtime.
+- **Prompt management:** Fetch and version prompts with caching and variable
+  substitution.
+
+![Zespan system health dashboard](assets/zespan_overview.png)
+
+## Prerequisites
+
+Before you begin, set up a Zespan account and credentials:
+
+1. Sign up at [app.zespan.com](https://app.zespan.com).
+2. Create a project and copy the **API key** from **Onboarding → API Key**.
+3. Set the environment variables:
+
+   ```bash
+   export ZESPAN_API_KEY=<your-zespan-api-key>
+   export GOOGLE_API_KEY=<your-google-api-key>
+   ```
+
+## Installation
+
+Install the Zespan SDK alongside ADK:
+
+=== "Python"
+
+    ```bash
+    pip install zespan google-adk
+    ```
+
+=== "TypeScript"
+
+    ```bash
+    npm install @zespan/sdk @google/adk
+    ```
+
+## Send traces
+
+Instrument an ADK agent with the Zespan SDK to start capturing traces:
+
+=== "Python"
+
+    Initialize Zespan once at startup, then create a `ZespanADKCallbackHandler`
+    and spread its `.callbacks` into your `LlmAgent`.
+
+    ```python
+    import asyncio
+    import os
+
+    import zespan
+    from zespan import ZespanADKCallbackHandler
+    from google.adk.agents import LlmAgent
+    from google.adk.runners import InMemoryRunner
+    from google.genai import types
+
+    zespan.init(api_key=os.environ["ZESPAN_API_KEY"])
+
+    handler = ZespanADKCallbackHandler()
+
+
+    def get_weather(city: str) -> dict:
+        """Retrieves the current weather report for a specified city."""
+        if city.lower() == "new york":
+            return {
+                "status": "success",
+                "report": "The weather in New York is sunny with a temperature of 25°C.",
+            }
+        return {
+            "status": "error",
+            "error_message": f"Weather information for '{city}' is not available.",
+        }
+
+
+    agent = LlmAgent(
+        name="weather_agent",
+        model="gemini-flash-latest",
+        description="Agent to answer weather questions.",
+        instruction="Use the available tools to find an answer.",
+        tools=[get_weather],
+        **handler.callbacks,
+    )
+
+
+    async def main():
+        runner = InMemoryRunner(agent=agent, app_name="weather_app")
+        await runner.session_service.create_session(
+            app_name="weather_app", user_id="user", session_id="session"
+        )
+        async for event in runner.run_async(
+            user_id="user",
+            session_id="session",
+            new_message=types.Content(
+                role="user",
+                parts=[types.Part(text="What is the weather in New York?")],
+            ),
+        ):
+            if event.is_final_response():
+                print(event.content.parts[0].text.strip())
+
+
+    if __name__ == "__main__":
+        asyncio.run(main())
+    ```
+
+=== "TypeScript"
+
+    Two approaches are available.
+
+    **`instrumentADK`** wraps coordinator and runner in one call and intercepts
+    the full event stream, including delegations.
+
+    ```typescript
+    import { zespan, instrumentADK } from "@zespan/sdk";
+    import { LlmAgent, InMemoryRunner } from "@google/adk";
+
+    zespan.init({ apiKey: process.env.ZESPAN_API_KEY! });
+
+    function getWeather(city: string): object {
+      if (city.toLowerCase() === "new york") {
+        return {
+          status: "success",
+          report: "The weather in New York is sunny with a temperature of 25°C.",
+        };
+      }
+      return {
+        status: "error",
+        error_message: `Weather information for '${city}' is not available.`,
+      };
+    }
+
+    const coordinator = new LlmAgent({
+      name: "weather_agent",
+      model: "gemini-flash-latest",
+      description: "Agent to answer weather questions.",
+      instruction: "Use the available tools to find an answer.",
+      tools: [getWeather],
+    });
+
+    const runner = new InMemoryRunner({
+      agent: coordinator,
+      appName: "weather_app",
+    });
+
+    const { runner: tracedRunner } = instrumentADK({ coordinator, runner });
+
+    for await (const event of tracedRunner.runEphemeral({
+      userId: "user",
+      newMessage: { parts: [{ text: "What is the weather in New York?" }] },
+    })) {
+      if (event.isFinalResponse()) {
+        console.log(event.content.parts[0].text);
+      }
+    }
+    ```
+
+    **`ZespanADKCallbackHandler`** uses ADK's native callback system; spread
+    `.callbacks` into your agent config.
+
+    ```typescript
+    import { zespan, ZespanADKCallbackHandler } from "@zespan/sdk";
+    import { LlmAgent, InMemoryRunner } from "@google/adk";
+
+    zespan.init({ apiKey: process.env.ZESPAN_API_KEY! });
+
+    const handler = new ZespanADKCallbackHandler();
+
+    const agent = new LlmAgent({
+      name: "weather_agent",
+      model: "gemini-flash-latest",
+      description: "Agent to answer weather questions.",
+      instruction: "Use the available tools to find an answer.",
+      tools: [getWeather],
+      ...handler.callbacks,
+    });
+
+    const runner = new InMemoryRunner({ agent, appName: "weather_app" });
+
+    for await (const event of runner.runEphemeral({
+      userId: "user",
+      newMessage: { parts: [{ text: "What is the weather in New York?" }] },
+    })) {
+      if (event.isFinalResponse()) {
+        console.log(event.content.parts[0].text);
+      }
+    }
+    ```
+
+## Multi-agent systems
+
+Zespan links coordinator and sub-agent spans into a single trace:
+
+=== "Python"
+
+    Use the **same handler instance** across the coordinator and all sub-agents.
+    Spans are linked under a single trace via the shared ADK invocation ID.
+
+    ```python
+    handler = ZespanADKCallbackHandler()
+
+    specialist = LlmAgent(
+        name="lookup_agent",
+        model="gemini-flash-latest",
+        tools=[lookup_tool],
+        **handler.callbacks,
+    )
+
+    coordinator = LlmAgent(
+        name="coordinator",
+        model="gemini-flash-latest",
+        sub_agents=[specialist],
+        **handler.callbacks,
+    )
+    ```
+
+=== "TypeScript"
+
+    With `instrumentADK`, all `subAgents` are wrapped recursively and automatically.
+
+    ```typescript
+    const specialist = new LlmAgent({
+      name: "lookup_agent",
+      model: "gemini-flash-latest",
+      tools: [lookupTool],
+    });
+
+    const coordinator = new LlmAgent({
+      name: "coordinator",
+      model: "gemini-flash-latest",
+      subAgents: [specialist],
+    });
+
+    const { runner: tracedRunner } = instrumentADK({
+      coordinator,
+      runner: new InMemoryRunner({ agent: coordinator, appName: "my_app" }),
+    });
+    ```
+
+    With `ZespanADKCallbackHandler`, spread the same instance into every agent.
+
+    ```typescript
+    const handler = new ZespanADKCallbackHandler();
+
+    const specialist = new LlmAgent({
+      name: "lookup_agent",
+      model: "gemini-flash-latest",
+      tools: [lookupTool],
+      ...handler.callbacks,
+    });
+
+    const coordinator = new LlmAgent({
+      name: "coordinator",
+      model: "gemini-flash-latest",
+      subAgents: [specialist],
+      ...handler.callbacks,
+    });
+    ```
+
+## View traces in the dashboard
+
+Run the agent, then open your project at
+[app.zespan.com](https://app.zespan.com). Each ADK run produces a hierarchical
+trace showing:
+
+- Agent spans with latency and delegation links between coordinator and
+  sub-agents
+- LLM spans with token counts, cost, finish reason, and optional
+  prompt/completion text
+- Tool spans with input arguments and return values
+
+![Zespan ADK traces list](assets/zespan_traces.png)
+
+## Resources
+
+- [Zespan](https://zespan.com)
+- [`zespan` on PyPI](https://pypi.org/project/zespan/)
+- [`@zespan/sdk` on npm](https://www.npmjs.com/package/@zespan/sdk)
+- [Zespan documentation](https://docs.zespan.com)
 
 ================
 File: docs/integrations/zoominfo.md
