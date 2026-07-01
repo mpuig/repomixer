@@ -315,10 +315,14 @@ hide:
 
 # Welcome to ADK 2.0
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+</div>
+
 ADK 2.0 introduces powerful tools for building sophisticated AI agents, and
 helps you structure agents to execute challenging tasks with more control,
-predictability, and reliability. ADK 2.0 is available for Python and includes
-the following key features:
+predictability, and reliability. ADK 2.0 is available for Python and Go and
+includes the following key features:
 
 -   [**Graph-based workflows**](/graphs/): Build deterministic agent
     workflows with more control over how tasks are routed and executed.
@@ -337,6 +341,10 @@ to build agents with ADK 2.0!
 !!! tip "ADK Python v2.0.0 GA release"
 
     ADK Python 2.0 is released for general availability as of May 19, 2026.
+
+!!! tip "ADK Go v2.0.0 GA release"
+
+    ADK Go 2.0 is released for general availability as of June 30, 2026.
 
 ## ADK Python 1.x compatibility
 
@@ -357,7 +365,7 @@ architecture, your Agents, Tools, and Functions are evaluated as individual
 following breaking changes and migration steps to ensure a smooth transition for
 your production applications.
 
-### Event Schema & Custom Session Databases
+### Event Schema & Custom Session Storage
 
 ADK 2.0 introduces new fields `node_info` and `output` to the core
 ***Event*** schema to track graph state and workflow outputs.
@@ -433,8 +441,8 @@ so the framework can evaluate them against your configured ***RetryConfig***,
 such as `RetryConfig(max_attempts=3)`. Never catch ***BaseException*** unless
 you are explicitly re-raising the exception.
 
-If you encounter additional ADK 1.0 to ADK 2.0 incompatibilities, report them
-through the
+If you encounter additional ADK Python 1.0 to ADK 2.0 incompatibilities, report
+them through the
 [issue tracker](https://github.com/google/adk-python/issues/new?template=bug_report.md&labels=v2).
 
 
@@ -486,6 +494,119 @@ To install the latest version of ADK 1.x, follow these steps:
         source .venv/bin/activate
         ```
 
+## ADK Go 1.x compatibility
+
+ADK Go 2.0 is designed to be compatible with agents developed with ADK Go 1.x
+releases. However, there are a few breaking changes you should be aware of
+before upgrading an ADK Go 1.x project to ADK Go 2.0.
+
+!!! warning "Breaking changes: ADK Go 1.x to 2.0 incompatibilities"
+
+    There are several known incompatibilities and breaking changes introduced
+    with ADK Go v2.0.0. Before upgrading, review these changes and take
+    mitigation steps, if necessary.
+
+The ADK Go 2.0 release introduces the Workflow Runtime, transitioning ADK Go
+from a hierarchical agent executor to a graph-based execution engine. In this
+new architecture, your Agents, Tools, and Functions are evaluated as individual
+*nodes* within a workflow graph. If you are upgrading from ADK Go 1.x, review
+the following breaking changes and migration steps.
+
+### Module import path
+
+ADK Go 2.0 uses a new major version module path. You must update all import
+paths in your Go source files and your `go.mod` file.
+
+*   **1.x import path:** `google.golang.org/adk`
+*   **2.0 import path:** `google.golang.org/adk/v2`
+
+**Migration action:** Run `go get google.golang.org/adk/v2` and update
+all import statements in your source files from `google.golang.org/adk/...` to
+`google.golang.org/adk/v2/...`.
+
+### Agent Execution: Agent interface changes
+
+In ADK Go 1.x, agents implemented the `agent.Agent` interface by providing a
+`Run` method. In ADK Go 2.0, agents are evaluated as individual *nodes* within
+the new Workflow Graph engine.
+
+*   **Execution driver custom overrides:** Custom agent types that override
+    internal execution behavior may no longer work as expected. The Workflow
+    Graph engine manages execution scheduling and event emission, and custom
+    implementations that bypass these mechanisms are silently ignored.
+
+**Migration action:** Move custom execution logic into standardized
+`BeforeAgentCallback` and `AfterAgentCallback` hooks to safely inject custom
+logic into the execution lifecycle.
+
+### Event Construction: `session.NewEvent` signature change
+
+`session.NewEvent` now requires a `context.Context` as its first argument:
+
+```go
+// Before (ADK Go 1.x)
+ev := session.NewEvent(ctx.InvocationID())
+// or
+ev := session.NewEventWithContext(ctx, ctx.InvocationID())
+
+// After (ADK Go 2.0)
+ev := session.NewEvent(ctx, ctx.InvocationID())
+```
+
+The event ID and timestamp are now obtained through the `platform` package,
+so a time or UUID provider installed on `ctx` controls them. This lets workflow
+engines produce deterministic, replay-safe events. The previous
+parameterless-context form and the temporary `NewEventWithContext` helper are
+removed.
+
+**Migration action:** Pass the context already in scope as the first argument
+to `session.NewEvent`. Any `context.Context` works — the `ctx` of an agent,
+tool, or callback (which embed `context.Context`), a request context, or in
+tests, `t.Context()`. If a helper that calls `NewEvent` does not yet receive a
+context, add a `ctx context.Context` parameter and thread it down from the
+caller. Avoid creating a new `context.Background()` mid-call-chain; reserve
+that for `main`, `init`, and top-level test setup.
+
+### Event Schema & Custom Session Storage
+
+ADK Go 2.0 adds five new fields to the core ***Event*** struct to support
+graph routing, workflow state, and human-in-the-loop pausing:
+
+| Go field | Serialized name | Purpose |
+|---|---|---|
+| `IsolationScope string` | `isolationScope` (`json:"isolationScope,omitempty"`) | Restricts which agent contexts see this event in LLM prompt history. |
+| `Routes []string` | `Routes` (no JSON tag) | Routing keys emitted by a node to drive conditional edge dispatch. |
+| `RequestedInput *RequestInput` | `RequestedInput` (no JSON tag) | Signals that a workflow node is pausing for human input. |
+| `Output any` | `Output` (no JSON tag) | Generic data output from a workflow node. |
+| `NodeInfo *NodeInfo` | `nodeInfo` (`json:"nodeInfo,omitempty"`) | Workflow-node metadata identifying which node emitted the event. |
+
+*   **Custom session storage:** If you have implemented a custom
+    `session.Service`, such as storing sessions in your own SQL or NoSQL
+    databases with rigid schemas, your underlying database schema must be
+    updated to accommodate all five new fields. Inserting a 2.0 ***Event***
+    into a rigid 1.x database table causes insertion or deserialization
+    failures. *However, if your custom session service stores events as
+    serialized JSON blobs, you do not need to update your schema.*
+
+**Migration action:** Update your database schemas and downstream client
+validators to expect and store the five new fields on all Event payloads.
+Pay particular attention to `Routes`, `RequestedInput`, and `Output`, which
+have no JSON struct tags and therefore serialize under their Go field names
+exactly as shown above.
+
+If you encounter additional ADK Go 1.0 to ADK 2.0 incompatibilities, report
+them through the
+[issue tracker](https://github.com/google/adk-go/issues/new?template=bug_report.md&labels=v2).
+
+### Installing ADK Go 1.x {#install-go}
+
+If you want to continue using ADK Go 1.x and are not yet ready to upgrade to
+ADK Go 2.0, pin your dependency to the 1.x release line:
+
+```shell
+go get google.golang.org/adk@v1
+```
+
 ## Next steps
 
 Read the developer guides for building agents with ADK 2.0 features:
@@ -496,11 +617,17 @@ Read the developer guides for building agents with ADK 2.0 features:
 
 Check out these ADK 2.0 code samples for testing and inspiration:
 
--   [**Workflow samples**](https://github.com/google/adk-python/tree/v2/contributing/workflow_samples)
--   [**Collaborative task samples**](https://github.com/google/adk-python/tree/v2/contributing/task_samples)
+=== "Python"
 
-Thanks for checking out ADK 2.0! We look forward to your
-[feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=v2)!
+    -   [**Workflow samples**](https://github.com/google/adk-python/tree/main/contributing/samples/workflows)
+    -   [**Collaborative task samples**](https://github.com/google/adk-python/tree/main/contributing/samples/multi_agent)
+
+=== "Go"
+
+    -   [**All workflow agents samples**](https://github.com/google/adk-go/tree/main/examples/workflow)
+    -   [**Collaborative task sample**](https://github.com/google/adk-go/tree/main/examples/multiagent/collaboration)
+
+Thanks for checking out ADK 2.0! We look forward to your feedback — let us know on [ADK Go](https://github.com/google/adk-go/issues/new) or [ADK Python](https://github.com/google/adk-python/issues/new).
 
 ================
 File: docs/a2a/a2a-extension.md
@@ -2055,7 +2182,7 @@ Agent Platform.
     **Setup:**
 
     1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+       Vars, `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`) is complete.
 
     2. **Install Provider Library:** Install the necessary client library configured
        for Agent Platform.
@@ -2186,7 +2313,7 @@ Agent Platform offers a curated selection of open-source models, such as Meta Ll
     **Setup:**
 
     1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_VERTEXAI=TRUE`) is complete.
+       Vars, `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`) is complete.
 
     2. **Install LiteLLM:**
             ```shell
@@ -3241,21 +3368,72 @@ File: docs/agents/models/litert-lm.md
 # LiteRT-LM model host for ADK agents
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-kotlin">Kotlin v0.4.0</span>
 </div>
 
-[LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM) is a C++ library to
-efficiently run language models across edge platforms.
-On desktop (Linux, macOS, and Windows), ADK integrates with LiteRT-LM-hosted
-models through the LiteRT-LM server launched by the LiteRT-LM CLI `lit`.
+You can use the
+[LiteRT-LM](https://github.com/google-ai-edge/LiteRT-LM) 
+library to efficiently run language models locally on various compute devices
+without requiring specialized processors such as graphics processing units 
+(GPU) or tensor processing units (TPU). LiteRT-LM supports many models,
+including Google Gemma models as well as third-party models. This guide 
+provides instructions for setting up LiteRT-LM with ADK for the following
+languages:
 
-## Get started
+- [Python](#python) 
+- [Kotlin](#kotlin)
 
-LiteRT-LM works with the `Gemini` class. You only have to set the `base_url` and
-`model` parameters.
+## Python
+
+These instructions describe how to use LiteRT-LM server with ADK in Python
+with a Gemma open weights model, including using LiteRT-LM 's local hosting
+model server `lit`.
+
+### Install resources
+
+You need to download a model to use with LiteRT-LM, and the `lit` CLI tool
+to help you find a model download it.
+
+#### Install `lit` CLI tool
+
+Download and install the `lit` CLI tool by following these
+[instructions](https://github.com/google-ai-edge/LiteRT-LM?tab=readme-ov-file#desktop-cli-lit)
+in the LiteRT-LM GitHub repository.
+
+#### Download a model
+
+Before you start the server, you need to download a model. You'll need a
+_Hugging Face_ user access token to download a LiteRT-LM model using `lit`. You
+can get a token for your _Hugging Face_ account
+[here](https://huggingface.co/settings/tokens).
+
+To see a list of models available for download, use the `lit list` command:
+
+```bash
+lit list --show_all
+```
+
+Download a model using the `lit pull` command:
+
+```bash
+export HUGGING_FACE_HUB_TOKEN="**your Hugging Face token**"
+lit pull gemma3n-e2b
+```
+
+### Configure your agent
+
+Configure your agent to connect to LiteRT-LM and a hosted model.
+When running Gemma models with LiteRT-LM, you configure a `Gemini`
+model class with the model identifier and local network address.
+
+To use LiteRT-LM with ADK and a Gemma model:
 
 1.  Set `base_url` to the LiteRT-LM server URL, for example: `localhost:8001`.
 2.  Set `model` to the LiteRT-LM model name, for example: `gemma3n-e2b`.
+
+The following example code shows how to configure an agent to
+connect to the locally hosted LiteRT-LM instance serving the Gemma
+model configuration described above:
 
 ```py
 from google.adk.agents import Agent
@@ -3287,38 +3465,12 @@ Then run the agent as usual:
 adk web
 ```
 
-## Running the LiteRT-LM Server
+### Running the LiteRT-LM server
 
 The LiteRT-LM server is a separate process that serves LiteRT-LM models. It is
 started by the LiteRT-LM CLI tool `lit`.
 
-### Download the `lit` CLI tool
-
-Download the `lit` CLI tool by following these
-[instructions](https://github.com/google-ai-edge/LiteRT-LM?tab=readme-ov-file#desktop-cli-lit)
-in the LiteRT-LM GitHub repository.
-
-### Download a model
-
-Before you start the server, you need to download a model. You'll need a
-*Hugging Face* user access token to download a LiteRT-LM model using `lit`. You
-can get a token for your *Hugging Face* account
-[here](https://huggingface.co/settings/tokens).
-
-To see a list of models available for download, use the `lit list` command:
-
-```bash
-lit list --show_all
-```
-
-Download a model using the `lit pull` command:
-
-```bash
-export HUGGING_FACE_HUB_TOKEN="**your Hugging Face token**"
-lit pull gemma3n-e2b
-```
-
-### Run the server
+#### Run the server
 
 After downloading a model, start the LiteRT-LM server locally by running the
 following command:
@@ -3331,13 +3483,151 @@ lit serve --port 8001
 
     You may choose any port number for the LiteRT-LM server as long as it matches the `base_url` you set in the `Gemini` class in your agent code.
 
-### Debugging
+#### Debugging
 
 To see incoming requests to the LiteRT-LM server and the exact input sent to the
 model, use the `--verbose` flag:
 
 ```bash
 lit serve --port 8001 --verbose
+```
+
+## Kotlin
+
+These instructions describe how to use LiteRT-LM with ADK in Kotlin using
+the `com.google.adk.kt.litertlm` package.
+
+### Install resources
+
+You need to download a model to use with LiteRT-LM, and the `litert-lm` CLI tool
+to help you find a model download it.
+
+#### Install LiteRT-LM CLI
+
+Prerequisites: Python 3.10 or higher
+
+To install the CLI, run:
+
+```bash
+pip install --upgrade litert-lm
+```
+
+For additional installation methods, such as using uv, see
+[LiteRT-LM CLI Installation Guide](https://developers.google.com/edge/litert-lm/cli/installation).
+
+#### Download a model
+
+Download a model compatible with LiteRT-LM to use the `litert-lm` CLI tool. 
+Use `litert-lm` to download models directly from Hugging Face:
+
+```bash
+litert-lm import \
+  --from-huggingface-repo litert-community/gemma-4-E2B-it-litert-lm \
+  gemma-4-E2B-it.litertlm
+```
+
+Once downloaded, the model is stored locally at:
+
+```
+~/.litert-lm/models/gemma-4-E2B-it.litertlm/model.litertlm
+```
+
+For more details about `litert-lm`, refer to the
+[LiteRT-LM CLI Usage Guide](https://developers.google.com/edge/litert-lm/cli/usage).
+
+### Add dependencies
+
+ADK Kotlin works with LiteRT-LM through an adapter package,
+`com.google.adk:google-adk-kotlin-litertlm`.
+
+In your `build.gradle.kts`, add `com.google.adk:google-adk-kotlin-litertlm` and
+`com.google.ai.edge.litertlm:litertlm-jvm` to your dependencies:
+
+```kt
+repositories {
+    mavenCentral()
+    google()
+}
+
+dependencies {
+    implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:0.4.0")
+    implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
+    // other dependencies...
+}
+```
+
+### Configure agent model
+
+Run a local model for your agent with LiteRT-LM by configuring a
+`LiteRtLmModel` object as part of your `LlmAgent` object. If you do not
+already have a ADK Kotlin project, follow the 
+[Kotlin Quickstart for ADK](/get-started/kotlin/) 
+getting started guide. The following code example shows you how to
+configure an `LlmAgent`, and set the `model` parameter to a `LiteRtLmModel`:
+
+```kt
+ object HelloTimeAgent {
+
+    // Get model path from environment variable.
+    private val modelPath: String by lazy {
+        System.getenv("LITERT_LM_MODEL_PATH")
+            ?: throw IllegalStateException(
+                "LITERT_LM_MODEL_PATH environment variable must be set pointing to a .litertlm file."
+            )
+    }
+
+    @JvmField
+    val rootAgent =
+        LlmAgent(
+            name = "hello_time_agent",
+            description = "Tells the current time in a specified city.",
+            model =
+                LiteRtLmModel.create(
+                    EngineConfig(modelPath = modelPath, backend = Backend.CPU())
+                ),
+            instruction =
+                Instruction(
+                    "You are a helpful assistant that tells the current time in a city. " +
+                        "Use the 'getCurrentTime' tool for this purpose."
+                ),
+            tools = TimeService().generatedTools(),
+        )
+}
+```
+
+In this example, the path to the LiteRT-LM model file is read from the
+environment variable `LITERT_LM_MODEL_PATH`. The model will be run on the CPU.
+You can run the model on a GPU by setting `backend = Backend.GPU()`.
+
+When you run the agent, set `LITERT_LM_MODEL_PATH` to the location of the model
+file, for example: `~/.litert-lm/models/gemma-4-E2B-it.litertlm/model.litertlm`.
+
+### Run your agent
+
+If you followed the [Kotlin Quickstart for ADK](/get-started/kotlin/)
+with the above modifications, you can run your ADK agent using the command-line 
+REPL with the environment variable `LITERT_LM_MODEL_PATH` set to the path of
+the model file:
+
+```bash
+LITERT_LM_MODEL_PATH=~/.litert-lm/models/gemma-4-E2B-it.litertlm/model.litertlm ./gradlew run
+```
+
+Example interaction:
+
+```
+Agent hello_time_agent is ready. Type 'exit' to quit.
+
+You > what's your name?
+
+hello_time_agent > I am Gemma 4, a Large Language Model developed by Google DeepMind.
+
+You > what time is it in paris?
+
+hello_time_agent > calls tool: getCurrentTime
+
+hello_time_agent > The time in Paris is 10:30 am.
 ```
 
 ================
@@ -3675,11 +3965,11 @@ how and when other agents run, defining the control flow of a process.
 
 !!! note "Alternative: graph-based workflows"
 
-    Starting in ADK 2.0, template workflows have been superseded
+    Starting in ADK 2.0 for Python and Go, template workflows have been superseded
 
     by more flexible workflow structures, including
-    [graph-based workflows](/workflows/graphs/) and
-    [dynamic workflows](/workflows/dynamic/).
+    [graph-based workflows](/graphs/) and
+    [dynamic workflows](/graphs/dynamic/).
     These workflow architectures provide more control, flexibility
     and capability to evolve your agent workflows over time.
 
@@ -3743,11 +4033,11 @@ the ***LoopAgent*** object you define.
 
 !!! note "Alternative: graph-based workflows"
 
-    Starting in ADK 2.0, templated workflows have been superseded
+    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
 
     by more flexible workflow structures, including
-    [graph-based workflows](/workflows/graphs/) and
-    [dynamic workflows](/workflows/dynamic/).
+    [graph-based workflows](/graphs/) and
+    [dynamic workflows](/graphs/dynamic/).
 
 ### Example scenario
 
@@ -3836,11 +4126,11 @@ ultimately managed by the ***ParallelAgent*** object you define.
 
 !!! note "Alternative: graph-based workflows"
 
-    Starting in ADK 2.0, templated workflows have been superseded
+    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
 
     by more flexible workflow structures, including
-    [graph-based workflows](/workflows/graphs/) and
-    [dynamic workflows](/workflows/dynamic/).
+    [graph-based workflows](/graphs/) and
+    [dynamic workflows](/graphs/dynamic/).
 
 ### How it works
 
@@ -3917,11 +4207,11 @@ object you define.
 
 !!! note "Alternative: graph-based workflows"
 
-    Starting in ADK 2.0, templated workflows have been superseded
+    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
 
     by more flexible workflow structures, including
-    [graph-based workflows](/workflows/graphs/) and
-    [dynamic workflows](/workflows/dynamic/).
+    [graph-based workflows](/graphs/) and
+    [dynamic workflows](/graphs/dynamic/).
 
 ### Example scenario
 
@@ -4077,7 +4367,7 @@ To create an ADK project for use with Agent Config:
     1.  For Gemini model access through Google API, add a line to the
         file with your API key:
 
-            GOOGLE_GENAI_USE_VERTEXAI=0
+            GOOGLE_GENAI_USE_ENTERPRISE=0
             GOOGLE_API_KEY=<your-Google-Gemini-API-key>
 
         You can get an API key from the Google AI Studio
@@ -4085,7 +4375,7 @@ To create an ADK project for use with Agent Config:
 
     1.  For Gemini model access through Google Cloud, add these lines to the file:
 
-            GOOGLE_GENAI_USE_VERTEXAI=1
+            GOOGLE_GENAI_USE_ENTERPRISE=1
             GOOGLE_CLOUD_PROJECT=<your_gcp_project>
             GOOGLE_CLOUD_LOCATION=us-central1
 
@@ -6204,6 +6494,28 @@ Control whether the agent receives the prior conversation history.
             .build();
     ```
 
+!!! note "Go v2.0.0: agent execution modes"
+
+    ADK Go v2.0.0 introduces an explicit `Mode` field on `llmagent.Config` that
+    controls how the agent runs when used inside a graph-based or dynamic
+    workflow. Three modes are available:
+
+    -   **`ModeChat`** (default for an agent used as a sub-agent): The agent
+        participates in a multi-turn conversation with the user and is reachable
+        from peer agents via `transfer_to_agent`.
+    -   **`ModeSingleTurn`** (default for an agent used as a node in a
+        workflow): The agent completes its task in a single turn without
+        chatting with the user.
+    -   **`ModeTask`**: A task agent that chats with the user to accomplish a
+        task — in contrast to `ModeSingleTurn`, it can interact with the user
+        across turns to complete the work.
+
+    When you wrap an `llmagent` with `workflow.NewAgentNode`, the workflow
+    engine automatically sets the mode to `ModeSingleTurn` if no mode is
+    specified — equivalent to Python's `mode="single_turn"` on an agent used
+    as a workflow node. For more information on composing agents in graph-based
+    workflows, see [Graph-based agent workflows](/graphs/).
+
 ### Planner
 
 <div class="language-support-tag" title="">
@@ -6455,6 +6767,9 @@ the following:
   planning (`planner`), controlling agent transfer
   (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`), and system-wide
   instructions (`global_instruction`). See [Custom agent workflows](/agents/custom-agents/).
+* **Graph-based workflows:** Compose LLM agents as steps in deterministic,
+  graph-based pipelines using [Graph-based agent workflows](/graphs/). In Go v2.0.0, use
+  `workflow.NewAgentNode` to wrap any LLM agent as a workflow node.
 
 ================
 File: docs/agents/routing.md
@@ -6871,6 +7186,16 @@ File: docs/api-reference/index.md
 
 The Agent Development Kit (ADK) provides comprehensive API references across supported languages, allowing you to dive deep into all available classes, methods, and functionalities.
 
+{{#
+  CONTRIBUTORS: Keep all API reference links below as full `https://` absolute URLs.
+  These API docs (python/, typescript/, java/, kotlin/, cli/, agentconfig/, rest/)
+  are externally generated HTML, not MkDocs Markdown pages. If written as relative
+  or root-relative paths, such as `python/index.html` or `/api-reference/python/`,
+  the mkdocs-llmstxt plugin rewrites them to non-existent `.md` URLs, such as
+  `https://adk.dev/api-reference/python/index.md`, producing broken 404 links in
+  llms.txt / llms-full.txt. See #1716 and #1717 for history.
+#}}
+
 <div class="grid cards" markdown>
 
 -   :fontawesome-brands-python:{ .lg .middle } **Python API Reference**
@@ -6879,9 +7204,6 @@ The Agent Development Kit (ADK) provides comprehensive API references across sup
     Explore the complete API documentation for the Python Agent Development Kit. Discover detailed information on all modules, classes, functions, and examples to build sophisticated AI agents with Python.
 
     [:octicons-arrow-right-24: View Python API Docs](https://adk.dev/api-reference/python/) <br>
-    <!-- Assuming your Python API docs are in a 'python' subdirectory -->
-    <!-- Or link to an external ReadTheDocs, etc. -->
-    <!-- [:octicons-arrow-right-24: View Python API Docs](python/index.html) -->
 
 <!-- This comment forces a block separation -->
 
@@ -6891,8 +7213,6 @@ The Agent Development Kit (ADK) provides comprehensive API references across sup
     Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
 
     [:octicons-arrow-right-24: View Typescript API Docs](https://adk.dev/api-reference/typescript/) <br>
-    <!-- Assuming your Typescript API docs are in a 'typescript' subdirectory -->
-    <!-- [:octicons-arrow-right-24: View Typescript API Docs](typescript/index.html) -->
 
 <!-- This comment forces a block separation -->
 
@@ -6901,7 +7221,8 @@ The Agent Development Kit (ADK) provides comprehensive API references across sup
     ---
     Explore the complete API documentation for the Go Agent Development Kit. Discover detailed information on all modules, classes, and functions to build sophisticated AI agents with Go.
 
-    [:octicons-arrow-right-24: View Go API Docs](https://pkg.go.dev/google.golang.org/adk) <br>
+    [:octicons-arrow-right-24: View Go v2.x API Docs](https://pkg.go.dev/google.golang.org/adk/v2) <br>
+    [:octicons-arrow-right-24: View Go v1.x API Docs](https://pkg.go.dev/google.golang.org/adk) <br>
 
 <!-- This comment forces a block separation -->
 
@@ -6911,9 +7232,6 @@ The Agent Development Kit (ADK) provides comprehensive API references across sup
     Access the comprehensive Javadoc for the Java Agent Development Kit. This reference provides detailed specifications for all packages, classes, interfaces, and methods, enabling you to develop robust AI agents using Java.
 
     [:octicons-arrow-right-24: View Java API Docs](https://adk.dev/api-reference/java/) <br>
-    <!-- Assuming your Java API docs (Javadocs) are in a 'java' subdirectory -->
-    <!-- Or link to an external Javadoc hosting site -->
-    <!-- [:octicons-arrow-right-24: View Java API Docs](java/index.html) -->
 
 <!-- This comment forces a block separation -->
 
@@ -12308,7 +12626,7 @@ Set your environment variables as described in the [Setup and Installation](../g
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project-id
 export GOOGLE_CLOUD_LOCATION=us-central1 # Or your preferred location
-export GOOGLE_GENAI_USE_VERTEXAI=True
+export GOOGLE_GENAI_USE_ENTERPRISE=True
 ```
 
 For more information on connecting to Google Cloud from ADK agents, see
@@ -12579,7 +12897,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     --region $GOOGLE_CLOUD_LOCATION \
     --project $GOOGLE_CLOUD_PROJECT \
     --allow-unauthenticated \
-    --set-env-vars="GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_VERTEXAI=$GOOGLE_GENAI_USE_VERTEXAI"
+    --set-env-vars="GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_ENTERPRISE=$GOOGLE_GENAI_USE_ENTERPRISE"
     # Add any other necessary environment variables your agent might need
     ```
 
@@ -12822,7 +13140,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     --region $GOOGLE_CLOUD_LOCATION \
     --project $GOOGLE_CLOUD_PROJECT \
     --allow-unauthenticated \
-    --set-env-vars="GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_VERTEXAI=$GOOGLE_GENAI_USE_VERTEXAI"
+    --set-env-vars="GOOGLE_CLOUD_PROJECT=$GOOGLE_CLOUD_PROJECT,GOOGLE_CLOUD_LOCATION=$GOOGLE_CLOUD_LOCATION,GOOGLE_GENAI_USE_ENTERPRISE=$GOOGLE_GENAI_USE_ENTERPRISE"
     # Add any other necessary environment variables your agent might need
     ```
 
@@ -12945,14 +13263,14 @@ File: docs/deploy/gke.md
 # Deploy to Google Kubernetes Engine (GKE)
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span>
 </div>
 
 [GKE](https://cloud.google.com/gke) is the Google Cloud managed Kubernetes service. It allows you to deploy and manage containerized applications using Kubernetes.
 
 To deploy your agent you will need to have a Kubernetes cluster running on GKE. You can create a cluster using the Google Cloud Console or the `gcloud` command line tool.
 
-In this example we will deploy a simple agent to GKE. The agent will be a FastAPI application that uses `Gemini 2.0 Flash` as the LLM. We can use Agent Platform or AI Studio as the LLM provider using the Environment variable `GOOGLE_GENAI_USE_VERTEXAI`.
+In this example deploys a simple agent to GKE. The Python agent is a FastAPI application that uses `Gemini Flash` as the LLM. The Go agent uses the ADK launcher and a statically-linked binary in a minimal container. We can use Vertex AI or AI Studio as the LLM provider. You can use Agent Platform or AI Studio as the LLM provider with the environment variable `GOOGLE_GENAI_USE_ENTERPRISE`.
 
 ## Environment variables
 
@@ -12961,7 +13279,7 @@ Set your environment variables as described in the [Setup and Installation](../g
 ```bash
 export GOOGLE_CLOUD_PROJECT=your-project-id # Your GCP project ID
 export GOOGLE_CLOUD_LOCATION=us-central1 # Or your preferred location
-export GOOGLE_GENAI_USE_VERTEXAI=true # Set to true if using Agent Platform
+export GOOGLE_GENAI_USE_ENTERPRISE=true # Set to true if using Agent Platform
 export GOOGLE_CLOUD_PROJECT_NUMBER=$(gcloud projects describe --format json $GOOGLE_CLOUD_PROJECT | jq -r ".projectNumber")
 ```
 
@@ -13056,124 +13374,256 @@ gcloud container clusters get-credentials adk-cluster \
 
 We will reference the `capital_agent` example defined on the [LLM agents](../agents/llm-agents.md) page.
 
-To proceed, organize your project files as follows:
+=== "Python"
 
-```txt
-your-project-directory/
-├── capital_agent/
-│   ├── __init__.py
-│   └── agent.py       # Your agent code (see "Capital Agent example" below)
-├── main.py            # FastAPI application entry point
-├── requirements.txt   # Python dependencies
-└── Dockerfile         # Container build instructions
-```
+    Organize your project files as follows:
 
+    ```txt
+    your-project-directory/
+    ├── capital_agent/
+    │   ├── __init__.py
+    │   └── agent.py       # Your agent code
+    ├── main.py            # FastAPI application entry point
+    ├── requirements.txt   # Python dependencies
+    └── Dockerfile         # Container build instructions
+    ```
 
+=== "Go"
+
+    Organize your project files as follows:
+
+    ```txt
+    your-project-directory/
+    ├── main.go       # Agent code and launcher entry point
+    ├── go.mod        # Go module definition
+    ├── go.sum        # Go module checksums
+    └── Dockerfile    # Container build instructions
+    ```
 
 ### Code files
 
-Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capital_agent/agent.py`, `capital_agent/__init__.py`) in the root of `your-project-directory/`.
+=== "Python"
 
-1. This is the Capital Agent example inside the `capital_agent` directory
+    Create the following files (`main.py`, `requirements.txt`, `Dockerfile`, `capital_agent/agent.py`, `capital_agent/__init__.py`) in the root of `your-project-directory/`.
 
-    ```python title="capital_agent/agent.py"
-    from google.adk.agents import LlmAgent 
+    1. This is the Capital Agent example inside the `capital_agent` directory
 
-    # Define a tool function
-    def get_capital_city(country: str) -> str:
-      """Retrieves the capital city for a given country."""
-      # Replace with actual logic (e.g., API call, database lookup)
-      capitals = {"france": "Paris", "japan": "Tokyo", "canada": "Ottawa"}
-      return capitals.get(country.lower(), f"Sorry, I don't know the capital of {country}.")
+        ```python title="capital_agent/agent.py"
+        from google.adk.agents import LlmAgent 
 
-    # Add the tool to the agent
-    capital_agent = LlmAgent(
-        model="gemini-flash-latest",
-        name="capital_agent", #name of your agent
-        description="Answers user questions about the capital city of a given country.",
-        instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
-        tools=[get_capital_city] # Provide the function directly
-    )
+        # Define a tool function
+        def get_capital_city(country: str) -> str:
+          """Retrieves the capital city for a given country."""
+          # Replace with actual logic (e.g., API call, database lookup)
+          capitals = {"france": "Paris", "japan": "Tokyo", "canada": "Ottawa"}
+          return capitals.get(country.lower(), f"Sorry, I don't know the capital of {country}.")
 
-    # ADK will discover the root_agent instance
-    root_agent = capital_agent
-    ```
-    
-    Mark your directory as a python package
+        # Add the tool to the agent
+        capital_agent = LlmAgent(
+            model="gemini-flash-latest",
+            name="capital_agent", #name of your agent
+            description="Answers user questions about the capital city of a given country.",
+            instruction="""You are an agent that provides the capital city of a country... (previous instruction text)""",
+            tools=[get_capital_city] # Provide the function directly
+        )
 
-    ```python title="capital_agent/__init__.py"
+        # ADK will discover the root_agent instance
+        root_agent = capital_agent
+        ```
 
-    from . import agent
-    ```
+        Mark your directory as a python package
 
-2. This file sets up the FastAPI application using `get_fast_api_app()` from ADK:
+        ```python title="capital_agent/__init__.py"
 
-    ```python title="main.py"
-    import os
+        from . import agent
+        ```
 
-    import uvicorn
-    from fastapi import FastAPI
-    from google.adk.cli.fast_api import get_fast_api_app
+    2. This file sets up the FastAPI application using `get_fast_api_app()` from ADK:
 
-    # Get the directory where main.py is located
-    AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    # Example session service URI (e.g., SQLite)
-    # Note: Use 'sqlite+aiosqlite' instead of 'sqlite' because DatabaseSessionService requires an async driver
-    SESSION_SERVICE_URI = "sqlite+aiosqlite:///./sessions.db"
-    # Example allowed origins for CORS
-    ALLOWED_ORIGINS = ["http://localhost", "http://localhost:8080", "*"]
-    # Set web=True if you intend to serve a web interface, False otherwise
-    SERVE_WEB_INTERFACE = True
+        ```python title="main.py"
+        import os
 
-    # Call the function to get the FastAPI app instance
-    # Ensure the agent directory name ('capital_agent') matches your agent folder
-    app: FastAPI = get_fast_api_app(
-        agents_dir=AGENT_DIR,
-        session_service_uri=SESSION_SERVICE_URI,
-        allow_origins=ALLOWED_ORIGINS,
-        web=SERVE_WEB_INTERFACE,
-    )
+        import uvicorn
+        from fastapi import FastAPI
+        from google.adk.cli.fast_api import get_fast_api_app
 
-    # You can add more FastAPI routes or configurations below if needed
-    # Example:
-    # @app.get("/hello")
-    # async def read_root():
-    #     return {"Hello": "World"}
+        # Get the directory where main.py is located
+        AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
+        # Example session service URI (e.g., SQLite)
+        # Note: Use 'sqlite+aiosqlite' instead of 'sqlite' because DatabaseSessionService requires an async driver
+        SESSION_SERVICE_URI = "sqlite+aiosqlite:///./sessions.db"
+        # Example allowed origins for CORS
+        ALLOWED_ORIGINS = ["http://localhost", "http://localhost:8080", "*"]
+        # Set web=True if you intend to serve a web interface, False otherwise
+        SERVE_WEB_INTERFACE = True
 
-    if __name__ == "__main__":
-        # Use the PORT environment variable provided by Cloud Run, defaulting to 8080
-        uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
-    ```
+        # Call the function to get the FastAPI app instance
+        # Ensure the agent directory name ('capital_agent') matches your agent folder
+        app: FastAPI = get_fast_api_app(
+            agents_dir=AGENT_DIR,
+            session_service_uri=SESSION_SERVICE_URI,
+            allow_origins=ALLOWED_ORIGINS,
+            web=SERVE_WEB_INTERFACE,
+        )
 
-    *Note: We specify `agent_dir` to the directory `main.py` is in and use `os.environ.get("PORT", 8080)` for Cloud Run compatibility.*
+        if __name__ == "__main__":
+            # Use the PORT environment variable provided by Cloud Run, defaulting to 8080
+            uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
+        ```
 
-3. List the necessary Python packages:
+        *Note: We specify `agent_dir` to the directory `main.py` is in and use `os.environ.get("PORT", 8080)` for Cloud Run compatibility.*
 
-    ```txt title="requirements.txt"
-    google-adk
-    # Add any other dependencies your agent needs
-    ```
+    3. List the necessary Python packages:
 
-4. Define the container image:
+        ```txt title="requirements.txt"
+        google-adk
+        # Add any other dependencies your agent needs
+        ```
 
-    ```dockerfile title="Dockerfile"
-    FROM python:3.13-slim
-    WORKDIR /app
+    4. Define the container image:
 
-    COPY requirements.txt .
-    RUN pip install --no-cache-dir -r requirements.txt
+        ```dockerfile title="Dockerfile"
+        FROM python:3.13-slim
+        WORKDIR /app
 
-    RUN adduser --disabled-password --gecos "" myuser && \
-        chown -R myuser:myuser /app
+        COPY requirements.txt .
+        RUN pip install --no-cache-dir -r requirements.txt
 
-    COPY . .
+        RUN adduser --disabled-password --gecos "" myuser && \
+            chown -R myuser:myuser /app
 
-    USER myuser
+        COPY . .
 
-    ENV PATH="/home/myuser/.local/bin:$PATH"
+        USER myuser
 
-    CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
-    ```
+        ENV PATH="/home/myuser/.local/bin:$PATH"
+
+        CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
+        ```
+
+=== "Go"
+
+    Create the following files in the root of `your-project-directory/`.
+
+    1. Define the agent and embed the ADK launcher. The launcher handles the `web`,
+       `api`, and `webui` subcommands that start the REST API server and web interface:
+
+        ```go title="main.go"
+        package main
+
+        import (
+            "context"
+            "fmt"
+            "log"
+            "os"
+            "strings"
+
+            "google.golang.org/adk/agent"
+            "google.golang.org/adk/agent/llmagent"
+            "google.golang.org/adk/cmd/launcher"
+            "google.golang.org/adk/cmd/launcher/full"
+            "google.golang.org/adk/model/gemini"
+            "google.golang.org/adk/tool"
+            "google.golang.org/adk/tool/functiontool"
+            "google.golang.org/genai"
+        )
+
+        type getCapitalCityArgs struct {
+            Country string `json:"country" jsonschema:"The country to look up."`
+        }
+
+        func getCapitalCity(_ tool.Context, args getCapitalCityArgs) (string, error) {
+            capitals := map[string]string{
+                "france":  "Paris",
+                "japan":   "Tokyo",
+                "canada":  "Ottawa",
+            }
+            capital, ok := capitals[strings.ToLower(args.Country)]
+            if !ok {
+                return "", fmt.Errorf("capital not found for %s", args.Country)
+            }
+            return capital, nil
+        }
+
+        func main() {
+            ctx := context.Background()
+
+            model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+                APIKey: os.Getenv("GOOGLE_API_KEY"),
+            })
+            if err != nil {
+                log.Fatalf("Failed to create model: %v", err)
+            }
+
+            capitalTool, err := functiontool.New(
+                functiontool.Config{
+                    Name:        "get_capital_city",
+                    Description: "Retrieves the capital city for a given country.",
+                },
+                getCapitalCity,
+            )
+            if err != nil {
+                log.Fatalf("Failed to create tool: %v", err)
+            }
+
+            capitalAgent, err := llmagent.New(llmagent.Config{
+                Name:        "capital_agent",
+                Model:       model,
+                Description: "Answers questions about capital cities.",
+                Instruction: "You are an agent that provides the capital city of a country.",
+                Tools:       []tool.Tool{capitalTool},
+            })
+            if err != nil {
+                log.Fatalf("Failed to create agent: %v", err)
+            }
+
+            config := &launcher.Config{
+                AgentLoader: agent.NewSingleLoader(capitalAgent),
+            }
+
+            l := full.NewLauncher()
+            if err = l.Execute(ctx, config, os.Args[1:]); err != nil {
+                log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+            }
+        }
+        ```
+
+        To use Vertex AI instead of AI Studio, set `genai.ClientConfig` to use
+        the Vertex AI backend:
+
+        ```go
+        model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+            Backend:  genai.BackendVertexAI,
+            Project:  os.Getenv("GOOGLE_CLOUD_PROJECT"),
+            Location: os.Getenv("GOOGLE_CLOUD_LOCATION"),
+        })
+        ```
+
+    2. Define the container image. Go compiles to a self-contained static binary,
+       so the container uses a minimal distroless base image — no runtime
+       dependencies or package manager required:
+
+        ```dockerfile title="Dockerfile"
+        # Stage 1: Build the Go binary
+        FROM golang:1.25 AS builder
+        WORKDIR /app
+
+        COPY go.mod go.sum ./
+        RUN go mod download
+
+        COPY . .
+        # Compile a statically linked Linux/amd64 binary
+        RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+            go build -ldflags="-s -w" -o capital_agent .
+
+        # Stage 2: Copy the binary into a minimal runtime image
+        FROM gcr.io/distroless/static-debian12
+        COPY --from=builder /app/capital_agent /app/capital_agent
+        EXPOSE 8080
+
+        # Start the API server and web UI
+        CMD ["/app/capital_agent", "web", "-port", "8080", "api", "webui"]
+        ```
 
 ### Build the container image
 
@@ -13186,14 +13636,42 @@ gcloud artifacts repositories create adk-repo \
     --description="ADK repository"
 ```
 
-Build the container image using the `gcloud` command line tool. This example builds the image and tags it as `adk-repo/adk-agent:latest`.
+Build the container image and push it to Artifact Registry:
 
-```bash
-gcloud builds submit \
-    --tag $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest \
-    --project=$GOOGLE_CLOUD_PROJECT \
-    .
-```
+=== "Python"
+
+    Use Cloud Build to build and push the image directly from your source directory:
+
+    ```bash
+    gcloud builds submit \
+        --tag $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest \
+        --project=$GOOGLE_CLOUD_PROJECT \
+        .
+    ```
+
+=== "Go"
+
+    The multi-stage Dockerfile handles compilation inside the builder stage, so you
+    can use Cloud Build without needing a local Go toolchain:
+
+    ```bash
+    gcloud builds submit \
+        --tag $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest \
+        --project=$GOOGLE_CLOUD_PROJECT \
+        .
+    ```
+
+    Alternatively, compile the binary locally and build a smaller image without
+    the multi-stage Dockerfile — useful if you already have Go installed:
+
+    ```bash
+    # Cross-compile for linux/amd64
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o capital_agent .
+
+    # Build and push the image
+    docker build -t $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest .
+    docker push $GOOGLE_CLOUD_LOCATION-docker.pkg.dev/$GOOGLE_CLOUD_PROJECT/adk-repo/adk-agent:latest
+    ```
 
 Verify the image is built and pushed to the Artifact Registry:
 
@@ -13263,9 +13741,9 @@ spec:
             value: $GOOGLE_CLOUD_PROJECT
           - name: GOOGLE_CLOUD_LOCATION
             value: $GOOGLE_CLOUD_LOCATION
-          - name: GOOGLE_GENAI_USE_VERTEXAI
-            value: "$GOOGLE_GENAI_USE_VERTEXAI"
-          # If using AI Studio, set GOOGLE_GENAI_USE_VERTEXAI to false and set the following:
+          - name: GOOGLE_GENAI_USE_ENTERPRISE
+            value: "$GOOGLE_GENAI_USE_ENTERPRISE"
+          # If using AI Studio, set GOOGLE_GENAI_USE_ENTERPRISE to false and set the following:
           # - name: GOOGLE_API_KEY
           #   value: $GOOGLE_API_KEY
           # Add any other necessary environment variables your agent might need
@@ -13315,6 +13793,11 @@ kubectl get svc adk-agent -o=jsonpath='{.status.loadBalancer.ingress[0].ip}'
 ```
 
 ## Option 2: Automated Deployment using `adk deploy gke`
+
+!!! note "Python only"
+    The `adk deploy gke` command is available for Python only. Go does not have
+    an equivalent CLI command. Go agents must be deployed using the manual
+    approach described in [Option 1](#option-1-manual-deployment-using-gcloud-and-kubectl).
 
 ADK provides a CLI command to streamline GKE deployment. This avoids the need to manually build images, write Kubernetes manifests, or push to Artifact Registry.
 
@@ -13465,11 +13948,24 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
 
     #### Set the application URL
 
-    Replace the example URL with the actual URL of your deployed Cloud Run service.
-
     ```bash
     export APP_URL=$(kubectl get service adk-agent -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
     ```
+
+    !!! note "Go: API path prefix"
+        The Go ADK server serves all REST endpoints under the `/api` path prefix
+        by default. Prepend `/api` to every path in the examples below when
+        testing a Go deployment. For example:
+
+        | Python | Go |
+        |---|---|
+        | `$APP_URL/list-apps` | `$APP_URL/api/list-apps` |
+        | `$APP_URL/apps/…` | `$APP_URL/api/apps/…` |
+        | `$APP_URL/run_sse` | `$APP_URL/api/run_sse` |
+
+        The prefix can be changed at startup with `-path_prefix` on the `api`
+        subcommand, e.g. `CMD ["/app/capital_agent", "web", "-port", "8080", "api", "-path_prefix", ""]`
+        removes the prefix entirely.
 
     #### List available apps
 
@@ -13483,7 +13979,7 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
 
     #### Create or Update a Session
 
-    Initialize or update the state for a specific user and session. Replace `capital_agent` with your actual app name if different. The values `user_123` and `session_abc` are example identifiers; you can replace them with your desired user and session IDs.
+    Initialize or update the state for a specific user and session. Replace `capital_agent` with your actual app name if different.
 
     ```bash
     curl -X POST \
@@ -13496,22 +13992,49 @@ Once your agent is deployed to GKE, you can interact with it via the deployed UI
 
     Send a prompt to your agent. Replace `capital_agent` with your app name and adjust the user/session IDs and prompt as needed.
 
-    ```bash
-    curl -X POST $APP_URL/run_sse \
-        -H "Content-Type: application/json" \
-        -d '{
-        "app_name": "capital_agent",
-        "user_id": "user_123",
-        "session_id": "session_abc",
-        "new_message": {
-            "role": "user",
-            "parts": [{
-            "text": "What is the capital of Canada?"
-            }]
-        },
-        "streaming": false
-        }'
-    ```
+    !!! note "Go: JSON field names are camelCase"
+        The Python ADK REST API uses `snake_case` field names in the JSON request
+        body (e.g. `app_name`, `user_id`, `new_message`). The Go ADK REST API
+        uses `camelCase` (e.g. `appName`, `userId`, `newMessage`). Use the
+        correct format for your deployment language.
+
+    === "Python"
+
+        ```bash
+        curl -X POST $APP_URL/run_sse \
+            -H "Content-Type: application/json" \
+            -d '{
+            "app_name": "capital_agent",
+            "user_id": "user_123",
+            "session_id": "session_abc",
+            "new_message": {
+                "role": "user",
+                "parts": [{
+                "text": "What is the capital of Canada?"
+                }]
+            },
+            "streaming": false
+            }'
+        ```
+
+    === "Go"
+
+        ```bash
+        curl -X POST $APP_URL/api/run_sse \
+            -H "Content-Type: application/json" \
+            -d '{
+            "appName": "capital_agent",
+            "userId": "user_123",
+            "sessionId": "session_abc",
+            "newMessage": {
+                "role": "user",
+                "parts": [{
+                "text": "What is the capital of Canada?"
+                }]
+            },
+            "streaming": false
+            }'
+        ```
 
     * Set `"streaming": true` if you want to receive Server-Sent Events (SSE).
     * The response will contain the agent's execution events, including the final answer.
@@ -13536,6 +14059,11 @@ kubectl logs $POD_NAME
 
 ### Attempt to write a readonly database
 
+!!! note "Python only"
+    This error applies to Python deployments that use SQLite for session storage.
+    Go deployments use an in-memory session service by default and are not
+    affected by this issue.
+
 You might see there is no session id created in the UI and the agent does not respond to any messages. This is usually caused by the SQLite database being read-only. This can happen if you run the agent locally and then create the container image which copies the SQLite database into the container. The database is then read-only in the container.
 
 ```bash
@@ -13557,7 +14085,7 @@ or (recommended) you can add a `.dockerignore` file to your project directory to
 sessions.db
 ```
 
-Build the container image abd deploy the application again.
+Build the container image and deploy the application again.
 
 ### Insufficient Permission to Stream Logs `ERROR: (gcloud.builds.submit)`
 
@@ -17254,7 +17782,7 @@ To run the server, you’ll need to export two environment variables:
 * a variable to specify we’re not using Agent Platform this time.
 
 ```shell
-export GOOGLE_GENAI_USE_VERTEXAI=FALSE
+export GOOGLE_GENAI_USE_ENTERPRISE=FALSE
 export GOOGLE_API_KEY=YOUR_API_KEY
 ```
 
@@ -17817,7 +18345,7 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
     2. Open the **`.env`** file located inside (`app/`) and copy-paste the following code.
 
         ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=FALSE
+        GOOGLE_GENAI_USE_ENTERPRISE=FALSE
         GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_API_KEY_HERE
         ```
 
@@ -17838,7 +18366,7 @@ To run the agent, choose a platform from either Google AI Studio or Google Cloud
        the following code and update the project ID and location.
 
         ```env title=".env"
-        GOOGLE_GENAI_USE_VERTEXAI=TRUE
+        GOOGLE_GENAI_USE_ENTERPRISE=TRUE
         GOOGLE_CLOUD_PROJECT=PASTE_YOUR_ACTUAL_PROJECT_ID
         GOOGLE_CLOUD_LOCATION=us-central1
         ```
@@ -18030,8 +18558,15 @@ File: docs/get-started/go.md
 This guide shows you how to get up and running with Agent Development Kit
 for Go. Before you start, make sure you have the following installed:
 
-*   Go 1.24.4 or later
-*   ADK Go v0.2.0 or later
+*   Go 1.25 or later
+*   ADK Go v2.0.0 or later
+
+!!! tip "What's new in ADK Go 2.0"
+
+    ADK Go 2.0 introduces graph-based workflow agents, parallel and loop
+    execution primitives, and Human-in-the-Loop tool confirmation. See the
+    [ADK 2.0 release page](/2.0/) for the full list of new features and
+    migration guidance.
 
 ## Create an agent project
 
@@ -18075,13 +18610,13 @@ import (
 	"log"
 	"os"
 
-	"google.golang.org/adk/agent"
-	"google.golang.org/adk/agent/llmagent"
-	"google.golang.org/adk/cmd/launcher"
-	"google.golang.org/adk/cmd/launcher/full"
-	"google.golang.org/adk/model/gemini"
-	"google.golang.org/adk/tool"
-	"google.golang.org/adk/tool/geminitool"
+	"google.golang.org/adk/v2/agent"
+	"google.golang.org/adk/v2/agent/llmagent"
+	"google.golang.org/adk/v2/cmd/launcher"
+	"google.golang.org/adk/v2/cmd/launcher/full"
+	"google.golang.org/adk/v2/model/gemini"
+	"google.golang.org/adk/v2/tool"
+	"google.golang.org/adk/v2/tool/geminitool"
 	"google.golang.org/genai"
 )
 
@@ -18121,11 +18656,13 @@ func main() {
 
 ### Configure project and dependencies
 
-Use the `go mod` command to initialize the project modules and install the
-required packages based on the `import` statement in your agent code file:
+Initialize your module, add ADK Go 2.0 as a pinned dependency, then let `go mod
+tidy` resolve the remaining packages based on the `import` statements in your
+agent code file:
 
 ```console
 go mod init my-agent/main
+go get google.golang.org/adk/v2
 go mod tidy
 ```
 
@@ -18190,7 +18727,7 @@ go run agent.go web api webui
 ```
 
 This command starts a web server with a chat interface for your agent. You can
-access the web interface at (http://localhost:8080). Select your agent at the
+access the web interface at `http://localhost:8080`. Select your agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
@@ -18205,7 +18742,9 @@ upper left corner and type a request.
 Now that you have ADK installed and your first agent running, try building
 your own agent with our build guides:
 
-*  [Build your agent](/tutorials/)
+*   [Build your agent](/tutorials/)
+*   [Build graph-based workflows](/graphs/)
+*   [ADK Go workflow agents](/agents/workflow-agents/)
 
 ================
 File: docs/get-started/google-cloud.md
@@ -18468,6 +19007,8 @@ across supported languages. For a guided introduction, start with the
 
 === "Go"
 
+    **Prerequisites:** Go 1.25 or later is required for ADK Go v2.0.0.
+
     **Create a new Go module**
 
     If you are starting a new project, you can create a new Go module:
@@ -18476,18 +19017,30 @@ across supported languages. For a guided introduction, start with the
     go mod init example.com/my-agent
     ```
 
-    **Install ADK**
+    **Install ADK Go v2.0.0**
 
-    To add the ADK to your project, run the following command:
+    To add ADK Go v2.0.0 to your project, run the following command:
 
     ```shell
-    go get google.golang.org/adk
+    go get google.golang.org/adk/v2
     ```
 
-    This will add the ADK as a dependency to your `go.mod` file.
+    This will add ADK Go v2.0.0 as a dependency to your `go.mod` file.
 
     (Optional) Verify your installation by checking your `go.mod` file for the
-    `google.golang.org/adk` entry.
+    `google.golang.org/adk/v2` entry.
+
+    ??? tip "Still using ADK Go v1.x?"
+
+        If you are not yet ready to upgrade to v2.0.0, you can continue using
+        the v1.x release line:
+
+        ```shell
+        go get google.golang.org/adk@v1
+        ```
+
+        See the [ADK 2.0 release page](/2.0/) for upgrade guidance, including
+        breaking changes and migration steps for ADK Go 1.x projects.
 
 === "Java"
 
@@ -18849,7 +19402,7 @@ mvn compile exec:java \
 ```
 
 This command starts a web server with a chat interface for your agent. You can
-access the web interface at (http://localhost:8000). Select your agent at the
+access the web interface at `http://localhost:8000`. Select your agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
@@ -19150,7 +19703,7 @@ gradle run -PmainClass=com.example.agent.WebMainKt
 ```
 
 This command starts a web server with a chat interface for your agent. You can
-access the web interface at (http://localhost:8080). Select your agent at the
+access the web interface at `http://localhost:8080`. Select your agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
@@ -19323,7 +19876,7 @@ adk web --port 8000
     run `adk web` from the `agents/` directory.
 
 This command starts a web server with a chat interface for your agent. You can
-access the web interface at (http://localhost:8000). Select the agent at the
+access the web interface at `http://localhost:8000`. Select the agent at the
 upper left corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
@@ -19484,7 +20037,7 @@ npx adk web
 ```
 
 This command starts a web server with a chat interface for your agent. You can
-access the web interface at (http://localhost:8000). Select your agent at the
+access the web interface at `http://localhost:8000`. Select your agent at the
 upper right corner and type a request.
 
 ![adk-web-dev-ui-chat.png](/assets/adk-web-dev-ui-chat.png)
@@ -19507,237 +20060,388 @@ File: docs/graphs/data-handling.md
 # Data handling for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Structuring and managing data between agents and graph-based nodes is critical
 for building reliable processes with ADK. This guide explains data handling
 within graph-based workflows and collaboration agents, including how information
-is transmitted and received between graph nodes using ***Events***. It covers
-the essential parameters for events, data, content, and state, and explains how
-to implement structured data transfer for both function and agent nodes using
-data format schemas and specific instruction syntax.
+is transmitted and received between graph nodes. It covers the essential
+parameters for passing data, content, and state, and explains how to implement
+structured data transfer for both function and agent nodes using data format
+schemas and specific instruction syntax.
 
-## Workflow graph Events
+## Workflow data flow
 
-Within a graph-based workflow, you pass data using ***Events***. All execution
-*nodes* in a workflow graph consume and emit Events. This section covers the
-basics of transmitting and receiving data between nodes in a ***Workflow***.
-Events have specific parameters for transmitting different types of data between
-nodes. The key parameters for node data handling are as follows:
+Within a graph-based workflow, nodes pass data to downstream steps through
+events. A step writes its output to a named event field, and the next step
+receives it as its typed input.
 
--   **`output`**: Parameter for passing information between *nodes*.
--   **`message`**: Data intended as a response to a user.
--   **`state`**: Data automatically persisted across nodes via ***Events***
-    throughout an ADK session.
+=== "Python"
 
-Events also carry additional information about the workflow, including the
-source node of the Event.
+    In Python, data is exchanged between graph nodes using ***Events***. The key
+    parameters for node data handling are:
 
-### Node input and output with Events
+    -   **`output`**: Parameter for passing information between *nodes*.
+    -   **`message`**: Data intended as a response to a user.
+    -   **`state`**: Data automatically persisted across nodes via ***Events***
+        throughout an ADK session.
 
-Each node in a graph receives and transmits data through the ***Event*** class.
-Use the ***yield*** syntax to hand off data to the next node, as shown in the
-following code snippet:
+=== "Go"
 
-```python
-from google.adk import Event
+    In ADK Go v2.0.0, the data-passing mechanism depends on which agent style
+    you use:
 
-def my_function_node(node_input: str):
-    output_value = node_input.upper()
-    return Event(output=output_value) # "THE RESULT"
-```
+    **workflow package** (`FunctionNode`, `AgentNode`, `DynamicNode`): nodes
+    communicate through `session.Event` fields, mirroring Python closely:
 
-Use the ***return*** syntax when outputting ***Event*** data that does not
-require additional processing. When emitting data that requires additional
-processing, or if you are generating more than one data item, you can use more
-than one ***yield*** command. Each ***yield*** call adds to a list of data
-objects on the Event which is passed to the next node of a graph. A ***return***
-or ***yield*** command without a parameter passes a `None` value to the next
-node.
+    -   **`Event.Output`**: the node's return value, set automatically by the
+        framework when a `FunctionNode` returns a non-`*genai.Content` value.
+        The successor node receives this as its typed `input` parameter.
+    -   **`Event.Routes`**: routing keys set explicitly by an emitting node to
+        select which conditional edge to follow — the Go equivalent of
+        Python's `Event(route=...)`.
+    -   **`Event.NodeInfo`**: scheduler metadata (`path`, `MessageAsOutput`,
+        `OutputFor`). Set by the workflow engine; nodes do not set this
+        directly.
 
-### Event `output` parameter
+    **Prebuilt workflow agents** (`sequentialagent`, `parallelagent`,
+    `loopagent`): these agents communicate through session state:
 
-The ***output*** parameter of an ***Event*** is the standard way to pass data to
-the next node of a graph. The next node receives a ***node input*** object
-containing the data, as shown in the following code sample:
+    -   **`OutputKey`** on `llmagent.Config`: the framework writes the agent's
+        final text response to `state[OutputKey]` after each turn.
+    -   **`ctx.Session().State().Set` / `.Get`**: write or read arbitrary
+        values from state inside custom code.
+    -   **`{key}` in `Instruction`**: the framework substitutes `state["key"]`
+        into the prompt before calling the model.
 
-```python
-def my_function_node_1():
-    return Event(output="The Result")
+    State keys may carry a prefix that controls their lifetime and scope:
 
-def my_function_node_2(node_input: str):
-    output_value = node_input.lower()
-    return Event(output=output_value) # "the result"
-```
+    | Prefix constant | Prefix string | Scope |
+    |---|---|---|
+    | `session.KeyPrefixApp` | `"app:"` | Shared across all users and sessions for the app |
+    | `session.KeyPrefixUser` | `"user:"` | Tied to the user, shared across their sessions |
+    | `session.KeyPrefixTemp` | `"temp:"` | Discarded after the current invocation ends |
+    | *(none)* | — | Persists for the lifetime of the session |
 
-You can pass longer, structured data in a serializable format, as shown in this
-code sample:
+### Node output
 
-```python
-def my_function_node_3():
-    yield Event(
-        output={
-            "city_name": "Paris",
-            "city_time": "10:10 AM",
-        },
+Each step in a workflow produces output for its successor.
+
+=== "Python"
+
+    Use the ***return*** or ***yield*** syntax to hand off data to the next node:
+
+    ```python
+    from google.adk import Event
+
+    def my_function_node(node_input: str):
+        output_value = node_input.upper()
+        return Event(output=output_value) # "THE RESULT"
+    ```
+
+    Use the ***return*** syntax when outputting ***Event*** data that does not
+    require additional processing. When emitting data that requires additional
+    processing, or if you are generating more than one data item, you can use
+    more than one ***yield*** command. Each ***yield*** call adds to a list of
+    data objects on the Event which is passed to the next node of a graph. A
+    ***return*** or ***yield*** command without a parameter passes a `None` value
+    to the next node.
+
+=== "Go"
+
+    **workflow package**: a `FunctionNode` simply returns a typed Go value.
+    The framework automatically wraps the return value in a `session.Event`
+    and sets `Event.Output`. The successor node receives this value as its
+    typed `input` parameter — no manual event construction needed:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:event-output"
+    ```
+
+    **Prebuilt workflow agents**: use `OutputKey` on `llmagent.Config` to
+    save an agent's text response to session state, then reference it with
+    `{key}` in downstream agents' `Instruction` templates:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:output-key"
+    ```
+
+### Node output: passing structured data
+
+=== "Python"
+
+    You can pass longer, structured data in a serializable format:
+
+    ```python
+    def my_function_node_3():
+        yield Event(
+            output={
+                "city_name": "Paris",
+                "city_time": "10:10 AM",
+            },
+        )
+    ```
+
+    !!! warning "Caution: Event.output limitation"
+
+        Nodes are only allowed to emit a single ***Event.output*** data payload
+        per execution. This limitation means that while you can use more than
+        one ***yield*** in a node, having two or more ***yield*** commands with
+        an ***Event.output*** results in a runtime error.
+
+=== "Go"
+
+    **workflow package**: a `FunctionNode` can return any JSON-serializable
+    Go struct. The framework serializes it into `Event.Output` and
+    deserializes it back into the successor node's typed `input` parameter.
+    There is no single-payload restriction — each node has exactly one typed
+    return value:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:structured-output"
+    ```
+
+    **Prebuilt workflow agents**: use multiple `OutputKey` values, one per
+    agent, to store individual fields in session state. Downstream agents
+    read each field independently via `{key}` in their `Instruction`.
+
+### Routing output
+
+=== "Python"
+
+    Use the `route` parameter of an ***Event*** to drive conditional edge
+    dispatch:
+
+    ```python
+    def router(node_input: str):
+        return Event(route="BUG")
+    ```
+
+=== "Go"
+
+    **workflow package**: an emitting `FunctionNode` constructs a
+    `session.Event` directly, sets `Event.Routes` to the desired route keys,
+    and sets `Event.Output` to forward the payload to the successor. The
+    workflow engine reads `Event.Routes` at dispatch time to select the
+    matching edge:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:routing-output"
+    ```
+
+### User-facing messages
+
+=== "Python"
+
+    Use the ***message*** parameter of an ***Event*** to send a response to a
+    user rather than pass data to the next node:
+
+    ```python
+    async def user_message(node_input: str):
+      """Tell user research process is starting."""
+      yield Event(message="Beginning research process...")
+    ```
+
+=== "Go"
+
+    **workflow package**: to emit a user-visible message without advancing
+    the node's typed output, set `Event.Content` on an intermediate event
+    emitted via the `emit` callback in an `EmittingFunctionNode`. The
+    terminal return value (or `nil`) controls `Event.Output`.
+
+    **Prebuilt workflow agents**: any `llmagent` step automatically emits its
+    model response as a user-facing event. For non-LLM steps, write a custom
+    `Run` function on an `agent.Agent` that yields events whose
+    `LLMResponse.Content` contains the text.
+
+### Session state and state scopes
+
+Session state persists data across turns within a session. It is the primary
+data-sharing mechanism for the prebuilt workflow agents, and is also available
+inside tools and callbacks regardless of which agent style you use.
+
+=== "Python"
+
+    Use the ***state*** parameter of an ***Event*** to maintain values across
+    nodes. Nodes can modify state values, and the modified state values are
+    available to downstream nodes:
+
+    ```python
+    async def init_state_node(attempts: int = 0):
+      yield Event(
+          state={
+              "attempts": attempts,
+          },
+      )
+
+    async def task_attempt_node(node_input: Content, attempts: int):
+      yield Event(
+          state={
+              "attempts": attempts + 1,
+          },
+      )
+
+    async def read_state_node(ctx: Context):
+      print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
+
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[("START", init_state_node, task_attempt_node, read_state_node)],
     )
-```
+    ```
 
-!!! warning "Caution: Event.output limitation"
+    !!! warning "Caution: `state` property data limitations"
 
-    Nodes are only allowed to emit a single ***Event.output*** data payload
-    per execution. This limitation means that while you can more than one
-    ***yield*** in a node, having two or more ***yield*** commands with an
-    ***Event.output*** results in a runtime error.
+        The state parameter *should not be used to persist large amounts of
+        data* between nodes. Use artifacts or other data persistence mechanisms,
+        such as database Tools, to persist large data resources during the life
+        cycle of a Workflow.
 
-### Event `message` parameter
+=== "Go"
 
-The ***message*** parameter of an ***Event*** is used to pass data intended as
-a user response. In general, you should not use the ***message*** parameter in
-your agent code unless it is specifically to provide information to a user or
-request information from a user. The following code example show how to provide
-information to a user during workflow execution:
+    State is written with `ctx.Session().State().Set(key, value)` and read
+    with `.Get(key)`. The `session` package defines prefix constants that map
+    to the same lifetime scopes as Python's state parameter. This pattern
+    applies to prebuilt workflow agents and to tools and callbacks in any
+    agent style:
 
-```python
-async def user_message(node_input: str):
-  """Tell user research process is starting."""
-  yield Event(message="Beginning research process...")
-```
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:state-scopes"
+    ```
 
-### Event `state` parameter
+    !!! warning "Caution: state data limitations"
 
-The ***state*** parameter of an ***Event*** is used to maintain a small set of
-data values during an entire ADK session. Values in the state parameter
-automatically persist between Nodes and are meant for guiding the execution of
-more complex workflows. Nodes can modify state values, and the modified state
-values are available to downstream Nodes.The following code example shows how
-state is persisted across nodes:
+        Session state is a lightweight key-value store. Do not use it to persist
+        large payloads such as file contents or binary data. Use ADK artifacts
+        or external storage tools instead.
 
-```python
-async def init_state_node(attempts: int = 0):
-  yield Event(
-      state={
-          "attempts": attempts,
-      },
-  )
+    !!! tip "workflow package: prefer Event.Output over state"
 
-async def task_attempt_node(node_input: Content, attempts: int):
-  yield Event(
-      state={
-          "attempts": attempts + 1,
-      },
-  )
+        For the `workflow` package (`FunctionNode`, `AgentNode`, `DynamicNode`),
+        pass data between nodes by returning typed values — the framework sets
+        `Event.Output` automatically. Only use `State().Set` when you need to
+        share values with tools, callbacks, or agent `Instruction` templates.
 
-async def read_state_node(ctx: Context):
-  print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
+## Constrain node data with schemas
 
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", init_state_node, task_attempt_node, read_state_node)],
-)
-```
+You can set input and output data schemas to constrain the data formats
+accepted and produced by any agent node.
 
-!!! warning "Caution: `state` property data limitations"
+=== "Python"
 
-    The state parameter *should not be used to persist large amounts of data* between
-    nodes. Use artifacts or other data persistence mechanisms, such as database
-    Tools, to persist large data resources during the life cycle of a Workflow.
+    Use `input_schema` and `output_schema` with a class that extends
+    ***BaseModel*** to constrain any agent's input and output:
 
-## Constrain node data input and output with schemas
+    ```python
+    from google.adk import Agent
+    from pydantic import BaseModel
 
-You can set input and output data schemas to constrain the input and output data
-formats of any node, including ***FunctionNodes*** and **Agents**. The following
-parameters are optional settings for any node. You can set both or either one of
-these parameters on any workflow node as required by your agent project.
+    class FlightSearchInput(BaseModel):
+        origin: str           # Airport code "SFO"
+        destination: str      # Airport code "CDG"
+        departure_date: date  # date(2026, 3, 15)
+        passengers: int = 1   # Number of passengers
 
--   **`input_schema`**: Set the expected input schema using a class that
-    extends ***BaseModel***.
--   **`output_schema`**: Set the required output schema using a class that
-    extends ***BaseModel***.
+    class FlightSearchOutput(BaseModel):
+        flights: list[Flight]
+        cheapest_price: float
 
-The code example below shows how to set both input and output schemas for a
-subagent.
+    flight_searcher = Agent(
+        name="flight_searcher",
+        instruction="Search for available flights.",
+        input_schema=FlightSearchInput,
+        output_schema=FlightSearchOutput,
+        tools=[search_flights_api],
+        mode="single_turn",
+        ...
+    )
 
-```python
-from google.adk import Agent
-from pydantic import BaseModel
+    assistant = Agent(
+        name="assistant",
+        instruction="You help users plan trips.",
+        sub_agents=[flight_searcher],
+        ...
+    )
+    ```
 
-class FlightSearchInput(BaseModel):
-    origin: str           # Airport code "SFO"
-    destination: str      # Airport code "CDG"
-    departure_date: date  # date(2026, 3, 15)
-    passengers: int = 1   # Number of passengers
+=== "Go"
 
-class FlightSearchOutput(BaseModel):
-    flights: list[Flight]
-    cheapest_price: float
+    **workflow package**: use `workflow.NewAgentNodeTyped[Input, Output]` to
+    attach schemas to an agent node. The generic type parameters are reflected
+    into `*jsonschema.Schema` automatically — no hand-built schema construction
+    needed. The node's `Event.Output` carries the structured result to the
+    successor — no `OutputKey` or state write is needed:
 
-flight_searcher = Agent(
-    name="flight_searcher",
-    instruction="Search for available flights.",
-    input_schema=FlightSearchInput,
-    output_schema=FlightSearchOutput,
-    tools=[search_flights_api],
-    mode="single_turn",
-    ...
-)
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:input-output-schema"
+    ```
 
-assistant = Agent(
-    name="assistant",
-    instruction="You help users plan trips.",
-    sub_agents=[flight_searcher],
-    ...
-)
-```
+    **Prebuilt workflow agents**: set `InputSchema` and `OutputSchema` on
+    `llmagent.Config`. `OutputSchema` forces the model to reply with a JSON
+    object matching the schema (the agent cannot use tools when `OutputSchema`
+    is set). Use `OutputKey` to save the JSON string to state for downstream
+    agents to reference via `{key}` in their `Instruction`.
 
 ## Access structured data in agents
 
-When you pass structured data into an agent from subagent or a workflow node,
-such as a Function Node, you can use specific syntax to add that data into the
-agent's instructions. Specifically, you can use the curly braces `{ }` to select
-the input schema properties, or `< >` to specify the input schema properties,
-the `from` keyword, and the name of the node providing the data. The following
-code snippet shows two ways to include data passed through an agent
-***input schema***:
+=== "Python"
 
-```python
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
+    Use the curly-brace `{ }` syntax to select properties from the input
+    schema, or `< >` to select a property and also qualify it by the name
+    of the source node:
 
-def lookup_time_function(city: str):
-    """Simulate returning the current time in the specified city."""
-    return Event(output=CityTime(time_info='10:10 AM', city=city))
+    ```python
+    class CityTime(BaseModel):
+        time_info: str  # time information
+        city: str       # city name
 
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
+    def lookup_time_function(city: str):
+        """Simulate returning the current time in the specified city."""
+        return Event(output=CityTime(time_info='10:10 AM', city=city))
 
-    # data selection based on class and parameter
-    # instruction="""
-    #     Return a sentence in the following format:
-    #     It is {CityTime.time_info} in {CityTime.city} right now.
-    # """,
+    city_report_agent = Agent(
+        name="city_report_agent",
+        model="gemini-flash-latest",
+        input_schema=CityTime,
 
-    # more restrictive data selection based on source node name
-    instruction="""
-        Return a sentence in the following format:
-        It is <CityTime.time_info from lookup_time_function> in
-        <CityTime.city from lookup_time_function> right now.
-    """,
-)
+        # data selection based on class and parameter
+        # instruction="""
+        #     Return a sentence in the following format:
+        #     It is {CityTime.time_info} in {CityTime.city} right now.
+        # """,
 
-root_agent = Workflow(
-    name="root_agent",
-    edges=[
-        (START, city_generator_agent, lookup_time_function, city_report_agent)
-    ],
-)
-```
+        # more restrictive data selection based on source node name
+        instruction="""
+            Return a sentence in the following format:
+            It is <CityTime.time_info from lookup_time_function> in
+            <CityTime.city from lookup_time_function> right now.
+        """,
+    )
 
-For a complete, but simplified version of this workflow, see
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[
+            (START, city_generator_agent, lookup_time_function, city_report_agent)
+        ],
+    )
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, a `FunctionNode` returns a typed struct and the
+    framework serializes it into `Event.Output`. The successor `AgentNode`
+    receives the struct as its user content — the fields are available to the
+    agent's `Instruction` without any `{key}` template syntax. This is the
+    direct equivalent of Python's `input_schema=CityTime` with
+    `{CityTime.time_info}` template placeholders: the struct fields are
+    delivered as typed input rather than looked up by name from state.
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/data-handling/main.go:structured-output"
+    ```
+
+For a complete example of this workflow, see
 [Graph-based agent workflows](/graphs/#get-started).
 
 ================
@@ -19746,7 +20450,7 @@ File: docs/graphs/dynamic.md
 # Dynamic agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 The ADK framework provides a programmatic way to define workflows as a more
@@ -19759,20 +20463,21 @@ manage.
 
 Dynamic workflows in ADK allow you to put aside graph-based path structures and
 use the full power of your chosen programming language to build workflows. With
-Dynamic workflows, you can create workflows with simple decorators, invoke
-workflow nodes as functions, and build complex routing logic. Here are some of
-the benefits of dynamic workflows in ADK:
+dynamic workflows, you can create workflows with simple decorators (Python) or
+constructor functions (Go), invoke workflow nodes as functions, and build
+complex routing logic. Here are some of the benefits of dynamic workflows in ADK:
 
 -   **Flexible Control Flow:** Define execution order dynamically using
     loops, conditionals, and recursion which are difficult or impossible to
     represent in static graphs.
 -   **Programmatic Experience:** Use familiar constructs like `while` loops
-    and `async/await` instead of graph-based routing.
+    and `async/await` (Python) or `for` loops and `workflow.RunNode` (Go)
+    instead of graph-based routing.
 -   **Automatic Checkpointing:** Dynamic workflows track each node
     execution. Successful sub-nodes are automatically skipped when resuming the
     workflow, making complex logic durable and resumable by default.
 -   **Encapsulation:** Wrap business logic into *parent* nodes that
-    internally compose lower-level nodes, keeping the overall workflow graph
+    internally compose lower-level nodes, keeping the overall workflow
     clean and manageable.
 
 ## Get started
@@ -19780,155 +20485,244 @@ the benefits of dynamic workflows in ADK:
 The following dynamic workflow code example shows how to define a basic
 workflow containing a single node with a function:
 
-```python
-from google.adk import Context
-from google.adk import Workflow
-from google.adk.workflow import node
-from typing import Any
+=== "Python"
 
-@node(name="hello_node")
-def my_node(node_input: Any):
-    return "Hello World"
+    ```python
+    from google.adk import Context
+    from google.adk import Workflow
+    from google.adk.workflow import node
+    from typing import Any
 
-# define a dynamic workflow node
-@node(rerun_on_resume=True)
-async def my_workflow(ctx: Context, node_input: str) -> str:
-    # run_node executes a node and returns its output
-    result = await ctx.run_node(my_node, node_input="hello")
-    return result
+    @node(name="hello_node")
+    def my_node(node_input: Any):
+        return "Hello World"
 
-# Run the workflow
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", my_workflow)],
-)
-```
+    # define a dynamic workflow node
+    @node(rerun_on_resume=True)
+    async def my_workflow(ctx: Context, node_input: str) -> str:
+        # run_node executes a node and returns its output
+        result = await ctx.run_node(my_node, node_input="hello")
+        return result
 
-This example uses the [***@node***](#node) annotation for convenience and to
-keep the written code as simple as possible. This annotation generates wrappers
-that allow the code to be run in the context of an ADK dynamic workflow.
+    # Run the workflow
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[("START", my_workflow)],
+    )
+    ```
+
+    This example uses the [***@node***](#node) annotation for convenience and to
+    keep the written code as simple as possible. This annotation generates wrappers
+    that allow the code to be run in the context of an ADK dynamic workflow.
+
+=== "Go"
+
+    In Go, `workflow.NewFunctionNode` replaces the `@node` decorator and
+    `workflow.NewDynamicNode` replaces the `@node(rerun_on_resume=True)` async
+    orchestrator. `workflow.RunNode` is the direct equivalent of
+    `ctx.run_node()`. `workflowagent.New` with `workflow.Chain` replaces
+    `Workflow(edges=[...])`.
+
+    Resume behaviour after a human-in-the-loop pause is controlled by
+    `NodeConfig.RerunOnResume` — see [Nodes](#node) below for details.
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:get-started"
+    ```
 
 ## Building blocks: nodes and workflows
 
 Nodes and workflows represent the basic building blocks of ADK's dynamic
-workflows. These classes provide the functionality required to wrap your code so
-it can be integrated into code-based workflows in ADK.
+workflows. These types and functions provide the functionality required to
+wrap your code so it can be integrated into code-based workflows in ADK.
 
-### Nodes and @node {#node}
+### Nodes {#node}
 
-A dynamic workflow in ADK is composed of *nodes*, which are classes derived
-from ***BaseNode***. A simple version of a usable workflow node is a
-***FunctionNode***, which allows you to wrap code with functionality required to
-run within a ***Workflow***. For convenience, the ADK framework provides the
-***@node*** annotation which generates the node wrapper, keeping boilerplate
-wrapper code to a minimum:
+A dynamic workflow in ADK is composed of *nodes*. A simple version of a
+usable workflow node wraps a plain function with the metadata required to
+run within a workflow.
 
-```python
-@node(name="hello_node")
-def my_function_node(node_input: Any):
-    return "Hello World"
-```
+=== "Python"
 
-The following code snippet shows the equivalent code *without* the
-***@node*** annotation:
+    In Python, the ***@node*** annotation generates the node wrapper, keeping
+    boilerplate to a minimum:
 
-```python
-# base function
-def my_function_node(node_input: Any):
-    return "Hello World"
+    ```python
+    @node(name="hello_node")
+    def my_function_node(node_input: Any):
+        return "Hello World"
+    ```
 
-# FunctionNode wrapper with options
-success_node = FunctionNode(
-    my_function_node,
-    name="hello",
-    rerun_on_resume=True,
-)
-```
+    The following code snippet shows the equivalent code *without* the
+    ***@node*** annotation:
 
-Creating the node wrapper code yourself can be useful if you are wrapping
-functions from an external library, need to create multiple nodes from the same
-function with different configurations, or if you are managing node references
-in a registry for advanced orchestration.
+    ```python
+    # base function
+    def my_function_node(node_input: Any):
+        return "Hello World"
+
+    # FunctionNode wrapper with options
+    success_node = FunctionNode(
+        my_function_node,
+        name="hello",
+        rerun_on_resume=True,
+    )
+    ```
+
+    Creating the node wrapper code yourself can be useful if you are wrapping
+    functions from an external library, need to create multiple nodes from the
+    same function with different configurations, or if you are managing node
+    references in a registry for advanced orchestration.
+
+=== "Go"
+
+    In Go, `workflow.NewFunctionNode[IN, OUT]` wraps a plain function as a
+    workflow node, inferring input and output types from the generic parameters.
+    There is no decorator syntax; the node is a value that you pass as a child
+    to `workflow.RunNode` inside a dynamic orchestrator:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:building-blocks-nodes"
+    ```
+
+    `NodeConfig` holds the same options as Python's `@node` arguments.
+    The most important field is `RerunOnResume *bool`, which controls what
+    happens when a workflow resumes after a human-in-the-loop pause:
+
+    -   **`&true` (re-entry mode)**: the interrupted node is re-run from the
+        beginning on resume. Use this for dynamic orchestrator nodes that call
+        `workflow.RunNode` in a loop — the body re-executes and already-completed
+        child activations are skipped automatically (checkpointing). This mirrors
+        Python's `@node(rerun_on_resume=True)`.
+    -   **`&false` (handoff mode)**: the resume payload is routed directly to
+        the node's successor as input, bypassing the interrupted node entirely.
+        Use this for leaf nodes that simply emit a pause event and expect the
+        human response to flow to the next step.
+    -   **`nil`**: the default depends on node type. `workflow.NewDynamicNode`
+        automatically sets `nil → &true` (re-entry mode), because an
+        orchestrator body must be re-entered on resume to deliver cached child
+        results. `workflow.NewFunctionNode` and other leaf node constructors
+        leave `nil` as-is, which the engine treats as handoff (`&false`).
+        Explicit `&false` is always respected on any node type.
+
+    ```go
+    // NewDynamicNode: nil RerunOnResume is automatically set to &true.
+    // Passing &rerun explicitly is equivalent and makes the intent clear.
+    rerun := true
+    orchestratorNode := workflow.NewDynamicNode[string, string]("my_workflow",
+        myOrchestratorfn,
+        workflow.NodeConfig{RerunOnResume: &rerun}, // re-entry: node body re-runs on resume
+    )
+
+    // NewFunctionNode: nil RerunOnResume stays nil → engine treats as handoff.
+    handoffNode := workflow.NewFunctionNode("leaf_node",
+        myLeafFn,
+        workflow.NodeConfig{}, // nil RerunOnResume → handoff for FunctionNode
+    )
+    ```
+
 
 ### Workflows
 
-In an ADK dynamic workflow, you use the ***Workflow*** class as a primary
-container for orchestrating nodes. You use a node to define a dynamic workflow
-with code that manages running nodes and the execution logic (order and paths)
-for those nodes, as shown in the following code sample:
+In an ADK dynamic workflow, you use a dynamic node as the primary
+orchestrator for nodes. A dynamic node manages running child nodes and the
+execution logic (order and paths) for those nodes.
 
-```python
-@node(rerun_on_resume=True)
-async def my_workflow(ctx):
-    # run_node executes a node and returns its output
-    result = await ctx.run_node(my_function_node, node_input="Hello")
-    result_formatted = await ctx.run_node(my_formatting_node, node_input=result)
-    return result_formatted
+=== "Python"
 
-# Run the workflow
-root_agent = Workflow(
-    name="root_agent",
-    edges=[("START", my_workflow)],
-)
-```
+    ```python
+    @node(rerun_on_resume=True)
+    async def my_workflow(ctx):
+        # run_node executes a node and returns its output
+        result = await ctx.run_node(my_function_node, node_input="Hello")
+        result_formatted = await ctx.run_node(my_formatting_node, node_input=result)
+        return result_formatted
+
+    # Run the workflow
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[("START", my_workflow)],
+    )
+    ```
+
+=== "Go"
+
+    `workflow.NewDynamicNode` creates an orchestrator whose body calls
+    `workflow.RunNode` for each child step. `workflowagent.New` with
+    `workflow.Chain(workflow.Start, myWorkflow)` is the equivalent of
+    `Workflow(edges=[("START", my_workflow)])`:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:building-blocks-workflow"
+    ```
 
 ## Data handling
 
 When using dynamic workflows with ADK, passing data is simpler than
-[graph-based workflows](/graphs/) because, with a workflow,
-the ***Context*** class's ***run_node()*** method returns the node's output
-directly. This eliminates the need to directly handle session state or complex
-routing outputs for data transfer. The following code example shows how you can
-pass string data between an agent node and a function node:
+[graph-based workflows](/graphs/) because `workflow.RunNode` returns the
+child node's output directly as a typed Go value — eliminating the need to
+manually read and write session state keys for data transfer.
 
-```python
-from google.adk import Context
-from google.adk.workflow import node
+=== "Python"
 
-@node(rerun_on_resume=True)
-async def editorial_workflow(ctx: Context, user_request: str):
-    # Agent Node generates output
-    raw_draft = await ctx.run_node(draft_agent, user_request)
+    ```python
+    from google.adk import Context
+    from google.adk.workflow import node
 
-    # Function Node formats text
-    formatted_text = await ctx.run_node(format_function_node, raw_draft)
+    @node(rerun_on_resume=True)
+    async def editorial_workflow(ctx: Context, user_request: str):
+        # Agent Node generates output
+        raw_draft = await ctx.run_node(draft_agent, user_request)
 
-    return formatted_text
-```
+        # Function Node formats text
+        formatted_text = await ctx.run_node(format_function_node, raw_draft)
 
-You can also pass specific data schemas using defined class and configure input
-and output schemas, similar to graph-based workflow nodes, as shown in the
-following code example:
+        return formatted_text
+    ```
 
-```python
-from google.adk import Agent
-from google.adk import Context
-from google.adk.workflow import node
-from pydantic import BaseModel
+    You can also pass specific data schemas using a defined class and configure
+    input and output schemas, similar to graph-based workflow nodes:
 
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
+    ```python
+    from google.adk import Agent
+    from google.adk import Context
+    from google.adk.workflow import node
+    from pydantic import BaseModel
 
-@node
-def city_time_function(city: str):
-    """Simulate returning the current time in a specified city."""
-    return CityTime(time_info="10:10 AM", city=city)
+    class CityTime(BaseModel):
+        time_info: str  # time information
+        city: str       # city name
 
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
-    instruction="""output the data provided by the previous node.""",
-)
+    @node
+    def city_time_function(city: str):
+        """Simulate returning the current time in a specified city."""
+        return CityTime(time_info="10:10 AM", city=city)
 
-@node # workflow node
-async def city_workflow(ctx: Context):
-    city_time = await ctx.run_node(city_time_function, "Paris")
-    report_text = await ctx.run_node(city_report_agent, city_time)
+    city_report_agent = Agent(
+        name="city_report_agent",
+        model="gemini-flash-latest",
+        input_schema=CityTime,
+        instruction="""output the data provided by the previous node.""",
+    )
 
-    return report_text
-```
+    @node # workflow node
+    async def city_workflow(ctx: Context):
+        city_time = await ctx.run_node(city_time_function, "Paris")
+        report_text = await ctx.run_node(city_report_agent, city_time)
+
+        return report_text
+    ```
+
+=== "Go"
+
+    In Go, `workflow.NewAgentNode` wraps an `agent.Agent` so it can be
+    invoked via `workflow.RunNode` inside a dynamic orchestrator. The output
+    of each `RunNode` call is returned as a typed value — no session state
+    reads are required:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:data-handling"
+    ```
 
 For more information on data handling between workflow nodes, see
 [Data handling for agent workflows](/graphs/data-handling/).
@@ -19943,138 +20737,199 @@ the techniques that you can use for routing.
 ### Sequence route
 
 You can create sequential task processing with dynamic workflows in ADK, just
-as you can with graph-based workflows. The following code snippet shows a
-dynamic workflow with an agent, a function node, and a second agent:
+as you can with graph-based workflows.
 
-```python
-@node # workflow node
-async def city_workflow(ctx: Context):
-    city = await ctx.run_node(city_generator_agent)
-    city_time = await ctx.run_node(city_time_function, city)
-    report_text = await ctx.run_node(city_report_agent, city_time)
+=== "Python"
 
-    return report_text
-```
+    The following code snippet shows a dynamic workflow with an agent, a
+    function node, and a second agent:
+
+    ```python
+    @node # workflow node
+    async def city_workflow(ctx: Context):
+        city = await ctx.run_node(city_generator_agent)
+        city_time = await ctx.run_node(city_time_function, city)
+        report_text = await ctx.run_node(city_report_agent, city_time)
+
+        return report_text
+    ```
+
+=== "Go"
+
+    Call `workflow.RunNode` sequentially inside a `NewDynamicNode` body —
+    each call awaits the child before the next one starts. The
+    [data handling example above](#data-handling) demonstrates exactly this
+    pattern: `cityWorkflow` calls `workflow.RunNode` for `cityTimeNode` and
+    then `cityReportNode` in order, passing each node's typed output to the
+    next.
 
 ### Loop route
 
 For workflows where you want to use an iterative loop for a task, dynamic
-workflows offer much more flexibility to define the routing logic you need. The
-following code example shows how to use dynamic workflows to construct a
-workflow loop for generating, reviewing, and updating code:
+workflows offer much more flexibility to define the routing logic you need.
 
-```python
-from google.adk import Context
-from google.adk import Event
-from google.adk.agents import LlmAgent
-from google.adk.workflow import node
+=== "Python"
 
-coder_agent = LlmAgent(
-    name="generator_agent",
-    model="gemini-flash-latest",
-    instruction="Write python code for user request.",
-    output_schema=str,
-)
+    The following code example shows how to use dynamic workflows to construct
+    a workflow loop for generating, reviewing, and updating code:
 
-@node(name="lint_reviewer")
-async def compile_lint_check(ctx: Context, code: str):
-    # Simulate API call or lint check
-    class Response:
-        findings = ""
-    return Response()
+    ```python
+    from google.adk import Context
+    from google.adk import Event
+    from google.adk.agents import LlmAgent
+    from google.adk.workflow import node
 
-fixer_agent = LlmAgent(
-    name="fixer_agent",
-    model="gemini-flash-latest",
-    instruction="""Refactor current code {code}.
-        Based on compile & lint review: {findings}""",
-    output_schema=str,
-)
+    coder_agent = LlmAgent(
+        name="generator_agent",
+        model="gemini-flash-latest",
+        instruction="Write python code for user request.",
+        output_schema=str,
+    )
 
-@node # workflow node
-async def code_workflow(ctx: Context, user_request: str):
-  code = await ctx.run_node(coder_agent, user_request)
-  check_resp = await ctx.run_node(compile_lint_check, code)
+    @node(name="lint_reviewer")
+    async def compile_lint_check(ctx: Context, code: str):
+        # Simulate API call or lint check
+        class Response:
+            findings = ""
+        return Response()
 
-  while check_resp.findings:
-    yield Event(state={"code": code, "findings": check_resp.findings})
-    code = await ctx.run_node(fixer_agent, {"code": code, "findings": check_resp.findings})
+    fixer_agent = LlmAgent(
+        name="fixer_agent",
+        model="gemini-flash-latest",
+        instruction="""Refactor current code {code}.
+            Based on compile & lint review: {findings}""",
+        output_schema=str,
+    )
 
-    check_resp = await ctx.run_node(compile_lint_check, code)
+    @node # workflow node
+    async def code_workflow(ctx: Context, user_request: str):
+      code = await ctx.run_node(coder_agent, user_request)
+      check_resp = await ctx.run_node(compile_lint_check, code)
 
-  return code
-```
+      while check_resp.findings:
+        yield Event(state={"code": code, "findings": check_resp.findings})
+        code = await ctx.run_node(fixer_agent, {"code": code, "findings": check_resp.findings})
+
+        check_resp = await ctx.run_node(compile_lint_check, code)
+
+      return code
+    ```
+
+=== "Go"
+
+    In Go, the loop is a plain `for` loop inside the dynamic node body. The
+    lint check node returns an empty string when there are no findings,
+    which signals the loop to exit:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:loop-route"
+    ```
 
 ### Parallel execution routes
 
-Dynamic workflows in ADK can support parallel execution, and you can use
-standard asynchronous libraries, such as `asyncio`, to build this
-functionality. The following code example shows how to build a workflow node
-that supports parallel execution using `@node` and `asyncio.gather`:
+Dynamic workflows in ADK can support parallel execution.
 
-```python
-import asyncio
-from typing import Any
-from google.adk import Context
-from google.adk.workflow import BaseNode, node
+=== "Python"
+
+    In Python, you can use `asyncio.gather` to build parallel execution:
+
+    ```python
+    import asyncio
+    from typing import Any
+    from google.adk import Context
+    from google.adk.workflow import BaseNode, node
 
 
-@node(rerun_on_resume=True)
-async def parallel_supervisor(
-    ctx: Context, node_input: list[Any], real_node: BaseNode
-):
-    """Runs a worker node in parallel for each item in the input list."""
-    tasks = []
-    for item in node_input:
-        # ctx.run_node returns a future. Append instead of awaiting immediately.
-        tasks.append(ctx.run_node(real_node, item))
+    @node(rerun_on_resume=True)
+    async def parallel_supervisor(
+        ctx: Context, node_input: list[Any], real_node: BaseNode
+    ):
+        """Runs a worker node in parallel for each item in the input list."""
+        tasks = []
+        for item in node_input:
+            # ctx.run_node returns a future. Append instead of awaiting immediately.
+            tasks.append(ctx.run_node(real_node, item))
 
-    # Collect all results in parallel
-    results = await asyncio.gather(*tasks)
-    return results
-```
+        # Collect all results in parallel
+        results = await asyncio.gather(*tasks)
+        return results
+    ```
 
-!!! tip "Tip: Resuming parallel nodes"
+    !!! tip "Tip: Resuming parallel nodes"
 
-    The workflow framework ensures that if a dynamic workflow is resumed, only
-    failed or interrupted worker nodes are re-executed, including parallel worker
-    nodes.
+        The workflow framework ensures that if a dynamic workflow is resumed,
+        only failed or interrupted worker nodes are re-executed, including
+        parallel worker nodes.
+
+=== "Go"
+
+    In Go, `workflow.NewParallelWorker` wraps a child node and runs it
+    concurrently for each element of a list input, collecting results into a
+    single output slice. The `maxConcurrency` parameter caps how many
+    concurrent activations may run simultaneously; `0` means unlimited:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:parallel-route"
+    ```
+
+    !!! tip "Tip: Resuming parallel nodes"
+
+        The workflow framework ensures that if a dynamic workflow is resumed,
+        only failed or interrupted worker nodes are re-executed, including
+        parallel worker nodes managed by `NewParallelWorker`.
 
 ## Human input
 
 Dynamic workflows in ADK can also include human input or human in the loop
-(HITL) steps. You build human input into workflows by yielding a
-***RequestInput*** from a node, which pauses the workflow and waits for user
-input. The following code example shows how to build a human input node and
-include it in a workflow:
+(HITL) steps.
 
-```python
-from typing import Any
-from google.adk import Context
-from google.adk.events import RequestInput
-from google.adk.workflow import node
+=== "Python"
 
+    You build human input into workflows by yielding a ***RequestInput*** from
+    a node, which pauses the workflow and waits for user input. The following
+    code example shows how to build a human input node and include it in a
+    workflow:
 
-@node(rerun_on_resume=False)
-async def get_user_approval(ctx: Context, node_input: Any):
-    """Yields a RequestInput to pause the workflow and wait for user input."""
-    yield RequestInput(message="Please approve this request (Yes/No)")
+    ```python
+    from typing import Any
+    from google.adk import Context
+    from google.adk.events import RequestInput
+    from google.adk.workflow import node
 
 
-@node(rerun_on_resume=True)
-async def handle_process(ctx: Context, node_input: Any):
-    """The orchestrator calling the interactive step."""
-    user_response = await ctx.run_node(get_user_approval)
+    @node(rerun_on_resume=False)
+    async def get_user_approval(ctx: Context, node_input: Any):
+        """Yields a RequestInput to pause the workflow and wait for user input."""
+        yield RequestInput(message="Please approve this request (Yes/No)")
 
-    if user_response.lower() == "yes":
-        return "Approved"
-    return "Denied"
-```
 
-!!! important "Important: Parent nodes with `ctx.run_node`"
+    @node(rerun_on_resume=True)
+    async def handle_process(ctx: Context, node_input: Any):
+        """The orchestrator calling the interactive step."""
+        user_response = await ctx.run_node(get_user_approval)
 
-    Parent nodes in dynamic workflows that call `ctx.run_node` must set
-    `rerun_on_resume=True` to handle interruptions properly.
+        if user_response.lower() == "yes":
+            return "Approved"
+        return "Denied"
+    ```
+
+    !!! important "Important: Parent nodes with `ctx.run_node`"
+
+        Parent nodes in dynamic workflows that call `ctx.run_node` must set
+        `rerun_on_resume=True` to handle interruptions properly.
+
+=== "Go"
+
+    In Go, use `workflow.NewEmittingFunctionNode` with
+    `workflow.ResumeOrRequestInput` to implement the re-entry HITL pattern.
+    On the first pass `ResumeOrRequestInput` emits a `session.RequestInput`
+    event and returns `ErrNodeInterrupted`, pausing the workflow. After the
+    human replies, the node is re-run from the top (`RerunOnResume: &true`)
+    and `ResumeOrRequestInput` returns the human's reply directly:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:human-input"
+    ```
 
 ## Advanced features
 
@@ -20094,51 +20949,61 @@ or re-run workflow.
 #### Custom execution IDs
 
 In some rare cases, you may need to have stable identifiers, such as when
-processing a reorderable list, you can supply a custom ID when running a node.
-In general, you should avoid this due to the impacts to workflow task retries
-and process resumes. Specifically, these IDs are used to check node states and
-skip execution if a node was already run. If you provide custom IDs, make sure
-they are deterministic for workflow re-runs and logically remain the same for
-the input. The following example code shows how to add such an identifier when
-executing node in a workflow:
+processing a reorderable list. In general, you should avoid this due to the
+impacts to workflow task retries and process resumes. Specifically, these IDs
+are used to check node states and skip execution if a node was already run. If
+you provide custom IDs, make sure they are deterministic for workflow re-runs
+and logically remain the same for the input.
 
 !!! warning "Warning: Custom execution IDs"
 
-    Avoid creating custom execution IDs. Since execution IDs are used to determine
-    the execution order of nodes, custom execution IDs can cause problems when the
-    system attempts to re-run those nodes in your workflow.
+    Avoid creating custom execution IDs. Since execution IDs are used to
+    determine the execution order of nodes, custom execution IDs can cause
+    problems when the system attempts to re-run those nodes in your workflow.
 
-```python
-from google.adk import Context
-from google.adk.workflow import node
-from pydantic import BaseModel
-from typing import Any
-import asyncio
+=== "Python"
 
-class Order(BaseModel):
-  order_id: str
-  cart_items: list[Product]
+    ```python
+    from google.adk import Context
+    from google.adk.workflow import node
+    from pydantic import BaseModel
+    from typing import Any
+    import asyncio
 
-@node(rerun_on_resume=True)
-async def process_all_orders(ctx: Context, node_input: Any):
-  orders = await get_orders()
+    class Order(BaseModel):
+      order_id: str
+      cart_items: list[Product]
 
-  process_tasks = []
-  for order in orders:
-    # Use run_id to provide a custom identifier.
-    # Custom run_ids must contain at least one non-numeric character
-    # to avoid collision with auto-generated sequential numeric IDs.
-    task = ctx.run_node(process_order, order, run_id=f"order-{order.order_id}")
-    process_tasks.append(task)
+    @node(rerun_on_resume=True)
+    async def process_all_orders(ctx: Context, node_input: Any):
+      orders = await get_orders()
 
-  results = await asyncio.gather(*process_tasks)
-  return results
-```
+      process_tasks = []
+      for order in orders:
+        # Use run_id to provide a custom identifier.
+        # Custom run_ids must contain at least one non-numeric character
+        # to avoid collision with auto-generated sequential numeric IDs.
+        task = ctx.run_node(process_order, order, run_id=f"order-{order.order_id}")
+        process_tasks.append(task)
 
-By default, auto-generated run IDs are sequential integers starting from
-`"1"` (represented as strings). Custom `run_id` values must contain at
-least one non-numeric character to avoid collisions with these
-auto-generated IDs.
+      results = await asyncio.gather(*process_tasks)
+      return results
+    ```
+
+    By default, auto-generated run IDs are sequential integers starting from
+    `"1"` (represented as strings). Custom `run_id` values must contain at
+    least one non-numeric character to avoid collisions with these
+    auto-generated IDs.
+
+=== "Go"
+
+    In Go, pass `workflow.WithRunID("order-x")` as a trailing option to
+    `workflow.RunNode`. The ID must contain at least one non-numeric character
+    to avoid collision with the auto-generated sequential counter IDs:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/dynamic/main.go:custom-execution-ids"
+    ```
 
 ================
 File: docs/graphs/human-input.md
@@ -20146,7 +21011,7 @@ File: docs/graphs/human-input.md
 # Human input for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Being able to request human input for data input, decision verification, or
@@ -20158,113 +21023,198 @@ the input process more predictable and reliable.
 
 ## Get started
 
-You can implement a human input node in a graph using the ***RequestInput***
-class and a text prompt for the user. The following code example shows how to
-add a human input node to an Workflow graph:
+=== "Python"
 
-```python
-from google.adk.events import RequestInput
-from google.adk import Workflow
+    You can implement a human input node in a graph using the ***RequestInput***
+    class and a text prompt for the user. The following code example shows how to
+    add a human input node to a Workflow graph:
 
-def step1(): # Human input step
-  yield RequestInput(message="Enter a number:")
+    ```python
+    from google.adk.events import RequestInput
+    from google.adk import Workflow
 
-def step2(node_input):
-  return node_input * 2
+    def step1(): # Human input step
+      yield RequestInput(message="Enter a number:")
 
-root_agent = Workflow(
-    name="root_agent",
-    edges=[('START', step1, step2)],
-)
-```
+    def step2(node_input):
+      return node_input * 2
 
-In this code example, `step1` pauses the execution of the agent until the
-system receives an input from a user. Once the system receives input from the
-user, that input is passed to the next node.
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[('START', step1, step2)],
+    )
+    ```
+
+    In this code example, `step1` pauses the execution of the agent until the
+    system receives an input from a user. Once the system receives input from the
+    user, that input is passed to the next node.
+
+=== "Go"
+
+    In ADK Go v2.0.0, a HITL graph node is built with
+    `workflow.NewEmittingFunctionNode` and `workflow.ResumeOrRequestInput`.
+    This is the direct equivalent of Python's `RequestInput` node:
+
+    -   On the **first pass**, `workflow.ResumeOrRequestInput` emits a
+        `session.RequestInput` event (surfaced as `Event.RequestedInput`) and
+        returns `ErrNodeInterrupted`, pausing the workflow.
+    -   After the human replies, the node is **re-invoked from the top**
+        (`RerunOnResume: &true`) and `ResumeOrRequestInput` returns the reply
+        payload, which flows as typed input to the next node via `event.Output`.
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/human-input/main.go:graph-hitl-get-started"
+    ```
 
 ## Configuration options
 
-Human input nodes can use the ***RequestInput*** class with the following
-configuration options:
+=== "Python"
 
--   **`message`:** Text provided to the user to explain the human input
-    request.
--   **`payload`:** Structured data to be used as part of the human input
-    request.
--   **`response_schema`:** A data structure the human response must conform to.
+    Human input nodes can use the ***RequestInput*** class with the following
+    configuration options:
 
-!!! note "Note: Response schema input limitations"
+    -   **`message`:** Text provided to the user to explain the human input
+        request.
+    -   **`payload`:** Structured data to be used as part of the human input
+        request.
+    -   **`response_schema`:** A data structure the human response must conform to.
 
-    For the **response_schema** setting, the ***RequestInput*** class does not
-    automatically reformat human responses to fit a specified data structure. The
-    human response must be provided in the specified format. For a better user
-    experience, consider providing a user interface to collect structured data
-    or use an Agent node to conform unstructured data to the format required.
+    !!! note "Note: Response schema input limitations"
+
+        For the **response_schema** setting, the ***RequestInput*** class does not
+        automatically reformat human responses to fit a specified data structure. The
+        human response must be provided in the specified format. For a better user
+        experience, consider providing a user interface to collect structured data
+        or use an Agent node to conform unstructured data to the format required.
+
+=== "Go"
+
+    `session.RequestInput` carries the following fields, which map directly to
+    Python's `RequestInput` parameters:
+
+    -   **`InterruptID`** (`string`): A unique identifier for this pause point.
+        Use a stable prefix plus a UUID to avoid collision across workflow runs.
+        Equivalent to the implicit interrupt ID in Python.
+    -   **`Message`** (`string`): Human-readable prompt displayed to the user.
+        Equivalent to Python's `message` parameter.
+    -   **`Payload`** (`any`): Optional structured data sent alongside the
+        prompt so the client can render additional context. Equivalent to
+        Python's `payload` parameter.
+
+    `workflow.NodeConfig.RerunOnResume` controls what happens on resume:
+
+    -   **`&true`**: the node body is re-run from the top; `ResumeOrRequestInput`
+        returns the human's reply on the second pass. Required for nodes that
+        use `ResumeOrRequestInput`.
+    -   **`&false`** or **`nil`** (leaf default): the reply is routed to the
+        node's successor as input, bypassing the interrupted node.
+
+    !!! note "Note: Structured response from the client"
+
+        ADK Go does not automatically parse or validate the structure of the
+        human's reply payload. If your workflow needs structured feedback,
+        include a UI or a downstream agent node to validate the response before
+        acting on it.
 
 ## Human input examples
 
-The following code examples demonstrate more detailed human input requests,
-including the use of ***message***, ***payload*** and ***response schema***
-parameters.
+The following code examples demonstrate more detailed human input requests.
 
-### Request input with response schema
+### Request input with a message and payload
 
-The following code sample shows how to construct a ***RequestInput*** object in
-a workflow node, including a ***response schema***:
+=== "Python"
 
-```python
-async def initial_prompt(ctx: Context):
-   """Ask the user for itinerary information"""
-   input_message = """
-       This is an interactive concierge workflow tasked with making you a great
-       itinerary for you in your city of choice. If you give some details about
-       yourself or what you are generally looking for I can better personalize
-       your itinerary.
-       For example, input your:
-           City (Required),
-           Age,
-           Hobby,
-           Example of attraction you liked
-   """
-   yield RequestInput(message=input_message, response_schema=str)
-```
+    The following code sample shows how to construct a ***RequestInput*** object
+    in a workflow node, including a ***payload*** and ***response schema***. In
+    this example, the `ActivitiesList` is expected to be completed by an agent
+    node that composes a list of activities, and the `get_user_feedback()` node
+    requests feedback from the user.
 
-### Request input with data payload
+    ```python
+    class ActivitiesList(BaseModel):
+       """Itinerary should be a list of dictionaries for each activity. Each
+       activity has a name and a description"""
+       itinerary: List[Dict[str, str]]
 
-The following code sample shows how to construct a ***RequestInput*** object in
-a workflow node, including a ***payload*** and ***response schema***. In this
-example, the `ActivitiesList` is expected to be completed by an agent node that
-composes a list of activities, and the `get_user_feedback()` node requests
-feedback for the user.
+    class UserFeedback(BaseModel):
+       """Expected response structure from the user."""
+       user_response: str
 
-```python
-class ActivitiesList(BaseModel):
-   """Itinerary should be a list of dictionaries for each activity. Each
-   activity has a name and a description"""
-   itinerary: List[Dict[str, str]]
-
-class UserFeedback(BaseModel):
-   """Expected response structure from the user."""
-   user_response: str
-
-async def get_user_feedback(node_input: ActivitiesList):
-   """
-   Retrieves the user's thoughts on the agents initial itinerary in order to
-   either expand on, change the list, or exit the loop
-   """
-   message = (
-       f"""
-       Here is your recommended base itinerary:\n{node_input}\n\n
-       Which of these items appeal to you (if any)?
+    async def get_user_feedback(node_input: ActivitiesList):
        """
-   )
+       Retrieves the user's thoughts on the agents initial itinerary in order to
+       either expand on, change the list, or exit the loop
+       """
+       message = (
+           f"""
+           Here is your recommended base itinerary:\n{node_input}\n\n
+           Which of these items appeal to you (if any)?
+           """
+       )
 
-   yield RequestInput(
-       message=message,
-       payload=node_input,
-        response_schema=UserFeedback,
-   )
-```
+       yield RequestInput(
+           message=message,
+           payload=node_input,
+            response_schema=UserFeedback,
+       )
+    ```
+
+=== "Go"
+
+    The following code sample shows a three-node graph: a builder node generates
+    a structured itinerary, a HITL node sends it as `Payload` alongside the
+    prompt, and a final node acts on the user's feedback. The `Payload` field
+    lets the client render the full itinerary for the user before they respond:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/human-input/main.go:graph-hitl-with-payload"
+    ```
+
+## Tool-confirmation: approval prompts in LLM agents
+
+Tool-confirmation is a separate, LLM-agent–level mechanism for yes/no
+approval prompts. Unlike graph HITL nodes, tool-confirmation works inside an
+`llmagent` tool function rather than as a standalone graph node. It is useful
+when you want an LLM agent to pause and ask for approval before executing a
+specific tool call.
+
+=== "Python"
+
+    The following code sample shows how to construct a ***RequestInput*** object
+    in a workflow node, including a ***response schema***:
+
+    ```python
+    async def initial_prompt(ctx: Context):
+       """Ask the user for itinerary information"""
+       input_message = """
+           This is an interactive concierge workflow tasked with making you a great
+           itinerary for you in your city of choice. If you give some details about
+           yourself or what you are generally looking for I can better personalize
+           your itinerary.
+           For example, input your:
+               City (Required),
+               Age,
+               Hobby,
+               Example of attraction you liked
+       """
+       yield RequestInput(message=input_message, response_schema=str)
+    ```
+
+=== "Go"
+
+    Set `RequireConfirmation: true` in `functiontool.Config` for a static
+    yes/no approval before a tool executes, or call `ctx.RequestConfirmation`
+    from inside the tool for a custom hint message:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/human-input/main.go:simple-hitl"
+    ```
+
+    For a custom hint with manual re-entry handling:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/human-input/main.go:hitl-with-hint"
+    ```
 
 ================
 File: docs/graphs/index.md
@@ -20272,7 +21222,7 @@ File: docs/graphs/index.md
 # Graph-based agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Graph-based agent workflows in ADK let you build agents with more precise control,
@@ -20304,63 +21254,92 @@ provide the following advantages:
 -   **Enhance reliability:** Improve the predictability of your agents by
     relying on structured node definitions rather than prompts alone.
 
+!!! note "Workflow styles in ADK"
+
+    ADK offers three complementary ways to compose multi-step work:
+
+    -   **Graph-based workflows** (this section): a declarative graph of nodes
+        and edges with explicit routing — best for deterministic, structured
+        processes.
+    -   **[Dynamic workflows](/graphs/dynamic/):** programmatic orchestration
+        in your own code (loops, conditionals, recursion) — best when the
+        control flow is too complex or iterative for a static graph.
+    -   **[Prebuilt workflow agents](/agents/workflow-agents/)** (sequential,
+        parallel, loop): higher-level building blocks for common patterns
+        without assembling a graph yourself.
+
 ## Get started
 
 This section describes how to get started with graph-based agents. The following
 example shows how to create a sequential graph-based agent workflow that
-generates a city name, looks up the current time in that city with code
+generates a city name, looks up the current time in that city with a code
 function, and the final agent reports the information.
 
-```python
-from google.adk import Agent
-from google.adk import Workflow
-from google.adk import Event
-from pydantic import BaseModel
+=== "Python"
 
-city_generator_agent = Agent(
-    name="city_generator_agent",
-    model="gemini-flash-latest",
-    instruction="""Return the name of a random city.
-      Return only the name, nothing else.""",
-    output_schema=str,
-)
+    ```python
+    from google.adk import Agent
+    from google.adk import Workflow
+    from google.adk import Event
+    from pydantic import BaseModel
 
-class CityTime(BaseModel):
-    time_info: str  # time information
-    city: str       # city name
-
-def lookup_time_function(node_input: str):
-    """Simulate returning the current time in the specified city."""
-    return CityTime(time_info="10:10 AM", city=node_input)
-
-city_report_agent = Agent(
-    name="city_report_agent",
-    model="gemini-flash-latest",
-    input_schema=CityTime,
-    instruction="""Output following line:
-    It is {CityTime.time_info} in {CityTime.city} right now.""",
-    output_schema=str,
-)
-
-def completed_message_function(node_input: str):
-    return Event(
-        message=f"{node_input}\n WORKFLOW COMPLETED.",
+    city_generator_agent = Agent(
+        name="city_generator_agent",
+        model="gemini-flash-latest",
+        instruction="""Return the name of a random city.
+          Return only the name, nothing else.""",
+        output_schema=str,
     )
 
-root_agent = Workflow(
-    name="root_agent",
-    edges=[
-        ("START", city_generator_agent, lookup_time_function,
-          city_report_agent, completed_message_function)
-    ],
-)
-```
+    class CityTime(BaseModel):
+        time_info: str  # time information
+        city: str       # city name
 
-This sample code demonstrates how you can use the ***Workflow*** class to
-assemble a simple, sequential workflow and alternate between AI agent processing
-and code execution. While you could perform these steps using a single agent
-with a longer prompt and a tool call, the graph-based approach gives you precise
-control over the task execution order and the data output from each step.
+    def lookup_time_function(node_input: str):
+        """Simulate returning the current time in the specified city."""
+        return CityTime(time_info="10:10 AM", city=node_input)
+
+    city_report_agent = Agent(
+        name="city_report_agent",
+        model="gemini-flash-latest",
+        input_schema=CityTime,
+        instruction="""Output following line:
+        It is {CityTime.time_info} in {CityTime.city} right now.""",
+        output_schema=str,
+    )
+
+    def completed_message_function(node_input: str):
+        return Event(
+            message=f"{node_input}\n WORKFLOW COMPLETED.",
+        )
+
+    root_agent = Workflow(
+        name="root_agent",
+        edges=[
+            ("START", city_generator_agent, lookup_time_function,
+              city_report_agent, completed_message_function)
+        ],
+    )
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, sequential workflows use the graph engine:
+    `workflow.NewFunctionNode` wraps each step, and `workflow.Chain` wires
+    the nodes into a sequential `edges` slice. The framework automatically
+    passes each node's typed return value to the next node via
+    `event.Output` — no session state writes are needed. The whole graph is
+    wrapped in `workflowagent.New`, which produces a standard `agent.Agent`.
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/index/main.go:sequential-get-started"
+    ```
+
+This sample code demonstrates how you can assemble a simple, sequential
+workflow and alternate between agent processing and code execution. While you
+could perform these steps using a single agent with a longer prompt and a tool
+call, the graph-based approach gives you precise control over the task
+execution order and the data output from each step.
 
 For more information about data handling with graph-based workflows, see
 [Data handling with workflow nodes and agents](/graphs/data-handling/).
@@ -20392,52 +21371,66 @@ switching between non-deterministic AI-powered agents and deterministic code as
 needed.
 
 The following code sample shows how the workflow graph in Figure 2 could be
-translated into a graph-based agent using the ***Workflow*** class:
+translated into a graph-based agent:
 
-```python
-process_message = Agent(
-    name="process_message",
-    model="gemini-flash-latest",
-    instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
-      or "LOGISTICS". If you think a message applies to more than one category,
-      reply with a comma separated list of categories.
-   """,
-    output_schema=str,
-)
+=== "Python"
 
-def router(node_input: str):
-    routes = node_input.split(",")
-    routes = [route.strip() for route in routes]
-    return Event(route=routes)
+    ```python
+    process_message = Agent(
+        name="process_message",
+        model="gemini-flash-latest",
+        instruction="""Classify user message into either "BUG", "CUSTOMER_SUPPORT",
+          or "LOGISTICS". If you think a message applies to more than one category,
+          reply with a comma separated list of categories.
+       """,
+        output_schema=str,
+    )
 
-def response_1_bug():
-    return Event(message="Handling bug...")
+    def router(node_input: str):
+        routes = node_input.split(",")
+        routes = [route.strip() for route in routes]
+        return Event(route=routes)
 
-def response_2_support():
-    return Event(message="Handling customer support...")
+    def response_1_bug():
+        return Event(message="Handling bug...")
 
-def response_3_logistics():
-    return Event(message="Handling logistics...")
+    def response_2_support():
+        return Event(message="Handling customer support...")
 
-root_agent = Workflow(
-   name="routing_workflow",
-   edges=[
-       ("START", process_message, router),
-       ( router,
-           {
-               "BUG": response_1_bug,
-               "CUSTOMER_SUPPORT": response_2_support,
-               "LOGISTICS": response_3_logistics,
-           }
-       )
-   ],
-)
-```
+    def response_3_logistics():
+        return Event(message="Handling logistics...")
 
-This sample code demonstrates how you can use an ***edges*** array to define a
-graph with routes between a set of *nodes*, which are discrete tasks that can
-include agents, Tools, your code, and even additional ***Workflows***. For
-information about building advanced graphs for workflows, see
+    root_agent = Workflow(
+       name="routing_workflow",
+       edges=[
+           ("START", process_message, router),
+           ( router,
+               {
+                   "BUG": response_1_bug,
+                   "CUSTOMER_SUPPORT": response_2_support,
+                   "LOGISTICS": response_3_logistics,
+               }
+           )
+       ],
+    )
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, conditional routing uses `workflow.NewEmittingFunctionNode`
+    to set `event.Routes` and `workflow.StringRoute` edges to dispatch to the
+    matching handler — the direct equivalent of Python's `router` function and
+    dict dispatch. `workflow.Concat` merges the chain and the conditional edges
+    into a single `edges` slice passed to `workflowagent.New`.
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/index/main.go:process-pipeline"
+    ```
+
+This sample code demonstrates how you can compose a sequence of agents to
+define a graph with routes between a set of *nodes*, which are discrete tasks
+that can include agents, Tools, your code, and even additional workflow agents.
+For information about building advanced pipelines, see
 [Build graph routes for workflow agents](/graphs/routes/).
 
 ## Known limitations {#known-limitations}
@@ -20445,11 +21438,26 @@ information about building advanced graphs for workflows, see
 There are some known limitations with graph-based workflows. They
 are *not compatible* with the following ADK features:
 
--   **Live Streaming** functionality is not compatible with graph-based
-    workflows.
+-   **Live streaming:** Not supported in graph-based workflows.
 -   **Integrations:** Some third-party
-    [Integrations](/integrations/) may not be
-    compatible with graph-based workflows.
+    [integrations](/integrations/) may not be compatible with graph-based
+    workflows.
+
+!!! note "Go: graph workflow API"
+
+    The `workflow` package in ADK Go v2.0.0 is the direct equivalent of the
+    Python `Workflow` class. Use `workflow.NewFunctionNode` and
+    `workflow.NewAgentNode` to define nodes, `workflow.Chain` or
+    `workflow.Concat` with `[]workflow.Edge` to wire them, and
+    `workflowagent.New` to wrap the graph as a runnable agent. Conditional
+    routing uses `workflow.StringRoute`, `workflow.IntRoute`, or
+    `workflow.BoolRoute` matched against `event.Routes`. Fan-in is handled by
+    `workflow.NewJoinNode`.
+
+    For advanced routing patterns and fan-out/join examples, see
+    [Build graph routes for workflow agents](/graphs/routes/). For prebuilt
+    higher-level alternatives (sequential, parallel, loop), see
+    [Prebuilt workflow agents](/agents/workflow-agents/).
 
 ================
 File: docs/graphs/routes.md
@@ -20457,7 +21465,7 @@ File: docs/graphs/routes.md
 # Build graph routes for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Graph-based workflows in ADK define agent logic as a graph of execution nodes
@@ -20469,26 +21477,53 @@ logic, this approach allows you to define a specific, step-wise process workflow
 in code, providing improved precision and reliability over purely prompt-based
 agents.
 
-![Graph-based flight upgrade agent](/assets/graph-workflow-router.svg)
+![Task graph with conditional routing between nodes](/assets/graph-workflow-router.svg)
 
-```python
-root_agent = Workflow(
-  name="routing_workflow",
-  edges=[
-    ("START", process_message, router),
-    (router,
-      {
-        "output-1": response_1,
-        "output-2": response_2,
-        "output-3": response_3,
-      },
-    ),
-  ],
-)
-```
+**Figure 1.** Visualization of a task graph and the routing code to implement it.
 
-**Figure 1.** Visualization of a task graph and the ***Workflow*** code to
-implement it.
+=== "Python"
+
+    ```python
+    root_agent = Workflow(
+      name="routing_workflow",
+      edges=[
+        ("START", process_message, router),
+        (router,
+          {
+            "output-1": response_1,
+            "output-2": response_2,
+            "output-3": response_3,
+          },
+        ),
+      ],
+    )
+    ```
+
+=== "Go"
+
+    ADK Go v2.0.0 provides the following approach to graph-based
+    workflows:
+
+    **Graph engine** (`workflowagent` + `workflow.Edge`): A node-and-edges
+    graph API that maps directly to Python's `Workflow(edges=[...])`.
+    Nodes are defined with `workflow.NewFunctionNode`, `workflow.NewAgentNode`,
+    or `workflow.NewDynamicNode`, edges are declared as `[]workflow.Edge`, and
+    the whole graph is wrapped in a `workflowagent.New` call:
+
+    ```go
+    edges := workflow.Concat(
+        workflow.Chain(workflow.Start, classifyNode),
+        []workflow.Edge{
+            {From: classifyNode, To: responseA, Route: workflow.StringRoute("output-1")},
+            {From: classifyNode, To: responseB, Route: workflow.StringRoute("output-2")},
+            {From: classifyNode, To: responseC, Route: workflow.StringRoute("output-3")},
+        },
+    )
+    rootAgent, _ := workflowagent.New(workflowagent.Config{
+        Name:  "routing_workflow",
+        Edges: edges,
+    })
+    ```
 
 The advantage of using a graph-based agent workflow is the significant increase
 in control, predictability, and reliability over prompt-based agents. By
@@ -20505,192 +21540,367 @@ Get started with graph-based workflows in ADK by checking out
 A graph is composed of execution nodes. These *nodes* can be ***Agents***, ADK
 ***Tools***, human input tasks, or code functions you write. Nodes can take
 inputs from previously executed nodes, and emit data through ***Event***
-objects. The following shows a simple ***FunctionNode*** that handles text
-inputs and sends a text output:
+objects.
 
-```python
-from google.adk import Event
+=== "Python"
 
-def my_function_node(node_input: str):
-    input_text_modified = node_input.upper()
-    return Event(output=input_text_modified)
-```
+    The following shows a simple ***FunctionNode*** that handles text inputs
+    and sends a text output:
 
-For more information about transferring data between nodes, see .
+    ```python
+    from google.adk import Event
+
+    def my_function_node(node_input: str):
+        input_text_modified = node_input.upper()
+        return Event(output=input_text_modified)
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, the primary node type is `workflow.NewFunctionNode`.
+    A `FunctionNode` wraps a plain Go function: the function returns a typed
+    value, and the framework automatically wraps it in a `session.Event`,
+    setting `event.Output`. The successor node receives this value as its
+    typed `input` parameter — no manual state writes or event construction
+    needed:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/routes/main.go:function-node"
+    ```
+
+For more information about transferring data between nodes, see
 [Data handling for agent workflows](/graphs/data-handling/).
 
 ## Workflow graphs syntax
 
-You define a graph by creating an ***edges*** array, which defines a logical
-execution path of *nodes* and conditions to be followed. This section
-provides an overview of graph syntax in an ***edges*** array. The following code
-example shows a basic workflow with two nodes to be executed in order:
+You define a graph by composing workflow agents. This section provides an
+overview of the common routing patterns.
 
-```python
-from google.adk import Workflow
+!!! caution "Caution: Workflow agent limitations"
 
-root_agent = Workflow(
-    name="sequential_workflow",
-    edges=[("START", task_A_node, task_B_node)],
-)
-```
-
-!!! caution "Caution: Workflows and agent limitations"
-
-    You can add ***Agents***, or ***LlmAgents***, to graph-based workflows,
-    however they must be set to a task or single-turn mode. For more
-    information about agent modes, see
+    You can add ***LlmAgents*** to graph-based workflows. However, they must
+    be configured for single-turn or task mode. For more information about
+    agent modes, see
     [Build collaborative agent teams](/workflows/collaboration/#mode-configuration-and-behaviors).
 
 ### Route sequences
 
-The ***edges*** array executes nodes based on the order or nodes presented in
-the array, starting with the first row and proceeding through the subsequent
-rows until execution is complete. The first row of the ***edges*** array uses
-the ***START*** keyword to indicate the beginning of a graph execution, with
-each listed node executed in sequence, as shown in the following code
-snippets:
+A sequential route runs each node once, in the listed order.
 
-```python
-edges=[("START", task_A_node)]  # single node run
-edges=[("START",
-        task_A_node,
-        task_B_node,
-        task_C_node)]           # 3 nodes run in order
-```
+=== "Python"
 
-You can also use ***START*** more than once to initiate parallel tasks at the
-beginning of a workflow graph, as shown in the following code snippet:
+    The `edges` array uses the `START` keyword to indicate the beginning of a
+    graph execution, with each listed node executed in sequence:
 
-```python
-edges=[
-    ("START", parallel_task_A),
-    ("START", parallel_task_B),
-    ("START", parallel_task_C),
-]
-```
+    ```python
+    edges=[("START", task_A_node)]  # single node run
+    edges=[("START",
+            task_A_node,
+            task_B_node,
+            task_C_node)]           # 3 nodes run in order
+    ```
 
-!!! warning "Caution: Limitations on parallel nodes"
+=== "Go"
 
-    Not all workflow nodes or subagents can be run in parallel. In particular,
-    you cannot run multiple interactive chat sessions within the same agent
-    session.
+    `workflow.Chain(workflow.Start, nodeA, nodeB, nodeC)` wires nodes into a
+    sequential edge slice. Each node's typed return value is forwarded to the
+    next node via `event.Output` — no session state writes needed:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/routes/main.go:sequential-nodes"
+    ```
 
 ### Route branches and conditional execution
 
-The subsequent rows of the ***edges*** arrays after the START keyword define
-additional execution logic for nodes. For branching paths, which is how you create a conditional node, you define a node,
-usually a ***FunctionNode***, that outputs an Event with a specific  ***route*** value. In the edges graph, you then define the conditional execution logic by mapping these route values to target nodes, as shown in the following code example:
+=== "Python"
 
-```python
-def router(node_input: str):
-    """Route to task B or C based on node_input."""
-    if condition(node_input):
-        return Event(route="RUN_TASK_C")
-    return Event(route="RUN_TASK_B")
+    In Python, branching is handled by a `FunctionNode` that returns an
+    `Event(route=...)` value, which the `edges` dict dispatches to different nodes.
 
-task_B_node = Agent(name="task_B_agent") # An agent to execute node B
+    ```python
+    def router(node_input: str):
+        """Route to task B or C based on node_input."""
+        if condition(node_input):
+            return Event(route="RUN_TASK_C")
+        return Event(route="RUN_TASK_B")
 
-def task_C_node(node_input: str):
-    """A FunctionNode to execute node C."""
-    return Event(output="Task C completed")
+    task_B_node = Agent(name="task_B_agent") # An agent to execute node B
 
-root_agent = Workflow(
-    name="routing_workflow",
-    edges=[
-        ("START", task_A_node, router),
-        (router,
-          {
-            # "route value": node_to_run
-            "RUN_TASK_B": task_B_node,
-            "RUN_TASK_C": task_C_node,
-          },
-        ),
-    ],
-)
-```
+    def task_C_node(node_input: str):
+        """A FunctionNode to execute node C."""
+        return Event(output="Task C completed")
+
+    root_agent = Workflow(
+        name="routing_workflow",
+        edges=[
+            ("START", task_A_node, router),
+            (router,
+              {
+                # "route value": node_to_run
+                "RUN_TASK_B": task_B_node,
+                "RUN_TASK_C": task_C_node,
+              },
+            ),
+        ],
+    )
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, conditional dispatch uses the `workflow` graph engine.
+    A node sets `Event.Routes` to one or more string route keys, and each
+    `workflow.Edge` selects its successor using a `workflow.Route` matcher:
+
+    -   `workflow.StringRoute("category")` — matches a single string value
+    -   `workflow.IntRoute(n)` or `workflow.MultiRoute[int]{1, 2, 3}` — matches
+        integer values
+    -   `workflow.BoolRoute(true)` — matches a boolean value
+    -   `workflow.Default` — matches when no other route on the same source
+        node matches
+
+    The following pattern is the Go equivalent of the Python router:
+
+    ```go
+    // classifyNode emits an Event with Routes=[]string{"BUG"},
+    // ["CUSTOMER_SUPPORT"], or ["LOGISTICS"] based on the message.
+    edges := workflow.Concat(
+        workflow.Chain(workflow.Start, processMessage, classifyNode),
+        []workflow.Edge{
+            {From: classifyNode, To: bugHandler,       Route: workflow.StringRoute("BUG")},
+            {From: classifyNode, To: supportHandler,   Route: workflow.StringRoute("CUSTOMER_SUPPORT")},
+            {From: classifyNode, To: logisticsHandler, Route: workflow.StringRoute("LOGISTICS")},
+        },
+    )
+    rootAgent, _ := workflowagent.New(workflowagent.Config{
+        Name:  "routing_workflow",
+        Edges: edges,
+    })
+    ```
+
+    `workflow.EdgeBuilder` provides a fluent alternative to assembling the
+    `[]workflow.Edge` slice by hand. The builder's `Add`, `AddFanOut`, and
+    `AddFanIn` methods express the same topology with less repetition:
+
+    ```go
+    eb := workflow.NewEdgeBuilder()
+    eb.Add(workflow.Start, processMessage)
+    eb.Add(processMessage, classifyNode)
+    eb.AddRoute(classifyNode, bugHandler,       workflow.StringRoute("BUG"))
+    eb.AddRoute(classifyNode, supportHandler,   workflow.StringRoute("CUSTOMER_SUPPORT"))
+    eb.AddRoute(classifyNode, logisticsHandler, workflow.StringRoute("LOGISTICS"))
+
+    rootAgent, _ := workflowagent.New(workflowagent.Config{
+        Name:  "routing_workflow",
+        Edges: eb.Build(),
+    })
+    ```
+
+    For complete, runnable routing examples see:
+    [string routing](https://github.com/google/adk-go/tree/v2/examples/workflow/routing/string),
+    [int / multi-value routing](https://github.com/google/adk-go/tree/v2/examples/workflow/routing/int),
+    and [LLM-driven routing](https://github.com/google/adk-go/tree/v2/examples/workflow/routing/llm).
+
+    !!! note "Prebuilt agents: encoding routing in state"
+
+        When using `sequentialagent` / `parallelagent` / `loopagent` instead
+        of the graph engine, there is no `Event.Routes` dispatch. Encode the
+        routing decision in session state via `OutputKey` and let downstream
+        agents inspect it in their `Instruction` template, or use a `loopagent`
+        with an `Escalate`-based exit — see the
+        [loop and escalation example](#loop-and-escalation-exit) below.
 
 ## Parallel tasks: fan out and join paths
 
 You can create graphs that split execution across multiple, parallel nodes, and
 typically you need to assemble the output of each node for further processing.
-This task execution pattern has two stages. The workflow first fans out when it 
-starts multiple parallel tasks, and then it re-joins those paths when those 
-those tasks are completed before proceeding to the next step.
-
-You accomplish the join step by using a ***JoinNode*** object, which waits for
-each parallel task to complete and then passes the collection of outputs from
-these nodes to the next node.
+This task execution pattern has two stages. The workflow first fans out when it
+starts multiple parallel tasks, and then it re-joins those paths when those
+tasks are completed before proceeding to the next step.
 
 ![Tasks connecting to a JoinNode](/assets/graph-joinnode.svg)
 
-**Figure 2.** The output of parallel task nodes can be assembled using a
-JoinNode object.
+**Figure 2.** The output of parallel task nodes can be assembled and joined
+before passing results to the next step.
 
-The following code snippet shows how to start three parallel tasks from
-***START*** and use a basic ***JoinNode*** object to join their outputs before
-running the final task:
+=== "Python"
 
-```python
-​​from google.adk.workflow import JoinNode
+    You accomplish the join step by using a ***JoinNode*** object, which waits
+    for each parallel task to complete and then passes the collection of outputs
+    from these nodes to the next node.
 
-my_join_node = JoinNode(name="my_join_node")
+    ```python
+    from google.adk.workflow import JoinNode
 
-edges=[
-    ("START", parallel_task_A, my_join_node),
-    ("START", parallel_task_B, my_join_node),
-    ("START", parallel_task_C, my_join_node),
-    (my_join_node, final_task_D),
-]
-```
+    my_join_node = JoinNode(name="my_join_node")
 
-!!! warning "Caution: Stuck JoinNode from incomplete nodes"
+    edges=[
+        ("START", parallel_task_A, my_join_node),
+        ("START", parallel_task_B, my_join_node),
+        ("START", parallel_task_C, my_join_node),
+        (my_join_node, final_task_D),
+    ]
+    ```
 
-    The ***JoinNode*** object proceeds only after all its upstream nodes have
-    provided an Event output. If one of the upstream nodes fails to provide output,
-    the JoinNode is stuck and workflow execution stops. Make sure to include
-    failsafe output from any node that outputs to a ***JoinNode***.
+    !!! warning "Caution: Stuck JoinNode from incomplete nodes"
+
+        The ***JoinNode*** object proceeds only after all its upstream nodes
+        have provided an Event output. If one of the upstream nodes fails to
+        provide output, the JoinNode is stuck and workflow execution stops.
+        Make sure to include failsafe output from any node that outputs to a
+        ***JoinNode***.
+
+=== "Go"
+
+    ADK Go v2.0.0 provides `workflow.NewJoinNode` for true fan-in in the
+    graph engine: fan-out edges from `workflow.Start` (or any shared source
+    node) feed in parallel to the join node, which waits for all of them to
+    complete before emitting a `map[string]any` keyed by predecessor node name
+    to the next node.
+
+    `workflow.EdgeBuilder` makes the fan-out / fan-in wiring concise with its
+    dedicated `AddFanOut` and `AddFanIn` helpers (as shown in the
+    [complex workflow example](https://github.com/google/adk-go/tree/v2/examples/workflow/complex)):
+
+    ```go
+    gatherNode := workflow.NewJoinNode("gather")
+
+    eb := workflow.NewEdgeBuilder()
+    eb.AddFanOut(workflow.Start, researchNodeA, researchNodeB, researchNodeC)
+    eb.AddFanIn(gatherNode, researchNodeA, researchNodeB, researchNodeC)
+    eb.Add(gatherNode, formatNode)
+    eb.Add(formatNode, synthesisNode)
+
+    rootAgent, _ := workflowagent.New(workflowagent.Config{
+        Name:  "research_pipeline",
+        Edges: eb.Build(),
+    })
+    ```
+
+    The following snippet shows the complete fan-out / join pattern using
+    `workflow.NewJoinNode` and `EdgeBuilder.AddFanOut` / `AddFanIn`:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/routes/main.go:parallel-fan-out"
+    ```
+
+    !!! warning "Caution: Stuck JoinNode from incomplete nodes"
+
+        `workflow.NewJoinNode` proceeds only after every predecessor node has
+        emitted an `event.Output`. If a predecessor fails without emitting
+        output, the JoinNode is stuck and workflow execution stops. Attach a
+        `RetryConfig` to flaky predecessor nodes to guard against transient
+        failures.
 
 ## Nested workflows
 
 When building more complex workflows, you may want to encapsulate the
 functionality for specific tasks into reusable workflows. One or more
-***Workflow*** objects can be used as a node within the graph of another
-workflow agent to accomplish this goal.
+workflow agents can be used as a sub-agent within another workflow agent to
+accomplish this goal.
 
 ![Nested Workflows inside a parent Workflow](/assets/graph-workflow-nodes.svg)
 
-**Figure 3.** Nested ***Workflows*** as nodes inside a parent ***Workflow***.
+**Figure 3.** Nested workflow agents as sub-agents inside a parent workflow.
 
-The following code snippet shows how to implement a workflow agent with two
-nested more ***Workflow*** objects (workflow_B, workflow_C) as nodes in the
-graph:
+=== "Python"
 
-```python
-from google.adk import Workflow
+    ```python
+    from google.adk import Workflow
 
-root_agent = Workflow(
-    name="parent_workflow",
-    edges=[
-       ("START", task_A1, router),
-       (router, {
-            "RUN_WORKFLOW_B": workflow_B,
-            "RUN_WORKFLOW_C": workflow_C,
-            },
-       ),
-    ],
-)
-```
+    root_agent = Workflow(
+        name="parent_workflow",
+        edges=[
+           ("START", task_A1, router),
+           (router, {
+                "RUN_WORKFLOW_B": workflow_B,
+                "RUN_WORKFLOW_C": workflow_C,
+                },
+           ),
+        ],
+    )
+    ```
 
-### Nested workflow data output
+    #### Nested workflow data output
 
-Output for nested Workflow objects works slightly differently from individual
-nodes. When the nested workflow completes one of its nodes, it transmits data
-to the next node in the nested workflow's graph *and* the system bubbles up the
-Event for that node to the parent workflow for process traceability. When the
-nested workflow completes the last node in its process, the parent node extracts
-data from the final leaf nodes and emits it as the output of the nested
-workflow.
+    Output for nested Workflow objects works slightly differently from
+    individual nodes. When the nested workflow completes one of its nodes, it
+    transmits data to the next node in the nested workflow's graph *and* the
+    system bubbles up the Event for that node to the parent workflow for
+    process traceability. When the nested workflow completes the last node in
+    its process, the parent node extracts data from the final leaf nodes and
+    emits it as the output of the nested workflow.
+
+=== "Go"
+
+    ADK Go v2.0.0 supports nested workflows in two complementary ways:
+
+    **Graph engine** (`workflowagent` + `workflow.Edge`): A `workflowagent`
+    created with `workflowagent.New` is itself an `agent.Agent`, so it can
+    be wrapped with `workflow.NewAgentNode` and used as a node inside another
+    workflow's `edges` slice. The inner workflow runs to completion as a single
+    node from the outer graph's perspective, and its terminal output is emitted
+    as the node output on the outer graph's edge:
+
+    ```go
+    innerNode, _ := workflow.NewAgentNode(innerWorkflowAgent, workflow.NodeConfig{})
+
+    outerEdges := workflow.Chain(workflow.Start, outerStepNode, innerNode, finalNode)
+    rootAgent, _ := workflowagent.New(workflowagent.Config{
+        Name:  "parent_workflow",
+        Edges: outerEdges,
+    })
+    ```
+
+    The following snippet shows both the inner and outer graph construction.
+    `workflow.NewAgentNode` wraps the inner `workflowagent` so it can be
+    placed in the outer graph's `workflow.Chain`:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/routes/main.go:nested-workflows"
+    ```
+
+## Loop and escalation exit
+
+A loop repeats a set of steps until a termination condition is met. In Python
+this is expressed as a back-edge in the `edges` graph that routes back to an
+earlier node. In ADK Go v2.0.0, the graph engine supports the same pattern
+directly: add an edge from a downstream node back to an earlier node with a
+route condition, and the engine re-activates the target node with a fresh
+lifecycle on each iteration.
+
+=== "Python"
+
+    ```python
+    def router(node_input: str):
+        """Route to task B or C based on node_input."""
+        if condition(node_input):
+            return Event(route="RUN_TASK_C")
+        return Event(route="RUN_TASK_B")
+
+    root_agent = Workflow(
+        name="routing_workflow",
+        edges=[
+            ("START", task_A_node, router),
+            (router,
+              {
+                "RUN_TASK_B": task_B_node,
+                "RUN_TASK_C": task_C_node,
+              },
+            ),
+        ],
+    )
+    ```
+
+=== "Go"
+
+    The following example uses the graph engine with `workflow.EdgeBuilder`.
+    The critic node returns a verdict, a router node sets `Event.Routes`, and
+    a back-edge from the refiner to the critic creates the loop. When the
+    critic is satisfied it routes to the terminal `done` node instead:
+
+    ```go
+    --8<-- "examples/go/snippets/graphs/routes/main.go:loop-escalate"
+    ```
 
 ================
 File: docs/grounding/google_search_grounding.md
@@ -20874,7 +22084,7 @@ Before creating a grounded agent, you must have an existing Agent Search Data St
 * For Java, ensure your application environment has Google Cloud default credentials configured (`GOOGLE_APPLICATION_CREDENTIALS`).
 
 ```env title=".env"
-GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 GOOGLE_CLOUD_PROJECT=YOUR_PROJECT_ID
 GOOGLE_CLOUD_LOCATION=LOCATION
 ```
@@ -24916,7 +26126,7 @@ shows the BigQuery view optionally created when
 
     os.environ['GOOGLE_CLOUD_PROJECT'] = 'your-gcp-project-id'
     os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
-    os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+    os.environ['GOOGLE_GENAI_USE_ENTERPRISE'] = 'True'
 
     plugin = BigQueryAgentAnalyticsPlugin(
         project_id="your-gcp-project-id",
@@ -25044,7 +26254,7 @@ LIMIT 20;
         # --- CRITICAL: Set environment variables BEFORE Gemini instantiation ---
         os.environ['GOOGLE_CLOUD_PROJECT'] = PROJECT_ID
         os.environ['GOOGLE_CLOUD_LOCATION'] = VERTEX_LOCATION
-        os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
+        os.environ['GOOGLE_GENAI_USE_ENTERPRISE'] = 'True'
 
         # --- Initialize the Plugin with Config ---
         bq_config = BigQueryLoggerConfig(
@@ -26444,7 +27654,7 @@ DATASET_ID = os.environ.get("BQ_DATASET", "agent_analytics")
 # region used by GOOGLE_CLOUD_LOCATION.
 BQ_LOCATION = os.environ.get("BQ_LOCATION", "US")
 
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+os.environ["GOOGLE_GENAI_USE_ENTERPRISE"] = "True"
 
 # --- Plugin ---
 bq_analytics_plugin = BigQueryAgentAnalyticsPlugin(
@@ -27794,7 +29004,7 @@ working_dir/
 
     os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "{your-project-id}")
     os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
-    os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
+    os.environ.setdefault("GOOGLE_GENAI_USE_ENTERPRISE", "True")
 
 
     # Define a tool function
@@ -29957,7 +31167,7 @@ With this approach, `Session` objects are handled as children of the
 variables are set correctly, as shown below:
 
 ```env title="agent/.env"
-GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
 ```
 
@@ -30000,7 +31210,7 @@ the session object without any project or location.
 ```py
 # Requires: pip install google-adk[vertexai]
 # Plus environment variable setup:
-# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
 from google.adk.sessions import VertexAiSessionService
 
@@ -30029,7 +31239,7 @@ the memory object without any project or location.
 ```py
 # Requires: pip install google-adk[vertexai]
 # Plus environment variable setup:
-# GOOGLE_GENAI_USE_VERTEXAI=TRUE
+# GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 # GOOGLE_API_KEY=PASTE_YOUR_ACTUAL_EXPRESS_MODE_API_KEY_HERE
 from google.adk.memory import VertexAiMemoryBankService
 
@@ -30648,7 +31858,7 @@ Configure environment variables:
 
 ```env title="my_agent/.env"
 # Gemini environment variables
-GOOGLE_GENAI_USE_VERTEXAI=0
+GOOGLE_GENAI_USE_ENTERPRISE=0
 GOOGLE_API_KEY="YOUR_API_KEY"
 
 # Galileo environment variables
@@ -33703,7 +34913,7 @@ session = await runner.session_service.create_session(
 - [adk-mimir-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
 - [adk-mimir-memory on PyPI](https://pypi.org/project/adk-mimir-memory/)
 - [Mimir (backing service)](https://github.com/Perseus-Computing-LLC/mimir)
-- [Perseus (context engine)](https://github.com/Perseus-Computing-LLC/perseus)
+- [Perseus Context integration](/integrations/perseus/)
 
 ================
 File: docs/integrations/mlflow-gateway.md
@@ -40205,6 +41415,43 @@ Defaults to 3.
 optimization results if desired.
 Facilitates warm starts.
 
+### `GEPARootAgentOptimizer` {#geparootagentoptimizer}
+
+The
+[`GEPARootAgentOptimizer`](https://github.com/google/adk-python/blob/main/src/google/adk/optimization/gepa_root_agent_optimizer.py)
+improves both the instructions of the root agent and the instructions of skills
+provided to it via a
+[`SkillToolset`](https://github.com/google/adk-python/blob/main/src/google/adk/tools/skill_toolset.py)
+using the [GEPA](https://gepa-ai.github.io/gepa/) optimizer.
+In many ways it can be considered to be an extension of the
+[`GEPARootAgentPromptOptimizer`](#geparootagentpromptoptimizer).
+It expects the sampler to provide eval results as an
+[`UnstructuredSamplingResult`](#sampler-results).
+Its output is a subclass of [`OptimizerResult`](#agent-optimizer-results) which
+specifies a list of [optimized agents with scores](#agent-optimizer-results) and
+additional metrics collected during optimization.
+
+Note: The `GEPARootAgentOptimizer` does not improve any sub-agents or agent
+tools.
+
+You can configure the `GEPARootAgentOptimizer` with a
+`GEPARootAgentOptimizerConfig` that contains the following fields:
+
+* `optimizer_model` (optional): The model used to analyze evaluation results and
+optimize the agent.
+Defaults to `"gemini-3.5-flash"`.
+* `model_configuration` (optional): The configuration for the optimizer model.
+Defaults to a config with a `ThinkingLevel` of `HIGH`.
+* `max_metric_calls` (optional): The maximum number of evaluations to run during
+optimization.
+Defaults to 100.
+* `reflection_minibatch_size` (optional): The number of examples to use at a
+time to update the instructions.
+Defaults to 3.
+* `run_dir` (optional): The directory to save intermediate and final
+optimization results if desired.
+Facilitates warm starts.
+
 ### `SimplePromptOptimizer` {#simplepromptoptimizer}
 
 The `SimplePromptOptimizer` is an automated, iterative prompt-tuning component designed
@@ -40222,7 +41469,7 @@ The optimizer automatically executes an asynchronous, four-stage feedback loop:
 
 **Note:** The optimization loop does not mutate your initial agent instance in place. Upon completion, it returns an `OptimizerResult` containing the highest-scoring agent variation extracted during the process.
 
-### Configuration
+#### Configuration
 
 Configure the behavior of the loop by passing a `SimplePromptOptimizerConfig` instance to the optimizer.
 
@@ -40231,7 +41478,7 @@ Configure the behavior of the loop by passing a `SimplePromptOptimizerConfig` in
 | `num_iterations` | int | *Required* | The total number of optimization rounds to execute. |
 | `batch_size` | int | *Required* | The number of evaluation sample cases processed by the sampler during each individual iteration. |
 
-### Implementation Example
+#### Implementation Example
 
 Once your configuration is defined, run the optimization with:
 
@@ -41614,9 +42861,37 @@ Use the following command to start the ADK web interface:
 
 === "Go"
 
+    In Go, the web interface is not a standalone CLI tool. Instead, you embed
+    the launcher directly in your agent's `main.go` and pass arguments at
+    runtime. The `full.NewLauncher()` helper bundles the web server, REST API,
+    and Web UI into a single binary:
+
+    ```go title="main.go"
+    import (
+        "google.golang.org/adk/cmd/launcher"
+        "google.golang.org/adk/cmd/launcher/full"
+    )
+
+    func main() {
+        // ... build your agent and config ...
+        l := full.NewLauncher()
+        if err := l.Execute(ctx, config, os.Args[1:]); err != nil {
+            log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        }
+    }
+    ```
+
+    Then start the web interface by passing the `web`, `api`, and `webui`
+    subcommands on the command line:
+
     ```shell
     go run agent.go web api webui
     ```
+
+    The `web` keyword activates the HTTP server. `api` adds the ADK REST API
+    backend, and `webui` serves the browser-based chat interface. Both `api`
+    and `webui` are required to use the web interface together; either can be
+    omitted if you only need the API or UI independently.
 
 === "Java"
 
@@ -41658,32 +42933,128 @@ Use the following command to start the ADK web interface:
 Once started, the server prints the access URL to the console. Open it in your
 browser to use the web interface:
 
-```shell
-+-----------------------------------------------------------------------------+
-| ADK Web Server started                                                      |
-|                                                                             |
-| For local testing, access at http://localhost:8000.                         |
-+-----------------------------------------------------------------------------+
-```
+=== "Python"
 
+    ```shell
+    +-----------------------------------------------------------------------------+
+    | ADK Web Server started                                                      |
+    |                                                                             |
+    | For local testing, access at http://localhost:8000.                         |
+    +-----------------------------------------------------------------------------+
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    +-----------------------------------------------------------------------------+
+    | ADK Web Server started                                                      |
+    |                                                                             |
+    | For local testing, access at http://localhost:8000.                         |
+    +-----------------------------------------------------------------------------+
+    ```
+
+=== "Go"
+
+    ```shell
+    2025/01/01 00:00:00 Starting the web server: &{port:8080 ...}
+    2025/01/01 00:00:00 Web servers starts on http://localhost:8080
+    2025/01/01 00:00:00        webui:  you can access API using http://localhost:8080/ui/
+    2025/01/01 00:00:00        api:  you can access API using http://localhost:8080/api
+    ```
+
+=== "Java"
+
+    ```shell
+    +-----------------------------------------------------------------------------+
+    | ADK Web Server started                                                      |
+    |                                                                             |
+    | For local testing, access at http://localhost:8000.                         |
+    +-----------------------------------------------------------------------------+
+    ```
 ## Common options
 
-Here are some commonly used options for the `adk web` command. Run `adk web
---help` to see all available options.
+=== "Python"
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--port` | Port to run the server on | `8000` |
-| `--host` | Host binding address | `127.0.0.1` |
-| `--session_service_uri` | Custom session storage URI | In-memory |
-| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
-| `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
+    Here are some commonly used options for the `adk web` command. Run `adk web
+    --help` to see all available options.
 
-For example:
+    | Option | Description | Default |
+    |--------|-------------|---------|
+    | `--port` | Port to run the server on | `8000` |
+    | `--host` | Host binding address | `127.0.0.1` |
+    | `--session_service_uri` | Custom session storage URI | In-memory |
+    | `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+    | `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
 
-```shell
-adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
-```
+    For example:
+
+    ```shell
+    adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
+    ```
+
+=== "TypeScript"
+
+    Here are some commonly used options for the `adk web` command. Run `adk web
+    --help` to see all available options.
+
+    | Option | Description | Default |
+    |--------|-------------|---------|
+    | `--port` | Port to run the server on | `8000` |
+    | `--host` | Host binding address | `127.0.0.1` |
+    | `--session_service_uri` | Custom session storage URI | In-memory |
+    | `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+    | `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
+
+    For example:
+
+    ```shell
+    adk web --port 3000 --session_service_uri "sqlite:///sessions.db"
+    ```
+
+=== "Go"
+
+    !!! note "Go flags differ from Python/TypeScript"
+
+        The Go web launcher does not use the same flags as `adk web` in Python
+        or TypeScript. Options like `--host`, `--session_service_uri`,
+        `--artifact_service_uri`, and `--reload` are not available. Session and
+        artifact services are configured in Go code when constructing the
+        `launcher.Config`, not via command-line flags.
+
+    Flags are split across the `web`, `api`, and `webui` subcommands. Pass
+    flags after the relevant subcommand keyword.
+
+    **`web` subcommand flags** (passed directly after `web`):
+
+    | Flag | Description | Default |
+    |------|-------------|---------|
+    | `-port` | Port for the HTTP server | `8080` |
+    | `-write-timeout` | Timeout for writing HTTP responses | `15s` |
+    | `-read-timeout` | Timeout for reading HTTP requests | `15s` |
+    | `-idle-timeout` | Keep-alive idle connection timeout | `60s` |
+    | `-shutdown-timeout` | Graceful shutdown wait time | `15s` |
+    | `-otel_to_cloud` | Export OpenTelemetry data to GCP | `false` |
+
+    **`api` subcommand flags** (passed after `api`):
+
+    | Flag | Description | Default |
+    |------|-------------|---------|
+    | `-webui_address` | WebUI origin allowed for CORS | `localhost:8080` |
+    | `-path_prefix` | URL path prefix for the REST API | `/api` |
+    | `-sse-write-timeout` | Timeout for SSE (streaming) responses | `120s` |
+    | `-trace_capacity` | Max in-memory traces to retain | `10000` |
+
+    **`webui` subcommand flags** (passed after `webui`):
+
+    | Flag | Description | Default |
+    |------|-------------|---------|
+    | `-api_server_address` | REST API URL as seen from the browser | `http://localhost:8080/api` |
+
+    For example, to run on port 9090 with a custom API prefix:
+
+    ```shell
+    go run agent.go web -port 9090 api -path_prefix /myapi webui -api_server_address http://localhost:9090/myapi
+    ```
 
 ================
 File: docs/runtime/ambient-agents.md
@@ -42265,9 +43636,34 @@ Use the following command to run your agent in an ADK API server:
 
 === "Go"
 
+    In Go, there is no standalone `adk` CLI. Instead, you embed the launcher
+    directly in your agent's `main.go`. The `full.NewLauncher()` helper bundles
+    the REST API, Web UI, and other modes into a single binary:
+
+    ```go title="main.go"
+    import (
+        "google.golang.org/adk/cmd/launcher"
+        "google.golang.org/adk/cmd/launcher/full"
+    )
+
+    func main() {
+        // ... build your agent and config ...
+        l := full.NewLauncher()
+        if err := l.Execute(ctx, config, os.Args[1:]); err != nil {
+            log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        }
+    }
+    ```
+
+    Then start the API server by passing the `web` and `api` subcommands on
+    the command line:
+
     ```shell
     go run agent.go web api
     ```
+
+    The `web` keyword activates the HTTP server. `api` adds the ADK REST API
+    backend and registers all routes under the `/api` path prefix by default.
 
 === "Java"
 
@@ -42351,6 +43747,36 @@ The output should appear similar to:
     |                                                                             |
     | For local testing, access at http://localhost:8000.                         |
     +-----------------------------------------------------------------------------+
+    ```
+
+=== "Go"
+
+    ```shell
+    2025/01/01 00:00:00 Starting the web server: &{port:8080 ...}
+    2025/01/01 00:00:00 Web servers starts on http://localhost:8080
+    2025/01/01 00:00:00        api:  you can access API using http://localhost:8080/api
+    2025/01/01 00:00:00        api:      for instance: http://localhost:8080/api/list-apps
+    ```
+    
+    !!! note "Go: default port and path prefix"
+
+    The Go API server defaults to port **8080** (not 8000) and serves all
+    REST endpoints under the **`/api`** path prefix by default. Adjust all
+    example `curl` commands below accordingly:
+
+    | Python/TypeScript/Java | Go |
+    |---|---|
+    | `http://localhost:8000/list-apps` | `http://localhost:8080/api/list-apps` |
+    | `http://localhost:8000/apps/…` | `http://localhost:8080/api/apps/…` |
+    | `http://localhost:8000/run` | `http://localhost:8080/api/run` |
+    | `http://localhost:8000/run_sse` | `http://localhost:8080/api/run_sse` |
+
+    The port can be changed with the `-port` flag on the `web` subcommand and
+    the prefix can be changed with the `-path_prefix` flag on the `api`
+    subcommand. For example:
+
+    ```shell
+    go run agent.go web -port 8000 api -path_prefix ""
     ```
 
 === "Java"
@@ -42528,6 +43954,13 @@ on to deploying your agent! Here are some ways you can deploy your agent:
 
 ## Interactive API docs
 
+!!! note "Python and TypeScript only"
+
+    Swagger UI interactive documentation is served at `/docs` by the Python and
+    TypeScript ADK API servers only. The Go API server does not expose a `/docs`
+    endpoint. To explore the Go REST API, use the endpoint reference below or
+    send requests directly with `curl`.
+
 The API server automatically generates interactive API documentation using Swagger UI. This is an invaluable tool for exploring endpoints, understanding request formats, and testing your agent directly from your browser.
 
 To access the interactive docs, start the API server and navigate to [http://localhost:8000/docs](http://localhost:8000/docs) in your web browser.
@@ -42567,6 +44000,12 @@ curl -X GET http://localhost:8000/list-apps
 Sessions store the state and event history for a specific user's interaction with an agent.
 
 #### Update a session
+
+!!! note "Not available in Go"
+
+    The `PATCH` session update endpoint is not implemented in the Go ADK REST
+    API server. To modify session state in Go, pass a `stateDelta` field in
+    your `/run` or `/run_sse` request body instead.
 
 Updates an existing session.
 
@@ -42625,7 +44064,8 @@ curl -X DELETE http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s
 ```
 
 **Example Response**
-A successful deletion returns an empty response with a `204 No Content` status code.
+A successful deletion returns an empty response. Python and TypeScript return a
+`204 No Content` status code. Go returns `200 OK` with an empty body.
 
 ---
 
@@ -42851,8 +44291,32 @@ Use the following command to run your agent in the ADK command line interface:
 
 === "Go"
 
+    In Go, the command-line interface is not a standalone `adk` tool. Instead,
+    you embed the launcher directly in your agent's `main.go`. The
+    `full.NewLauncher()` helper bundles the console, web server, and other
+    modes into a single binary, with **console as the default** when no
+    subcommand keyword is given:
+
+    ```go title="main.go"
+    import (
+        "google.golang.org/adk/cmd/launcher"
+        "google.golang.org/adk/cmd/launcher/full"
+    )
+
+    func main() {
+        // ... build your agent and config ...
+        l := full.NewLauncher()
+        if err := l.Execute(ctx, config, os.Args[1:]); err != nil {
+            log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        }
+    }
+    ```
+
+    Run the agent in console mode with either of the following commands:
+
     ```shell
-    go run agent.go
+    go run agent.go           # console is the default sublauncher
+    go run agent.go console   # or explicitly name the console subcommand
     ```
 
 === "Java"
@@ -42864,16 +44328,57 @@ Use the following command to run your agent in the ADK command line interface:
     ```
 
 This starts an interactive session where you can type queries and see agent
-responses directly in your terminal:
+responses directly in your terminal.
 
-```shell
-Running agent my_agent, type exit to exit.
-[user]: What's the weather in New York?
-[my_agent]: The weather in New York is sunny with a temperature of 25°C.
-[user]: exit
-```
+=== "Python"
+
+    ```shell
+    Running agent my_agent, type exit to exit.
+    [user]: What's the weather in New York?
+    [my_agent]: The weather in New York is sunny with a temperature of 25°C.
+    [user]: exit
+    ```
+
+=== "TypeScript"
+
+    ```shell
+    Running agent my_agent, type exit to exit.
+    [user]: What's the weather in New York?
+    [my_agent]: The weather in New York is sunny with a temperature of 25°C.
+    [user]: exit
+    ```
+
+=== "Go"
+
+    ```shell
+    User -> What's the weather in New York?
+
+    Agent -> The weather in New York is sunny with a temperature of 25°C.
+
+    User ->
+    ```
+
+    To exit, press **Ctrl+C** or send EOF (**Ctrl+D**).
+
+=== "Java"
+
+    ```shell
+    Running agent my_agent, type exit to exit.
+    [user]: What's the weather in New York?
+    [my_agent]: The weather in New York is sunny with a temperature of 25°C.
+    [user]: exit
+    ```
 
 ## Session options
+
+!!! note "Python only"
+
+    The `--save_session`, `--resume`, `--replay`, and `--session_id` options
+    are available in the Python ADK CLI only. The Go console launcher does not
+    support session save/resume/replay via command-line flags. In Go, session
+    persistence is configured in code by providing a persistent
+    `session.Service` implementation (such as `session/database`) to
+    `launcher.Config`.
 
 The `adk run` command includes options for saving, resuming, and replaying
 sessions.
@@ -42925,6 +44430,14 @@ The input file should contain initial state and queries:
 
 ## Storage options
 
+!!! note "Python only"
+
+    The `--session_service_uri` and `--artifact_service_uri` command-line
+    flags are available in the Python ADK CLI only. In Go, session and artifact
+    services are configured in code when constructing `launcher.Config` — for
+    example, using `session/database` for a persistent database-backed session
+    store, or `artifact/gcsartifact` for Cloud Storage-backed artifacts.
+
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--session_service_uri` | Custom session storage URI | SQLite under `.adk/session.db` |
@@ -42939,15 +44452,47 @@ adk run --session_service_uri "sqlite:///my_sessions.db" path/to/my_agent
 
 ## All options
 
-| Option | Description |
-|--------|-------------|
-| `--save_session` | Save the session to a JSON file on exit |
-| `--session_id` | Session ID to use when saving |
-| `--resume` | Path to a saved session file to resume |
-| `--replay` | Path to an input file for non-interactive replay |
-| `--session_service_uri` | Custom session storage URI |
-| `--artifact_service_uri` | Custom artifact storage URI |
-| `--memory_service_uri` | Custom memory service URI |
+=== "Python"
+
+    | Option | Description |
+    |--------|-------------|
+    | `--save_session` | Save the session to a JSON file on exit |
+    | `--session_id` | Session ID to use when saving |
+    | `--resume` | Path to a saved session file to resume |
+    | `--replay` | Path to an input file for non-interactive replay |
+    | `--session_service_uri` | Custom session storage URI |
+    | `--artifact_service_uri` | Custom artifact storage URI |
+    | `--memory_service_uri` | Custom memory service URI |
+
+=== "Go"
+
+    !!! note "Go flags differ from Python"
+
+        The Go console launcher does not support `--save_session`, `--resume`,
+        `--replay`, `--session_id`, `--session_service_uri`, or
+        `--artifact_service_uri`. These are Python CLI features. Session and
+        artifact services are configured in Go code via `launcher.Config`.
+
+    Flags are passed after the `console` keyword (or directly if `console` is
+    the default):
+
+    | Flag | Description | Default |
+    |------|-------------|---------|
+    | `-streaming_mode` | Streaming mode for agent responses (`none`\|`sse`) | Auto-detected (TTY → `sse`, pipe → `none`) |
+    | `-shutdown-timeout` | Graceful shutdown wait time | `2s` |
+    | `-otel_to_cloud` | Export OpenTelemetry data to GCP | `false` |
+
+    For example, to force non-streaming output:
+
+    ```shell
+    go run agent.go console -streaming_mode none
+    ```
+
+    Or to force SSE streaming (token-by-token output):
+
+    ```shell
+    go run agent.go -streaming_mode sse
+    ```
 
 ================
 File: docs/runtime/event-loop.md
@@ -44332,8 +45877,9 @@ your language:
 
 - [Python API reference](../api-reference/python/google-adk.html#google.adk.agents.RunConfig)
 - [TypeScript API reference](../api-reference/typescript/interfaces/RunConfig.html)
-- [Go API reference](https://pkg.go.dev/google.golang.org/adk/agent#RunConfig)
+- [Go API reference](https://pkg.go.dev/google.golang.org/adk/v2/agent#RunConfig)
 - [Java API reference](../api-reference/java/com/google/adk/agents/RunConfig.html)
+- [Kotlin API reference](../api-reference/kotlin/google-adk-kotlin-core/com.google.adk.kt.agents/-run-config/index.html)
 
 ================
 File: docs/safety/index.md
@@ -47089,11 +48635,11 @@ You can define Skills within the code of your agent, as shown below.
     ```go
     import (
         "os"
-    
+
         "google.golang.org/adk/tool/skilltoolset/skill"
         "google.golang.org/adk/tool/skilltoolset"
     )
-    
+
     // ...
 
     source := skill.NewFileSystemSource(os.DirFS("./skills"))
@@ -47103,7 +48649,7 @@ You can define Skills within the code of your agent, as shown below.
     //   source, _, err = skill.WithFrontmatterPreloadSource(ctx, source)
     //   source, _, err = skill.WithCompletePreloadSource(ctx, source)
     // For more information about these and other wrappers, see
-    // https://pkg.go.dev/google.golang.org/adk/tool/skilltoolset/skill#Source.
+    // https://pkg.go.dev/google.golang.org/adk/v2/tool/skilltoolset/skill#Source.
 
     skillToolset, err := skilltoolset.New(ctx, skilltoolset.Config{
         Source: source,
@@ -47334,10 +48880,10 @@ One of ADK's most powerful features is its transparent support for both [Gemini 
 
 #### How Platform Selection Works
 
-ADK uses the `GOOGLE_GENAI_USE_VERTEXAI` environment variable to determine which Live API platform to use:
+ADK uses the `GOOGLE_GENAI_USE_ENTERPRISE` environment variable to determine which Live API platform to use:
 
-- `GOOGLE_GENAI_USE_VERTEXAI=FALSE` (or not set): Uses Gemini Live API via Google AI Studio
-- `GOOGLE_GENAI_USE_VERTEXAI=TRUE`: Uses Gemini Live API (Agent Platform) via Google Cloud
+- `GOOGLE_GENAI_USE_ENTERPRISE=FALSE` (or not set): Uses Gemini Live API via Google AI Studio
+- `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`: Uses Gemini Live API (Agent Platform) via Google Cloud
 
 This environment variable is read by the underlying `google-genai` SDK when ADK creates the LLM connection. No code changes are needed when switching platforms—only environment configuration changes.
 
@@ -47345,7 +48891,7 @@ This environment variable is read by the underlying `google-genai` SDK when ADK 
 
 ```bash
 # .env.development
-GOOGLE_GENAI_USE_VERTEXAI=FALSE
+GOOGLE_GENAI_USE_ENTERPRISE=FALSE
 GOOGLE_API_KEY=your_api_key_here
 ```
 
@@ -47360,7 +48906,7 @@ GOOGLE_API_KEY=your_api_key_here
 
 ```bash
 # .env.production
-GOOGLE_GENAI_USE_VERTEXAI=TRUE
+GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 GOOGLE_CLOUD_PROJECT=your_project_id
 GOOGLE_CLOUD_LOCATION=us-central1
 ```
@@ -52670,7 +54216,7 @@ Now let's define an agent that can monitor stock price changes and monitor the v
     ) -> AsyncGenerator[str, None]:
       """Monitor how many people are in the video streams."""
       print("start monitor_video_stream!")
-      client = Client(vertexai=False)
+      client = Client(enterprise=False)
       prompt_text = (
           "Count the number of people in this image. Just respond with a numeric"
           " number."
@@ -57293,7 +58839,7 @@ print(f"OpenAI API Key set: {'Yes' if os.environ.get('OPENAI_API_KEY') and os.en
 print(f"Anthropic API Key set: {'Yes' if os.environ.get('ANTHROPIC_API_KEY') and os.environ['ANTHROPIC_API_KEY'] != 'YOUR_ANTHROPIC_API_KEY' else 'No (REPLACE PLACEHOLDER!)'}")
 
 # Configure ADK to use API keys directly (not Agent Platform for this multi-model setup)
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
+os.environ["GOOGLE_GENAI_USE_ENTERPRISE"] = "False"
 
 
 # @markdown **Security Note:** It's best practice to manage API keys securely (e.g., using Colab Secrets or environment variables) rather than hardcoding them directly in the notebook. Replace the placeholder strings above.
@@ -59097,9 +60643,9 @@ server.
 
 The [Agents CLI](https://google.github.io/agents-cli/) tool set lets you plug
 ADK agent expertise into your favorite AI-coding environments including
-Antigravity, Gemini CLI, Claude Code, and Cursor. Install Agents CLI into your
-current AI-powered development environment to scaffold, build, test, evaluate,
-and deploy ADK agents. Enable your development environment with these
+Antigravity, Claude Code, Cursor, and other AI coding tools. Install Agents CLI
+into your current AI-powered development environment to scaffold, build, test,
+evaluate, and deploy ADK agents. Enable your development environment with these
 Agents CLI Skills:
 
 *   Development lifecycle and coding guidelines
@@ -59124,15 +60670,6 @@ environment, see the
 
 You can configure your coding tool to search and read ADK documentation using an
 MCP server. Below are setup instructions for popular tools.
-
-### Gemini CLI
-
-To add the ADK docs MCP server to [Gemini CLI](https://geminicli.com/), install
-the [ADK Docs Extension](https://github.com/derailed-dash/adk-docs-ext):
-
-```bash
-gemini extensions install https://github.com/derailed-dash/adk-docs-ext
-```
 
 ### Antigravity
 
@@ -60141,7 +61678,7 @@ File: docs/workflows/collaboration.md
 # Build collaborative agent teams
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Some complex tasks may require multiple agents with specific responsibilities
@@ -60179,27 +61716,40 @@ agent behavior.
 The following code example shows how to set operating modes for
 a small team of subagents and assign them to a coordinator agent:
 
-```python
-from google.adk import Agent
+=== "Python"
 
-weather_agent = Agent(
-    name="weather_checker",
-    mode="single_turn",         # no user interaction
-    tools=[get_weather, user_info, geocode_address],
-)
-flight_agent = Agent(
-    name="flight_booker",
-    mode="task",                # can ask user questions
-    input_schema=FlightInput,
-    output_schema=FlightResult,
-    tools=[search_flights, book_flight],
-)
-root = Agent(
-    name="travel_planner",      # coordinator agent
-    sub_agents=[weather_agent, flight_agent],
-    # Auto-injects: request_task_weather_checker, request_task_flight_booker
-)
-```
+    ```python
+    from google.adk import Agent
+
+    weather_agent = Agent(
+        name="weather_checker",
+        mode="single_turn",         # no user interaction
+        tools=[get_weather, user_info, geocode_address],
+    )
+    flight_agent = Agent(
+        name="flight_booker",
+        mode="task",                # can ask user questions
+        input_schema=FlightInput,
+        output_schema=FlightResult,
+        tools=[search_flights, book_flight],
+    )
+    root = Agent(
+        name="travel_planner",      # coordinator agent
+        sub_agents=[weather_agent, flight_agent],
+        # Auto-injects: request_task_weather_checker, request_task_flight_booker
+    )
+    ```
+
+=== "Go"
+
+    In ADK Go v2.0.0, the `Mode` field on `llmagent.Config` accepts the same
+    mode strings as Python: `"chat"`, `"task"`, and `"single_turn"`. Declaring
+    `SubAgents` on the coordinator agent causes ADK to automatically generate
+    `request_task_<name>` delegation tools, exactly as in Python.
+
+    ```go
+    --8<-- "examples/go/snippets/workflows/collaboration/main.go:get-started"
+    ```
 
 When you run this workflow, the `travel_planner` coordinator agent automatically
 identifies and assigns tasks to the subagents. When a subagent completes
@@ -60279,10 +61829,12 @@ Workflow Agent graph nodes, and with ***LlmAgent*** instances. However the
 execution transfer behavior is different depending on the calling, or parent,
 agent:
 
-**As a workflow graph node:** When a task agent is placed within a workflow
-graph, such as ***SequentialAgent***, ***ParallelAgent***, the agent executes
-its task. Upon completion, control automatically advances to the next node based
-on the logic of the workflow agent's graph.
+**As a workflow graph node:** When a task or single-turn agent is placed within
+a workflow graph — such as a ***SequentialAgent*** or ***ParallelAgent*** (Python
+and Go prebuilt agents), or wrapped with `workflow.NewAgentNode` in the ADK Go
+v2.0.0 graph engine — the agent executes its task. Upon completion, control
+automatically advances to the next node based on the logic of the workflow
+agent's graph.
 
 **As a transferee from an LlmAgent:** When a parent ***LlmAgent*** transfers
 control to a task agent via `request_task`, the task agent executes until it
@@ -61530,6 +63082,13 @@ language. For detailed information on ADK releases, see these locations:
 *   [ADK Go release notes](https://github.com/google/adk-go/releases)
 *   [ADK Java release notes](https://github.com/google/adk-java/releases)
 *   [ADK Kotlin release notes](https://github.com/google/adk-kotlin/releases)
+
+!!! tip "ADK Go v2.0.0"
+
+    ADK Go v2.0.0 introduces graph-based and dynamic workflow support, a new
+    `workflow` package, agent execution modes, and Human-in-the-Loop tool
+    confirmation. See the [ADK 2.0 release page](/2.0/) for the full feature
+    list and Go 1.x migration guidance.
 
 
 
