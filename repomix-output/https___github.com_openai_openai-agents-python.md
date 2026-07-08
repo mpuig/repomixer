@@ -623,14 +623,14 @@ search:
 -   음성은 구성할 수 있지만, 세션이 이미 음성 오디오를 생성한 후에는 변경할 수 없습니다.
 -   지침, 함수 도구, 핸드오프, 훅, 출력 가드레일은 모두 계속 작동합니다.
 
-`RealtimeSessionModelSettings`는 새로운 중첩형 `audio` 구성과 이전의 평면형 별칭을 모두 지원합니다. 새 코드에는 중첩 구조를 권장하며, 새 실시간 에이전트는 `gpt-realtime-2`로 시작하세요.
+`RealtimeSessionModelSettings`는 새로운 중첩형 `audio` 구성과 이전의 평면형 별칭을 모두 지원합니다. 새 코드에는 중첩 구조를 권장하며, 새 실시간 에이전트는 `gpt-realtime-2.1`로 시작하세요.
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -975,14 +975,14 @@ agent = RealtimeAgent(
 
 ### 3. 러너 구성
 
-새 코드에서는 중첩된 `audio.input` / `audio.output` 세션 설정 구조를 사용하는 것을 권장합니다. 새 실시간 에이전트에는 `gpt-realtime-2`로 시작하세요.
+새 코드에서는 중첩된 `audio.input` / `audio.output` 세션 설정 구조를 사용하는 것을 권장합니다. 새 실시간 에이전트에는 `gpt-realtime-2.1`로 시작하세요.
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -4821,7 +4821,7 @@ SDK의 주요 기능은 다음과 같습니다.
 -   **세션**: 에이전트 루프 내에서 작업 컨텍스트를 유지하기 위한 영속 메모리 계층
 -   **휴먼인더루프 (HITL)**: 에이전트 실행 전반에 사람을 참여시키기 위한 내장 메커니즘
 -   **트레이싱**: OpenAI의 평가, 파인튜닝, 증류 도구 모음 지원과 함께 워크플로를 시각화, 디버깅, 모니터링하기 위한 내장 트레이싱
--   **실시간 에이전트**: `gpt-realtime-2`, 자동 인터럽션(중단 처리) 감지, 컨텍스트 관리, 가드레일 등을 활용해 강력한 음성 에이전트 구축
+-   **실시간 에이전트**: `gpt-realtime-2.1`, 자동 인터럽션(중단 처리) 감지, 컨텍스트 관리, 가드레일 등을 활용해 강력한 음성 에이전트 구축
 
 ## Agents SDK 또는 Responses API
 
@@ -4887,7 +4887,7 @@ export OPENAI_API_KEY=sk-...
 | 턴 간 메모리 유지 | [에이전트 실행](running_agents.md#choose-a-memory-strategy) 및 [세션](sessions/index.md) |
 | OpenAI 모델, 웹소켓 전송 또는 비 OpenAI 제공자 사용 | [모델](models/index.md) |
 | 출력, 실행 항목, 인터럽션(중단 처리), 재개 상태 검토 | [결과](results.md) |
-| `gpt-realtime-2`로 지연 시간이 낮은 음성 에이전트 구축 | [실시간 에이전트 빠른 시작](realtime/quickstart.md) 및 [실시간 전송](realtime/transport.md) |
+| `gpt-realtime-2.1`로 지연 시간이 낮은 음성 에이전트 구축 | [실시간 에이전트 빠른 시작](realtime/quickstart.md) 및 [실시간 전송](realtime/transport.md) |
 | 음성-텍스트 변환 / 에이전트 / 텍스트-음성 변환 파이프라인 구축 | [음성 파이프라인 빠른 시작](voice/quickstart.md) |
 
 ================
@@ -8752,14 +8752,14 @@ By default, `RealtimeRunner` uses `OpenAIRealtimeWebSocketModel`, so the default
 -   Voice can be configured, but it cannot change after the session has already produced spoken audio.
 -   Instructions, function tools, handoffs, hooks, and output guardrails all still work.
 
-`RealtimeSessionModelSettings` supports both a newer nested `audio` config and older flat aliases. Prefer the nested shape for new code, and start with `gpt-realtime-2` for new realtime agents:
+`RealtimeSessionModelSettings` supports both a newer nested `audio` config and older flat aliases. Prefer the nested shape for new code, and start with `gpt-realtime-2.1` for new realtime agents:
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -9100,14 +9100,14 @@ agent = RealtimeAgent(
 
 ### 3. Configure the runner
 
-Prefer the nested `audio.input` / `audio.output` session settings shape for new code. For new realtime agents, start with `gpt-realtime-2`.
+Prefer the nested `audio.input` / `audio.output` session settings shape for new code. For new realtime agents, start with `gpt-realtime-2.1`.
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -13817,14 +13817,14 @@ search:
 -   可以配置音色，但在会话已经生成过语音音频后就不能再更改。
 -   instructions、工具调用、任务转移、钩子和输出安全防护措施仍然都可用。
 
-`RealtimeSessionModelSettings` 同时支持较新的嵌套式 `audio` 配置和较旧的扁平别名。新代码建议优先使用嵌套形式，并为新的实时智能体从 `gpt-realtime-2` 开始：
+`RealtimeSessionModelSettings` 同时支持较新的嵌套式 `audio` 配置和较旧的扁平别名。新代码建议优先使用嵌套形式，并为新的实时智能体从 `gpt-realtime-2.1` 开始：
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -14169,14 +14169,14 @@ agent = RealtimeAgent(
 
 ### 3. runner 配置
 
-对于新代码，优先使用嵌套的 `audio.input` / `audio.output` 会话设置结构。对于新的实时智能体，请从 `gpt-realtime-2` 开始。
+对于新代码，优先使用嵌套的 `audio.input` / `audio.output` 会话设置结构。对于新的实时智能体，请从 `gpt-realtime-2.1` 开始。
 
 ```python
 runner = RealtimeRunner(
     starting_agent=agent,
     config={
         "model_settings": {
-            "model_name": "gpt-realtime-2",
+            "model_name": "gpt-realtime-2.1",
             "audio": {
                 "input": {
                     "format": "pcm16",
@@ -18015,7 +18015,7 @@ SDK 有两个核心设计原则：
 -   **会话**：用于在智能体循环中维护工作上下文的持久记忆层。
 -   **人在回路**：内置机制，用于在智能体运行过程中引入人工参与。
 -   **追踪**：内置追踪，用于可视化、调试和监控工作流，并支持 OpenAI 的评估、微调和蒸馏工具套件。
--   **实时智能体**：使用 `gpt-realtime-2`、自动中断检测、上下文管理、安全防护措施等构建强大的语音智能体。
+-   **实时智能体**：使用 `gpt-realtime-2.1`、自动中断检测、上下文管理、安全防护措施等构建强大的语音智能体。
 
 ## Agents SDK 与 Responses API 的选择
 
@@ -18081,7 +18081,7 @@ export OPENAI_API_KEY=sk-...
 | 在多个轮次之间保留记忆 | [运行智能体](running_agents.md#choose-a-memory-strategy)和[会话](sessions/index.md) |
 | 使用 OpenAI模型、websocket 传输或非 OpenAI提供商 | [模型](models/index.md) |
 | 查看输出、运行项、中断和恢复状态 | [结果](results.md) |
-| 使用 `gpt-realtime-2` 构建低延迟语音智能体 | [实时智能体快速入门](realtime/quickstart.md)和[实时传输](realtime/transport.md) |
+| 使用 `gpt-realtime-2.1` 构建低延迟语音智能体 | [实时智能体快速入门](realtime/quickstart.md)和[实时传输](realtime/transport.md) |
 | 构建语音转文本 / 智能体 / 文本转语音流水线 | [语音流水线快速入门](voice/quickstart.md) |
 
 ================
@@ -22877,7 +22877,7 @@ Here are the main features of the SDK:
 -   **Sessions**: A persistent memory layer for maintaining working context within an agent loop.
 -   **Human in the loop**: Built-in mechanisms for involving humans across agent runs.
 -   **Tracing**: Built-in tracing for visualizing, debugging, and monitoring workflows, with support for the OpenAI suite of evaluation, fine-tuning, and distillation tools.
--   **Realtime Agents**: Build powerful voice agents with `gpt-realtime-2`, automatic interruption detection, context management, guardrails, and more.
+-   **Realtime Agents**: Build powerful voice agents with `gpt-realtime-2.1`, automatic interruption detection, context management, guardrails, and more.
 
 ## Agents SDK or Responses API?
 
@@ -22943,7 +22943,7 @@ Use this table when you know the job you want to do, but not which page explains
 | Keep memory across turns | [Running agents](running_agents.md#choose-a-memory-strategy) and [Sessions](sessions/index.md) |
 | Use OpenAI models, websocket transport, or non-OpenAI providers | [Models](models/index.md) |
 | Review outputs, run items, interruptions, and resume state | [Results](results.md) |
-| Build a low-latency voice agent with `gpt-realtime-2` | [Realtime agents quickstart](realtime/quickstart.md) and [Realtime transport](realtime/transport.md) |
+| Build a low-latency voice agent with `gpt-realtime-2.1` | [Realtime agents quickstart](realtime/quickstart.md) and [Realtime transport](realtime/transport.md) |
 | Build a speech-to-text / agent / text-to-speech pipeline | [Voice pipeline quickstart](voice/quickstart.md) |
 
 ================
@@ -23725,6 +23725,14 @@ We will increment `Z` for non-breaking changes:
 -   Updates to beta features
 
 ## Breaking change changelog
+
+### 0.18.0
+
+This minor release does **not** introduce a breaking change. The minor version bump is for the Realtime agents default model update only.
+
+Highlights:
+
+-   Realtime agents now use `gpt-realtime-2.1` as the default model, so new Realtime setups use the latest recommended model without extra configuration.
 
 ### 0.17.0
 

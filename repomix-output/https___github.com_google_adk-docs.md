@@ -239,7 +239,7 @@ agent = <span class="fn">Agent</span>(
 
 </pre></div>
 
-<div class="code-content" id="code-go" style="display:none"><pre><span class="kw">import</span> <span class="str">"google.golang.org/adk/agent/llmagent"</span>
+<div class="code-content" id="code-go" style="display:none"><pre><span class="kw">import</span> <span class="str">"google.golang.org/adk/v2/agent/llmagent"</span>
 
 model, _ := gemini.<span class="fn">NewModel</span>(context.<span class="fn">Background</span>(), <span class="str">"gemini-flash-latest"</span>, <span class="kw">nil</span>)
 a, _ := llmagent.<span class="fn">New</span>(llmagent.<span class="fn">Config</span>{
@@ -285,8 +285,8 @@ a, _ := llmagent.<span class="fn">New</span>(llmagent.<span class="fn">Config</s
       </div>
       <div class="install-info" id="install-go" style="display:none">
         <div class="install-cmd">
-          <code>go get google.golang.org/adk</code>
-          <button class="copy-btn" data-copy="go get google.golang.org/adk" title="Copy to clipboard">📋</button>
+          <code>go get google.golang.org/adk/v2</code>
+          <button class="copy-btn" data-copy="go get google.golang.org/adk/v2" title="Copy to clipboard">📋</button>
         </div>
       </div>
       <div class="install-info" id="install-java" style="display:none">
@@ -737,7 +737,7 @@ is often not enough. You will want to create specialized agents that can
 collaborate to solve a problem. The [**Agent2Agent (A2A) Protocol**](https://a2a-protocol.org) is the
 standard that allows these agents to communicate with each other.
 
-## When to Use A2A vs. Local Sub-Agents
+## When to use A2A vs. local sub-agents
 
 - **Local Sub-Agents:** These are agents that run *within the same application
   process* as your main agent. They are like internal modules or libraries, used
@@ -759,7 +759,7 @@ Consider using **A2A** when:
 - You want to enforce a **strong, formal contract** (the A2A protocol) between
   your system's components.
 
-### When to Use A2A: Concrete Examples
+### When to use A2A: concrete examples
 
 - **Integrating with a Third-Party Service:** Your main agent needs to get
   real-time stock prices from an external financial data provider. This
@@ -776,7 +776,7 @@ Consider using **A2A** when:
   contribute agents, and you need a strict contract for how these agents
   interact to ensure compatibility and stability.
 
-### When NOT to Use A2A: Concrete Examples (Prefer Local Sub-Agents)
+### When NOT to use A2A: concrete examples (prefer local sub-agents)
 
 - **Internal Code Organization:** You are breaking down a complex task within a
   single agent into smaller, manageable functions or modules (e.g., a
@@ -793,14 +793,14 @@ Consider using **A2A** when:
   require independent deployment or complex state management, a simple function
   or class within the same agent is more appropriate than a separate A2A agent.
 
-## The A2A Workflow in ADK: A Simplified View
+## The A2A workflow in ADK: a simplified view
 
 Agent Development Kit (ADK) simplifies the process of building and connecting
 agents using the A2A protocol. Here's a straightforward breakdown of how it
 works:
 
 1. **Making an Agent Accessible (Exposing):** You start with an existing ADK
-    agent that you want other agents to be able to interact with. The ADK
+    agent that you want other agents to be able to interact with. ADK
     provides a simple way to "expose" this agent, turning it into an
     **A2AServer**. This server acts as a public interface, allowing other agents
     to send requests to your agent over a network. Think of it like setting up a
@@ -815,15 +815,27 @@ works:
 
 From your perspective as a developer, once you've set up this connection,
 interacting with the remote agent feels just like interacting with a local tool
-or function. The ADK abstracts away the network layer, making distributed agent
+or function. ADK abstracts away the network layer, making distributed agent
 systems as easy to work with as local ones.
 
-## Visualizing the A2A Workflow
+## Supported capabilities in A2A
+
+ADK's A2A integration provides three core capabilities for complex agentic
+systems:
+
+- **Reasoning:** Preserves a model's reasoning/thought traces when messages pass
+  between agents over A2A.
+- **Long-Running Tools:** Tracks tool calls that run longer than a standard
+  response, so long-running operations don't time out.
+- **Artifacts:** Passes file artifacts (such as generated files) between agents
+  over A2A.
+
+## Visualizing the A2A workflow
 
 To further clarify the A2A workflow, let's look at the "before and after" for
 both exposing and consuming agents, and then the combined system.
 
-### Exposing an Agent
+### Exposing an agent
 
 **Before Exposing:**
 Your agent code runs as a standalone component, but in this scenario, you want
@@ -860,7 +872,7 @@ accessible over a network to other remote agents.
 +-----------------------------+
 ```
 
-### Consuming an Agent
+### Consuming an agent
 
 **Before Consuming:**
 Your agent (referred to as the "Root Agent" in this context) is the application
@@ -892,7 +904,7 @@ remote agent.
       (Now talks to remote agent via RemoteA2aAgent)
 ```
 
-### Final System (Combined View)
+### Final system (combined view)
 
 This diagram shows how the consuming and exposing parts connect to form a
 complete A2A system.
@@ -924,7 +936,7 @@ Exposing Side:
                                                +-------------------+
 ```
 
-## Concrete Use Case: Customer Service and Product Catalog Agents
+## Concrete use case: customer service and product catalog agents
 
 Let's consider a practical example: a **Customer Service Agent** that needs to
 retrieve product information from a separate **Product Catalog Agent**.
@@ -980,7 +992,7 @@ Server. Then, the Customer Service Agent can simply call methods on the
 communication to the Product Catalog Agent. This allows for clear separation of
 concerns and easy integration of specialized agents.
 
-## Next Steps
+## Next steps
 
 Now that you understand the "why" of A2A, let's dive into the "how."
 
@@ -2619,8 +2631,8 @@ in your agents:
 
     ```go
     import (
-    	"google.golang.org/adk/agent/llmagent"
-    	"google.golang.org/adk/model/gemini"
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model/gemini"
     	"google.golang.org/genai"
     )
 
@@ -3281,7 +3293,7 @@ File: docs/agents/models/litellm.md
 translation layer for models and model hosting services, providing a
 standardized, OpenAI-compatible interface to over 100+ LLMs. ADK provides
 integration through the LiteLLM library, allowing you to access a vast range of
-LLMs from providers like OpenAI, Anthropic (non-Agent Platform), Cohere, and many
+LLMs from providers such as OpenAI, Anthropic, Ollama, Mistral, DeepSeek, and Cohere, and many
 others. You can run open-source models locally or self-host them and integrate
 them using LiteLLM for operational control, cost savings, privacy, or offline
 use cases.
@@ -4941,8 +4953,8 @@ The foundation for structuring multi-agent systems is the parent-child relations
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchy"
@@ -5019,9 +5031,9 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline"
@@ -5083,9 +5095,9 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/parallelagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/parallelagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-execution"
@@ -5193,10 +5205,10 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     ```go
     import (
         "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/loopagent"
+        "google.golang.org/adk/v2/session"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:loop-with-condition"
@@ -5297,9 +5309,9 @@ The most fundamental way for agents operating within the same invocation (and th
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:output-key-state"
@@ -5397,7 +5409,7 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
 
     ```go
     import (
-        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/v2/agent/llmagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:llm-transfer"
@@ -5540,12 +5552,12 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     import (
         "fmt"
         "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/model"
-        "google.golang.org/adk/session"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/agenttool"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/model"
+        "google.golang.org/adk/v2/session"
+        "google.golang.org/adk/v2/tool"
+        "google.golang.org/adk/v2/tool/agenttool"
         "google.golang.org/genai"
     )
 
@@ -6477,7 +6489,7 @@ Control whether the agent receives the prior conversation history.
 === "Go"
 
     ```go
-    import "google.golang.org/adk/agent/llmagent"
+    import "google.golang.org/adk/v2/agent/llmagent"
 
     --8<-- "examples/go/snippets/agents/llm-agents/snippets/main.go:include_contents"
     ```
@@ -7685,11 +7697,11 @@ Understanding artifacts involves grasping a few key components: the service that
       "context"
       "log"
 
-      "google.golang.org/adk/agent/llmagent"
-      "google.golang.org/adk/artifactservice"
-      "google.golang.org/adk/llm/gemini"
-      "google.golang.org/adk/runner"
-      "google.golang.org/adk/sessionservice"
+      "google.golang.org/adk/v2/agent/llmagent"
+      "google.golang.org/adk/v2/artifact"
+      "google.golang.org/adk/v2/model/gemini"
+      "google.golang.org/adk/v2/runner"
+      "google.golang.org/adk/v2/session"
       "google.golang.org/genai"
 	)
 
@@ -7964,11 +7976,11 @@ Before you can use any artifact methods via the context objects, you **must** pr
       "context"
       "log"
 
-      "google.golang.org/adk/agent/llmagent"
-      "google.golang.org/adk/artifactservice"
-      "google.golang.org/adk/llm/gemini"
-      "google.golang.org/adk/runner"
-      "google.golang.org/adk/sessionservice"
+      "google.golang.org/adk/v2/agent/llmagent"
+      "google.golang.org/adk/v2/artifact"
+      "google.golang.org/adk/v2/model/gemini"
+      "google.golang.org/adk/v2/runner"
+      "google.golang.org/adk/v2/session"
       "google.golang.org/genai"
     )
 
@@ -8088,8 +8100,8 @@ The artifact interaction methods are available directly on instances of `Callbac
         import (
           "log"
 
-          "google.golang.org/adk/agent"
-          "google.golang.org/adk/llm"
+          "google.golang.org/adk/v2/agent"
+          "google.golang.org/adk/v2/model"
           "google.golang.org/genai"
         )
 
@@ -8218,8 +8230,8 @@ The artifact interaction methods are available directly on instances of `Callbac
         import (
           "log"
 
-          "google.golang.org/adk/agent"
-          "google.golang.org/adk/llm"
+          "google.golang.org/adk/v2/agent"
+          "google.golang.org/adk/v2/model"
         )
 
         --8<-- "examples/go/snippets/artifacts/main.go:loading-artifacts"
@@ -8362,9 +8374,9 @@ artifact in a later turn.
 
     ```go
     import (
-      "google.golang.org/adk/agent/llmagent"
-      "google.golang.org/adk/tool"
-      "google.golang.org/adk/tool/loadartifactstool"
+      "google.golang.org/adk/v2/agent/llmagent"
+      "google.golang.org/adk/v2/tool"
+      "google.golang.org/adk/v2/tool/loadartifactstool"
     )
 
     agent, err := llmagent.New(llmagent.Config{
@@ -8454,8 +8466,8 @@ artifact in a later turn.
           "log"
           "strings"
 
-          "google.golang.org/adk/agent"
-          "google.golang.org/adk/llm"
+          "google.golang.org/adk/v2/agent"
+          "google.golang.org/adk/v2/model"
           "google.golang.org/genai"
         )
 
@@ -8598,7 +8610,7 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
 
         ```go
         import (
-          "google.golang.org/adk/artifactservice"
+          "google.golang.org/adk/v2/artifact"
         )
 
         --8<-- "examples/go/snippets/artifacts/main.go:in-memory-service"
@@ -10310,8 +10322,8 @@ Here are the primary context flavors you will encounter:
 
         ```go
         import (
-        	"google.golang.org/adk/agent"
-        	"google.golang.org/adk/session"
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/session"
         )
 
         --8<-- "examples/go/snippets/context/main.go:invocation_context_agent"
@@ -10377,7 +10389,7 @@ Here are the primary context flavors you will encounter:
     === "Go"
 
         ```go
-        import "google.golang.org/adk/agent"
+        import "google.golang.org/adk/v2/agent"
 
         --8<-- "examples/go/snippets/context/main.go:readonly_context_instruction"
         ```
@@ -10452,8 +10464,8 @@ Here are the primary context flavors you will encounter:
 
         ```go
         import (
-        	"google.golang.org/adk/agent"
-        	"google.golang.org/adk/model"
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/model"
         )
 
         --8<-- "examples/go/snippets/context/main.go:callback_context_callback"
@@ -10551,7 +10563,7 @@ Here are the primary context flavors you will encounter:
     === "Go"
 
         ```go
-        import "google.golang.org/adk/tool"
+        import "google.golang.org/adk/v2/tool"
 
         --8<-- "examples/go/snippets/context/main.go:tool_context_tool"
         ```
@@ -10656,9 +10668,9 @@ You'll frequently need to read information stored within the context.
 
         ```go
         import (
-        	"google.golang.org/adk/agent"
-        	"google.golang.org/adk/session"
-            "google.golang.org/adk/tool"
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/session"
+            "google.golang.org/adk/v2/tool"
         	"google.golang.org/genai"
         )
 
@@ -10731,7 +10743,7 @@ You'll frequently need to read information stored within the context.
     === "Go"
 
         ```go
-        import "google.golang.org/adk/tool"
+        import "google.golang.org/adk/v2/tool"
 
         --8<-- "examples/go/snippets/context/main.go:accessing_ids"
         ```
@@ -10794,7 +10806,7 @@ You'll frequently need to read information stored within the context.
 
         ```go
         import (
-        	"google.golang.org/adk/agent"
+        	"google.golang.org/adk/v2/agent"
         	"google.golang.org/genai"
         )
 
@@ -10880,7 +10892,7 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Go"
 
         ```go
-        import "google.golang.org/adk/tool"
+        import "google.golang.org/adk/v2/tool"
 
         --8<-- "examples/go/snippets/context/main.go:passing_data_tool1"
 
@@ -10948,7 +10960,7 @@ State is crucial for memory and data flow. When you modify state using `Callback
     === "Go"
 
         ```go
-        import "google.golang.org/adk/tool"
+        import "google.golang.org/adk/v2/tool"
 
         --8<-- "examples/go/snippets/context/main.go:updating_preferences"
         ```
@@ -11032,7 +11044,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
             ```go
             import (
-            	"google.golang.org/adk/tool"
+            	"google.golang.org/adk/v2/tool"
             	"google.golang.org/genai"
             )
 
@@ -11177,7 +11189,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
         === "Go"
 
             ```go
-            import "google.golang.org/adk/tool"
+            import "google.golang.org/adk/v2/tool"
 
             --8<-- "examples/go/snippets/context/main.go:artifacts_summarize"
             ```
@@ -11272,7 +11284,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
     === "Go"
 
         ```go
-        import "google.golang.org/adk/tool"
+        import "google.golang.org/adk/v2/tool"
 
         --8<-- "examples/go/snippets/context/main.go:artifacts_list"
         ```
@@ -13518,13 +13530,13 @@ We will reference the `capital_agent` example defined on the [LLM agents](../age
             "os"
             "strings"
 
-            "google.golang.org/adk/agent"
-            "google.golang.org/adk/agent/llmagent"
-            "google.golang.org/adk/cmd/launcher"
-            "google.golang.org/adk/cmd/launcher/full"
-            "google.golang.org/adk/model/gemini"
-            "google.golang.org/adk/tool"
-            "google.golang.org/adk/tool/functiontool"
+            "google.golang.org/adk/v2/agent"
+            "google.golang.org/adk/v2/agent/llmagent"
+            "google.golang.org/adk/v2/cmd/launcher"
+            "google.golang.org/adk/v2/cmd/launcher/full"
+            "google.golang.org/adk/v2/model/gemini"
+            "google.golang.org/adk/v2/tool"
+            "google.golang.org/adk/v2/tool/functiontool"
             "google.golang.org/genai"
         )
 
@@ -16593,7 +16605,7 @@ An `Event` in ADK is an immutable record representing a specific point in the ag
     ```
 
 === "Go"
-    In Go, this is a struct of type `google.golang.org/adk/session.Event`.
+    In Go, this is a struct of type `google.golang.org/adk/v2/session.Event`.
 
     ```go
     // Conceptual Structure of an Event (Go - See session/session.go)
@@ -16772,7 +16784,7 @@ Quickly determine what an event represents by checking:
       // Pseudocode: Basic event identification (Go)
     import (
       "fmt"
-      "google.golang.org/adk/session"
+      "google.golang.org/adk/v2/session"
       "google.golang.org/genai"
     )
 
@@ -16938,7 +16950,7 @@ Once you know the event type, access the relevant data:
         ```go
         import (
             "fmt"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/session"
             "google.golang.org/genai"
         )
 
@@ -17011,7 +17023,7 @@ Once you know the event type, access the relevant data:
         ```go
         import (
             "fmt"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/session"
             "google.golang.org/genai"
         )
 
@@ -17081,7 +17093,7 @@ The `event.actions` object signals changes that occurred or should occur. Always
         ```go
         import (
             "fmt"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/session"
         )
 
         func handleStateChanges(event *session.Event) {
@@ -17129,12 +17141,12 @@ The `event.actions` object signals changes that occurred or should occur. Always
         ```
 
     === "Go"
-        `artifactChanges := event.Actions.ArtifactDelta` (a `map[string]artifact.Artifact`)
+        `artifactChanges := event.Actions.ArtifactDelta` (a `map[string]int64`)
         ```go
         import (
             "fmt"
-            "google.golang.org/adk/artifact"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/artifact"
+            "google.golang.org/adk/v2/session"
         )
 
         func handleArtifactChanges(event *session.Event) {
@@ -17142,8 +17154,8 @@ The `event.actions` object signals changes that occurred or should occur. Always
                 fmt.Printf("  Artifacts saved: %v\n", event.Actions.ArtifactDelta)
                 // UI might refresh an artifact list
                 // Iterate through event.Actions.ArtifactDelta to get filename and artifact.Artifact details
-                for filename, art := range event.Actions.ArtifactDelta {
-                    fmt.Printf("    Filename: %s, Version: %d, MIMEType: %s\n", filename, art.Version, art.MIMEType)
+                for filename, version := range event.Actions.ArtifactDelta {
+                    fmt.Printf("    Filename: %s, Version: %d\n", filename, version)
                 }
             }
         }
@@ -17209,7 +17221,7 @@ The `event.actions` object signals changes that occurred or should occur. Always
         ```go
         import (
             "fmt"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/session"
         )
 
         func handleControlFlow(event *session.Event) {
@@ -17351,7 +17363,7 @@ Use the built-in helper method `event.is_final_response()` to identify events su
         import (
             "fmt"
             "strings"
-            "google.golang.org/adk/session"
+            "google.golang.org/adk/v2/session"
             "google.golang.org/genai"
         )
 
@@ -28421,6 +28433,143 @@ They are packaged in the toolset `BigtableToolset`.
 ```
 
 ================
+File: docs/integrations/carsxe.md
+================
+---
+catalog_title: CarsXE
+catalog_description: Decode VINs and license plates, and fetch vehicle specs, market value, history, and recalls
+catalog_icon: /integrations/assets/carsxe.png
+catalog_tags: ["mcp"]
+---
+
+# CarsXE MCP tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+</div>
+
+The [CarsXE MCP server](https://github.com/carsxe/carsxe-mcp-server) connects your
+ADK agent to the [CarsXE](https://www.carsxe.com/) vehicle data platform. It
+exposes CarsXE's APIs — VIN decoding and full specifications, license-plate
+decoding, market value, title and ownership history, safety recalls, lien and
+theft records, OBD-II code decoding, and image lookups — as MCP tools your agent
+can call with natural language such as "Decode VIN 1HGBH41JXMN109186" or "Are
+there open recalls on this car?".
+
+The server is hosted at `https://mcp.carsxe.com/mcp` over streamable HTTP, so no
+local install is required — the agent connects to the remote endpoint directly.
+
+## Use cases
+
+- **Decode a VIN or plate**: Turn a 17-character VIN or a license plate into
+  structured make, model, year, engine, trim, and equipment data so the agent
+  can reason about a specific vehicle.
+
+- **Assess a vehicle**: Retrieve market value, full title and ownership history,
+  and open safety recalls to support buying, selling, and servicing decisions.
+
+- **Diagnose problems**: Decode OBD-II trouble codes (e.g. `P0300`) into
+  human-readable definitions and likely causes.
+
+- **Read vehicle images**: Extract a VIN or plate from a photo, and fetch
+  vehicle images by make and model.
+
+## Prerequisites
+
+- A working [ADK installation](/get-started/installation/)
+- A CarsXE API key — sign up at
+  [api.carsxe.com](https://api.carsxe.com/dashboard/developer) and copy your key
+
+## Use with agent
+
+The agent connects to the hosted CarsXE MCP server over streamable HTTP and
+authenticates with your API key via the `X-API-Key` header.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
+
+    CARSXE_API_KEY = "YOUR_CARSXE_API_KEY"
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="carsxe_agent",
+        instruction=(
+            "You are a vehicle data assistant. Use the CarsXE tools to decode "
+            "VINs and license plates and to look up specifications, market value, "
+            "history, recalls, and OBD-II codes."
+        ),
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPConnectionParams(
+                    url="https://mcp.carsxe.com/mcp",
+                    headers={"X-API-Key": CARSXE_API_KEY},
+                ),
+            )
+        ],
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { LlmAgent, MCPToolset } from "@google/adk";
+
+    const CARSXE_API_KEY = "YOUR_CARSXE_API_KEY";
+
+    const rootAgent = new LlmAgent({
+        model: "gemini-flash-latest",
+        name: "carsxe_agent",
+        instruction:
+            "You are a vehicle data assistant. Use the CarsXE tools to decode " +
+            "VINs and license plates and to look up specifications, market value, " +
+            "history, recalls, and OBD-II codes.",
+        tools: [
+            new MCPToolset({
+                type: "StreamableHTTPConnectionParams",
+                url: "https://mcp.carsxe.com/mcp",
+                transportOptions: {
+                    requestInit: {
+                        headers: {
+                            "X-API-Key": CARSXE_API_KEY,
+                        },
+                    },
+                },
+            }),
+        ],
+    });
+
+    export { rootAgent };
+    ```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`get-vehicle-specs` | Decode a VIN into full vehicle specifications (make, model, year, engine, trim, equipment)
+`decode-vehicle-plate` | Decode a license plate into vehicle data
+`get-market-value` | Estimate a vehicle's market value by VIN
+`get-vehicle-history` | Retrieve title, ownership, accident, and odometer history by VIN
+`get-vehicle-recalls` | Check open safety recalls by VIN
+`get-lien-theft` | Check lien and theft records by VIN
+`international-vin-decoder` | Decode a non-US (international) VIN
+`vin-ocr` | Extract a VIN from an image using OCR
+`recognize-plate-image` | Recognize a license plate from an image
+`get-year-make-model` | Look up specifications by year, make, and model
+`get-vehicle-images` | Retrieve vehicle images by make and model
+`decode-obd-code` | Decode an OBD-II diagnostic trouble code
+
+## Additional resources
+
+- [CarsXE MCP server repository](https://github.com/carsxe/carsxe-mcp-server)
+- [CarsXE API documentation](https://api.carsxe.com/docs)
+- [CarsXE homepage](https://www.carsxe.com/)
+- [Get a CarsXE API key](https://api.carsxe.com/dashboard/developer)
+
+================
 File: docs/integrations/cartesia.md
 ================
 ---
@@ -29117,7 +29266,7 @@ For fully customized agent runtimes, you can enable cloud tracing by using the b
     	"log"
     	"time"
 
-    	"google.golang.org/adk/telemetry"
+    	"google.golang.org/adk/v2/telemetry"
     )
 
     func main() {
@@ -34719,7 +34868,7 @@ documentation:
     	"fmt"
 
     	"github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
-    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/adk/v2/agent/llmagent"
     )
 
     func main() {
@@ -34766,158 +34915,6 @@ For more information, read more about the following features:
 * [Authenticated Parameters](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#parameter-binding): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
 * [Authorized Invocations:](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#client-to-server-authentication)  restrict access to use a tool based on the users Auth token
 * [OpenTelemetry](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry): get metrics and tracing from Toolbox with OpenTelemetry
-
-================
-File: docs/integrations/mimir.md
-================
----
-catalog_title: Mimir Memory
-catalog_description: Add persistent, local, encrypted cross-session memory to ADK agents
-catalog_icon: /integrations/assets/mimir.svg
-catalog_tags: ["data"]
----
-
-# Mimir Memory integration for ADK
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
-</div>
-
-The [`adk-mimir-memory`](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
-integration connects your ADK agent to
-[Mimir](https://github.com/Perseus-Computing-LLC/mimir), a persistent,
-cross-session memory backend. Backed by a single Rust binary with an embedded
-SQLite database, it requires **zero cloud dependencies**, and everything runs
-locally. Memory is encrypted at rest with AES-256-GCM, and search combines FTS5
-keyword matching with dense vector retrieval.
-
-## Use cases
-
-- **Persistent agent memory across restarts**: Sessions survive process
-  restarts, and agents recall past conversations automatically
-- **Private, air-gapped deployments**: No cloud dependency, and Mimir runs
-  entirely on your machine with optional AES-256-GCM encryption
-- **Hybrid search across memories**: Combine keyword (FTS5/BM25) and semantic
-  (dense vector) search to find relevant past interactions
-- **Workspace-aware agents**: Pair with Perseus for agents that know about your
-  project files, git state, and configuration
-
-## Prerequisites
-
-- Python 3.10+
-- The `mimir` binary (see [Installation](#installation))
-- `google-adk>=1.0.0`
-
-## Installation
-
-Install the Python package:
-
-```bash
-pip install adk-mimir-memory
-```
-
-Then install the `mimir` binary: download the build for your platform from the
-[Mimir releases page](https://github.com/Perseus-Computing-LLC/mimir/releases)
-and place it on your `PATH`. The service looks for `mimir` by default, or pass
-`mimir_binary="/absolute/path/to/mimir"` to `MimirMemoryService`.
-
-## Use with agent
-
-Create the `MimirMemoryService`, pass it to your `Runner`, and give the agent
-the `load_memory` tool so it can recall past sessions:
-
-```python
-from adk_mimir_memory import MimirMemoryService
-from google.adk.agents import Agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.tools import load_memory
-
-agent = Agent(
-    name="memory_assistant",
-    model="gemini-flash-latest",
-    instruction="You are a helpful assistant with long-term memory.",
-    tools=[load_memory],
-)
-
-runner = Runner(
-    agent=agent,
-    app_name="mimir_app",
-    session_service=InMemorySessionService(),
-    memory_service=MimirMemoryService(db_path="~/.adk/mimir.db"),
-)
-```
-
-After a session completes, call
-`await memory_service.add_session_to_memory(session)` to persist it. The agent
-recalls relevant memories in later sessions through the `load_memory` tool. See
-[ADK memory](/sessions/memory/) for the full ingest-and-recall flow.
-
-### Perseus live context (optional)
-
-For live workspace awareness, install the `perseus` extra:
-
-```bash
-pip install adk-mimir-memory[perseus]
-```
-
-Then use the prebuilt `perseus_context_agent`, which resolves `@file`,
-`@search`, and `@memory` directives at inference time:
-
-```python
-from adk_mimir_memory.perseus_context import perseus_context_agent
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-
-# The pre-built agent ships without a model; set one before use.
-perseus_context_agent.model = "gemini-flash-latest"
-
-runner = Runner(
-    agent=perseus_context_agent,
-    app_name="perseus_app",
-    session_service=InMemorySessionService(),
-    memory_service=MimirMemoryService(db_path="~/.adk/mimir.db"),
-)
-```
-
-Set Perseus directives via session state when creating the session (inside an
-async function):
-
-```python
-session = await runner.session_service.create_session(
-    app_name="perseus_app",
-    user_id="user",
-    state={
-        "_perseus_directives": "@file AGENTS.md @file README.md @memory deployment",
-        "_perseus_workspace": "/path/to/project",
-    },
-)
-```
-
-## Available memory operations
-
-| Method | Description |
-|---|---|
-| `add_session_to_memory(session)` | Persist a full session's events |
-| `add_events_to_memory(...)` | Append incremental event deltas |
-| `add_memory(...)` | Store explicit memory entries |
-| `search_memory(...)` | FTS5 keyword search across memories |
-
-## Backend comparison
-
-| Backend | Dependencies | At-rest encryption | Search | Hosting |
-|---|---|---|---|---|
-| **InMemoryMemoryService** | None | Not persisted | Keyword | Local (ephemeral) |
-| **VertexAiMemoryBankService** | Google Cloud | Google-managed (CMEK optional) | Semantic (Gemini) | Google Cloud |
-| **VertexAiRagMemoryService** | Google Cloud | Google-managed (CMEK optional) | Vector similarity | Google Cloud |
-| **MimirMemoryService** | `mimir` binary | Local AES-256-GCM (optional) | Hybrid (FTS5 + dense) | Local |
-
-## Resources
-
-- [adk-mimir-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
-- [adk-mimir-memory on PyPI](https://pypi.org/project/adk-mimir-memory/)
-- [Mimir (backing service)](https://github.com/Perseus-Computing-LLC/mimir)
-- [Perseus Context integration](/integrations/perseus/)
 
 ================
 File: docs/integrations/mlflow-gateway.md
@@ -36616,6 +36613,160 @@ specific tool identifiers.
 - [PayPal Agent Tools Reference](https://docs.paypal.ai/developer/tools/ai/agent-tools-ref)
 
 ================
+File: docs/integrations/perseus-vault.md
+================
+---
+catalog_title: Perseus Vault Memory
+catalog_description: Add persistent, local, encrypted cross-session memory to ADK agents
+catalog_icon: /integrations/assets/perseus-vault.svg
+catalog_tags: ["data"]
+---
+
+# Perseus Vault Memory integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [`adk-perseus-vault-memory`](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
+integration connects your ADK agent to
+[Perseus Vault](https://github.com/Perseus-Computing-LLC/perseus-vault), a
+persistent, cross-session memory backend. Backed by a single Rust binary with an
+embedded SQLite database, it requires **zero cloud dependencies**, and everything
+runs locally. Memory is encrypted at rest with AES-256-GCM, and search combines
+FTS5 keyword matching with dense vector retrieval.
+
+## Use cases
+
+- **Persistent agent memory across restarts**: Sessions survive process
+  restarts, and agents recall past conversations automatically
+- **Private, air-gapped deployments**: No cloud dependency, and Perseus Vault
+  runs entirely on your machine with optional AES-256-GCM encryption
+- **Hybrid search across memories**: Combine keyword (FTS5/BM25) and semantic
+  (dense vector) search to find relevant past interactions
+- **Workspace-aware agents**: Pair with Perseus for agents that know about your
+  project files, git state, and configuration
+
+## Prerequisites
+
+- Python 3.10+
+- The `perseus-vault` binary (see [Installation](#installation))
+- `google-adk>=1.0.0`
+
+## Installation
+
+Install the Python package:
+
+```bash
+pip install adk-perseus-vault-memory
+```
+
+Then install the `perseus-vault` binary: download the build for your platform
+from the
+[releases page](https://github.com/Perseus-Computing-LLC/perseus-vault/releases)
+and place it on your `PATH`. The service looks for `perseus-vault` by default, or
+pass `vault_binary="/absolute/path/to/perseus-vault"` to
+`PerseusVaultMemoryService`.
+
+## Use with agent
+
+Create the `PerseusVaultMemoryService`, pass it to your `Runner`, and give the
+agent the `load_memory` tool so it can recall past sessions:
+
+```python
+from adk_perseus_vault_memory import PerseusVaultMemoryService
+from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.tools import load_memory
+
+agent = Agent(
+    name="memory_assistant",
+    model="gemini-flash-latest",
+    instruction="You are a helpful assistant with long-term memory.",
+    tools=[load_memory],
+)
+
+runner = Runner(
+    agent=agent,
+    app_name="perseus_vault_app",
+    session_service=InMemorySessionService(),
+    memory_service=PerseusVaultMemoryService(db_path="~/.adk/vault.db"),
+)
+```
+
+After a session completes, call `await memory_service.add_session_to_memory(session)`
+to persist it; the agent recalls memories in later sessions through the
+`load_memory` tool. See [ADK memory](/sessions/memory/) for the full
+ingest-and-recall flow.
+
+### Perseus live context (optional)
+
+For live workspace awareness, install the `perseus` extra:
+
+```bash
+pip install adk-perseus-vault-memory[perseus]
+```
+
+Then use the prebuilt `perseus_context_agent`, which resolves `@file`,
+`@search`, and `@memory` directives at inference time:
+
+```python
+from adk_perseus_vault_memory.perseus_context import perseus_context_agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+
+# The pre-built agent ships without a model; set one before use.
+perseus_context_agent.model = "gemini-flash-latest"
+
+runner = Runner(
+    agent=perseus_context_agent,
+    app_name="perseus_app",
+    session_service=InMemorySessionService(),
+    memory_service=PerseusVaultMemoryService(db_path="~/.adk/vault.db"),
+)
+```
+
+Set Perseus directives via session state when creating the session (inside an
+async function):
+
+```python
+session = await runner.session_service.create_session(
+    app_name="perseus_app",
+    user_id="user",
+    state={
+        "_perseus_directives": "@file AGENTS.md @file README.md @memory deployment",
+        "_perseus_workspace": "/path/to/project",
+    },
+)
+```
+
+## Available memory operations
+
+| Method | Description |
+|---|---|
+| `add_session_to_memory(session)` | Persist a full session's events |
+| `add_events_to_memory(...)` | Append incremental event deltas |
+| `add_memory(...)` | Store explicit memory entries |
+| `search_memory(...)` | FTS5 keyword search across memories |
+
+## Backend comparison
+
+| Backend | Dependencies | At-rest encryption | Search | Hosting |
+|---|---|---|---|---|
+| **InMemoryMemoryService** | None | Not persisted | Keyword | Local (ephemeral) |
+| **VertexAiMemoryBankService** | Google Cloud | Google-managed | Semantic (Gemini) | Google Cloud |
+| **VertexAiRagMemoryService** | Google Cloud | Google-managed | Vector similarity | Google Cloud |
+| **PerseusVaultMemoryService** | `perseus-vault` binary | Local AES-256-GCM | Hybrid (FTS5 + dense) | Local |
+
+## Resources
+
+- [adk-perseus-vault-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
+- [adk-perseus-vault-memory on PyPI](https://pypi.org/project/adk-perseus-vault-memory/)
+- [Perseus Vault (backing service)](https://github.com/Perseus-Computing-LLC/perseus-vault)
+- [Perseus Context integration](/integrations/perseus/)
+
+================
 File: docs/integrations/perseus.md
 ================
 ---
@@ -36641,7 +36792,7 @@ retrieval index, no embeddings, and no extra LLM round-trip. Everything runs
 locally.
 
 Perseus is a context compiler, not a memory or RAG backend. For persistent
-cross-session memory, pair it with its companion, [Mimir](/integrations/mimir/).
+cross-session memory, pair it with its companion, [Perseus Vault](/integrations/perseus-vault/).
 
 ## Use cases
 
@@ -36784,7 +36935,7 @@ agent = Agent(
 - [adk-perseus-context on GitHub](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
 - [adk-perseus-context on PyPI](https://pypi.org/project/adk-perseus-context/)
 - [Perseus (context engine)](https://github.com/Perseus-Computing-LLC/perseus)
-- [Mimir Memory integration](/integrations/mimir/)
+- [Perseus Vault Memory integration](/integrations/perseus-vault/)
 
 ================
 File: docs/integrations/phoenix.md
@@ -37999,8 +38150,8 @@ ADK project's App object, as shown below:
 
     ```go
     import (
-    	"google.golang.org/adk/plugin/retryandreflect"
-    	"google.golang.org/adk/runner"
+    	"google.golang.org/adk/v2/plugin/retryandreflect"
+    	"google.golang.org/adk/v2/runner"
     )
 
     // ... create rootAgent and sessionService ...
@@ -40816,7 +40967,7 @@ To get detailed logs of agent activity (user messages, model requests/responses,
 
 ### Go programmatic setup
 
-In Go, ADK uses the `google.golang.org/adk/telemetry` package for OpenTelemetry
+In Go, ADK uses the `google.golang.org/adk/v2/telemetry` package for OpenTelemetry
 configuration and the standard `log` package for general events.
 
 #### Capture prompt content
@@ -40828,7 +40979,7 @@ package main
 
 import (
 	"context"
-	"google.golang.org/adk/telemetry"
+	"google.golang.org/adk/v2/telemetry"
 )
 
 func main() {
@@ -40860,7 +41011,7 @@ package main
 
 import (
 	"context"
-	"google.golang.org/adk/telemetry"
+	"google.golang.org/adk/v2/telemetry"
 )
 
 func main() {
@@ -41893,10 +42044,10 @@ methods, as shown in the following code example:
     import (
     	"fmt"
 
-    	"google.golang.org/adk/agent"
-    	"google.golang.org/adk/agent/llmagent"
-    	"google.golang.org/adk/model"
-    	"google.golang.org/adk/plugin"
+    	"google.golang.org/adk/v2/agent"
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model"
+    	"google.golang.org/adk/v2/plugin"
         "google.golang.org/genai"
     )
 
@@ -42157,14 +42308,14 @@ a simple ADK agent.
     	"fmt"
     	"log"
 
-    	"google.golang.org/adk/agent"
-    	"google.golang.org/adk/agent/llmagent"
-    	"google.golang.org/adk/model/gemini"
-    	"google.golang.org/adk/plugin"
-    	"google.golang.org/adk/runner"
-    	"google.golang.org/adk/session"
-    	"google.golang.org/adk/tool"
-    	"google.golang.org/adk/tool/functiontool"
+    	"google.golang.org/adk/v2/agent"
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model/gemini"
+    	"google.golang.org/adk/v2/plugin"
+    	"google.golang.org/adk/v2/runner"
+    	"google.golang.org/adk/v2/session"
+    	"google.golang.org/adk/v2/tool"
+    	"google.golang.org/adk/v2/tool/functiontool"
     	"google.golang.org/genai"
     )
 
@@ -42479,12 +42630,12 @@ object takes the potentially modified user message and prepares for execution.
 The `before_run_callback` fires here, allowing for global setup before any agent
 logic begins.
 
--   **When It Runs:** Immediately after `runner.run()` is called, before
-    any other processing.
--   **Purpose:** The first opportunity to inspect or modify the user's raw
-    input.
--   **Flow Control:** Return a `types.Content` object to **replace** the
-    user's original message.
+-   **When It Runs:** After the `on_user_message_callback`, when the `Runner`
+    prepares for execution and before any agent logic begins.
+-   **Purpose:** Global setup or initialization before the invocation runs.
+-   **Flow Control:** Return a `types.Content` object to **halt execution**:
+    the `Runner` exits early and ends the run with that content as the result.
+    Return `None` to proceed normally.
 
 The following code example shows the basic syntax of this callback:
 
@@ -42872,8 +43023,8 @@ Use the following command to start the ADK web interface:
 
     ```go title="main.go"
     import (
-        "google.golang.org/adk/cmd/launcher"
-        "google.golang.org/adk/cmd/launcher/full"
+        "google.golang.org/adk/v2/cmd/launcher"
+        "google.golang.org/adk/v2/cmd/launcher/full"
     )
 
     func main() {
@@ -43646,8 +43797,8 @@ Use the following command to run your agent in an ADK API server:
 
     ```go title="main.go"
     import (
-        "google.golang.org/adk/cmd/launcher"
-        "google.golang.org/adk/cmd/launcher/full"
+        "google.golang.org/adk/v2/cmd/launcher"
+        "google.golang.org/adk/v2/cmd/launcher/full"
     )
 
     func main() {
@@ -44303,8 +44454,8 @@ Use the following command to run your agent in the ADK command line interface:
 
     ```go title="main.go"
     import (
-        "google.golang.org/adk/cmd/launcher"
-        "google.golang.org/adk/cmd/launcher/full"
+        "google.golang.org/adk/v2/cmd/launcher"
+        "google.golang.org/adk/v2/cmd/launcher/full"
     )
 
     func main() {
@@ -44606,7 +44757,7 @@ The `Runner` acts as the central coordinator for a single user invocation. Its r
         return func(yield func(*Event, error) bool) {
             // 1. Append new_query to session event history (via SessionService)
             // ...
-            userEvent := session.NewEvent(ctx.InvocationID()) // Simplified for conceptual view
+            userEvent := session.NewEvent(ctx, ctx.InvocationID()) // Simplified for conceptual view
             userEvent.Author = "user"
             userEvent.LLMResponse = model.LLMResponse{Content: newQuery}
 
@@ -45031,7 +45182,7 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
 
           // 1. Determine a change or output is needed, construct the event
           updateData := map[string]interface{}{"field_1": "value_2"}
-          eventWithStateChange := session.NewEvent(ctx.InvocationID())
+          eventWithStateChange := session.NewEvent(ctx, ctx.InvocationID())
           eventWithStateChange.Author = a.Name()
           eventWithStateChange.Actions = &session.EventActions{StateDelta: updateData}
           // ... other event fields ...
@@ -45057,7 +45208,7 @@ Understanding a few key aspects of how the ADK Runtime handles state, streaming,
           // of the *next* `Run` invocation in a subsequent turn.
 
           // ... subsequent code continues, potentially yielding more events ...
-          finalEvent := session.NewEvent(ctx.InvocationID())
+          finalEvent := session.NewEvent(ctx, ctx.InvocationID())
           finalEvent.Author = a.Name()
           // ...
           yield(finalEvent, nil)
@@ -45596,7 +45747,7 @@ to `runner.run_async()` or `runner.run_live()` to override default behavior.
 === "Go"
 
     ```go
-    import "google.golang.org/adk/agent"
+    import "google.golang.org/adk/v2/agent"
 
     config := agent.RunConfig{
         StreamingMode: agent.StreamingModeSSE,
@@ -45695,7 +45846,7 @@ execute function calls. CFC uses the Live API under the hood.
 === "Go"
 
     ```go
-    import "google.golang.org/adk/agent"
+    import "google.golang.org/adk/v2/agent"
 
     config := agent.RunConfig{
         StreamingMode: agent.StreamingModeSSE,
@@ -46116,7 +46267,7 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
     	"fmt"
     	"strings"
 
-    	"google.golang.org/adk/tool"
+    	"google.golang.org/adk/v2/tool"
     )
 
     func query(ctx tool.Context, args QueryArgs) (map[string]any, error) {
@@ -46241,7 +46392,7 @@ Gemini models come with in-built safety mechanisms that can be leveraged to impr
 
     ```go
     import (
-    	"google.golang.org/adk/agent/llmagent"
+    	"google.golang.org/adk/v2/agent/llmagent"
     	"google.golang.org/genai"
     )
 
@@ -46354,8 +46505,8 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     import (
     	"fmt"
 
-    	"google.golang.org/adk/agent/llmagent"
-    	"google.golang.org/adk/tool"
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/tool"
     )
 
     // Hypothetical callback function
@@ -46471,173 +46622,175 @@ Care must be taken when agent output is visualized in a browser: if HTML or JS c
 ================
 File: docs/sessions/session/index.md
 ================
-# Session: Tracking Individual Conversations
+# Session: Tracking individual conversations
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
-Following our Introduction, let's dive into the `Session`. Think back to the
-idea of a "conversation thread." Just like you wouldn't start every text message
-from scratch, agents need context regarding the ongoing interaction.
-**`Session`** is the ADK object designed specifically to track and manage these
-individual conversation threads.
+A `Session` represents a single conversation thread between a user and your
+agent. Just like you wouldn't start every text message from scratch, agents need
+context regarding the ongoing interaction. The `Session` object in ADK is
+designed specifically to track and manage these individual conversation threads.
 
-## The `Session` Object
+## The `Session` object
 
 When a user starts interacting with your agent, the `SessionService` creates a
 `Session` object (`google.adk.sessions.Session`). This object acts as the
 container holding everything related to that *one specific chat thread*. Here
 are its key properties:
 
-*   **Identification (`id`, `appName`, `userId`):** Unique labels for the
-    conversation.
-    * `id`: A unique identifier for *this specific* conversation thread, essential for retrieving it later. A SessionService object can handle multiple `Session`(s). This field identifies which particular session object are we referring to. For example, "test_id_modification".
-    * `app_name`: Identifies which agent application this conversation belongs to. For example, "id_modifier_workflow".
-    *   `userId`: Links the conversation to a particular user.
-*   **History (`events`):** A chronological sequence of all interactions
-    (`Event` objects – user messages, agent responses, tool actions) that have
-    occurred within this specific thread.
-*   **Session State (`state`):** A place to store temporary data relevant *only*
-    to this specific, ongoing conversation. This acts as a scratchpad for the
-    agent during the interaction. We will cover how to use and manage `state` in
-    detail in the next section.
-*   **Activity Tracking (`lastUpdateTime`):** A timestamp indicating the last
-    time an event occurred in this conversation thread.
+* **Identification (`id`, `appName`, `userId`):** Unique labels for the
+  conversation.
+    * `id`: A unique identifier for *this specific* conversation thread,
+      essential for retrieving it later. A SessionService object can handle
+      multiple `Session`(s). This field identifies which particular session
+      object are we referring to. For example, "test_id_modification".
+    * `app_name`: Identifies which agent application this conversation belongs
+      to. For example, "id_modifier_workflow".
+    * `userId`: Links the conversation to a particular user.
+* **History (`events`):** A chronological sequence of all interactions (`Event`
+  objects – user messages, agent responses, tool actions) that have occurred
+  within this specific thread.
+* **Session State (`state`):** A place to store temporary data relevant *only*
+  to this specific, ongoing conversation. This acts as a scratchpad for the
+  agent during the interaction. We will cover how to use and manage `state` in
+  detail in the next section.
+* **Activity Tracking (`lastUpdateTime`):** A timestamp indicating the last time
+  an event occurred in this conversation thread.
 
-### Example: Examining Session Properties
-
+### Example: Examining session properties
 
 === "Python"
 
-       ```py
-        from google.adk.sessions import InMemorySessionService, Session
+    ```py
+    from google.adk.sessions import InMemorySessionService, Session
 
-        # Create a simple session to examine its properties
-        temp_service = InMemorySessionService()
-        example_session = await temp_service.create_session(
-            app_name="my_app",
-            user_id="example_user",
-            state={"initial_key": "initial_value"} # State can be initialized
-        )
+    # Create a simple session to examine its properties
+    temp_service = InMemorySessionService()
+    example_session = await temp_service.create_session(
+        app_name="my_app",
+        user_id="example_user",
+        state={"initial_key": "initial_value"} # State can be initialized
+    )
 
-        print(f"--- Examining Session Properties ---")
-        print(f"ID (`id`):                {example_session.id}")
-        print(f"Application Name (`app_name`): {example_session.app_name}")
-        print(f"User ID (`user_id`):         {example_session.user_id}")
-        print(f"State (`state`):           {example_session.state}") # Note: Only shows initial state here
-        print(f"Events (`events`):         {example_session.events}") # Initially empty
-        print(f"Last Update (`last_update_time`): {example_session.last_update_time:.2f}")
-        print(f"---------------------------------")
+    print(f"--- Examining Session Properties ---")
+    print(f"ID (`id`):                {example_session.id}")
+    print(f"Application Name (`app_name`): {example_session.app_name}")
+    print(f"User ID (`user_id`):         {example_session.user_id}")
+    print(f"State (`state`):           {example_session.state}") # Note: Only shows initial state here
+    print(f"Events (`events`):         {example_session.events}") # Initially empty
+    print(f"Last Update (`last_update_time`): {example_session.last_update_time:.2f}")
+    print(f"---------------------------------")
 
-        # Clean up (optional for this example)
-        await temp_service.delete_session(app_name=example_session.app_name,
-                                    user_id=example_session.user_id, session_id=example_session.id)
-        print("The final status of temp_service - ", temp_service)
-       ```
+    # Clean up (optional for this example)
+    await temp_service.delete_session(app_name=example_session.app_name,
+                                user_id=example_session.user_id, session_id=example_session.id)
+    print("The final status of temp_service - ", temp_service)
+    ```
 
 === "TypeScript"
 
-       ```typescript
-        import { InMemorySessionService } from "@google/adk";
+    ```typescript
+    import { InMemorySessionService } from "@google/adk";
 
-        // Create a simple session to examine its properties
-        const tempService = new InMemorySessionService();
-        const exampleSession = await tempService.createSession({
-            appName: "my_app",
-            userId: "example_user",
-            state: {"initial_key": "initial_value"} // State can be initialized
-        });
+    // Create a simple session to examine its properties
+    const tempService = new InMemorySessionService();
+    const exampleSession = await tempService.createSession({
+        appName: "my_app",
+        userId: "example_user",
+        state: {"initial_key": "initial_value"} // State can be initialized
+    });
 
-        console.log("--- Examining Session Properties ---");
-        console.log(`ID ('id'):                ${exampleSession.id}`);
-        console.log(`Application Name ('appName'): ${exampleSession.appName}`);
-        console.log(`User ID ('userId'):         ${exampleSession.userId}`);
-        console.log(`State ('state'):           ${JSON.stringify(exampleSession.state)}`); // Note: Only shows initial state here
-        console.log(`Events ('events'):         ${JSON.stringify(exampleSession.events)}`); // Initially empty
-        console.log(`Last Update ('lastUpdateTime'): ${exampleSession.lastUpdateTime}`);
-        console.log("---------------------------------");
+    console.log("--- Examining Session Properties ---");
+    console.log(`ID ('id'):                ${exampleSession.id}`);
+    console.log(`Application Name ('appName'): ${exampleSession.appName}`);
+    console.log(`User ID ('userId'):         ${exampleSession.userId}`);
+    console.log(`State ('state'):           ${JSON.stringify(exampleSession.state)}`); // Note: Only shows initial state here
+    console.log(`Events ('events'):         ${JSON.stringify(exampleSession.events)}`); // Initially empty
+    console.log(`Last Update ('lastUpdateTime'): ${exampleSession.lastUpdateTime}`);
+    console.log("---------------------------------");
 
-        // Clean up (optional for this example)
-        const finalStatus = await tempService.deleteSession({
-            appName: exampleSession.appName,
-            userId: exampleSession.userId,
-            sessionId: exampleSession.id
-        });
-        console.log("The final status of temp_service - ", finalStatus);
-       ```
+    // Clean up (optional for this example)
+    const finalStatus = await tempService.deleteSession({
+        appName: exampleSession.appName,
+        userId: exampleSession.userId,
+        sessionId: exampleSession.id
+    });
+    console.log("The final status of temp_service - ", finalStatus);
+    ```
 
 === "Go"
 
-       ```go
-       --8<-- "examples/go/snippets/sessions/session_management_example/session_management_example.go:examine_session"
-       ```
+    ```go
+    --8<-- "examples/go/snippets/sessions/session_management_example/session_management_example.go:examine_session"
+    ```
 
 === "Java"
 
-       ```java
-        import com.google.adk.sessions.InMemorySessionService;
-        import com.google.adk.sessions.Session;
-        import java.util.concurrent.ConcurrentMap;
-        import java.util.concurrent.ConcurrentHashMap;
+    ```java
+    import com.google.adk.sessions.InMemorySessionService;
+    import com.google.adk.sessions.Session;
+    import java.util.concurrent.ConcurrentMap;
+    import java.util.concurrent.ConcurrentHashMap;
 
-        String sessionId = "123";
-        String appName = "example-app"; // Example app name
-        String userId = "example-user"; // Example user id
-        ConcurrentMap<String, Object> initialState = new ConcurrentHashMap<>(Map.of("newKey", "newValue"));
-        InMemorySessionService exampleSessionService = new InMemorySessionService();
+    String sessionId = "123";
+    String appName = "example-app"; // Example app name
+    String userId = "example-user"; // Example user id
+    ConcurrentMap<String, Object> initialState = new ConcurrentHashMap<>(Map.of("newKey", "newValue"));
+    InMemorySessionService exampleSessionService = new InMemorySessionService();
 
-        // Create Session
-        Session exampleSession = exampleSessionService.createSession(
-            appName, userId, initialState, Optional.of(sessionId)).blockingGet();
-        System.out.println("Session created successfully.");
+    // Create Session
+    Session exampleSession = exampleSessionService.createSession(
+        appName, userId, initialState, Optional.of(sessionId)).blockingGet();
+    System.out.println("Session created successfully.");
 
-        System.out.println("--- Examining Session Properties ---");
-        System.out.printf("ID (`id`): %s%n", exampleSession.id());
-        System.out.printf("Application Name (`appName`): %s%n", exampleSession.appName());
-        System.out.printf("User ID (`userId`): %s%n", exampleSession.userId());
-        System.out.printf("State (`state`): %s%n", exampleSession.state());
-        System.out.println("------------------------------------");
+    System.out.println("--- Examining Session Properties ---");
+    System.out.printf("ID (`id`): %s%n", exampleSession.id());
+    System.out.printf("Application Name (`appName`): %s%n", exampleSession.appName());
+    System.out.printf("User ID (`userId`): %s%n", exampleSession.userId());
+    System.out.printf("State (`state`): %s%n", exampleSession.state());
+    System.out.println("------------------------------------");
 
 
-        // Clean up (optional for this example)
-        var unused = exampleSessionService.deleteSession(appName, userId, sessionId);
-       ```
+    // Clean up (optional for this example)
+    var unused = exampleSessionService.deleteSession(appName, userId, sessionId);
+    ```
 
 === "Kotlin"
 
-       ```kotlin
-        import com.google.adk.kt.sessions.InMemorySessionService
-        import com.google.adk.kt.sessions.SessionKey
+    ```kotlin
+    import com.google.adk.kt.sessions.InMemorySessionService
+    import com.google.adk.kt.sessions.SessionKey
 
-        val sessionId = "123"
-        val appName = "example-app"
-        val userId = "example-user"
-        val initialState = mapOf("newKey" to "newValue")
-        val sessionService = InMemorySessionService()
+    val sessionId = "123"
+    val appName = "example-app"
+    val userId = "example-user"
+    val initialState = mapOf("newKey" to "newValue")
+    val sessionService = InMemorySessionService()
 
-        // Create Session
-        val exampleSession = sessionService.createSession(
-            key = SessionKey(appName, userId, sessionId),
-            state = initialState
-        )
-        println("Session created successfully.")
+    // Create Session
+    val exampleSession = sessionService.createSession(
+        key = SessionKey(appName, userId, sessionId),
+        state = initialState
+    )
+    println("Session created successfully.")
 
-        println("--- Examining Session Properties ---")
-        println("ID (`id`):                ${exampleSession.key.id}")
-        println("Application Name (`appName`): ${exampleSession.key.appName}")
-        println("User ID (`userId`):         ${exampleSession.key.userId}")
-        println("State (`state`):           ${exampleSession.state}")
-        println("------------------------------------")
+    println("--- Examining Session Properties ---")
+    println("ID (`id`):                ${exampleSession.key.id}")
+    println("Application Name (`appName`): ${exampleSession.key.appName}")
+    println("User ID (`userId`):         ${exampleSession.key.userId}")
+    println("State (`state`):           ${exampleSession.state}")
+    println("------------------------------------")
 
-        // Clean up (optional for this example)
-        sessionService.deleteSession(exampleSession.key)
-       ```
+    // Clean up (optional for this example)
+    sessionService.deleteSession(exampleSession.key)
+    ```
 
 *(**Note:** The state shown above is only the initial state. State updates
 happen via events, as discussed in the State section.)*
 
-## Managing Sessions with a `SessionService`
+## Managing sessions with a `SessionService`
 
 As seen above, you don't typically create or manage `Session` objects directly.
 Instead, you use a **`SessionService`**. This service acts as the central
@@ -46645,17 +46798,17 @@ manager responsible for the entire lifecycle of your conversation sessions.
 
 Its core responsibilities include:
 
-*   **Starting New Conversations:** Creating fresh `Session` objects when a user
-    begins an interaction.
-*   **Resuming Existing Conversations:** Retrieving a specific `Session` (using
-    its ID) so the agent can continue where it left off.
-*   **Saving Progress:** Appending new interactions (`Event` objects) to a
-    session's history. This is also the mechanism through which session `state`
-    gets updated (more in the `State` section).
-*   **Listing Conversations:** Finding the active session threads for a
-    particular user and application.
-*   **Cleaning Up:** Deleting `Session` objects and their associated data when
-    conversations are finished or no longer needed.
+* **Starting New Conversations:** Creating fresh `Session` objects when a user
+  begins an interaction.
+* **Resuming Existing Conversations:** Retrieving a specific `Session` (using
+  its ID) so the agent can continue where it left off.
+* **Saving Progress:** Appending new interactions (`Event` objects) to a
+  session's history. This is also the mechanism through which session `state`
+  gets updated (more in the `State` section).
+* **Listing Conversations:** Finding the active session threads for a particular
+  user and application.
+* **Cleaning Up:** Deleting `Session` objects and their associated data when
+  conversations are finished or no longer needed.
 
 ## `SessionService` implementations
 
@@ -46664,47 +46817,48 @@ the storage backend that best suits your needs:
 
 ### `InMemorySessionService`
 
-*   **How it works:** Stores all session data directly in the application's
-    memory.
-*   **Persistence:** None. **All conversation data is lost if the
-    application restarts.**
-*   **Requires:** Nothing extra.
-*   **Best for:** Quick development, local testing, examples, and scenarios
-    where long-term persistence isn't required.
+* **How it works:** Stores all session data directly in the application's
+  memory.
+* **Persistence:** None. **All conversation data is lost if the application
+  restarts.**
+* **Requires:** Nothing extra.
+* **Best for:** Quick development, local testing, examples, and scenarios where
+  long-term persistence isn't required.
 
 === "Python"
 
-      ```py
-        from google.adk.sessions import InMemorySessionService
-        session_service = InMemorySessionService()
-      ```
+    ```py
+    from google.adk.sessions import InMemorySessionService
+    session_service = InMemorySessionService()
+    ```
+
 === "TypeScript"
 
-      ```typescript
-        import { InMemorySessionService } from "@google/adk";
-        const sessionService = new InMemorySessionService();
-      ```
+    ```typescript
+    import { InMemorySessionService } from "@google/adk";
+    const sessionService = new InMemorySessionService();
+    ```
 
 === "Go"
 
-      ```go
-        import "google.golang.org/adk/session"
-        inMemoryService := session.InMemoryService()
-      ```
+    ```go
+    import "google.golang.org/adk/v2/session"
+    inMemoryService := session.InMemoryService()
+    ```
 
 === "Java"
 
-      ```java
-        import com.google.adk.sessions.InMemorySessionService;
-        InMemorySessionService exampleSessionService = new InMemorySessionService();
-      ```
+    ```java
+    import com.google.adk.sessions.InMemorySessionService;
+    InMemorySessionService exampleSessionService = new InMemorySessionService();
+    ```
 
 === "Kotlin"
 
-      ```kotlin
-        import com.google.adk.kt.sessions.InMemorySessionService
-        val sessionService = InMemorySessionService()
-      ```
+    ```kotlin
+    import com.google.adk.kt.sessions.InMemorySessionService
+    val sessionService = InMemorySessionService()
+    ```
 
 ### `VertexAiSessionService`
 
@@ -46712,19 +46866,21 @@ the storage backend that best suits your needs:
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
-*   **How it works:** Uses Google Cloud Agent Platform infrastructure via API
-    calls for session management.
-*   **Persistence:** Yes. Data is managed reliably and scalably via
-    [Agent Runtime](/deploy/agent-runtime/).
-*   **Requires:**
-    *   A Google Cloud project (`pip install vertexai`)
-    *   A Google Cloud storage bucket that can be configured by this
-        [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
-    *   An Agent Runtime resource name/ID that can setup following this
-        [tutorial](/deploy/agent-runtime/).
-    *   If you do not have a Google Cloud project and you want to try the VertexAiSessionService, see [Agent Platform Express Mode](/integrations/express-mode/).
-*   **Best for:** Scalable production applications deployed on Google Cloud,
-    especially when integrating with other Agent Platform features.
+* **How it works:** Uses Google Cloud Agent Platform infrastructure via API
+  calls for session management.
+* **Persistence:** Yes. Data is managed reliably and scalably via [Agent
+  Runtime](/deploy/agent-runtime/).
+* **Requires:**
+    * A Google Cloud project (`pip install vertexai`)
+    * A Google Cloud storage bucket that can be configured by this
+      [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
+    * An Agent Runtime resource name/ID that can setup following this
+      [tutorial](/deploy/agent-runtime/).
+    * If you do not have a Google Cloud project and you want to try the
+      VertexAiSessionService, see [Agent Platform Express
+      Mode](/integrations/express-mode/).
+* **Best for:** Scalable production applications deployed on Google Cloud,
+  especially when integrating with other Agent Platform features.
 
 === "Python"
 
@@ -46746,7 +46902,7 @@ the storage backend that best suits your needs:
 === "Go"
 
     ```go
-    import "google.golang.org/adk/session"
+    import "google.golang.org/adk/v2/session"
 
     // 2. VertexAIService
     // Before running, ensure your environment is authenticated:
@@ -46796,12 +46952,12 @@ For more information on connecting to Google Cloud from ADK agents, see
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span>
 </div>
 
-*   **How it works:** Connects to a relational database (e.g., PostgreSQL,
-    MySQL, SQLite) to store session data persistently in tables.
-*   **Persistence:** Yes. Data survives application restarts.
-*   **Requires:** A configured database.
-*   **Best for:** Applications needing reliable, persistent storage that you
-    manage yourself.
+* **How it works:** Connects to a relational database (e.g., PostgreSQL, MySQL,
+  SQLite) to store session data persistently in tables.
+* **Persistence:** Yes. Data survives application restarts.
+* **Requires:** A configured database.
+* **Best for:** Applications needing reliable, persistent storage that you
+  manage yourself.
 
 ```py
 from google.adk.sessions import DatabaseSessionService
@@ -46814,24 +46970,25 @@ session_service = DatabaseSessionService(db_url=db_url)
 
 #### Concurrency and locking
 
-The `DatabaseSessionService` ensures data integrity during concurrent operations through a
-two-tiered locking architecture:
+The `DatabaseSessionService` ensures data integrity during concurrent operations
+through a two-tiered locking architecture:
 
 * **In-Process locking:** The service uses an internal, in-process lock to
-        serialize `append_event` calls for the same session. This prevents race
-        conditions when multiple requests try to update the same session
-        simultaneously within the same process.
-* **Row-Level locking:** For PostgreSQL, MySQL, and MariaDB, the service
-        uses row-level locking (via `SELECT ... FOR UPDATE`) to prevent race
-        conditions when multiple processes or replicas try to update the same
-        session simultaneously.
+  serialize `append_event` calls for the same session. This prevents race
+  conditions when multiple requests try to update the same session
+  simultaneously within the same process.
+* **Row-Level locking:** For PostgreSQL, MySQL, and MariaDB, the service uses
+  row-level locking (via `SELECT ... FOR UPDATE`) to prevent race conditions
+  when multiple processes or replicas try to update the same session
+  simultaneously.
 
-!!! warning "Async Driver Requirement"
+!!! warning "Async driver requirement"
 
-    `DatabaseSessionService` requires an async database driver. When using SQLite,
-    you must use `sqlite+aiosqlite` instead of `sqlite` in your connection string.
-    For other databases (PostgreSQL, MySQL), ensure you're using an async-compatible
-    driver, such as `asyncpg` for PostgreSQL, `aiomysql` for MySQL.
+    `DatabaseSessionService` requires an async database driver. When using
+    SQLite, you must use `sqlite+aiosqlite` instead of `sqlite` in your
+    connection string. For other databases (PostgreSQL, MySQL), ensure you're
+    using an async-compatible driver, such as `asyncpg` for PostgreSQL,
+    `aiomysql` for MySQL.
 
 !!! note "Session database schema change in ADK Python v1.22.0"
 
@@ -46839,39 +46996,55 @@ two-tiered locking architecture:
     requires migration of the Session Database. For more information, see
     [Session database schema migration](/sessions/session/migrate/).
 
-## The Session Lifecycle
+## The session lifecycle
 
 <img src="../../assets/event-loop.png" alt="Session lifecycle">
 
 Here’s a simplified flow of how `Session` and `SessionService` work together
 during a conversation turn:
 
-1.  **Start or Resume:** Your application needs to use the `SessionService` to
-    either `create_session` (for a new chat) or use an existing session id.
-2.  **Context Provided:** The `Runner` gets the appropriate `Session` object
-    from the appropriate service method, providing the agent with access to the
-    corresponding Session's `state` and `events`.
-3.  **Agent Processing:** The user prompts the agent with a query. The agent
-    analyzes the query and potentially the session `state` and `events` history
-    to determine the response.
-4.  **Response & State Update:** The agent generates a response (and potentially
-    flags data to be updated in the `state`). The `Runner` packages this as an
-    `Event`.
-5.  **Save Interaction:** The `Runner` calls
-    `sessionService.append_event(session, event)` with the `session` and the new
-    `event` as the arguments. The service adds the `Event` to the history and
-    updates the session's `state` in storage based on information within the
-    event. The session's `last_update_time` also get updated.
-6.  **Ready for Next:** The agent's response goes to the user. The updated
-    `Session` is now stored by the `SessionService`, ready for the next turn
-    (which restarts the cycle at step 1, usually with the continuation of the
-    conversation in the current session).
-7.  **End Conversation:** When the conversation is over, your application calls
-    `sessionService.delete_session(...)` to clean up the stored session data if
-    it is no longer required.
+1. **Start or Resume:** Your application needs to use the `SessionService` to
+   either `create_session` (for a new chat) or use an existing session id.
+2. **Context Provided:** The `Runner` gets the appropriate `Session` object from
+   the appropriate service method, providing the agent with access to the
+   corresponding Session's `state` and `events`.
+3. **Agent Processing:** The user prompts the agent with a query. The agent
+   analyzes the query and potentially the session `state` and `events` history
+   to determine the response.
+4. **Response & State Update:** The agent generates a response (and potentially
+   flags data to be updated in the `state`). The `Runner` packages this as an
+   `Event`.
+5. **Save Interaction:** The `Runner` calls
+   `sessionService.append_event(session, event)` with the `session` and the new
+   `event` as the arguments. The service adds the `Event` to the history and
+   updates the session's `state` in storage based on information within the
+   event. The session's `last_update_time` also get updated.
+6. **Ready for Next:** The agent's response goes to the user. The updated
+   `Session` is now stored by the `SessionService`, ready for the next turn
+   (which restarts the cycle at step 1, usually with the continuation of the
+   conversation in the current session).
+7. **End Conversation:** When the conversation is over, your application calls
+   `sessionService.delete_session(...)` to clean up the stored session data if
+   it is no longer required.
 
 This cycle highlights how the `SessionService` ensures conversational continuity
 by managing the history and state associated with each `Session` object.
+
+## Troubleshoot session errors
+
+During execution, ADK can raise specific exceptions to help you identify
+configuration or state issues.
+
+### `SessionNotFoundError`
+
+Raised when a runner attempts to access or execute a session that does not exist
+in the active session store. Inherits from `ValueError` for backward
+compatibility.
+
+* **Common causes:** an invalid, expired, or missing `session_id`; running a
+  session before it has been created.
+* **How to resolve:** ensure the session exists first via `create_session(...)`,
+  or construct the `Runner` with `auto_create_session=True`.
 
 ================
 File: docs/sessions/session/migrate.md
@@ -47171,8 +47344,8 @@ The `InMemoryMemoryService` stores session information in the application's memo
 === "Go"
     ```go
     import (
-      "google.golang.org/adk/memory"
-      "google.golang.org/adk/session"
+      "google.golang.org/adk/v2/memory"
+      "google.golang.org/adk/v2/session"
     )
 
     // Services must be shared across runners to share state and memory.
@@ -47468,13 +47641,13 @@ When a memory service is configured, your agent can use a tool or callback to re
 === "Python"
     ```python
     from google.adk.agents import Agent
-    from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+    from google.adk.tools import preload_memory
 
     agent = Agent(
         model=MODEL_ID,
         name='weather_sentiment_agent',
         instruction="...",
-        tools=[PreloadMemoryTool()]
+        tools=[preload_memory]
     )
     ```
 
@@ -47493,9 +47666,9 @@ When a memory service is configured, your agent can use a tool or callback to re
 === "Go"
     ```go
     import (
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/preloadmemorytool"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/tool"
+        "google.golang.org/adk/v2/tool/preloadmemorytool"
     )
 
     agent, _ := llmagent.New(llmagent.Config{
@@ -47529,7 +47702,7 @@ To extract memories from your session, you need to call `add_session_to_memory`.
 === "Python"
     ```python
     from google.adk.agents import Agent
-    from google import adk
+    from google.adk.tools import preload_memory
 
     async def auto_save_session_to_memory_callback(callback_context):
         await callback_context.add_session_to_memory()
@@ -47538,7 +47711,7 @@ To extract memories from your session, you need to call `add_session_to_memory`.
         model=MODEL,
         name="Generic_QA_Agent",
         instruction="Answer the user's questions",
-        tools=[adk.tools.preload_memory_tool.PreloadMemoryTool()],
+        tools=[preload_memory],
         after_agent_callback=auto_save_session_to_memory_callback,
     )
     ```
@@ -47568,11 +47741,11 @@ To extract memories from your session, you need to call `add_session_to_memory`.
     ```go
     import (
         "context"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/session"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/loadmemorytool"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/session"
+        "google.golang.org/adk/v2/tool"
+        "google.golang.org/adk/v2/tool/loadmemorytool"
     )
 
     func autoSaveSessionToMemoryCallback(ctx agent.CallbackContext, s session.Session) (*genai.Content, error) {
@@ -48424,10 +48597,10 @@ You can define [skills in code](#inline-skills) or load
         "context"
         "os"
 
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/tool/skilltoolset/skill"
-        "google.golang.org/adk/tool/skilltoolset"
-        "google.golang.org/adk/tool"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/tool/skilltoolset/skill"
+        "google.golang.org/adk/v2/tool/skilltoolset"
+        "google.golang.org/adk/v2/tool"
     )
 
     mySkillToolset, err := skilltoolset.New(ctx, skilltoolset.Config{
@@ -48557,7 +48730,7 @@ You can define Skills within the code of your agent, as shown below.
         "slices"
         "strings"
 
-        "google.golang.org/adk/tool/skilltoolset/skill"
+        "google.golang.org/adk/v2/tool/skilltoolset/skill"
     )
 
     // Example implementation of a static in-memory skill.Source:
@@ -48640,8 +48813,8 @@ You can define Skills within the code of your agent, as shown below.
     import (
         "os"
 
-        "google.golang.org/adk/tool/skilltoolset/skill"
-        "google.golang.org/adk/tool/skilltoolset"
+        "google.golang.org/adk/v2/tool/skilltoolset/skill"
+        "google.golang.org/adk/v2/tool/skilltoolset"
     )
 
     // ...
@@ -56318,13 +56491,13 @@ A tool can write data to a `temp:` variable, and a subsequent tool can read it. 
 
         ```go
         import (
-            "google.golang.org/adk/agent"
-            "google.golang.org/adk/agent/llmagent"
-            "google.golang.org/adk/model/gemini"
-            "google.golang.org/adk/runner"
-            "google.golang.org/adk/session"
-            "google.golang.org/adk/tool"
-            "google.golang.org/adk/tool/functiontool"
+            "google.golang.org/adk/v2/agent"
+            "google.golang.org/adk/v2/agent/llmagent"
+            "google.golang.org/adk/v2/model/gemini"
+            "google.golang.org/adk/v2/runner"
+            "google.golang.org/adk/v2/session"
+            "google.golang.org/adk/v2/tool"
+            "google.golang.org/adk/v2/tool/functiontool"
             "google.golang.org/genai"
         )
 
@@ -56426,11 +56599,11 @@ Define your tool function and wrap it using the `LongRunningFunctionTool` class:
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/model/gemini"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/functiontool"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/model/gemini"
+        "google.golang.org/adk/v2/tool"
+        "google.golang.org/adk/v2/tool/functiontool"
         "google.golang.org/genai"
     )
 
@@ -56647,11 +56820,11 @@ The `AgentTool` class provides the following attributes for customizing its beha
 
         ```go
         import (
-            "google.golang.org/adk/agent"
-            "google.golang.org/adk/agent/llmagent"
-            "google.golang.org/adk/model/gemini"
-            "google.golang.org/adk/tool"
-            "google.golang.org/adk/tool/agenttool"
+            "google.golang.org/adk/v2/agent"
+            "google.golang.org/adk/v2/agent/llmagent"
+            "google.golang.org/adk/v2/model/gemini"
+            "google.golang.org/adk/v2/tool"
+            "google.golang.org/adk/v2/tool/agenttool"
             "google.golang.org/genai"
         )
 
@@ -60967,7 +61140,7 @@ entirely on your machine and is recommended for internal development.
     To add the ADK to your project, run the following command:
 
     ```bash
-    go get google.golang.org/adk
+    go get google.golang.org/adk/v2
     ```
 
     This will add the ADK as a dependency to your `go.mod` file.
@@ -61660,25 +61833,27 @@ Then follow the steps below to create an agent.
 
 To create an agent with Visual Builder:
 
-1.  In top left of the page, select the **+** (plus sign), as shown in *Figure 1*, to start creating an agent.
-1.  Type a name for your agent application and select **Create**.
-1.  Edit your agent by doing any of the following:
-    *   In the left panel, edit agent component values.
-    *   In the central panel, add new agent components.
-    *   In the right panel, use prompts to modify the agent or get help.
-1.  In bottom left corner, select **Save** to save your agent.
-1.  Interact with your new agent to test it.
-1.  In top left of the page, select the pencil icon, as shown in *Figure 1*, to continue editing your agent.
+1. In the top left of the web UI, select the **+** (plus sign), as shown in
+   *Figure 1*, to start creating an agent.
+1. Type a name for your agent application and select **Create**.
+1. Edit your agent by doing any of the following:
+    - In the left panel, edit agent component values.
+    - In the central panel, add new agent components.
+    - In the right panel, use prompts to modify the agent or get help.
+1. In the bottom left corner, select **Save** to save your agent.
+1. Interact with your new agent to test it.
+1. In the top left of the web UI, select the pencil icon, as shown in *Figure
+   1*, to continue editing your agent.
 
 Here are a few things to note when using Visual Builder:
 
-*   **Create agent and save:** When creating an agent, make sure you select
-    **Save** before exiting the editing interface, otherwise your new agent may
-    not be editable.
-*   **Agent editing:** Edit (pencil icon) for agents is *only* available for
-    agents created with Visual Builder
-*   **Add tools:** When adding existing custom Tools to a Visual Builder
-    agent, specify a fully-qualified Python function name.
+- **Create agent and save:** When creating an agent, make sure you select
+  **Save** before exiting the editing interface, otherwise your new agent may
+  not be editable.
+- **Agent editing:** Edit (pencil icon) for agents is *only* available for
+  agents created with Visual Builder.
+- **Add tools:** When adding existing custom Tools to a Visual Builder agent,
+  specify a fully-qualified Python function name.
 
 ??? tip "Try this prompt with the Visual Builder assistant"
 
@@ -61694,26 +61869,26 @@ agents, as well as an AI-powered development Assistant that can answer questions
 and edit your agent workflow. The tool supports all the essential components for
 building an ADK agent workflow, including:
 
-*   **Agents**
-    *   **Root Agent**: The primary controlling agent for a workflow. All other agents in
-        an ADK agent workflow are considered Sub Agents.
-    *   [**LLM Agent:**](/agents/llm-agents/)
-        An agent powered by a generative AI model.
-    *   [**Sequential Agent:**](/agents/workflow-agents/sequential-agents/)
-        A workflow agent that executes a series of sub-agents in a sequence.
-    *   [**Loop Agent:**](/agents/workflow-agents/loop-agents/)
-        A workflow agent that repeatedly executes a sub-agent until a certain condition is met.
-    *   [**Parallel Agent:**](/agents/workflow-agents/parallel-agents/)
-        A workflow agent that executes multiple sub-agents concurrently.
-*   **Tools**
-    *   [**Prebuilt tools:**](/integrations/)
-        A limited set of ADK-provided tools can be added to agents.
-    *   [**Custom tools:**](/tools-custom/)
-        You can build and add custom tools to your workflow.
-*   **Components**
-    *   [**Callbacks**](/callbacks/)
-        A flow control component that lets you modify the behavior of agents at the start
-        and end of agent workflow events.
+- **Agents**
+    - **Root Agent**: The primary controlling agent for a workflow. All other
+      agents in an ADK agent workflow are considered Sub Agents.
+    - [**LLM Agent:**](/agents/llm-agents/)
+      An agent powered by a generative AI model.
+    - [**Sequential Agent:**](/agents/workflow-agents/sequential-agents/)
+      A workflow agent that executes a series of sub-agents in a sequence.
+    - [**Loop Agent:**](/agents/workflow-agents/loop-agents/)
+      A workflow agent that repeatedly executes a sub-agent until a certain condition is met.
+    - [**Parallel Agent:**](/agents/workflow-agents/parallel-agents/)
+      A workflow agent that executes multiple sub-agents concurrently.
+- **Tools**
+    - [**Prebuilt tools:**](/integrations/)
+      A limited set of ADK-provided tools can be added to agents.
+    - [**Custom tools:**](/tools-custom/)
+      You can build and add custom tools to your workflow.
+- **Components**
+    - [**Callbacks**](/callbacks/)
+      A flow control component that lets you modify the behavior of agents at the start
+      and end of agent workflow events.
 
 Some advanced ADK features are not supported by Visual Builder due to
 limitations of the Agent Config feature. For more information, see the Agent
@@ -61727,7 +61902,7 @@ tools. These files are generated in a subfolder of the directory where you ran
 the ADK web interface. The following listing shows an example layout for a
 DiceAgent project:
 
-```none
+```text
 DiceAgent/
     root_agent.yaml    # main agent code
     sub_agent_1.yaml   # sub agents (if any)
@@ -61744,6 +61919,22 @@ DiceAgent/
 For more information on the Agent Config code format used by Visual Builder, see
 [Agent Config](/agents/config/) and [Agent Config YAML
 schema](/api-reference/agentconfig/).
+
+## Security and deployment
+
+The Visual Builder saves agent configuration files to your project directory
+through local API endpoints. For security reasons, these endpoints are available
+only when the web UI is served (for example, `adk web`). In headless or API-only
+deployments, such as the default `adk deploy cloud_run`, they are not
+registered, which prevents unauthorized file writes.
+
+!!! note "File upload restrictions"
+
+    To prevent arbitrary file writes, file uploads through the Visual Builder
+    accept only files with `.yaml` and `.yml` extensions. The server
+    automatically rejects absolute paths, path traversal sequences (`..`), and
+    YAML files containing blocked keys (such as `args`) that can execute
+    arbitrary code.
 
 ================
 File: docs/workflows/collaboration.md
@@ -61809,7 +62000,8 @@ a small team of subagents and assign them to a coordinator agent:
     root = Agent(
         name="travel_planner",      # coordinator agent
         sub_agents=[weather_agent, flight_agent],
-        # Auto-injects: request_task_weather_checker, request_task_flight_booker
+        # Auto-injects delegation tools named after each subagent:
+        # weather_checker, flight_booker
     )
     ```
 
@@ -61818,7 +62010,8 @@ a small team of subagents and assign them to a coordinator agent:
     In ADK Go v2.0.0, the `Mode` field on `llmagent.Config` accepts the same
     mode strings as Python: `"chat"`, `"task"`, and `"single_turn"`. Declaring
     `SubAgents` on the coordinator agent causes ADK to automatically generate
-    `request_task_<name>` delegation tools, exactly as in Python.
+    a delegation tool for each subagent, named after the subagent itself,
+    exactly as in Python.
 
     ```go
     --8<-- "examples/go/snippets/workflows/collaboration/main.go:get-started"
@@ -61880,7 +62073,7 @@ each mode:
     <tr>
       <td><strong>Return to parent</strong></td>
       <td>Manual (via transfer)</td>
-      <td>Automatic (via <code>complete_task</code>)</td>
+      <td>Automatic (via <code>finish_task</code>)</td>
       <td>Automatic (with result)</td>
     </tr>
   </tbody>
@@ -61910,11 +62103,11 @@ automatically advances to the next node based on the logic of the workflow
 agent's graph.
 
 **As a transferee from an LlmAgent:** When a parent ***LlmAgent*** transfers
-control to a task agent via `request_task`, the task agent executes until it
-calls `complete_task`. At that point, control automatically returns to the
-originating agent that initiated the transfer. This behavior differs from
-default, chat ***mode*** agents, which require explicit `transfer_to_agent`
-calls to hand back control.
+control to a task agent via the delegation tool named after that subagent, the
+task agent executes until it calls `finish_task`. At that point, control
+automatically returns to the originating agent that initiated the transfer.
+This behavior differs from default, chat ***mode*** agents, which require
+explicit `transfer_to_agent` calls to hand back control.
 
 <table>
   <thead>
@@ -62084,8 +62277,8 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:coordinator-pattern"
@@ -62181,9 +62374,9 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:sequential-pipeline-pattern"
@@ -62303,10 +62496,10 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/parallelagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/parallelagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:parallel-gather-pattern"
@@ -62437,9 +62630,9 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/tool"
-        "google.golang.org/adk/tool/agenttool"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/tool"
+        "google.golang.org/adk/v2/tool/agenttool"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:hierarchical-pattern"
@@ -62569,9 +62762,9 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:generator-critic-pattern"
@@ -62726,10 +62919,10 @@ your project requirements before committing to a full implementation.
     ```go
     import (
         "iter"
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/loopagent"
-        "google.golang.org/adk/session"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/loopagent"
+        "google.golang.org/adk/v2/session"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:iterative-refinement-pattern"
@@ -62922,10 +63115,10 @@ your project requirements before committing to a full implementation.
 
     ```go
     import (
-        "google.golang.org/adk/agent"
-        "google.golang.org/adk/agent/llmagent"
-        "google.golang.org/adk/agent/workflowagents/sequentialagent"
-        "google.golang.org/adk/tool"
+        "google.golang.org/adk/v2/agent"
+        "google.golang.org/adk/v2/agent/llmagent"
+        "google.golang.org/adk/v2/agent/workflowagents/sequentialagent"
+        "google.golang.org/adk/v2/tool"
     )
 
     --8<-- "examples/go/snippets/agents/multi-agent/main.go:human-in-loop-pattern"
