@@ -5950,6 +5950,9 @@ dive deeper into how they work and how to use them effectively:
 * [**Simple agents:**](/agents/llm-agents/) Explore how to configure agents
   powered by AI models, including setting instructions, providing tools, and
   enabling advanced features like planning and code execution.
+* [**Managed agents:**](/agents/managed-agents/) Use Google's first-party,
+  out-of-the-box agents (backed by the Managed Agents API) directly in your ADK
+  flows, with built-in server-side tools like web search and code execution.
 * [**Graph workflows:**](/graphs/) Discover how evolve your agents from
   plain language instructions to composable, reliable execution paths that
   combine AI reasoning with deterministic code logic.
@@ -6782,6 +6785,186 @@ the following:
 * **Graph-based workflows:** Compose LLM agents as steps in deterministic,
   graph-based pipelines using [Graph-based agent workflows](/graphs/). In Go v2.0.0, use
   `workflow.NewAgentNode` to wrap any LLM agent as a workflow node.
+
+================
+File: docs/agents/managed-agents.md
+================
+# Managed agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.4.0</span><span class="lst-preview">Preview</span>
+</div>
+
+Managed agents let you use Google's first-party, out-of-the-box agents, backed
+by the Managed Agents API, from within your ADK flows. Managed agents are
+available through the [Gemini API](https://ai.google.dev/gemini-api/docs/agents)
+and [Agent
+Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/managed-agents).
+The `ManagedAgent` class connects to a managed agent (such as the Antigravity
+agent) that runs in a specialized, server-side execution environment, so you get
+powerful built-in capabilities without managing sandboxes or writing client-side
+function declarations.
+
+`ManagedAgent` implements the same `BaseAgent` contract as other ADK agents, so
+you can use it standalone or drop it directly into an ADK flow. It is a good fit
+when you want a robust, server-hosted agent with specialized built-in tools
+rather than building and operating that environment yourself.
+
+## What are managed agents?
+
+A *managed agent* is an agent whose reasoning, tools, and execution environment
+are hosted and operated by Google through the Managed Agents API, rather than
+run by your own ADK process. Instead of issuing standard `generate_content`
+calls, `ManagedAgent` creates server-side *interactions* and streams the results
+back into your ADK flow. Managed agents provide several built-in advantages:
+
+- **First-party, out-of-the-box agents:** Connect to ready-made agents (for
+  example, the Antigravity agent) by referencing their `agent_id`.
+- **Built-in, server-side execution:** Capabilities such as web search and code
+  execution run in a managed sandbox on the server, with no local sandbox to
+  provision or secure.
+- **No client-side function declarations:** Server-side tools are configured on
+  the managed agent, so you don't declare or execute them locally.
+
+## When to use managed agents vs. building your own
+
+Managed agents and ADK agents solve different problems. Choosing between them is
+mostly a trade-off between out-of-the-box power and fine-grained control.
+
+- **Managed agents** give you a powerful agent out of the box, but with limited
+  flexibility. The toolset is predefined and server-side, the agent runs only in
+  the managed environment, and client-side or MCP tools are not supported.
+- **ADK agents** (such as [`LlmAgent`](/agents/llm-agents/)) give you
+  fine-grained control over the model, instructions, tools (including custom
+  function tools and MCP tools), and where execution happens.
+
+## Prerequisites
+
+`ManagedAgent` supports two backends. Complete the prerequisites for the backend
+you plan to use: obtain credentials and an `agent_id`.
+
+### Gemini API backend
+
+- **Authentication:** Obtain a Gemini API key and set it as the `GEMINI_API_KEY`
+  environment variable.
+- **Agent ID:** You need an `agent_id` to connect to. You can either:
+    - Create a new agent by following the [Gemini API Agents
+      documentation](https://ai.google.dev/gemini-api/docs/agents).
+    - Use an out-of-the-box agent ID, such as `antigravity-preview-05-2026`,
+      which is used in the examples below.
+
+### Agent Platform backend
+
+- **Authentication:** Agent Platform requires Google Cloud credentials. Follow
+  the [Agent Platform setup
+  instructions](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/managed-agents/create-manage#before-you-begin)
+  to authenticate your local environment (for example, with `gcloud auth
+  application-default login`).
+- **Location:** The Managed Agents API is served only from the `global`
+  location. `ManagedAgent` enforces a connection to `global` on the Agent
+  Platform backend.
+- **Agent ID:** As with the Gemini API, you need an `agent_id`. Create one via
+  the [Agent Platform Managed Agents
+  guide](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/managed-agents),
+  or use an out-of-the-box agent ID available to your project.
+
+## Get started
+
+The following example creates two managed agents: one that answers questions
+using web search, and one that solves computational questions by running code
+server-side. Both run their tools in the managed environment
+(`environment={'type': 'remote'}`).
+
+=== "Python"
+
+    ```python
+    import os
+    from google.adk.agents import ManagedAgent
+    from google.adk.tools import google_search
+    from google.genai import types
+
+    # Ensure you have the MANAGED_AGENT_ID and the proper environment config
+    _AGENT_ID = os.environ.get('MANAGED_AGENT_ID', 'antigravity-preview-05-2026')
+
+    managed_search_agent = ManagedAgent(
+        name='managed_search_agent',
+        description='Answers questions that need fresh, grounded information from the web.',
+        agent_id=_AGENT_ID,
+        environment={'type': 'remote'},
+        tools=[google_search],
+    )
+
+    # A managed code execution agent using raw types.Tool
+    managed_code_execution_agent = ManagedAgent(
+        name='managed_code_execution_agent',
+        description='Solves computational questions by running code server-side.',
+        agent_id=_AGENT_ID,
+        environment={'type': 'remote'},
+        tools=[types.Tool(code_execution=types.ToolCodeExecution())],
+    )
+    ```
+
+## How it works
+
+When you invoke a `ManagedAgent`, ADK sends your request to the managed agent
+via the [Interactions
+API](https://ai.google.dev/gemini-api/docs/interactions-overview) and streams
+the results, both partial and final, back into your ADK flow in real time. The
+reasoning, tools, and execution all run in Google's managed environment rather
+than in your ADK process.
+
+!!! note "How `ManagedAgent` maps to the Managed Agents API"
+
+    An ADK `ManagedAgent` does not create or register a new managed agent
+    resource. It connects to an agent that already exists on the backend (the
+    one named by `agent_id`) and applies its configuration (such as `tools` and
+    `environment`) as per-interaction overrides at runtime. In Managed Agents
+    API terms, ADK works entirely on the *data plane* (the Interactions API) and
+    leaves the *control plane* (the Agents API, which creates and manages agent
+    resources) untouched. For how these two planes differ, see the [Managed
+    Agents API system
+    architecture](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/managed-agents).
+
+### Local session vs. remote state
+
+`ManagedAgent` keeps almost no state locally. The ADK session persists only two
+values on the events it emits: the `previous_interaction_id` and the sandbox
+`environment_id`. On each new turn the agent recovers both by scanning prior
+session events, then reuses them so the conversation and its sandbox continue.
+
+Everything else lives server-side. The Managed Agents API owns the sandbox
+environment and the full interaction history, and that remote interaction, not
+the local session, is the source of truth for continuing a conversation.
+Response text appears in both the local ADK events and the remote interaction
+history, but ADK stores only the IDs it needs to recover and reuse the remote
+state; it never re-sends prior turns.
+
+## Limitations
+
+- **Location pinned (Agent Platform only):** For the Agent Platform backend, the
+  Managed Agents API is currently served only from the `global` location.
+  Regional endpoints raise an error.
+- **Server-side tools only:** Client-executed tools (Python functions,
+  callables) and MCP tools are not supported and raise a `NotImplementedError`.
+- **Streaming only:** The agent uses streaming interactions (`stream=True`).
+  Background-polling execution and strictly non-streaming connections are not
+  yet fully supported.
+- **Backend differences:** The Gemini API and Agent Platform backends currently
+  exhibit slightly different behavioral patterns. Test against the specific
+  backend you intend to use.
+
+## Next steps
+
+- **Samples:** [Managed Agent
+  Basic](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/basic)
+  and [Managed Agent Code
+  Execution](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/code_execution).
+- **Backend documentation:** [Gemini API
+  Agents](https://ai.google.dev/gemini-api/docs/agents) and [Agent Platform
+  Managed
+  Agents](https://docs.cloud.google.com/gemini-enterprise-agent-platform/build/managed-agents).
+- **Related ADK topics:** [Models for agents](/agents/models/), [Multi-agent
+  workflows](/workflows/), and [Custom tools](/tools-custom/).
 
 ================
 File: docs/agents/routing.md
@@ -38999,6 +39182,99 @@ The `SpannerVectorStoreSettings` class used above defines how
   as `COSINE` or `EUCLIDEAN`.
 - **`additional_filter`**: An optional SQL filter string to apply during the
   search, for example: "inventoryCount > 0".
+
+================
+File: docs/integrations/sprites.md
+================
+---
+catalog_title: Sprites
+catalog_description: Persistent, stateful Linux sandboxes with checkpoint and restore for agent code execution
+catalog_icon: /integrations/assets/sprites.png
+catalog_tags: ["code"]
+---
+
+# Sprites plugin for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [Sprites ADK plugin](https://github.com/superfly/sprites-adk) connects your
+ADK agent to [Sprites](https://sprites.dev) — persistent, stateful Linux
+sandboxes from [Fly.io](https://fly.io). Unlike ephemeral sandboxes, a Sprite
+keeps its filesystem, installed packages, and running processes between
+sessions, and it can **checkpoint and restore** its entire state — so your
+agent can snapshot the environment before a risky change and roll back if it
+goes wrong.
+
+## Use cases
+
+- **Persistent development environments**: A named Sprite is reused across
+  sessions — packages and files from earlier runs are still there, so
+  long-running projects don't rebuild the environment from scratch each time.
+
+- **Secure code execution**: Run agent-generated Python, JavaScript, or bash in
+  an isolated microVM instead of on the host machine.
+
+- **Safe experimentation**: Checkpoint the whole environment before package
+  upgrades, migrations, or bulk edits, then restore it if the change breaks
+  things.
+
+- **File workflows**: Write scripts and data into the sandbox, run them, and
+  read the results back.
+
+## Prerequisites
+
+- A [Sprites](https://sprites.dev) account
+- A Sprites API token (set as the `SPRITES_TOKEN` environment variable)
+
+## Installation
+
+```bash
+pip install sprites-adk
+```
+
+## Use with agent
+
+```python
+from sprites_adk import SpritesPlugin
+from google.adk.agents import Agent
+from google.adk.runners import InMemoryRunner
+
+# SpritesPlugin() gives each run a fresh sandbox; SpritesPlugin(sprite_name="my-project")
+# reuses one persistent environment across sessions.
+plugin = SpritesPlugin(
+  # token="your-sprites-token"  # Or set the SPRITES_TOKEN environment variable
+)
+
+root_agent = Agent(
+    model="gemini-flash-latest",
+    name="sandbox_agent",
+    instruction="Run code and commands in the Sprite sandbox, not locally.",
+    tools=plugin.get_tools(),
+)
+
+# Register the plugin on the runner so its lifecycle callbacks and cleanup run.
+runner = InMemoryRunner(agent=root_agent, plugins=[plugin])
+```
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`execute_command_in_sprite` | Run a shell command in the sandbox
+`execute_code_in_sprite` | Execute Python, JavaScript, or bash code
+`write_file_to_sprite` | Write a text file into the sandbox
+`read_file_from_sprite` | Read a text file from the sandbox
+`create_sprite_checkpoint` | Snapshot the entire environment (filesystem, packages, processes)
+`list_sprite_checkpoints` | List available checkpoints
+`restore_sprite_checkpoint` | Roll back to a checkpoint (destructive; requires confirmation)
+
+## Additional resources
+
+- [sprites-adk on PyPI](https://pypi.org/project/sprites-adk/)
+- [sprites-adk on GitHub](https://github.com/superfly/sprites-adk)
+- [Sprites documentation](https://docs.sprites.dev)
 
 ================
 File: docs/integrations/stackone.md
