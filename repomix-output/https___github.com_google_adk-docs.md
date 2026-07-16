@@ -3562,8 +3562,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:0.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:0.5.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -19401,8 +19401,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.4.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
     }
     ```
 
@@ -19814,8 +19814,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
 }
 ```
 
@@ -19835,9 +19835,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:0.4.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.4.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:0.5.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
     }
 
     kotlin {
@@ -19941,9 +19941,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.4.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:0.4.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:0.5.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
 }
 ```
 
@@ -28746,7 +28746,7 @@ catalog_tags: ["mcp"]
 </div>
 
 The [CarsXE MCP server](https://github.com/carsxe/carsxe-mcp-server) connects your
-ADK agent to the [CarsXE](https://www.carsxe.com/) vehicle data platform. It
+ADK agent to the [CarsXE](https://carsxe.com/) vehicle data platform. It
 exposes CarsXE's APIs — VIN decoding and full specifications, license-plate
 decoding, market value, title and ownership history, safety recalls, lien and
 theft records, OBD-II code decoding, and image lookups — as MCP tools your agent
@@ -28863,7 +28863,7 @@ Tool | Description
 
 - [CarsXE MCP server repository](https://github.com/carsxe/carsxe-mcp-server)
 - [CarsXE API documentation](https://api.carsxe.com/docs)
-- [CarsXE homepage](https://www.carsxe.com/)
+- [CarsXE homepage](https://carsxe.com/)
 - [Get a CarsXE API key](https://api.carsxe.com/dashboard/developer)
 
 ================
