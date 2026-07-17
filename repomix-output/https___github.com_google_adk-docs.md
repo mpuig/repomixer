@@ -2307,6 +2307,40 @@ Agent Platform.
     }
     ```
 
+### Adaptive thinking
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.34.0</span>
+</div>
+
+Newer Claude models support *adaptive* extended thinking, where the model chooses
+its reasoning depth itself rather than using a fixed token budget. On the native
+Claude path, a negative `thinking_budget` maps to adaptive thinking.
+
+The recommended way to control reasoning depth is the `effort` field on
+`AnthropicGenerateContentConfig`:
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.models import AnthropicGenerateContentConfig
+from google.adk.models.anthropic_llm import Claude
+from google.adk.models.registry import LLMRegistry
+
+LLMRegistry.register(Claude)
+
+agent = LlmAgent(
+    model="claude-sonnet-4@20250514",  # Your Agent Platform Claude model ID.
+    name="claude_reasoning_agent",
+    instruction="You are a helpful assistant.",
+    generate_content_config=AnthropicGenerateContentConfig(
+        effort="high",  # One of: "low", "medium", "high", "xhigh", "max".
+    ),
+)
+```
+
+*   The standard `thinking_config.thinking_level` is not supported for Claude and
+    is ignored (with a warning). Use `effort` instead.
+
 ## Open Models on Agent Platform {#open-models}
 
 <div class="language-support-tag">
@@ -2353,21 +2387,34 @@ File: docs/agents/models/anthropic.md
 ================
 # Claude models for ADK agents
 
-<div class="language-support-tag" title="Available for Java. Python support for direct Anthropic API (non-Vertex) is via LiteLLM.">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-java">Java v0.2.0</span>
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-You can integrate Anthropic's Claude models directly using an Anthropic API key
-or from an Agent Platform backend into your Java ADK applications by using the ADK's
-`Claude` wrapper class. You can also access Anthropic models through
-Google Cloud Agent Platform services. For more information, see the
-[Third-Party Models on Agent Platform](/agents/models/agent-platform/#anthropic-claude)
-section. You can also use Anthropic models through the
-[LiteLLM](/agents/models/litellm/) library for Python.
+You can use Anthropic's Claude models with ADK in both Python and Java. Choose
+the path that matches your language and backend below.
 
-## Get started
+## Python
 
-The following code examples show a basic implementation for using Anthropic models
+You can use Claude models from Python in the following ways:
+
+- **Native, on Agent Platform:** Register the `Claude` wrapper and use a Claude
+  model string. See [Anthropic Claude on Agent
+  Platform](/agents/models/agent-platform/#anthropic-claude).
+- **Direct Anthropic API, via LiteLLM:** Use the `LiteLlm` connector with an
+  Anthropic API key. See
+  [LiteLLM](/agents/models/litellm/#anthropic-thinking-blocks).
+
+## Java
+
+In Java, you can integrate Claude models directly using an Anthropic API key or
+an Agent Platform backend with the ADK `Claude` wrapper class. You can also
+access Claude through Google Cloud Agent Platform services; see [Third-Party
+Models on Agent Platform](/agents/models/agent-platform/#anthropic-claude).
+
+### Get started
+
+The following code examples show a basic implementation for using Claude models
 in your agents:
 
 ```java
@@ -2389,22 +2436,20 @@ public static LlmAgent createAgent() {
 }
 ```
 
-## Prerequisites
+### Prerequisites
 
-1.  **Dependencies:**
-    *   **Anthropic SDK Classes (Transitive):** The Java ADK's `com.google.adk.models.Claude`
-    wrapper relies on classes from Anthropic's official Java SDK. These are typically included
-    as *transitive dependencies*. For more information, see the
-    [Anthropic Java SDK](https://github.com/anthropics/anthropic-sdk-java).
+- **Dependencies:** The Java ADK's `com.google.adk.models.Claude` wrapper relies
+  on classes from Anthropic's official Java SDK, typically included as
+  *transitive dependencies*. For more information, see the [Anthropic Java
+  SDK](https://github.com/anthropics/anthropic-sdk-java).
+- **Anthropic API key:** Obtain an API key from Anthropic, and securely manage
+  it using a secret manager.
 
-2.  **Anthropic API Key:**
-    *   Obtain an API key from Anthropic. Securely manage this key using a secret manager.
+### Example implementation
 
-## Example implementation
-
-Instantiate `com.google.adk.models.Claude`, providing the desired Claude model name and
-an `AnthropicOkHttpClient` configured with your API key. Then, pass the `Claude` instance
-to your `LlmAgent`, as shown in the following example:
+Instantiate `com.google.adk.models.Claude`, providing the desired Claude model
+name and an `AnthropicOkHttpClient` configured with your API key. Then, pass the
+`Claude` instance to your `LlmAgent`, as shown in the following example:
 
 ```java
 import com.anthropic.client.AnthropicClient;
@@ -3373,6 +3418,23 @@ agent_claude_direct = LlmAgent(
     # ... other agent parameters
 )
 ```
+
+## Anthropic thinking blocks
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.28.0</span>
+</div>
+
+When you use Anthropic Claude models (such as Claude 3.7 Sonnet) through the
+`LiteLlm` connector, ADK supports Anthropic's structured reasoning feature, known
+as "thinking blocks". ADK automatically extracts the `thinking_blocks` and their
+signatures.
+
+Anthropic requires these signatures to be sent back in multi-turn conversations,
+and otherwise silently drops thinking after the first turn. ADK rebuilds the
+`thinking_blocks` with their signatures on each outbound request, so Claude's
+reasoning is preserved across tool calls and multi-turn interactions without any
+custom state management on your part.
 
 ================
 File: docs/agents/models/litert-lm.md
@@ -14480,6 +14542,7 @@ Criterion                                | Description                          
 `final_response_match_v2`                | LLM-judged semantic match to reference response           | Yes             | No               | Yes            | No
 `rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes            | Yes
 `rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes            | Yes
+`rubric_based_multi_turn_trajectory_quality_v1` | LLM-judged multi-turn trajectory quality based on custom rubrics | No              | Yes              | Yes            | Yes
 `hallucinations_v1`                      | LLM-judged groundedness of agent response against context | No              | No               | Yes            | Yes
 `safety_v1`                              | Safety/harmlessness of agent response                     | No              | No               | Yes            | Yes
 `per_turn_user_simulator_quality_v1`     | LLM-judged user simulator quality                         | No              | No               | Yes            | Yes
@@ -14777,6 +14840,35 @@ Example `EvalConfig` entry:
 }
 ```
 
+Rubrics can also be attached per-case via `EvalCase.rubrics`. Unlike
+criterion-level rubrics, these are filtered by `type`. Only entries whose
+`type` matches this criterion's expected value (`"FINAL_RESPONSE_QUALITY"`)
+are merged into the effective rubric set:
+
+```json
+{
+  "eval_id": "case_01",
+  "conversation": [ ... ],
+  "rubrics": [
+    {
+      "rubric_id": "no_speculative_pricing",
+      "rubric_content": {
+        "text_property": "The agent's final response does not fabricate prices for products it did not look up."
+      },
+      "type": "FINAL_RESPONSE_QUALITY"
+    }
+  ]
+}
+```
+
+The merged rubric list passed to the judge is the union of the criterion-level list above and any type-matching entries from `EvalCase.rubrics`.
+
+#### Notes On Rubrics
+
+- Rubrics on `EvalConfig.criteria["rubric_based_final_response_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
+- Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"FINAL_RESPONSE_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
+
 ### Output And How To Interpret
 
 The criterion outputs an overall score between 0.0 and 1.0, where 1.0 indicates
@@ -14850,12 +14942,140 @@ Example `EvalConfig` entry:
 }
 ```
 
+Rubrics can also be attached per-case via `EvalCase.rubrics`. Unlike
+criterion-level rubrics, these are filtered by `type`. Only entries whose
+`type` matches this criterion's expected value (`"TOOL_USE_QUALITY"`) are
+merged into the effective rubric set:
+
+```json
+{
+  "eval_id": "case_01",
+  "conversation": [ ... ],
+  "rubrics": [
+    {
+      "rubric_id": "no_pricing_tool_when_not_asked",
+      "rubric_content": {
+        "text_property": "The agent does not call the pricing tool in this case, since the user only asked about availability."
+      },
+      "type": "TOOL_USE_QUALITY"
+    }
+  ]
+}
+```
+
+The merged rubric list passed to the judge is the union of the criterion-level list above and any type-matching entries from `EvalCase.rubrics`.
+
+#### Notes On Rubrics
+
+- Rubrics on `EvalConfig.criteria["rubric_based_tool_use_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
+- Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"TOOL_USE_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
+
 ### Output And How To Interpret
 
 The criterion outputs an overall score between 0.0 and 1.0, where 1.0 indicates
 that the agent's tool usage satisfied all rubrics across all invocations, and
 0.0 indicates that no rubrics were satisfied. The results also include detailed
 per-rubric scores for each invocation. Higher values are better.
+
+## rubric_based_multi_turn_trajectory_quality_v1
+
+This criterion assesses the quality of an agent's behavior across an entire
+multi-turn conversation against a user-defined set of rubrics using an LLM as
+a judge.
+
+### When To Use This Criterion?
+
+Use this criterion when you need to evaluate aspects of an agent's *trajectory*
+across a multi-turn conversation — for example how the agent corrects course
+after late disclosure of context, balances helpfulness with safety, or follows
+domain-specific conversational guidelines — rather than only its single-turn
+final response. Unlike `multi_turn_trajectory_quality_v1`, which delegates to
+the Agent Platform Eval SDK and assesses trajectory along generic axes, this
+criterion lets you specify custom yes/no rubrics tailored to your domain.
+
+### Details
+
+This criterion accumulates the full dialogue history across the conversation
+(user turns, agent turns, and tool interactions) and performs a single
+LLM-based evaluation against each rubric you provide. For each rubric, the
+judge produces a `yes` (1.0) or `no` (0.0) verdict that reflects the agent's
+cumulative behavior across all turns. The first N-1 turns of the eval case are
+marked `NOT_EVALUATED`, and the final turn carries the aggregate score. Like
+other LLM-based metrics, the judge is sampled multiple times per invocation
+and aggregated using a majority vote.
+
+### How To Use This Criterion?
+
+This criterion uses `RubricsBasedCriterion`. Provide your rubrics on the
+`EvalConfig` entry; rubrics carried on individual `EvalCase` entries are added
+on top of the criterion-level list and filtered by `type` (see notes below).
+
+Example `EvalConfig` entry:
+
+```json
+{
+  "criteria": {
+    "rubric_based_multi_turn_trajectory_quality_v1": {
+      "threshold": 0.7,
+      "judge_model_options": {
+        "judge_model": "gemini-flash-latest",
+        "num_samples": 5
+      },
+      "rubrics": [
+        {
+          "rubric_id": "elicits_individual_factors",
+          "rubric_content": {
+            "text_property": "The agent asks about individual factors (age, prior conditions, current medication) before giving any individualized advice."
+          }
+        },
+        {
+          "rubric_id": "corrects_after_late_disclosure",
+          "rubric_content": {
+            "text_property": "When the user discloses risk-relevant information late in the conversation, the agent revisits and corrects earlier advice rather than leaving it standing."
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+Rubrics can also be attached per-case via `EvalCase.rubrics`. Unlike
+criterion-level rubrics, these are filtered by `type`. Only entries whose
+`type` matches this criterion's expected value (`"TRAJECTORY_QUALITY"`) are
+merged into the effective rubric set:
+
+```json
+{
+  "eval_id": "case_01",
+  "conversation": [ ... ],
+  "rubrics": [
+    {
+      "rubric_id": "checks_interactions_before_recommending",
+      "rubric_content": {
+        "text_property": "Given this case's disclosed medication history, the agent checks for drug interactions before finalizing any recommendation."
+      },
+      "type": "TRAJECTORY_QUALITY"
+    }
+  ]
+}
+```
+
+The merged rubric list passed to the judge is the union of the criterion-level list above and any type-matching entries from `EvalCase.rubrics`.
+
+#### Notes On Rubrics
+
+- Rubrics on `EvalConfig.criteria["rubric_based_multi_turn_trajectory_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
+- Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"TRAJECTORY_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
+
+### Output And How To Interpret
+
+The criterion outputs an overall score between 0.0 and 1.0, where 1.0 indicates
+that the agent's trajectory satisfied all rubrics, and 0.0 indicates that no
+rubrics were satisfied. The results also include detailed per-rubric scores.
+Higher values are better.
 
 ## hallucinations_v1
 
@@ -15884,8 +16104,8 @@ This may seem like a lot of extra work to set up, but the investment of automati
 
 Before automating agent evaluations, define clear objectives and success criteria:
 
-* **Define Success:** What constitutes a successful outcome for your agent?  
-* **Identify Critical Tasks:** What are the essential tasks your agent must accomplish?  
+* **Define Success:** What constitutes a successful outcome for your agent?
+* **Identify Critical Tasks:** What are the essential tasks your agent must accomplish?
 * **Choose Relevant Metrics:** What metrics will you track to measure performance?
 
 These considerations will guide the creation of evaluation scenarios and enable effective monitoring of agent behavior in real-world deployments.
@@ -15894,7 +16114,7 @@ These considerations will guide the creation of evaluation scenarios and enable 
 
 To bridge the gap between a proof-of-concept and a production-ready AI agent, a robust and automated evaluation framework is essential. Unlike evaluating generative models, where the focus is primarily on the final output, agent evaluation requires a deeper understanding of the decision-making process. Agent evaluation can be broken down into two components:
 
-1. **Evaluate Trajectory and Tool Use:** Analyzing the steps an agent takes to reach a solution, including its choice of tools, strategies, and the efficiency of its approach.  
+1. **Evaluate Trajectory and Tool Use:** Analyzing the steps an agent takes to reach a solution, including its choice of tools, strategies, and the efficiency of its approach.
 2. **Evaluate the Final Response:** Assessing the quality, relevance, and correctness of the agent's final output.
 
 The trajectory is just a list of steps the agent took before it returned to the user. We can compare that against the list of steps we expect the agent to have taken.
@@ -15938,7 +16158,8 @@ You can give the file any name for example `evaluation.test.json`. The framework
 [Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py).
 Here is a test file with a few examples:
 
-!!! note 
+!!! note
+
     Comments are included for explanatory purposes and should be removed for the JSON to be valid.
 
 ```json
@@ -15998,7 +16219,8 @@ Test files can be organized into folders. Optionally, a folder can also include 
 
 #### How to migrate test files not backed by the Pydantic schema?
 
-!!! note 
+!!! note
+
     If your test files don't adhere to [EvalSet](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) schema file, then this section is relevant to you.
 
 Please use `AgentEvaluator.migrate_eval_data_to_new_schema` to migrate your
@@ -16019,11 +16241,8 @@ Creating evalsets manually can be complex, therefore UI tools are provided to he
 [Eval Set](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) and
 [Eval Case](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_case.py).
 
-!!! warning
-    This evalset evaluation method requires the use of a paid service,
-    [Vertex Gen AI Evaluation Service API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/evaluation).
+!!! note
 
-!!! note 
     Comments are included for explanatory purposes and should be removed for the JSON to be valid.
 
 ```json
@@ -16163,6 +16382,7 @@ Creating evalsets manually can be complex, therefore UI tools are provided to he
 #### How to migrate eval set files not backed by the Pydantic schema?
 
 !!! note
+
     If your eval set files don't adhere to [EvalSet](https://github.com/google/adk-python/blob/main/src/google/adk/evaluation/eval_set.py) schema file, then this section is relevant to you.
 
 Based on who is maintaining the eval set data, there are two routes:
@@ -16185,7 +16405,7 @@ Before the `adk conformance` command can execute meaningful regression testing, 
 Follow this workflow to prepare your environment:
 ##### Create the Test Directory Hierarchy
 
- Conformance tests rely on a strict file layout to automatically discover and map test cases. 
+ Conformance tests rely on a strict file layout to automatically discover and map test cases.
  Initialize your testing directory using the following structure:
 
 ```
@@ -16199,6 +16419,7 @@ tests
 ```
 
 !!! note
+
     If your agent uses Server-Sent Events (SSE), the testing framework will additionally look for `generated-recordings-sse.yaml` and `generated-session-sse.yaml` within the same folder.
 
 ##### Define the test specification (spec.yaml)
@@ -16212,7 +16433,7 @@ user_prompts: - "What's the temperature in San Francisco right now?" expected_to
  - "get_weather_api"
 ```
 
-#### Automate the baseline 
+#### Automate the baseline
 
 Because the background data (like LLM requests and tool calls) is complex, you shouldn't try to write or save the baseline files manually. Instead, let ADK generate them for you.
 
@@ -16234,10 +16455,10 @@ Once these baseline files are locked in, your setup is complete, and the directo
 
 #### How it works
 
-* **Replay Mode (Default):** The tool runs your agent and compares its live LLM requests, responses, and tool calls directly against your previously recorded interactions to catch unexpected deviations.  
+* **Replay Mode (Default):** The tool runs your agent and compares its live LLM requests, responses, and tool calls directly against your previously recorded interactions to catch unexpected deviations.
 * **Live Mode:** Runs evaluation-based verification against active environments *(Note: This mode is a work in progress)*.
 
-### Evaluation Criteria
+### Evaluation criteria
 
 ADK provides several built-in criteria for evaluating agent performance, ranging
 from tool trajectory matching to LLM-based response quality assessment. For a
@@ -16265,9 +16486,19 @@ Here is a summary of all the available criteria:
 *   **multi_turn_tool_use_quality_v1**: Evaluates function calls made during a
     conversation.
 
+!!! note
+
+    Some criteria (such as response quality, safety, and multi-turn quality)
+    require the [Vertex Gen AI Evaluation Service
+    API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/evaluation).
+    To use them, authenticate by setting a `GOOGLE_API_KEY` environment
+    variable, or by using Google Cloud project credentials
+    (`GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` with Application Default
+    Credentials).
+
 If no evaluation criteria are provided, the following default configuration is used:
 
-* `tool_trajectory_avg_score`: Defaults to 1.0, requiring a 100% match in the tool usage trajectory.  
+* `tool_trajectory_avg_score`: Defaults to 1.0, requiring a 100% match in the tool usage trajectory.
 * `response_match_score`: Defaults to 0.8, allowing for a small margin of error in the agent's natural language responses.
 
 Here is an example of a `test_config.json` file specifying custom evaluation criteria:
@@ -16281,7 +16512,7 @@ Here is an example of a `test_config.json` file specifying custom evaluation cri
 }
 ```
 
-#### Recommendations on Criteria
+#### Recommendations on criteria
 
 Choose criteria based on your evaluation goals:
 
@@ -16321,7 +16552,7 @@ and/or responses are not supported in combination with
 [User Simulation](./user-sim.md).
 Currently, only the `hallucinations_v1` and `safety_v1` criteria support such evals.
 
-### User Simulation
+### User simulation
 
 When evaluating conversational agents, it is not always practical to use a fixed
 set of user prompts, as the conversation can proceed in unexpected ways.
@@ -16333,20 +16564,20 @@ generated by an AI model.
 For details on how to set up an eval with user simulation, see
 [User Simulation](./user-sim.md).
 
-## How to run Evaluation with ADK
+## How to run evaluation with ADK
 
 As a developer, you can evaluate your agents using the ADK in the following ways:
 
-- **Web-based UI (**`adk web`**):** Evaluate agents interactively through a web-based interface.  
-- **Programmatically (**`pytest`**)**: Integrate evaluation into your testing pipeline using `pytest` and test files.  
+- **Web-based UI (**`adk web`**):** Evaluate agents interactively through a web-based interface.
+- **Programmatically (**`pytest`**)**: Integrate evaluation into your testing pipeline using `pytest` and test files.
 - **Command Line Interface (**`adk eval`**):** Run evaluations on an existing evaluation set file directly from the command line.
 - **Conformance Testing** (**`adk conformance`**):** Execute automated tests against your baseline files to detect unexpected deviations or regressions.
 
-### Run Evaluations via the Web UI
+### Run evaluations via the web UI
 
 The web UI provides an interactive way to evaluate agents, generate evaluation datasets, and inspect agent behavior in detail.
 
-#### Step 1: Create and Save a Test Case
+#### Step 1: Create and save a test case
 
 1. Start the web server by running: `adk web <path_to_your_agents_folder>`
 2. In the web interface, select an agent and interact with it to create a session.
@@ -16354,7 +16585,7 @@ The web UI provides an interactive way to evaluate agents, generate evaluation d
 4. Create a new eval set or select an existing one.
 5. Click **"Add current session"** to save the conversation as a new evaluation case.
 
-#### Step 2: View and Edit Your Test Case
+#### Step 2: View and edit your test case
 
 Once a case is saved, you can click its ID in the list to inspect it. To make changes, click the **Edit current eval case** icon (pencil). This interactive view allows you to:
 
@@ -16364,7 +16595,7 @@ Once a case is saved, you can click its ID in the list to inspect it. To make ch
 
 ![adk-eval-case.gif](../assets/adk-eval-case.gif)
 
-#### Step 3: Run the Evaluation with Custom Metrics
+#### Step 3: Run the evaluation with custom metrics
 
 1. Select one or more test cases from your evalset.
 2. Click **Run Evaluation**. An **EVALUATION METRIC** dialog will appear.
@@ -16375,7 +16606,7 @@ Once a case is saved, you can click its ID in the list to inspect it. To make ch
 
 ![adk-eval-config.gif](../assets/adk-eval-config.gif)
 
-#### Step 4: Analyze Results
+#### Step 4: Analyze results
 
 After the run completes, you can analyze the results:
 
@@ -16401,17 +16632,17 @@ Each trace row is interactive:
 
 Blue rows in the trace view indicate that an event was generated from that interaction. Clicking on these blue rows will open the bottom event detail panel, providing deeper insights into the agent's execution flow.
 
-### Run Tests Programmatically
+### Run tests programmatically
 
 You can also use **`pytest`** to run test files as part of your integration tests.
 
-#### Example Command
+#### Example command
 
 ```shell
 pytest tests/integration/
 ```
 
-#### Example Test Code
+#### Example test code
 
 Here is an example of a `pytest` test case that runs a single test file:
 
@@ -16430,7 +16661,7 @@ async def test_with_single_test_file():
 
 This approach allows you to integrate agent evaluations into your CI/CD pipelines or larger test suites. If you want to specify the initial session state for your tests, you can do that by storing the session details in a file and passing that to `AgentEvaluator.evaluate` method.
 
-### Run Evaluations via the CLI
+### Run evaluations via the CLI
 
 You can also run evaluation of an eval set file through the command line interface (CLI). This runs the same evaluation that runs on the UI, but it helps with automation, i.e. you can add this command as a part of your regular build generation and verification process.
 
@@ -16454,18 +16685,18 @@ adk eval \
 
 Here are the details for each command line argument:
 
-* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.  
+* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.
 * `EVAL_SET_FILE_PATH`: The path to evaluations file(s). You can specify one or more eval set file paths. For each file, all evals will be run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name, demarcated by a colon `:` .
-* For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`  
-  `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`  
-* `CONFIG_FILE_PATH`: The path to the config file.  
+* For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`
+  `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`
+* `CONFIG_FILE_PATH`: The path to the config file.
 * `PRINT_DETAILED_RESULTS`: Prints detailed results on the console.
 
 ### Run conformance tests
 
 You can run all your tests at once, run specific ones, or create a summary report.
 
-#### Run All Tests
+#### Run all tests
 
 If you don't type a specific folder path, the tool automatically looks for a tests/ folder in your workspace and runs everything inside it:
 
@@ -16473,7 +16704,7 @@ If you don't type a specific folder path, the tool automatically looks for a tes
 adk conformance test
 ```
 
-#### Run Specific Test Groups or Individual Cases
+#### Run specific test groups or individual cases
 
 Pass one or more folder paths to narrow down which tests execute:
 
@@ -16487,7 +16718,7 @@ adk conformance test tests/core/description_001
 
 ```
 
-#### Generate Markdown Test Reports
+#### Generate Markdown test reports
 
 Add the `--generate_report` flag to produce a clean test summary report. You can optionally specify where to save it using the `--report_dir parameter`:
 
@@ -16496,7 +16727,7 @@ Add the `--generate_report` flag to produce a clean test summary report. You can
 adk conformance test --generate_report --report_dir=reports
 ```
 
-#### Automating with CI/CD  
+#### Automate with CI/CD
 Because adk conformance test is a command-line tool that fails if things don't match, it is highly useful for CI/CD pipelines. You can set it up to run automatically whenever someone opens a pull request, blocking any code from merging if it changes the agent's expected behavior.
 
 ================
@@ -24257,6 +24488,34 @@ of the tool, see
 
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/agent_search.py"
+```
+
+## Dynamic configuration
+
+You can create a subclass of `VertexAiSearchTool` and override the
+`_build_vertex_ai_search_config` method to dynamically configure the search
+settings based on the conversation context. This approach is useful for
+implementing features such as per-user data filtering.
+
+The `_build_vertex_ai_search_config` method receives the conversation
+`readonly_context` as an argument. You can use this context to access state
+information and adjust the search configuration at runtime.
+
+```python
+from google.genai import types
+from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.tools import VertexAiSearchTool
+
+class MyVertexAISearchTool(VertexAiSearchTool):
+    def _build_vertex_ai_search_config(
+        self, readonly_context: ReadonlyContext
+    ) -> types.VertexAISearch:
+        """Builds the VertexAISearch configuration, adding a user-specific filter."""
+        config = super()._build_vertex_ai_search_config(readonly_context)
+        if "user_id" in readonly_context.state:
+            user_id = readonly_context.state["user_id"]
+            config.filter = f'user_id: ANY("{user_id}")'
+        return config
 ```
 
 ================
@@ -35265,6 +35524,224 @@ For more information, read more about the following features:
 * [Authenticated Parameters](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#parameter-binding): bind tool inputs to values from OIDC tokens automatically, making it easy to run sensitive queries without potentially leaking data
 * [Authorized Invocations:](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#client-to-server-authentication)  restrict access to use a tool based on the users Auth token
 * [OpenTelemetry](https://mcp-toolbox.dev/documentation/connect-to/toolbox-sdks/python-sdk/core/#opentelemetry): get metrics and tracing from Toolbox with OpenTelemetry
+
+================
+File: docs/integrations/milvus.md
+================
+---
+catalog_title: Milvus
+catalog_description: Milvus-backed memory and RAG retrieval for ADK agents
+catalog_icon: /integrations/assets/milvus.svg
+catalog_tags: ["data"]
+---
+
+# Milvus integration for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The [`adk-milvus`](https://github.com/zilliztech/adk-milvus) package connects
+ADK Python agents to [Milvus](https://milvus.io/), an open-source vector
+database. Use it for persistent semantic memory through `MilvusMemoryService`,
+or expose a `milvus_similarity_search` retrieval tool for RAG workflows through
+`MilvusToolset`.
+
+Milvus can run locally with Milvus Lite, as a self-hosted Milvus server, or as a
+managed [Zilliz Cloud](https://zilliz.com/cloud) deployment using the same
+configuration fields.
+
+## Use cases
+
+- **Semantic memory for agents**: Persist session events in Milvus and retrieve
+  relevant memories in later conversations.
+- **RAG over private content**: Index documents or snippets and let the agent
+  retrieve relevant context through a tool call.
+- **Local-to-cloud development**: Start with Milvus Lite for local development,
+  then switch to a Milvus server or Zilliz Cloud by changing the URI and token.
+
+## Prerequisites
+
+- Python 3.10 or later
+- ADK for Python and `adk-milvus`
+- An embedding function that returns one vector per input text
+- One Milvus deployment:
+    - Milvus Lite for local development
+    - Milvus server, such as `http://localhost:19530`
+    - Zilliz Cloud endpoint and token
+
+## Installation
+
+```bash
+pip install adk-milvus
+```
+
+This installs the ADK runtime dependencies, PyMilvus, and Milvus Lite support.
+
+## Configuration
+
+Use `MILVUS_URI` and `MILVUS_TOKEN` for all deployment modes:
+
+```bash
+# Milvus Lite
+export MILVUS_URI="./adk_milvus.db"
+
+# Milvus server
+export MILVUS_URI="http://localhost:19530"
+
+# Zilliz Cloud
+export MILVUS_URI="https://your-endpoint.api.gcp-us-west1.zillizcloud.com"
+export MILVUS_TOKEN="your-token"
+```
+
+`MILVUS_TOKEN` is only needed for authenticated deployments such as Zilliz
+Cloud. If you use a non-default Milvus database, set `MILVUS_DB_NAME`.
+
+## Use with agent
+
+=== "Memory service"
+
+    Plug `MilvusMemoryService` into a `Runner` to persist and search
+    cross-session memory.
+
+    ```python
+    from adk_milvus import MilvusMemoryService
+    from google.adk.agents import Agent
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.genai import Client
+
+    genai_client = Client()
+
+    def embedding_function(texts):
+        response = genai_client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=list(texts),
+        )
+        return [list(embedding.values) for embedding in response.embeddings]
+
+    memory_service = MilvusMemoryService(
+        embedding_function=embedding_function,
+        dimension=3072,
+        collection_name="adk_memory",
+    )
+
+    agent = Agent(
+        name="memory_agent",
+        model="gemini-flash-latest",
+        instruction="Use memory to personalize responses when relevant.",
+    )
+
+    runner = Runner(
+        app_name="milvus_memory_app",
+        agent=agent,
+        session_service=InMemorySessionService(),
+        memory_service=memory_service,
+    )
+    ```
+
+    After a useful session, add it to memory and search it later:
+
+    ```python
+    session = await runner.session_service.get_session(
+        app_name="milvus_memory_app",
+        user_id="user-1",
+        session_id="session-1",
+    )
+    await memory_service.add_session_to_memory(session)
+
+    result = await memory_service.search_memory(
+        app_name="milvus_memory_app",
+        user_id="user-1",
+        query="what did the user say about database preferences?",
+    )
+    for memory in result.memories:
+        print(memory.content.parts[0].text)
+    ```
+
+=== "RAG toolset"
+
+    Use `MilvusVectorStore` to index text, then expose it through
+    `MilvusToolset`.
+
+    ```python
+    from adk_milvus import MilvusToolset
+    from adk_milvus import MilvusVectorStore
+    from adk_milvus import MilvusVectorStoreSettings
+    from google.adk.agents import Agent
+    from google.genai import Client
+
+    genai_client = Client()
+
+    def embedding_function(texts):
+        response = genai_client.models.embed_content(
+            model="gemini-embedding-001",
+            contents=list(texts),
+        )
+        return [list(embedding.values) for embedding in response.embeddings]
+
+    vector_store = MilvusVectorStore(
+        embedding_function=embedding_function,
+        settings=MilvusVectorStoreSettings(
+            collection_name="adk_rag",
+            dimension=3072,
+        ),
+    )
+
+    vector_store.add_texts(
+        [
+            "Milvus Lite is useful for local RAG development.",
+            "Zilliz Cloud provides managed Milvus for production workloads.",
+        ],
+        metadatas=[
+            {"source": "milvus-lite"},
+            {"source": "zilliz-cloud"},
+        ],
+    )
+
+    milvus_toolset = MilvusToolset(vector_store=vector_store)
+    tools = await milvus_toolset.get_tools_with_prefix()
+
+    agent = Agent(
+        name="rag_agent",
+        model="gemini-flash-latest",
+        instruction="Use retrieval context when answering questions.",
+        tools=tools,
+    )
+    ```
+
+## Available tools and operations
+
+### RAG toolset
+
+Tool | Description
+---- | -----------
+`milvus_similarity_search` | Search indexed text in Milvus and return matching rows with content, source, metadata, and distance.
+
+### Memory service
+
+Method | Description
+---- | -----------
+`add_session_to_memory(session)` | Persist text-bearing events from an ADK session.
+`search_memory(app_name, user_id, query)` | Search memories scoped to an ADK app and user.
+
+## Notes
+
+- `dimension` must match the embedding model output dimension.
+- `MilvusMemoryService` scopes search by `app_name` and `user_id`.
+- `MilvusVectorStore` creates the collection if it does not already exist and
+  validates the existing schema before reuse.
+- The collection consistency level and database name can be configured for
+  deployments that need stronger read-after-write behavior or multiple Milvus
+  databases.
+
+## Resources
+
+- [ADK Milvus package](https://github.com/zilliztech/adk-milvus)
+- [ADK Milvus on PyPI](https://pypi.org/project/adk-milvus/)
+- [Milvus documentation](https://milvus.io/docs)
+- [Milvus Lite documentation](https://milvus.io/docs/milvus_lite.md)
+- [Zilliz Cloud](https://zilliz.com/cloud)
 
 ================
 File: docs/integrations/mlflow-gateway.md
