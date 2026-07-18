@@ -11,43 +11,43 @@ search:
 ---
 # 모델
 
-Agents SDK는 두 가지 방식으로 OpenAI 모델을 기본 지원합니다.
+Agents SDK는 두 가지 방식으로 OpenAI 모델을 즉시 사용할 수 있도록 지원합니다.
 
 -   **권장**: 새로운 [Responses API](https://platform.openai.com/docs/api-reference/responses)를 사용하여 OpenAI API를 호출하는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]
 -   [Chat Completions API](https://platform.openai.com/docs/api-reference/chat)를 사용하여 OpenAI API를 호출하는 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]
 
 ## 모델 설정 선택
 
-설정에 맞는 가장 간단한 경로부터 시작하세요.
+설정에 맞는 가장 간단한 방식부터 시작하세요.
 
-| 하려는 작업 | 권장 경로 | 자세히 보기 |
+| 수행하려는 작업 | 권장 방식 | 자세히 보기 |
 | --- | --- | --- |
-| OpenAI 모델만 사용 | Responses 모델 경로와 함께 기본 OpenAI 공급자 사용 | [OpenAI 모델](#openai-models) |
+| OpenAI 모델만 사용 | 기본 OpenAI 공급자와 Responses 모델 경로 사용 | [OpenAI 모델](#openai-models) |
 | WebSocket 전송을 통해 OpenAI Responses API 사용 | Responses 모델 경로를 유지하고 WebSocket 전송 활성화 | [Responses WebSocket 전송](#responses-websocket-transport) |
-| OpenAI에서 호스팅되는 서브에이전트 사용 | 실험적 호스티드 멀티 에이전트 모델 사용 | [호스티드 멀티 에이전트](#hosted-multi-agent-experimental) |
+| OpenAI 호스트 하위 에이전트 사용 | 실험적 호스티드 멀티 에이전트 모델 사용 | [호스티드 멀티 에이전트](#hosted-multi-agent-experimental) |
 | OpenAI 이외의 공급자 하나 사용 | 기본 제공 공급자 통합 지점으로 시작 | [OpenAI 이외의 모델](#non-openai-models) |
-| 에이전트 간에 모델 또는 공급자 혼합 | 실행별 또는 에이전트별로 공급자를 선택하고 기능 차이 검토 | [하나의 워크플로에서 모델 혼합](#mixing-models-in-one-workflow) 및 [공급자 간 모델 혼합](#mixing-models-across-providers) |
+| 에이전트별로 모델 또는 공급자 혼합 | 실행별 또는 에이전트별로 공급자를 선택하고 기능 차이 검토 | [하나의 워크플로에서 모델 혼합](#mixing-models-in-one-workflow) 및 [여러 공급자의 모델 혼합](#mixing-models-across-providers) |
 | 고급 OpenAI Responses 요청 설정 조정 | OpenAI Responses 경로에서 `ModelSettings` 사용 | [고급 OpenAI Responses 설정](#advanced-openai-responses-settings) |
-| OpenAI 이외의 공급자 또는 혼합 공급자 라우팅에 서드파티 어댑터 사용 | 지원되는 베타 어댑터를 비교하고 출시할 공급자 경로 검증 | [서드파티 어댑터](#third-party-adapters) |
+| OpenAI 이외의 공급자 또는 혼합 공급자 라우팅을 위한 서드 파티 어댑터 사용 | 지원되는 베타 어댑터를 비교하고 배포할 공급자 경로 검증 | [서드 파티 어댑터](#third-party-adapters) |
 
 ## OpenAI 모델
 
-OpenAI만 사용하는 대부분의 앱에서는 기본 OpenAI 공급자와 문자열 모델 이름을 사용하고 Responses 모델 경로를 유지하는 방식을 권장합니다.
+OpenAI만 사용하는 대부분의 앱에는 기본 OpenAI 공급자와 문자열 모델 이름을 사용하면서 Responses 모델 경로를 유지하는 방식을 권장합니다.
 
-`Agent`를 초기화할 때 모델을 지정하지 않으면 기본 모델이 사용됩니다. 현재 기본 모델은 지연 시간이 짧은 에이전트 워크플로를 위해 `reasoning.effort="none"` 및 `verbosity="low"`로 설정된 [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)입니다. 사용 권한이 있다면 명시적인 `model_settings`를 유지하면서 더 높은 품질을 얻을 수 있도록 에이전트를 `gpt-5.6-sol`로 설정하는 것을 권장합니다.
+`Agent`를 초기화할 때 모델을 지정하지 않으면 기본 모델이 사용됩니다. 현재 기본 모델은 지연 시간이 짧은 에이전트 워크플로를 위해 `reasoning.effort="none"` 및 `verbosity="low"`가 적용된 [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)입니다. 액세스 권한이 있다면 명시적인 `model_settings`를 유지하면서 더 높은 품질을 위해 에이전트 모델을 `gpt-5.6-sol`로 설정하는 것이 좋습니다.
 
 `gpt-5.6-sol`과 같은 다른 모델로 전환하려면 두 가지 방법으로 에이전트를 구성할 수 있습니다.
 
 ### 기본 모델
 
-첫째, 사용자 지정 모델을 설정하지 않은 모든 에이전트에서 특정 모델을 일관되게 사용하려면 에이전트를 실행하기 전에 `OPENAI_DEFAULT_MODEL` 환경 변수를 설정하세요.
+먼저, 사용자 지정 모델을 설정하지 않은 모든 에이전트에서 특정 모델을 일관되게 사용하려면 에이전트를 실행하기 전에 `OPENAI_DEFAULT_MODEL` 환경 변수를 설정합니다.
 
 ```bash
 export OPENAI_DEFAULT_MODEL=gpt-5.6-sol
 python3 my_awesome_agent.py
 ```
 
-둘째, `RunConfig`를 통해 실행의 기본 모델을 설정할 수 있습니다. 에이전트에 모델을 설정하지 않으면 이 실행의 모델이 사용됩니다.
+둘째, `RunConfig`를 통해 실행의 기본 모델을 설정할 수 있습니다. 에이전트에 모델을 설정하지 않으면 해당 실행의 모델이 사용됩니다.
 
 ```python
 from agents import Agent, RunConfig, Runner
@@ -66,7 +66,7 @@ result = await Runner.run(
 
 #### GPT-5 모델
 
-이 방식으로 `gpt-5.6-sol`과 같은 GPT-5 모델을 사용하면 SDK가 기본 `ModelSettings`를 적용합니다. 대부분의 사용 사례에 가장 적합한 설정이 적용됩니다. 기본 모델의 추론 강도를 조정하려면 자체 `ModelSettings`를 전달하세요.
+이 방식으로 `gpt-5.6-sol`과 같은 GPT-5 모델을 사용하면 SDK가 기본 `ModelSettings`를 적용합니다. 대부분의 사용 사례에 가장 적합한 설정이 적용됩니다. 기본 모델의 추론 수준을 조정하려면 자체 `ModelSettings`를 전달합니다.
 
 ```python
 from openai.types.shared import Reasoning
@@ -82,9 +82,9 @@ my_agent = Agent(
 )
 ```
 
-지연 시간을 줄이려면 GPT-5 모델에 `reasoning.effort="none"`을 사용하는 것이 좋습니다.
+지연 시간을 줄이려면 GPT-5 모델에서 `reasoning.effort="none"`을 사용하는 것이 좋습니다.
 
-GPT-5.6은 기존 `reasoning` 설정을 통해 추론 모드, 지속되는 추론 컨텍스트, `"max"` 강도 수준도 지원합니다. 이러한 제어 기능은 Responses API 경로에서 사용할 수 있습니다.
+GPT-5.6은 기존 `reasoning` 설정을 통해 추론 모드, 유지되는 추론 컨텍스트, `"max"` 수준도 지원합니다. 이러한 제어 기능은 Responses API 경로에서 사용할 수 있습니다.
 
 ```python
 from openai.types.shared import Reasoning
@@ -103,19 +103,19 @@ agent = Agent(
 )
 ```
 
-`reasoning.mode`와 `reasoning.context`는 Responses 전용 설정입니다. Chat Completions는 `reasoning.effort`만 사용하며, 지원되는 강도 수준은 모델과 API 인터페이스에 따라 달라집니다. GPT-5.6의 `"max"` 강도에는 Responses API를 사용하세요. Chat Completions 어댑터는 경고와 함께 모드와 컨텍스트를 무시합니다. 이 경고를 오류로 전환하려면 OpenAI 공급자에서 `strict_feature_validation=True`를 설정하세요.
+`reasoning.mode`와 `reasoning.context`는 Responses 전용 설정입니다. Chat Completions는 `reasoning.effort`만 사용하며, 지원되는 수준은 모델과 API 인터페이스에 따라 달라집니다. GPT-5.6의 `"max"` 수준에는 Responses API를 사용하세요. Chat Completions 어댑터는 경고와 함께 모드와 컨텍스트를 무시합니다. 해당 경고를 오류로 전환하려면 OpenAI 공급자에서 `strict_feature_validation=True`를 설정하세요.
 
-`context="all_turns"`를 사용할 때는 `previous_response_id`, 서버 측 대화 또는 이전 추론 항목 재생을 통해 대화를 보존하세요. 상태 비저장 `store=False` 호출에서는 응답에 `reasoning.encrypted_content`를 포함하고 다음 요청에서 해당 추론 항목을 다시 재생하세요.
+`context="all_turns"`를 사용할 때는 `previous_response_id`, 서버 측 대화 또는 이전 추론 항목 재생을 통해 대화를 유지하세요. 상태 비저장 `store=False` 호출에서는 응답에 `reasoning.encrypted_content`를 포함하고 다음 요청에서 해당 추론 항목을 재생하세요.
 
 #### ComputerTool 모델 선택
 
-에이전트에 [`ComputerTool`][agents.tool.ComputerTool]이 포함되어 있으면 실제 Responses 요청의 유효 모델에 따라 SDK가 전송하는 컴퓨터 도구 페이로드가 결정됩니다. 명시적인 `gpt-5.5` 요청은 GA 기본 제공 `computer` 도구를 사용하고, 명시적인 `computer-use-preview` 요청은 이전 `computer_use_preview` 페이로드를 유지합니다.
+에이전트에 [`ComputerTool`][agents.tool.ComputerTool]이 포함된 경우 실제 Responses 요청에 적용되는 모델에 따라 SDK가 전송할 컴퓨터 도구 페이로드가 결정됩니다. 명시적인 `gpt-5.5` 요청은 정식 출시된 기본 제공 `computer` 도구를 사용하는 반면, 명시적인 `computer-use-preview` 요청은 이전 `computer_use_preview` 페이로드를 유지합니다.
 
-프롬프트 관리형 호출은 주요 예외입니다. 프롬프트 템플릿이 모델을 소유하고 SDK가 요청에서 `model`을 생략하면, SDK는 프롬프트에 고정된 모델을 추측하지 않도록 프리뷰 호환 컴퓨터 페이로드를 기본값으로 사용합니다. 이 흐름에서 GA 경로를 유지하려면 요청에 `model="gpt-5.5"`를 명시하거나 `ModelSettings(tool_choice="computer")` 또는 `ModelSettings(tool_choice="computer_use")`를 사용해 GA 선택기를 강제하세요.
+프롬프트가 관리하는 호출은 주요 예외입니다. 프롬프트 템플릿이 모델을 소유하여 SDK가 요청에서 `model`을 생략하면, 프롬프트가 고정한 모델을 추측하지 않도록 SDK는 미리보기 호환 컴퓨터 페이로드를 기본값으로 사용합니다. 이 흐름에서 정식 출시 경로를 유지하려면 요청에 `model="gpt-5.5"`를 명시하거나 `ModelSettings(tool_choice="computer")` 또는 `ModelSettings(tool_choice="computer_use")`를 사용하여 정식 출시 선택기를 강제하세요.
 
-등록된 [`ComputerTool`][agents.tool.ComputerTool]이 있으면 `tool_choice="computer"`, `"computer_use"`, `"computer_use_preview"`가 유효 요청 모델과 일치하는 기본 제공 선택기로 정규화됩니다. 등록된 `ComputerTool`이 없으면 이 문자열들은 계속 일반 함수 이름처럼 동작합니다.
+[`ComputerTool`][agents.tool.ComputerTool]이 등록된 경우 `tool_choice="computer"`, `"computer_use"`, `"computer_use_preview"`는 적용되는 요청 모델에 맞는 기본 제공 선택기로 정규화됩니다. 등록된 `ComputerTool`이 없으면 해당 문자열은 계속 일반 함수 이름처럼 동작합니다.
 
-프리뷰 호환 요청은 `environment`와 디스플레이 크기를 미리 직렬화해야 하므로, [`ComputerProvider`][agents.tool.ComputerProvider] 팩토리를 사용하는 프롬프트 관리형 흐름에서는 구체적인 `Computer` 또는 `AsyncComputer` 인스턴스를 전달하거나 요청을 보내기 전에 GA 선택기를 강제해야 합니다. 전체 마이그레이션 세부 정보는 [도구](../tools.md#computertool-and-the-responses-computer-tool)를 참조하세요.
+미리보기 호환 요청은 `environment`와 디스플레이 크기를 미리 직렬화해야 하므로, [`ComputerProvider`][agents.tool.ComputerProvider] 팩터리를 사용하는 프롬프트 관리 흐름에서는 구체적인 `Computer` 또는 `AsyncComputer` 인스턴스를 전달하거나 요청을 보내기 전에 정식 출시 선택기를 강제해야 합니다. 전체 마이그레이션 세부 정보는 [도구](../tools.md#computertool-and-the-responses-computer-tool)를 참조하세요.
 
 #### GPT-5 이외의 모델
 
@@ -129,11 +129,11 @@ agent = Agent(
 -   [`tool_namespace()`][agents.tool.tool_namespace]
 -   `@function_tool(defer_loading=True)` 및 기타 지연 로딩 Responses 도구 인터페이스
 
-이 기능들은 Chat Completions 모델과 Responses 이외의 백엔드에서는 거부됩니다. 지연 로딩 도구를 사용할 때는 에이전트에 `ToolSearchTool()`을 추가하고, 단순 네임스페이스 이름이나 지연 전용 함수 이름을 강제하는 대신 모델이 `auto` 또는 `required` 도구 선택을 통해 도구를 로드하도록 하세요. 설정 세부 정보와 현재 제약 사항은 [도구](../tools.md#hosted-tool-search)를 참조하세요.
+이러한 기능은 Chat Completions 모델과 Responses 이외의 백엔드에서 거부됩니다. 지연 로딩 도구를 사용할 때는 에이전트에 `ToolSearchTool()`을 추가하고, 단순 네임스페이스 이름이나 지연 전용 함수 이름을 강제하는 대신 모델이 `auto` 또는 `required` 도구 선택을 통해 도구를 로드하도록 하세요. 설정 세부 정보와 현재 제약 사항은 [도구](../tools.md#hosted-tool-search)를 참조하세요.
 
 ### Responses WebSocket 전송
 
-기본적으로 OpenAI Responses API 요청은 HTTP 전송을 사용합니다. OpenAI 기반 모델을 사용할 때 WebSocket 전송을 선택적으로 활성화할 수 있습니다.
+기본적으로 OpenAI Responses API 요청은 HTTP 전송을 사용합니다. OpenAI 기반 모델을 사용할 때 WebSocket 전송을 활성화할 수 있습니다.
 
 #### 기본 설정
 
@@ -143,9 +143,9 @@ from agents import set_default_openai_responses_transport
 set_default_openai_responses_transport("websocket")
 ```
 
-이는 기본 OpenAI 공급자가 해석하는 OpenAI Responses 모델에 영향을 주며, `"gpt-5.6-sol"`과 같은 문자열 모델 이름도 포함됩니다.
+이 설정은 기본 OpenAI 공급자가 해석하는 OpenAI Responses 모델에 적용되며, `"gpt-5.6-sol"`과 같은 문자열 모델 이름도 포함됩니다.
 
-SDK가 모델 이름을 모델 인스턴스로 해석할 때 전송 방식이 선택됩니다. 구체적인 [`Model`][agents.models.interface.Model] 객체를 전달하면 해당 전송 방식은 이미 고정되어 있습니다. [`OpenAIResponsesWSModel`][agents.models.openai_responses.OpenAIResponsesWSModel]은 WebSocket을 사용하고, [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]은 HTTP를 사용하며, [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]은 Chat Completions를 계속 사용합니다. `RunConfig(model_provider=...)`를 전달하면 전역 기본값 대신 해당 공급자가 전송 방식 선택을 제어합니다.
+전송 방식은 SDK가 모델 이름을 모델 인스턴스로 해석할 때 선택됩니다. 구체적인 [`Model`][agents.models.interface.Model] 객체를 전달하면 해당 객체의 전송 방식은 이미 고정되어 있습니다. [`OpenAIResponsesWSModel`][agents.models.openai_responses.OpenAIResponsesWSModel]은 WebSocket을 사용하고, [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]은 HTTP를 사용하며, [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]은 Chat Completions를 유지합니다. `RunConfig(model_provider=...)`를 전달하면 전역 기본값 대신 해당 공급자가 전송 방식 선택을 제어합니다.
 
 #### 공급자 또는 실행 수준 설정
 
@@ -170,7 +170,7 @@ result = await Runner.run(
 )
 ```
 
-OpenAI 기반 공급자는 선택적인 에이전트 등록 구성도 허용합니다. 이는 OpenAI 설정에서 하네스 ID와 같은 공급자 수준 등록 메타데이터가 필요한 경우를 위한 고급 옵션입니다.
+OpenAI 기반 공급자는 선택적 에이전트 등록 구성도 허용합니다. 이는 OpenAI 설정에서 하네스 ID와 같은 공급자 수준 등록 메타데이터를 요구하는 경우를 위한 고급 옵션입니다.
 
 ```python
 from agents import (
@@ -196,14 +196,14 @@ result = await Runner.run(
 
 #### `MultiProvider`를 사용한 고급 라우팅
 
-접두사 기반 모델 라우팅이 필요한 경우, 예를 들어 한 실행에서 `openai/...` 및 `any-llm/...` 모델 이름을 혼합하려면 [`MultiProvider`][agents.MultiProvider]를 사용하고 여기에서 `openai_use_responses_websocket=True`를 설정하세요.
+접두사 기반 모델 라우팅이 필요한 경우(예: 한 번의 실행에서 `openai/...`와 `any-llm/...` 모델 이름을 혼합하는 경우) [`MultiProvider`][agents.MultiProvider]를 사용하고 해당 위치에서 `openai_use_responses_websocket=True`를 설정하세요.
 
-`MultiProvider`는 다음 두 가지 기존 기본 동작을 유지합니다.
+`MultiProvider`는 기존의 두 가지 기본 동작을 유지합니다.
 
 -   `openai/...`는 OpenAI 공급자의 별칭으로 처리되므로 `openai/gpt-4.1`은 모델 `gpt-4.1`로 라우팅됩니다.
 -   알 수 없는 접두사는 그대로 전달되지 않고 `UserError`를 발생시킵니다.
 
-OpenAI 공급자가 리터럴 네임스페이스 모델 ID를 요구하는 OpenAI 호환 엔드포인트를 가리키는 경우, 명시적으로 그대로 전달하는 동작을 활성화하세요. WebSocket이 활성화된 설정에서는 `MultiProvider`에도 `openai_use_responses_websocket=True`를 유지하세요.
+리터럴 네임스페이스 모델 ID를 요구하는 OpenAI 호환 엔드포인트를 OpenAI 공급자에 지정하는 경우, 통과 동작을 명시적으로 활성화하세요. WebSocket이 활성화된 설정에서는 `MultiProvider`에도 `openai_use_responses_websocket=True`를 유지하세요.
 
 ```python
 from agents import Agent, MultiProvider, RunConfig, Runner
@@ -229,29 +229,29 @@ result = await Runner.run(
 )
 ```
 
-백엔드가 리터럴 `openai/...` 문자열을 요구하는 경우 `openai_prefix_mode="model_id"`를 사용하세요. 백엔드가 `openrouter/openai/gpt-4.1-mini`와 같은 다른 네임스페이스 모델 ID를 요구하는 경우 `unknown_prefix_mode="model_id"`를 사용하세요. 이러한 옵션은 WebSocket 전송 외부의 `MultiProvider`에서도 작동합니다. 이 예제에서는 이 섹션에서 설명하는 전송 설정의 일부이므로 WebSocket을 활성화한 상태로 유지합니다. 같은 옵션은 [`responses_websocket_session()`][agents.responses_websocket_session]에서도 사용할 수 있습니다.
+백엔드가 리터럴 `openai/...` 문자열을 요구할 때는 `openai_prefix_mode="model_id"`를 사용하세요. 백엔드가 `openrouter/openai/gpt-4.1-mini`와 같은 다른 네임스페이스 모델 ID를 요구할 때는 `unknown_prefix_mode="model_id"`를 사용하세요. 이러한 옵션은 WebSocket 전송 외부의 `MultiProvider`에서도 작동합니다. 이 예제에서는 이 섹션에서 설명하는 전송 설정의 일부이므로 WebSocket을 활성화한 상태로 유지합니다. 동일한 옵션은 [`responses_websocket_session()`][agents.responses_websocket_session]에서도 사용할 수 있습니다.
 
-`MultiProvider`를 통해 라우팅하면서 동일한 공급자 수준 등록 메타데이터가 필요한 경우 `openai_agent_registration=OpenAIAgentRegistrationConfig(...)`를 전달하면 기본 OpenAI 공급자로 전달됩니다.
+`MultiProvider`를 통해 라우팅하면서 동일한 공급자 수준 등록 메타데이터가 필요한 경우 `openai_agent_registration=OpenAIAgentRegistrationConfig(...)`를 전달하면 기본 OpenAI 공급자에 전달됩니다.
 
 사용자 지정 OpenAI 호환 엔드포인트나 프록시를 사용하는 경우 WebSocket 전송에도 호환되는 WebSocket `/responses` 엔드포인트가 필요합니다. 이러한 설정에서는 `websocket_base_url`을 명시적으로 설정해야 할 수 있습니다.
 
 #### 참고 사항
 
--   이는 WebSocket 전송을 통한 Responses API이며 [Realtime API](../realtime/guide.md)가 아닙니다. Chat Completions 또는 OpenAI 이외의 공급자가 Responses WebSocket `/responses` 엔드포인트를 지원하지 않는 한 해당 공급자에는 적용되지 않습니다.
--   환경에 아직 설치되어 있지 않다면 `websockets` 패키지를 설치하세요.
--   WebSocket 전송을 활성화한 후 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 직접 사용할 수 있습니다. 여러 턴과 중첩된 에이전트 도구 호출에서 동일한 WebSocket 연결을 재사용하려는 멀티턴 워크플로에는 [`responses_websocket_session()`][agents.responses_websocket_session] 헬퍼를 권장합니다. [에이전트 실행](../running_agents.md) 가이드와 [`examples/basic/stream_ws.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/stream_ws.py)를 참조하세요.
--   추론 턴이 길거나 지연 시간 급증이 있는 네트워크에서는 `responses_websocket_options`로 WebSocket 연결 유지 동작을 사용자 지정하세요. 지연된 pong 프레임을 허용하려면 `ping_timeout`을 늘리고, ping은 활성 상태로 유지하면서 하트비트 제한 시간을 비활성화하려면 `ping_timeout=None`을 설정하세요. WebSocket 지연 시간보다 안정성이 더 중요하면 HTTP/SSE 전송을 사용하세요.
+-   이는 WebSocket 전송을 통한 Responses API이며 [Realtime API](../realtime/guide.md)가 아닙니다. Chat Completions 또는 OpenAI 이외의 공급자가 Responses WebSocket `/responses` 엔드포인트를 지원하지 않는 한 해당 항목에는 적용되지 않습니다.
+-   환경에 `websockets` 패키지가 아직 없다면 설치하세요.
+-   WebSocket 전송을 활성화한 후 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]를 직접 사용할 수 있습니다. 여러 턴과 중첩된 에이전트 도구 호출 전반에서 동일한 WebSocket 연결을 재사용하려는 멀티턴 워크플로에는 [`responses_websocket_session()`][agents.responses_websocket_session] 도우미를 권장합니다. [에이전트 실행](../running_agents.md) 가이드와 [`examples/basic/stream_ws.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/stream_ws.py)를 참조하세요.
+-   추론 턴이 길거나 네트워크 지연이 급증하는 경우 `responses_websocket_options`로 WebSocket 연결 유지 동작을 사용자 지정하세요. 지연된 pong 프레임을 허용하려면 `ping_timeout`을 늘리거나, ping을 활성화한 상태로 하트비트 시간 제한을 비활성화하려면 `ping_timeout=None`을 설정하세요. WebSocket 지연 시간보다 안정성이 더 중요할 때는 HTTP/SSE 전송을 권장합니다.
 -   기본적으로 SDK는 수신 메시지 크기 제한을 비활성화합니다(`max_size=None`). 프록시 뒤에서 장기간 실행되는 에이전트 프로세스나 메모리가 제한된 컨테이너에서는 메시지별 메모리 사용량을 제한하도록 `responses_websocket_options={"max_size": 8 * 1024 * 1024}`를 설정하세요.
 
 ### 호스티드 멀티 에이전트(실험적)
 
-OpenAI Responses API 호스티드 멀티 에이전트 베타를 사용하면 GPT-5.6 루트 모델이 서버에서 호스팅되는 서브에이전트를 생성하고 조정할 수 있습니다. Agents SDK는 기존 `Runner`를 계속 사용할 수 있습니다. 호스티드 오케스트레이션은 서비스에서 수행되고, 개발자가 정의한 함수 도구는 애플리케이션에서 실행됩니다.
+OpenAI Responses API 호스티드 멀티 에이전트 베타를 사용하면 GPT-5.6 루트 모델이 서버에서 호스트되는 하위 에이전트를 생성하고 조정할 수 있습니다. Agents SDK는 기존 `Runner`를 계속 사용할 수 있습니다. 호스티드 오케스트레이션은 서비스에서 유지되고 개발자가 정의한 함수 도구는 애플리케이션에서 실행됩니다.
 
-이 통합은 실험적이며, 활성 호스티드 에이전트에 `response.inject`를 사용하여 로컬 함수 출력을 반환할 수 있도록 Responses WebSocket 전송을 사용합니다. `client.beta.responses.connect`를 노출하는 베타 빌드를 포함한 `openai[realtime]>=2.45.0`이 필요합니다. 인터페이스와 베타 항목 스키마는 정식 출시 전에 변경될 수 있습니다.
+이 통합은 실험적이며, 로컬 함수 출력을 `response.inject`를 사용하여 활성 호스티드 에이전트에 반환할 수 있도록 Responses WebSocket 전송을 사용합니다. `client.beta.responses.connect`를 노출하는 베타 빌드를 포함하여 `openai[realtime]>=2.45.0`이 필요합니다. 인터페이스와 베타 항목 스키마는 정식 출시 전에 변경될 수 있습니다.
 
 #### 모델 구성
 
-실험적 모듈에서 모델을 가져와 SDK `Agent`에 할당하세요.
+실험적 모듈에서 모델을 가져와 SDK `Agent`에 할당합니다.
 
 ```python
 from agents import Agent
@@ -264,13 +264,13 @@ agent = Agent(
 )
 ```
 
-`OpenAIHostedMultiAgentModel`을 생성하면 `multi_agent.enabled`가 활성화되고 `OpenAI-Beta: responses_multi_agent=v1` WebSocket 헤더가 전송됩니다. `openai_client`를 제공하지 않으면 모델은 기본 OpenAI 클라이언트를 사용합니다. `max_concurrent_subagents`를 생략하면 서비스 기본값이 사용됩니다.
+`OpenAIHostedMultiAgentModel`을 생성하면 `multi_agent.enabled`가 활성화되고 `OpenAI-Beta: responses_multi_agent=v1` WebSocket 헤더가 전송됩니다. `openai_client`가 제공되지 않으면 모델은 기본 OpenAI 클라이언트를 사용합니다. `max_concurrent_subagents`를 생략하면 서비스 기본값이 사용됩니다.
 
 #### 로컬 함수 도구
 
-모든 호스티드 에이전트는 요청에 구성된 모델과 도구를 공유합니다. Responses API가 어떤 호스티드 에이전트에서 함수를 호출할지 결정합니다. 일반 SDK Runner는 함수를 로컬에서 실행하고 동일한 호출 ID를 가진 `function_call_output`을 활성 WebSocket 응답에 주입합니다. 이를 통해 서비스가 원래 호스티드 호출자를 재개할 수 있습니다. 함수 실행에는 여전히 Runner의 일반 가드레일, 훅, 실패 변환이 적용됩니다. SDK 도구 승인 인터럽션(중단 처리)은 지원되지 않습니다. `needs_approval` 설정이 `False`가 아닌 함수 도구는 요청을 보내기 전에 거부됩니다.
+모든 호스티드 에이전트는 요청에 구성된 모델과 도구를 공유합니다. Responses API가 함수를 호출할 호스티드 에이전트를 결정합니다. 일반 SDK Runner가 함수를 로컬에서 실행하고 동일한 호출 ID가 포함된 `function_call_output`을 활성 WebSocket 응답에 삽입하므로, 서비스가 원래 호스티드 호출자를 재개할 수 있습니다. 함수 실행에는 Runner의 일반 가드레일, 훅, 실패 변환이 계속 적용됩니다. SDK 도구 승인 인터럽션(중단 처리)은 지원되지 않습니다. `needs_approval` 설정이 `False`가 아닌 함수 도구는 요청이 전송되기 전에 거부됩니다.
 
-도구에서 호출자를 인식하는 로깅이나 권한 부여가 필요한 경우 `get_hosted_agent_metadata()`를 사용하세요.
+도구에서 호출자별 로깅이나 권한 부여가 필요할 때는 `get_hosted_agent_metadata()`를 사용하세요.
 
 ```python
 from typing import Any
@@ -287,50 +287,50 @@ def lookup_document(ctx: ToolContext[Any], section: str) -> str:
     return f"Contents for {section}"
 ```
 
-호스티드 에이전트 이름은 관찰용 메타데이터일 뿐이며 로컬 라우팅 메커니즘이 아닙니다. SDK가 제공하는 호출 ID를 사용하여 출력을 라우팅하세요. 부작용이 있는 도구에서는 해당 호출 ID를 멱등성 키로 사용하고, 도구 실행 전이나 도중에 필요한 권한 부여를 애플리케이션 코드에서 적용하세요. 이 모델에서는 `needs_approval`을 사용하지 마세요. 도구 인수와 출력은 Responses API 경계를 통과합니다.
+호스티드 에이전트 이름은 관찰용 메타데이터이며 로컬 라우팅 메커니즘이 아닙니다. SDK가 제공한 호출 ID를 사용하여 출력을 라우팅하세요. 부수 효과가 있는 도구에서는 해당 호출 ID를 멱등성 키로 사용하고, 도구 실행 전이나 실행 중에 애플리케이션 코드에서 필요한 권한 부여를 적용하세요. 이 모델에는 `needs_approval`을 사용하지 마세요. 도구 인수와 출력은 Responses API 경계를 통과합니다.
 
 #### 출력 및 스트리밍 동작
 
-`final_answer` 단계를 가진 `/root`의 메시지만 일반 최종 메시지가 됩니다. 실험적 어댑터는 상위 수준 `RunResult`에서 서브에이전트 메시지와 호스티드 오케스트레이션 레코드를 필터링합니다. SDK는 이러한 레코드를 로컬 함수로 실행하지 않습니다.
+`final_answer` 단계에서 `/root`에 귀속된 메시지만 일반 최종 메시지가 됩니다. 실험적 어댑터는 하위 에이전트 메시지와 호스티드 오케스트레이션 레코드를 상위 수준 `RunResult`에서 제외합니다. SDK는 이러한 레코드를 로컬 함수로 실행하지 않습니다.
 
-원문 스트리밍에서는 호스티드 출력 항목과 `response.inject.created` 확인을 포함한 베타 Responses 이벤트가 계속 노출됩니다. 어댑터는 함수 호출이 준비되면 하나의 활성 공급자 응답을 SDK에 표시되는 논리적 모델 턴으로 나누고, Runner가 출력을 생성한 후 같은 공급자 응답을 재개합니다. 원문 호스티드 항목이나 `ToolContext`에서 기여 주체를 검사하려면 `get_hosted_agent_metadata()`를 사용하세요.
+원문 스트리밍에서는 호스티드 출력 항목과 `response.inject.created` 확인을 포함한 베타 Responses 이벤트가 계속 노출됩니다. 어댑터는 함수 호출이 준비되면 활성 공급자 응답 하나를 SDK에 표시되는 논리적 모델 턴으로 나눈 다음, Runner가 출력을 생성한 후 동일한 공급자 응답을 재개합니다. 귀속 정보를 확인하려면 원문 호스티드 항목이나 `ToolContext`와 함께 `get_hosted_agent_metadata()`를 사용하세요.
 
 #### SDK 오케스트레이션과의 관계
 
-호스티드 멀티 에이전트는 SDK 핸드오프 및 Agents-as-tools와 별개입니다.
+호스티드 멀티 에이전트는 SDK 핸드오프 및 agents-as-tools와 별개입니다.
 
--   호스티드 멀티 에이전트는 OpenAI 서비스에서 서브에이전트를 생성합니다. 애플리케이션이 이러한 서브에이전트를 생성하거나 예약하지 않습니다.
--   SDK 핸드오프는 활성 로컬 SDK `Agent`를 변경합니다. 이 실험적 모델을 사용할 때는 모든 호스티드 에이전트가 같은 핸드오프 도구를 받아 소유권 충돌이 발생하므로 거부됩니다.
--   Agents-as-tools는 계속 사용할 수 있지만, 이를 사용하면 중첩된 클라이언트 측 및 서버 측 오케스트레이션이 생성됩니다. 추가 지연 시간, 비용, 도구 노출을 신중하게 평가하세요.
+-   호스티드 멀티 에이전트는 OpenAI 서비스에서 하위 에이전트를 생성합니다. 애플리케이션은 이러한 하위 에이전트를 생성하거나 예약하지 않습니다.
+-   SDK 핸드오프는 활성 로컬 SDK `Agent`를 변경합니다. 이 실험적 모델을 사용할 때는 모든 호스티드 에이전트가 동일한 핸드오프 도구를 받아 소유권 충돌이 발생하므로 핸드오프가 거부됩니다.
+-   Agents-as-tools는 계속 사용할 수 있지만, 이를 사용하면 클라이언트 측 및 서버 측 오케스트레이션이 중첩됩니다. 추가되는 지연 시간, 비용, 도구 노출을 신중하게 평가하세요.
 
 #### 현재 제한 사항
 
-실험적 모델은 `reasoning.summary`, `max_tool_calls`, 호출자가 제공한 `multi_agent` 또는 `betas` 재정의를 거부합니다. 서비스가 각 호스티드 에이전트 컨텍스트를 독립적으로 자동 압축하므로 명시적인 `context_management.compact_threshold`를 사용할 수 있지만, Responses `/compact` 엔드포인트는 베타에서 지원되지 않습니다.
+실험적 모델은 `reasoning.summary`, `max_tool_calls`, 호출자가 제공한 `multi_agent` 또는 `betas` 재정의를 거부합니다. Responses `/compact` 엔드포인트는 베타에서 지원되지 않지만, 서비스가 각 호스티드 에이전트 컨텍스트를 독립적으로 자동 압축하므로 명시적인 `context_management.compact_threshold`는 사용할 수 있습니다.
 
-하나의 `OpenAIHostedMultiAgentModel` 인스턴스는 한 번에 최대 하나의 활성 호스티드 응답을 소유합니다. 로컬 함수 출력을 기다리는 동안 실행을 중단한 경우 `await model.close()`를 호출하여 WebSocket을 해제하세요. 다른 프로세스나 이벤트 루프에서 진행 중인 호스티드 응답을 복원하는 기능은 현재 지원되지 않습니다.
+하나의 `OpenAIHostedMultiAgentModel` 인스턴스는 동시에 최대 하나의 활성 호스티드 응답을 소유합니다. 로컬 함수 출력을 기다리는 동안 실행을 중단한 경우 `await model.close()`를 호출하여 WebSocket을 해제하세요. 진행 중인 호스티드 응답을 다른 프로세스나 이벤트 루프에서 복원하는 기능은 현재 지원되지 않습니다.
 
-기본 Responses API 베타 동작은 [OpenAI 멀티 에이전트 가이드](https://developers.openai.com/api/docs/guides/tools-multi-agent)를 참조하세요. 비스트리밍 및 스트리밍 SDK 사용법은 [`examples/agent_patterns/hosted_multi_agent_beta.py`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns/hosted_multi_agent_beta.py)를 참조하세요.
+기반 Responses API 베타 동작은 [OpenAI 멀티 에이전트 가이드](https://developers.openai.com/api/docs/guides/tools-multi-agent)를 참조하세요. 비스트리밍 및 스트리밍 SDK 사용법은 [`examples/agent_patterns/hosted_multi_agent_beta.py`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns/hosted_multi_agent_beta.py)를 참조하세요.
 
 ## OpenAI 이외의 모델
 
-OpenAI 이외의 공급자가 필요하면 SDK의 기본 제공 공급자 통합 지점부터 시작하세요. 많은 설정에서는 서드파티 어댑터를 추가하지 않아도 충분합니다. 각 패턴의 예제는 [examples/model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)에 있습니다.
+OpenAI 이외의 공급자가 필요하면 SDK의 기본 제공 공급자 통합 지점부터 시작하세요. 많은 설정에서는 서드 파티 어댑터를 추가하지 않아도 충분합니다. 각 패턴의 예제는 [examples/model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)에 있습니다.
 
-### OpenAI 이외의 공급자 통합 방법
+### OpenAI 이외의 공급자 통합 방식
 
 | 접근 방식 | 사용 시점 | 범위 |
 | --- | --- | --- |
-| [`set_default_openai_client`][agents.set_default_openai_client] | 하나의 OpenAI 호환 엔드포인트가 대부분 또는 모든 에이전트의 기본값이어야 하는 경우 | 전역 기본값 |
-| [`ModelProvider`][agents.models.interface.ModelProvider] | 하나의 사용자 지정 공급자를 단일 실행에 적용해야 하는 경우 | 실행별 |
-| [`Agent.model`][agents.agent.Agent.model] | 에이전트마다 서로 다른 공급자 또는 구체적인 모델 객체가 필요한 경우 | 에이전트별 |
-| 서드파티 어댑터 | 기본 제공 경로에서 제공하지 않는 어댑터 관리형 공급자 지원 범위 또는 라우팅이 필요한 경우 | [서드파티 어댑터](#third-party-adapters) 참조 |
+| [`set_default_openai_client`][agents.set_default_openai_client] | 하나의 OpenAI 호환 엔드포인트를 대부분 또는 모든 에이전트의 기본값으로 사용해야 할 때 | 전역 기본값 |
+| [`ModelProvider`][agents.models.interface.ModelProvider] | 하나의 사용자 지정 공급자를 단일 실행에 적용해야 할 때 | 실행별 |
+| [`Agent.model`][agents.agent.Agent.model] | 에이전트마다 다른 공급자 또는 구체적인 모델 객체가 필요할 때 | 에이전트별 |
+| 서드 파티 어댑터 | 기본 제공 경로가 제공하지 않는 어댑터 관리형 공급자 지원 범위 또는 라우팅이 필요할 때 | [서드 파티 어댑터](#third-party-adapters) 참조 |
 
 다음 기본 제공 경로를 사용하여 다른 LLM 공급자를 통합할 수 있습니다.
 
-1. [`set_default_openai_client`][agents.set_default_openai_client]는 `AsyncOpenAI` 인스턴스를 LLM 클라이언트로 전역에서 사용하려는 경우 유용합니다. LLM 공급자에 OpenAI 호환 API 엔드포인트가 있고 `base_url` 및 `api_key`를 설정할 수 있는 경우에 사용합니다. 구성 가능한 예제는 [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)를 참조하세요.
-2. [`ModelProvider`][agents.models.interface.ModelProvider]는 `Runner.run` 수준에 적용됩니다. 이를 통해 "이 실행의 모든 에이전트에 사용자 지정 모델 공급자를 사용"하도록 지정할 수 있습니다. 구성 가능한 예제는 [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)를 참조하세요.
-3. [`Agent.model`][agents.agent.Agent.model]을 사용하면 특정 Agent 인스턴스에 모델을 지정할 수 있습니다. 이를 통해 에이전트별로 서로 다른 공급자를 혼합하여 사용할 수 있습니다. 구성 가능한 예제는 [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)를 참조하세요.
+1. [`set_default_openai_client`][agents.set_default_openai_client]는 `AsyncOpenAI` 인스턴스를 LLM 클라이언트로 전역에서 사용하려는 경우에 유용합니다. LLM 공급자에 OpenAI 호환 API 엔드포인트가 있고 `base_url`과 `api_key`를 설정할 수 있는 경우를 위한 방식입니다. 구성 가능한 예제는 [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)를 참조하세요.
+2. [`ModelProvider`][agents.models.interface.ModelProvider]는 `Runner.run` 수준에서 사용됩니다. 이를 통해 "이 실행의 모든 에이전트에 사용자 지정 모델 공급자를 사용"하도록 지정할 수 있습니다. 구성 가능한 예제는 [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)를 참조하세요.
+3. [`Agent.model`][agents.agent.Agent.model]을 사용하면 특정 Agent 인스턴스에 모델을 지정할 수 있습니다. 이를 통해 에이전트별로 서로 다른 공급자를 조합하여 사용할 수 있습니다. 구성 가능한 예제는 [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)를 참조하세요.
 
-`platform.openai.com`의 API 키가 없는 경우 `set_tracing_disabled()`를 통해 트레이싱을 비활성화하거나 [다른 트레이싱 프로세서](../tracing.md)를 설정하는 것을 권장합니다.
+`platform.openai.com`의 API 키가 없는 경우 `set_tracing_disabled()`를 통해 트레이싱을 비활성화하거나 [다른 트레이싱 프로세서](../tracing.md)를 설정하는 것이 좋습니다.
 
 ``` python
 from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel, set_tracing_disabled
@@ -345,19 +345,19 @@ agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model
 
 !!! note
 
-    이 예제에서는 아직 많은 LLM 공급자가 Responses API를 지원하지 않으므로 Chat Completions API/모델을 사용합니다. LLM 공급자가 Responses API를 지원하는 경우 Responses 사용을 권장합니다.
+    이 예제에서는 많은 LLM 공급자가 아직 Responses API를 지원하지 않으므로 Chat Completions API/모델을 사용합니다. LLM 공급자가 Responses API를 지원한다면 Responses 사용을 권장합니다.
 
 ## 하나의 워크플로에서 모델 혼합
 
-단일 워크플로에서 에이전트마다 서로 다른 모델을 사용할 수 있습니다. 예를 들어 분류에는 더 작고 빠른 모델을 사용하고, 복잡한 작업에는 더 크고 성능이 뛰어난 모델을 사용할 수 있습니다. [`Agent`][agents.Agent]를 구성할 때 다음 방법 중 하나로 특정 모델을 선택할 수 있습니다.
+단일 워크플로에서 에이전트마다 서로 다른 모델을 사용해야 할 수 있습니다. 예를 들어 분류에는 더 작고 빠른 모델을 사용하고 복잡한 작업에는 더 크고 성능이 뛰어난 모델을 사용할 수 있습니다. [`Agent`][agents.Agent]를 구성할 때 다음 방법 중 하나로 특정 모델을 선택할 수 있습니다.
 
 1. 모델 이름 전달
 2. 임의의 모델 이름과 해당 이름을 Model 인스턴스에 매핑할 수 있는 [`ModelProvider`][agents.models.interface.ModelProvider] 전달
-3. [`Model`][agents.models.interface.Model] 구현 직접 제공
+3. [`Model`][agents.models.interface.Model] 구현을 직접 제공
 
 !!! note
 
-    SDK는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]과 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 형식을 모두 지원하지만, 두 형식에서 지원하는 기능과 도구 집합이 다르므로 워크플로마다 하나의 모델 형식을 사용하는 것을 권장합니다. 워크플로에서 여러 모델 형식을 혼합해야 한다면 사용하는 모든 기능을 양쪽에서 모두 지원하는지 확인하세요.
+    SDK는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]과 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 형식을 모두 지원하지만, 두 형식이 서로 다른 기능과 도구 집합을 지원하므로 각 워크플로에서는 하나의 모델 형식만 사용하는 것이 좋습니다. 워크플로에서 모델 형식을 혼합해야 한다면 사용하는 모든 기능을 양쪽 모두에서 사용할 수 있는지 확인하세요.
 
 ```python
 from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
@@ -393,7 +393,7 @@ async def main():
 1.  OpenAI 모델의 이름을 직접 설정합니다.
 2.  [`Model`][agents.models.interface.Model] 구현을 제공합니다.
 
-에이전트에 사용하는 모델을 추가로 구성하려면 temperature와 같은 선택적 모델 구성 매개변수를 제공하는 [`ModelSettings`][agents.models.interface.ModelSettings]를 전달할 수 있습니다.
+에이전트에 사용할 모델을 더 세부적으로 구성하려면 temperature와 같은 선택적 모델 구성 매개변수를 제공하는 [`ModelSettings`][agents.models.interface.ModelSettings]를 전달할 수 있습니다.
 
 ```python
 from agents import Agent, ModelSettings
@@ -408,22 +408,22 @@ english_agent = Agent(
 
 ## 고급 OpenAI Responses 설정
 
-OpenAI Responses 경로를 사용하면서 더 세밀한 제어가 필요한 경우 `ModelSettings`부터 시작하세요.
+OpenAI Responses 경로를 사용하면서 더 많은 제어가 필요할 때는 `ModelSettings`부터 시작하세요.
 
 ### 일반적인 고급 `ModelSettings` 옵션
 
-OpenAI Responses API를 사용할 때 여러 요청 필드는 이미 직접 대응하는 `ModelSettings` 필드를 제공하므로 `extra_args`를 사용할 필요가 없습니다.
+OpenAI Responses API를 사용할 때는 여러 요청 필드에 직접 대응하는 `ModelSettings` 필드가 이미 있으므로 이러한 필드에 `extra_args`를 사용할 필요가 없습니다.
 
-- `parallel_tool_calls`: 같은 턴에서 여러 도구 호출을 허용하거나 금지합니다.
+- `parallel_tool_calls`: 동일한 턴에서 여러 도구 호출을 허용하거나 금지합니다.
 - `truncation`: 컨텍스트가 넘칠 때 실패하는 대신 Responses API가 가장 오래된 대화 항목을 제거하도록 `"auto"`를 설정합니다.
-- `store`: 생성된 응답을 나중에 가져올 수 있도록 서버 측에 저장할지 제어합니다. 이는 응답 ID에 의존하는 후속 워크플로와 `store=False`일 때 로컬 입력으로 대체해야 할 수 있는 세션 압축 흐름에 중요합니다.
+- `store`: 생성된 응답을 나중에 검색할 수 있도록 서버 측에 저장할지 제어합니다. 이는 응답 ID를 사용하는 후속 워크플로와 `store=False`일 때 로컬 입력으로 대체해야 할 수 있는 세션 압축 흐름에 중요합니다.
 - `context_management`: `compact_threshold`를 사용하는 Responses 압축과 같은 서버 측 컨텍스트 처리를 구성합니다.
-- `prompt_cache_retention`: 이전 모델 계열의 확장된 보존 기간을 구성합니다. 예를 들어
+- `prompt_cache_retention`: 이전 모델 계열의 연장된 보존 기간을 구성합니다. 예를 들어
   `"24h"`를 사용합니다.
-- `prompt_cache_options`: 암시적 또는 명시적 프롬프트 캐싱을 선택하고, GPT-5.6에서는 `"30m"` 캐시 TTL을 구성합니다.
-- `response_include`: `web_search_call.action.sources`, `file_search_call.results`, `reasoning.encrypted_content`와 같은 더 풍부한 응답 페이로드를 요청합니다.
-- `top_logprobs`: 출력 텍스트의 상위 토큰 logprob를 요청합니다. SDK는 `message.output_text.logprobs`도 자동으로 추가합니다.
-- `retry`: 모델 호출에 Runner 관리형 재시도 설정을 선택적으로 활성화합니다. [Runner 관리형 재시도](#runner-managed-retries)를 참조하세요.
+- `prompt_cache_options`: 암시적 또는 명시적 프롬프트 캐싱을 선택하고 GPT-5.6의 경우 `"30m"` 캐시 TTL을 구성합니다.
+- `response_include`: `web_search_call.action.sources`, `file_search_call.results`, `reasoning.encrypted_content`와 같이 더 풍부한 응답 페이로드를 요청합니다.
+- `top_logprobs`: 출력 텍스트의 상위 토큰 로그 확률을 요청합니다. SDK는 `message.output_text.logprobs`도 자동으로 추가합니다.
+- `retry`: 모델 호출에 Runner가 관리하는 재시도 설정을 사용합니다. [Runner 관리형 재시도](#runner-managed-retries)를 참조하세요.
 
 ```python
 from agents import Agent, ModelSettings
@@ -443,7 +443,7 @@ research_agent = Agent(
 )
 ```
 
-명시적 프롬프트 캐싱을 사용할 때는 재사용 가능한 접두사가 끝나는 콘텐츠 부분에 중단점을 추가하세요. 같은 `ModelSettings.prompt_cache_options` 필드가 Responses 및 Chat Completions 요청에 그대로 전달되며, Chat Completions 변환기는 텍스트, 이미지, 오디오, 파일 콘텐츠 부분의 중단점을 보존합니다.
+명시적 프롬프트 캐싱에서는 재사용 가능한 접두사가 끝나는 콘텐츠 부분에 중단점을 추가하세요. 동일한 `ModelSettings.prompt_cache_options` 필드가 Responses 및 Chat Completions 요청에 그대로 전달되며, Chat Completions 변환기는 텍스트, 이미지, 오디오, 파일 콘텐츠 부분의 중단점을 유지합니다.
 
 ```python
 from agents import Runner
@@ -469,19 +469,18 @@ result = await Runner.run(
 )
 ```
 
-`prompt_cache_retention`은 기존
-보존 제어를 사용하는 이전 모델 계열에서 계속 사용할 수 있습니다. 직접적인 `ModelSettings` 필드와 같은 키를
-`extra_args`에서 함께 사용하지 마세요.
+`prompt_cache_retention`은 기존 보존 제어를 사용하는 이전 모델 계열에서도 계속 사용할 수 있습니다.
+직접적인 `ModelSettings` 필드와 `extra_args`의 동일한 키를 함께 사용하지 마세요.
 
-`store=False`를 설정하면 Responses API는 나중에 서버 측에서 가져올 수 있도록 해당 응답을 보관하지 않습니다. 이는 상태 비저장 또는 데이터 무보존 형태의 흐름에 유용하지만, 응답 ID를 재사용하는 기능은 대신 로컬에서 관리되는 상태에 의존해야 합니다. 예를 들어 마지막 응답이 저장되지 않은 경우 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]은 기본 `"auto"` 압축 경로를 입력 기반 압축으로 전환합니다. [세션 가이드](../sessions/index.md#openai-responses-compaction-sessions)를 참조하세요.
+`store=False`를 설정하면 Responses API는 해당 응답을 나중에 서버 측에서 검색할 수 있도록 유지하지 않습니다. 이는 상태 비저장 또는 데이터 보존이 없는 형태의 흐름에 유용하지만, 응답 ID를 재사용하는 기능이 로컬에서 관리하는 상태에 의존해야 함을 의미하기도 합니다. 예를 들어 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]은 마지막 응답이 저장되지 않았을 때 기본 `"auto"` 압축 경로를 입력 기반 압축으로 전환합니다. [세션 가이드](../sessions/index.md#openai-responses-compaction-sessions)를 참조하세요.
 
-서버 측 압축은 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]과 다릅니다. `context_management=[{"type": "compaction", "compact_threshold": ...}]`는 각 Responses API 요청과 함께 전송되며, 렌더링된 컨텍스트가 임계값을 넘으면 API가 응답의 일부로 압축 항목을 생성할 수 있습니다. `OpenAIResponsesCompactionSession`은 턴 사이에 독립 실행형 `responses.compact` 엔드포인트를 호출하고 로컬 세션 기록을 다시 작성합니다.
+서버 측 압축은 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]과 다릅니다. `context_management=[{"type": "compaction", "compact_threshold": ...}]`는 각 Responses API 요청과 함께 전송되며, 렌더링된 컨텍스트가 임계값을 넘으면 API가 응답의 일부로 압축 항목을 내보낼 수 있습니다. `OpenAIResponsesCompactionSession`은 턴 사이에 독립형 `responses.compact` 엔드포인트를 호출하고 로컬 세션 기록을 다시 작성합니다.
 
 ### `extra_args` 전달
 
-SDK가 아직 최상위 수준에서 직접 노출하지 않는 공급자별 또는 최신 요청 필드가 필요할 때 `extra_args`를 사용하세요.
+SDK가 아직 최상위 수준에 직접 노출하지 않은 공급자별 요청 필드나 최신 요청 필드가 필요한 경우 `extra_args`를 사용하세요.
 
-또한 OpenAI의 Responses API를 사용할 때는 [몇 가지 다른 선택적 매개변수](https://platform.openai.com/docs/api-reference/responses/create)(예: `user`, `service_tier` 등)가 있습니다. 최상위 수준에서 사용할 수 없는 경우 `extra_args`를 사용하여 전달할 수 있습니다. 같은 요청 필드를 직접적인 `ModelSettings` 필드를 통해 함께 설정하지 마세요.
+또한 OpenAI의 Responses API를 사용할 때 [몇 가지 다른 선택적 매개변수](https://platform.openai.com/docs/api-reference/responses/create)(예: `user`, `service_tier` 등)를 사용할 수 있습니다. 최상위 수준에서 사용할 수 없다면 `extra_args`를 사용하여 전달할 수도 있습니다. 동일한 요청 필드를 직접적인 `ModelSettings` 필드를 통해 함께 설정하지 마세요.
 
 ```python
 from agents import Agent, ModelSettings
@@ -499,7 +498,7 @@ english_agent = Agent(
 
 ## Runner 관리형 재시도
 
-재시도는 런타임 전용이며 선택적으로 활성화해야 합니다. `ModelSettings(retry=...)`를 설정하고 재시도 정책에서 재시도를 선택하지 않는 한 SDK는 일반적인 모델 요청을 재시도하지 않습니다.
+재시도는 런타임 전용이며 명시적으로 활성화해야 합니다. `ModelSettings(retry=...)`를 설정하고 재시도 정책이 재시도를 선택하지 않는 한 SDK는 일반 모델 요청을 재시도하지 않습니다.
 
 ```python
 from agents import Agent, ModelRetrySettings, ModelSettings, retry_policies
@@ -527,44 +526,44 @@ agent = Agent(
 )
 ```
 
-`ModelRetrySettings`에는 세 개의 필드가 있습니다.
+`ModelRetrySettings`에는 세 가지 필드가 있습니다.
 
 <div class="field-table" markdown="1">
 
-| 필드 | 유형 | 참고 사항 |
+| 필드 | 타입 | 참고 사항 |
 | --- | --- | --- |
-| `max_retries` | `int | None` | 최초 요청 이후 허용되는 재시도 횟수 |
-| `backoff` | `ModelRetryBackoffSettings | dict | None` | 정책이 명시적인 지연 시간을 반환하지 않고 재시도할 때 사용하는 기본 지연 전략입니다. `backoff.max_delay`는 계산된 백오프 지연에만 상한을 적용합니다. 정책이 반환한 명시적 지연이나 retry-after 힌트에는 상한을 적용하지 않습니다. |
+| `max_retries` | `int | None` | 최초 요청 이후 허용되는 재시도 횟수입니다. |
+| `backoff` | `ModelRetryBackoffSettings | dict | None` | 정책이 명시적 지연 시간을 반환하지 않고 재시도할 때 사용하는 기본 지연 전략입니다. `backoff.max_delay`는 계산된 백오프 지연만 제한합니다. 정책이나 retry-after 힌트가 반환한 명시적 지연은 제한하지 않습니다. |
 | `policy` | `RetryPolicy | None` | 재시도 여부를 결정하는 콜백입니다. 이 필드는 런타임 전용이며 직렬화되지 않습니다. |
 
 </div>
 
 재시도 정책은 다음 항목이 포함된 [`RetryPolicyContext`][agents.retry.RetryPolicyContext]를 받습니다.
 
-- `attempt` 및 `max_retries`: 시도 횟수를 고려해 결정할 수 있습니다.
-- `stream`: 스트리밍 및 비스트리밍 동작을 분기할 수 있습니다.
-- `error`: 원문 오류를 검사할 수 있습니다.
-- `normalized`: `status_code`, `retry_after`, `error_code`, `is_network_error`, `is_timeout`, `is_abort`와 같은 정규화된 정보입니다.
-- `provider_advice`: 기본 모델 어댑터가 재시도 지침을 제공할 수 있을 때 사용됩니다.
+- 시도 횟수를 고려하여 결정할 수 있도록 제공되는 `attempt`와 `max_retries`
+- 스트리밍과 비스트리밍 동작을 분기할 수 있도록 제공되는 `stream`
+- 원문 검사를 위한 `error`
+- `status_code`, `retry_after`, `error_code`, `is_network_error`, `is_timeout`, `is_abort`와 같이 정규화된 정보가 포함된 `normalized`
+- 기반 모델 어댑터가 재시도 지침을 제공할 수 있을 때 사용되는 `provider_advice`
 
 정책은 다음 중 하나를 반환할 수 있습니다.
 
 - 간단한 재시도 결정을 위한 `True` / `False`
 - 지연 시간을 재정의하거나 진단 사유를 첨부하려는 경우 [`RetryDecision`][agents.retry.RetryDecision]
 
-SDK는 `retry_policies`에 미리 준비된 헬퍼를 제공합니다.
+SDK는 `retry_policies`에서 바로 사용할 수 있는 도우미를 제공합니다.
 
-| 헬퍼 | 동작 |
+| 도우미 | 동작 |
 | --- | --- |
 | `retry_policies.never()` | 항상 재시도하지 않습니다. |
-| `retry_policies.provider_suggested()` | 가능한 경우 공급자의 재시도 지침을 따릅니다. |
-| `retry_policies.network_error()` | 일시적인 전송 및 제한 시간 실패와 일치합니다. |
+| `retry_policies.provider_suggested()` | 사용 가능한 경우 공급자의 재시도 지침을 따릅니다. |
+| `retry_policies.network_error()` | 일시적인 전송 및 시간 제한 실패와 일치합니다. |
 | `retry_policies.http_status([...])` | 선택한 HTTP 상태 코드와 일치합니다. |
-| `retry_policies.retry_after()` | retry-after 힌트가 있을 때만 해당 지연 시간을 사용하여 재시도합니다. 이 헬퍼는 retry-after 값을 명시적 정책 지연으로 처리하므로 `backoff.max_delay`의 상한이 적용되지 않습니다. |
+| `retry_policies.retry_after()` | retry-after 힌트가 있을 때만 해당 지연 시간을 사용하여 재시도합니다. 이 도우미는 retry-after 값을 명시적 정책 지연으로 처리하므로 `backoff.max_delay`가 이를 제한하지 않습니다. |
 | `retry_policies.any(...)` | 중첩된 정책 중 하나라도 재시도를 선택하면 재시도합니다. |
-| `retry_policies.all(...)` | 중첩된 모든 정책이 재시도를 선택할 때만 재시도합니다. |
+| `retry_policies.all(...)` | 중첩된 모든 정책이 재시도를 선택한 경우에만 재시도합니다. |
 
-정책을 조합할 때 `provider_suggested()`는 공급자가 구분할 수 있는 경우 공급자의 거부와 재생 안전성 승인을 보존하므로 가장 안전한 첫 번째 기본 구성 요소입니다.
+정책을 조합할 때는 공급자가 구분할 수 있는 거부와 재생 안전성 승인을 유지하므로 `provider_suggested()`가 가장 안전한 첫 번째 기본 구성 요소입니다.
 
 ##### 안전 경계
 
@@ -572,17 +571,17 @@ SDK는 `retry_policies`에 미리 준비된 헬퍼를 제공합니다.
 
 - 중단 오류
 - 공급자 지침에서 재생이 안전하지 않다고 표시한 요청
-- 이미 출력이 시작되어 재생이 안전하지 않은 스트리밍 실행
+- 재생이 안전하지 않을 정도로 출력이 이미 시작된 스트리밍 실행
 
-`previous_response_id` 또는 `conversation_id`를 사용하는 상태 저장 후속 요청도 더 보수적으로 처리됩니다. 이러한 요청에서는 `network_error()` 또는 `http_status([500])`와 같은 비공급자 조건만으로 충분하지 않습니다. 재시도 정책에는 일반적으로 `retry_policies.provider_suggested()`를 통한 공급자의 재생 안전 승인이 포함되어야 합니다.
+`previous_response_id` 또는 `conversation_id`를 사용하는 상태 유지형 후속 요청도 더 보수적으로 처리됩니다. 이러한 요청에서는 `network_error()`나 `http_status([500])`와 같은 비공급자 조건만으로는 충분하지 않습니다. 재시도 정책에는 일반적으로 `retry_policies.provider_suggested()`를 통한 공급자의 재생 안전 승인이 포함되어야 합니다.
 
-##### Runner와 에이전트 병합 동작
+##### Runner와 에이전트의 병합 동작
 
-`retry`는 Runner 수준과 에이전트 수준의 `ModelSettings` 사이에서 깊은 병합됩니다.
+`retry`는 Runner 수준과 에이전트 수준의 `ModelSettings` 사이에서 깊은 병합이 적용됩니다.
 
 - 에이전트는 `retry.max_retries`만 재정의하면서 Runner의 `policy`를 상속할 수 있습니다.
-- 에이전트는 `retry.backoff`의 일부만 재정의하고 Runner의 다른 백오프 필드를 유지할 수 있습니다.
-- `policy`는 런타임 전용이므로 직렬화된 `ModelSettings`는 `max_retries`와 `backoff`를 유지하지만 콜백 자체는 생략합니다.
+- 에이전트는 `retry.backoff`의 일부만 재정의하면서 Runner의 다른 백오프 필드를 유지할 수 있습니다.
+- `policy`는 런타임 전용이므로 직렬화된 `ModelSettings`에는 `max_retries`와 `backoff`가 유지되지만 콜백 자체는 생략됩니다.
 
 더 자세한 예제는 [`examples/basic/retry.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry.py)와 [어댑터 기반 재시도 예제](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry_litellm.py)를 참조하세요.
 
@@ -590,22 +589,22 @@ SDK는 `retry_policies`에 미리 준비된 헬퍼를 제공합니다.
 
 ### 트레이싱 클라이언트 오류 401
 
-트레이싱 관련 오류가 발생하는 이유는 트레이스가 OpenAI 서버에 업로드되지만 OpenAI API 키가 없기 때문입니다. 이를 해결하는 세 가지 방법이 있습니다.
+트레이싱 관련 오류가 발생하는 이유는 트레이스가 OpenAI 서버에 업로드되지만 OpenAI API 키가 없기 때문입니다. 이를 해결하는 방법은 세 가지입니다.
 
-1. 트레이싱을 완전히 비활성화합니다: [`set_tracing_disabled(True)`][agents.set_tracing_disabled]
-2. 트레이싱용 OpenAI 키를 설정합니다: [`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]. 이 API 키는 트레이스 업로드에만 사용되며 [platform.openai.com](https://platform.openai.com/)에서 발급한 키여야 합니다.
-3. OpenAI 이외의 트레이스 프로세서를 사용합니다. [트레이싱 문서](../tracing.md#custom-tracing-processors)를 참조하세요.
+1. 트레이싱 완전히 비활성화: [`set_tracing_disabled(True)`][agents.set_tracing_disabled]
+2. 트레이싱용 OpenAI 키 설정: [`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]. 이 API 키는 트레이스 업로드에만 사용되며 [platform.openai.com](https://platform.openai.com/)에서 발급된 키여야 합니다.
+3. OpenAI 이외의 트레이스 프로세서 사용. [트레이싱 문서](../tracing.md#custom-tracing-processors)를 참조하세요.
 
 ### Responses API 지원
 
-SDK는 기본적으로 Responses API를 사용하지만, 아직 많은 다른 LLM 공급자가 이를 지원하지 않습니다. 그 결과 404 또는 유사한 문제가 발생할 수 있습니다. 이를 해결하는 두 가지 방법이 있습니다.
+SDK는 기본적으로 Responses API를 사용하지만, 다른 많은 LLM 공급자는 아직 이를 지원하지 않습니다. 그 결과 404 또는 이와 유사한 문제가 발생할 수 있습니다. 이를 해결하는 방법은 두 가지입니다.
 
-1. [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api]를 호출합니다. 환경 변수를 통해 `OPENAI_API_KEY` 및 `OPENAI_BASE_URL`을 설정하는 경우 사용할 수 있습니다.
+1. [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api]를 호출합니다. 환경 변수를 통해 `OPENAI_API_KEY`와 `OPENAI_BASE_URL`을 설정하는 경우 사용할 수 있습니다.
 2. [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]을 사용합니다. 예제는 [여기](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)에서 확인할 수 있습니다.
 
 ### Chat Completions 호환성 옵션
 
-Chat Completions를 통해 라우팅하면 SDK는 `previous_response_id`, `conversation_id`, 프롬프트 또는 텍스트 전용이 아닌 도구 출력처럼 Chat Completions에서 전송할 수 없는 Responses 전용 필드를 자동으로 제거하여 호환성을 유지합니다. 개발 중 이러한 불일치가 즉시 실패하도록 하려면 OpenAI 공급자에서 엄격한 기능 검증을 활성화하세요.
+Chat Completions를 통해 라우팅할 때 SDK는 `previous_response_id`, `conversation_id`, 프롬프트 또는 텍스트 전용이 아닌 도구 출력과 같이 Chat Completions에서 전송할 수 없는 Responses 전용 필드를 자동으로 삭제하여 호환성을 유지합니다. 개발 중 이러한 불일치가 즉시 실패하도록 하려면 OpenAI 공급자에서 엄격한 기능 검증을 활성화하세요.
 
 ```python
 from agents import Agent, OpenAIProvider, RunConfig, Runner
@@ -625,7 +624,7 @@ result = await Runner.run(
 
 [`MultiProvider`][agents.MultiProvider]를 사용하는 경우 대신 `openai_strict_feature_validation=True`를 전달하세요.
 
-일부 OpenAI 호환 Chat Completions 공급자는 증분 SDK 처리에 충분히 안정적이지 않은 청크로 도구 호출 델타를 스트리밍합니다. 이 경우 스트리밍 도구 호출 버퍼링을 활성화하여 공급자 스트림이 끝난 후에만 SDK가 도구 호출을 생성하도록 하세요.
+일부 OpenAI 호환 Chat Completions 공급자는 점진적인 SDK 처리에 충분히 안정적이지 않은 청크로 도구 호출 델타를 스트리밍합니다. 이 경우 스트리밍 도구 호출 버퍼링을 활성화하여 공급자 스트림이 완료된 후에만 SDK가 도구 호출을 내보내도록 하세요.
 
 ```python
 from agents import OpenAIProvider
@@ -640,7 +639,7 @@ provider = OpenAIProvider(
 
 ### structured outputs 지원
 
-일부 모델 공급자는 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)를 지원하지 않습니다. 이 경우 다음과 유사한 오류가 발생하기도 합니다.
+일부 모델 공급자는 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)를 지원하지 않습니다. 이로 인해 때때로 다음과 유사한 오류가 발생합니다.
 
 ```
 
@@ -648,37 +647,45 @@ BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type'
 
 ```
 
-이는 일부 모델 공급자의 한계입니다. JSON 출력은 지원하지만 출력에 사용할 `json_schema`를 지정할 수는 없습니다. 이 문제를 해결하기 위해 작업 중이지만, JSON 스키마 출력을 지원하는 공급자를 사용할 것을 권장합니다. 그렇지 않으면 잘못된 JSON으로 인해 앱이 자주 중단될 수 있습니다.
+이는 일부 모델 공급자의 한계입니다. JSON 출력은 지원하지만 출력에 사용할 `json_schema`를 지정하도록 허용하지 않습니다. 이 문제를 해결하기 위해 작업하고 있지만 JSON 스키마 출력을 지원하는 공급자를 사용하는 것이 좋습니다. 그렇지 않으면 잘못된 형식의 JSON으로 인해 앱이 자주 중단될 수 있습니다.
 
-## 공급자 간 모델 혼합
+## 여러 공급자의 모델 혼합
 
-모델 공급자 간의 기능 차이를 알고 있어야 하며, 그렇지 않으면 오류가 발생할 수 있습니다. 예를 들어 OpenAI는 structured outputs, 멀티모달 입력, 호스티드 파일 검색 및 웹 검색을 지원하지만 다른 많은 공급자는 이러한 기능을 지원하지 않습니다. 다음 제한 사항에 유의하세요.
+모델 공급자 간 기능 차이를 알고 있어야 하며, 그렇지 않으면 오류가 발생할 수 있습니다. 예를 들어 OpenAI는 structured outputs, 멀티모달 입력, 호스티드 파일 검색 및 웹 검색을 지원하지만 다른 많은 공급자는 이러한 기능을 지원하지 않습니다. 다음 제한 사항에 유의하세요.
 
--   이해하지 못하는 공급자에게 지원되지 않는 `tools`를 전송하지 마세요
+-   지원하지 않는 `tools`를 이해하지 못하는 공급자에게 보내지 마세요
 -   텍스트 전용 모델을 호출하기 전에 멀티모달 입력을 필터링하세요
--   구조화된 JSON 출력을 지원하지 않는 공급자는 때때로 잘못된 JSON을 생성할 수 있다는 점에 유의하세요.
+-   구조화된 JSON 출력을 지원하지 않는 공급자는 때때로 유효하지 않은 JSON을 생성할 수 있다는 점에 유의하세요.
 
-## 서드파티 어댑터
+## 서드 파티 어댑터
 
-SDK의 기본 제공 공급자 통합 지점만으로 충분하지 않을 때만 서드파티 어댑터를 사용하세요. 이 SDK에서 OpenAI 모델만 사용하는 경우 Any-LLM이나 LiteLLM 대신 기본 제공 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 경로를 사용하세요. 서드파티 어댑터는 OpenAI 모델과 OpenAI 이외의 공급자를 결합해야 하거나 기본 제공 경로에서 제공하지 않는 어댑터 관리형 공급자 지원 범위 또는 라우팅이 필요한 경우에 사용합니다. 어댑터는 SDK와 업스트림 모델 공급자 사이에 또 하나의 호환성 계층을 추가하므로 기능 지원과 요청 의미 체계는 공급자에 따라 달라질 수 있습니다. SDK에는 현재 Any-LLM과 LiteLLM이 최선형 베타 어댑터 통합으로 포함되어 있습니다.
+SDK의 기본 제공 공급자 통합 지점만으로 충분하지 않을 때만 서드 파티 어댑터를 사용하세요. 이 SDK에서 OpenAI 모델만 사용하는 경우 Any-LLM이나 LiteLLM 대신 기본 제공 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 경로를 권장합니다. 서드 파티 어댑터는 OpenAI 모델과 OpenAI 이외의 공급자를 결합해야 하거나, 기본 제공 경로가 제공하지 않는 어댑터 관리형 공급자 지원 범위 또는 라우팅이 필요한 경우를 위한 것입니다. 어댑터는 SDK와 업스트림 모델 공급자 사이에 또 하나의 호환성 계층을 추가하므로 기능 지원과 요청 의미 체계가 공급자마다 다를 수 있습니다. 현재 SDK에는 최선 지원 방식의 베타 어댑터 통합으로 Any-LLM과 LiteLLM이 포함되어 있습니다.
 
 ### Any-LLM
 
-Any-LLM 관리형 공급자 지원 범위 또는 라우팅이 필요한 경우를 위해 Any-LLM 지원이 최선형 베타로 제공됩니다.
+Any-LLM 지원은 Any-LLM이 관리하는 공급자 지원 범위 또는 라우팅이 필요한 경우를 위해 최선 지원 방식의 베타로 제공됩니다.
 
 업스트림 공급자 경로에 따라 Any-LLM은 Responses API, Chat Completions 호환 API 또는 공급자별 호환성 계층을 사용할 수 있습니다.
 
-Any-LLM이 필요하면 `openai-agents[any-llm]`을 설치한 다음 [`examples/model_providers/any_llm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_auto.py) 또는 [`examples/model_providers/any_llm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_provider.py)부터 시작하세요. [`MultiProvider`][agents.MultiProvider]와 함께 `any-llm/...` 모델 이름을 사용하거나, `AnyLLMModel`을 직접 인스턴스화하거나, 실행 범위에서 `AnyLLMProvider`를 사용할 수 있습니다. 모델 인터페이스를 명시적으로 고정해야 하는 경우 `AnyLLMModel`을 생성할 때 `api="responses"` 또는 `api="chat_completions"`를 전달하세요.
+Any-LLM이 필요한 경우 `openai-agents[any-llm]`을 설치한 다음 [`examples/model_providers/any_llm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_auto.py) 또는 [`examples/model_providers/any_llm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_provider.py)부터 시작하세요. [`MultiProvider`][agents.MultiProvider]와 함께 `any-llm/...` 모델 이름을 사용하거나, `AnyLLMModel`을 직접 인스턴스화하거나, 실행 범위에서 `AnyLLMProvider`를 사용할 수 있습니다. 모델 인터페이스를 명시적으로 고정해야 하는 경우 `AnyLLMModel`을 생성할 때 `api="responses"` 또는 `api="chat_completions"`를 전달하세요.
 
-Any-LLM은 서드파티 어댑터 계층이므로 공급자 종속성과 기능 격차는 SDK가 아닌 Any-LLM 업스트림에서 정의됩니다. 업스트림 공급자가 사용량 지표를 반환하면 자동으로 전파되지만, 스트리밍 Chat Completions 백엔드에서 사용량 청크를 생성하려면 `ModelSettings(include_usage=True)`가 필요할 수 있습니다. structured outputs, 도구 호출, 사용량 보고 또는 Responses 전용 동작에 의존한다면 배포할 정확한 공급자 백엔드를 검증하세요.
+Any-LLM은 서드 파티 어댑터 계층이므로 공급자 종속성과 기능 차이는 SDK가 아니라 업스트림 Any-LLM에서 정의됩니다. 업스트림 공급자가 사용량 지표를 반환하면 자동으로 전달되지만, 스트리밍 Chat Completions 백엔드는 사용량 청크를 내보내기 전에 `ModelSettings(include_usage=True)`가 필요할 수 있습니다. structured outputs, 도구 호출, 사용량 보고 또는 Responses 전용 동작을 사용하는 경우 배포할 정확한 공급자 백엔드를 검증하세요.
 
 ### LiteLLM
 
-LiteLLM별 공급자 지원 범위 또는 라우팅이 필요한 경우를 위해 LiteLLM 지원이 최선형 베타로 제공됩니다.
+LiteLLM 지원은 LiteLLM별 공급자 지원 범위 또는 라우팅이 필요한 경우를 위해 최선 지원 방식의 베타로 제공됩니다.
 
-LiteLLM이 필요하면 `openai-agents[litellm]`을 설치한 다음 [`examples/model_providers/litellm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_auto.py) 또는 [`examples/model_providers/litellm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_provider.py)부터 시작하세요. `litellm/...` 모델 이름을 사용하거나 [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel]을 직접 인스턴스화할 수 있습니다.
+LiteLLM이 필요한 경우 `openai-agents[litellm]`을 설치한 다음 [`examples/model_providers/litellm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_auto.py) 또는 [`examples/model_providers/litellm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_provider.py)부터 시작하세요. `litellm/...` 모델 이름을 사용하거나 [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel]을 직접 인스턴스화할 수 있습니다.
 
-일부 LiteLLM 기반 공급자는 기본적으로 SDK 사용량 지표를 채우지 않습니다. 사용량 보고가 필요하면 `ModelSettings(include_usage=True)`를 전달하세요. structured outputs, 도구 호출, 사용량 보고 또는 어댑터별 라우팅 동작에 의존한다면 배포할 정확한 공급자 백엔드를 검증하세요.
+일부 LiteLLM 기반 공급자는 기본적으로 SDK 사용량 지표를 채우지 않습니다. 사용량 보고가 필요한 경우 `ModelSettings(include_usage=True)`를 전달하고, structured outputs, 도구 호출, 사용량 보고 또는 어댑터별 라우팅 동작을 사용하는 경우 배포할 정확한 공급자 백엔드를 검증하세요.
+
+LiteLLM이 응답 객체에 대해 Pydantic 직렬화 경고를 내보내는 경우 LiteLLM 어댑터를 가져오기 전에 SDK의 호환성 패치를 활성화할 수 있습니다.
+
+```bash
+export OPENAI_AGENTS_ENABLE_LITELLM_SERIALIZER_PATCH=true
+```
+
+이 패치는 기본적으로 비활성화되어 있으며 `1` 또는 `true` 값에서만 활성화됩니다. 비공개 LiteLLM 로깅 도우미를 래핑하여 특정 유형의 LiteLLM 응답 직렬화 경고를 억제하므로, 일반적인 직렬화 설정이 아니라 특정 문제를 위한 우회 방법으로 취급하세요. 비공개 LiteLLM API에 의존하므로 LiteLLM을 업그레이드할 때 다시 검증하고, 업스트림 경고가 더 이상 발생하지 않으면 환경 변수를 제거하세요.
 
 ================
 File: docs/ko/models/litellm.md
@@ -704,50 +711,50 @@ File: docs/ko/realtime/guide.md
 search:
   exclude: true
 ---
-# 실시간 에이전트 가이드
+# Realtime agents 가이드
 
-이 가이드는 OpenAI Agents SDK의 실시간 계층이 OpenAI Realtime API에 어떻게 매핑되는지, 그리고 Python SDK가 그 위에 어떤 추가 동작을 더하는지 설명합니다.
+이 가이드에서는 OpenAI Agents SDK의 실시간 계층이 OpenAI Realtime API에 어떻게 매핑되는지와 Python SDK가 그 위에 추가하는 동작을 설명합니다.
 
-!!! note "먼저 읽기"
+!!! note "시작하기"
 
-    기본 Python 경로를 원한다면 먼저 [빠른 시작](quickstart.md)을 읽어 보세요. 앱에서 서버 측 WebSocket 또는 SIP 중 무엇을 사용해야 할지 결정하는 중이라면 [실시간 전송](transport.md)을 읽어 보세요. 브라우저 WebRTC 전송은 Python SDK의 일부가 아닙니다.
+    기본 Python 경로를 사용하려면 먼저 [빠른 시작](quickstart.md)을 읽어보세요. 애플리케이션에서 서버 측 WebSocket과 SIP 중 무엇을 사용할지 결정하려면 [실시간 전송](transport.md)을 읽어보세요. 브라우저 WebRTC 전송은 Python SDK에 포함되지 않습니다.
 
 ## 개요
 
-실시간 에이전트는 Realtime API에 장기 연결을 열어 두어 모델이 텍스트와 오디오를 점진적으로 처리하고, 오디오 출력을 스트리밍하고, 도구를 호출하며, 매 턴마다 새 요청을 다시 시작하지 않고도 인터럽션(중단 처리)을 처리할 수 있게 합니다.
+Realtime agents는 Realtime API와의 장기 연결을 유지하므로 모델이 텍스트와 오디오를 점진적으로 처리하고, 오디오 출력을 스트리밍하고, 도구를 호출하고, 매 턴마다 새로운 요청을 다시 시작하지 않고도 인터럽션(중단 처리)을 처리할 수 있습니다.
 
-주요 SDK 컴포넌트는 다음과 같습니다.
+주요 SDK 구성 요소는 다음과 같습니다.
 
--   **RealtimeAgent**: 하나의 실시간 전문가를 위한 지침, 도구, 출력 가드레일 및 핸드오프
+-   **RealtimeAgent**: 한 실시간 전문 에이전트를 위한 지침, 도구, 출력 가드레일 및 핸드오프
 -   **RealtimeRunner**: 시작 에이전트를 실시간 전송에 연결하는 세션 팩토리
--   **RealtimeSession**: 입력을 보내고, 이벤트를 수신하고, 히스토리를 추적하고, 도구를 실행하는 라이브 세션
--   **RealtimeModel**: 전송 추상화. 기본값은 OpenAI의 서버 측 WebSocket 구현입니다.
+-   **RealtimeSession**: 입력을 전송하고, 이벤트를 수신하고, 기록을 추적하고, 도구를 실행하는 라이브 세션
+-   **RealtimeModel**: 전송 추상화입니다. 기본값은 OpenAI의 서버 측 WebSocket 구현입니다.
 
 ## 세션 수명 주기
 
-일반적인 실시간 세션은 다음과 같습니다.
+일반적인 실시간 세션은 다음과 같이 진행됩니다.
 
 1. 하나 이상의 `RealtimeAgent`를 생성합니다.
 2. 시작 에이전트로 `RealtimeRunner`를 생성합니다.
-3. `RealtimeSession`을 얻으려면 `await runner.run()`을 호출합니다.
-4. `async with session:` 또는 `await session.enter()`로 세션에 진입합니다.
-5. `send_message()` 또는 `send_audio()`로 사용자 입력을 보냅니다.
-6. 대화가 끝날 때까지 세션 이벤트를 반복 처리합니다.
+3. `await runner.run()`을 호출하여 `RealtimeSession`을 가져옵니다.
+4. `async with session:` 또는 `await session.enter()`을 사용하여 세션에 진입합니다.
+5. `send_message()` 또는 `send_audio()`를 사용하여 사용자 입력을 전송합니다.
+6. 대화가 종료될 때까지 세션 이벤트를 순회합니다.
 
-텍스트 전용 실행과 달리 `runner.run()`은 최종 결과를 즉시 생성하지 않습니다. 대신 로컬 히스토리, 백그라운드 도구 실행, 가드레일 상태, 활성 에이전트 구성을 전송 계층과 동기화하는 라이브 세션 객체를 반환합니다.
+텍스트 전용 실행과 달리 `runner.run()`은 최종 결과를 즉시 생성하지 않습니다. 대신 로컬 기록, 백그라운드 도구 실행, 가드레일 상태 및 활성 에이전트 구성을 전송 계층과 동기화된 상태로 유지하는 라이브 세션 객체를 반환합니다.
 
-기본적으로 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용하므로 기본 Python 경로는 Realtime API에 대한 서버 측 WebSocket 연결입니다. 다른 `RealtimeModel`을 전달해도 동일한 세션 수명 주기와 에이전트 기능이 적용되며, 연결 방식만 달라질 수 있습니다.
+기본적으로 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용하므로 기본 Python 경로는 Realtime API에 대한 서버 측 WebSocket 연결입니다. 다른 `RealtimeModel`을 전달하더라도 동일한 세션 수명 주기와 에이전트 기능이 적용되며, 연결 방식만 달라질 수 있습니다.
 
 ## 에이전트 및 세션 구성
 
-`RealtimeAgent`는 의도적으로 일반 `Agent` 타입보다 범위가 좁습니다.
+`RealtimeAgent`는 의도적으로 일반 `Agent` 유형보다 범위가 제한되어 있습니다.
 
--   모델 선택은 에이전트별이 아니라 세션 수준에서 구성됩니다.
--   Structured outputs는 지원되지 않습니다.
--   음성은 구성할 수 있지만, 세션이 이미 음성 오디오를 생성한 후에는 변경할 수 없습니다.
--   지침, 함수 도구, 핸드오프, 훅, 출력 가드레일은 모두 계속 작동합니다.
+-   모델 선택은 에이전트별이 아니라 세션 수준에서 구성합니다.
+-   structured outputs은 지원되지 않습니다.
+-   음성은 구성할 수 있지만 세션에서 음성 오디오를 이미 생성한 후에는 변경할 수 없습니다.
+-   지침, 함수 도구, 핸드오프, 훅 및 출력 가드레일은 모두 계속 작동합니다.
 
-`RealtimeSessionModelSettings`는 새로운 중첩형 `audio` 구성과 이전의 평면형 별칭을 모두 지원합니다. 새 코드에는 중첩 구조를 권장하며, 새 실시간 에이전트는 `gpt-realtime-2.1`로 시작하세요.
+`RealtimeSessionModelSettings`는 새로운 중첩 `audio` 구성과 이전의 평면 별칭을 모두 지원합니다. 새 코드에서는 중첩 구조를 사용하는 것이 좋으며, 새로운 Realtime agents에는 `gpt-realtime-2.1`부터 사용하세요.
 
 ```python
 runner = RealtimeRunner(
@@ -789,9 +796,9 @@ runner = RealtimeRunner(
 -   `tool_error_formatter`
 -   `tracing_disabled`
 
-타입이 지정된 전체 API 범위는 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참고하세요.
+전체 타입 지정 인터페이스는 [`RealtimeRunConfig`][agents.realtime.config.RealtimeRunConfig] 및 [`RealtimeSessionModelSettings`][agents.realtime.config.RealtimeSessionModelSettings]를 참조하세요.
 
-## 입력과 출력
+## 입력 및 출력
 
 ### 텍스트 및 구조화된 사용자 메시지
 
@@ -813,7 +820,7 @@ message: RealtimeUserInputMessage = {
 await session.send_message(message)
 ```
 
-구조화된 메시지는 실시간 대화에 이미지 입력을 포함하는 주요 방법입니다. [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)의 예제 웹 데모는 이러한 방식으로 `input_image` 메시지를 전달합니다.
+구조화된 메시지는 실시간 대화에 이미지 입력을 포함하는 주요 방법입니다. [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)의 웹 데모 코드 예제에서는 이 방식으로 `input_image` 메시지를 전달합니다.
 
 ### 오디오 입력
 
@@ -823,21 +830,21 @@ await session.send_message(message)
 await session.send_audio(audio_bytes)
 ```
 
-서버 측 턴 감지가 비활성화된 경우 턴 경계를 표시할 책임은 사용자에게 있습니다. 고수준 편의 메서드는 다음과 같습니다.
+서버 측 턴 감지가 비활성화된 경우 턴 경계를 직접 표시해야 합니다. 다음과 같은 상위 수준 편의 기능을 사용할 수 있습니다.
 
 ```python
 await session.send_audio(audio_bytes, commit=True)
 ```
 
-더 낮은 수준의 제어가 필요하다면 하위 모델 전송을 통해 `input_audio_buffer.commit` 같은 원문 클라이언트 이벤트를 보낼 수도 있습니다.
+더 낮은 수준의 제어가 필요한 경우 기본 모델 전송을 통해 `input_audio_buffer.commit`과 같은 원문 클라이언트 이벤트를 전송할 수도 있습니다.
 
 ### 수동 응답 제어
 
-`session.send_message()`는 고수준 경로를 사용해 사용자 입력을 보내고 응답을 시작합니다. 원문 오디오 버퍼링은 모든 구성에서 자동으로 동일하게 작동하지는 않습니다.
+`session.send_message()`는 상위 수준 경로를 사용하여 사용자 입력을 전송하고 응답을 자동으로 시작합니다. 원문 오디오 버퍼링은 모든 구성에서 동일한 작업을 **자동으로 수행하지는 않습니다**.
 
-Realtime API 수준에서 수동 턴 제어란 원문 `session.update`로 `turn_detection`을 지운 다음, `input_audio_buffer.commit` 및 `response.create`를 직접 보내는 것을 의미합니다.
+Realtime API 수준에서 수동 턴 제어를 사용하려면 원문 `session.update`로 `turn_detection`을 지운 다음, `input_audio_buffer.commit`과 `response.create`를 직접 전송해야 합니다.
 
-턴을 수동으로 관리하는 경우 모델 전송을 통해 원문 클라이언트 이벤트를 보낼 수 있습니다.
+턴을 수동으로 관리하는 경우 모델 전송을 통해 원문 클라이언트 이벤트를 전송할 수 있습니다.
 
 ```python
 from agents.realtime.model_inputs import RealtimeModelSendRawMessage
@@ -853,17 +860,17 @@ await session.model.send_event(
 
 이 패턴은 다음과 같은 경우에 유용합니다.
 
--   `turn_detection`이 비활성화되어 있고 모델이 언제 응답해야 하는지 직접 결정하려는 경우
--   응답을 트리거하기 전에 사용자 입력을 검사하거나 게이트 처리하려는 경우
--   대역 외 응답을 위한 사용자 지정 프롬프트가 필요한 경우
+-   `turn_detection`이 비활성화되어 있고 모델이 응답할 시점을 직접 결정하려는 경우
+-   응답을 트리거하기 전에 사용자 입력을 검사하거나 제어하려는 경우
+-   대역 외 응답에 사용자 지정 프롬프트가 필요한 경우
 
-[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)의 SIP 예제는 시작 인사를 강제로 생성하기 위해 원문 `response.create`를 사용합니다.
+[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)의 SIP 코드 예제에서는 원문 `response.create`를 사용하여 첫 인사말을 강제로 생성합니다.
 
-## 이벤트, 히스토리 및 인터럽션(중단 처리)
+## 이벤트, 기록 및 인터럽션(중단 처리)
 
-`RealtimeSession`은 고수준 SDK 이벤트를 내보내면서, 필요할 때는 원문 모델 이벤트도 계속 전달합니다.
+`RealtimeSession`은 상위 수준 SDK 이벤트를 내보내면서, 필요할 때 사용할 수 있도록 원문 모델 이벤트도 계속 전달합니다.
 
-중요한 세션 이벤트는 다음과 같습니다.
+주요 세션 이벤트는 다음과 같습니다.
 
 -   `audio`, `audio_end`, `audio_interrupted`
 -   `agent_start`, `agent_end`
@@ -875,21 +882,45 @@ await session.model.send_event(
 -   `error`
 -   `raw_model_event`
 
-UI 상태에 가장 유용한 이벤트는 보통 `history_added`와 `history_updated`입니다. 이 이벤트는 사용자 메시지, 어시스턴트 메시지, 도구 호출을 포함한 세션의 로컬 히스토리를 `RealtimeItem` 객체로 노출합니다.
+UI 상태에 가장 유용한 이벤트는 일반적으로 `history_added`와 `history_updated`입니다. 이러한 이벤트는 사용자 메시지, 어시스턴트 메시지 및 도구 호출을 포함한 세션의 로컬 기록을 `RealtimeItem` 객체로 제공합니다.
+
+### 사용량 집계
+
+완료된 모델 응답에 사용량이 포함된 경우 OpenAI 실시간 모델은 `raw_model_event` 내에서 [`RealtimeModelUsageEvent`][agents.realtime.model_events.RealtimeModelUsageEvent]를 내보냅니다. `usage` 필드에는 해당 응답의 토큰 수가 포함되며, `input_tokens_details`와 `output_tokens_details`는 선택적인 모달리티별 내역을 제공합니다.
+
+세션은 각 응답의 사용량도 공유 [`RunContextWrapper.usage`][agents.run_context.RunContextWrapper.usage]에 추가합니다. 라이브 세션의 누적 사용량을 확인하려면 이후의 `agent_end` 같은 상위 수준 이벤트에서 `event.info.context.usage`를 읽으세요.
+
+```python
+from agents.realtime import RealtimeModelUsageEvent
+
+async for event in session:
+    if event.type == "raw_model_event" and isinstance(
+        event.data, RealtimeModelUsageEvent
+    ):
+        response_usage = event.data.usage
+        print("Response tokens:", response_usage.total_tokens)
+        print("Input modalities:", event.data.input_tokens_details)
+        print("Output modalities:", event.data.output_tokens_details)
+    elif event.type == "agent_end":
+        session_usage = event.info.context.usage
+        print("Session tokens:", session_usage.total_tokens)
+```
+
+사용량은 모델 제공자가 완료된 응답에 사용량을 포함한 경우에만 보고됩니다. 누적 값에는 해당 `RealtimeSession`이 수신한 응답이 포함되며, 세션 간 합계가 아닙니다.
 
 ### 인터럽션(중단 처리) 및 재생 추적
 
-사용자가 어시스턴트를 중단하면 세션은 `audio_interrupted`를 내보내고, 서버 측 대화가 사용자가 실제로 들은 내용과 일치하도록 히스토리를 업데이트합니다.
+사용자가 어시스턴트의 응답을 중단하면 세션은 `audio_interrupted`를 내보내고 서버 측 대화가 사용자가 실제로 들은 내용과 일치하도록 기록을 업데이트합니다.
 
-지연 시간이 낮은 로컬 재생에서는 기본 재생 추적기로 충분한 경우가 많습니다. 원격 또는 지연 재생 시나리오, 특히 전화 통신에서는 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]를 사용하세요. 그러면 생성된 모든 오디오가 이미 들렸다고 가정하는 대신 실제 재생 진행률을 기준으로 인터럽션(중단 처리) 시 잘라내기가 이루어집니다.
+지연 시간이 짧은 로컬 재생에서는 기본 재생 추적기로 충분한 경우가 많습니다. 원격 또는 지연 재생 시나리오, 특히 전화 통신에서는 생성된 모든 오디오가 이미 재생되었다고 가정하는 대신 실제 재생 진행률을 기준으로 인터럽션(중단 처리) 시점의 잘라내기를 수행하도록 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]를 사용하세요.
 
-[`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py)의 Twilio 예제가 이 패턴을 보여줍니다.
+[`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py)의 Twilio 코드 예제에서 이 패턴을 확인할 수 있습니다.
 
 ## 도구, 승인, 핸드오프 및 가드레일
 
 ### 함수 도구
 
-실시간 에이전트는 라이브 대화 중 함수 도구를 지원합니다.
+Realtime agents는 라이브 대화 중 함수 도구를 지원합니다.
 
 ```python
 from agents import function_tool
@@ -910,9 +941,9 @@ agent = RealtimeAgent(
 
 ### 도구 승인
 
-함수 도구는 실행 전에 사람의 승인을 요구할 수 있습니다. 이 경우 세션은 `tool_approval_required`를 내보내고, `approve_tool_call()` 또는 `reject_tool_call()`을 호출할 때까지 도구 실행을 일시 중지합니다.
+함수 도구는 실행 전에 사람의 승인을 요구할 수 있습니다. 이 경우 세션은 `tool_approval_required`를 내보내고 `approve_tool_call()` 또는 `reject_tool_call()`을 호출할 때까지 도구 실행을 일시 중지합니다.
 
-도구에도 입력 가드레일이 있으면 해당 가드레일은 승인 후 실행 직전에 실행됩니다. 승인 이벤트가 발생하기 전에 이를 실행하려면 `RealtimeRunner(..., config={"tool_execution": {"pre_approval_tool_input_guardrails": True}})`로 runner를 생성하세요. 이 사전 승인 검사를 통과한 호출도 실행 전 승인 후에 다시 검사됩니다.
+도구에 입력 가드레일도 있는 경우 해당 가드레일은 승인 후 실행 직전에 작동합니다. 승인 이벤트가 발생하기 전에 가드레일을 실행하려면 `RealtimeRunner(..., config={"tool_execution": {"pre_approval_tool_input_guardrails": True}})`로 러너를 생성하세요. 이 사전 승인 검사를 통과한 호출도 승인 후 실행 전에 다시 검사됩니다.
 
 ```python
 async for event in session:
@@ -920,11 +951,11 @@ async for event in session:
         await session.approve_tool_call(event.call_id)
 ```
 
-구체적인 서버 측 승인 루프는 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)를 참고하세요. 휴먼인더루프 (HITL) 문서도 [휴먼인더루프 (HITL)](../human_in_the_loop.md)에서 이 흐름을 다시 참조합니다.
+구체적인 서버 측 승인 루프는 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)를 참조하세요. 휴먼인더루프 (HITL) 문서의 [휴먼인더루프 (HITL)](../human_in_the_loop.md)에서도 이 흐름을 안내합니다.
 
 ### 핸드오프
 
-실시간 핸드오프를 사용하면 한 에이전트가 라이브 대화를 다른 전문가에게 넘길 수 있습니다.
+실시간 핸드오프를 사용하면 한 에이전트가 라이브 대화를 다른 전문 에이전트에게 전달할 수 있습니다.
 
 ```python
 from agents.realtime import RealtimeAgent, realtime_handoff
@@ -946,11 +977,11 @@ main_agent = RealtimeAgent(
 )
 ```
 
-단독으로 지정된 `RealtimeAgent` 핸드오프는 자동으로 래핑되며, `realtime_handoff(...)`를 사용하면 이름, 설명, 검증, 콜백 및 가용성을 사용자 지정할 수 있습니다. 실시간 핸드오프는 일반 핸드오프 `input_filter`를 지원하지 않습니다.
+별도 설정이 없는 `RealtimeAgent` 핸드오프는 자동으로 래핑되며, `realtime_handoff(...)`를 사용하면 이름, 설명, 유효성 검사, 콜백 및 가용성을 사용자 지정할 수 있습니다. 실시간 핸드오프는 일반 핸드오프의 `input_filter`를 지원하지 **않습니다**.
 
 ### 가드레일
 
-실시간 에이전트는 에이전트 응답에 대한 출력 가드레일과 함수 도구 호출에 대한 입력 가드레일을 지원합니다. 출력 가드레일은 모든 부분 토큰마다 실행되는 대신 디바운스된 transcript 누적에 대해 실행되며, 예외를 발생시키는 대신 `guardrail_tripped`를 내보냅니다.
+Realtime agents는 에이전트 응답에 대한 출력 가드레일과 함수 도구 호출에 대한 입력 가드레일을 지원합니다. 출력 가드레일은 모든 부분 토큰이 아니라 디바운스된 트랜스크립트 누적 내용에 대해 실행되며, 예외를 발생시키는 대신 `guardrail_tripped`를 내보냅니다.
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -970,13 +1001,13 @@ agent = RealtimeAgent(
 )
 ```
 
-실시간 출력 가드레일이 트립되면 세션은 활성 응답을 중단하고, `response.cancel`을 강제하며, `guardrail_tripped`를 내보내고, 트리거된 가드레일의 이름을 담은 후속 사용자 메시지를 보내 모델이 대체 응답을 생성할 수 있게 합니다. 가드레일은 디바운스된 transcript 텍스트에 대해 실행되고 트립와이어가 작동할 때 일부 오디오가 이미 버퍼링되어 있을 수 있으므로, 오디오 플레이어는 여전히 `audio_interrupted`를 수신하고 로컬 재생을 즉시 중지해야 합니다.
+실시간 출력 가드레일이 작동하면 세션은 활성 응답을 중단하고, `response.cancel`을 강제로 실행하고, `guardrail_tripped`를 내보내며, 모델이 대체 응답을 생성할 수 있도록 작동한 가드레일의 이름이 포함된 후속 사용자 메시지를 전송합니다. 가드레일은 디바운스된 트랜스크립트 텍스트에 대해 실행되고 트립와이어가 작동할 때 일부 오디오가 이미 버퍼링되어 있을 수 있으므로, 오디오 플레이어는 계속 `audio_interrupted`를 수신하고 로컬 재생을 즉시 중지해야 합니다.
 
 ## SIP 및 전화 통신
 
-Python SDK에는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]을 통한 일급 SIP 연결 흐름이 포함되어 있습니다.
+Python SDK는 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel]을 통한 일급 SIP 연결 흐름을 제공합니다.
 
-Realtime Calls API를 통해 통화가 들어오고, 생성된 `call_id`에 에이전트 세션을 연결하려는 경우 이를 사용하세요.
+Realtime Calls API를 통해 전화가 수신되고 생성된 `call_id`에 에이전트 세션을 연결하려는 경우 사용하세요.
 
 ```python
 from agents.realtime import RealtimeRunner
@@ -993,18 +1024,18 @@ async with await runner.run(
         ...
 ```
 
-통화를 먼저 수락해야 하고 수락 페이로드가 에이전트에서 파생된 세션 구성과 일치하길 원한다면 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`를 사용하세요. 전체 흐름은 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)에 나와 있습니다.
+먼저 전화를 수락해야 하며 수락 페이로드가 에이전트에서 파생된 세션 구성과 일치하도록 하려면 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`를 사용하세요. 전체 흐름은 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)에 나와 있습니다.
 
 ## 저수준 접근 및 사용자 지정 엔드포인트
 
-`session.model`을 통해 하위 전송 객체에 접근할 수 있습니다.
+`session.model`을 통해 기본 전송 객체에 접근할 수 있습니다.
 
-다음이 필요할 때 사용하세요.
+다음과 같은 경우에 사용하세요.
 
 -   `session.model.add_listener(...)`를 통한 사용자 지정 리스너
 -   `response.create` 또는 `session.update` 같은 원문 클라이언트 이벤트
 -   `model_config`를 통한 사용자 지정 `url`, `headers` 또는 `api_key` 처리
--   기존 실시간 호출에 `call_id` 연결
+-   기존 실시간 호출에 대한 `call_id` 연결
 
 `RealtimeModelConfig`는 다음을 지원합니다.
 
@@ -1015,9 +1046,9 @@ async with await runner.run(
 -   `playback_tracker`
 -   `call_id`
 
-이 저장소에 포함되어 제공되는 `call_id` 예제는 SIP입니다. 더 넓은 범위의 Realtime API도 일부 서버 측 제어 흐름에 `call_id`를 사용하지만, 여기에는 Python 예제로 패키징되어 있지 않습니다.
+이 저장소에서 제공하는 `call_id` 코드 예제는 SIP를 사용합니다. 더 광범위한 Realtime API에서도 일부 서버 측 제어 흐름에 `call_id`를 사용하지만, 여기서는 해당 흐름을 Python 코드 예제로 제공하지 않습니다.
 
-Azure OpenAI에 연결할 때는 GA Realtime 엔드포인트 URL과 명시적 헤더를 전달하세요. 예를 들면 다음과 같습니다.
+Azure OpenAI에 연결할 때는 GA Realtime 엔드포인트 URL과 명시적인 헤더를 전달하세요. 예를 들면 다음과 같습니다.
 
 ```python
 session = await runner.run(
@@ -1028,7 +1059,7 @@ session = await runner.run(
 )
 ```
 
-토큰 기반 인증에는 `headers`에 bearer 토큰을 사용하세요.
+토큰 기반 인증에는 `headers`에서 전달자 토큰을 사용하세요.
 
 ```python
 session = await runner.run(
@@ -1039,7 +1070,7 @@ session = await runner.run(
 )
 ```
 
-`headers`를 전달하면 SDK가 `Authorization`을 자동으로 추가하지 않습니다. 실시간 에이전트에서는 기존 beta 경로(`/openai/realtime?api-version=...`)를 사용하지 마세요.
+`headers`를 전달하면 SDK가 `Authorization`을 자동으로 추가하지 않습니다. Realtime agents에서 레거시 베타 경로(`/openai/realtime?api-version=...`)를 사용하지 마세요.
 
 ## 추가 자료
 
@@ -1220,76 +1251,108 @@ search:
 ---
 # 실시간 전송 방식
 
-이 페이지를 사용하여 실시간 에이전트가 Python 애플리케이션에 어떻게 적합한지 결정하세요.
+이 페이지에서는 실시간 에이전트를 Python 애플리케이션에 통합하는 방법을 결정할 수 있습니다.
 
-!!! note "Python SDK 경계"
+!!! note "Python SDK 범위"
 
-    Python SDK에는 브라우저 WebRTC 전송이 **포함되지 않습니다**. 이 페이지는 Python SDK 전송 선택지, 즉 서버 측 WebSocket 및 SIP 연결 플로우만 다룹니다. 브라우저 WebRTC는 별도의 플랫폼 주제이며, 공식 [WebRTC를 사용하는 Realtime API](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 가이드에 문서화되어 있습니다.
+    Python SDK에는 브라우저 WebRTC 전송 기능이 **포함되어 있지 않습니다**. 이 페이지에서는 Python SDK의 전송 방식인 서버 측 WebSocket과 SIP 연결 흐름만 다룹니다. 브라우저 WebRTC는 별도의 플랫폼 주제이며, 공식 [WebRTC를 사용하는 Realtime API](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 가이드에 설명되어 있습니다.
 
-## 결정 가이드
+## 선택 가이드
 
-| 목표 | 시작 위치 | 이유 |
+| 목표 | 시작점 | 이유 |
 | --- | --- | --- |
-| 서버가 관리하는 실시간 앱 빌드 | [빠른 시작](quickstart.md) | 기본 Python 경로는 `RealtimeRunner`가 관리하는 서버 측 WebSocket 세션입니다. |
-| 어떤 전송 방식과 배포 형태를 선택해야 하는지 이해 | 이 페이지 | 전송 방식이나 배포 형태를 확정하기 전에 이 페이지를 사용하세요. |
-| 에이전트를 전화 또는 SIP 통화에 연결 | [실시간 가이드](guide.md) 및 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) | 이 저장소에는 `call_id`로 구동되는 SIP 연결 플로우가 포함되어 있습니다. |
+| 서버에서 관리하는 실시간 앱 구축 | [빠른 시작](quickstart.md) | 기본 Python 경로는 `RealtimeRunner`가 관리하는 서버 측 WebSocket 세션입니다. |
+| 선택할 전송 방식과 배포 구조 파악 | 이 페이지 | 전송 방식이나 배포 구조를 확정하기 전에 이 페이지를 참조하세요. |
+| 에이전트를 전화 또는 SIP 통화에 연결 | [실시간 가이드](guide.md) 및 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) | 저장소에는 `call_id`로 구동되는 SIP 연결 흐름이 포함되어 있습니다. |
 
 ## 기본 Python 경로인 서버 측 WebSocket
 
-커스텀 `RealtimeModel`을 전달하지 않으면 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용합니다.
+사용자 지정 `RealtimeModel`을 전달하지 않으면 `RealtimeRunner`는 `OpenAIRealtimeWebSocketModel`을 사용합니다.
 
 즉, 표준 Python 토폴로지는 다음과 같습니다.
 
 1. Python 서비스가 `RealtimeRunner`를 생성합니다.
 2. `await runner.run()`이 `RealtimeSession`을 반환합니다.
 3. 세션에 진입하여 텍스트, 구조화된 메시지 또는 오디오를 전송합니다.
-4. `RealtimeSessionEvent` 항목을 소비하고 오디오 또는 대본을 애플리케이션으로 전달합니다.
+4. `RealtimeSessionEvent` 항목을 처리하고 오디오 또는 트랜스크립트를 애플리케이션에 전달합니다.
 
-이 토폴로지는 핵심 데모 앱, CLI 예제, Twilio Media Streams 예제에서 사용됩니다.
+핵심 데모 앱, CLI 예제 및 Twilio Media Streams 예제에서 사용하는 토폴로지는 다음과 같습니다.
 
 -   [`examples/realtime/app`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app)
 -   [`examples/realtime/cli`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/cli)
 -   [`examples/realtime/twilio`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio)
 
-서버가 오디오 파이프라인, 도구 실행, 승인 플로우, 기록 처리를 담당할 때 이 경로를 사용하세요.
+서버에서 오디오 파이프라인, 도구 실행, 승인 흐름 및 기록 처리를 담당하는 경우 이 경로를 사용하세요.
 
-## 전화 통신 경로인 SIP 연결
+### 저수준 WebSocket 조정
 
-이 저장소에 문서화된 전화 통신 플로우에서 Python SDK는 `call_id`를 통해 기존 실시간 통화에 연결합니다.
+기반이 되는 서버 측 WebSocket 연결을 조정해야 할 때는 `OpenAIRealtimeWebSocketModel`에 `transport_config`를 전달합니다.
+
+```python
+from agents.realtime import (
+    OpenAIRealtimeWebSocketModel,
+    RealtimeAgent,
+    RealtimeRunner,
+)
+
+agent = RealtimeAgent(name="Assistant")
+model = OpenAIRealtimeWebSocketModel(
+    transport_config={
+        "ping_interval": 20.0,
+        "ping_timeout": 60.0,
+        "handshake_timeout": 30.0,
+        "max_size": 8 * 1024 * 1024,
+    }
+)
+runner = RealtimeRunner(starting_agent=agent, model=model)
+```
+
+지원되는 옵션은 다음과 같습니다.
+
+-   `ping_interval`: 클라이언트 연결 유지 ping 사이의 시간(초)입니다. ping을 비활성화하려면 `None`으로 설정합니다.
+-   `ping_timeout`: 연결을 끊기 전에 pong을 기다리는 시간(초)입니다. 하트비트 시간 초과 없이 지연된 pong을 허용하려면 `None`으로 설정합니다.
+-   `handshake_timeout`: 초기 연결 핸드셰이크를 기다리는 시간(초)입니다.
+-   `max_size`: 수신 WebSocket 메시지의 최대 크기(바이트)입니다. SDK 기본값은 `None`이며 수신 메시지 크기를 제한하지 않습니다. 메시지별 메모리 사용량을 제한해야 하는 경우 명시적으로 한도를 설정하세요.
+
+이 설정은 Realtime API 세션이 아니라 클라이언트 연결을 구성합니다. 엔드포인트, 인증, 통화 연결 및 재생 설정에는 계속 `RealtimeModelConfig`를 사용하세요.
+
+## 전화 통신을 위한 SIP 연결
+
+이 저장소에 문서화된 전화 통신 흐름에서 Python SDK는 `call_id`를 통해 기존 실시간 통화에 연결됩니다.
 
 이 토폴로지는 다음과 같습니다.
 
-1. OpenAI가 `realtime.call.incoming`과 같은 웹훅을 서비스로 보냅니다.
+1. OpenAI가 `realtime.call.incoming`과 같은 웹훅을 서비스에 전송합니다.
 2. 서비스가 Realtime Calls API를 통해 통화를 수락합니다.
-3. Python 서비스가 `RealtimeRunner(..., model=OpenAIRealtimeSIPModel())`을 시작합니다.
-4. 세션이 `model_config={"call_id": ...}`로 연결된 다음, 다른 실시간 세션과 마찬가지로 이벤트를 처리합니다.
+3. Python 서비스가 `RealtimeRunner(..., model=OpenAIRealtimeSIPModel())`를 시작합니다.
+4. 세션이 `model_config={"call_id": ...}`로 연결된 후 다른 실시간 세션과 동일하게 이벤트를 처리합니다.
 
 이 토폴로지는 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip)에 나와 있습니다.
 
-더 넓은 Realtime API도 일부 서버 측 제어 패턴에 `call_id`를 사용하지만, 이 저장소에서 제공되는 연결 예제는 SIP입니다.
+더 광범위한 Realtime API에서도 일부 서버 측 제어 패턴에 `call_id`를 사용하지만, 이 저장소에 포함된 연결 예제는 SIP를 사용합니다.
 
-## 이 SDK 범위 밖의 브라우저 WebRTC
+## SDK 범위 밖의 브라우저 WebRTC
 
-앱의 주 클라이언트가 Realtime WebRTC를 사용하는 브라우저인 경우:
+앱의 기본 클라이언트가 Realtime WebRTC를 사용하는 브라우저인 경우 다음 사항을 따르세요.
 
 -   이 저장소의 Python SDK 문서 범위 밖으로 간주하세요.
--   클라이언트 측 플로우와 이벤트 모델에는 공식 [WebRTC를 사용하는 Realtime API](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 및 [실시간 대화](https://developers.openai.com/api/docs/guides/realtime-conversations/) 문서를 사용하세요.
--   브라우저 WebRTC 클라이언트 위에 사이드밴드 서버 연결이 필요한 경우 공식 [실시간 서버 측 제어](https://developers.openai.com/api/docs/guides/realtime-server-controls/) 가이드를 사용하세요.
--   이 저장소가 브라우저 측 `RTCPeerConnection` 추상화나 바로 사용할 수 있는 브라우저 WebRTC 샘플을 제공한다고 기대하지 마세요.
+-   클라이언트 측 흐름과 이벤트 모델은 공식 [WebRTC를 사용하는 Realtime API](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 및 [실시간 대화](https://developers.openai.com/api/docs/guides/realtime-conversations/) 문서를 참조하세요.
+-   브라우저 WebRTC 클라이언트에 사이드밴드 서버 연결을 추가해야 하는 경우 공식 [실시간 서버 측 제어](https://developers.openai.com/api/docs/guides/realtime-server-controls/) 가이드를 참조하세요.
+-   이 저장소에서 브라우저 측 `RTCPeerConnection` 추상화 또는 즉시 사용할 수 있는 브라우저 WebRTC 샘플을 제공할 것으로 기대해서는 안 됩니다.
 
 또한 이 저장소는 현재 브라우저 WebRTC와 Python 사이드밴드를 함께 사용하는 예제를 제공하지 않습니다.
 
-## 커스텀 엔드포인트 및 연결 지점
+## 사용자 지정 엔드포인트 및 연결 지점
 
-[`RealtimeModelConfig`][agents.realtime.model.RealtimeModelConfig]의 전송 구성 인터페이스를 사용하면 기본 경로를 조정할 수 있습니다.
+[`RealtimeModelConfig`][agents.realtime.model.RealtimeModelConfig]에서 제공하는 전송 설정 인터페이스를 사용하면 기본 경로를 조정할 수 있습니다.
 
 -   `url`: WebSocket 엔드포인트 재정의
 -   `headers`: Azure 인증 헤더와 같은 명시적 헤더 제공
 -   `api_key`: API 키를 직접 또는 콜백을 통해 전달
--   `call_id`: 기존 실시간 통화에 연결. 이 저장소에서 문서화된 예제는 SIP입니다.
+-   `call_id`: 기존 실시간 통화에 연결. 이 저장소에 문서화된 예제는 SIP를 사용합니다.
 -   `playback_tracker`: 인터럽션(중단 처리)을 위해 실제 재생 진행 상황 보고
 
-토폴로지를 선택한 후의 상세한 생명주기와 기능 범위는 [실시간 에이전트 가이드](guide.md)를 참조하세요.
+토폴로지를 선택한 후의 상세한 수명 주기와 기능 범위는 [실시간 에이전트 가이드](guide.md)를 참조하세요.
 
 ================
 File: docs/ko/sandbox/clients.md
@@ -1515,7 +1578,7 @@ flowchart LR
 
 ## 샌드박스 클라이언트 선택
 
-로컬 개발에는 `UnixLocalSandboxClient`부터 사용하세요. 컨테이너 격리 또는 이미지 일관성이 필요하면 `DockerSandboxClient`로 전환하세요. 공급자가 관리하는 실행이 필요하면 호스티드 공급자로 전환하세요.
+macOS 또는 Linux의 로컬 개발에는 `UnixLocalSandboxClient`로 시작하세요. Windows에서는 `DockerSandboxClient` 또는 호스티드 공급자를 사용하세요. 지원되는 모든 플랫폼에서 컨테이너 격리나 이미지 일관성이 필요하다면 `DockerSandboxClient`로 전환하고, 공급자가 관리하는 실행이 필요하다면 호스티드 공급자로 전환하세요.
 
 대부분의 경우 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에서 샌드박스 클라이언트와 해당 옵션만 변경하면 `SandboxAgent` 정의는 그대로 유지됩니다. 로컬, Docker, 호스티드, 원격 마운트 옵션은 [샌드박스 클라이언트](clients.md)를 참고하세요.
 
@@ -2997,11 +3060,11 @@ search:
 ---
 # SQLAlchemy 세션
 
-`SQLAlchemySession`은 SQLAlchemy를 사용해 프로덕션 환경에서 사용할 수 있는 세션 구현을 제공하며, 세션 저장소로 SQLAlchemy가 지원하는 모든 데이터베이스(PostgreSQL, MySQL, SQLite 등)를 사용할 수 있습니다.
+`SQLAlchemySession`은 SQLAlchemy를 사용하여 프로덕션 환경에 적합한 세션 구현을 제공합니다. 따라서 SQLAlchemy가 지원하는 모든 데이터베이스(PostgreSQL, MySQL, SQLite 등)를 세션 스토리지로 사용할 수 있습니다.
 
 ## 설치
 
-SQLAlchemy 세션에는 `sqlalchemy` extra가 필요합니다.
+SQLAlchemy 세션에는 `sqlalchemy` 추가 의존성이 필요합니다.
 
 ```bash
 pip install openai-agents[sqlalchemy]
@@ -3011,7 +3074,7 @@ pip install openai-agents[sqlalchemy]
 
 ### 데이터베이스 URL 사용
 
-가장 간단하게 시작하는 방법입니다.
+가장 간단하게 시작하는 방법은 다음과 같습니다.
 
 ```python
 import asyncio
@@ -3037,7 +3100,7 @@ if __name__ == "__main__":
 
 ### 기존 엔진 사용
 
-기존 SQLAlchemy 엔진이 있는 애플리케이션의 경우:
+기존 SQLAlchemy 엔진이 있는 애플리케이션에서는 다음과 같이 사용합니다.
 
 ```python
 import asyncio
@@ -3066,10 +3129,27 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## 비 ASCII 텍스트 저장
 
-## API 참조
+기본적으로 `SQLAlchemySession`은 세션 항목을 JSON으로 직렬화할 때 비 ASCII 문자를 이스케이프합니다. 이렇게 하면 기존 스토리지 형식을 유지하면서도 항목을 로드할 때 원본 텍스트를 그대로 복원할 수 있습니다.
 
-- [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 주요 클래스
+저장된 JSON에서 다국어 텍스트를 읽을 수 있는 형태로 유지하려면 `ensure_ascii=False`를 설정합니다.
+
+```python
+session = SQLAlchemySession.from_url(
+    "user-123",
+    url="sqlite+aiosqlite:///conversations.db",
+    create_tables=True,
+    ensure_ascii=False,
+)
+```
+
+기존 엔진을 사용할 때는 동일한 옵션을 `SQLAlchemySession(...)`에 직접 전달할 수 있습니다. 이 설정은 데이터베이스에 저장되는 JSON 표현만 변경하며, 세션 메서드가 반환하는 값은 변경하지 않습니다.
+
+
+## API 레퍼런스
+
+- [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - 기본 클래스
 - [`Session`][agents.memory.session.Session] - 기본 세션 프로토콜
 
 ================
@@ -3390,21 +3470,21 @@ search:
 ---
 # 에이전트
 
-에이전트는 앱의 핵심 구성 요소입니다. 에이전트는 instructions, tools, 그리고 핸드오프, 가드레일, structured outputs 같은 선택적 런타임 동작으로 구성된 대규모 언어 모델(LLM)입니다.
+에이전트는 앱의 핵심 구성 요소입니다. 에이전트는 instructions, tools와 핸드오프, 가드레일, structured outputs 등의 선택적 런타임 동작으로 구성된 대규모 언어 모델(LLM)입니다.
 
-하나의 일반 `Agent`를 정의하거나 사용자 지정하려면 이 페이지를 사용하세요. 여러 에이전트가 협업하는 방식을 결정하려면 [에이전트 오케스트레이션](multi_agent.md)을 읽어보세요. 에이전트가 매니페스트에 정의된 파일과 샌드박스 네이티브 기능을 갖춘 격리된 워크스페이스 내에서 실행되어야 한다면 [샌드박스 에이전트 개념](sandbox/guide.md)을 읽어보세요.
+이 페이지는 하나의 일반 `Agent`를 정의하거나 사용자 지정할 때 사용합니다. 여러 에이전트의 협업 방식을 결정하려면 [에이전트 오케스트레이션](multi_agent.md)을 참조하세요. 에이전트를 매니페스트에 정의된 파일과 샌드박스 네이티브 기능이 있는 격리된 작업공간에서 실행해야 한다면 [샌드박스 에이전트 개념](sandbox/guide.md)을 참조하세요.
 
-SDK는 OpenAI 모델에 기본적으로 Responses API를 사용하지만, 여기서 중요한 차이는 오케스트레이션입니다. `Agent`와 `Runner`를 함께 사용하면 SDK가 턴, 도구, 가드레일, 핸드오프, 세션을 대신 관리합니다. 이 루프를 직접 관리하려면 Responses API를 직접 사용하세요.
+SDK는 OpenAI 모델에 기본적으로 Responses API를 사용하지만, 여기서의 차이점은 오케스트레이션입니다. `Agent`와 `Runner`를 함께 사용하면 SDK가 턴, 도구, 가드레일, 핸드오프, 세션을 대신 관리합니다. 이 루프를 직접 관리하려면 Responses API를 직접 사용하세요.
 
 ## 다음 가이드 선택
 
-이 페이지를 에이전트 정의를 위한 허브로 사용하세요. 다음으로 내려야 할 결정에 해당하는 인접 가이드로 이동하세요.
+이 페이지를 에이전트 정의를 위한 중심 가이드로 사용하세요. 다음으로 내려야 할 결정에 해당하는 관련 가이드로 이동할 수 있습니다.
 
-| 원하는 작업 | 다음으로 읽을 문서 |
+| 원하는 작업 | 다음 가이드 |
 | --- | --- |
 | 모델 또는 제공자 설정 선택 | [모델](models/index.md) |
 | 에이전트에 기능 추가 | [도구](tools.md) |
-| 실제 저장소, 문서 번들 또는 격리된 워크스페이스에서 에이전트 실행 | [샌드박스 에이전트 빠른 시작](sandbox_agents.md) |
+| 실제 리포지토리, 문서 묶음 또는 격리된 작업공간에서 에이전트 실행 | [샌드박스 에이전트 빠른 시작](sandbox_agents.md) |
 | 관리자 방식 오케스트레이션과 핸드오프 중 선택 | [에이전트 오케스트레이션](multi_agent.md) |
 | 핸드오프 동작 구성 | [핸드오프](handoffs.md) |
 | 턴 실행, 이벤트 스트리밍 또는 대화 상태 관리 | [에이전트 실행](running_agents.md) |
@@ -3415,23 +3495,23 @@ SDK는 OpenAI 모델에 기본적으로 Responses API를 사용하지만, 여기
 
 에이전트의 가장 일반적인 속성은 다음과 같습니다.
 
-| 속성 | 필수 여부 | 설명 |
+| 속성 | 필수 | 설명 |
 | --- | --- | --- |
 | `name` | 예 | 사람이 읽을 수 있는 에이전트 이름입니다. |
-| `instructions` | 아니요 | 시스템 프롬프트 또는 동적 instructions 콜백입니다. 사용을 강력히 권장합니다. [동적 instructions](#dynamic-instructions)를 참조하세요. |
+| `instructions` | 아니요 | 시스템 프롬프트 또는 동적 지침 콜백입니다. 사용을 적극 권장합니다. [동적 지침](#dynamic-instructions)을 참조하세요. |
 | `prompt` | 아니요 | OpenAI Responses API 프롬프트 구성입니다. 정적 프롬프트 객체 또는 함수를 허용합니다. [프롬프트 템플릿](#prompt-templates)을 참조하세요. |
-| `handoff_description` | 아니요 | 이 에이전트가 핸드오프 대상으로 제공될 때 노출되는 간단한 설명입니다. |
+| `handoff_description` | 아니요 | 이 에이전트가 핸드오프 대상으로 제공될 때 노출되는 짧은 설명입니다. |
 | `handoffs` | 아니요 | 대화를 전문 에이전트에게 위임합니다. [핸드오프](handoffs.md)를 참조하세요. |
 | `model` | 아니요 | 사용할 LLM입니다. [모델](models/index.md)을 참조하세요. |
-| `model_settings` | 아니요 | `temperature`, `top_p`, `tool_choice` 같은 모델 조정 매개변수입니다. |
+| `model_settings` | 아니요 | `temperature`, `top_p`, `tool_choice` 등의 모델 조정 매개변수입니다. |
 | `tools` | 아니요 | 에이전트가 호출할 수 있는 도구입니다. [도구](tools.md)를 참조하세요. |
 | `mcp_servers` | 아니요 | 에이전트용 MCP 기반 도구입니다. [MCP 가이드](mcp.md)를 참조하세요. |
-| `mcp_config` | 아니요 | 엄격한 스키마 변환과 MCP 실패 형식 지정 등 MCP 도구가 준비되는 방식을 세부 조정합니다. [MCP 가이드](mcp.md#agent-level-mcp-configuration)를 참조하세요. |
+| `mcp_config` | 아니요 | 엄격한 스키마 변환, MCP 실패 형식 지정 등 MCP 도구를 준비하는 방식을 세부 조정합니다. [MCP 가이드](mcp.md#agent-level-mcp-configuration)를 참조하세요. |
 | `input_guardrails` | 아니요 | 이 에이전트 체인의 첫 번째 사용자 입력에 대해 실행되는 가드레일입니다. [가드레일](guardrails.md)을 참조하세요. |
 | `output_guardrails` | 아니요 | 이 에이전트의 최종 출력에 대해 실행되는 가드레일입니다. [가드레일](guardrails.md)을 참조하세요. |
-| `output_type` | 아니요 | 일반 텍스트 대신 사용하는 structured outputs 타입입니다. [출력 타입](#output-types)을 참조하세요. |
+| `output_type` | 아니요 | 일반 텍스트 대신 사용할 구조화된 출력 유형입니다. [출력 유형](#output-types)을 참조하세요. |
 | `hooks` | 아니요 | 에이전트 범위의 수명 주기 콜백입니다. [수명 주기 이벤트(훅)](#lifecycle-events-hooks)를 참조하세요. |
-| `tool_use_behavior` | 아니요 | 도구 결과를 다시 모델로 전달할지, 아니면 실행을 종료할지 제어합니다. [도구 사용 동작](#tool-use-behavior)을 참조하세요. |
+| `tool_use_behavior` | 아니요 | 도구 결과를 모델에 다시 전달할지, 아니면 실행을 종료할지 제어합니다. [도구 사용 동작](#tool-use-behavior)을 참조하세요. |
 | `reset_tool_choice` | 아니요 | 도구 사용 루프를 방지하기 위해 도구 호출 후 `tool_choice`를 재설정합니다(기본값: `True`). [도구 사용 강제](#forcing-tool-use)를 참조하세요. |
 
 ```python
@@ -3450,7 +3530,7 @@ agent = Agent(
 )
 ```
 
-이 섹션의 모든 내용은 `Agent`에 적용됩니다. `SandboxAgent`는 동일한 개념을 기반으로 하며, 워크스페이스 범위 실행을 위한 `default_manifest`, `base_instructions`, `capabilities`, `run_as`를 추가합니다. [샌드박스 에이전트 개념](sandbox/guide.md)을 참조하세요.
+이 섹션의 모든 내용은 `Agent`에 적용됩니다. `SandboxAgent`는 동일한 개념을 기반으로 하며, 작업공간 범위 실행을 위해 `default_manifest`, `base_instructions`, `capabilities`, `run_as`를 추가합니다. [샌드박스 에이전트 개념](sandbox/guide.md)을 참조하세요.
 
 ## 프롬프트 템플릿
 
@@ -3459,14 +3539,14 @@ agent = Agent(
 사용 방법은 다음과 같습니다.
 
 1. https://platform.openai.com/playground/prompts 로 이동합니다
-2. 새 프롬프트 변수 `poem_style`을 생성합니다
+2. 새 프롬프트 변수 `poem_style`을 생성합니다.
 3. 다음 내용으로 시스템 프롬프트를 생성합니다.
 
     ```
     Write a poem in {{poem_style}}
     ```
 
-4. `--prompt-id` 플래그를 사용하여 예제를 실행합니다.
+4. `--prompt-id` 플래그를 사용해 예제를 실행합니다.
 
 ```python
 from agents import Agent
@@ -3481,7 +3561,7 @@ agent = Agent(
 )
 ```
 
-런타임에 프롬프트를 동적으로 생성할 수도 있습니다.
+실행 시점에 프롬프트를 동적으로 생성할 수도 있습니다.
 
 ```python
 from dataclasses import dataclass
@@ -3513,28 +3593,35 @@ result = await Runner.run(
 
 ## 컨텍스트
 
-에이전트는 `context` 타입에 대해 제네릭입니다. 컨텍스트는 종속성 주입 도구입니다. 직접 객체를 생성해 `Runner.run()`에 전달하면 모든 에이전트, 도구, 핸드오프 등에 전달되며, 에이전트 실행에 필요한 종속성과 상태를 담는 컨테이너 역할을 합니다. 어떤 Python 객체든 컨텍스트로 제공할 수 있습니다.
+에이전트는 `context` 타입에 대해 제네릭입니다. 컨텍스트는 종속성 주입 도구입니다. 컨텍스트는 사용자가 생성하여 `Runner.run()`에 전달하는 객체이며, 모든 에이전트, 도구, 핸드오프 등에 전달되고 에이전트 실행에 필요한 종속성과 상태를 모아 두는 역할을 합니다. 모든 Python 객체를 컨텍스트로 제공할 수 있습니다.
 
-전체 `RunContextWrapper` 인터페이스, 공유 사용량 추적, 중첩된 `tool_input`, 직렬화 시 주의 사항은 [컨텍스트 가이드](context.md)를 참조하세요.
+전체 `RunContextWrapper` 인터페이스, 공유 사용량 추적, 중첩된 `tool_input`, 직렬화 유의 사항은 [컨텍스트 가이드](context.md)를 참조하세요.
 
 ```python
+from dataclasses import dataclass
+
+@dataclass
+class Purchase:
+    id: str
+
 @dataclass
 class UserContext:
     name: str
     uid: str
     is_pro_user: bool
 
-    async def fetch_purchases() -> list[Purchase]:
-        return ...
+    async def fetch_purchases(self) -> list[Purchase]:
+        # implement your logic here
+        return []
 
 agent = Agent[UserContext](
     ...,
 )
 ```
 
-## 출력 타입
+## 출력 유형
 
-기본적으로 에이전트는 일반 텍스트(즉, `str`) 출력을 생성합니다. 에이전트가 특정 타입의 출력을 생성하도록 하려면 `output_type` 매개변수를 사용할 수 있습니다. 일반적으로 [Pydantic](https://docs.pydantic.dev/) 객체를 사용하지만, Pydantic [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/)로 래핑할 수 있는 모든 타입(dataclass, 리스트, TypedDict 등)을 지원합니다.
+기본적으로 에이전트는 일반 텍스트, 즉 `str` 출력을 생성합니다. 에이전트가 특정 유형의 출력을 생성하게 하려면 `output_type` 매개변수를 사용할 수 있습니다. 일반적으로 [Pydantic](https://docs.pydantic.dev/) 객체를 사용하지만, Pydantic [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/)로 래핑할 수 있는 모든 유형을 지원합니다. 여기에는 데이터클래스, 리스트, TypedDict 등이 포함됩니다.
 
 ```python
 from pydantic import BaseModel
@@ -3555,20 +3642,20 @@ agent = Agent(
 
 !!! note
 
-    `output_type`을 전달하면 모델은 일반적인 일반 텍스트 응답 대신 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)을 사용합니다.
+    `output_type`을 전달하면 모델은 일반 텍스트 응답 대신 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)을 사용합니다.
 
 ## 멀티 에이전트 시스템 설계 패턴
 
 멀티 에이전트 시스템을 설계하는 방법은 다양하지만, 일반적으로 폭넓게 적용할 수 있는 다음 두 가지 패턴이 사용됩니다.
 
-1. 관리자(agents as tools): 중앙 관리자/오케스트레이터가 전문화된 하위 에이전트를 도구로 호출하고 대화에 대한 제어권을 유지합니다.
-2. 핸드오프: 동등한 에이전트가 대화 제어권을 전문 에이전트에게 넘기고, 해당 에이전트가 대화를 이어받습니다. 이는 분산형 방식입니다.
+1. 관리자(agents as tools): 중앙 관리자/오케스트레이터가 전문 하위 에이전트를 도구로 호출하고 대화를 계속 제어합니다.
+2. 핸드오프: 동료 에이전트가 대화를 이어받는 전문 에이전트에게 제어권을 핸드오프합니다. 이는 분산형 방식입니다.
 
-자세한 내용은 [에이전트 구축 실전 가이드](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)를 참조하세요.
+자세한 내용은 [에이전트 구축 실무 가이드](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)를 참조하세요.
 
 ### 관리자(agents as tools)
 
-`customer_facing_agent`는 모든 사용자 상호작용을 처리하고 도구로 노출된 전문화된 하위 에이전트를 호출합니다. 자세한 내용은 [도구](tools.md#agents-as-tools) 문서를 참조하세요.
+`customer_facing_agent`는 모든 사용자 상호작용을 처리하고 도구로 노출된 전문 하위 에이전트를 호출합니다. 자세한 내용은 [도구](tools.md#agents-as-tools) 문서를 참조하세요.
 
 ```python
 from agents import Agent
@@ -3597,7 +3684,7 @@ customer_facing_agent = Agent(
 
 ### 핸드오프
 
-핸드오프는 에이전트가 작업을 위임할 수 있는 하위 에이전트입니다. 핸드오프가 발생하면 위임받은 에이전트가 대화 기록을 전달받고 대화를 이어받습니다. 이 패턴을 사용하면 하나의 작업에 특화된 모듈식 전문 에이전트를 구성할 수 있습니다. 자세한 내용은 [핸드오프](handoffs.md) 문서를 참조하세요.
+핸드오프는 에이전트가 작업을 위임할 수 있는 하위 에이전트입니다. 핸드오프가 발생하면 위임받은 에이전트가 대화 기록을 전달받아 대화를 이어받습니다. 이 패턴을 사용하면 단일 작업에 특화된 모듈식 전문 에이전트를 구성할 수 있습니다. 자세한 내용은 [핸드오프](handoffs.md) 문서를 참조하세요.
 
 ```python
 from agents import Agent
@@ -3616,9 +3703,9 @@ triage_agent = Agent(
 )
 ```
 
-## 동적 instructions
+## 동적 지침
 
-대부분의 경우 에이전트를 생성할 때 instructions를 제공할 수 있습니다. 하지만 함수를 통해 동적 instructions를 제공할 수도 있습니다. 함수는 에이전트와 컨텍스트를 전달받아 프롬프트를 반환해야 합니다. 일반 함수와 `async` 함수가 모두 허용됩니다.
+대부분의 경우 에이전트를 생성할 때 지침을 제공할 수 있습니다. 하지만 함수를 통해 동적 지침을 제공할 수도 있습니다. 함수는 에이전트와 컨텍스트를 전달받고 프롬프트를 반환해야 합니다. 일반 함수와 `async` 함수 모두 사용할 수 있습니다.
 
 ```python
 def dynamic_instructions(
@@ -3635,26 +3722,26 @@ agent = Agent[UserContext](
 
 ## 수명 주기 이벤트(훅)
 
-경우에 따라 에이전트의 수명 주기를 관찰해야 할 수 있습니다. 예를 들어 특정 이벤트가 발생할 때 이벤트를 기록하거나, 데이터를 미리 가져오거나, 사용량을 기록할 수 있습니다.
+에이전트의 수명 주기를 관찰해야 하는 경우가 있습니다. 예를 들어 특정 이벤트가 발생할 때 이벤트를 기록하거나, 데이터를 미리 가져오거나, 사용량을 기록할 수 있습니다.
 
 훅의 범위는 두 가지입니다.
 
--   [`RunHooks`][agents.lifecycle.RunHooks]는 다른 에이전트로의 핸드오프를 포함해 전체 `Runner.run(...)` 호출을 관찰합니다.
+-   [`RunHooks`][agents.lifecycle.RunHooks]는 다른 에이전트로의 핸드오프를 포함하여 전체 `Runner.run(...)` 호출을 관찰합니다.
 -   [`AgentHooks`][agents.lifecycle.AgentHooks]는 `agent.hooks`를 통해 특정 에이전트 인스턴스에 연결됩니다.
 
 콜백 컨텍스트도 이벤트에 따라 달라집니다.
 
--   에이전트 시작/종료 훅은 [`AgentHookContext`][agents.run_context.AgentHookContext]를 전달받습니다. 이 컨텍스트는 원래 컨텍스트를 래핑하며 공유 실행 사용량 상태를 포함합니다.
--   LLM, 도구, 핸드오프 훅은 [`RunContextWrapper`][agents.run_context.RunContextWrapper]를 전달받습니다.
+-   에이전트 시작/종료 훅은 원래 컨텍스트를 래핑하고 공유 실행 사용량 상태를 전달하는 [`AgentHookContext`][agents.run_context.AgentHookContext]를 받습니다.
+-   LLM, 도구, 핸드오프 훅은 [`RunContextWrapper`][agents.run_context.RunContextWrapper]를 받습니다.
 
-일반적인 훅 실행 시점은 다음과 같습니다.
+일반적인 훅 호출 시점은 다음과 같습니다.
 
 -   `on_agent_start` / `on_agent_end`: 특정 에이전트가 최종 출력 생성을 시작하거나 완료할 때
--   `on_llm_start` / `on_llm_end`: 각 모델 호출 직전과 직후
-- `on_tool_start` / `on_tool_end`: 각 로컬 도구 호출 전후. 함수 도구의 경우 훅 `context`는 일반적으로 `ToolContext`이므로 `tool_call_id` 같은 도구 호출 메타데이터를 검사할 수 있습니다.
+-   `on_llm_start` / `on_llm_end`: 각 모델 호출의 직전과 직후
+- `on_tool_start` / `on_tool_end`: 각 로컬 도구 호출의 직전과 직후. 함수 도구의 경우 훅 `context`는 일반적으로 `ToolContext`이므로 `tool_call_id` 같은 도구 호출 메타데이터를 검사할 수 있습니다.
 -   `on_handoff`: 제어권이 한 에이전트에서 다른 에이전트로 이동할 때
 
-전체 워크플로를 위한 단일 관찰자가 필요하면 `RunHooks`를 사용하고, 특정 에이전트에 사용자 지정 부수 효과가 필요하면 `AgentHooks`를 사용하세요.
+전체 워크플로에 단일 관찰자를 사용하려면 `RunHooks`를 사용하고, 특정 에이전트에 사용자 지정 부수 효과가 필요하면 `AgentHooks`를 사용하세요.
 
 ```python
 from agents import Agent, RunHooks, Runner
@@ -3684,7 +3771,7 @@ print(result.final_output)
 
 ## 에이전트 복제/복사
 
-에이전트의 `clone()` 메서드를 사용하면 에이전트를 복제하고 원하는 속성을 선택적으로 변경할 수 있습니다.
+에이전트에서 `clone()` 메서드를 사용하면 에이전트를 복제하고 원하는 속성을 선택적으로 변경할 수 있습니다.
 
 ```python
 pirate_agent = Agent(
@@ -3701,14 +3788,14 @@ robot_agent = pirate_agent.clone(
 
 ## 도구 사용 강제
 
-도구 목록을 제공한다고 해서 LLM이 항상 도구를 사용하는 것은 아닙니다. [`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice]를 설정하여 도구 사용을 강제할 수 있습니다. 유효한 값은 다음과 같습니다.
+도구 목록을 제공한다고 해서 LLM이 항상 도구를 사용하는 것은 아닙니다. [`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice]를 설정하면 도구 사용을 강제할 수 있습니다. 유효한 값은 다음과 같습니다.
 
 1. `auto`: LLM이 도구 사용 여부를 결정할 수 있습니다.
-2. `required`: LLM이 도구를 반드시 사용해야 합니다. 단, 사용할 도구는 지능적으로 결정할 수 있습니다.
-3. `none`: LLM이 도구를 _사용하지 않도록_ 합니다.
-4. `my_tool` 같은 특정 문자열: LLM이 해당 도구를 반드시 사용하도록 합니다.
+2. `required`: LLM이 도구를 사용하도록 요구하지만, 어떤 도구를 사용할지는 지능적으로 결정할 수 있습니다.
+3. `none`: LLM이 도구를 _사용하지 않도록_ 요구합니다.
+4. `my_tool` 같은 특정 문자열을 설정하면 LLM이 해당 도구를 사용하도록 요구합니다.
 
-OpenAI Responses 도구 검색을 사용할 때는 지정된 도구 선택에 더 많은 제약이 있습니다. `tool_choice`로 네임스페이스 이름 자체나 지연 전용 도구를 지정할 수 없으며, `tool_choice="tool_search"`는 [`ToolSearchTool`][agents.tool.ToolSearchTool]을 대상으로 하지 않습니다. 이런 경우에는 `auto` 또는 `required`를 사용하는 것이 좋습니다. Responses 관련 제약은 [호스티드 툴 검색](tools.md#hosted-tool-search)을 참조하세요.
+OpenAI Responses 도구 검색을 사용할 때는 이름이 지정된 도구 선택에 더 많은 제한이 있습니다. `tool_choice`로 단독 네임스페이스 이름이나 지연 전용 도구를 지정할 수 없으며, `tool_choice="tool_search"`는 [`ToolSearchTool`][agents.tool.ToolSearchTool]을 대상으로 하지 않습니다. 이러한 경우에는 `auto` 또는 `required`를 사용하는 것이 좋습니다. Responses 전용 제약 조건은 [호스티드 툴 검색](tools.md#hosted-tool-search)을 참조하세요.
 
 ```python
 from agents import Agent, Runner, function_tool, ModelSettings
@@ -3728,10 +3815,10 @@ agent = Agent(
 
 ## 도구 사용 동작
 
-`Agent` 구성의 `tool_use_behavior` 매개변수는 도구 출력의 처리 방식을 제어합니다.
+`Agent` 구성의 `tool_use_behavior` 매개변수는 도구 출력을 처리하는 방식을 제어합니다.
 
 - `"run_llm_again"`: 기본값입니다. 도구를 실행한 후 LLM이 결과를 처리하여 최종 응답을 생성합니다.
-- `"stop_on_first_tool"`: 추가 LLM 처리 없이 첫 번째 도구 호출의 출력을 최종 응답으로 사용합니다.
+- `"stop_on_first_tool"`: 추가적인 LLM 처리 없이 첫 번째 도구 호출의 출력을 최종 응답으로 사용합니다.
 
 ```python
 from agents import Agent, Runner, function_tool, ModelSettings
@@ -3749,7 +3836,7 @@ agent = Agent(
 )
 ```
 
-- `StopAtTools(stop_at_tool_names=[...])`: 지정된 도구 중 하나라도 호출되면 중지하고 해당 출력을 최종 응답으로 사용합니다.
+- `StopAtTools(stop_at_tool_names=[...])`: 지정된 도구 중 하나가 호출되면 해당 출력을 최종 응답으로 사용하고 중지합니다.
 
 ```python
 from agents import Agent, Runner, function_tool
@@ -3811,7 +3898,7 @@ agent = Agent(
 
 !!! note
 
-    무한 루프를 방지하기 위해 프레임워크는 도구 호출 후 `tool_choice`를 자동으로 "auto"로 재설정합니다. 이 동작은 [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice]를 통해 구성할 수 있습니다. 무한 루프가 발생하는 이유는 도구 결과가 LLM으로 전송된 후 `tool_choice`로 인해 LLM이 다시 도구 호출을 생성하며 이 과정이 끝없이 반복되기 때문입니다.
+    무한 루프를 방지하기 위해 프레임워크는 도구 호출 후 `tool_choice`를 자동으로 "auto"로 재설정합니다. 이 동작은 [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice]를 통해 구성할 수 있습니다. 무한 루프가 발생하는 이유는 도구 결과가 LLM에 전달된 후 `tool_choice`로 인해 LLM이 다시 도구 호출을 생성하는 과정이 무한히 반복되기 때문입니다.
 
 ================
 File: docs/ko/config.md
@@ -7894,55 +7981,69 @@ search:
 ---
 # 트레이싱
 
-Agents SDK에는 기본 제공 트레이싱이 포함되어 있으며, 에이전트 실행 중 발생하는 이벤트의 포괄적인 기록을 수집합니다: LLM 생성, 도구 호출, 핸드오프, 가드레일, 그리고 발생하는 사용자 지정 이벤트까지 포함됩니다. [Traces 대시보드](https://platform.openai.com/traces)를 사용하면 개발 중과 프로덕션에서 워크플로를 디버그하고, 시각화하고, 모니터링할 수 있습니다.
+Agents SDK에는 기본 제공 트레이싱 기능이 포함되어 있어 에이전트 실행 중 발생하는 이벤트(LLM 생성, 도구 호출, 핸드오프, 가드레일, 사용자 지정 이벤트까지)를 포괄적으로 기록합니다. [트레이스 대시보드](https://platform.openai.com/traces)를 사용하면 개발 및 프로덕션 환경에서 워크플로를 디버깅하고 시각화하며 모니터링할 수 있습니다.
 
 !!!note
 
-    트레이싱은 기본적으로 활성화되어 있습니다. 다음 세 가지 일반적인 방법으로 비활성화할 수 있습니다:
+    트레이싱은 기본적으로 활성화되어 있습니다. 일반적으로 다음 세 가지 방법으로 비활성화할 수 있습니다.
 
-    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1`을 설정하여 트레이싱을 전역적으로 비활성화할 수 있습니다
-    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]를 사용하여 트레이싱을 전역적으로 비활성화할 수 있습니다
-    3. [`agents.run.RunConfig.tracing_disabled`][]를 `True`로 설정하여 단일 실행에 대해 트레이싱을 비활성화할 수 있습니다
+    1. 환경 변수 `OPENAI_AGENTS_DISABLE_TRACING=1`을 설정하여 트레이싱을 전역적으로 비활성화할 수 있습니다.
+    2. 코드에서 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]를 사용하여 트레이싱을 전역적으로 비활성화할 수 있습니다.
+    3. [`agents.run.RunConfig.tracing_disabled`][]를 `True`로 설정하여 단일 실행의 트레이싱을 비활성화할 수 있습니다.
 
-***제로 데이터 보존(Zero Data Retention, ZDR) 정책에 따라 OpenAI API를 사용하는 조직에서는 트레이싱을 사용할 수 없습니다.***
+***OpenAI API를 사용하면서 제로 데이터 보존(Zero Data Retention, ZDR) 정책에 따라 운영되는 조직에서는 트레이싱을 사용할 수 없습니다.***
 
 ## 트레이스와 스팬
 
--   **트레이스**는 "워크플로"의 단일 엔드투엔드 작업을 나타냅니다. 트레이스는 스팬으로 구성됩니다. 트레이스에는 다음 속성이 있습니다:
-    -   `workflow_name`: 논리적 워크플로 또는 앱입니다. 예: "코드 생성" 또는 "고객 서비스".
+-   **트레이스**는 하나의 "워크플로"에 대한 단일 엔드투엔드 작업을 나타냅니다. 트레이스는 여러 스팬으로 구성되며 다음 속성을 갖습니다.
+    -   `workflow_name`: 논리적 워크플로 또는 앱입니다. 예를 들면 "코드 생성" 또는 "고객 서비스"입니다.
     -   `trace_id`: 트레이스의 고유 ID입니다. 전달하지 않으면 자동으로 생성됩니다. 형식은 `trace_<32_alphanumeric>`이어야 합니다.
-    -   `group_id`: 선택적 그룹 ID로, 동일한 대화의 여러 트레이스를 연결하는 데 사용합니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다.
-    -   `disabled`: True인 경우 트레이스가 기록되지 않습니다.
+    -   `group_id`: 동일한 대화의 여러 트레이스를 연결하기 위한 선택적 그룹 ID입니다. 예를 들어 채팅 스레드 ID를 사용할 수 있습니다.
+    -   `disabled`: True이면 트레이스가 기록되지 않습니다.
     -   `metadata`: 트레이스의 선택적 메타데이터입니다.
--   **스팬**은 시작 시간과 종료 시간이 있는 작업을 나타냅니다. 스팬에는 다음이 있습니다:
-    -   `started_at` 및 `ended_at` 타임스탬프.
-    -   `trace_id`, 소속된 트레이스를 나타냅니다
-    -   `parent_id`, 이 스팬의 부모 스팬을 가리킵니다(있는 경우)
-    -   `span_data`, 스팬에 대한 정보입니다. 예를 들어 `AgentSpanData`에는 에이전트에 대한 정보가 포함되고, `GenerationSpanData`에는 LLM 생성에 대한 정보가 포함되는 식입니다.
+-   **스팬**은 시작 시간과 종료 시간이 있는 작업을 나타냅니다. 스팬에는 다음 항목이 있습니다.
+    -   `started_at` 및 `ended_at` 타임스탬프
+    -   자신이 속한 트레이스를 나타내는 `trace_id`
+    -   이 스팬의 상위 스팬을 가리키는 `parent_id`(있는 경우)
+    -   스팬에 관한 정보인 `span_data`. 예를 들어 `AgentSpanData`에는 에이전트에 관한 정보가 포함되고, `GenerationSpanData`에는 LLM 생성에 관한 정보가 포함됩니다.
 
 ## 기본 트레이싱
 
-기본적으로 SDK는 다음을 트레이싱합니다:
+SDK는 기본적으로 다음 항목을 트레이싱합니다.
 
--   전체 `Runner.{run, run_sync, run_streamed}()`가 `trace()`로 래핑됩니다.
--   에이전트가 실행될 때마다 `agent_span()`로 래핑됩니다
--   LLM 생성은 `generation_span()`로 래핑됩니다
--   함수 도구 호출은 각각 `function_span()`로 래핑됩니다
--   가드레일은 `guardrail_span()`로 래핑됩니다
--   핸드오프는 `handoff_span()`로 래핑됩니다
--   오디오 입력(음성-텍스트 변환)은 `transcription_span()`로 래핑됩니다
--   오디오 출력(텍스트-음성 변환)은 `speech_span()`로 래핑됩니다
--   관련 오디오 스팬은 `speech_group_span()` 아래에 부모-자식 관계로 배치될 수 있습니다
+-   전체 `Runner.{run, run_sync, run_streamed}()`이 `trace()`로 래핑됩니다.
+-   각 실행기 호출이 `task_span()`으로 래핑됩니다.
+-   각 모델 턴이 `turn_span()`으로 래핑됩니다.
+-   에이전트가 실행될 때마다 `agent_span()`으로 래핑됩니다.
+-   LLM 생성이 `generation_span()`으로 래핑됩니다.
+-   각 함수 도구 호출이 `function_span()`으로 래핑됩니다.
+-   가드레일이 `guardrail_span()`으로 래핑됩니다.
+-   핸드오프가 `handoff_span()`으로 래핑됩니다.
+-   오디오 입력(음성 텍스트 변환)이 `transcription_span()`으로 래핑됩니다.
+-   오디오 출력(텍스트 음성 변환)이 `speech_span()`으로 래핑됩니다.
+-   관련 오디오 스팬은 `speech_group_span()` 아래의 하위 스팬으로 구성될 수 있습니다.
 
-기본적으로 트레이스 이름은 "Agent workflow"입니다. `trace`를 사용하는 경우 이 이름을 설정할 수 있으며, [`RunConfig`][agents.run.RunConfig]로 이름과 기타 속성을 구성할 수도 있습니다.
+기본 트레이스 이름은 "에이전트 워크플로"입니다. `trace`를 사용하는 경우 이 이름을 설정하거나, [`RunConfig`][agents.run.RunConfig]를 사용하여 이름과 기타 속성을 구성할 수 있습니다.
 
-또한 트레이스를 다른 대상으로 푸시하도록 [사용자 지정 트레이싱 프로세서](#custom-tracing-processors)를 설정할 수 있습니다(대체 대상 또는 보조 대상으로).
+더 간결한 계층 구조가 필요하다면 실행에 대한 자동 작업 및 턴 스팬을 비활성화하세요. 에이전트, 생성, 함수, 가드레일, 핸드오프 및 사용자 지정 스팬은 계속 기록됩니다.
+
+```python
+from agents import RunConfig, Runner
+
+result = await Runner.run(
+    agent,
+    "Hello",
+    run_config=RunConfig(tracing={"include_task_and_turn_spans": False}),
+)
+```
+
+또한 트레이스를 다른 대상으로 전송하도록 [사용자 지정 트레이스 프로세서](#custom-tracing-processors)를 설정할 수 있습니다. 기존 대상을 대체하거나 보조 대상으로 추가할 수 있습니다.
 
 ## 장기 실행 워커와 즉시 내보내기
 
-기본 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]는 몇 초마다 백그라운드에서 트레이스를 내보내거나, 인메모리 큐가 크기 기준에 도달하면 더 빨리 내보내며, 프로세스 종료 시 최종 플러시도 수행합니다. Celery, RQ, Dramatiq 또는 FastAPI 백그라운드 작업과 같은 장기 실행 워커에서는 일반적으로 추가 코드 없이 트레이스가 자동으로 내보내지지만, 각 작업이 끝난 직후 Traces 대시보드에 바로 표시되지 않을 수 있습니다.
+기본 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]는 몇 초마다 백그라운드에서 트레이스를 내보내며, 메모리 내 큐가 크기 트리거에 도달하면 더 일찍 내보냅니다. 또한 프로세스가 종료될 때 최종 플러시를 수행합니다. Celery, RQ, Dramatiq 또는 FastAPI 백그라운드 작업과 같은 장기 실행 워커에서는 별도 코드 없이도 일반적으로 트레이스가 자동으로 내보내지지만, 각 작업이 완료된 직후 트레이스 대시보드에 표시되지 않을 수 있습니다.
 
-작업 단위가 끝날 때 즉시 전달 보장이 필요하다면, 트레이스 컨텍스트가 종료된 후 [`flush_traces()`][agents.tracing.flush_traces]를 호출하세요.
+작업 단위가 끝날 때 즉시 전송되는 것을 보장해야 한다면 트레이스 컨텍스트가 종료된 후 [`flush_traces()`][agents.tracing.flush_traces]를 호출하세요.
 
 ```python
 from agents import Runner, flush_traces, trace
@@ -7979,11 +8080,11 @@ async def run(prompt: str, background_tasks: BackgroundTasks):
     return {"status": "queued"}
 ```
 
-[`flush_traces()`][agents.tracing.flush_traces]는 현재 버퍼링된 트레이스와 스팬이 내보내질 때까지 차단하므로, 부분적으로 구성된 트레이스를 플러시하지 않도록 `trace()`가 닫힌 후 호출하세요. 기본 내보내기 지연 시간이 허용 가능하다면 이 호출은 생략할 수 있습니다.
+[`flush_traces()`][agents.tracing.flush_traces]는 현재 버퍼링된 트레이스와 스팬이 내보내질 때까지 실행을 차단합니다. 따라서 부분적으로 생성된 트레이스가 플러시되지 않도록 `trace()`가 종료된 후 호출하세요. 기본 내보내기 지연 시간이 허용 가능한 경우에는 이 호출을 생략할 수 있습니다.
 
 ## 상위 수준 트레이스
 
-때로는 `run()`에 대한 여러 호출을 단일 트레이스의 일부로 만들고 싶을 수 있습니다. 전체 코드를 `trace()`로 래핑하면 됩니다.
+경우에 따라 여러 `run()` 호출을 하나의 트레이스에 포함하고 싶을 수 있습니다. 전체 코드를 `trace()`로 래핑하면 됩니다.
 
 ```python
 from agents import Agent, Runner, trace
@@ -7998,49 +8099,49 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 두 `Runner.run` 호출이 `with trace()`로 래핑되어 있으므로, 개별 실행은 두 개의 트레이스를 생성하는 대신 전체 트레이스의 일부가 됩니다.
+1. 두 `Runner.run` 호출이 `with trace()`로 래핑되어 있으므로, 두 개의 트레이스를 생성하는 대신 개별 실행이 전체 트레이스에 포함됩니다.
 
 ## 트레이스 생성
 
-[`trace()`][agents.tracing.trace] 함수를 사용하여 트레이스를 생성할 수 있습니다. 트레이스는 시작되고 종료되어야 합니다. 이를 위한 두 가지 옵션이 있습니다:
+[`trace()`][agents.tracing.trace] 함수를 사용하여 트레이스를 생성할 수 있습니다. 트레이스는 시작하고 종료해야 합니다. 다음 두 가지 방법을 사용할 수 있습니다.
 
-1. **권장**: 트레이스를 컨텍스트 매니저로 사용합니다. 즉, `with trace(...) as my_trace`를 사용합니다. 이렇게 하면 적절한 시점에 트레이스가 자동으로 시작되고 종료됩니다.
-2. [`trace.start()`][agents.tracing.Trace.start]와 [`trace.finish()`][agents.tracing.Trace.finish]를 수동으로 호출할 수도 있습니다.
+1. **권장**: 트레이스를 컨텍스트 관리자로 사용합니다. 즉, `with trace(...) as my_trace`를 사용합니다. 그러면 적절한 시점에 트레이스가 자동으로 시작되고 종료됩니다.
+2. [`trace.start()`][agents.tracing.Trace.start]와 [`trace.finish()`][agents.tracing.Trace.finish]를 직접 호출할 수도 있습니다.
 
-현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적됩니다. 즉, 동시성 환경에서도 자동으로 작동합니다. 트레이스를 수동으로 시작/종료하는 경우, 현재 트레이스를 업데이트하려면 `start()`/`finish()`에 `mark_as_current` 및 `reset_current`를 전달해야 합니다.
+현재 트레이스는 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적됩니다. 따라서 동시성 환경에서도 자동으로 작동합니다. 트레이스를 직접 시작하거나 종료하는 경우 현재 트레이스를 업데이트하려면 `start()`/`finish()`에 `mark_as_current`와 `reset_current`를 전달해야 합니다.
 
 ## 스팬 생성
 
-다양한 [`*_span()`][agents.tracing.create] 메서드를 사용하여 스팬을 생성할 수 있습니다. 일반적으로 스팬을 수동으로 생성할 필요는 없습니다. 사용자 지정 스팬 정보를 추적하기 위한 [`custom_span()`][agents.tracing.custom_span] 함수가 제공됩니다.
+다양한 [`*_span()`][agents.tracing.create] 메서드를 사용하여 스팬을 생성할 수 있습니다. 일반적으로 스팬을 직접 생성할 필요는 없습니다. 사용자 지정 스팬 정보를 추적하기 위한 [`custom_span()`][agents.tracing.custom_span] 함수가 제공됩니다.
 
 스팬은 자동으로 현재 트레이스의 일부가 되며, Python [`contextvar`](https://docs.python.org/3/library/contextvars.html)를 통해 추적되는 가장 가까운 현재 스팬 아래에 중첩됩니다.
 
 ## 민감한 데이터
 
-일부 스팬은 민감할 가능성이 있는 데이터를 캡처할 수 있습니다.
+일부 스팬은 잠재적으로 민감한 데이터를 캡처할 수 있습니다.
 
-`generation_span()`은 LLM 생성의 입력/출력을 저장하고, `function_span()`은 함수 호출의 입력/출력을 저장합니다. 여기에는 민감한 데이터가 포함될 수 있으므로, [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터 캡처를 비활성화할 수 있습니다.
+`generation_span()`은 LLM 생성의 입력과 출력을 저장하고, `function_span()`은 함수 호출의 입력과 출력을 저장합니다. 여기에는 민감한 데이터가 포함될 수 있으므로 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]를 통해 해당 데이터 캡처를 비활성화할 수 있습니다.
 
-마찬가지로 오디오 스팬에는 기본적으로 입력 및 출력 오디오에 대한 base64 인코딩된 PCM 데이터가 포함됩니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성하여 이 오디오 데이터 캡처를 비활성화할 수 있습니다.
+마찬가지로 오디오 스팬에는 기본적으로 입력 및 출력 오디오의 Base64 인코딩된 PCM 데이터가 포함됩니다. [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]를 구성하여 이 오디오 데이터 캡처를 비활성화할 수 있습니다.
 
-기본적으로 `trace_include_sensitive_data`는 `True`입니다. 앱을 실행하기 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`로 내보내면 코드 없이 기본값을 설정할 수 있습니다.
+기본적으로 `trace_include_sensitive_data`는 `True`입니다. 코드를 사용하지 않고 기본값을 설정하려면 앱을 실행하기 전에 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 환경 변수를 `true/1` 또는 `false/0`으로 내보내면 됩니다.
 
 ## 사용자 지정 트레이싱 프로세서
 
-트레이싱의 상위 수준 아키텍처는 다음과 같습니다:
+트레이싱의 상위 수준 아키텍처는 다음과 같습니다.
 
--   초기화 시 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]가 생성되며, 이는 트레이스 생성을 담당합니다.
--   `TraceProvider`는 트레이스/스팬을 일괄적으로 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]로 보내는 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 구성됩니다. 이 익스포터는 스팬과 트레이스를 OpenAI 백엔드로 일괄 내보냅니다.
+-   초기화 시 트레이스 생성을 담당하는 전역 [`TraceProvider`][agents.tracing.setup.TraceProvider]를 생성합니다.
+-   트레이스와 스팬을 일괄 처리하여 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]로 보내는 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]로 `TraceProvider`를 구성합니다. `BackendSpanExporter`는 스팬과 트레이스를 OpenAI 백엔드로 일괄 내보냅니다.
 
-트레이스를 대체 또는 추가 백엔드로 보내거나 익스포터 동작을 수정하기 위해 이 기본 설정을 사용자 지정하려면 두 가지 옵션이 있습니다:
+대체 또는 추가 백엔드로 트레이스를 보내거나 내보내기 동작을 수정하는 등 이 기본 설정을 사용자 지정하는 방법은 두 가지입니다.
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 트레이스와 스팬이 준비되는 대로 수신할 **추가** 트레이싱 프로세서를 추가할 수 있습니다. 이를 통해 트레이스를 OpenAI 백엔드로 보내는 것에 더해 자체 처리를 수행할 수 있습니다.
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 자체 트레이싱 프로세서로 **교체**할 수 있습니다. 즉, 이를 수행하는 `TracingProcessor`를 포함하지 않는 한 트레이스는 OpenAI 백엔드로 전송되지 않습니다.
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor]를 사용하면 준비되는 트레이스와 스팬을 수신할 **추가** 트레이스 프로세서를 등록할 수 있습니다. 이를 통해 OpenAI 백엔드로 트레이스를 보내는 동시에 자체 처리를 수행할 수 있습니다.
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors]를 사용하면 기본 프로세서를 자체 트레이스 프로세서로 **대체**할 수 있습니다. 이 경우 트레이스를 전송하는 `TracingProcessor`를 포함하지 않으면 트레이스가 OpenAI 백엔드로 전송되지 않습니다.
 
 
-## 비OpenAI 모델에서의 트레이싱
+## OpenAI 이외 모델의 트레이싱
 
-OpenAI API 키를 비OpenAI 모델과 함께 사용하면 트레이싱을 비활성화할 필요 없이 OpenAI Traces 대시보드에서 무료 트레이싱을 활성화할 수 있습니다. 어댑터 선택과 설정 시 주의 사항은 모델 가이드의 [서드파티 어댑터](models/index.md#third-party-adapters) 섹션을 참조하세요.
+OpenAI 이외 모델에서 OpenAI API 키를 사용하면 트레이싱을 비활성화하지 않고도 OpenAI 트레이스 대시보드에서 무료 트레이싱을 사용할 수 있습니다. 어댑터 선택과 설정 시 유의 사항은 모델 가이드의 [서드 파티 어댑터](models/index.md#third-party-adapters) 섹션을 참조하세요.
 
 ```python
 import os
@@ -8061,7 +8162,7 @@ agent = Agent(
 )
 ```
 
-단일 실행에만 다른 트레이싱 키가 필요하다면, 전역 익스포터를 변경하는 대신 `RunConfig`를 통해 전달하세요.
+단일 실행에만 다른 트레이싱 키가 필요하다면 전역 내보내기를 변경하는 대신 `RunConfig`를 통해 전달하세요.
 
 ```python
 from agents import Runner, RunConfig
@@ -8074,10 +8175,10 @@ await Runner.run(
 ```
 
 ## 추가 참고 사항
-- OpenAI Traces 대시보드에서 무료 트레이스를 확인하세요.
+- OpenAI 트레이스 대시보드에서 무료 트레이스를 확인할 수 있습니다.
 
 
-## 에코시스템 통합
+## 생태계 통합
 
 다음 커뮤니티 및 벤더 통합은 OpenAI Agents SDK 트레이싱 인터페이스를 지원합니다.
 
@@ -8086,8 +8187,8 @@ await Runner.run(
 -   [Weights & Biases](https://weave-docs.wandb.ai/guides/integrations/openai_agents)
 -   [Arize-Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)
 -   [Future AGI](https://docs.futureagi.com/future-agi/products/observability/auto-instrumentation/openai_agents)
--   [MLflow (self-hosted/OSS)](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
--   [MLflow (Databricks hosted)](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
+-   [MLflow (자체 호스팅/OSS)](https://mlflow.org/docs/latest/tracing/integrations/openai-agent)
+-   [MLflow (Databricks 호스팅)](https://docs.databricks.com/aws/en/mlflow/mlflow-tracing#-automatic-tracing)
 -   [Braintrust](https://braintrust.dev/docs/guides/traces/integrations#openai-agents-sdk)
 -   [Pydantic Logfire](https://logfire.pydantic.dev/docs/integrations/llms/openai/#openai-agents)
 -   [AgentOps](https://docs.agentops.ai/v1/integrations/agentssdk)
@@ -8991,6 +9092,14 @@ If you need LiteLLM, install `openai-agents[litellm]`, then start from [`example
 
 Some LiteLLM-backed providers do not populate SDK usage metrics by default. If you need usage reporting, pass `ModelSettings(include_usage=True)` and validate the exact provider backend you plan to deploy if you depend on structured outputs, tool calling, usage reporting, or adapter-specific routing behavior.
 
+If LiteLLM emits Pydantic serializer warnings for response objects, you can opt in to the SDK's compatibility patch before importing the LiteLLM adapter:
+
+```bash
+export OPENAI_AGENTS_ENABLE_LITELLM_SERIALIZER_PATCH=true
+```
+
+The patch is disabled by default and is enabled only for `1` or `true` values. It suppresses a specific class of LiteLLM response-serialization warnings by wrapping a private LiteLLM logging helper, so treat it as a targeted workaround rather than a general serialization setting. Because it depends on a private LiteLLM API, validate it again when upgrading LiteLLM and remove the environment variable when the upstream warning no longer occurs.
+
 ================
 File: docs/models/litellm.md
 ================
@@ -9179,6 +9288,30 @@ High-value session events include:
 -   `raw_model_event`
 
 The most useful events for UI state are usually `history_added` and `history_updated`. They expose the session's local history as `RealtimeItem` objects, including user messages, assistant messages, and tool calls.
+
+### Usage accounting
+
+When a completed model response includes usage, the OpenAI realtime model emits a [`RealtimeModelUsageEvent`][agents.realtime.model_events.RealtimeModelUsageEvent] inside a `raw_model_event`. Its `usage` field contains the token counts for that response, while `input_tokens_details` and `output_tokens_details` provide optional modality breakdowns.
+
+The session also adds each response's usage to the shared [`RunContextWrapper.usage`][agents.run_context.RunContextWrapper.usage]. Read it from `event.info.context.usage` on a subsequent high-level event such as `agent_end` to inspect cumulative usage for the live session.
+
+```python
+from agents.realtime import RealtimeModelUsageEvent
+
+async for event in session:
+    if event.type == "raw_model_event" and isinstance(
+        event.data, RealtimeModelUsageEvent
+    ):
+        response_usage = event.data.usage
+        print("Response tokens:", response_usage.total_tokens)
+        print("Input modalities:", event.data.input_tokens_details)
+        print("Output modalities:", event.data.output_tokens_details)
+    elif event.type == "agent_end":
+        session_usage = event.info.context.usage
+        print("Session tokens:", session_usage.total_tokens)
+```
+
+Usage is reported only when the model provider includes it in the completed response. The cumulative value covers responses received by that `RealtimeSession`; it is not a cross-session total.
 
 ### Interruptions and playback tracking
 
@@ -9547,6 +9680,38 @@ This is the topology used by the core demo app, the CLI example, and the Twilio 
 -   [`examples/realtime/twilio`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio)
 
 Use this path when your server owns the audio pipeline, tool execution, approval flow, and history handling.
+
+### Low-level WebSocket tuning
+
+Pass `transport_config` to `OpenAIRealtimeWebSocketModel` when you need to tune the underlying server-side WebSocket connection:
+
+```python
+from agents.realtime import (
+    OpenAIRealtimeWebSocketModel,
+    RealtimeAgent,
+    RealtimeRunner,
+)
+
+agent = RealtimeAgent(name="Assistant")
+model = OpenAIRealtimeWebSocketModel(
+    transport_config={
+        "ping_interval": 20.0,
+        "ping_timeout": 60.0,
+        "handshake_timeout": 30.0,
+        "max_size": 8 * 1024 * 1024,
+    }
+)
+runner = RealtimeRunner(starting_agent=agent, model=model)
+```
+
+The supported options are:
+
+-   `ping_interval`: Seconds between client keepalive pings. Set `None` to disable pings.
+-   `ping_timeout`: Seconds to wait for a pong before disconnecting. Set `None` to tolerate delayed pongs without a heartbeat timeout.
+-   `handshake_timeout`: Seconds to wait for the initial connection handshake.
+-   `max_size`: Maximum incoming WebSocket message size in bytes. The SDK default is `None`, which leaves incoming message size unlimited; set an explicit limit when you need to bound per-message memory usage.
+
+These settings configure the client connection rather than the Realtime API session. Continue to use `RealtimeModelConfig` for endpoint, authentication, call attachment, and playback settings.
 
 ## SIP attach is the telephony path
 
@@ -11663,7 +11828,7 @@ If you do not need access to files or a living filesystem, keep using `Agent`. I
 
 ## Choose a sandbox client
 
-Start with `UnixLocalSandboxClient` for local development. Move to `DockerSandboxClient` when you need container isolation or image parity. Move to a hosted provider when you need provider-managed execution.
+Start with `UnixLocalSandboxClient` for local development on macOS or Linux. On Windows, use `DockerSandboxClient` or a hosted provider instead. On any supported platform, move to `DockerSandboxClient` when you need container isolation or image parity, or to a hosted provider when you need provider-managed execution.
 
 In most cases, the `SandboxAgent` definition stays the same while the sandbox client and its options change in [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]. See [Sandbox clients](clients.md) for local, Docker, hosted, and remote-mount options.
 
@@ -13198,6 +13363,23 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## Storing non-ASCII text
+
+By default, `SQLAlchemySession` escapes non-ASCII characters when it serializes session items to JSON. This preserves the historical storage format while still round-tripping the original text when items are loaded.
+
+Set `ensure_ascii=False` when you want multilingual text to remain readable in the stored JSON:
+
+```python
+session = SQLAlchemySession.from_url(
+    "user-123",
+    url="sqlite+aiosqlite:///conversations.db",
+    create_tables=True,
+    ensure_ascii=False,
+)
+```
+
+You can pass the same option directly to `SQLAlchemySession(...)` when using an existing engine. This setting changes only the JSON representation stored in the database; it does not change the values returned by session methods.
+
 
 ## API reference
 
@@ -13510,43 +13692,43 @@ search:
 ---
 # 模型
 
-Agents SDK 原生支持两种类型的OpenAI模型：
+Agents SDK 原生支持两种形式的 OpenAI 模型：
 
--   **推荐**：[`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]，它使用新的 [Responses API](https://platform.openai.com/docs/api-reference/responses) 调用OpenAI API。
--   [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]，它使用 [Chat Completions API](https://platform.openai.com/docs/api-reference/chat) 调用OpenAI API。
+-   **推荐**：[`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]，使用新的 [Responses API](https://platform.openai.com/docs/api-reference/responses) 调用 OpenAI API。
+-   [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]，使用 [Chat Completions API](https://platform.openai.com/docs/api-reference/chat) 调用 OpenAI API。
 
-## 模型配置方案选择
+## 模型配置选择
 
-从最符合你配置需求的简单方案开始：
+请从最适合您配置的最简单路径开始：
 
-| 如果你想要…… | 推荐方案 | 更多信息 |
+| 如果您希望…… | 推荐路径 | 更多信息 |
 | --- | --- | --- |
-| 仅使用OpenAI模型 | 使用默认OpenAI提供方和 Responses 模型路径 | [OpenAI模型](#openai-models) |
-| 通过 WebSocket 传输使用OpenAI Responses API | 保持使用 Responses 模型路径并启用 WebSocket 传输 | [Responses WebSocket 传输](#responses-websocket-transport) |
-| 使用OpenAI托管的子智能体 | 使用实验性的托管式多智能体模型 | [托管式多智能体](#hosted-multi-agent-experimental) |
-| 使用一个非OpenAI提供方 | 从内置提供方集成点开始 | [非OpenAI模型](#non-openai-models) |
-| 在不同智能体间混用模型或提供方 | 按运行或按智能体选择提供方，并检查功能差异 | [在一个工作流中混用模型](#mixing-models-in-one-workflow)和[跨提供方混用模型](#mixing-models-across-providers) |
-| 调整高级OpenAI Responses 请求设置 | 在OpenAI Responses 路径上使用 `ModelSettings` | [高级OpenAI Responses 设置](#advanced-openai-responses-settings) |
-| 使用第三方适配器进行非OpenAI或混合提供方路由 | 比较受支持的测试版适配器，并验证你计划上线的提供方路径 | [第三方适配器](#third-party-adapters) |
+| 仅使用 OpenAI 模型 | 使用默认 OpenAI 提供商和 Responses 模型路径 | [OpenAI 模型](#openai-models) |
+| 通过 websocket 传输使用 OpenAI Responses API | 保持使用 Responses 模型路径并启用 websocket 传输 | [Responses WebSocket 传输](#responses-websocket-transport) |
+| 使用由 OpenAI 托管的子智能体 | 使用实验性的托管式多智能体模型 | [托管式多智能体](#hosted-multi-agent-experimental) |
+| 使用一个非 OpenAI 提供商 | 从内置的提供商集成点开始 | [非 OpenAI 模型](#non-openai-models) |
+| 在不同智能体之间混用模型或提供商 | 按运行或按智能体选择提供商，并检查功能差异 | [在一个工作流中混用模型](#mixing-models-in-one-workflow)和[跨提供商混用模型](#mixing-models-across-providers) |
+| 调整高级 OpenAI Responses 请求设置 | 在 OpenAI Responses 路径中使用 `ModelSettings` | [高级 OpenAI Responses 设置](#advanced-openai-responses-settings) |
+| 使用第三方适配器进行非 OpenAI 或混合提供商路由 | 比较受支持的 Beta 版适配器，并验证您计划发布的提供商路径 | [第三方适配器](#third-party-adapters) |
 
-## OpenAI模型
+## OpenAI 模型
 
-对于大多数仅使用OpenAI的应用，推荐使用字符串模型名称和默认OpenAI提供方，并继续使用 Responses 模型路径。
+对于大多数仅使用 OpenAI 的应用，推荐使用字符串形式的模型名称和默认 OpenAI 提供商，并继续使用 Responses 模型路径。
 
-初始化 `Agent` 时如果没有指定模型，将使用默认模型。目前默认模型是 [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)，并配置 `reasoning.effort="none"` 和 `verbosity="low"`，适用于低延迟智能体工作流。如果你拥有访问权限，我们建议将智能体设置为 `gpt-5.6-sol` 以获得更高质量，同时继续显式设置 `model_settings`。
+初始化 `Agent` 时，如果未指定模型，将使用默认模型。当前默认模型为 [`gpt-5.4-mini`](https://developers.openai.com/api/docs/models/gpt-5.4-mini)，并设置 `reasoning.effort="none"` 和 `verbosity="low"`，适用于低延迟智能体工作流。如果您拥有访问权限，我们建议将智能体设置为 `gpt-5.6-sol`，以获得更高质量，同时显式设置 `model_settings`。
 
-如果要切换到 `gpt-5.6-sol` 等其他模型，可以通过两种方式配置智能体。
+如果希望切换到 `gpt-5.6-sol` 等其他模型，可以通过两种方式配置智能体。
 
 ### 默认模型
 
-首先，如果想让所有未设置自定义模型的智能体始终使用某个特定模型，请在运行智能体之前设置 `OPENAI_DEFAULT_MODEL` 环境变量。
+首先，如果希望所有未设置自定义模型的智能体始终使用某个特定模型，请在运行智能体前设置 `OPENAI_DEFAULT_MODEL` 环境变量。
 
 ```bash
 export OPENAI_DEFAULT_MODEL=gpt-5.6-sol
 python3 my_awesome_agent.py
 ```
 
-其次，可以通过 `RunConfig` 为一次运行设置默认模型。如果没有为智能体设置模型，则将使用此次运行的模型。
+其次，可以通过 `RunConfig` 为一次运行设置默认模型。如果未给智能体设置模型，则会使用此次运行的模型。
 
 ```python
 from agents import Agent, RunConfig, Runner
@@ -13565,7 +13747,7 @@ result = await Runner.run(
 
 #### GPT-5 模型
 
-以这种方式使用 `gpt-5.6-sol` 等任何 GPT-5 模型时，SDK 会应用默认的 `ModelSettings`，其中设置了适合大多数用例的最佳选项。要调整默认模型的推理强度，请传入自己的 `ModelSettings`：
+以这种方式使用任何 GPT-5 模型（例如 `gpt-5.6-sol`）时，SDK 会应用默认的 `ModelSettings`。这些设置最适合大多数使用场景。要调整默认模型的推理强度，请传入您自己的 `ModelSettings`：
 
 ```python
 from openai.types.shared import Reasoning
@@ -13581,9 +13763,9 @@ my_agent = Agent(
 )
 ```
 
-为了降低延迟，建议在 GPT-5 模型中使用 `reasoning.effort="none"`。
+为了降低延迟，建议对 GPT-5 模型使用 `reasoning.effort="none"`。
 
-GPT-5.6 还通过现有的 `reasoning` 设置支持推理模式、持久化推理上下文和 `"max"` 强度级别。这些控制项可在 Responses API 路径上使用：
+GPT-5.6 还通过现有的 `reasoning` 设置支持推理模式、持久化推理上下文和 `"max"` 强度级别。这些控制项可用于 Responses API 路径：
 
 ```python
 from openai.types.shared import Reasoning
@@ -13602,37 +13784,37 @@ agent = Agent(
 )
 ```
 
-`reasoning.mode` 和 `reasoning.context` 是 Responses 独有的设置。Chat Completions 仅使用 `reasoning.effort`，支持的强度级别取决于模型和 API 接口。请使用 Responses API 设置 GPT-5.6 的 `"max"` 强度。Chat Completions 适配器会忽略模式和上下文并发出警告；在OpenAI提供方上设置 `strict_feature_validation=True` 可将该警告转为错误。
+`reasoning.mode` 和 `reasoning.context` 是仅限 Responses 的设置。Chat Completions 仅使用 `reasoning.effort`，支持的强度级别取决于模型和 API 接口。若要使用 GPT-5.6 的 `"max"` 强度，请使用 Responses API。Chat Completions 适配器会忽略模式和上下文并发出警告；可在 OpenAI 提供商上设置 `strict_feature_validation=True`，将该警告转为错误。
 
-使用 `context="all_turns"` 时，请通过 `previous_response_id`、服务端对话或重放之前的推理项来保留对话。对于无状态的 `store=False` 调用，请在响应中包含 `reasoning.encrypted_content`，并在下一次请求中重放这些推理项。
+使用 `context="all_turns"` 时，请通过 `previous_response_id`、服务端对话或重放先前的推理项来保留对话。对于无状态的 `store=False` 调用，请在响应中包含 `reasoning.encrypted_content`，并在下一次请求中重放这些推理项。
 
 #### ComputerTool 模型选择
 
-如果智能体包含 [`ComputerTool`][agents.tool.ComputerTool]，实际 Responses 请求上的有效模型将决定 SDK 发送哪种计算机工具载荷。显式的 `gpt-5.5` 请求使用正式发布的内置 `computer` 工具，而显式的 `computer-use-preview` 请求继续使用旧版 `computer_use_preview` 载荷。
+如果智能体包含 [`ComputerTool`][agents.tool.ComputerTool]，实际 Responses 请求所使用的有效模型将决定 SDK 发送哪种计算机工具载荷。显式的 `gpt-5.5` 请求使用正式发布的内置 `computer` 工具，而显式的 `computer-use-preview` 请求仍使用较旧的 `computer_use_preview` 载荷。
 
-由提示词管理的调用是主要例外。如果提示词模板控制模型，且 SDK 在请求中省略 `model`，SDK 会默认使用兼容预览版的计算机载荷，从而避免猜测提示词固定的是哪个模型。要在该流程中继续使用正式发布路径，可以在请求中显式设置 `model="gpt-5.5"`，或通过 `ModelSettings(tool_choice="computer")` 或 `ModelSettings(tool_choice="computer_use")` 强制使用正式发布版选择器。
+由提示词管理的调用是主要例外。如果提示词模板指定了模型，且 SDK 从请求中省略 `model`，SDK 会默认使用与预览版兼容的计算机载荷，以避免猜测提示词固定的是哪个模型。若要在此流程中继续使用正式发布路径，可在请求中显式指定 `model="gpt-5.5"`，或通过 `ModelSettings(tool_choice="computer")` 或 `ModelSettings(tool_choice="computer_use")` 强制选择正式发布版本。
 
-注册 [`ComputerTool`][agents.tool.ComputerTool] 后，`tool_choice="computer"`、`"computer_use"` 和 `"computer_use_preview"` 会被规范化为与有效请求模型匹配的内置选择器。如果未注册 `ComputerTool`，这些字符串仍会像普通函数名称一样工作。
+注册 [`ComputerTool`][agents.tool.ComputerTool] 后，`tool_choice="computer"`、`"computer_use"` 和 `"computer_use_preview"` 会被规范化为与有效请求模型相匹配的内置选择器。如果未注册 `ComputerTool`，这些字符串仍会像普通函数名称一样工作。
 
-兼容预览版的请求必须预先序列化 `environment` 和显示尺寸，因此使用 [`ComputerProvider`][agents.tool.ComputerProvider] 工厂、由提示词管理的流程应传入具体的 `Computer` 或 `AsyncComputer` 实例，或者在发送请求前强制使用正式发布版选择器。有关完整迁移详情，请参阅[工具](../tools.md#computertool-and-the-responses-computer-tool)。
+与预览版兼容的请求必须预先序列化 `environment` 和显示尺寸，因此，使用 [`ComputerProvider`][agents.tool.ComputerProvider] 工厂、由提示词管理的流程应传入具体的 `Computer` 或 `AsyncComputer` 实例，或者在发送请求前强制使用正式发布版本选择器。完整迁移详情请参阅[工具](../tools.md#computertool-and-the-responses-computer-tool)。
 
 #### 非 GPT-5 模型
 
-如果传入非 GPT-5 模型名称且未提供自定义 `model_settings`，SDK 将恢复为与任何模型兼容的通用 `ModelSettings`。
+如果传入非 GPT-5 模型名称且未提供自定义 `model_settings`，SDK 会恢复使用与任何模型兼容的通用 `ModelSettings`。
 
-### Responses 独有的工具搜索功能
+### 仅限 Responses 的工具搜索功能
 
-以下工具功能仅受OpenAI Responses 模型支持：
+以下工具功能仅受 OpenAI Responses 模型支持：
 
 -   [`ToolSearchTool`][agents.tool.ToolSearchTool]
 -   [`tool_namespace()`][agents.tool.tool_namespace]
 -   `@function_tool(defer_loading=True)` 和其他延迟加载的 Responses 工具接口
 
-Chat Completions 模型和非 Responses 后端会拒绝这些功能。使用延迟加载工具时，请将 `ToolSearchTool()` 添加到智能体，并让模型通过 `auto` 或 `required` 工具选择来加载工具，而不是强制使用单独的命名空间名称或仅限延迟加载的函数名称。有关配置详情和当前限制，请参阅[工具](../tools.md#hosted-tool-search)。
+Chat Completions 模型和非 Responses 后端会拒绝这些功能。使用延迟加载工具时，请向智能体添加 `ToolSearchTool()`，并让模型通过 `auto` 或 `required` 工具选择来加载工具，而不要强制指定裸命名空间名称或仅限延迟加载的函数名称。配置详情和当前限制请参阅[工具](../tools.md#hosted-tool-search)。
 
 ### Responses WebSocket 传输
 
-默认情况下，OpenAI Responses API 请求使用 HTTP 传输。使用由OpenAI支持的模型时，可以选择启用 WebSocket 传输。
+默认情况下，OpenAI Responses API 请求使用 HTTP 传输。使用由 OpenAI 支持的模型时，您可以选择启用 websocket 传输。
 
 #### 基础配置
 
@@ -13642,13 +13824,13 @@ from agents import set_default_openai_responses_transport
 set_default_openai_responses_transport("websocket")
 ```
 
-这会影响由默认OpenAI提供方解析的OpenAI Responses 模型，包括 `"gpt-5.6-sol"` 等字符串模型名称。
+这会影响由默认 OpenAI 提供商解析的 OpenAI Responses 模型，包括 `"gpt-5.6-sol"` 等字符串形式的模型名称。
 
-SDK 将模型名称解析为模型实例时，会进行传输方式选择。如果传入具体的 [`Model`][agents.models.interface.Model] 对象，其传输方式已经固定：[`OpenAIResponsesWSModel`][agents.models.openai_responses.OpenAIResponsesWSModel] 使用 WebSocket，[`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 使用 HTTP，而 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 继续使用 Chat Completions。如果传入 `RunConfig(model_provider=...)`，则由该提供方而非全局默认提供方控制传输方式选择。
+SDK 将模型名称解析为模型实例时，会完成传输方式的选择。如果传入具体的 [`Model`][agents.models.interface.Model] 对象，其传输方式已经固定：[‌`OpenAIResponsesWSModel`][agents.models.openai_responses.OpenAIResponsesWSModel] 使用 websocket，[`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 使用 HTTP，而 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 继续使用 Chat Completions。如果传入 `RunConfig(model_provider=...)`，则由该提供商控制传输方式的选择，而不是使用全局默认设置。
 
-#### 提供方级或运行级配置
+#### 提供商级或运行级配置
 
-也可以按提供方或按运行配置 WebSocket 传输：
+您还可以按提供商或按运行配置 websocket 传输：
 
 ```python
 from agents import Agent, OpenAIProvider, RunConfig, Runner
@@ -13669,7 +13851,7 @@ result = await Runner.run(
 )
 ```
 
-由OpenAI支持的提供方还接受可选的智能体注册配置。这是一个高级选项，适用于OpenAI配置需要提供方级注册元数据（例如运行框架 ID）的情况。
+由 OpenAI 支持的提供商还接受可选的智能体注册配置。这是一项高级选项，适用于 OpenAI 配置需要提供商级注册元数据（例如测试框架 ID）的情况。
 
 ```python
 from agents import (
@@ -13697,12 +13879,12 @@ result = await Runner.run(
 
 如果需要基于前缀的模型路由，例如在一次运行中混用 `openai/...` 和 `any-llm/...` 模型名称，请使用 [`MultiProvider`][agents.MultiProvider]，并在其中设置 `openai_use_responses_websocket=True`。
 
-`MultiProvider` 保留两个历史默认行为：
+`MultiProvider` 保留了两个历史默认行为：
 
--   `openai/...` 被视为OpenAI提供方的别名，因此 `openai/gpt-4.1` 会作为模型 `gpt-4.1` 进行路由。
--   未知前缀会引发 `UserError`，而不是直接透传。
+-   `openai/...` 被视为 OpenAI 提供商的别名，因此 `openai/gpt-4.1` 会作为模型 `gpt-4.1` 进行路由。
+-   未知前缀会引发 `UserError`，而不会直接透传。
 
-当OpenAI提供方指向需要字面命名空间模型 ID 的OpenAI兼容端点时，请显式启用透传行为。在启用 WebSocket 的配置中，也请在 `MultiProvider` 上保留 `openai_use_responses_websocket=True`：
+将 OpenAI 提供商指向需要字面量命名空间模型 ID 的 OpenAI 兼容端点时，请显式启用透传行为。在启用 websocket 的配置中，还应在 `MultiProvider` 上保留 `openai_use_responses_websocket=True`：
 
 ```python
 from agents import Agent, MultiProvider, RunConfig, Runner
@@ -13728,25 +13910,25 @@ result = await Runner.run(
 )
 ```
 
-后端需要字面的 `openai/...` 字符串时，请使用 `openai_prefix_mode="model_id"`。后端需要其他命名空间模型 ID（例如 `openrouter/openai/gpt-4.1-mini`）时，请使用 `unknown_prefix_mode="model_id"`。这些选项也适用于 WebSocket 传输以外的 `MultiProvider`；此示例继续启用 WebSocket，因为它属于本节所述的传输配置。相同选项也可用于 [`responses_websocket_session()`][agents.responses_websocket_session]。
+当后端要求字面量 `openai/...` 字符串时，请使用 `openai_prefix_mode="model_id"`。当后端要求其他命名空间模型 ID（例如 `openrouter/openai/gpt-4.1-mini`）时，请使用 `unknown_prefix_mode="model_id"`。这些选项同样适用于 websocket 传输之外的 `MultiProvider`；此示例保持启用 websocket，因为它属于本节所述传输配置的一部分。相同选项也可用于 [`responses_websocket_session()`][agents.responses_websocket_session]。
 
-如果通过 `MultiProvider` 进行路由时需要相同的提供方级注册元数据，请传入 `openai_agent_registration=OpenAIAgentRegistrationConfig(...)`，它将被转发给底层OpenAI提供方。
+如果通过 `MultiProvider` 路由时需要相同的提供商级注册元数据，请传入 `openai_agent_registration=OpenAIAgentRegistrationConfig(...)`，该配置将转发给底层 OpenAI 提供商。
 
-如果使用自定义OpenAI兼容端点或代理，WebSocket 传输还要求提供兼容的 WebSocket `/responses` 端点。在这些配置中，可能需要显式设置 `websocket_base_url`。
+如果使用自定义 OpenAI 兼容端点或代理，websocket 传输还要求存在兼容的 websocket `/responses` 端点。在这些配置中，您可能需要显式设置 `websocket_base_url`。
 
 #### 注意事项
 
--   这是通过 WebSocket 传输使用的 Responses API，而不是 [Realtime API](../realtime/guide.md)。它不适用于 Chat Completions 或非OpenAI提供方，除非它们支持 Responses WebSocket `/responses` 端点。
--   如果环境中尚未安装 `websockets` 软件包，请安装它。
--   启用 WebSocket 传输后，可以直接使用 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]。对于希望跨轮次以及嵌套的智能体即工具调用复用同一 WebSocket 连接的多轮工作流，建议使用 [`responses_websocket_session()`][agents.responses_websocket_session] 辅助函数。请参阅[运行智能体](../running_agents.md)指南和 [`examples/basic/stream_ws.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/stream_ws.py)。
--   对于长时间推理轮次或存在延迟突增的网络，请使用 `responses_websocket_options` 自定义 WebSocket 保活行为。增大 `ping_timeout` 可容忍延迟的 pong 帧，或者设置 `ping_timeout=None`，以在保持 ping 启用的同时禁用心跳超时。如果可靠性比 WebSocket 延迟更重要，请优先使用 HTTP/SSE 传输。
--   默认情况下，SDK 会禁用传入消息大小限制（`max_size=None`）。对于位于代理后方或内存受限容器中的长时间运行智能体进程，请设置 `responses_websocket_options={"max_size": 8 * 1024 * 1024}`，以限制每条消息的内存用量。
+-   这是通过 websocket 传输的 Responses API，并非 [Realtime API](../realtime/guide.md)。它不适用于 Chat Completions 或非 OpenAI 提供商，除非这些提供商支持 Responses websocket `/responses` 端点。
+-   如果您的环境中尚未安装 `websockets` 软件包，请进行安装。
+-   启用 websocket 传输后，可以直接使用 [`Runner.run_streamed()`][agents.run.Runner.run_streamed]。对于希望跨轮次以及嵌套的智能体工具调用复用同一 websocket 连接的多轮工作流，建议使用 [`responses_websocket_session()`][agents.responses_websocket_session] 辅助函数。请参阅[运行智能体](../running_agents.md)指南和 [`examples/basic/stream_ws.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/stream_ws.py)。
+-   对于耗时较长的推理轮次或存在延迟峰值的网络，请使用 `responses_websocket_options` 自定义 websocket 保活行为。增大 `ping_timeout` 可容忍延迟的 pong 帧，也可设置 `ping_timeout=None` 以禁用心跳超时，同时保持 ping 启用。当可靠性比 websocket 延迟更重要时，优先使用 HTTP/SSE 传输。
+-   默认情况下，SDK 会禁用传入消息的大小限制（`max_size=None`）。对于代理之后长期运行的智能体进程或内存受限容器，请设置 `responses_websocket_options={"max_size": 8 * 1024 * 1024}`，以限制每条消息的内存使用量。
 
 ### 托管式多智能体（实验性）
 
-OpenAI Responses API 托管式多智能体测试版允许 GPT-5.6 根模型创建和协调服务端托管的子智能体。Agents SDK 可以继续使用常规 `Runner`：托管式编排在服务上进行，而开发者定义的工具调用则在你的应用中执行。
+OpenAI Responses API 托管式多智能体 Beta 版允许 GPT-5.6 根模型创建并协调由服务托管的子智能体。Agents SDK 可以继续使用其常规 `Runner`：托管编排保留在服务端，而开发者定义的工具调用则在您的应用中执行。
 
-此集成具有实验性，并使用 Responses WebSocket 传输，以便通过 `response.inject` 将本地函数输出返回给活跃的托管智能体。它要求使用 `openai[realtime]>=2.45.0`，其中包括公开 `client.beta.responses.connect` 的测试版构建。该接口和测试版项目架构可能会在正式发布前发生变化。
+此集成为实验性功能，使用 Responses WebSocket 传输，以便通过 `response.inject` 将本地函数输出返回给活动的托管智能体。它要求使用 `openai[realtime]>=2.45.0`，其中包括公开 `client.beta.responses.connect` 的 Beta 版本。该接口和 Beta 项架构可能会在正式发布前发生变化。
 
 #### 模型配置
 
@@ -13763,11 +13945,11 @@ agent = Agent(
 )
 ```
 
-构造 `OpenAIHostedMultiAgentModel` 会启用 `multi_agent.enabled`，并发送 `OpenAI-Beta: responses_multi_agent=v1` WebSocket 标头。除非提供 `openai_client`，否则该模型使用默认OpenAI客户端。如果省略 `max_concurrent_subagents`，则使用服务默认值。
+构造 `OpenAIHostedMultiAgentModel` 会启用 `multi_agent.enabled`，并发送 `OpenAI-Beta: responses_multi_agent=v1` WebSocket 标头。除非提供 `openai_client`，否则该模型会使用默认 OpenAI 客户端。如果省略 `max_concurrent_subagents`，则使用服务默认值。
 
 #### 本地工具调用
 
-所有托管智能体共享为请求配置的模型和工具。Responses API 决定由哪个托管智能体调用函数。常规 SDK Runner 在本地执行函数，并将具有相同调用 ID 的 `function_call_output` 注入活跃的 WebSocket 响应，使服务能够恢复原始托管调用方。函数执行仍会经过 Runner 的常规安全防护措施、钩子和失败转换。不支持 SDK 工具审批中断：任何 `needs_approval` 设置不为 `False` 的工具调用都会在请求发送前被拒绝。
+所有托管智能体共享为请求配置的模型和工具。由 Responses API 决定哪个托管智能体调用函数。常规 SDK Runner 会在本地执行函数，并将具有相同调用 ID 的 `function_call_output` 注入活动的 WebSocket 响应，从而让服务恢复原始托管调用方。函数执行仍会经过 Runner 的常规安全防护措施、钩子和失败转换。不支持 SDK 工具审批中断：发送请求前，任何 `needs_approval` 设置不为 `False` 的工具调用都会被拒绝。
 
 当工具需要感知调用方的日志记录或授权时，请使用 `get_hosted_agent_metadata()`：
 
@@ -13786,50 +13968,50 @@ def lookup_document(ctx: ToolContext[Any], section: str) -> str:
     return f"Contents for {section}"
 ```
 
-托管智能体名称是观测性元数据，而不是本地路由机制。请使用 SDK 提供的调用 ID 路由输出。对于会产生副作用的工具，请将该调用 ID 用作幂等键，并在工具执行之前或期间通过应用代码实施任何必要的授权；请勿将 `needs_approval` 与此模型结合使用。工具参数和输出会跨越 Responses API 边界。
+托管智能体名称是观测元数据，而不是本地路由机制。请使用 SDK 提供的调用 ID 路由输出。对于会产生副作用的工具，请将该调用 ID 用作幂等键，并在工具执行前或执行期间通过应用代码强制实施任何必要的授权；不要对该模型使用 `needs_approval`。工具参数和输出会跨越 Responses API 边界。
 
 #### 输出与流式传输行为
 
-只有归属于 `/root` 且阶段为 `final_answer` 的消息才会成为普通最终消息。实验性适配器会从高级 `RunResult` 中过滤子智能体消息和托管式编排记录；SDK 绝不会将这些记录作为本地函数执行。
+只有归属于 `/root` 且阶段为 `final_answer` 的消息才会成为常规最终消息。实验性适配器会从高级 `RunResult` 中过滤掉子智能体消息和托管编排记录；SDK 永远不会将这些记录作为本地函数执行。
 
-原始流式传输会继续公开测试版 Responses 事件，包括托管输出项和 `response.inject.created` 确认。函数调用就绪时，适配器会将一个活跃的提供方响应划分为 SDK 可见的逻辑模型轮次，然后在 Runner 生成输出后恢复同一个提供方响应。请将 `get_hosted_agent_metadata()` 与原始托管项或 `ToolContext` 一起使用，以检查归属信息。
+原始流式传输仍会公开 Beta Responses 事件，包括托管输出项和 `response.inject.created` 确认。函数调用就绪时，适配器会将一个活动的提供商响应划分为 SDK 可见的逻辑模型轮次；Runner 生成输出后，再恢复同一个提供商响应。使用 `get_hosted_agent_metadata()` 以及原始托管项或 `ToolContext` 可以检查归属信息。
 
 #### 与 SDK 编排的关系
 
-托管式多智能体独立于 SDK 任务转移和 agents-as-tools：
+托管式多智能体与 SDK 任务转移和 agents-as-tools 相互独立：
 
--   托管式多智能体在OpenAI服务上创建子智能体。你的应用不会创建或调度这些子智能体。
--   SDK 任务转移会更改当前活跃的本地 SDK `Agent`。使用此实验性模型时，任务转移会被拒绝，因为每个托管智能体都会收到相同的任务转移工具，从而造成所有权冲突。
--   Agents-as-tools 仍然可用，但使用它们会产生嵌套的客户端和服务端编排。请审慎评估额外的延迟、成本和工具暴露。
+-   托管式多智能体在 OpenAI 服务上创建子智能体。您的应用不会创建或调度这些子智能体。
+-   SDK 任务转移会更改活动的本地 SDK `Agent`。使用此实验性模型时，任务转移会被拒绝，因为每个托管智能体都会收到相同的任务转移工具，这将造成所有权冲突。
+-   Agents-as-tools 仍然可用，但使用它们会创建嵌套的客户端和服务端编排。请谨慎评估由此增加的延迟、成本和工具暴露范围。
 
 #### 当前限制
 
-实验性模型会拒绝 `reasoning.summary`、`max_tool_calls` 以及调用方提供的 `multi_agent` 或 `betas` 覆盖值。该测试版不支持 Responses `/compact` 端点，但可以使用显式的 `context_management.compact_threshold`，因为服务会自动独立压缩每个托管智能体的上下文。
+实验性模型会拒绝 `reasoning.summary`、`max_tool_calls`，以及调用方提供的 `multi_agent` 或 `betas` 覆盖值。Beta 版不支持 Responses `/compact` 端点，但可以使用显式的 `context_management.compact_threshold`，因为服务会自动独立压缩每个托管智能体的上下文。
 
-一个 `OpenAIHostedMultiAgentModel` 实例最多同时拥有一个活跃的托管响应。如果在等待本地函数输出时放弃运行，请调用 `await model.close()` 以释放其 WebSocket。目前不支持在其他进程或事件循环中恢复进行中的托管响应。
+一个 `OpenAIHostedMultiAgentModel` 实例同时最多拥有一个活动的托管响应。如果在等待本地函数输出时放弃运行，请调用 `await model.close()` 释放其 WebSocket。目前不支持在其他进程或事件循环中恢复正在进行的托管响应。
 
-有关底层 Responses API 测试版行为，请参阅 [OpenAI多智能体指南](https://developers.openai.com/api/docs/guides/tools-multi-agent)。有关非流式传输和流式传输 SDK 用法，请参阅 [`examples/agent_patterns/hosted_multi_agent_beta.py`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns/hosted_multi_agent_beta.py)。
+有关底层 Responses API Beta 行为，请参阅 [OpenAI 多智能体指南](https://developers.openai.com/api/docs/guides/tools-multi-agent)。有关非流式传输和流式传输的 SDK 用法，请参阅 [`examples/agent_patterns/hosted_multi_agent_beta.py`](https://github.com/openai/openai-agents-python/tree/main/examples/agent_patterns/hosted_multi_agent_beta.py)。
 
-## 非OpenAI模型
+## 非 OpenAI 模型
 
-如果需要非OpenAI提供方，请从 SDK 的内置提供方集成点开始。在许多配置中，无需添加第三方适配器即可满足需求。每种模式的代码示例位于 [examples/model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)。
+如果需要非 OpenAI 提供商，请从 SDK 的内置提供商集成点开始。在许多配置中，无需添加第三方适配器即可满足需求。各种模式的代码示例位于 [examples/model_providers](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)。
 
-### 非OpenAI提供方的集成方式
+### 非 OpenAI 提供商的集成方式
 
-| 方式 | 适用场景 | 作用域 |
+| 方法 | 适用情况 | 作用域 |
 | --- | --- | --- |
-| [`set_default_openai_client`][agents.set_default_openai_client] | 一个OpenAI兼容端点应成为大多数或所有智能体的默认端点 | 全局默认 |
-| [`ModelProvider`][agents.models.interface.ModelProvider] | 一个自定义提供方应适用于单次运行 | 按运行 |
-| [`Agent.model`][agents.agent.Agent.model] | 不同智能体需要不同的提供方或具体模型对象 | 按智能体 |
-| 第三方适配器 | 需要由适配器管理的提供方覆盖或内置路径无法提供的路由 | 请参阅[第三方适配器](#third-party-adapters) |
+| [`set_default_openai_client`][agents.set_default_openai_client] | 应将一个 OpenAI 兼容端点设为大多数或所有智能体的默认端点 | 全局默认 |
+| [`ModelProvider`][agents.models.interface.ModelProvider] | 一个自定义提供商应应用于单次运行 | 按运行 |
+| [`Agent.model`][agents.agent.Agent.model] | 不同智能体需要不同的提供商或具体模型对象 | 按智能体 |
+| 第三方适配器 | 您需要由适配器管理的提供商覆盖范围或内置路径未提供的路由 | 请参阅[第三方适配器](#third-party-adapters) |
 
-可以通过以下内置路径集成其他 LLM 提供方：
+可以通过以下内置路径集成其他 LLM 提供商：
 
-1. [`set_default_openai_client`][agents.set_default_openai_client] 适用于希望在全局范围使用 `AsyncOpenAI` 实例作为 LLM 客户端的情况。此方式适用于 LLM 提供方具有OpenAI兼容 API 端点，并且你可以设置 `base_url` 和 `api_key` 的情况。可配置的代码示例请参阅 [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)。
-2. [`ModelProvider`][agents.models.interface.ModelProvider] 作用于 `Runner.run` 层级。借助它，你可以指定“为本次运行中的所有智能体使用自定义模型提供方”。可配置的代码示例请参阅 [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)。
-3. [`Agent.model`][agents.agent.Agent.model] 允许在特定 Agent 实例上指定模型。这样可以为不同智能体混合搭配不同的提供方。可配置的代码示例请参阅 [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)。
+1. [`set_default_openai_client`][agents.set_default_openai_client] 适用于希望在全局范围内使用 `AsyncOpenAI` 实例作为 LLM 客户端的情况。该方式适用于 LLM 提供商具有 OpenAI 兼容 API 端点，并且您可以设置 `base_url` 和 `api_key` 的情况。可配置的代码示例请参阅 [examples/model_providers/custom_example_global.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_global.py)。
+2. [`ModelProvider`][agents.models.interface.ModelProvider] 在 `Runner.run` 层级生效。这允许您指定“为本次运行中的所有智能体使用自定义模型提供商”。可配置的代码示例请参阅 [examples/model_providers/custom_example_provider.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_provider.py)。
+3. [`Agent.model`][agents.agent.Agent.model] 允许您在特定 Agent 实例上指定模型。这样即可为不同智能体灵活搭配不同提供商。可配置的代码示例请参阅 [examples/model_providers/custom_example_agent.py](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/custom_example_agent.py)。
 
-如果没有来自 `platform.openai.com` 的 API 密钥，建议通过 `set_tracing_disabled()` 禁用追踪，或者设置[其他追踪进程](../tracing.md)。
+如果您没有来自 `platform.openai.com` 的 API 密钥，建议通过 `set_tracing_disabled()` 禁用追踪，或设置[其他追踪进程](../tracing.md)。
 
 ``` python
 from agents import Agent, AsyncOpenAI, OpenAIChatCompletionsModel, set_tracing_disabled
@@ -13844,11 +14026,11 @@ agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model
 
 !!! note
 
-    在这些代码示例中，我们使用 Chat Completions API/模型，因为许多 LLM 提供方仍不支持 Responses API。如果你的 LLM 提供方支持它，建议使用 Responses。
+    在这些代码示例中，我们使用 Chat Completions API/模型，因为许多 LLM 提供商仍不支持 Responses API。如果您的 LLM 提供商支持 Responses API，建议使用 Responses。
 
-## 在一个工作流中混用模型
+## 单一工作流中的模型混用
 
-在单个工作流中，你可能希望为每个智能体使用不同的模型。例如，可以使用更小、更快的模型进行分流，同时使用更大、能力更强的模型处理复杂任务。配置 [`Agent`][agents.Agent] 时，可以通过以下任一方式选择特定模型：
+在单个工作流中，您可能希望为每个智能体使用不同的模型。例如，可以使用更小、更快的模型进行分流，同时使用更大、能力更强的模型处理复杂任务。配置 [`Agent`][agents.Agent] 时，可以通过以下任一方式选择特定模型：
 
 1. 传入模型名称。
 2. 传入任意模型名称以及能够将该名称映射到 Model 实例的 [`ModelProvider`][agents.models.interface.ModelProvider]。
@@ -13856,7 +14038,7 @@ agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model
 
 !!! note
 
-    虽然 SDK 同时支持 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 和 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 两种形式，但建议每个工作流只使用一种模型形式，因为两种形式支持的功能和工具集合不同。如果工作流需要混用模型形式，请确保正在使用的所有功能都受两者支持。
+    尽管我们的 SDK 同时支持 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 和 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 形式，但我们建议每个工作流使用单一模型形式，因为这两种形式支持的功能和工具集合不同。如果您的工作流需要混用不同模型形式，请确保您使用的所有功能均受两者支持。
 
 ```python
 from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
@@ -13889,10 +14071,10 @@ async def main():
     print(result.final_output)
 ```
 
-1.  直接设置OpenAI模型的名称。
+1.  直接设置 OpenAI 模型的名称。
 2.  提供 [`Model`][agents.models.interface.Model] 实现。
 
-如果要进一步配置智能体使用的模型，可以传入 [`ModelSettings`][agents.models.interface.ModelSettings]，其中提供 temperature 等可选模型配置参数。
+如果希望进一步配置智能体所使用的模型，可以传入 [`ModelSettings`][agents.models.interface.ModelSettings]，它提供 temperature 等可选模型配置参数。
 
 ```python
 from agents import Agent, ModelSettings
@@ -13905,23 +14087,23 @@ english_agent = Agent(
 )
 ```
 
-## 高级OpenAI Responses 设置
+## 高级 OpenAI Responses 设置
 
-使用OpenAI Responses 路径且需要更多控制时，请从 `ModelSettings` 开始。
+使用 OpenAI Responses 路径并需要更多控制时，请先从 `ModelSettings` 开始。
 
 ### 常用高级 `ModelSettings` 选项
 
-使用OpenAI Responses API 时，多个请求字段已经有对应的直接 `ModelSettings` 字段，因此无需通过 `extra_args` 传递它们。
+使用 OpenAI Responses API 时，多个请求字段已经有对应的直接 `ModelSettings` 字段，因此无需通过 `extra_args` 设置。
 
-- `parallel_tool_calls`：允许或禁止在同一轮中进行多次工具调用。
-- `truncation`：设置为 `"auto"`，可让 Responses API 在上下文即将溢出时丢弃最早的对话项，而不是使请求失败。
-- `store`：控制生成的响应是否存储在服务端以供后续检索。这对于依赖响应 ID 的后续工作流以及在 `store=False` 时可能需要回退到本地输入的会话压缩流程很重要。
+- `parallel_tool_calls`：允许或禁止在同一轮次中进行多次工具调用。
+- `truncation`：设置为 `"auto"`，让 Responses API 在上下文即将溢出时丢弃最早的对话项，而不是让请求失败。
+- `store`：控制是否将生成的响应存储在服务端，以供后续检索。这对于依赖响应 ID 的后续工作流，以及在 `store=False` 时可能需要回退到本地输入的会话压缩流程非常重要。
 - `context_management`：配置服务端上下文处理，例如使用 `compact_threshold` 进行 Responses 压缩。
 - `prompt_cache_retention`：为较早的模型系列配置延长保留时间，例如
-  设置为 `"24h"`。
-- `prompt_cache_options`：选择隐式或显式提示词缓存；对于 GPT-5.6，还可配置 `"30m"` 缓存 TTL。
+  使用 `"24h"`。
+- `prompt_cache_options`：选择隐式或显式提示词缓存；对于 GPT-5.6，还可以配置 `"30m"` 缓存 TTL。
 - `response_include`：请求更丰富的响应载荷，例如 `web_search_call.action.sources`、`file_search_call.results` 或 `reasoning.encrypted_content`。
-- `top_logprobs`：请求输出文本的热门候选 token 对数概率。SDK 还会自动添加 `message.output_text.logprobs`。
+- `top_logprobs`：请求输出文本的最高概率 token 对数概率。SDK 还会自动添加 `message.output_text.logprobs`。
 - `retry`：选择启用由 Runner 管理的模型调用重试设置。请参阅 [Runner 管理的重试](#runner-managed-retries)。
 
 ```python
@@ -13942,7 +14124,7 @@ research_agent = Agent(
 )
 ```
 
-使用显式提示词缓存时，请在可复用前缀结束的内容部分添加断点。同一个 `ModelSettings.prompt_cache_options` 字段会透传到 Responses 和 Chat Completions 请求，而 Chat Completions 转换器会保留文本、图像、音频和文件内容部分的断点。
+使用显式提示词缓存时，请在可复用前缀结束处的内容部分添加断点。相同的 `ModelSettings.prompt_cache_options` 字段会透传给 Responses 和 Chat Completions 请求，而 Chat Completions 转换器会保留文本、图像、音频和文件内容部分中的断点。
 
 ```python
 from agents import Runner
@@ -13968,19 +14150,19 @@ result = await Runner.run(
 )
 ```
 
-`prompt_cache_retention` 仍可用于采用旧版
-保留控制的较早模型系列。请勿同时使用直接 `ModelSettings` 字段和
-`extra_args` 中的同名键。
+`prompt_cache_retention` 仍适用于使用旧版
+保留控制的较早模型系列。请勿同时通过直接 `ModelSettings` 字段和
+`extra_args` 设置相同的键。
 
-设置 `store=False` 时，Responses API 不会保留该响应以供后续服务端检索。这对于无状态或零数据保留类型的流程很有用，但也意味着原本会复用响应 ID 的功能必须改为依赖本地管理的状态。例如，当最后一个响应未存储时，[`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] 会将其默认的 `"auto"` 压缩路径切换为基于输入的压缩。请参阅[会话指南](../sessions/index.md#openai-responses-compaction-sessions)。
+设置 `store=False` 后，Responses API 不会保留该响应以供日后在服务端检索。这适用于无状态或零数据保留风格的流程，但也意味着原本可以复用响应 ID 的功能需要改为依赖本地管理的状态。例如，当最后一个响应未存储时，[`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession] 会将默认的 `"auto"` 压缩路径切换为基于输入的压缩。请参阅[会话指南](../sessions/index.md#openai-responses-compaction-sessions)。
 
-服务端压缩不同于 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]。`context_management=[{"type": "compaction", "compact_threshold": ...}]` 会随每个 Responses API 请求一起发送；当渲染后的上下文超过阈值时，API 可在响应中生成压缩项。`OpenAIResponsesCompactionSession` 则会在轮次之间调用独立的 `responses.compact` 端点，并重写本地会话历史记录。
+服务端压缩不同于 [`OpenAIResponsesCompactionSession`][agents.memory.openai_responses_compaction_session.OpenAIResponsesCompactionSession]。`context_management=[{"type": "compaction", "compact_threshold": ...}]` 会随每个 Responses API 请求一起发送，当渲染后的上下文超过阈值时，API 可以在响应中生成压缩项。`OpenAIResponsesCompactionSession` 会在轮次之间调用独立的 `responses.compact` 端点，并重写本地会话历史记录。
 
-### `extra_args` 传递
+### `extra_args` 的传递
 
-当需要 SDK 尚未直接在顶层公开的提供方特定或较新的请求字段时，请使用 `extra_args`。
+当需要 SDK 尚未直接在顶层公开的提供商特定请求字段或较新的请求字段时，请使用 `extra_args`。
 
-此外，使用OpenAI的 Responses API 时，[还有一些其他可选参数](https://platform.openai.com/docs/api-reference/responses/create)，例如 `user`、`service_tier` 等。如果它们在顶层不可用，也可以通过 `extra_args` 传递。请勿同时通过直接 `ModelSettings` 字段设置相同的请求字段。
+此外，使用 OpenAI 的 Responses API 时，[还有一些其他可选参数](https://platform.openai.com/docs/api-reference/responses/create)，例如 `user`、`service_tier` 等。如果这些参数在顶层不可用，也可以通过 `extra_args` 传入。请勿同时通过直接 `ModelSettings` 字段设置相同的请求字段。
 
 ```python
 from agents import Agent, ModelSettings
@@ -13998,7 +14180,7 @@ english_agent = Agent(
 
 ## Runner 管理的重试
 
-重试仅在运行时生效，并且需要主动启用。除非设置 `ModelSettings(retry=...)` 且重试策略决定重试，否则 SDK 不会重试常规模型请求。
+重试仅在运行时生效，并且需要选择启用。除非您设置 `ModelSettings(retry=...)` 且重试策略决定进行重试，否则 SDK 不会重试常规模型请求。
 
 ```python
 from agents import Agent, ModelRetrySettings, ModelSettings, retry_policies
@@ -14026,85 +14208,85 @@ agent = Agent(
 )
 ```
 
-`ModelRetrySettings` 包含三个字段：
+`ModelRetrySettings` 有三个字段：
 
 <div class="field-table" markdown="1">
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | `max_retries` | `int | None` | 初始请求之后允许的重试次数。 |
-| `backoff` | `ModelRetryBackoffSettings | dict | None` | 策略决定重试但未返回显式延迟时使用的默认延迟策略。`backoff.max_delay` 仅限制此处计算出的退避延迟，不限制策略返回的显式延迟或 Retry-After 提示。 |
+| `backoff` | `ModelRetryBackoffSettings | dict | None` | 策略决定重试但未返回显式延迟时使用的默认延迟策略。`backoff.max_delay` 仅限制此处计算出的退避延迟，不会限制策略返回的显式延迟或 retry-after 提示。 |
 | `policy` | `RetryPolicy | None` | 决定是否重试的回调。此字段仅在运行时生效，不会被序列化。 |
 
 </div>
 
 重试策略会接收一个 [`RetryPolicyContext`][agents.retry.RetryPolicyContext]，其中包含：
 
-- `attempt` 和 `max_retries`，便于根据尝试次数做出决策。
-- `stream`，便于区分流式传输与非流式传输行为。
+- `attempt` 和 `max_retries`，以便根据尝试次数作出决策。
+- `stream`，以便区分流式与非流式行为。
 - `error`，用于检查原始错误。
 - `normalized` 事实，例如 `status_code`、`retry_after`、`error_code`、`is_network_error`、`is_timeout` 和 `is_abort`。
-- `provider_advice`，用于底层模型适配器可以提供重试建议的情况。
+- 当底层模型适配器能够提供重试指导时使用的 `provider_advice`。
 
 策略可以返回：
 
-- `True` / `False`，用于简单的重试决策。
-- [`RetryDecision`][agents.retry.RetryDecision]，用于覆盖延迟或附加诊断原因。
+- `True` / `False`，用于作出简单的重试决定。
+- 当您希望覆盖延迟或附加诊断原因时，返回 [`RetryDecision`][agents.retry.RetryDecision]。
 
-SDK 在 `retry_policies` 上导出了现成的辅助函数：
+SDK 在 `retry_policies` 中导出了现成的辅助函数：
 
 | 辅助函数 | 行为 |
 | --- | --- |
-| `retry_policies.never()` | 始终不重试。 |
-| `retry_policies.provider_suggested()` | 在提供方提供重试建议时遵循该建议。 |
-| `retry_policies.network_error()` | 匹配暂时性传输失败和超时失败。 |
-| `retry_policies.http_status([...])` | 匹配指定的 HTTP 状态码。 |
-| `retry_policies.retry_after()` | 仅在存在 Retry-After 提示时重试，并使用该延迟。此辅助函数将 Retry-After 值视为显式策略延迟，因此 `backoff.max_delay` 不会限制它。 |
-| `retry_policies.any(...)` | 任意嵌套策略决定重试时进行重试。 |
-| `retry_policies.all(...)` | 仅在所有嵌套策略都决定重试时进行重试。 |
+| `retry_policies.never()` | 始终不启用重试。 |
+| `retry_policies.provider_suggested()` | 在提供商给出重试建议时遵循其建议。 |
+| `retry_policies.network_error()` | 匹配暂时性传输故障和超时故障。 |
+| `retry_policies.http_status([...])` | 匹配选定的 HTTP 状态码。 |
+| `retry_policies.retry_after()` | 仅在存在 retry-after 提示时重试，并使用其延迟时间。此辅助函数会将 retry-after 值视为显式策略延迟，因此 `backoff.max_delay` 不会限制它。 |
+| `retry_policies.any(...)` | 任一嵌套策略启用重试时进行重试。 |
+| `retry_policies.all(...)` | 仅当所有嵌套策略均启用重试时才进行重试。 |
 
-组合策略时，`provider_suggested()` 是最安全的首选基础组件，因为当提供方能够区分相关情况时，它会保留提供方的否决意见和重放安全性批准。
+组合策略时，`provider_suggested()` 是最安全的首选基础组件，因为当提供商能够区分这些情况时，它会保留提供商的否决意见和重放安全审批。
 
 ##### 安全边界
 
 某些失败永远不会自动重试：
 
 - 中止错误。
-- 提供方建议将重放标记为不安全的请求。
-- 已开始产生输出且重放会导致不安全的流式传输运行。
+- 提供商建议将重放标记为不安全的请求。
+- 已经开始输出，且重放会造成安全风险的流式运行。
 
-使用 `previous_response_id` 或 `conversation_id` 的有状态后续请求也会受到更保守的处理。对于这些请求，`network_error()` 或 `http_status([500])` 等非提供方判断条件本身并不足够。重试策略应包含提供方对重放安全性的批准，通常通过 `retry_policies.provider_suggested()` 实现。
+使用 `previous_response_id` 或 `conversation_id` 的有状态后续请求也会以更保守的方式处理。对于这些请求，仅使用 `network_error()` 或 `http_status([500])` 等非提供商判断条件并不足够。重试策略应包含来自提供商的重放安全审批，通常通过 `retry_policies.provider_suggested()` 实现。
 
 ##### Runner 与智能体的合并行为
 
-运行级和智能体级 `ModelSettings` 之间会对 `retry` 进行深度合并：
+Runner 级和智能体级 `ModelSettings` 之间会对 `retry` 进行深度合并：
 
-- 智能体可以仅覆盖 `retry.max_retries`，同时继承 Runner 的 `policy`。
-- 智能体可以仅覆盖 `retry.backoff` 的一部分，同时保留 Runner 中同级的其他退避字段。
+- 智能体可以只覆盖 `retry.max_retries`，同时仍继承 Runner 的 `policy`。
+- 智能体可以只覆盖 `retry.backoff` 的一部分，并保留 Runner 中同级的其他退避字段。
 - `policy` 仅在运行时生效，因此序列化后的 `ModelSettings` 会保留 `max_retries` 和 `backoff`，但省略回调本身。
 
-更完整的代码示例请参阅 [`examples/basic/retry.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry.py) 和[由适配器支持的重试示例](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry_litellm.py)。
+更完整的代码示例请参阅 [`examples/basic/retry.py`](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry.py) 和[基于适配器的重试示例](https://github.com/openai/openai-agents-python/tree/main/examples/basic/retry_litellm.py)。
 
-## 非OpenAI提供方故障排查
+## 非 OpenAI 提供商故障排除
 
-### 追踪客户端错误 401
+### 追踪客户端 401 错误
 
-如果遇到与追踪有关的错误，这是因为追踪数据会上传到OpenAI服务，而你没有OpenAI API 密钥。可以通过以下三种方式解决：
+如果遇到与追踪相关的错误，原因是追踪数据会上传到 OpenAI 服务，而您没有 OpenAI API 密钥。可以通过以下三种方式解决：
 
 1. 完全禁用追踪：[`set_tracing_disabled(True)`][agents.set_tracing_disabled]。
-2. 为追踪设置OpenAI密钥：[`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]。此 API 密钥仅用于上传追踪数据，并且必须来自 [platform.openai.com](https://platform.openai.com/)。
-3. 使用非OpenAI追踪进程。请参阅[追踪文档](../tracing.md#custom-tracing-processors)。
+2. 为追踪设置 OpenAI 密钥：[`set_tracing_export_api_key(...)`][agents.set_tracing_export_api_key]。此 API 密钥仅用于上传追踪数据，且必须来自 [platform.openai.com](https://platform.openai.com/)。
+3. 使用非 OpenAI 追踪进程。请参阅[追踪文档](../tracing.md#custom-tracing-processors)。
 
 ### Responses API 支持
 
-SDK 默认使用 Responses API，但许多其他 LLM 提供方仍不支持它。因此，你可能会看到 404 或类似问题。可以通过以下两种方式解决：
+SDK 默认使用 Responses API，但许多其他 LLM 提供商仍不支持该 API。因此，您可能会遇到 404 或类似问题。可以通过以下两种方式解决：
 
-1. 调用 [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api]。如果通过环境变量设置 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL`，此方法即可生效。
-2. 使用 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]。代码示例请参阅[此处](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)。
+1. 调用 [`set_default_openai_api("chat_completions")`][agents.set_default_openai_api]。如果您通过环境变量设置 `OPENAI_API_KEY` 和 `OPENAI_BASE_URL`，则可使用此方式。
+2. 使用 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel]。[此处](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/)提供了相关代码示例。
 
 ### Chat Completions 兼容性选项
 
-通过 Chat Completions 进行路由时，SDK 会静默丢弃 Chat Completions 无法发送的 Responses 独有字段，从而保持兼容性，例如 `previous_response_id`、`conversation_id`、提示词或并非纯文本的工具输出。如果希望在开发期间遇到这些不匹配时快速失败，请在OpenAI提供方上启用严格功能验证：
+通过 Chat Completions 进行路由时，SDK 会静默丢弃 Chat Completions 无法发送的仅限 Responses 字段，例如 `previous_response_id`、`conversation_id`、提示词或非纯文本工具输出，以保持兼容性。如果希望在开发过程中快速暴露这些不匹配问题，请在 OpenAI 提供商上启用严格功能验证：
 
 ```python
 from agents import Agent, OpenAIProvider, RunConfig, Runner
@@ -14124,7 +14306,7 @@ result = await Runner.run(
 
 如果使用 [`MultiProvider`][agents.MultiProvider]，请改为传入 `openai_strict_feature_validation=True`。
 
-一些OpenAI兼容的 Chat Completions 提供方会以分块形式流式传输工具调用增量，而这些分块不够可靠，无法供 SDK 进行增量处理。在这种情况下，请启用流式传输工具调用缓冲，让 SDK 仅在提供方流结束后生成工具调用：
+某些 OpenAI 兼容的 Chat Completions 提供商会以分块形式流式传输工具调用增量，但这些分块不够可靠，无法由 SDK 进行增量处理。在这种情况下，请启用流式工具调用缓冲，使 SDK 仅在提供商流结束后生成工具调用：
 
 ```python
 from agents import OpenAIProvider
@@ -14139,7 +14321,7 @@ provider = OpenAIProvider(
 
 ### structured outputs 支持
 
-一些模型提供方不支持 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)。这有时会导致类似如下的错误：
+某些模型提供商不支持 [structured outputs](https://platform.openai.com/docs/guides/structured-outputs)。这有时会产生如下错误：
 
 ```
 
@@ -14147,37 +14329,45 @@ BadRequestError: Error code: 400 - {'error': {'message': "'response_format.type'
 
 ```
 
-这是某些模型提供方的局限：它们支持 JSON 输出，但不允许指定输出所使用的 `json_schema`。我们正在修复此问题，但建议依赖支持 JSON Schema 输出的提供方，否则应用经常会因格式错误的 JSON 而中断。
+这是某些模型提供商的不足之处：它们支持 JSON 输出，但不允许您指定用于输出的 `json_schema`。我们正在开发修复方案，但建议依赖支持 JSON Schema 输出的提供商，否则您的应用经常会因 JSON 格式错误而中断。
 
-## 跨提供方混用模型
+## 跨提供商的模型混用
 
-你需要了解不同模型提供方之间的功能差异，否则可能遇到错误。例如，OpenAI支持 structured outputs、多模态输入以及托管式文件检索和网络检索，但许多其他提供方并不支持这些功能。请注意以下限制：
+您需要了解不同模型提供商之间的功能差异，否则可能会遇到错误。例如，OpenAI 支持 structured outputs、多模态输入、托管式文件检索和网络检索，但许多其他提供商不支持这些功能。请注意以下限制：
 
--   不要向无法理解 `tools` 的提供方发送不受支持的 `tools`
+-   不要向无法理解相应 `tools` 的提供商发送不受支持的 `tools`
 -   调用纯文本模型前，请过滤掉多模态输入
--   请注意，不支持结构化 JSON 输出的提供方偶尔会生成无效 JSON。
+-   请注意，不支持结构化 JSON 输出的提供商有时会生成无效 JSON。
 
 ## 第三方适配器
 
-仅当 SDK 的内置提供方集成点无法满足需求时，才应使用第三方适配器。如果只通过此 SDK 使用OpenAI模型，请优先使用内置 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 路径，而不是 Any-LLM 或 LiteLLM。第三方适配器适用于需要将OpenAI模型与非OpenAI提供方结合使用，或需要由适配器管理的提供方覆盖或内置路径无法提供的路由。适配器会在 SDK 和上游模型提供方之间增加一层兼容层，因此功能支持和请求语义可能因提供方而异。目前，SDK 以尽力支持的测试版适配器集成形式提供 Any-LLM 和 LiteLLM。
+只有在 SDK 的内置提供商集成点无法满足需求时，才应使用第三方适配器。如果此 SDK 仅使用 OpenAI 模型，请优先使用内置的 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 路径，而不是 Any-LLM 或 LiteLLM。第三方适配器适用于需要将 OpenAI 模型与非 OpenAI 提供商组合使用，或需要由适配器管理的提供商覆盖范围或内置路径未提供的路由。适配器会在 SDK 与上游模型提供商之间增加一层兼容层，因此不同提供商的功能支持和请求语义可能有所不同。SDK 当前以尽力支持的 Beta 版适配器集成形式包含 Any-LLM 和 LiteLLM。
 
 ### Any-LLM
 
-Any-LLM 支持以尽力支持的测试版形式提供，适用于需要由 Any-LLM 管理的提供方覆盖或路由的情况。
+对于需要由 Any-LLM 管理提供商覆盖范围或路由的情况，我们以尽力支持的 Beta 版形式提供 Any-LLM 支持。
 
-根据上游提供方路径，Any-LLM 可能使用 Responses API、Chat Completions 兼容 API 或提供方特定的兼容层。
+根据上游提供商路径，Any-LLM 可能会使用 Responses API、Chat Completions 兼容 API 或提供商特定的兼容层。
 
-如果需要 Any-LLM，请安装 `openai-agents[any-llm]`，然后从 [`examples/model_providers/any_llm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_auto.py) 或 [`examples/model_providers/any_llm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_provider.py) 开始。可以将 `any-llm/...` 模型名称与 [`MultiProvider`][agents.MultiProvider] 一起使用、直接实例化 `AnyLLMModel`，或在运行作用域使用 `AnyLLMProvider`。如果需要显式固定模型接口，请在构造 `AnyLLMModel` 时传入 `api="responses"` 或 `api="chat_completions"`。
+如果需要 Any-LLM，请安装 `openai-agents[any-llm]`，然后从 [`examples/model_providers/any_llm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_auto.py) 或 [`examples/model_providers/any_llm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/any_llm_provider.py) 开始。您可以通过 [`MultiProvider`][agents.MultiProvider] 使用 `any-llm/...` 模型名称，直接实例化 `AnyLLMModel`，或在运行作用域使用 `AnyLLMProvider`。如果需要显式固定模型接口，请在构造 `AnyLLMModel` 时传入 `api="responses"` 或 `api="chat_completions"`。
 
-Any-LLM 仍然是第三方适配器层，因此提供方依赖项和能力缺口由上游 Any-LLM 而非 SDK 定义。当上游提供方返回用量指标时，这些指标会自动传播，但流式传输 Chat Completions 后端可能需要设置 `ModelSettings(include_usage=True)` 才会生成用量数据块。如果依赖 structured outputs、工具调用、用量报告或 Responses 特定行为，请验证计划部署的具体提供方后端。
+Any-LLM 仍然属于第三方适配器层，因此提供商依赖项和能力缺口由上游 Any-LLM 而非 SDK 定义。当上游提供商返回使用量指标时，这些指标会自动传播，但流式 Chat Completions 后端可能需要设置 `ModelSettings(include_usage=True)` 才会生成使用量数据块。如果您依赖 structured outputs、工具调用、使用量报告或 Responses 特定行为，请验证您计划部署的具体提供商后端。
 
 ### LiteLLM
 
-LiteLLM 支持以尽力支持的测试版形式提供，适用于需要 LiteLLM 特定提供方覆盖或路由的情况。
+对于需要 LiteLLM 特定提供商覆盖范围或路由的情况，我们以尽力支持的 Beta 版形式提供 LiteLLM 支持。
 
-如果需要 LiteLLM，请安装 `openai-agents[litellm]`，然后从 [`examples/model_providers/litellm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_auto.py) 或 [`examples/model_providers/litellm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_provider.py) 开始。可以使用 `litellm/...` 模型名称，或直接实例化 [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel]。
+如果需要 LiteLLM，请安装 `openai-agents[litellm]`，然后从 [`examples/model_providers/litellm_auto.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_auto.py) 或 [`examples/model_providers/litellm_provider.py`](https://github.com/openai/openai-agents-python/tree/main/examples/model_providers/litellm_provider.py) 开始。您可以使用 `litellm/...` 模型名称，也可以直接实例化 [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel]。
 
-一些由 LiteLLM 支持的提供方默认不会填充 SDK 用量指标。如果需要用量报告，请传入 `ModelSettings(include_usage=True)`；如果依赖 structured outputs、工具调用、用量报告或适配器特定的路由行为，请验证计划部署的具体提供方后端。
+某些由 LiteLLM 支持的提供商默认不会填充 SDK 使用量指标。如果需要使用量报告，请传入 `ModelSettings(include_usage=True)`；如果您依赖 structured outputs、工具调用、使用量报告或适配器特定的路由行为，请验证您计划部署的具体提供商后端。
+
+如果 LiteLLM 针对响应对象生成 Pydantic 序列化器警告，可以在导入 LiteLLM 适配器前选择启用 SDK 的兼容性补丁：
+
+```bash
+export OPENAI_AGENTS_ENABLE_LITELLM_SERIALIZER_PATCH=true
+```
+
+该补丁默认禁用，只有值为 `1` 或 `true` 时才会启用。它通过封装 LiteLLM 的私有日志辅助函数来抑制特定类型的 LiteLLM 响应序列化警告，因此应将其视为针对性解决方法，而不是通用序列化设置。由于该补丁依赖 LiteLLM 的私有 API，升级 LiteLLM 时请再次验证；上游警告不再出现后，请移除该环境变量。
 
 ================
 File: docs/zh/models/litellm.md
@@ -14205,48 +14395,48 @@ search:
 ---
 # 实时智能体指南
 
-本指南说明OpenAI Agents SDK的实时层如何映射到OpenAI Realtime API，以及 Python SDK 在其之上添加了哪些额外行为。
+本指南介绍 OpenAI Agents SDK的实时层如何映射到 OpenAI Realtime API，以及 Python SDK 在此基础上增加的行为。
 
 !!! note "从这里开始"
 
-    如果你想使用默认的 Python 路径，请先阅读[快速入门](quickstart.md)。如果你正在决定应用应使用服务端 WebSocket 还是 SIP，请阅读[实时传输](transport.md)。浏览器 WebRTC 传输不属于 Python SDK。
+    如果你希望使用默认的 Python 路径，请先阅读[快速入门](quickstart.md)。如果你正在确定应用应使用服务端 WebSocket 还是 SIP，请阅读[实时传输](transport.md)。浏览器 WebRTC 传输不属于 Python SDK。
 
-## 概览
+## 概述
 
-实时智能体会与Realtime API保持一个长连接，以便模型可以增量处理文本和音频、流式传输音频输出、调用工具，并处理中断，而无需在每一轮都重新发起请求。
+实时智能体会与 Realtime API 保持长期连接，使模型能够增量处理文本和音频、以流式传输方式输出音频、调用工具并处理中断，而无需在每轮对话时重新发起请求。
 
-主要 SDK 组件包括：
+SDK 的主要组件包括：
 
--   **RealtimeAgent**：一个实时专家智能体的 instructions、tools、输出安全防护措施和任务转移
--   **RealtimeRunner**：会话工厂，用于将起始智能体连接到实时传输
--   **RealtimeSession**：实时会话，用于发送输入、接收事件、跟踪历史记录并执行工具
--   **RealtimeModel**：传输抽象层。默认使用OpenAI的服务端 WebSocket 实现。
+-   **RealtimeAgent**：单个实时专家智能体的指令、工具、输出安全防护措施和任务转移
+-   **RealtimeRunner**：将起始智能体连接到实时传输层的会话工厂
+-   **RealtimeSession**：用于发送输入、接收事件、追踪历史记录和执行工具的实时会话
+-   **RealtimeModel**：传输抽象。默认实现是 OpenAI的服务端 WebSocket。
 
 ## 会话生命周期
 
-典型的实时会话如下：
+典型的实时会话流程如下：
 
 1. 创建一个或多个 `RealtimeAgent`。
-2. 使用起始智能体创建一个 `RealtimeRunner`。
-3. 调用 `await runner.run()` 获取一个 `RealtimeSession`。
+2. 使用起始智能体创建 `RealtimeRunner`。
+3. 调用 `await runner.run()` 获取 `RealtimeSession`。
 4. 使用 `async with session:` 或 `await session.enter()` 进入会话。
 5. 使用 `send_message()` 或 `send_audio()` 发送用户输入。
-6. 迭代会话事件，直到对话结束。
+6. 迭代处理会话事件，直到对话结束。
 
-与纯文本运行不同，`runner.run()` 不会立即生成最终结果。它会返回一个实时会话对象，该对象会将本地历史记录、后台工具执行、安全防护措施状态以及活动智能体配置与传输层保持同步。
+与纯文本运行不同，`runner.run()` 不会立即生成最终结果。它会返回一个实时会话对象，使本地历史记录、后台工具执行、安全防护措施状态和当前智能体配置与传输层保持同步。
 
-默认情况下，`RealtimeRunner` 使用 `OpenAIRealtimeWebSocketModel`，因此默认的 Python 路径是到Realtime API的服务端 WebSocket 连接。如果你传入不同的 `RealtimeModel`，相同的会话生命周期和智能体功能仍然适用，而连接机制可以发生变化。
+默认情况下，`RealtimeRunner` 使用 `OpenAIRealtimeWebSocketModel`，因此默认的 Python 路径是通过服务端 WebSocket 连接到 Realtime API。如果传入其他 `RealtimeModel`，仍会使用相同的会话生命周期和智能体功能，但连接机制可以有所不同。
 
-## 智能体和会话配置
+## 智能体与会话配置
 
-`RealtimeAgent` 的范围有意比常规 `Agent` 类型更窄：
+`RealtimeAgent` 的设计范围有意比常规 `Agent` 类型更窄：
 
--   模型选择在会话层级配置，而不是按智能体配置。
--   不支持structured outputs。
--   可以配置音色，但在会话已经生成过语音音频后就不能再更改。
--   instructions、工具调用、任务转移、钩子和输出安全防护措施仍然都可用。
+-   模型选择在会话级别配置，而不是为每个智能体单独配置。
+-   不支持 structured outputs。
+-   可以配置语音，但会话生成口语音频后便无法更改。
+-   指令、工具调用、任务转移、钩子和输出安全防护措施仍然可用。
 
-`RealtimeSessionModelSettings` 同时支持较新的嵌套式 `audio` 配置和较旧的扁平别名。新代码建议优先使用嵌套形式，并为新的实时智能体从 `gpt-realtime-2.1` 开始：
+`RealtimeSessionModelSettings` 同时支持较新的嵌套 `audio` 配置和旧版扁平别名。新代码应优先使用嵌套结构，并为新的实时智能体从 `gpt-realtime-2.1` 开始：
 
 ```python
 runner = RealtimeRunner(
@@ -14268,19 +14458,19 @@ runner = RealtimeRunner(
 )
 ```
 
-有用的会话级设置包括：
+常用的会话级设置包括：
 
--   `audio.input.format`、`audio.output.format`
+-   `audio.input.format`, `audio.output.format`
 -   `audio.input.transcription`
 -   `audio.input.noise_reduction`
 -   `audio.input.turn_detection`
--   `audio.output.voice`、`audio.output.speed`
+-   `audio.output.voice`, `audio.output.speed`
 -   `output_modalities`
 -   `tool_choice`
 -   `prompt`
 -   `tracing`
 
-`RealtimeRunner(config=...)` 上有用的运行级设置包括：
+`RealtimeRunner(config=...)` 中常用的运行级设置包括：
 
 -   `async_tool_calls`
 -   `output_guardrails`
@@ -14292,7 +14482,7 @@ runner = RealtimeRunner(
 
 ## 输入与输出
 
-### 文本和结构化用户消息
+### 文本与结构化用户消息
 
 使用 [`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] 发送纯文本或结构化实时消息。
 
@@ -14312,31 +14502,31 @@ message: RealtimeUserInputMessage = {
 await session.send_message(message)
 ```
 
-结构化消息是在实时对话中包含图像输入的主要方式。[`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py) 中的示例 Web 演示就是以这种方式转发 `input_image` 消息。
+结构化消息是在实时对话中包含图像输入的主要方式。[`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py) 中的 Web 演示示例以这种方式转发 `input_image` 消息。
 
 ### 音频输入
 
-使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio] 流式传输原始音频字节：
+使用 [`session.send_audio()`][agents.realtime.session.RealtimeSession.send_audio] 以流式传输方式发送原始音频字节：
 
 ```python
 await session.send_audio(audio_bytes)
 ```
 
-如果禁用了服务端轮次检测，你需要自行标记轮次边界。高层便捷方法是：
+如果禁用了服务端轮次检测，你需要负责标记轮次边界。高级便捷用法如下：
 
 ```python
 await session.send_audio(audio_bytes, commit=True)
 ```
 
-如果需要更低层级的控制，也可以通过底层模型传输发送原始客户端事件，例如 `input_audio_buffer.commit`。
+如果需要更底层的控制，也可以通过底层模型传输层发送原始客户端事件，例如 `input_audio_buffer.commit`。
 
 ### 手动响应控制
 
-`session.send_message()` 使用高层路径发送用户输入，并为你启动响应。原始音频缓冲并**不会**在所有配置中自动执行同样操作。
+`session.send_message()` 使用高级路径发送用户输入，并为你启动响应。原始音频缓冲在所有配置下**并不会**自动执行相同操作。
 
-在Realtime API层面，手动轮次控制意味着用原始 `session.update` 清除 `turn_detection`，然后自行发送 `input_audio_buffer.commit` 和 `response.create`。
+在 Realtime API 层面，手动轮次控制意味着使用原始 `session.update` 清除 `turn_detection`，然后自行发送 `input_audio_buffer.commit` 和 `response.create`。
 
-如果你正在手动管理轮次，可以通过模型传输发送原始客户端事件：
+如果你要手动管理轮次，可以通过模型传输层发送原始客户端事件：
 
 ```python
 from agents.realtime.model_inputs import RealtimeModelSendRawMessage
@@ -14350,41 +14540,65 @@ await session.model.send_event(
 )
 ```
 
-此模式适用于以下场景：
+此模式适用于以下情况：
 
--   `turn_detection` 已禁用，并且你想自行决定模型应在何时响应
--   你想在触发响应之前检查用户输入或对其进行门控
--   你需要为带外响应使用自定义提示词
+-   已禁用 `turn_detection`，且你希望自行决定模型何时响应
+-   希望在触发响应前检查或限制用户输入
+-   需要为带外响应使用自定义提示词
 
-[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py) 中的 SIP 示例使用原始 `response.create` 来强制发送开场问候。
+[`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py) 中的 SIP 示例使用原始 `response.create` 强制发送开场问候语。
 
-## 事件、历史记录和中断
+## 事件、历史记录与中断
 
-`RealtimeSession` 会发出更高层级的 SDK 事件，同时在需要时仍会转发原始模型事件。
+`RealtimeSession` 会发出更高级的 SDK 事件，同时在需要时仍会转发原始模型事件。
 
 重要的会话事件包括：
 
--   `audio`、`audio_end`、`audio_interrupted`
--   `agent_start`、`agent_end`
--   `tool_start`、`tool_end`、`tool_approval_required`
+-   `audio`, `audio_end`, `audio_interrupted`
+-   `agent_start`, `agent_end`
+-   `tool_start`, `tool_end`, `tool_approval_required`
 -   `handoff`
--   `history_added`、`history_updated`
+-   `history_added`, `history_updated`
 -   `guardrail_tripped`
 -   `input_audio_timeout_triggered`
 -   `error`
 -   `raw_model_event`
 
-对 UI 状态最有用的事件通常是 `history_added` 和 `history_updated`。它们会以 `RealtimeItem` 对象形式公开会话的本地历史记录，包括用户消息、助手消息和工具调用。
+对 UI 状态最有用的事件通常是 `history_added` 和 `history_updated`。它们会以 `RealtimeItem` 对象形式公开会话的本地历史记录，其中包括用户消息、助手消息和工具调用。
 
-### 中断和播放跟踪
+### 用量统计
+
+当已完成的模型响应包含用量信息时，OpenAI实时模型会在 `raw_model_event` 中发出 [`RealtimeModelUsageEvent`][agents.realtime.model_events.RealtimeModelUsageEvent]。其 `usage` 字段包含该响应的 token 数量，而 `input_tokens_details` 和 `output_tokens_details` 提供可选的模态细分数据。
+
+会话还会将每个响应的用量添加到共享的 [`RunContextWrapper.usage`][agents.run_context.RunContextWrapper.usage] 中。可在后续的高级事件（例如 `agent_end`）中通过 `event.info.context.usage` 读取它，以查看实时会话的累计用量。
+
+```python
+from agents.realtime import RealtimeModelUsageEvent
+
+async for event in session:
+    if event.type == "raw_model_event" and isinstance(
+        event.data, RealtimeModelUsageEvent
+    ):
+        response_usage = event.data.usage
+        print("Response tokens:", response_usage.total_tokens)
+        print("Input modalities:", event.data.input_tokens_details)
+        print("Output modalities:", event.data.output_tokens_details)
+    elif event.type == "agent_end":
+        session_usage = event.info.context.usage
+        print("Session tokens:", session_usage.total_tokens)
+```
+
+仅当模型提供方在已完成的响应中包含用量信息时，才会报告用量。累计值涵盖该 `RealtimeSession` 收到的响应，并非跨会话总计。
+
+### 中断与播放追踪
 
 当用户打断助手时，会话会发出 `audio_interrupted` 并更新历史记录，使服务端对话与用户实际听到的内容保持一致。
 
-在低延迟本地播放中，默认播放跟踪器通常已经足够。在远程或延迟播放场景中，尤其是电话通信，请使用 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]，以便中断截断基于实际播放进度，而不是假设所有已生成音频都已经被听到。
+对于低延迟本地播放，默认播放追踪器通常已足够。在远程或延迟播放场景中，尤其是电话场景，应使用 [`RealtimePlaybackTracker`][agents.realtime.model.RealtimePlaybackTracker]，使中断截断基于实际播放进度，而不是假设所有已生成的音频都已播放给用户。
 
 [`examples/realtime/twilio/twilio_handler.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio/twilio_handler.py) 中的 Twilio 示例展示了此模式。
 
-## 工具、审批、任务转移和安全防护措施
+## 工具、审批、任务转移与安全防护措施
 
 ### 工具调用
 
@@ -14409,9 +14623,9 @@ agent = RealtimeAgent(
 
 ### 工具审批
 
-工具调用可以要求在执行前获得人工审批。发生这种情况时，会话会发出 `tool_approval_required`，并暂停工具运行，直到你调用 `approve_tool_call()` 或 `reject_tool_call()`。
+工具调用可以要求在执行前进行人工审批。发生这种情况时，会话会发出 `tool_approval_required`，并暂停工具运行，直到你调用 `approve_tool_call()` 或 `reject_tool_call()`。
 
-如果该工具还具有输入安全防护措施，这些安全防护措施会在审批通过后、执行前立即运行。若要在发出审批事件之前运行它们，请使用 `RealtimeRunner(..., config={"tool_execution": {"pre_approval_tool_input_guardrails": True}})` 创建 runner。通过此预审批检查的调用，在审批后、执行前仍会再次检查。
+如果工具还具有输入安全防护措施，则这些安全防护措施会在审批后、执行前立即运行。若要在发出审批事件之前运行它们，请使用 `RealtimeRunner(..., config={"tool_execution": {"pre_approval_tool_input_guardrails": True}})` 创建运行器。通过该预审批检查的调用仍会在审批后、执行前再次接受检查。
 
 ```python
 async for event in session:
@@ -14419,11 +14633,11 @@ async for event in session:
         await session.approve_tool_call(event.call_id)
 ```
 
-有关具体的服务端审批循环，请参阅 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)。人在环路文档也会在[人在环路](../human_in_the_loop.md)中回指此流程。
+有关具体的服务端审批循环，请参阅 [`examples/realtime/app/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app/server.py)。[人工介入](../human_in_the_loop.md)文档也介绍了此流程。
 
 ### 任务转移
 
-实时任务转移让一个智能体可以将实时对话转移给另一位专家：
+实时任务转移允许一个智能体将实时对话转交给另一个专家智能体：
 
 ```python
 from agents.realtime import RealtimeAgent, realtime_handoff
@@ -14445,11 +14659,11 @@ main_agent = RealtimeAgent(
 )
 ```
 
-裸 `RealtimeAgent` 任务转移会被自动包装，而 `realtime_handoff(...)` 可用于自定义名称、描述、验证、回调和可用性。实时任务转移不支持常规任务转移的 `input_filter`。
+直接使用的 `RealtimeAgent` 任务转移会被自动封装，而 `realtime_handoff(...)` 允许你自定义名称、描述、验证、回调和可用性。实时任务转移**不**支持常规任务转移的 `input_filter`。
 
 ### 安全防护措施
 
-实时智能体支持针对智能体响应的输出安全防护措施，以及针对工具调用的输入安全防护措施。输出安全防护措施在经过防抖的转写累积文本上运行，而不是在每个部分 token 上运行，并且它们会发出 `guardrail_tripped`，而不是抛出异常。
+实时智能体支持对智能体响应使用输出安全防护措施，并支持对工具调用使用输入安全防护措施。输出安全防护措施基于经过防抖处理的转录文本累积结果运行，而不是针对每个部分 token 运行；触发时会发出 `guardrail_tripped`，而不是引发异常。
 
 ```python
 from agents.guardrail import GuardrailFunctionOutput, OutputGuardrail
@@ -14469,13 +14683,13 @@ agent = RealtimeAgent(
 )
 ```
 
-当实时输出安全防护措施触发时，会话会中断活动响应，强制执行 `response.cancel`，发出 `guardrail_tripped`，并发送一条后续用户消息，指明被触发的安全防护措施，以便模型生成替代响应。你的音频播放器仍应监听 `audio_interrupted` 并立即停止本地播放，因为安全防护措施是在经过防抖的转写文本上运行的，触发条件触发时可能已有部分音频被缓冲。
+当实时输出安全防护措施被触发时，会话会中断当前响应，强制执行 `response.cancel`，发出 `guardrail_tripped`，并发送一条后续用户消息，其中包含被触发的安全防护措施名称，以便模型生成替代响应。你的音频播放器仍应监听 `audio_interrupted` 并立即停止本地播放，因为安全防护措施基于经过防抖处理的转录文本运行，触发机制生效时可能已有部分音频进入缓冲区。
 
-## SIP 和电话通信
+## SIP 与电话
 
-Python SDK 通过 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 提供一等的 SIP 附加流程。
+Python SDK 通过 [`OpenAIRealtimeSIPModel`][agents.realtime.openai_realtime.OpenAIRealtimeSIPModel] 提供一流的 SIP 挂接流程。
 
-当呼叫通过 Realtime Calls API 到达，并且你想将智能体会话附加到生成的 `call_id` 时，请使用它：
+当呼叫通过 Realtime Calls API 到达，且你希望将智能体会话挂接到生成的 `call_id` 时，请使用此流程：
 
 ```python
 from agents.realtime import RealtimeRunner
@@ -14492,18 +14706,18 @@ async with await runner.run(
         ...
 ```
 
-如果你需要先接受呼叫，并希望接受载荷与从智能体派生出的会话配置相匹配，请使用 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`。完整流程展示在 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py) 中。
+如果需要先接听呼叫，并希望接听载荷与基于智能体生成的会话配置保持一致，请使用 `OpenAIRealtimeSIPModel.build_initial_session_payload(...)`。完整流程可参阅 [`examples/realtime/twilio_sip/server.py`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip/server.py)。
 
-## 低层访问和自定义端点
+## 底层访问与自定义端点
 
-你可以通过 `session.model` 访问底层传输对象。
+可以通过 `session.model` 访问底层传输对象。
 
-在以下情况下使用它：
+以下情况需要使用此对象：
 
--   通过 `session.model.add_listener(...)` 使用自定义监听器
--   使用原始客户端事件，例如 `response.create` 或 `session.update`
--   通过 `model_config` 处理自定义 `url`、`headers` 或 `api_key`
--   将 `call_id` 附加到现有实时通话
+-   通过 `session.model.add_listener(...)` 添加自定义监听器
+-   发送原始客户端事件，例如 `response.create` 或 `session.update`
+-   通过 `model_config` 自定义 `url`、`headers` 或 `api_key` 处理
+-   使用 `call_id` 挂接到现有实时呼叫
 
 `RealtimeModelConfig` 支持：
 
@@ -14514,9 +14728,9 @@ async with await runner.run(
 -   `playback_tracker`
 -   `call_id`
 
-本仓库随附的 `call_id` 示例是 SIP。更广泛的Realtime API也会在某些服务端控制流中使用 `call_id`，但这里没有将这些流程打包为 Python 代码示例。
+此代码仓库提供的 `call_id` 示例使用 SIP。更广泛的 Realtime API 也会在某些服务端控制流程中使用 `call_id`，但此处未将这些流程打包为 Python 示例。
 
-连接到Azure OpenAI时，请传入 GA Realtime 端点 URL 和显式 headers。例如：
+连接 Azure OpenAI 时，请传入正式发布版（GA）的 Realtime 端点 URL 和显式请求头。例如：
 
 ```python
 session = await runner.run(
@@ -14538,14 +14752,14 @@ session = await runner.run(
 )
 ```
 
-如果传入 `headers`，SDK 不会自动添加 `Authorization`。在实时智能体中避免使用旧版 beta 路径（`/openai/realtime?api-version=...`）。
+如果传入 `headers`，SDK 不会自动添加 `Authorization`。使用实时智能体时，应避免使用旧版 beta 路径（`/openai/realtime?api-version=...`）。
 
-## 更多阅读
+## 延伸阅读
 
 -   [实时传输](transport.md)
 -   [快速入门](quickstart.md)
--   [OpenAI Realtime 对话](https://developers.openai.com/api/docs/guides/realtime-conversations/)
--   [OpenAI Realtime 服务端控制](https://developers.openai.com/api/docs/guides/realtime-server-controls/)
+-   [OpenAI实时对话](https://developers.openai.com/api/docs/guides/realtime-conversations/)
+-   [OpenAI实时服务端控制](https://developers.openai.com/api/docs/guides/realtime-server-controls/)
 -   [`examples/realtime`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime)
 
 ================
@@ -14719,76 +14933,108 @@ search:
 ---
 # 实时传输
 
-使用本页判断实时智能体如何适配你的 Python 应用程序。
+本页帮助您确定如何将实时智能体集成到 Python 应用中。
 
 !!! note "Python SDK 边界"
 
-    Python SDK **不**包含浏览器 WebRTC 传输。本页仅讨论 Python SDK 的传输选择：服务端 WebSocket 和 SIP 接入流程。浏览器 WebRTC 是一个单独的平台主题，记录在官方 [Realtime API with WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 指南中。
+    Python SDK **不**包含浏览器 WebRTC 传输。本页仅介绍 Python SDK 的传输方式：服务端 WebSocket 和 SIP 接入流程。浏览器 WebRTC 属于单独的平台主题，详见官方[Realtime API 与 WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc/)指南。
 
 ## 决策指南
 
-| 目标 | 从这里开始 | 原因 |
+| 目标 | 入门文档 | 原因 |
 | --- | --- | --- |
-| 构建由服务端管理的实时应用 | [快速入门](quickstart.md) | 默认的 Python 路径是由 `RealtimeRunner` 管理的服务端 WebSocket 会话。 |
-| 了解应选择哪种传输和部署形态 | 本页 | 在确定传输或部署形态之前使用本页。 |
-| 将智能体接入电话或 SIP 通话 | [实时指南](guide.md) 和 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) | 该仓库提供了由 `call_id` 驱动的 SIP 接入流程。 |
+| 构建由服务端管理的实时应用 | [快速入门](quickstart.md) | Python 的默认路径是由 `RealtimeRunner` 管理的服务端 WebSocket 会话。 |
+| 了解应选择的传输方式和部署架构 | 本页 | 在确定传输方式或部署架构之前，请先阅读本页。 |
+| 将智能体接入电话或 SIP 通话 | [实时指南](guide.md)和[`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) | 代码仓库提供了由 `call_id` 驱动的 SIP 接入流程。 |
 
-## 默认 Python 路径：服务端 WebSocket
+## 服务端 WebSocket：Python 的默认路径
 
-除非你传入自定义 `RealtimeModel`，否则 `RealtimeRunner` 会使用 `OpenAIRealtimeWebSocketModel`。
+除非传入自定义 `RealtimeModel`，否则 `RealtimeRunner` 会使用 `OpenAIRealtimeWebSocketModel`。
 
-这意味着标准 Python 拓扑如下：
+这意味着标准 Python 拓扑结构如下：
 
-1. 你的 Python 服务创建一个 `RealtimeRunner`。
+1. 您的 Python 服务创建一个 `RealtimeRunner`。
 2. `await runner.run()` 返回一个 `RealtimeSession`。
 3. 进入会话并发送文本、结构化消息或音频。
-4. 消费 `RealtimeSessionEvent` 项，并将音频或转录文本转发到你的应用程序。
+4. 使用 `RealtimeSessionEvent` 项，并将音频或转录文本转发到您的应用。
 
-这是核心演示应用、CLI 示例和 Twilio Media Streams 示例所使用的拓扑：
+核心演示应用、CLI 代码示例和 Twilio Media Streams 代码示例均使用此拓扑结构：
 
--   [`examples/realtime/app`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app)
--   [`examples/realtime/cli`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/cli)
--   [`examples/realtime/twilio`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio)
+- [`examples/realtime/app`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/app)
+- [`examples/realtime/cli`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/cli)
+- [`examples/realtime/twilio`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio)
 
-当你的服务负责音频管道、工具执行、审批流程和历史记录处理时，请使用此路径。
+当您的服务负责音频管线、工具执行、审批流程和历史记录处理时，请使用此路径。
 
-## 电话路径：SIP 接入
+### 底层 WebSocket 调优
 
-对于此仓库中记录的电话流程，Python SDK 会通过 `call_id` 接入现有的实时通话。
+如需调整底层服务端 WebSocket 连接，请将 `transport_config` 传递给 `OpenAIRealtimeWebSocketModel`：
 
-该拓扑如下：
+```python
+from agents.realtime import (
+    OpenAIRealtimeWebSocketModel,
+    RealtimeAgent,
+    RealtimeRunner,
+)
 
-1. OpenAI 向你的服务发送一个 webhook，例如 `realtime.call.incoming`。
-2. 你的服务通过 Realtime Calls API 接受该通话。
-3. 你的 Python 服务启动一个 `RealtimeRunner(..., model=OpenAIRealtimeSIPModel())`。
-4. 会话使用 `model_config={"call_id": ...}` 连接，然后像任何其他实时会话一样处理事件。
+agent = RealtimeAgent(name="Assistant")
+model = OpenAIRealtimeWebSocketModel(
+    transport_config={
+        "ping_interval": 20.0,
+        "ping_timeout": 60.0,
+        "handshake_timeout": 30.0,
+        "max_size": 8 * 1024 * 1024,
+    }
+)
+runner = RealtimeRunner(starting_agent=agent, model=model)
+```
 
-这是 [`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) 中展示的拓扑。
+支持的选项包括：
 
-更广泛的 Realtime API 也会在一些服务端控制模式中使用 `call_id`，但此仓库提供的接入示例是 SIP。
+- `ping_interval`：客户端保活 ping 之间的秒数。设置为 `None` 可禁用 ping。
+- `ping_timeout`：断开连接前等待 pong 的秒数。设置为 `None` 可容忍 pong 延迟，而不会触发心跳超时。
+- `handshake_timeout`：等待初始连接握手的秒数。
+- `max_size`：传入 WebSocket 消息的最大字节数。SDK 默认值为 `None`，即不限制传入消息的大小；如需限制单条消息的内存用量，请设置明确的上限。
 
-## 本 SDK 范围之外的浏览器 WebRTC
+这些设置用于配置客户端连接，而不是 Realtime API 会话。对于端点、身份验证、通话接入和播放设置，请继续使用 `RealtimeModelConfig`。
 
-如果你的应用的主要客户端是使用 Realtime WebRTC 的浏览器：
+## SIP 接入：电话通信路径
 
--   将其视为不在此仓库的 Python SDK 文档范围内。
--   使用官方 [Realtime API with WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc/) 和 [实时对话](https://developers.openai.com/api/docs/guides/realtime-conversations/)文档，了解客户端流程和事件模型。
--   如果你需要在浏览器 WebRTC 客户端之上使用旁路服务端连接，请使用官方 [Realtime server-side controls](https://developers.openai.com/api/docs/guides/realtime-server-controls/) 指南。
--   不要期望此仓库提供浏览器端 `RTCPeerConnection` 抽象或现成的浏览器 WebRTC 示例。
+对于此代码仓库中记录的电话通信流程，Python SDK 会通过 `call_id` 接入现有的实时通话。
 
-此仓库目前也未提供浏览器 WebRTC 加 Python 旁路服务端示例。
+此拓扑结构如下：
 
-## 自定义端点和接入点
+1. OpenAI 向您的服务发送 `realtime.call.incoming` 等 webhook。
+2. 您的服务通过 Realtime Calls API 接听通话。
+3. 您的 Python 服务启动 `RealtimeRunner(..., model=OpenAIRealtimeSIPModel())`。
+4. 会话使用 `model_config={"call_id": ...}` 建立连接，随后像其他实时会话一样处理事件。
 
-[`RealtimeModelConfig`][agents.realtime.model.RealtimeModelConfig] 中的传输配置界面允许你调整默认路径：
+[`examples/realtime/twilio_sip`](https://github.com/openai/openai-agents-python/tree/main/examples/realtime/twilio_sip) 展示了此拓扑结构。
 
--   `url`：覆盖 WebSocket 端点
--   `headers`：提供显式标头，例如 Azure 身份验证标头
--   `api_key`：直接传入 API key，或通过回调传入
--   `call_id`：接入现有实时通话。在此仓库中，记录的示例是 SIP。
--   `playback_tracker`：报告实际播放进度，以便处理中断
+更广泛的 Realtime API 也会在某些服务端控制模式中使用 `call_id`，但此代码仓库提供的接入代码示例采用 SIP。
 
-选择拓扑后，请参阅[实时智能体指南](guide.md)，了解详细生命周期和能力界面。
+## SDK 范围之外的浏览器 WebRTC
+
+如果应用的主要客户端是使用实时 WebRTC 的浏览器：
+
+- 应将其视为超出此代码仓库中 Python SDK 文档的范围。
+- 客户端流程和事件模型请参阅官方[Realtime API 与 WebRTC](https://developers.openai.com/api/docs/guides/realtime-webrtc/)和[实时对话](https://developers.openai.com/api/docs/guides/realtime-conversations/)文档。
+- 如果需要在浏览器 WebRTC 客户端之外建立旁路服务端连接，请参阅官方[实时服务端控制](https://developers.openai.com/api/docs/guides/realtime-server-controls/)指南。
+- 不应期望此代码仓库提供浏览器端 `RTCPeerConnection` 抽象或现成的浏览器 WebRTC 代码示例。
+
+此代码仓库目前也未提供浏览器 WebRTC 与 Python 旁路连接组合使用的代码示例。
+
+## 自定义端点与接入点
+
+[`RealtimeModelConfig`][agents.realtime.model.RealtimeModelConfig] 中的传输配置选项可用于调整默认路径：
+
+- `url`：覆盖 WebSocket 端点
+- `headers`：提供明确的标头，例如 Azure 身份验证标头
+- `api_key`：直接传入 API 密钥或通过回调传入
+- `call_id`：接入现有的实时通话。此代码仓库中记录的代码示例采用 SIP。
+- `playback_tracker`：报告实际播放进度，以便处理中断
+
+选择拓扑结构后，请参阅[实时智能体指南](guide.md)，了解详细的生命周期和功能范围。
 
 ================
 File: docs/zh/sandbox/clients.md
@@ -15014,7 +15260,7 @@ flowchart LR
 
 ## 沙盒客户端的选择
 
-本地开发可从 `UnixLocalSandboxClient` 开始。当需要容器隔离或镜像一致性时，请改用 `DockerSandboxClient`。当需要由提供商管理执行时，请改用托管提供商。
+在 macOS 或 Linux 上进行本地开发时，首先使用 `UnixLocalSandboxClient`。在 Windows 上，请改用 `DockerSandboxClient` 或托管提供商。在任何受支持的平台上，当需要容器隔离或镜像一致性时，请改用 `DockerSandboxClient`；当需要由提供商管理执行环境时，请改用托管提供商。
 
 大多数情况下，`SandboxAgent` 定义保持不变，只需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端及其选项。有关本地、Docker、托管和远程挂载选项，请参阅[沙盒客户端](clients.md)。
 
@@ -16496,19 +16742,19 @@ search:
 ---
 # SQLAlchemy 会话
 
-`SQLAlchemySession` 使用 SQLAlchemy 提供生产就绪的会话实现，使你可以使用 SQLAlchemy 支持的任何数据库（PostgreSQL、MySQL、SQLite 等）进行会话存储。
+`SQLAlchemySession` 使用 SQLAlchemy 提供可用于生产环境的会话实现，让你可以使用 SQLAlchemy 支持的任何数据库（PostgreSQL、MySQL、SQLite 等）存储会话。
 
 ## 安装
 
-SQLAlchemy 会话需要 `sqlalchemy` 额外依赖：
+SQLAlchemy 会话需要安装 `sqlalchemy` 可选依赖：
 
 ```bash
 pip install openai-agents[sqlalchemy]
 ```
 
-## 快速开始
+## 快速入门
 
-### 使用数据库 URL
+### 数据库 URL 的使用
 
 最简单的入门方式：
 
@@ -16534,9 +16780,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### 使用现有引擎
+### 现有引擎的使用
 
-适用于已有 SQLAlchemy 引擎的应用：
+对于已有 SQLAlchemy 引擎的应用程序：
 
 ```python
 import asyncio
@@ -16564,6 +16810,23 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+## 非 ASCII 文本的存储
+
+默认情况下，`SQLAlchemySession` 在将会话项序列化为 JSON 时会转义非 ASCII 字符。这样既能保留原有的存储格式，也能在加载会话项时无损还原原始文本。
+
+如果希望多语言文本在存储的 JSON 中保持可读，请设置 `ensure_ascii=False`：
+
+```python
+session = SQLAlchemySession.from_url(
+    "user-123",
+    url="sqlite+aiosqlite:///conversations.db",
+    create_tables=True,
+    ensure_ascii=False,
+)
+```
+
+使用现有引擎时，也可以将相同的选项直接传递给 `SQLAlchemySession(...)`。此设置仅会更改数据库中存储的 JSON 表示形式，不会更改会话方法返回的值。
 
 
 ## API 参考
@@ -16889,49 +17152,49 @@ search:
 ---
 # 智能体
 
-智能体是应用中的核心构建块。智能体是一个大语言模型（LLM），配置了指令、工具以及任务转移、安全防护措施和structured outputs等可选运行时行为。
+智能体是应用中的核心构建模块。智能体是一个配置了指令、工具以及任务转移、安全防护措施和structured outputs等可选运行时行为的大语言模型（LLM）。
 
-当你需要定义或自定义单个普通 `Agent` 时，请使用本页面。如果你正在确定多个智能体应如何协作，请阅读[智能体编排](multi_agent.md)。如果智能体需要在隔离的工作区中运行，并使用由清单定义的文件和沙箱原生能力，请阅读[沙箱智能体概念](sandbox/guide.md)。
+当你需要定义或自定义单个普通`Agent`时，请使用本页面。如果你正在考虑多个智能体应如何协作，请阅读[智能体编排](multi_agent.md)。如果智能体应在具有清单定义文件和沙箱原生能力的隔离工作区中运行，请阅读[沙箱智能体概念](sandbox/guide.md)。
 
-对于OpenAI模型，SDK默认使用 Responses API，但这里的区别在于编排方式：`Agent` 与 `Runner` 相结合后，SDK可以为你管理轮次、工具、安全防护措施、任务转移和会话。如果你希望自行控制该循环，请直接使用 Responses API。
+对于OpenAI模型，SDK默认使用Responses API，但这里的区别在于编排：`Agent`与`Runner`让SDK为你管理轮次、工具、安全防护措施、任务转移和会话。如果你想自行控制该循环，请改为直接使用Responses API。
 
 ## 后续指南选择
 
-将本页面作为智能体定义的入口。根据你接下来需要做出的决策，前往相应的关联指南。
+将本页面用作智能体定义的入口。根据你接下来需要作出的决策，前往相应的邻近指南。
 
 | 如果你想要…… | 接下来阅读 |
 | --- | --- |
 | 选择模型或提供商配置 | [模型](models/index.md) |
 | 为智能体添加能力 | [工具](tools.md) |
-| 让智能体在真实代码仓库、文档集合或隔离工作区中运行 | [沙箱智能体快速入门](sandbox_agents.md) |
-| 在管理器式编排与任务转移之间进行选择 | [智能体编排](multi_agent.md) |
+| 让智能体针对真实代码仓库、文档包或隔离工作区运行 | [沙箱智能体快速入门](sandbox_agents.md) |
+| 在管理器式编排与任务转移之间作出选择 | [智能体编排](multi_agent.md) |
 | 配置任务转移行为 | [任务转移](handoffs.md) |
-| 运行轮次、以流式传输事件或管理对话状态 | [运行智能体](running_agents.md) |
+| 运行轮次、流式传输事件或管理会话状态 | [运行智能体](running_agents.md) |
 | 检查最终输出、运行项或可恢复状态 | [结果](results.md) |
 | 共享本地依赖项和运行时状态 | [上下文管理](context.md) |
 
-## 基本配置
+## 基础配置
 
-智能体最常用的属性包括：
+智能体最常见的属性包括：
 
 | 属性 | 必需 | 描述 |
 | --- | --- | --- |
-| `name` | 是 | 易于理解的智能体名称。 |
+| `name` | 是 | 人类可读的智能体名称。 |
 | `instructions` | 否 | 系统提示词或动态指令回调。强烈建议设置。请参阅[动态指令](#dynamic-instructions)。 |
-| `prompt` | 否 | OpenAI Responses API 提示词配置。接受静态提示词对象或函数。请参阅[提示词模板](#prompt-templates)。 |
-| `handoff_description` | 否 | 当此智能体作为任务转移目标提供时显示的简短描述。 |
-| `handoffs` | 否 | 将对话委派给专业智能体。请参阅[任务转移](handoffs.md)。 |
+| `prompt` | 否 | OpenAI Responses API提示词配置。接受静态提示词对象或函数。请参阅[提示词模板](#prompt-templates)。 |
+| `handoff_description` | 否 | 当此智能体作为任务转移目标提供时公开的简短描述。 |
+| `handoffs` | 否 | 将会话委派给专业智能体。请参阅[任务转移](handoffs.md)。 |
 | `model` | 否 | 要使用的LLM。请参阅[模型](models/index.md)。 |
-| `model_settings` | 否 | 模型调优参数，例如 `temperature`、`top_p` 和 `tool_choice`。 |
+| `model_settings` | 否 | 模型调优参数，例如`temperature`、`top_p`和`tool_choice`。 |
 | `tools` | 否 | 智能体可以调用的工具。请参阅[工具](tools.md)。 |
-| `mcp_servers` | 否 | 面向智能体、由MCP支持的工具。请参阅[MCP指南](mcp.md)。 |
-| `mcp_config` | 否 | 微调MCP工具的准备方式，例如严格架构转换和MCP故障格式化。请参阅[MCP指南](mcp.md#agent-level-mcp-configuration)。 |
-| `input_guardrails` | 否 | 在此智能体链的首个用户输入上运行的安全防护措施。请参阅[安全防护措施](guardrails.md)。 |
-| `output_guardrails` | 否 | 在此智能体的最终输出上运行的安全防护措施。请参阅[安全防护措施](guardrails.md)。 |
-| `output_type` | 否 | 使用结构化输出类型，而非纯文本。请参阅[输出类型](#output-types)。 |
-| `hooks` | 否 | 智能体范围内的生命周期回调。请参阅[生命周期事件（钩子）](#lifecycle-events-hooks)。 |
+| `mcp_servers` | 否 | 由MCP支持的智能体工具。请参阅[MCP指南](mcp.md)。 |
+| `mcp_config` | 否 | 微调MCP工具的准备方式，例如严格模式转换和MCP失败格式。请参阅[MCP指南](mcp.md#agent-level-mcp-configuration)。 |
+| `input_guardrails` | 否 | 针对此智能体链的首个用户输入运行的安全防护措施。请参阅[安全防护措施](guardrails.md)。 |
+| `output_guardrails` | 否 | 针对此智能体最终输出运行的安全防护措施。请参阅[安全防护措施](guardrails.md)。 |
+| `output_type` | 否 | 使用结构化输出类型，而不是纯文本。请参阅[输出类型](#output-types)。 |
+| `hooks` | 否 | 智能体作用域的生命周期回调。请参阅[生命周期事件（钩子）](#lifecycle-events-hooks)。 |
 | `tool_use_behavior` | 否 | 控制工具结果是返回模型继续处理，还是结束运行。请参阅[工具使用行为](#tool-use-behavior)。 |
-| `reset_tool_choice` | 否 | 在工具调用后重置 `tool_choice`（默认值：`True`），以避免工具使用循环。请参阅[强制使用工具](#forcing-tool-use)。 |
+| `reset_tool_choice` | 否 | 在工具调用后重置`tool_choice`（默认值：`True`），以避免工具使用循环。请参阅[强制使用工具](#forcing-tool-use)。 |
 
 ```python
 from agents import Agent, ModelSettings, function_tool
@@ -16949,23 +17212,23 @@ agent = Agent(
 )
 ```
 
-本节中的所有内容都适用于 `Agent`。`SandboxAgent` 以相同理念为基础，并添加了 `default_manifest`、`base_instructions`、`capabilities` 和 `run_as`，用于工作区范围内的运行。请参阅[沙箱智能体概念](sandbox/guide.md)。
+本节中的所有内容都适用于`Agent`。`SandboxAgent`基于相同理念构建，并额外提供`default_manifest`、`base_instructions`、`capabilities`和`run_as`，用于限定在工作区范围内的运行。请参阅[沙箱智能体概念](sandbox/guide.md)。
 
 ## 提示词模板
 
-你可以通过设置 `prompt` 来引用在OpenAI平台中创建的提示词模板。该功能适用于使用 Responses API 的OpenAI模型。
+你可以通过设置`prompt`引用在OpenAI平台中创建的提示词模板。此功能适用于通过Responses API使用OpenAI模型的情况。
 
-要使用此功能，请：
+请按以下步骤使用：
 
 1. 前往 https://platform.openai.com/playground/prompts
-2. 创建一个新的提示词变量 `poem_style`。
-3. 创建一个包含以下内容的系统提示词：
+2. 创建一个新的提示词变量`poem_style`。
+3. 创建包含以下内容的系统提示词：
 
     ```
     Write a poem in {{poem_style}}
     ```
 
-4. 使用 `--prompt-id` 标志运行代码示例。
+4. 使用`--prompt-id`标志运行代码示例。
 
 ```python
 from agents import Agent
@@ -16980,7 +17243,7 @@ agent = Agent(
 )
 ```
 
-你也可以在运行时动态生成提示词：
+你还可以在运行时动态生成提示词：
 
 ```python
 from dataclasses import dataclass
@@ -17012,19 +17275,26 @@ result = await Runner.run(
 
 ## 上下文
 
-智能体的 `context` 类型是泛型。上下文是一种依赖注入工具：它是你创建并传递给 `Runner.run()` 的对象，会传递给每个智能体、工具、任务转移等，并作为智能体运行所需依赖项和状态的汇集容器。你可以将任何 Python 对象作为上下文提供。
+智能体的`context`类型支持泛型。上下文是一种依赖注入工具：它是你创建并传递给`Runner.run()`的对象，会被传递给每个智能体、工具、任务转移等，并作为智能体运行所需依赖项和状态的集合。你可以提供任意Python对象作为上下文。
 
-请阅读[上下文指南](context.md)，了解完整的 `RunContextWrapper` 接口、共享用量追踪、嵌套的 `tool_input` 以及序列化注意事项。
+请阅读[上下文指南](context.md)，了解完整的`RunContextWrapper`接口、共享用量跟踪、嵌套的`tool_input`以及序列化注意事项。
 
 ```python
+from dataclasses import dataclass
+
+@dataclass
+class Purchase:
+    id: str
+
 @dataclass
 class UserContext:
     name: str
     uid: str
     is_pro_user: bool
 
-    async def fetch_purchases() -> list[Purchase]:
-        return ...
+    async def fetch_purchases(self) -> list[Purchase]:
+        # implement your logic here
+        return []
 
 agent = Agent[UserContext](
     ...,
@@ -17033,7 +17303,7 @@ agent = Agent[UserContext](
 
 ## 输出类型
 
-默认情况下，智能体生成纯文本（即 `str`）输出。如果你希望智能体生成特定类型的输出，可以使用 `output_type` 参数。常见选择是使用 [Pydantic](https://docs.pydantic.dev/) 对象，但我们支持任何能够封装在 Pydantic [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/) 中的类型，例如数据类、列表、TypedDict 等。
+默认情况下，智能体生成纯文本（即`str`）输出。如果你希望智能体生成特定类型的输出，可以使用`output_type`参数。常见做法是使用[Pydantic](https://docs.pydantic.dev/)对象，但我们支持能够封装在Pydantic [TypeAdapter](https://docs.pydantic.dev/latest/api/type_adapter/)中的任何类型，包括数据类、列表、TypedDict等。
 
 ```python
 from pydantic import BaseModel
@@ -17054,20 +17324,20 @@ agent = Agent(
 
 !!! note
 
-    传入 `output_type` 时，即表示让模型使用[structured outputs](https://platform.openai.com/docs/guides/structured-outputs)，而不是常规的纯文本响应。
+    传入`output_type`会指示模型使用[structured outputs](https://platform.openai.com/docs/guides/structured-outputs)，而不是常规纯文本响应。
 
 ## 多智能体系统设计模式
 
-多智能体系统有很多设计方式，但我们通常会看到两种具有广泛适用性的模式：
+多智能体系统有许多设计方式，但我们通常会看到两种广泛适用的模式：
 
-1. 管理器（agents as tools）：中央管理器/编排器将专业子智能体作为工具调用，并保留对话的控制权。
-2. 任务转移：对等智能体将控制权转移给专业智能体，由其接管对话。这是一种去中心化模式。
+1. 管理器（agents as tools）：中央管理器/编排器将专业子智能体作为工具调用，并保留对会话的控制权。
+2. 任务转移：对等智能体将控制权转移给接管会话的专业智能体。这是一种去中心化模式。
 
-有关更多详细信息，请参阅[智能体构建实用指南](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)。
+有关更多详细信息，请参阅我们的[智能体构建实用指南](https://cdn.openai.com/business-guides-and-resources/a-practical-guide-to-building-agents.pdf)。
 
 ### 管理器（agents as tools）
 
-`customer_facing_agent` 负责处理所有用户交互，并调用作为工具提供的专业子智能体。请在[工具](tools.md#agents-as-tools)文档中了解更多信息。
+`customer_facing_agent`负责处理所有用户交互，并调用作为工具公开的专业子智能体。请在[工具](tools.md#agents-as-tools)文档中了解更多信息。
 
 ```python
 from agents import Agent
@@ -17096,7 +17366,7 @@ customer_facing_agent = Agent(
 
 ### 任务转移
 
-任务转移是智能体可以委派任务的子智能体。发生任务转移时，被委派的智能体会收到对话历史记录并接管对话。此模式支持模块化的专业智能体，使其能够专注并擅长单一任务。请在[任务转移](handoffs.md)文档中了解更多信息。
+任务转移是智能体可以委派给的子智能体。发生任务转移时，被委派的智能体会接收会话历史记录并接管会话。此模式支持模块化的专业智能体，让其专注并擅长单一任务。请在[任务转移](handoffs.md)文档中了解更多信息。
 
 ```python
 from agents import Agent
@@ -17117,7 +17387,7 @@ triage_agent = Agent(
 
 ## 动态指令
 
-在大多数情况下，你可以在创建智能体时提供指令。不过，你也可以通过函数提供动态指令。该函数将接收智能体和上下文，并且必须返回提示词。普通函数和 `async` 函数均受支持。
+在大多数情况下，你可以在创建智能体时提供指令。不过，你也可以通过函数提供动态指令。该函数会接收智能体和上下文，并且必须返回提示词。普通函数和`async`函数均可使用。
 
 ```python
 def dynamic_instructions(
@@ -17134,26 +17404,26 @@ agent = Agent[UserContext](
 
 ## 生命周期事件（钩子）
 
-有时，你可能需要观察智能体的生命周期。例如，你可能希望在特定事件发生时记录事件日志、预取数据或记录用量。
+有时，你需要观察智能体的生命周期。例如，你可能希望在特定事件发生时记录事件日志、预取数据或记录用量。
 
-钩子分为两个作用域：
+钩子有两个作用域：
 
--   [`RunHooks`][agents.lifecycle.RunHooks] 观察整个 `Runner.run(...)` 调用，包括向其他智能体的任务转移。
--   [`AgentHooks`][agents.lifecycle.AgentHooks] 通过 `agent.hooks` 附加到特定智能体实例。
+-   [`RunHooks`][agents.lifecycle.RunHooks]观察整个`Runner.run(...)`调用，包括向其他智能体进行的任务转移。
+-   [`AgentHooks`][agents.lifecycle.AgentHooks]通过`agent.hooks`附加到特定智能体实例。
 
-回调上下文也会根据事件而变化：
+回调上下文也会因事件而异：
 
--   智能体启动/结束钩子接收 [`AgentHookContext`][agents.run_context.AgentHookContext]，该对象会封装你的原始上下文，并携带共享的运行用量状态。
--   LLM、工具和任务转移钩子接收 [`RunContextWrapper`][agents.run_context.RunContextWrapper]。
+-   智能体开始/结束钩子接收[`AgentHookContext`][agents.run_context.AgentHookContext]，它封装原始上下文并携带共享的运行用量状态。
+-   LLM、工具和任务转移钩子接收[`RunContextWrapper`][agents.run_context.RunContextWrapper]。
 
 典型的钩子触发时机：
 
 -   `on_agent_start` / `on_agent_end`：特定智能体开始或完成最终输出的生成时。
--   `on_llm_start` / `on_llm_end`：紧邻每次模型调用的前后。
-- `on_tool_start` / `on_tool_end`：每次本地工具调用的前后。对于工具调用，钩子的 `context` 通常是 `ToolContext`，因此你可以检查 `tool_call_id` 等工具调用元数据。
+-   `on_llm_start` / `on_llm_end`：每次模型调用前后立即触发。
+- `on_tool_start` / `on_tool_end`：每次本地工具调用前后触发。对于工具调用，钩子的`context`通常是`ToolContext`，因此你可以检查`tool_call_id`等工具调用元数据。
 -   `on_handoff`：控制权从一个智能体转移到另一个智能体时。
 
-如果你需要为整个工作流设置单一观察器，请使用 `RunHooks`；如果某个智能体需要自定义副作用，请使用 `AgentHooks`。
+如果你希望使用单个观察者监控整个工作流，请使用`RunHooks`；如果某个智能体需要自定义副作用，请使用`AgentHooks`。
 
 ```python
 from agents import Agent, RunHooks, Runner
@@ -17175,15 +17445,15 @@ result = await Runner.run(agent, "Explain quines", hooks=LoggingHooks())
 print(result.final_output)
 ```
 
-有关完整的回调接口，请参阅[生命周期 API 参考](ref/lifecycle.md)。
+有关完整的回调接口，请参阅[生命周期API参考](ref/lifecycle.md)。
 
 ## 安全防护措施
 
-安全防护措施允许你在智能体运行的同时并行检查/验证用户输入，并在智能体生成输出后检查/验证该输出。例如，你可以筛查用户输入和智能体输出是否相关。请在[安全防护措施](guardrails.md)文档中了解更多信息。
+安全防护措施允许你在智能体运行的同时，并行检查/验证用户输入，并在智能体生成输出后检查其输出。例如，你可以检查用户输入和智能体输出的相关性。请在[安全防护措施](guardrails.md)文档中了解更多信息。
 
 ## 智能体的克隆/复制
 
-通过对智能体使用 `clone()` 方法，你可以复制一个智能体，并可选择更改所需的任意属性。
+通过对智能体使用`clone()`方法，你可以复制智能体，并可选择更改任意属性。
 
 ```python
 pirate_agent = Agent(
@@ -17200,14 +17470,14 @@ robot_agent = pirate_agent.clone(
 
 ## 强制使用工具
 
-提供工具列表并不意味着LLM一定会使用工具。你可以通过设置 [`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice] 来强制使用工具。有效值包括：
+提供工具列表并不总是意味着LLM会使用工具。你可以通过设置[`ModelSettings.tool_choice`][agents.model_settings.ModelSettings.tool_choice]强制使用工具。有效值包括：
 
-1. `auto`，允许LLM自行决定是否使用工具。
-2. `required`，要求LLM使用工具（但可以智能地决定使用哪个工具）。
+1. `auto`，允许LLM决定是否使用工具。
+2. `required`，要求LLM使用工具（但它可以智能地决定使用哪个工具）。
 3. `none`，要求LLM_不_使用工具。
-4. 设置特定字符串，例如 `my_tool`，要求LLM使用该特定工具。
+4. 设置特定字符串，例如`my_tool`，要求LLM使用该特定工具。
 
-使用 OpenAI Responses 工具搜索时，具名工具选择的限制更多：不能通过 `tool_choice` 指定裸命名空间名称或仅延迟加载的工具，并且 `tool_choice="tool_search"` 不会指定 [`ToolSearchTool`][agents.tool.ToolSearchTool]。在这些情况下，建议使用 `auto` 或 `required`。有关 Responses 的特定限制，请参阅[托管工具搜索](tools.md#hosted-tool-search)。
+使用OpenAI Responses工具搜索时，具名工具选择的限制更多：你不能通过`tool_choice`将裸命名空间名称或仅延迟加载的工具设为目标，并且`tool_choice="tool_search"`不会以[`ToolSearchTool`][agents.tool.ToolSearchTool]为目标。在这些情况下，建议使用`auto`或`required`。有关Responses特有的限制，请参阅[托管工具搜索](tools.md#hosted-tool-search)。
 
 ```python
 from agents import Agent, Runner, function_tool, ModelSettings
@@ -17227,10 +17497,10 @@ agent = Agent(
 
 ## 工具使用行为
 
-`Agent` 配置中的 `tool_use_behavior` 参数控制如何处理工具输出：
+`Agent`配置中的`tool_use_behavior`参数控制工具输出的处理方式：
 
-- `"run_llm_again"`：默认值。运行工具后，由LLM处理结果并生成最终响应。
-- `"stop_on_first_tool"`：将第一次工具调用的输出用作最终响应，不再由LLM进一步处理。
+- `"run_llm_again"`：默认行为。执行工具后，由LLM处理结果并生成最终响应。
+- `"stop_on_first_tool"`：将首次工具调用的输出用作最终响应，不再由LLM进一步处理。
 
 ```python
 from agents import Agent, Runner, function_tool, ModelSettings
@@ -17248,7 +17518,7 @@ agent = Agent(
 )
 ```
 
-- `StopAtTools(stop_at_tool_names=[...])`：如果调用了任一指定工具，则停止运行，并将其输出用作最终响应。
+- `StopAtTools(stop_at_tool_names=[...])`：如果调用了任何指定工具，则停止运行，并将其输出用作最终响应。
 
 ```python
 from agents import Agent, Runner, function_tool
@@ -17272,7 +17542,7 @@ agent = Agent(
 )
 ```
 
-- `ToolsToFinalOutputFunction`：处理工具结果并决定是停止还是继续由LLM处理的自定义函数。
+- `ToolsToFinalOutputFunction`：处理工具结果并决定是停止还是继续调用LLM的自定义函数。
 
 ```python
 from agents import Agent, Runner, function_tool, FunctionToolResult, RunContextWrapper
@@ -17310,7 +17580,7 @@ agent = Agent(
 
 !!! note
 
-    为防止无限循环，框架会在工具调用后自动将 `tool_choice` 重置为“auto”。可以通过 [`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice] 配置此行为。之所以会出现无限循环，是因为工具结果会发送给LLM，而LLM随后会因 `tool_choice` 再次生成工具调用，如此无限重复。
+    为防止无限循环，框架会在工具调用后自动将`tool_choice`重置为"auto"。此行为可通过[`agent.reset_tool_choice`][agents.agent.Agent.reset_tool_choice]进行配置。出现无限循环的原因是，工具结果会发送给LLM，而LLM随后又会因`tool_choice`生成另一个工具调用，如此无限循环。
 
 ================
 File: docs/zh/config.md
@@ -21393,55 +21663,69 @@ search:
 ---
 # 追踪
 
-Agents SDK内置了追踪功能，会收集智能体运行期间事件的完整记录：LLM生成、工具调用、任务转移、安全防护措施，甚至包括发生的自定义事件。使用[Traces 控制面板](https://platform.openai.com/traces)，你可以在开发期间和生产环境中调试、可视化并监控你的工作流。
+Agents SDK内置追踪功能，可在智能体运行期间收集全面的事件记录，包括 LLM生成、工具调用、任务转移、安全防护措施，甚至是发生的自定义事件。使用[追踪控制面板](https://platform.openai.com/traces)，你可以在开发和生产环境中调试、可视化和监控工作流。
 
 !!!note
 
-    追踪默认启用。你可以通过三种常见方式将其禁用：
+    追踪默认启用。你可以通过以下三种常用方式将其禁用：
 
-    1. 你可以通过设置环境变量 `OPENAI_AGENTS_DISABLE_TRACING=1` 全局禁用追踪
-    2. 你可以在代码中使用 [`set_tracing_disabled(True)`][agents.set_tracing_disabled] 全局禁用追踪
-    3. 你可以将 [`agents.run.RunConfig.tracing_disabled`][] 设置为 `True`，为单次运行禁用追踪
+    1. 设置环境变量 `OPENAI_AGENTS_DISABLE_TRACING=1`，在全局范围内禁用追踪
+    2. 在代码中使用 [`set_tracing_disabled(True)`][agents.set_tracing_disabled]，在全局范围内禁用追踪
+    3. 将 [`agents.run.RunConfig.tracing_disabled`][] 设置为 `True`，为单次运行禁用追踪
 
-***对于使用OpenAI的 API 且遵循零数据保留（ZDR）政策的组织，追踪不可用。***
+***对于使用OpenAI API且遵循零数据保留（Zero Data Retention，ZDR）政策的组织，追踪功能不可用。***
 
-## 追踪与 Span
+## 追踪与跨度
 
--   **追踪**表示一个“工作流”的单次端到端操作。它们由 Span 组成。追踪具有以下属性：
-    -   `workflow_name`：这是逻辑工作流或应用。例如“代码生成”或“客户服务”。
-    -   `trace_id`：追踪的唯一 ID。如果你不传入，则会自动生成。格式必须为 `trace_<32_alphanumeric>`。
-    -   `group_id`：可选的组 ID，用于关联来自同一对话的多个追踪。例如，你可以使用聊天线程 ID。
+-   **追踪**表示一次“工作流”的端到端操作，由多个跨度组成。追踪具有以下属性：
+    -   `workflow_name`：逻辑工作流或应用。例如，“代码生成”或“客户服务”。
+    -   `trace_id`：追踪的唯一 ID。如果未传入，则自动生成。格式必须为 `trace_<32_alphanumeric>`。
+    -   `group_id`：可选的组 ID，用于关联同一对话中的多个追踪。例如，可以使用聊天线程 ID。
     -   `disabled`：如果为 True，则不会记录该追踪。
     -   `metadata`：追踪的可选元数据。
--   **Span**表示具有开始时间和结束时间的操作。Span 具有：
+-   **跨度**表示具有开始和结束时间的操作。跨度具有：
     -   `started_at` 和 `ended_at` 时间戳。
-    -   `trace_id`，用于表示它们所属的追踪
-    -   `parent_id`，指向此 Span 的父级 Span（如果有）
-    -   `span_data`，即关于该 Span 的信息。例如，`AgentSpanData` 包含有关智能体的信息，`GenerationSpanData` 包含有关LLM生成的信息，等等。
+    -   `trace_id`，表示其所属的追踪
+    -   `parent_id`，指向该跨度的父跨度（如果有）
+    -   `span_data`，即有关该跨度的信息。例如，`AgentSpanData` 包含有关智能体的信息，`GenerationSpanData` 包含有关 LLM生成的信息，等等。
 
 ## 默认追踪
 
-默认情况下，SDK会追踪以下内容：
+默认情况下，SDK 会追踪以下内容：
 
--   整个 `Runner.{run, run_sync, run_streamed}()` 会被封装在 `trace()` 中。
--   每次智能体运行时，都会被封装在 `agent_span()` 中
--   LLM生成会被封装在 `generation_span()` 中
--   每个工具调用都会被封装在 `function_span()` 中
--   安全防护措施会被封装在 `guardrail_span()` 中
--   任务转移会被封装在 `handoff_span()` 中
--   音频输入（语音转文本）会被封装在 `transcription_span()` 中
--   音频输出（文本转语音）会被封装在 `speech_span()` 中
--   相关音频 Span 可以作为子级归属于 `speech_group_span()`
+-   整个 `Runner.{run, run_sync, run_streamed}()` 都封装在一个 `trace()` 中。
+-   每次运行器调用都封装在一个 `task_span()` 中。
+-   每个模型轮次都封装在一个 `turn_span()` 中。
+-   每次智能体运行时，都封装在 `agent_span()` 中
+-   LLM生成封装在 `generation_span()` 中
+-   每次工具调用都封装在 `function_span()` 中
+-   安全防护措施封装在 `guardrail_span()` 中
+-   任务转移封装在 `handoff_span()` 中
+-   音频输入（语音转文本）封装在 `transcription_span()` 中
+-   音频输出（文本转语音）封装在 `speech_span()` 中
+-   相关的音频跨度可以作为子跨度归入 `speech_group_span()` 中
 
-默认情况下，追踪命名为“Agent workflow”。如果使用 `trace`，你可以设置此名称；也可以使用 [`RunConfig`][agents.run.RunConfig] 配置名称和其他属性。
+默认情况下，追踪名为“智能体工作流”。使用 `trace` 时可以设置此名称，也可以使用 [`RunConfig`][agents.run.RunConfig] 配置名称及其他属性。
 
-此外，你还可以设置[自定义追踪进程](#custom-tracing-processors)，将追踪推送到其他目标（作为替代目标或第二目标）。
+如果需要更紧凑的层级结构，可以为某次运行禁用自动任务跨度和轮次跨度。智能体、生成、函数、安全防护措施、任务转移和自定义跨度仍会被记录。
 
-## 长时间运行的 worker 与即时导出
+```python
+from agents import RunConfig, Runner
 
-默认的 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 会每隔几秒在后台导出追踪，或者当内存队列达到其大小触发阈值时更早导出，并且还会在进程退出时执行最终刷新。在 Celery、RQ、Dramatiq 或 FastAPI 后台任务等长时间运行的 worker 中，这意味着追踪通常无需任何额外代码就会自动导出，但它们可能不会在每个任务完成后立即出现在 Traces 控制面板中。
+result = await Runner.run(
+    agent,
+    "Hello",
+    run_config=RunConfig(tracing={"include_task_and_turn_spans": False}),
+)
+```
 
-如果你需要在一个工作单元结束时保证即时交付，请在追踪上下文退出后调用 [`flush_traces()`][agents.tracing.flush_traces]。
+此外，你可以设置[自定义追踪进程](#custom-tracing-processors)，将追踪推送到其他目标位置（作为替代目标或辅助目标）。
+
+## 长时间运行的工作进程与即时导出
+
+默认的 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 每隔几秒在后台导出一次追踪，或在内存队列达到其大小阈值时提前导出，并在进程退出时执行最后一次刷新。在 Celery、RQ、Dramatiq 或 FastAPI 后台任务等长时间运行的工作进程中，这意味着追踪通常无需任何额外代码即可自动导出，但它们可能不会在每个作业完成后立即显示在追踪控制面板中。
+
+如果需要保证在工作单元结束时立即交付，请在追踪上下文退出后调用 [`flush_traces()`][agents.tracing.flush_traces]。
 
 ```python
 from agents import Runner, flush_traces, trace
@@ -21478,11 +21762,11 @@ async def run(prompt: str, background_tasks: BackgroundTasks):
     return {"status": "queued"}
 ```
 
-[`flush_traces()`][agents.tracing.flush_traces] 会阻塞，直到当前已缓冲的追踪和 Span 都被导出；因此请在 `trace()` 关闭后调用它，以避免刷新尚未构建完成的追踪。当默认导出延迟可以接受时，你可以跳过此调用。
+[`flush_traces()`][agents.tracing.flush_traces] 会阻塞，直到当前缓冲的追踪和跨度全部导出，因此请在 `trace()` 关闭后调用它，以避免刷新尚未完整构建的追踪。如果默认导出延迟可以接受，则可以跳过此调用。
 
-## 更高层级的追踪
+## 高层级追踪
 
-有时，你可能希望多次调用 `run()` 都属于同一个追踪。你可以通过将整个代码封装在一个 `trace()` 中来实现。
+有时，你可能希望多次调用 `run()` 时将其纳入同一个追踪。可以通过将整个代码封装在 `trace()` 中来实现。
 
 ```python
 from agents import Agent, Runner, trace
@@ -21497,49 +21781,49 @@ async def main():
         print(f"Rating: {second_result.final_output}")
 ```
 
-1. 由于对 `Runner.run` 的两次调用都封装在 `with trace()` 中，因此各次运行将成为整体追踪的一部分，而不是创建两个追踪。
+1. 由于两次 `Runner.run` 调用都封装在 `with trace()` 中，因此各次运行将成为整体追踪的一部分，而不会创建两个追踪。
 
 ## 追踪创建
 
-你可以使用 [`trace()`][agents.tracing.trace] 函数创建追踪。追踪需要启动和结束。你有两种方式可以做到这一点：
+可以使用 [`trace()`][agents.tracing.trace] 函数创建追踪。追踪需要启动和结束。你有以下两种方式：
 
-1. **推荐**：将追踪用作上下文管理器，即 `with trace(...) as my_trace`。这会在正确的时间自动开始和结束追踪。
-2. 你也可以手动调用 [`trace.start()`][agents.tracing.Trace.start] 和 [`trace.finish()`][agents.tracing.Trace.finish]。
+1. **推荐**：将追踪用作上下文管理器，即 `with trace(...) as my_trace`。这会在适当的时间自动启动和结束追踪。
+2. 也可以手动调用 [`trace.start()`][agents.tracing.Trace.start] 和 [`trace.finish()`][agents.tracing.Trace.finish]。
 
-当前追踪通过 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。这意味着它可自动适配并发。如果你手动开始/结束追踪，则需要将 `mark_as_current` 和 `reset_current` 传递给 `start()`/`finish()`，以更新当前追踪。
+当前追踪通过 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。这意味着它能够自动支持并发。如果手动启动或结束追踪，则需要将 `mark_as_current` 和 `reset_current` 传递给 `start()`/`finish()`，以更新当前追踪。
 
-## Span 创建
+## 跨度创建
 
-你可以使用各种 [`*_span()`][agents.tracing.create] 方法来创建 Span。通常，你不需要手动创建 Span。可使用 [`custom_span()`][agents.tracing.custom_span] 函数来跟踪自定义 Span 信息。
+可以使用各种 [`*_span()`][agents.tracing.create] 方法创建跨度。通常无需手动创建跨度。可以使用 [`custom_span()`][agents.tracing.custom_span] 函数跟踪自定义跨度信息。
 
-Span 会自动成为当前追踪的一部分，并嵌套在最近的当前 Span 之下；当前 Span 通过 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html) 跟踪。
+跨度会自动成为当前追踪的一部分，并嵌套在最近的当前跨度下；当前跨度通过 Python [`contextvar`](https://docs.python.org/3/library/contextvars.html) 进行跟踪。
 
 ## 敏感数据
 
-某些 Span 可能会捕获潜在敏感数据。
+某些跨度可能会捕获潜在的敏感数据。
 
-`generation_span()` 会存储LLM生成的输入/输出，`function_span()` 会存储函数调用的输入/输出。这些内容可能包含敏感数据，因此你可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁用对此类数据的捕获。
+`generation_span()` 会存储 LLM生成的输入和输出，`function_span()` 会存储函数调用的输入和输出。这些内容可能包含敏感数据，因此可以通过 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 禁止捕获这些数据。
 
-同样，默认情况下，音频 Span 会包含输入和输出音频的 base64 编码 PCM 数据。你可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 来禁用对此音频数据的捕获。
+同样，默认情况下，音频跨度包含输入和输出音频的 base64 编码 PCM 数据。可以通过配置 [`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] 禁止捕获这些音频数据。
 
-默认情况下，`trace_include_sensitive_data` 为 `True`。你可以在运行应用之前将 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量导出为 `true/1` 或 `false/0`，以在不修改代码的情况下设置默认值。
+默认情况下，`trace_include_sensitive_data` 为 `True`。无需修改代码，只需在运行应用之前将 `OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA` 环境变量导出为 `true/1` 或 `false/0`，即可设置默认值。
 
 ## 自定义追踪进程
 
 追踪的高层架构如下：
 
 -   初始化时，我们会创建一个全局 [`TraceProvider`][agents.tracing.setup.TraceProvider]，负责创建追踪。
--   我们使用 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] 配置 `TraceProvider`，它会将追踪/Span 分批发送到 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者会将 Span 和追踪分批导出到OpenAI后端。
+-   我们为 `TraceProvider` 配置一个 [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor]，它会将追踪和跨度分批发送到 [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter]，后者再将跨度和追踪分批导出到OpenAI后端。
 
-要自定义此默认设置，以将追踪发送到替代后端或额外后端，或修改导出器行为，你有两个选择：
+如果要自定义此默认设置、将追踪发送到其他或额外的后端，或修改导出器行为，有以下两种选择：
 
-1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 允许你添加一个**额外的**追踪进程，该进程会在追踪和 Span 准备就绪时接收它们。这样你就可以在将追踪发送到OpenAI后端之外，执行自己的处理。
-2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 允许你使用自己的追踪进程**替换**默认进程。这意味着，除非你包含一个执行此操作的 `TracingProcessor`，否则追踪不会发送到OpenAI后端。
+1. [`add_trace_processor()`][agents.tracing.add_trace_processor] 可用于添加一个**额外的**追踪进程，该进程将在追踪和跨度准备就绪时接收它们。这样，除了将追踪发送到OpenAI后端外，还可以执行自己的处理。
+2. [`set_trace_processors()`][agents.tracing.set_trace_processors] 可用于使用自己的追踪进程**替换**默认进程。这意味着，除非加入一个执行发送操作的 `TracingProcessor`，否则追踪不会发送到OpenAI后端。
 
 
 ## 非OpenAI模型追踪
 
-你可以将 OpenAI API 密钥与非OpenAI模型一起使用，以在 OpenAI Traces 控制面板中启用免费追踪，而无需禁用追踪。有关适配器选择和设置注意事项，请参阅 Models 指南中的[第三方适配器](models/index.md#third-party-adapters)部分。
+可以将OpenAI API 密钥与非OpenAI模型搭配使用，从而在OpenAI追踪控制面板中启用免费追踪，而无需禁用追踪。有关适配器选择和设置注意事项，请参阅模型指南中的[第三方适配器](models/index.md#third-party-adapters)部分。
 
 ```python
 import os
@@ -21560,7 +21844,7 @@ agent = Agent(
 )
 ```
 
-如果你只需要为单次运行使用不同的追踪密钥，请通过 `RunConfig` 传入，而不是更改全局导出器。
+如果仅需要为单次运行使用不同的追踪密钥，请通过 `RunConfig` 传入该密钥，而不要更改全局导出器。
 
 ```python
 from agents import Runner, RunConfig
@@ -21572,13 +21856,13 @@ await Runner.run(
 )
 ```
 
-## 补充说明
-- 在 OpenAI Traces 控制面板查看免费追踪。
+## 附加说明
+- 可在OpenAI追踪控制面板中查看免费追踪。
 
 
 ## 生态系统集成
 
-以下社区和供应商集成支持 OpenAI Agents SDK的追踪接口面。
+以下社区和供应商集成支持OpenAI Agents SDK追踪接口。
 
 ### 外部追踪进程列表
 
@@ -21866,7 +22150,7 @@ The most common properties of an agent are:
 | `reset_tool_choice` | no | Reset `tool_choice` after a tool call (default: `True`) to avoid tool-use loops. See [Forcing tool use](#forcing-tool-use). |
 
 ```python
-from agents import Agent, ModelSettings, function_tool
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -26171,8 +26455,8 @@ orchestrator = Agent(
 )
 
 async def main():
-    context = RunContextWrapper(LanguageContext(language_preference="french_spanish"))
-    result = await Runner.run(orchestrator, "How are you?", context=context.context)
+    context = LanguageContext(language_preference="french_spanish")
+    result = await Runner.run(orchestrator, "How are you?", context=context)
     print(result.final_output)
 
 asyncio.run(main())
@@ -26291,6 +26575,8 @@ The Agents SDK includes built-in tracing, collecting a comprehensive record of e
 By default, the SDK traces the following:
 
 -   The entire `Runner.{run, run_sync, run_streamed}()` is wrapped in a `trace()`.
+-   Each runner invocation is wrapped in a `task_span()`.
+-   Each model turn is wrapped in a `turn_span()`.
 -   Each time an agent runs, it is wrapped in `agent_span()`
 -   LLM generations are wrapped in `generation_span()`
 -   Function tool calls are each wrapped in `function_span()`
@@ -26301,6 +26587,18 @@ By default, the SDK traces the following:
 -   Related audio spans may be parented under a `speech_group_span()`
 
 By default, the trace is named "Agent workflow". You can set this name if you use `trace`, or you can configure the name and other properties with the [`RunConfig`][agents.run.RunConfig].
+
+If you want a more compact hierarchy, disable the automatic task and turn spans for a run. Agent, generation, function, guardrail, handoff, and custom spans are still recorded.
+
+```python
+from agents import RunConfig, Runner
+
+result = await Runner.run(
+    agent,
+    "Hello",
+    run_config=RunConfig(tracing={"include_task_and_turn_spans": False}),
+)
+```
 
 In addition, you can set up [custom trace processors](#custom-tracing-processors) to push traces to other destinations (as a replacement, or secondary destination).
 
