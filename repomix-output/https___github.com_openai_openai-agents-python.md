@@ -360,8 +360,9 @@ agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model
     SDK는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]과 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 형식을 모두 지원하지만, 두 형식이 서로 다른 기능과 도구 집합을 지원하므로 각 워크플로에서는 하나의 모델 형식만 사용하는 것이 좋습니다. 워크플로에서 모델 형식을 혼합해야 한다면 사용하는 모든 기능을 양쪽 모두에서 사용할 수 있는지 확인하세요.
 
 ```python
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 import asyncio
+
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -388,6 +389,10 @@ triage_agent = Agent(
 async def main():
     result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 1.  OpenAI 모델의 이름을 직접 설정합니다.
@@ -2630,7 +2635,7 @@ session = AdvancedSQLiteSession(
 # With persistent storage
 session = AdvancedSQLiteSession(
     session_id="user_123",
-    db_path="path/to/conversations.db",
+    db_path="conversations.db",
     create_tables=True
 )
 
@@ -3293,7 +3298,6 @@ graph LR
 먼저 몇 가지 에이전트를 설정하겠습니다. 이 SDK로 에이전트를 만들어 본 적이 있다면 익숙할 것입니다. 몇 개의 에이전트와 하나의 핸드오프, 하나의 도구를 사용합니다.
 
 ```python
-import asyncio
 import random
 
 from agents import (
@@ -3378,7 +3382,6 @@ import sounddevice as sd
 from agents import (
     Agent,
     function_tool,
-    set_tracing_disabled,
 )
 from agents.voice import (
     AudioInput,
@@ -3515,7 +3518,7 @@ SDK는 OpenAI 모델에 기본적으로 Responses API를 사용하지만, 여기
 | `reset_tool_choice` | 아니요 | 도구 사용 루프를 방지하기 위해 도구 호출 후 `tool_choice`를 재설정합니다(기본값: `True`). [도구 사용 강제](#forcing-tool-use)를 참조하세요. |
 
 ```python
-from agents import Agent, ModelSettings, function_tool
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -3798,7 +3801,7 @@ robot_agent = pirate_agent.clone(
 OpenAI Responses 도구 검색을 사용할 때는 이름이 지정된 도구 선택에 더 많은 제한이 있습니다. `tool_choice`로 단독 네임스페이스 이름이나 지연 전용 도구를 지정할 수 없으며, `tool_choice="tool_search"`는 [`ToolSearchTool`][agents.tool.ToolSearchTool]을 대상으로 하지 않습니다. 이러한 경우에는 `auto` 또는 `required`를 사용하는 것이 좋습니다. Responses 전용 제약 조건은 [호스티드 툴 검색](tools.md#hosted-tool-search)을 참조하세요.
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool, ModelSettings
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -3821,7 +3824,7 @@ agent = Agent(
 - `"stop_on_first_tool"`: 추가적인 LLM 처리 없이 첫 번째 도구 호출의 출력을 최종 응답으로 사용합니다.
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -3839,7 +3842,7 @@ agent = Agent(
 - `StopAtTools(stop_at_tool_names=[...])`: 지정된 도구 중 하나가 호출되면 해당 출력을 최종 응답으로 사용하고 중지합니다.
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.agent import StopAtTools
 
 @function_tool
@@ -3863,7 +3866,7 @@ agent = Agent(
 - `ToolsToFinalOutputFunction`: 도구 결과를 처리하고 LLM을 중지할지 계속 실행할지 결정하는 사용자 지정 함수입니다.
 
 ```python
-from agents import Agent, Runner, function_tool, FunctionToolResult, RunContextWrapper
+from agents import Agent, function_tool, FunctionToolResult, RunContextWrapper
 from agents.agent import ToolsToFinalOutputResult
 from typing import List, Any
 
@@ -4215,7 +4218,7 @@ if __name__ == "__main__":
 ```python
 from typing import Annotated
 from pydantic import BaseModel, Field
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.tool_context import ToolContext
 
 class WeatherContext(BaseModel):
@@ -4821,7 +4824,7 @@ search:
 항상 승인을 요구하려면 `needs_approval`을 `True`로 설정하거나, 호출마다 결정하는 비동기 함수를 제공합니다. 호출 가능한 함수는 실행 컨텍스트, 파싱된 도구 매개변수, 도구 호출 ID를 받습니다.
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(needs_approval=True)
@@ -7605,7 +7608,7 @@ def score_b(score: Annotated[int, Field(..., ge=0, le=100, description="Score fr
 
 ```python
 import asyncio
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(timeout=2.0)
@@ -7688,8 +7691,9 @@ def get_user_profile(user_id: str) -> str:
 일부 워크플로에서는 제어를 핸드오프하는 대신 중앙 에이전트가 전문 에이전트 네트워크를 오케스트레이션하도록 할 수 있습니다. 에이전트를 도구로 모델링하여 이를 구현할 수 있습니다.
 
 ```python
-from agents import Agent, Runner
 import asyncio
+
+from agents import Agent, Runner
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -7722,6 +7726,10 @@ orchestrator_agent = Agent(
 async def main():
     result = await Runner.run(orchestrator_agent, input="Say 'Hello, how are you?' in Spanish.")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### 도구 에이전트 사용자 지정
@@ -8772,8 +8780,9 @@ Within a single workflow, you may want to use different models for each agent. F
     While our SDK supports both the [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] and the [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] shapes, we recommend using a single model shape for each workflow because the two shapes support a different set of features and tools. If your workflow requires mixing and matching model shapes, make sure that all the features you're using are available on both.
 
 ```python
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 import asyncio
+
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -8800,6 +8809,10 @@ triage_agent = Agent(
 async def main():
     result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 1.  Sets the name of an OpenAI model directly.
@@ -12872,7 +12885,7 @@ session = AdvancedSQLiteSession(
 # With persistent storage
 session = AdvancedSQLiteSession(
     session_id="user_123",
-    db_path="path/to/conversations.db",
+    db_path="conversations.db",
     create_tables=True
 )
 
@@ -13519,7 +13532,6 @@ graph LR
 First, let's set up some Agents. This should feel familiar to you if you've built any agents with this SDK. We'll have a couple of Agents, a handoff, and a tool.
 
 ```python
-import asyncio
 import random
 
 from agents import (
@@ -13604,7 +13616,6 @@ import sounddevice as sd
 from agents import (
     Agent,
     function_tool,
-    set_tracing_disabled,
 )
 from agents.voice import (
     AudioInput,
@@ -14041,8 +14052,9 @@ agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model
     尽管我们的 SDK 同时支持 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 和 [`OpenAIChatCompletionsModel`][agents.models.openai_chatcompletions.OpenAIChatCompletionsModel] 形式，但我们建议每个工作流使用单一模型形式，因为这两种形式支持的功能和工具集合不同。如果您的工作流需要混用不同模型形式，请确保您使用的所有功能均受两者支持。
 
 ```python
-from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 import asyncio
+
+from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -14069,6 +14081,10 @@ triage_agent = Agent(
 async def main():
     result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 1.  直接设置 OpenAI 模型的名称。
@@ -16312,7 +16328,7 @@ session = AdvancedSQLiteSession(
 # With persistent storage
 session = AdvancedSQLiteSession(
     session_id="user_123",
-    db_path="path/to/conversations.db",
+    db_path="conversations.db",
     create_tables=True
 )
 
@@ -16975,7 +16991,6 @@ graph LR
 首先，我们来设置一些智能体。如果你曾使用此 SDK 构建过智能体，这部分应该会很熟悉。我们将使用两个智能体、一次任务转移和一个工具。
 
 ```python
-import asyncio
 import random
 
 from agents import (
@@ -17060,7 +17075,6 @@ import sounddevice as sd
 from agents import (
     Agent,
     function_tool,
-    set_tracing_disabled,
 )
 from agents.voice import (
     AudioInput,
@@ -17197,7 +17211,7 @@ search:
 | `reset_tool_choice` | 否 | 在工具调用后重置`tool_choice`（默认值：`True`），以避免工具使用循环。请参阅[强制使用工具](#forcing-tool-use)。 |
 
 ```python
-from agents import Agent, ModelSettings, function_tool
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -17480,7 +17494,7 @@ robot_agent = pirate_agent.clone(
 使用OpenAI Responses工具搜索时，具名工具选择的限制更多：你不能通过`tool_choice`将裸命名空间名称或仅延迟加载的工具设为目标，并且`tool_choice="tool_search"`不会以[`ToolSearchTool`][agents.tool.ToolSearchTool]为目标。在这些情况下，建议使用`auto`或`required`。有关Responses特有的限制，请参阅[托管工具搜索](tools.md#hosted-tool-search)。
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool, ModelSettings
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -17503,7 +17517,7 @@ agent = Agent(
 - `"stop_on_first_tool"`：将首次工具调用的输出用作最终响应，不再由LLM进一步处理。
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -17521,7 +17535,7 @@ agent = Agent(
 - `StopAtTools(stop_at_tool_names=[...])`：如果调用了任何指定工具，则停止运行，并将其输出用作最终响应。
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.agent import StopAtTools
 
 @function_tool
@@ -17545,7 +17559,7 @@ agent = Agent(
 - `ToolsToFinalOutputFunction`：处理工具结果并决定是停止还是继续调用LLM的自定义函数。
 
 ```python
-from agents import Agent, Runner, function_tool, FunctionToolResult, RunContextWrapper
+from agents import Agent, function_tool, FunctionToolResult, RunContextWrapper
 from agents.agent import ToolsToFinalOutputResult
 from typing import List, Any
 
@@ -17897,7 +17911,7 @@ if __name__ == "__main__":
 ```python
 from typing import Annotated
 from pydantic import BaseModel, Field
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.tool_context import ToolContext
 
 class WeatherContext(BaseModel):
@@ -18503,7 +18517,7 @@ search:
 将 `needs_approval` 设置为 `True` 可始终要求审批，或提供一个异步函数按每次调用做出决定。该可调用对象会接收运行上下文、解析后的工具参数以及工具调用 ID。
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(needs_approval=True)
@@ -21287,7 +21301,7 @@ def score_b(score: Annotated[int, Field(..., ge=0, le=100, description="Score fr
 
 ```python
 import asyncio
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(timeout=2.0)
@@ -21370,8 +21384,9 @@ def get_user_profile(user_id: str) -> str:
 在某些工作流中，你可能希望由一个中央智能体编排由多个专用智能体组成的网络，而不是转移控制权。你可以通过将智能体建模为工具来实现这一点。
 
 ```python
-from agents import Agent, Runner
 import asyncio
+
+from agents import Agent, Runner
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -21404,6 +21419,10 @@ orchestrator_agent = Agent(
 async def main():
     result = await Runner.run(orchestrator_agent, input="Say 'Hello, how are you?' in Spanish.")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### 工具智能体自定义
@@ -22433,7 +22452,7 @@ Supplying a list of tools doesn't always mean the LLM will use a tool. You can f
 When you are using OpenAI Responses tool search, named tool choices are more limited: you cannot target bare namespace names or deferred-only tools with `tool_choice`, and `tool_choice="tool_search"` does not target [`ToolSearchTool`][agents.tool.ToolSearchTool]. In those cases, prefer `auto` or `required`. See [Hosted tool search](tools.md#hosted-tool-search) for the Responses-specific constraints.
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool, ModelSettings
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -22456,7 +22475,7 @@ The `tool_use_behavior` parameter in the `Agent` configuration controls how tool
 - `"stop_on_first_tool"`: The output of the first tool call is used as the final response, without further LLM processing.
 
 ```python
-from agents import Agent, Runner, function_tool, ModelSettings
+from agents import Agent, function_tool
 
 @function_tool
 def get_weather(city: str) -> str:
@@ -22474,7 +22493,7 @@ agent = Agent(
 - `StopAtTools(stop_at_tool_names=[...])`: Stops if any specified tool is called, using its output as the final response.
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.agent import StopAtTools
 
 @function_tool
@@ -22498,7 +22517,7 @@ agent = Agent(
 - `ToolsToFinalOutputFunction`: A custom function that processes tool results and decides whether to stop or continue with the LLM.
 
 ```python
-from agents import Agent, Runner, function_tool, FunctionToolResult, RunContextWrapper
+from agents import Agent, function_tool, FunctionToolResult, RunContextWrapper
 from agents.agent import ToolsToFinalOutputResult
 from typing import List, Any
 
@@ -22842,7 +22861,7 @@ For this, you can use the [`ToolContext`][agents.tool_context.ToolContext] class
 ```python
 from typing import Annotated
 from pydantic import BaseModel, Field
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 from agents.tool_context import ToolContext
 
 class WeatherContext(BaseModel):
@@ -23432,7 +23451,7 @@ This page focuses on the manual approval flow via `interruptions`. If your app c
 Set `needs_approval` to `True` to always require approval or provide an async function that decides per call. The callable receives the run context, parsed tool parameters, and the tool call ID.
 
 ```python
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(needs_approval=True)
@@ -26172,7 +26191,7 @@ You can set per-call timeouts for async function tools with `@function_tool(time
 
 ```python
 import asyncio
-from agents import Agent, Runner, function_tool
+from agents import Agent, function_tool
 
 
 @function_tool(timeout=2.0)
@@ -26255,8 +26274,9 @@ If you are manually creating a `FunctionTool` object, then you must handle error
 In some workflows, you may want a central agent to orchestrate a network of specialized agents, instead of handing off control. You can do this by modeling agents as tools.
 
 ```python
-from agents import Agent, Runner
 import asyncio
+
+from agents import Agent, Runner
 
 spanish_agent = Agent(
     name="Spanish agent",
@@ -26289,6 +26309,10 @@ orchestrator_agent = Agent(
 async def main():
     result = await Runner.run(orchestrator_agent, input="Say 'Hello, how are you?' in Spanish.")
     print(result.final_output)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Customizing tool-agents
@@ -26708,7 +26732,7 @@ You can use an OpenAI API key with non-OpenAI models to enable free tracing in t
 
 ```python
 import os
-from agents import set_tracing_export_api_key, Agent, Runner
+from agents import set_tracing_export_api_key, Agent
 from agents.extensions.models.any_llm_model import AnyLLMModel
 
 tracing_api_key = os.environ["OPENAI_API_KEY"]
