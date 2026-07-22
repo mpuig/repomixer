@@ -6577,6 +6577,8 @@ SDK가 이전 출력에서 후속 입력을 구성하는 다중 턴 에이전트
 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 메서드를 사용해 다음 턴의 입력을 가져오는 방식으로 대화 기록을 수동으로 관리할 수 있습니다.
 
 ```python
+from agents import Agent, Runner, trace
+
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
@@ -6599,7 +6601,7 @@ async def main():
 더 간단한 방법으로 [Sessions](sessions/index.md)를 사용하면 `.to_input_list()`를 직접 호출하지 않고도 대화 기록을 자동으로 처리할 수 있습니다.
 
 ```python
-from agents import Agent, Runner, SQLiteSession
+from agents import Agent, Runner, SQLiteSession, trace
 
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
@@ -8153,7 +8155,7 @@ OpenAI 이외 모델에서 OpenAI API 키를 사용하면 트레이싱을 비활
 
 ```python
 import os
-from agents import set_tracing_export_api_key, Agent, Runner
+from agents import set_tracing_export_api_key, Agent
 from agents.extensions.models.any_llm_model import AnyLLMModel
 
 tracing_api_key = os.environ["OPENAI_API_KEY"]
@@ -20270,6 +20272,8 @@ result = Runner.run_sync(
 你可以使用 [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] 方法获取下一轮输入，从而手动管理对话历史记录：
 
 ```python
+from agents import Agent, Runner, trace
+
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
@@ -20292,7 +20296,7 @@ async def main():
 若要采用更简单的方式，可以使用 [Sessions](sessions/index.md) 自动处理对话历史记录，而无需手动调用 `.to_input_list()`：
 
 ```python
-from agents import Agent, Runner, SQLiteSession
+from agents import Agent, Runner, SQLiteSession, trace
 
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
@@ -21846,7 +21850,7 @@ async def main():
 
 ```python
 import os
-from agents import set_tracing_export_api_key, Agent, Runner
+from agents import set_tracing_export_api_key, Agent
 from agents.extensions.models.any_llm_model import AnyLLMModel
 
 tracing_api_key = os.environ["OPENAI_API_KEY"]
@@ -25174,6 +25178,8 @@ At the end of the agent run, you can choose what to show to the user. For exampl
 You can manually manage conversation history using the [`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] method to get the inputs for the next turn:
 
 ```python
+from agents import Agent, Runner, trace
+
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
@@ -25196,7 +25202,7 @@ async def main():
 For a simpler approach, you can use [Sessions](sessions/index.md) to automatically handle conversation history without manually calling `.to_input_list()`:
 
 ```python
-from agents import Agent, Runner, SQLiteSession
+from agents import Agent, Runner, SQLiteSession, trace
 
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
