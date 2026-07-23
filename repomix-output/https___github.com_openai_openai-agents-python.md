@@ -8820,7 +8820,7 @@ if __name__ == "__main__":
 1.  Sets the name of an OpenAI model directly.
 2.  Provides a [`Model`][agents.models.interface.Model] implementation.
 
-When you want to further configure the model used for an agent, you can pass [`ModelSettings`][agents.models.interface.ModelSettings], which provides optional model configuration parameters such as temperature.
+When you want to further configure the model used for an agent, you can pass [`ModelSettings`][agents.model_settings.ModelSettings], which provides optional model configuration parameters such as temperature.
 
 ```python
 from agents import Agent, ModelSettings
@@ -26725,7 +26725,7 @@ By default, `trace_include_sensitive_data` is `True`. You can set the default wi
 
 The high level architecture for tracing is:
 
--   At initialization, we create a global [`TraceProvider`][agents.tracing.setup.TraceProvider], which is responsible for creating traces.
+-   At initialization, we create a global [`TraceProvider`][agents.tracing.provider.TraceProvider], which is responsible for creating traces.
 -   We configure the `TraceProvider` with a [`BatchTraceProcessor`][agents.tracing.processors.BatchTraceProcessor] that sends traces/spans in batches to a [`BackendSpanExporter`][agents.tracing.processors.BackendSpanExporter], which exports the spans and traces to the OpenAI backend in batches.
 
 To customize this default setup, to send traces to alternative or additional backends or modifying exporter behavior, you have two options:
