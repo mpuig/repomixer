@@ -41875,7 +41875,7 @@ catalog_tags: ["mcp", "connectors"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
 </div>
 
-The [ZoomInfo MCP Server](https://docs.zoominfo.com/docs/zi-api-mcp-overview)
+The [ZoomInfo MCP Server](https://docs.zoominfo.com/docs/connect-to-zoominfo-mcp)
 connects your ADK agent to the [ZoomInfo](https://www.zoominfo.com/) B2B
 intelligence platform, giving it access to 100M+ company profiles, 300M+
 professional contacts, and go-to-market signals. This integration gives your
@@ -41995,7 +41995,8 @@ Tool | Description
 
 ## Additional resources
 
-- [ZoomInfo MCP Overview](https://docs.zoominfo.com/docs/zi-api-mcp-overview)
+- [Connect to ZoomInfo MCP](https://docs.zoominfo.com/docs/connect-to-zoominfo-mcp)
+- [Available MCP Tools](https://docs.zoominfo.com/docs/available-mcp-tools)
 - [ZoomInfo Developer Documentation](https://docs.zoominfo.com/)
 
 ================
@@ -49998,6 +49999,7 @@ The structure of a Skill allows it to be loaded incrementally to minimize the
 impact on the operating context window of the agent.
 
 !!! example "Experimental"
+    
     The Skills feature is experimental. We welcome your feedback via the
     respective ADK GitHub repositories:
     [ADK Python](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills),
@@ -50086,7 +50088,11 @@ You can define [skills in code](#inline-skills) or load
     For a complete example, see the code sample in
     [skills](https://github.com/google/adk-go/tree/main/examples/skills).
 
-## Understand Skills
+!!! note "Check your working directory"
+
+        Ensure that 'skills/' directory exist in your current working directory and contains the sub-directories for the Skills you want to use in your agent.
+
+## Skill structure
 
 The Skills feature allows you to create modular packages of Skill instructions
 and resources that agents can load on demand. This approach helps you organize
@@ -50108,6 +50114,33 @@ three levels:
     -   `assets/`: Resource materials such as database schemas, API
         documentation, templates, or examples.
     -   `scripts/`: Executable scripts supported by the agent runtime.
+
+### System instructions for using skills
+
+The `SkillToolset` provides a default system instruction to the agent that
+outlines how it should interact with skills. These instructions include the
+following key points:
+
+*   You must use the `load_skill` tool to read a skill's instructions before
+    using it.
+*   You must follow the instructions in the skill definition exactly.
+*   You must use the `load_skill_resource` tool to view files within a skill's
+    directory.
+*   You must use the `run_skill_script` to run scripts from a skill's `scripts/`
+    directory.
+
+### Skill validation
+
+The frontmatter of a skill's `SKILL.md` file is validated to ensure that it
+meets the following requirements:
+
+*   **name**:
+    *   Must be 64 characters or less.
+    *   Must be in lowercase, kebab-case (a-z, 0-9, and hyphens).
+    *   Must not have leading, trailing, or consecutive hyphens.
+*   **description**:
+    *   Must not be empty.
+    *   Must be 1024 characters or less.
 
 ### Skills directory structure
 
@@ -50297,7 +50330,12 @@ You can define Skills within the code of your agent, as shown below.
     }
     ```
 
+## Skill processing and validation
 
+When you include skills in your agent, the agent uses a standardized process
+to interact with them. This process includes a system-level instruction for
+how to use skills, a defined format for how skills are represented, and a set
+of validation rules for skill definitions.
 
 ## Next steps
 
@@ -56524,7 +56562,7 @@ specific interactive process with your ***Agent Client*** application.
 *   **SERVICE\_ACCOUNT:** Provides Google Cloud Service Account credentials as a
     JSON key or Application Default Credentials. This type typically exchanges a
     Bearer token.
-
+    
 ## Tools and integrations quick guide
 
 Here is a quick guide to authentication for key ADK toolsets:
@@ -56653,7 +56691,7 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       auth_scheme = OpenIdConnectWithConfig(
           authorization_endpoint=OAUTH2_AUTH_ENDPOINT_URL,
           token_endpoint=OAUTH2_TOKEN_ENDPOINT_URL,
-          scopes=['openid', 'YOUR_OAUTH_SCOPES"]
+          scopes=['openid', 'YOUR_OAUTH_SCOPES']
       )
       auth_credential = AuthCredential(
           auth_type=AuthCredentialTypes.OPEN_ID_CONNECT,
@@ -56755,6 +56793,35 @@ sample_toolset = OpenAPIToolset(
 !!! tip "Pair `use_id_token` with `audience`"
 
     Always use `use_id_token=True` and `audience` together. If you provide one without the other, the ADK will raise an error to prevent accidental misconfiguration.
+
+#### Use external access tokens
+
+The `external_access_token_key` feature allows your agent to use an existing
+access token provided by the runtime environment, such as a token provided by
+a frontend application, instead of starting a new authentication flow.
+When configured, the credential manager skips standard OAuth flows. Instead, 
+retrieves the key in the agent's `tool_context.state` and directly uses the 
+token for authentication.
+The use of this configuration parameter is mutually exclusive, and cannot
+include `credentials`, `client_id`, `client_secret`, or scopes parameters in the same
+configuration block.
+
+Follow this example to configure the key:
+
+```python
+from google.adk.auth.auth_credential import AuthCredential
+from google.adk.auth.auth_credential import AuthCredentialTypes
+
+# Configure the tool to look for "my_frontend_token" in the session state
+credentials_config = AuthCredential(
+    auth_type=AuthCredentialTypes.GOOGLE_CREDENTIALS,
+    google_credentials_config={
+        # Do not hardcode authentication keys in production code
+        "external_access_token_key": "get_my_frontend_token" 
+    }
+)
+
+```
 
 #### Authentication request flow
 
