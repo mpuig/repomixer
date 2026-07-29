@@ -21,23 +21,6 @@ File: docs/_includes/homepage/_agent-cli.md
 </div>
 
 ================
-File: docs/_includes/homepage/_ai-dev-tools.md
-================
-<!-- Developer Tools -->
-<div class="feature-split">
-  <div class="feature-text">
-    <span class="feature-badge">AI Dev Tools</span>
-    <h2>Build agents <i>with</i> agents.</h2>
-    <p>ADK agents are designed to be written by humans and AI. Connect your AI-powered development tools to our ADK coding resources and generate robust, capable agents in seconds.</p>
-    <a href="tutorials/coding-with-ai/" class="btn btn-accent" style="margin-top:12px">Code with AI</a>
-  </div>
-  <div class="feature-visual">
-    <div id="asciinema-demo"></div>
-  </div>
-</div>
-<!-- requires: Asciinema player script -->
-
-================
 File: docs/_includes/homepage/_build-cta.md
 ================
 <!-- Ready to Build CTA Section -->
@@ -91,24 +74,6 @@ File: docs/_includes/homepage/_ecosystem.md
   <div class="feature-visual">
     <div class="ui-wrapper">
       <img src="assets/integrations-list.png" alt="ADK Integrations List" class="devui-img">
-    </div>
-  </div>
-</div>
-
-================
-File: docs/_includes/homepage/_eval.md
-================
-<!-- Eval Section -->
-<div class="feature-split reverse">
-  <div class="feature-text">
-    <span class="feature-badge">Evaluation</span>
-    <h2>Go beyond vibes. Evaluate everything.</h2>
-    <p>Engage ADK's visual debugging, open evaluation framework, and partner tools to test your entire agent execution trajectory. Simulate user interactions, build custom performance metrics, and optimize agents against your evaluation results.</p>
-    <a href="evaluate/" class="btn btn-accent" style="margin-top:12px">Learn more</a>
-  </div>
-  <div class="feature-visual">
-    <div class="ui-wrapper">
-      <img src="assets/adk-eval-case.gif" alt="ADK Web Eval UI" class="devui-img">
     </div>
   </div>
 </div>
@@ -3219,7 +3184,6 @@ food_tour_app/
 ├── __init__.py
 └── agent.py
 ```
-**Full project can be found [here](https://github.com/google/adk-samples/tree/main/python/agents/gemma-food-tour-guide)**
 
 `agent.py`
 ```python
@@ -4681,10 +4645,9 @@ limitations:
 
 ## Next steps
 
-For ideas on how and what to build with ADK Agent Configs, see the yaml-based
-agent definitions in the ADK
-[adk-samples](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C//+root_agent.yaml&type=code)
-repository. For detailed information on the syntax and settings supported by
+For ideas on what to build, see the
+[sample agent configs](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C//+root_agent.yaml&type=code)
+in the `adk-python` repository. For detailed information on the syntax and settings supported by
 the Agent Config format, see the
 [Agent Config syntax reference](/api-reference/agentconfig/).
 
@@ -10506,7 +10469,7 @@ the `prompt` on `LlmSummarizer`. For more details, see the
 ================
 File: docs/context/index.md
 ================
-# Context
+# Agent context
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
@@ -10623,11 +10586,11 @@ If you use these specific context types, ADK ensures that your agent has access 
 Here are the primary context flavors you will encounter:
 
 - **`InvocationContext`**: Used during core agent runs (`_run_async_impl`, `_run_live_impl`) to provide a comprehensive view of the entire invocation, including service references and lifecycle management.
-  
+
 - **`ReadonlyContext`**: A lightweight, restricted view of fundamental contextual details used in scenarios where mutation is disallowed, such as within instruction providers.
-  
+
 - **`Context`**: Used in agent lifecycle and model callbacks. It provides a robust set of features for reading/writing session state, managing artifacts, and injecting data into the memory service.
-  
+
 - **`ToolContext`**: Tailored for tool execution and tool-related callbacks. In addition to the capabilities of Context, it includes specialized methods for authentication flows, memory searching, and artifact discovery.
 
 !!! note
@@ -10657,7 +10620,7 @@ Here are the primary context flavors you will encounter:
                 # ... agent logic using ctx ...
                 yield # ... event ...
         ```
-        
+
     === "TypeScript"
 
         ```typescript
@@ -11046,7 +11009,7 @@ You'll frequently need to read information stored within the context.
         public void myTool(ToolContext toolContext) {
             String userPref = (String) toolContext.state().getOrDefault("user_display_preference", "default_mode");
             String apiEndpoint = (String) toolContext.state().get("app:api_endpoint"); // Read app-level state
-            
+
             if ("dark_mode".equals(userPref)) {
                 // ... apply dark mode logic ...
             }
@@ -11059,7 +11022,7 @@ You'll frequently need to read information stored within the context.
 
         public void myCallback(CallbackContext callbackContext) {
             String lastToolResult = (String) callbackContext.state().get("temp:last_api_result"); // Read temporary state
-            
+
             if (lastToolResult != null && !lastToolResult.isEmpty()) {
                 System.out.println("Found temporary result from last tool: " + lastToolResult);
             }
@@ -11796,8 +11759,8 @@ Securely manage API keys or other credentials needed by tools.
     import com.google.adk.tools.ToolContext;
     import java.util.Map;
 
-    // Note: AuthConfig, requestCredential, and getAuthResponse are not yet 
-    // fully implemented in the Java ADK public API. 
+    // Note: AuthConfig, requestCredential, and getAuthResponse are not yet
+    // fully implemented in the Java ADK public API.
     // This example relies on external auth population into the session state.
 
     public class SecureApiTool {
@@ -12021,13 +11984,13 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
         if (criticalError != null && criticalError) {
           System.out.println("Critical error detected, ending invocation.");
           ctx.setEndInvocation(true); // Signal framework to stop processing
-          
+
           Event errorEvent = Event.builder()
               .author(name())
               .invocationId(ctx.invocationId())
               .content(Content.builder().parts(List.of(Part.builder().text("Stopping due to critical error.").build())).build())
               .build();
-              
+
           return Flowable.just(errorEvent); // Stop this agent's execution
         }
 
@@ -13115,11 +13078,15 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     * `--region TEXT`: (Required) The Google Cloud location for deployment (e.g., `$GOOGLE_CLOUD_LOCATION`, `us-central1`).
     * `--service_name TEXT`: (Optional) The name for the Cloud Run service (e.g., `$SERVICE_NAME`). Defaults to `adk-default-service-name`.
     * `--app_name TEXT`: (Optional) The application name for the ADK API server (e.g., `$APP_NAME`). Defaults to the name of the directory specified by `AGENT_PATH` (e.g., `capital_agent` if `AGENT_PATH` is `./capital_agent`).
-    * `--agent_engine_id TEXT`: (Optional) If you are using a managed session service via Agent Runtime, provide its resource ID here.
+    * `--session_service_uri TEXT`: (Optional) The URI of the session service. If you are using a managed session service via Agent Runtime, pass `agentengine://<agent_engine>`, where `<agent_engine>` is either the resource ID or the full `projects/*/locations/*/reasoningEngines/*` resource name. Other supported forms are `memory://` and any SQLAlchemy database URL (e.g., `sqlite://<path>`).
+    * `--artifact_service_uri TEXT`: (Optional) The URI of the artifact service (e.g., `gs://<bucket_name>` for Cloud Storage, `file://<path>`, or `memory://`).
+    * `--memory_service_uri TEXT`: (Optional) The URI of the memory service (e.g., `rag://<rag_corpus_id>`, `agentengine://<agent_engine>`, or `memory://`).
     * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
     * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
     * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
     * `--help`: Show the help message and exit.
+
+    When `--session_service_uri` and `--artifact_service_uri` are not set, the deployed container falls back to the in-memory session and artifact services, and sessions and artifacts are lost whenever a Cloud Run instance is recycled. Set both options for any deployment that must retain this data.
 
     ##### Passing gcloud CLI Arguments
 
@@ -14270,7 +14237,7 @@ adk deploy gke [OPTIONS] AGENT_PATH
 | --region    | The Google Cloud region of your cluster (e.g., us-central1).    | Yes |
 | --service_type | The type of Kubernetes service to create. Accepts `ClusterIP` (default) or `LoadBalancer`. | No |
 | --with_ui   | Deploys both the agent's back-end API and a companion front-end user interface.    | No |
-| --log_level   | Sets the logging level for the deployment process. Options: debug, info, warning, error.     | No |
+| --log_level   | Sets the logging level for the deployment process. Options: debug, info, warning, error, critical.     | No |
 
 
 ### How it works
@@ -16888,13 +16855,6 @@ You can also specify a pre-built `user_persona` in the following manner:
 ```
 
 While the conversation plan dictates what must be accomplished, the persona dictates how the model phrases its queries and reacts to the agent's responses.
-
-!!! tip "Try it in Colab"
-
-    Test this entire workflow yourself in an interactive notebook on
-    [Simulating User Conversations to Dynamically Evaluate ADK Agents](https://github.com/google/adk-samples/blob/main/python/notebooks/evaluation/user_simulation_in_adk_evals.ipynb).
-    You'll define a conversation scenario, run a "dry run" to check the
-    dialogue, and then perform a full evaluation to score the agent's responses.
 
 ## User personas
 
@@ -22927,14 +22887,6 @@ ADK supports multiple grounding approaches:
 
     - [Blog post: 10-minute Agentic RAG with Vector Search 2.0 and ADK](https://medium.com/google-cloud/10-minute-agentic-rag-with-the-new-vector-search-2-0-and-adk-655fff0bacac)
 
--   :material-notebook: **Vector Search 2.0 Travel Agent Notebook**
-
-    ---
-
-    A hands-on Jupyter notebook companion to the Agentic RAG blog post. Build an end-to-end travel agent using real Airbnb data, auto-embeddings, hybrid search with RRF ranking, and ADK tool integration.
-
-    - [Vector Search 2.0 Travel Agent Notebook](https://github.com/google/adk-samples/blob/main/python/notebooks/grounding/vectorsearch2_travel_agent.ipynb)
-
 -   :material-text-search: **Deep Search Agent**
 
     ---
@@ -22942,14 +22894,6 @@ ADK supports multiple grounding approaches:
     A production-ready fullstack research agent that transforms topics into comprehensive reports with citations. Features a two-phase workflow with human-in-the-loop plan approval, iterative search refinement, and multi-agent architecture for planning, researching, critiquing, and composing.
 
     - [Deep Search Agent](https://github.com/google/adk-samples/tree/main/python/agents/deep-search)
-
--   :material-file-document-multiple: **RAG Agent**
-
-    ---
-
-    A document Q&A agent powered by Knowledge Engine. Upload documents and ask questions to receive accurate answers with citations formatted as URLs pointing to source materials.
-
-    - [RAG Agent](https://github.com/google/adk-samples/tree/main/python/agents/RAG)
 
 </div>
 
@@ -31421,11 +31365,15 @@ catalog_tags: ["mcp"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
 </div>
 
-The [e2a MCP Server](https://github.com/Mnexa-AI/e2a/tree/main/mcp) connects
+The [e2a MCP Server](https://github.com/tokencanopy/e2a/tree/main/mcp) connects
 your ADK agent to [e2a](https://e2a.dev), an authenticated email gateway built
 for AI agents. This integration gives your agent its own email inbox to send,
-receive, and reply to messages using natural language, with SPF/DKIM-verified
-inbound mail and optional human-in-the-loop approval on outbound messages.
+receive, and reply to messages using natural language, with SPF/DKIM/DMARC
+verification on inbound mail and an optional human review hold on outbound
+messages.
+
+The server is hosted at `https://api.e2a.dev/mcp` and speaks Streamable HTTP —
+there is nothing to install or run locally.
 
 ## Use cases
 
@@ -31433,65 +31381,25 @@ inbound mail and optional human-in-the-loop approval on outbound messages.
   `support-bot@your-domain.com`) and let agents send and receive mail just like
   a teammate.
 
-- **Authenticated inbound**: Every incoming message arrives with SPF and DKIM
-  verification results so your agent knows whether the sender is who they claim
-  to be.
+- **Authenticated inbound**: Every incoming message carries SPF, DKIM, and
+  DMARC evidence, so your agent can tell whether the sender is who they claim
+  to be before acting on the content.
 
-- **Human-in-the-loop approval**: Configure HITL on any agent and outbound
-  messages are held in a pending queue until a reviewer approves them,
-  optionally with edits to subject, body, or recipients before sending.
+- **Human-in-the-loop review**: Turn on a review hold and outbound messages are
+  parked as `pending_review` until a human approves them — optionally with
+  edits to the subject, body, or recipients before sending.
 
-- **Automate threaded conversations**: Reply to received emails with proper
-  In-Reply-To and References headers preserved, so threads stay intact across
-  multiple turns.
+- **Automate threaded conversations**: Reply with `In-Reply-To` and
+  `References` headers preserved, so threads stay intact across multiple turns
+  in the recipient's mail client.
 
 ## Prerequisites
 
 - A free [e2a account](https://e2a.dev) and an API key from the dashboard
-- Node.js 18+ (only required for the local MCP server)
 
 ## Use with agent
 
 === "Python"
-
-    === "Local MCP Server"
-
-        ```python
-        from google.adk.agents import Agent
-        from google.adk.tools.mcp_tool import McpToolset
-        from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-        from mcp import StdioServerParameters
-
-        E2A_API_KEY = "YOUR_E2A_API_KEY"
-        E2A_AGENT_EMAIL = "your-bot@your-domain.com"  # optional default inbox
-
-        root_agent = Agent(
-            model="gemini-flash-latest",
-            name="e2a_agent",
-            instruction=(
-                "You manage email through the e2a tools. Call whoami once "
-                "to find your inbox address. Use list_messages and "
-                "get_message to read; use reply_to_message (not "
-                "send_email) when replying to an existing thread so "
-                "threading headers are preserved."
-            ),
-            tools=[
-                McpToolset(
-                    connection_params=StdioConnectionParams(
-                        server_params=StdioServerParameters(
-                            command="npx",
-                            args=["-y", "@e2a/mcp-server"],
-                            env={
-                                "E2A_API_KEY": E2A_API_KEY,
-                                "E2A_AGENT_EMAIL": E2A_AGENT_EMAIL,
-                            },
-                        ),
-                        timeout=30,
-                    ),
-                )
-            ],
-        )
-        ```
 
     === "Remote MCP Server"
 
@@ -31508,16 +31416,18 @@ inbound mail and optional human-in-the-loop approval on outbound messages.
             model="gemini-flash-latest",
             name="e2a_agent",
             instruction=(
-                "You manage email through the e2a tools. Call whoami once "
-                "to find your inbox address. Use list_messages and "
-                "get_message to read; use reply_to_message (not "
-                "send_email) when replying to an existing thread so "
-                "threading headers are preserved."
+                "You manage email through the e2a tools. Call whoami once to "
+                "learn your identity and inbox address. Use list_messages and "
+                "get_message to read; use reply_to_message when replying to an "
+                "existing thread (it preserves In-Reply-To and References), and "
+                "send_message only to start a new thread. Both 'accepted' and "
+                "'pending_review' are successful outcomes — never re-send after "
+                "either one."
             ),
             tools=[
                 McpToolset(
                     connection_params=StreamableHTTPConnectionParams(
-                        url="https://mcp.e2a.dev/mcp",
+                        url="https://api.e2a.dev/mcp",
                         headers={"Authorization": f"Bearer {E2A_API_KEY}"},
                         timeout=30,
                     ),
@@ -31527,41 +31437,6 @@ inbound mail and optional human-in-the-loop approval on outbound messages.
         ```
 
 === "TypeScript"
-
-    === "Local MCP Server"
-
-        ```typescript
-        import { LlmAgent, MCPToolset } from "@google/adk";
-
-        const E2A_API_KEY = "YOUR_E2A_API_KEY";
-        const E2A_AGENT_EMAIL = "your-bot@your-domain.com"; // optional default inbox
-
-        const rootAgent = new LlmAgent({
-            model: "gemini-flash-latest",
-            name: "e2a_agent",
-            instruction:
-                "You manage email through the e2a tools. Call whoami once " +
-                "to find your inbox address. Use list_messages and " +
-                "get_message to read; use reply_to_message (not " +
-                "send_email) when replying to an existing thread so " +
-                "threading headers are preserved.",
-            tools: [
-                new MCPToolset({
-                    type: "StdioConnectionParams",
-                    serverParams: {
-                        command: "npx",
-                        args: ["-y", "@e2a/mcp-server"],
-                        env: {
-                            E2A_API_KEY: E2A_API_KEY,
-                            E2A_AGENT_EMAIL: E2A_AGENT_EMAIL,
-                        },
-                    },
-                }),
-            ],
-        });
-
-        export { rootAgent };
-        ```
 
     === "Remote MCP Server"
 
@@ -31574,15 +31449,17 @@ inbound mail and optional human-in-the-loop approval on outbound messages.
             model: "gemini-flash-latest",
             name: "e2a_agent",
             instruction:
-                "You manage email through the e2a tools. Call whoami once " +
-                "to find your inbox address. Use list_messages and " +
-                "get_message to read; use reply_to_message (not " +
-                "send_email) when replying to an existing thread so " +
-                "threading headers are preserved.",
+                "You manage email through the e2a tools. Call whoami once to " +
+                "learn your identity and inbox address. Use list_messages and " +
+                "get_message to read; use reply_to_message when replying to an " +
+                "existing thread (it preserves In-Reply-To and References), and " +
+                "send_message only to start a new thread. Both 'accepted' and " +
+                "'pending_review' are successful outcomes — never re-send after " +
+                "either one.",
             tools: [
                 new MCPToolset({
                     type: "StreamableHTTPConnectionParams",
-                    url: "https://mcp.e2a.dev/mcp",
+                    url: "https://api.e2a.dev/mcp",
                     transportOptions: {
                         requestInit: {
                             headers: {
@@ -31597,69 +31474,70 @@ inbound mail and optional human-in-the-loop approval on outbound messages.
         export { rootAgent };
         ```
 
+!!! tip "For production, pair the toolset with the e2a SDK"
+
+    The MCP toolset hands the inbox to the model. Keep the deterministic
+    parts — verifying webhook signatures, handling at-least-once delivery,
+    sending idempotently — in application code with the
+    [Python](https://pypi.org/project/e2a/) or
+    [TypeScript](https://www.npmjs.com/package/@e2a/sdk) SDK. The ADK webhook
+    example below is a complete working version of that shape.
+
 ## Available tools
 
-### Identity
+The hosted server exposes 60+ tools; call `tools/list` against the endpoint for
+the authoritative set. Which ones you see depends on your key: an
+**agent-scoped** key (`e2a_agt_…`) — recommended for a deployed agent — sees
+only the runtime tools, while an **account-scoped** key (`e2a_acct_…`) also
+sees the admin tools below.
+
+### Runtime — inbox tools
 
 Tool | Description
 ---- | -----------
-`whoami` | Return the default agent's full record (requires `E2A_AGENT_EMAIL` when the account has more than one agent)
-`list_agents` | List every agent inbox owned by the authenticated user
-`create_agent` | Register a new inbox using a slug on the shared domain; defaults to `local` mode so the agent receives mail by polling and no webhook is required
-`update_agent` | Update an existing agent's webhook URL, mode, or HITL setting
-`delete_agent` | Permanently delete an agent (requires `confirm: true`) and stop accepting mail for that address
+`whoami` | Return the authenticated identity: user, credential scope, plan and usage limits, plus `agent_email` for an agent-scoped credential
+`get_agent` | Fetch one agent's full record
+`list_messages` | List inbox or sent mail with `direction`, `read_status`, search filters, and cursor pagination
+`get_message` | Full body, headers, attachment metadata, and SPF/DKIM/DMARC evidence for one message
+`get_message_lifecycle` | Reconstructed delivery history for one message
+`get_attachment` | Attachment metadata, or the bytes inline with `inline: true`
+`send_message` | Send a new email; returns `accepted`, or `pending_review` when a review hold catches it — both are success, neither should be retried
+`reply_to_message` | Reply in-thread; preserves `In-Reply-To` and `References`
+`forward_message` | Forward a message to new recipients
+`list_conversations` / `get_conversation` | Browse threads rather than individual messages
+`update_message_labels` | Add or remove labels on a message
+`delete_message` / `restore_message` | Soft-delete to trash, and restore
 
-!!! warning "Cloud-mode agents must verify webhook signatures"
-
-    Agents created with `agent_mode: "cloud"` receive mail via webhooks instead
-    of polling. Your webhook handler must verify the HMAC signature on every
-    delivery. See the [cloud-mode webhook
-    example](https://github.com/Mnexa-AI/e2a/tree/main/examples/adk-cloud-webhook)
-    for a complete setup with signature verification.
-
-### Messages
-
-Tool | Description
----- | -----------
-`send_email` | Send a new email; returns `status: pending_approval` instead of `sent` when HITL is enabled
-`reply_to_message` | Reply to an inbound message; preserves In-Reply-To and References headers
-`list_messages` | List inbound mail with `status` filter (unread / read / all) and pagination
-`get_message` | Fetch full body, headers, and attachment metadata for one message
-`get_attachment_data` | Download an attachment's bytes by message id and 0-based attachment index (returned as base64)
-
-### Human-in-the-loop approval
+### Admin — provisioning and setup
 
 Tool | Description
 ---- | -----------
-`list_pending_messages` | List outbound mail awaiting human approval, soonest-expiring first
-`get_pending_message` | Get the full draft (subject, recipients, body) of a pending message
-`approve_pending_message` | Send a held message, optionally with reviewer edits (subject / body / recipients)
-`reject_pending_message` | Discard a held message; optional `reason` stored for audit
-
-### Domains
-
-Tool | Description
----- | -----------
-`list_domains` | List every custom domain registered to the authenticated user, with verification state
-`register_domain` | Add a custom domain and receive the DNS records needed to prove ownership
-`verify_domain` | Re-run DNS verification on a registered domain after the records are in place
-`delete_domain` | Remove a custom domain (requires `confirm: true`; agents on the shared domain are unaffected)
+`list_agents`, `create_agent`, `update_agent`, `delete_agent`, `restore_agent` | Manage agent inboxes
+`get_protection`, `update_protection` | Per-agent screening and review-hold configuration
+`list_domains`, `register_domain`, `get_domain`, `verify_domain`, `delete_domain` | Custom domain registration and DNS verification
+`list_reviews`, `get_review`, `approve_review`, `reject_review` | Work the human review queue
+`list_webhooks`, `create_webhook`, `update_webhook`, `delete_webhook`, `rotate_webhook_secret`, `test_webhook`, `list_webhook_deliveries` | Webhook subscriptions and delivery history
+`list_events`, `get_event`, `redeliver_event` | Event log and replay
+`list_templates`, `create_template`, `update_template`, `delete_template`, `validate_template` | Server-side email templates (beta)
+`list_api_keys`, `create_api_key`, `delete_api_key` | API key management
 
 ## Configuration
 
-Variable | Required | Default | Description
--------- | -------- | ------- | -----------
-`E2A_API_KEY` | Yes | — | Your e2a API key
-`E2A_AGENT_EMAIL` | No | — | Default agent inbox; scopes tools so the LLM doesn't need to specify it on every call
-`E2A_BASE_URL` | No | `https://e2a.dev` | Self-hosted deployment URL (local MCP server only)
+The hosted endpoint needs no environment variables beyond your API key, which
+ADK passes in the `Authorization` header shown above. To use a self-hosted e2a
+deployment, change the `url` to that deployment's `/mcp` endpoint.
+
+Interactive MCP clients can add `https://api.e2a.dev/mcp` as an OAuth 2.1
+connector instead of pasting a key. To receive mail, poll `list_messages`, open
+a WebSocket with the SDK's `listen()` (no public URL required), or subscribe an
+HTTPS endpoint with `create_webhook`.
 
 ## Additional resources
 
-- [e2a MCP Server source](https://github.com/Mnexa-AI/e2a/tree/main/mcp)
-- [Runnable ADK example](https://github.com/Mnexa-AI/e2a/tree/main/mcp/examples/adk)
-- [Cloud-mode webhook example](https://github.com/Mnexa-AI/e2a/tree/main/examples/adk-cloud-webhook)
+- [e2a MCP Server source](https://github.com/tokencanopy/e2a/tree/main/mcp)
+- [Runnable ADK example](https://github.com/tokencanopy/e2a/tree/main/mcp/examples/adk)
+- [ADK webhook example](https://github.com/tokencanopy/e2a/tree/main/examples/adk-cloud-webhook)
 - [e2a documentation](https://e2a.dev)
-- [npm package](https://www.npmjs.com/package/@e2a/mcp-server)
 
 ================
 File: docs/integrations/elevenlabs.md
@@ -34353,9 +34231,7 @@ The `vertex_ai_rag_retrieval` tool allows the agent to perform private data
 retrieval using Knowledge Engine.
 
 When you use grounding with Knowledge Engine, you need to prepare a RAG corpus
-beforehand. Please refer to the [RAG ADK agent
-sample](https://github.com/google/adk-samples/blob/main/python/agents/RAG/rag/shared_libraries/prepare_corpus_and_data.py)
-or [Knowledge Engine
+beforehand. Please refer to the [Knowledge Engine
 page](https://cloud.google.com/vertex-ai/generative-ai/docs/rag-engine/rag-quickstart)
 for setting it up.
 
@@ -41145,6 +41021,10 @@ to install or run locally.
 - **OCR at agent runtime**: Extract text and structure from images and scanned
   documents as a step inside a larger agent workflow.
 
+- **Structured data extraction**: Pull named fields out of forms, invoices, and
+  contracts as JSON matching a schema, either one you supply or one the server
+  drafts from the document.
+
 ## Prerequisites
 
 - An [Unstructured account](https://transform.unstructured.io) and API key.
@@ -41206,17 +41086,28 @@ the agent pause between status checks, because parsing jobs run asynchronously:
             name="transform_agent",
             instruction=(
                 "You parse documents with the Unstructured Transform MCP server. "
-                "Pass public https:// file URLs straight to transform_files. It "
-                "returns a job_id; poll with check_transform_status, calling "
+                "Pass public https:// file URLs straight to start_transform_job. It "
+                "returns a job_id; poll with check_job_status, calling "
                 "wait_seconds(30) between checks (jobs take 30 seconds to a few "
-                "minutes). When the job completes, call get_transform_results and "
-                "report the parsed content back to the user. transform_files "
+                "minutes). When the job completes, call get_job_results and "
+                "report the parsed content back to the user. start_transform_job "
                 "accepts an optional stages config; it auto-selects a parse "
                 "strategy by default, but if the output looks low quality "
                 "(garbled text or lost tables), re-run the file with a hi_res "
-                "partition strategy for a cleaner result. If asked to parse a "
-                "local file, explain that this requires the upload helper from the "
-                "Unstructured ADK guide."
+                "partition strategy for a cleaner result. If the user wants "
+                "specific fields rather than the whole document, extract "
+                "instead of just parsing. The extraction tools read the element "
+                "JSON a parse produces, so parse the file first and keep the "
+                "output_ref that get_job_results returns for it. Call "
+                "suggest_extraction_schema_for_file with that output_ref when "
+                "you need a schema, then start_extraction_job with "
+                "element_json_refs set to the output_refs and schema_to_extract "
+                "set to a JSON Schema passed as a JSON string. Poll and read an "
+                "extraction job with check_job_status and get_job_results like "
+                "any other job; its results come back inline, wrapped with the "
+                "source filename, so report that filename with each object. If "
+                "asked to parse a local file, explain that this requires the "
+                "upload helper from the Unstructured ADK guide."
             ),
             tools=[
                 wait_seconds,
@@ -41231,9 +41122,11 @@ the agent pause between status checks, because parsing jobs run asynchronously:
                     ),
                     tool_filter=[
                         "request_file_upload_url",
-                        "transform_files",
-                        "check_transform_status",
-                        "get_transform_results",
+                        "start_transform_job",
+                        "suggest_extraction_schema_for_file",
+                        "start_extraction_job",
+                        "check_job_status",
+                        "get_job_results",
                     ],
                 )
             ],
@@ -41242,11 +41135,17 @@ the agent pause between status checks, because parsing jobs run asynchronously:
 
 !!! note
 
-    Transforming a document is asynchronous: `transform_files` starts a job,
-    the agent polls `check_transform_status`, and `get_transform_results`
-    returns pre-signed download URLs for the output. Instruct your agent to
+    Transforming a document is asynchronous: `start_transform_job` starts a
+    job, the agent polls `check_job_status`, and `get_job_results` returns
+    pre-signed download URLs for the output. Instruct your agent to
     pause between status checks, as shown above, so a polling loop does not
     burn through model rate limits.
+
+    Structured-data extraction is a second asynchronous job that runs on the
+    element JSON of a completed parse, identified by the `output_ref` that
+    `get_job_results` returns for each file. A prompt that parses and then
+    extracts therefore runs two polling loops, so allow for the extra time and
+    model steps.
 
     To parse **local** files, the agent also needs a plain function tool that
     HTTP `PUT`s the file bytes to the pre-signed URL returned by
@@ -41260,9 +41159,11 @@ the agent pause between status checks, because parsing jobs run asynchronously:
 Tool | Description
 ---- | -----------
 `request_file_upload_url` | Returns a pre-signed upload URL and file reference for a local file.
-`transform_files` | Starts a parsing job for uploaded files or public HTTP(S) URLs; returns a `job_id`.
-`check_transform_status` | Reports whether a job is `SCHEDULED`, `IN_PROGRESS`, or `COMPLETED`.
-`get_transform_results` | Returns the parsed output and pre-signed download URLs for a completed job.
+`start_transform_job` | Starts a parsing job for uploaded files or public HTTP(S) URLs; returns a `job_id`.
+`suggest_extraction_schema_for_file` | Drafts a JSON Schema from one parsed document's element JSON, for when you do not have a schema yet.
+`start_extraction_job` | Starts a structured-data extraction job over parsed element JSON against a JSON Schema; returns a `job_id`.
+`check_job_status` | Reports whether a job is `SCHEDULED`, `IN_PROGRESS`, or `COMPLETED`. Serves both parsing and extraction jobs.
+`get_job_results` | Returns a completed job's output: pre-signed download URLs for a parsing job, or the extracted data inline for an extraction job.
 
 ## Resources
 
@@ -47970,7 +47871,7 @@ agent. Just like you wouldn't start every text message from scratch, agents need
 context regarding the ongoing interaction. The `Session` object in ADK is
 designed specifically to track and manage these individual conversation threads.
 
-## The `Session` object
+## `Session` objects
 
 When a user starts interacting with your agent, the `SessionService` creates a
 `Session` object (`google.adk.sessions.Session`). This object acts as the
@@ -47997,6 +47898,9 @@ are its key properties:
   an event occurred in this conversation thread.
 
 ### Example: Examining session properties
+
+The following code example demonstrates how to list various values stored in a
+session object:
 
 === "Python"
 
@@ -48126,6 +48030,41 @@ are its key properties:
 
 *(**Note:** The state shown above is only the initial state. State updates
 happen via events, as discussed in the State section.)*
+
+## Session lifecycle
+
+<img src="../../assets/event-loop.png" alt="Session lifecycle">
+
+Here’s a simplified flow of how `Session` and `SessionService` work together
+during a conversation turn:
+
+1. **Start or Resume:** Your application needs to use the `SessionService` to
+   either `create_session` (for a new chat) or use an existing session id.
+2. **Context Provided:** The `Runner` gets the appropriate `Session` object from
+   the appropriate service method, providing the agent with access to the
+   corresponding Session's `state` and `events`.
+3. **Agent Processing:** The user prompts the agent with a query. The agent
+   analyzes the query and potentially the session `state` and `events` history
+   to determine the response.
+4. **Response & State Update:** The agent generates a response (and potentially
+   flags data to be updated in the `state`). The `Runner` packages this as an
+   `Event`.
+5. **Save Interaction:** The `Runner` calls
+   `sessionService.append_event(session, event)` with the `session` and the new
+   `event` as the arguments. The service adds the `Event` to the history and
+   updates the session's `state` in storage based on information within the
+   event. The session's `last_update_time` also get updated.
+6. **Ready for Next:** The agent's response goes to the user. The updated
+   `Session` is now stored by the `SessionService`, ready for the next turn
+   (which restarts the cycle at step 1, usually with the continuation of the
+   conversation in the current session).
+7. **End Conversation:** When the conversation is over, your application calls
+   `sessionService.delete_session(...)` to clean up the stored session data if
+   it is no longer required.
+
+This cycle highlights how the `SessionService` ensures conversational continuity
+by managing the history and state associated with each `Session` object.
+
 
 ## Managing sessions with a `SessionService`
 
@@ -48332,40 +48271,6 @@ through a two-tiered locking architecture:
     The schema for the session database changed in ADK Python v1.22.0, which
     requires migration of the Session Database. For more information, see
     [Session database schema migration](/sessions/session/migrate/).
-
-## The session lifecycle
-
-<img src="../../assets/event-loop.png" alt="Session lifecycle">
-
-Here’s a simplified flow of how `Session` and `SessionService` work together
-during a conversation turn:
-
-1. **Start or Resume:** Your application needs to use the `SessionService` to
-   either `create_session` (for a new chat) or use an existing session id.
-2. **Context Provided:** The `Runner` gets the appropriate `Session` object from
-   the appropriate service method, providing the agent with access to the
-   corresponding Session's `state` and `events`.
-3. **Agent Processing:** The user prompts the agent with a query. The agent
-   analyzes the query and potentially the session `state` and `events` history
-   to determine the response.
-4. **Response & State Update:** The agent generates a response (and potentially
-   flags data to be updated in the `state`). The `Runner` packages this as an
-   `Event`.
-5. **Save Interaction:** The `Runner` calls
-   `sessionService.append_event(session, event)` with the `session` and the new
-   `event` as the arguments. The service adds the `Event` to the history and
-   updates the session's `state` in storage based on information within the
-   event. The session's `last_update_time` also get updated.
-6. **Ready for Next:** The agent's response goes to the user. The updated
-   `Session` is now stored by the `SessionService`, ready for the next turn
-   (which restarts the cycle at step 1, usually with the continuation of the
-   conversation in the current session).
-7. **End Conversation:** When the conversation is over, your application calls
-   `sessionService.delete_session(...)` to clean up the stored session data if
-   it is no longer required.
-
-This cycle highlights how the `SessionService` ensures conversational continuity
-by managing the history and state associated with each `Session` object.
 
 ## Troubleshoot session errors
 
@@ -50356,9 +50261,7 @@ Google's Agent Development Kit ([ADK](https://adk.dev)) provides a production-re
 
 ## ADK Gemini Live API Toolkit Demo
 
-To help you understand the concepts in this guide, we provide a working demo application that showcases ADK bidirectional streaming in action. This FastAPI-based demo implements the complete streaming lifecycle with a practical, real-world architecture.
-
-**Demo Repository**: [adk-samples/python/agents/bidi-demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
+To help you understand the concepts in this guide, we reference a demo application that showcases ADK bidirectional streaming in action. This FastAPI-based demo implements the complete streaming lifecycle with a practical, real-world architecture.
 
 ![ADK Gemini Live API Toolkit Demo](assets/bidi-demo-screen.png)
 
@@ -50370,9 +50273,7 @@ The demo features:
 - **Interactive UI**: Web interface with event console for monitoring Live API events
 - **Google Search Integration**: Agent equipped with tool calling capabilities
 
-**We strongly recommend installing and running this demo** before diving into the guide. Hands-on experimentation will help you understand the concepts more deeply, and the demo code serves as a practical reference throughout all parts of this guide.
-
-For installation instructions and usage details, see the [demo README](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo).
+The demo code serves as a practical reference throughout all parts of this guide, with code snippets linked inline as each concept is introduced.
 
 ## 1.1 What is Bidi-streaming?
 
@@ -55741,17 +55642,6 @@ text, audio, and video inputs, and they can provide text and audio output.
     - [LensMosaic Demo](https://lens-mosaic-nhhfh7g7iq-uc.a.run.app)
     - [Source Code](https://github.com/kazunori279/lens-mosaic)
 
--   :material-microphone-outline: **ADK Gemini Live API Toolkit Demo**
-
-    ---
-
-    [![Bidi Demo screenshot](https://raw.githubusercontent.com/google/adk-samples/main/python/agents/bidi-demo/assets/bidi-demo-screen.png)](https://bidi-demo-761793285222.us-central1.run.app/)
-
-    A production-ready reference implementation showcasing ADK Gemini Live API Toolkit with multimodal support (text, audio, image). This FastAPI-based demo demonstrates real-time WebSocket communication, automatic transcription, tool calling with Google Search, and complete streaming lifecycle management.
-
-    - [Bidi Demo](https://bidi-demo-761793285222.us-central1.run.app/)
-    - [Source Code](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
-
 </div>
 
 <div class="grid cards" markdown>
@@ -55764,14 +55654,6 @@ text, audio, and video inputs, and they can provide text and audio output.
     implement low-latency and bidirectional voice and video communication.
 
     - [Quickstart (Gemini Live API Toolkit)](../get-started/streaming/quickstart-streaming.md)
-
--   :material-console-line: **Gemini Live API Toolkit Demo Application**
-
-    ---
-
-    A production-ready reference implementation showcasing ADK Gemini Live API Toolkit with multimodal support (text, audio, image). This FastAPI-based demo demonstrates real-time WebSocket communication, automatic transcription, tool calling with Google Search, and complete streaming lifecycle management. This demo is extensively referenced throughout the development guide series.
-
-    - [ADK Gemini Live API Toolkit Demo](https://github.com/google/adk-samples/tree/main/python/agents/bidi-demo)
 
 -   :material-console-line: **Blog post: ADK Gemini Live API Toolkit Visual Guide**
 
@@ -58505,7 +58387,7 @@ To use an agent as a tool, wrap the agent with the `AgentTool` class.
     AgentTool(agent = agentB)
     ```
 
-### Customization
+### Customize your agent tool
 
 The `AgentTool` class provides the following attributes for customizing its
 behavior:
@@ -58556,9 +58438,8 @@ behavior:
         ```kotlin
         --8<-- "examples/kotlin/snippets/tools/function-tools/AgentTool.kt:agent_tool"
         ```
-
-### How it works
-
+        
+#### How it works
 1. When the `root_agent` receives the long text, its instruction tells it to use
    the 'summarize' tool for long texts.
 2. The framework recognizes 'summarize' as an `AgentTool` that wraps the
@@ -58571,6 +58452,46 @@ behavior:
    `root_agent`.**
 6. The `root_agent` can then take the summary and formulate its final response
    to the user (e.g., "Here's a summary of the text: ...")
+        
+#### Control plugin inheritance
+
+When you wrap an agent with `AgentTool`, you can control whether it
+inherits plugins from the parent runner using the `include_plugins`
+parameter.
+
+* **`include_plugins=True` (default):** The child agent inherits all
+  plugins from the parent, preserving trace spans and event streaming.
+* **`include_plugins=False`:** The child agent runs in an isolated
+  environment without inheriting any plugins from the parent. Use this
+  setting to ensure an agent's execution is self-contained and unaffected
+  by the parent's plugin environment.
+
+=== "Python"
+
+    ```python
+    from google.adk.tools import agent_tool
+
+    # Placeholder definition for MyImageAgent
+    class MyImageAgent:
+        def __init__(
+            self, name="My Agent", description="A simple image agent."
+        ):
+            self.name = name
+            # Added description attribute
+            self.description = description 
+
+    # Example 1: Isolate MyImageAgent from parent plugins 
+    my_isolated_tool = agent_tool.AgentTool(
+        agent=MyImageAgent(), # Instantiate MyImageAgent
+        include_plugins=False
+    )
+
+    # Example 2: Inherit plugins
+    my_observable_tool = agent_tool.AgentTool(
+        agent=MyImageAgent(), # Instantiate MyImageAgent
+        include_plugins=True
+    )
+    ```
 
 ================
 File: docs/tools-custom/index.md
@@ -60420,12 +60341,12 @@ ADK simplifies interacting with external REST APIs by automatically generating c
 !!! tip "Core Benefit"
     Use `OpenAPIToolset` to instantly create agent tools (`RestApiTool`) from your existing API documentation (OpenAPI spec), enabling agents to seamlessly call your web services.
 
-## Key Components
+## Key components
 
 * **`OpenAPIToolset`**: This is the primary class you'll use. You initialize it with your OpenAPI specification, and it handles the parsing and generation of tools.
 * **`RestApiTool`**: This class represents a single, callable API operation (like `GET /pets/{petId}` or `POST /pets`). `OpenAPIToolset` creates one `RestApiTool` instance for each operation defined in your spec.
 
-## How it Works
+## How it works
 
 The process involves these main steps when you use `OpenAPIToolset`:
 
@@ -60443,13 +60364,21 @@ The process involves these main steps when you use `OpenAPIToolset`:
     * **API Details**: Stores the required HTTP method, path, server base URL, parameters (path, query, header, cookie), and request body schema internally.
 
 4. **`RestApiTool` Functionality**: Each generated `RestApiTool`:
-    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on the operation's parameters and request body. This schema tells the LLM how to call the tool (what arguments are expected).
-    * **Execution**: When called by the LLM, it constructs the correct HTTP request (URL, headers, query params, body) using the arguments provided by the LLM and the details from the OpenAPI spec. It handles authentication (if configured) and executes the API call using the `requests` library.
+    * **Schema Generation**: Dynamically creates a `FunctionDeclaration` based on
+   the operation's parameters and request body. This schema tells the LLM how
+   to call the tool (what arguments are expected).
+    * **Execution**: When the LLM calls the tool, the tool constructs the HTTP
+  request, including the URL, headers, query parameters, and body, using the
+  LLM's arguments and the OpenAPI specification. The tool handles
+  authentication if configured, and executes the API call asynchronously using the `httpx` library.
     * **Response Handling**: Returns the API response (typically JSON) back to the agent flow.
 
-5. **Authentication**: You can configure global authentication (like API keys or OAuth - see [Authentication](/tools-custom/authentication/) for details) when initializing `OpenAPIToolset`. This authentication configuration is automatically applied to all generated `RestApiTool` instances.
+5. **Authentication**: You can configure global authentication (like API keys or
+   OAuth - see [Authentication](/tools-custom/authentication/) for details)
+   when initializing `OpenAPIToolset`. This authentication configuration is
+   automatically applied to all generated `RestApiTool` instances.
 
-## Usage Workflow
+## Usage workflow
 
 Follow these steps to integrate an OpenAPI spec into your agent:
 
@@ -60481,10 +60410,10 @@ Follow these steps to integrate an OpenAPI spec into your agent:
     )
     ```
 
-4. **Instruct Agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
-5. **Run Agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
+4. **Instruct agent**: Update your agent's instructions to inform it about the new API capabilities and the names of the tools it can use (e.g., `list_pets`, `create_pet`). The tool descriptions generated from the spec will also help the LLM.
+5. **Run agent**: Execute your agent using the `Runner`. When the LLM determines it needs to call one of the APIs, it will generate a function call targeting the appropriate `RestApiTool`, which will then handle the HTTP request automatically.
 
-## Example
+## See it in action
 
 This example demonstrates generating tools from a simple Pet Store OpenAPI spec (using `httpbin.org` for mock responses) and interacting with them via an agent.
 
