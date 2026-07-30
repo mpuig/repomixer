@@ -1521,35 +1521,35 @@ search:
 
 !!! warning "베타 기능"
 
-    샌드박스 에이전트는 베타 버전입니다. 정식 출시 전까지 API 세부 정보, 기본값, 지원 기능이 변경될 수 있으며, 향후 더 고급 기능이 추가될 수 있습니다.
+    샌드박스 에이전트는 베타 기능입니다. 정식 출시 전까지 API 세부 사항, 기본값 및 지원 기능이 변경될 수 있으며, 향후 더 고급 기능이 추가될 수 있습니다.
 
-최신 에이전트는 파일 시스템의 실제 파일을 다룰 수 있을 때 가장 효과적으로 작동합니다. **샌드박스 에이전트**는 특화된 도구와 셸 명령을 사용하여 대규모 문서 집합을 검색하고 조작하며, 파일을 편집하고, 아티팩트를 생성하고, 명령을 실행할 수 있습니다. 샌드박스는 에이전트가 사용자를 대신해 작업할 수 있는 영구 워크스페이스를 모델에 제공합니다. Agents SDK의 샌드박스 에이전트를 사용하면 에이전트를 샌드박스 환경과 연결하여 손쉽게 실행할 수 있으며, 적절한 파일을 파일 시스템에 배치하고 샌드박스를 오케스트레이션하여 대규모 작업을 쉽게 시작, 중지, 재개할 수 있습니다.
+현대적인 에이전트는 파일 시스템의 실제 파일을 다룰 수 있을 때 가장 효과적으로 작동합니다. **샌드박스 에이전트**는 특수 도구와 셸 명령을 사용하여 대규모 문서 집합을 검색하고 조작하며, 파일을 편집하고, 아티팩트를 생성하고, 명령을 실행할 수 있습니다. 샌드박스는 에이전트가 사용자를 대신해 작업할 수 있는 영구 작업 공간을 모델에 제공합니다. Agents SDK의 샌드박스 에이전트를 사용하면 샌드박스 환경과 결합된 에이전트를 쉽게 실행할 수 있으며, 필요한 파일을 파일 시스템에 배치하고 샌드박스를 오케스트레이션하여 대규모로 작업을 쉽게 시작, 중지, 재개할 수 있습니다.
 
-에이전트에 필요한 데이터를 중심으로 워크스페이스를 정의합니다. 워크스페이스는 GitHub 저장소, 로컬 파일과 디렉터리, 합성 작업 파일, S3 또는 Azure Blob Storage 같은 원격 파일 시스템, 그리고 사용자가 제공하는 기타 샌드박스 입력으로 시작할 수 있습니다.
+에이전트에 필요한 데이터를 중심으로 작업 공간을 정의합니다. GitHub 저장소, 로컬 파일 및 디렉터리, 합성 작업 파일, S3 또는 Azure Blob Storage 같은 원격 파일 시스템 및 사용자가 제공하는 기타 샌드박스 입력에서 시작할 수 있습니다.
 
 <div class="sandbox-harness-image" markdown="1">
 
-![컴퓨팅 환경을 포함한 샌드박스 에이전트 하네스](../assets/images/harness_with_compute.png)
+![컴퓨팅 기능이 포함된 샌드박스 에이전트 하네스](../assets/images/harness_with_compute.png)
 
 </div>
 
-`SandboxAgent`도 여전히 `Agent`입니다. `instructions`, `prompt`, `tools`, `handoffs`, `mcp_servers`, `model_settings`, `output_type`, 가드레일, 훅과 같은 일반적인 에이전트 인터페이스를 그대로 유지하며, 일반적인 `Runner` API를 통해 실행됩니다. 달라지는 부분은 실행 경계입니다.
+`SandboxAgent`도 여전히 `Agent`입니다. `instructions`, `prompt`, `tools`, `handoffs`, `mcp_servers`, `model_settings`, `output_type`, 가드레일, 훅과 같은 일반적인 에이전트 인터페이스를 유지하며, 일반적인 `Runner` API를 통해 실행됩니다. 달라지는 점은 실행 경계입니다.
 
-- `SandboxAgent`는 에이전트 자체를 정의합니다. 일반적인 에이전트 구성에 더해 `default_manifest`, `base_instructions`, `run_as` 같은 샌드박스 전용 기본값과 파일 시스템 도구, 셸 액세스, 스킬, 메모리 또는 압축 같은 기능을 포함합니다.
-- `Manifest`는 파일, 저장소, 마운트, 환경을 포함하여 새 샌드박스 워크스페이스에 필요한 초기 콘텐츠와 레이아웃을 선언합니다.
-- 샌드박스 세션은 명령이 실행되고 파일이 변경되는 실제 격리 환경입니다.
-- [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]는 샌드박스 세션을 직접 주입하거나, 직렬화된 샌드박스 세션 상태로 다시 연결하거나, 샌드박스 클라이언트를 통해 새 샌드박스 세션을 생성하는 등 실행에서 샌드박스 세션을 가져오는 방식을 결정합니다.
-- 저장된 샌드박스 상태와 스냅샷을 사용하면 이후 실행에서 이전 작업에 다시 연결하거나, 저장된 콘텐츠를 바탕으로 새 샌드박스 세션을 초기화할 수 있습니다.
+- `SandboxAgent`는 에이전트 자체를 정의합니다. 일반적인 에이전트 구성뿐 아니라 `default_manifest`, `base_instructions`, `run_as` 같은 샌드박스별 기본값과 파일 시스템 도구, 셸 액세스, 스킬, 메모리 또는 압축 같은 기능도 포함합니다.
+- `Manifest`는 파일, 저장소, 마운트, 환경을 포함하여 새 샌드박스 작업 공간의 원하는 초기 콘텐츠와 레이아웃을 선언합니다.
+- 샌드박스 세션은 명령이 실행되고 파일이 변경되는 활성 격리 환경입니다.
+- [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]는 실행에서 샌드박스 세션을 가져오는 방법을 결정합니다. 예를 들어 세션을 직접 주입하거나, 직렬화된 샌드박스 세션 상태에서 다시 연결하거나, 샌드박스 클라이언트를 통해 새 샌드박스 세션을 생성할 수 있습니다.
+- 저장된 샌드박스 상태와 스냅샷을 사용하면 이후 실행에서 이전 작업에 다시 연결하거나 저장된 콘텐츠를 기반으로 새 샌드박스 세션을 시작할 수 있습니다.
 
-`Manifest`는 새 세션의 워크스페이스 계약이며, 모든 실제 샌드박스에 관한 완전한 정보의 원천은 아닙니다. 실행의 유효 워크스페이스는 재사용된 샌드박스 세션, 직렬화된 샌드박스 세션 상태 또는 실행 시 선택한 스냅샷에서 가져올 수도 있습니다.
+`Manifest`는 새 세션의 작업 공간 계약이며, 모든 활성 샌드박스에 대한 완전한 정보 원본은 아닙니다. 실행의 실질적인 작업 공간은 재사용된 샌드박스 세션, 직렬화된 샌드박스 세션 상태 또는 실행 시 선택한 스냅샷에서 가져올 수도 있습니다.
 
-이 페이지에서 "샌드박스 세션"은 샌드박스 클라이언트가 관리하는 실제 실행 환경을 의미합니다. 이는 [세션](../sessions/index.md)에서 설명하는 SDK의 대화형 [`Session`][agents.memory.session.Session] 인터페이스와 다릅니다.
+이 페이지에서 "샌드박스 세션"은 샌드박스 클라이언트가 관리하는 활성 실행 환경을 의미합니다. 이는 [세션](../sessions/index.md)에서 설명하는 SDK의 대화형 [`Session`][agents.memory.session.Session] 인터페이스와 다릅니다.
 
-외부 런타임은 계속해서 승인, 트레이싱, 핸드오프, 재개 관련 기록을 담당합니다. 샌드박스 세션은 명령, 파일 변경, 환경 격리를 담당합니다. 이러한 역할 분리는 모델의 핵심 요소입니다.
+외부 런타임은 계속해서 승인, 트레이싱, 핸드오프 및 재개 관련 기록 관리를 담당합니다. 샌드박스 세션은 명령, 파일 변경 및 환경 격리를 담당합니다. 이러한 역할 분리는 이 모델의 핵심 요소입니다.
 
-### 구성 요소 간 연계
+### 구성 요소의 관계
 
-샌드박스 실행은 에이전트 정의와 실행별 샌드박스 구성을 결합합니다. 러너는 에이전트를 준비하고 실제 샌드박스 세션에 바인딩하며, 이후 실행을 위해 상태를 저장할 수 있습니다.
+샌드박스 실행은 에이전트 정의와 실행별 샌드박스 구성을 결합합니다. 러너는 에이전트를 준비하고 활성 샌드박스 세션에 바인딩하며, 이후 실행을 위해 상태를 저장할 수 있습니다.
 
 ```mermaid
 flowchart LR
@@ -1565,43 +1565,43 @@ flowchart LR
     sandbox --> saved
 ```
 
-샌드박스 전용 기본값은 `SandboxAgent`에 둡니다. 실행별 샌드박스 세션 선택 사항은 `SandboxRunConfig`에 둡니다.
+샌드박스별 기본값은 `SandboxAgent`에 유지합니다. 실행별 샌드박스 세션 선택 사항은 `SandboxRunConfig`에 유지합니다.
 
-수명 주기는 다음 세 단계로 생각할 수 있습니다.
+수명 주기는 다음 세 단계로 나눌 수 있습니다.
 
-1. `SandboxAgent`, `Manifest`, 기능을 사용하여 에이전트와 새 워크스페이스 계약을 정의합니다.
+1. `SandboxAgent`, `Manifest` 및 기능을 사용해 에이전트와 새 작업 공간 계약을 정의합니다.
 2. 샌드박스 세션을 주입, 재개 또는 생성하는 `SandboxRunConfig`를 `Runner`에 제공하여 실행합니다.
-3. 러너가 관리하는 `RunState`, 명시적인 샌드박스 `session_state` 또는 저장된 워크스페이스 스냅샷에서 나중에 작업을 이어갑니다.
+3. 러너가 관리하는 `RunState`, 명시적인 샌드박스 `session_state` 또는 저장된 작업 공간 스냅샷에서 나중에 작업을 계속합니다.
 
-셸 액세스가 가끔 사용하는 도구 중 하나일 뿐이라면 [도구 가이드](../tools.md)의 호스티드 셸부터 사용하세요. 워크스페이스 격리, 샌드박스 클라이언트 선택 또는 샌드박스 세션 재개 동작이 설계의 일부라면 샌드박스 에이전트를 사용하세요.
+셸 액세스가 가끔 사용하는 도구 중 하나에 불과하다면 [도구 가이드](../tools.md)의 호스티드 셸로 시작하세요. 작업 공간 격리, 샌드박스 클라이언트 선택 또는 샌드박스 세션 재개 동작이 설계의 일부라면 샌드박스 에이전트를 사용하세요.
 
 ## 사용 시점
 
-샌드박스 에이전트는 다음과 같은 워크스페이스 중심 워크플로에 적합합니다.
+샌드박스 에이전트는 다음과 같은 작업 공간 중심 워크플로에 적합합니다.
 
-- 코딩과 디버깅(예: GitHub 저장소의 이슈 보고서에 대한 자동 수정 작업을 오케스트레이션하고 특정 테스트 실행)
-- 문서 처리와 편집(예: 사용자의 재무 문서에서 정보를 추출하고 작성된 세금 양식 초안 생성)
-- 파일에 기반한 검토 또는 분석(예: 답변하기 전에 온보딩 패킷, 생성된 보고서 또는 아티팩트 번들 확인)
-- 격리된 멀티 에이전트 패턴(예: 각 검토자나 코딩 하위 에이전트에 자체 워크스페이스 제공)
-- 여러 단계로 구성된 워크스페이스 작업(예: 한 실행에서 버그를 수정하고 나중에 회귀 테스트를 추가하거나, 스냅샷 또는 샌드박스 세션 상태에서 재개)
+- 코딩 및 디버깅(예: GitHub 저장소의 이슈 보고서에 대한 자동 수정 작업을 오케스트레이션하고 대상 테스트 실행)
+- 문서 처리 및 편집(예: 사용자의 재무 문서에서 정보를 추출하고 작성된 세금 양식 초안 생성)
+- 파일 기반 검토 또는 분석(예: 답변 전 온보딩 문서 묶음, 생성된 보고서 또는 아티팩트 번들 확인)
+- 격리된 멀티 에이전트 패턴(예: 각 검토자 또는 코딩 하위 에이전트에 자체 작업 공간 제공)
+- 여러 단계로 이루어진 작업 공간 작업(예: 한 실행에서 버그를 수정하고 나중에 회귀 테스트를 추가하거나, 스냅샷 또는 샌드박스 세션 상태에서 재개)
 
-파일이나 지속적으로 변경되는 파일 시스템에 액세스할 필요가 없다면 `Agent`를 계속 사용하세요. 셸 액세스가 가끔 필요한 기능일 뿐이라면 호스티드 셸을 추가하고, 워크스페이스 경계 자체가 기능의 일부라면 샌드박스 에이전트를 사용하세요.
+파일이나 지속적으로 변경되는 파일 시스템에 액세스할 필요가 없다면 계속 `Agent`를 사용하세요. 셸 액세스가 가끔 필요한 기능에 불과하다면 호스티드 셸을 추가하고, 작업 공간 경계 자체가 기능의 일부라면 샌드박스 에이전트를 사용하세요.
 
 ## 샌드박스 클라이언트 선택
 
-macOS 또는 Linux의 로컬 개발에는 `UnixLocalSandboxClient`로 시작하세요. Windows에서는 `DockerSandboxClient` 또는 호스티드 공급자를 사용하세요. 지원되는 모든 플랫폼에서 컨테이너 격리나 이미지 일관성이 필요하다면 `DockerSandboxClient`로 전환하고, 공급자가 관리하는 실행이 필요하다면 호스티드 공급자로 전환하세요.
+macOS 또는 Linux에서 로컬로 개발할 때는 `UnixLocalSandboxClient`로 시작하세요. Windows에서는 `DockerSandboxClient` 또는 호스티드 제공자를 사용하세요. 지원되는 모든 플랫폼에서 컨테이너 격리 또는 이미지 일관성이 필요하면 `DockerSandboxClient`로 전환하고, 제공자가 관리하는 실행이 필요하면 호스티드 제공자로 전환하세요.
 
-대부분의 경우 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에서 샌드박스 클라이언트와 해당 옵션만 변경하면 `SandboxAgent` 정의는 그대로 유지됩니다. 로컬, Docker, 호스티드, 원격 마운트 옵션은 [샌드박스 클라이언트](clients.md)를 참고하세요.
+대부분의 경우 `SandboxAgent` 정의는 그대로 유지하고 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에서 샌드박스 클라이언트와 해당 옵션만 변경합니다. 로컬, Docker, 호스티드 및 원격 마운트 옵션은 [샌드박스 클라이언트](clients.md)를 참조하세요.
 
 ## 핵심 구성 요소
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 계층 | 주요 SDK 구성 요소 | 답하는 질문 |
+| 계층 | 주요 SDK 구성 요소 | 답변하는 질문 |
 | --- | --- | --- |
-| 에이전트 정의 | `SandboxAgent`, `Manifest`, 기능 | 어떤 에이전트를 실행하며, 어떤 새 세션 워크스페이스 계약에서 시작해야 합니까? |
-| 샌드박스 실행 | `SandboxRunConfig`, 샌드박스 클라이언트, 실제 샌드박스 세션 | 이 실행은 실제 샌드박스 세션을 어떻게 가져오며, 작업은 어디에서 실행됩니까? |
-| 저장된 샌드박스 상태 | `RunState` 샌드박스 페이로드, `session_state`, 스냅샷 | 이 워크플로는 이전 샌드박스 작업에 어떻게 다시 연결하거나 저장된 콘텐츠에서 새 샌드박스 세션을 초기화합니까? |
+| 에이전트 정의 | `SandboxAgent`, `Manifest`, 기능 | 어떤 에이전트가 실행되며, 어떤 새 세션 작업 공간 계약에서 시작해야 하는가? |
+| 샌드박스 실행 | `SandboxRunConfig`, 샌드박스 클라이언트 및 활성 샌드박스 세션 | 이 실행은 어떻게 활성 샌드박스 세션을 가져오며, 작업은 어디에서 실행되는가? |
+| 저장된 샌드박스 상태 | `RunState` 샌드박스 페이로드, `session_state` 및 스냅샷 | 이 워크플로는 이전 샌드박스 작업에 어떻게 다시 연결하거나 저장된 콘텐츠를 기반으로 새 샌드박스 세션을 시작하는가? |
 
 </div>
 
@@ -1609,131 +1609,131 @@ macOS 또는 Linux의 로컬 개발에는 `UnixLocalSandboxClient`로 시작하�
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 구성 요소 | 담당 범위 | 확인할 질문 |
+| 구성 요소 | 담당 영역 | 확인할 질문 |
 | --- | --- | --- |
-| [`SandboxAgent`][agents.sandbox.sandbox_agent.SandboxAgent] | 에이전트 정의 | 이 에이전트는 무엇을 해야 하며, 어떤 기본값을 함께 유지해야 합니까? |
-| [`Manifest`][agents.sandbox.manifest.Manifest] | 새 세션의 워크스페이스 파일과 폴더 | 실행이 시작될 때 파일 시스템에 어떤 파일과 폴더가 있어야 합니까? |
-| [`Capability`][agents.sandbox.capabilities.capability.Capability] | 샌드박스 네이티브 동작 | 이 에이전트에 어떤 도구, 지침 조각 또는 런타임 동작을 연결해야 합니까? |
-| [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] | 실행별 샌드박스 클라이언트와 샌드박스 세션 소스 | 이 실행은 샌드박스 세션을 주입, 재개 또는 생성해야 합니까? |
-| [`RunState`][agents.run_state.RunState] | 러너가 관리하는 저장된 샌드박스 상태 | 러너가 관리하던 이전 워크플로를 재개하면서 해당 샌드박스 상태를 자동으로 이어가고 있습니까? |
-| [`SandboxRunConfig.session_state`][agents.run_config.SandboxRunConfig.session_state] | 명시적으로 직렬화된 샌드박스 세션 상태 | `RunState` 외부에서 이미 직렬화한 샌드박스 상태로부터 재개하려고 합니까? |
-| [`SandboxRunConfig.snapshot`][agents.run_config.SandboxRunConfig.snapshot] | 새 샌드박스 세션을 위한 저장된 워크스페이스 콘텐츠 | 새 샌드박스 세션을 저장된 파일과 아티팩트에서 시작해야 합니까? |
+| [`SandboxAgent`][agents.sandbox.sandbox_agent.SandboxAgent] | 에이전트 정의 | 이 에이전트는 무엇을 해야 하며, 어떤 기본값을 함께 유지해야 하는가? |
+| [`Manifest`][agents.sandbox.manifest.Manifest] | 새 세션 작업 공간의 파일 및 폴더 | 실행이 시작될 때 파일 시스템에 어떤 파일과 폴더가 있어야 하는가? |
+| [`Capability`][agents.sandbox.capabilities.capability.Capability] | 샌드박스 네이티브 동작 | 어떤 도구, 지침 조각 또는 런타임 동작을 이 에이전트에 연결해야 하는가? |
+| [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] | 실행별 샌드박스 클라이언트 및 샌드박스 세션 소스 | 이 실행은 샌드박스 세션을 주입, 재개 또는 생성해야 하는가? |
+| [`RunState`][agents.run_state.RunState] | 러너가 관리하는 저장된 샌드박스 상태 | 러너가 관리하던 이전 워크플로를 재개하고 그 샌드박스 상태를 자동으로 이어갈 것인가? |
+| [`SandboxRunConfig.session_state`][agents.run_config.SandboxRunConfig.session_state] | 명시적으로 직렬화된 샌드박스 세션 상태 | `RunState` 외부에서 이미 직렬화한 샌드박스 상태로부터 재개할 것인가? |
+| [`SandboxRunConfig.snapshot`][agents.run_config.SandboxRunConfig.snapshot] | 새 샌드박스 세션을 위한 저장된 작업 공간 콘텐츠 | 새 샌드박스 세션을 저장된 파일과 아티팩트에서 시작할 것인가? |
 
 </div>
 
 실용적인 설계 순서는 다음과 같습니다.
 
-1. `Manifest`로 새 세션의 워크스페이스 계약을 정의합니다.
+1. `Manifest`로 새 세션 작업 공간 계약을 정의합니다.
 2. `SandboxAgent`로 에이전트를 정의합니다.
-3. 기본 제공 또는 사용자 정의 기능을 추가합니다.
-4. `RunConfig(sandbox=SandboxRunConfig(...))`에서 각 실행이 샌드박스 세션을 가져오는 방식을 결정합니다.
+3. 기본 제공 또는 사용자 지정 기능을 추가합니다.
+4. 각 실행이 `RunConfig(sandbox=SandboxRunConfig(...))`에서 샌드박스 세션을 가져오는 방법을 결정합니다.
 
 ## 샌드박스 실행 준비 과정
 
 실행 시 러너는 해당 정의를 구체적인 샌드박스 기반 실행으로 변환합니다.
 
-1. `SandboxRunConfig`에서 샌드박스 세션을 확인합니다. `session=...`을 전달하면 해당 실제 샌드박스 세션을 재사용합니다. 그렇지 않으면 `client=...`를 사용하여 세션을 생성하거나 재개합니다.
-2. 실행에 사용할 유효 워크스페이스 입력을 결정합니다. 실행에서 샌드박스 세션을 주입하거나 재개하면 기존 샌드박스 상태가 우선합니다. 그렇지 않으면 러너는 일회성 매니페스트 재정의 또는 `agent.default_manifest`에서 시작합니다. 따라서 `Manifest`만으로 모든 실행의 최종 실제 워크스페이스가 정의되지는 않습니다.
-3. 기능이 결과 매니페스트를 처리하도록 합니다. 이를 통해 최종 에이전트를 준비하기 전에 기능이 파일, 마운트 또는 기타 워크스페이스 범위 동작을 추가할 수 있습니다.
-4. 고정된 순서로 최종 지침을 구성합니다. 먼저 SDK의 기본 샌드박스 프롬프트 또는 명시적으로 재정의한 경우 `base_instructions`를 사용하고, 이어서 `instructions`, 기능 지침 조각, 원격 마운트 정책 텍스트, 렌더링된 파일 시스템 트리를 추가합니다.
-5. 기능 도구를 실제 샌드박스 세션에 바인딩하고 일반적인 `Runner` API를 통해 준비된 에이전트를 실행합니다.
+1. `SandboxRunConfig`에서 샌드박스 세션을 확인합니다. `session=...`을 전달하면 해당 활성 샌드박스 세션을 재사용합니다. 그렇지 않으면 `client=...`를 사용하여 세션을 생성하거나 재개합니다.
+2. 실행에 실질적으로 적용할 작업 공간 입력을 결정합니다. 실행이 샌드박스 세션을 주입하거나 재개하면 기존 샌드박스 상태가 우선합니다. 그렇지 않으면 러너는 일회성 매니페스트 재정의 또는 `agent.default_manifest`에서 시작합니다. 이 때문에 `Manifest`만으로는 모든 실행의 최종 활성 작업 공간을 정의할 수 없습니다.
+3. 기능이 결과 매니페스트를 처리하도록 합니다. 이를 통해 최종 에이전트를 준비하기 전에 기능이 파일, 마운트 또는 기타 작업 공간 범위의 동작을 추가할 수 있습니다.
+4. 고정된 순서로 최종 지침을 구성합니다. 먼저 SDK의 기본 샌드박스 프롬프트 또는 명시적으로 재정의한 경우 `base_instructions`를 사용하고, 이어서 `instructions`, 기능의 지침 조각, 원격 마운트 정책 텍스트, 렌더링된 파일 시스템 트리를 추가합니다.
+5. 기능 도구를 활성 샌드박스 세션에 바인딩하고 일반적인 `Runner` API를 통해 준비된 에이전트를 실행합니다.
 
-샌드박스 사용은 턴의 의미를 바꾸지 않습니다. 턴은 여전히 단일 셸 명령이나 샌드박스 작업이 아니라 모델 단계입니다. 샌드박스 측 작업과 턴 사이에는 고정된 1:1 대응 관계가 없습니다. 일부 작업은 샌드박스 실행 계층 내부에서 처리될 수 있지만, 다른 작업은 추가 모델 단계가 필요한 도구 결과, 승인 또는 기타 상태를 반환합니다. 실용적인 원칙으로는 샌드박스 작업이 발생한 후 에이전트 런타임에서 추가 모델 응답이 필요할 때만 턴이 하나 더 사용됩니다.
+샌드박싱은 턴의 의미를 변경하지 않습니다. 턴은 여전히 하나의 셸 명령이나 샌드박스 작업이 아니라 모델 단계입니다. 샌드박스 측 작업과 턴 사이에는 고정된 1:1 대응 관계가 없습니다. 일부 작업은 샌드박스 실행 계층 내부에서 처리될 수 있지만, 다른 작업은 또 다른 모델 단계가 필요한 도구 결과, 승인 또는 기타 상태를 반환할 수 있습니다. 실용적인 원칙으로, 샌드박스 작업이 수행된 후 에이전트 런타임에 또 다른 모델 응답이 필요할 때만 턴이 하나 더 소비됩니다.
 
-이러한 준비 단계 때문에 `default_manifest`, `instructions`, `base_instructions`, `capabilities`, `run_as`가 `SandboxAgent`를 설계할 때 고려해야 할 주요 샌드박스 전용 옵션입니다.
+이러한 준비 단계 때문에 `SandboxAgent`를 설계할 때 고려해야 할 주요 샌드박스별 옵션은 `default_manifest`, `instructions`, `base_instructions`, `capabilities`, `run_as`입니다.
 
 ## `SandboxAgent` 옵션
 
-일반적인 `Agent` 필드에 추가되는 샌드박스 전용 옵션은 다음과 같습니다.
+다음은 일반적인 `Agent` 필드에 추가되는 샌드박스별 옵션입니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 옵션 | 적합한 용도 |
+| 옵션 | 가장 적합한 용도 |
 | --- | --- |
-| `default_manifest` | 러너가 생성하는 새 샌드박스 세션의 기본 워크스페이스 |
-| `instructions` | SDK 샌드박스 프롬프트 뒤에 추가되는 역할, 워크플로, 성공 기준 |
-| `base_instructions` | SDK 샌드박스 프롬프트를 대체하는 고급 우회 수단 |
-| `capabilities` | 이 에이전트와 함께 유지되어야 하는 샌드박스 네이티브 도구와 동작 |
-| `run_as` | 셸 명령, 파일 읽기, 패치 등 모델에 노출되는 샌드박스 도구의 사용자 ID |
+| `default_manifest` | 러너가 생성하는 새 샌드박스 세션의 기본 작업 공간 |
+| `instructions` | SDK 샌드박스 프롬프트 뒤에 추가되는 역할, 워크플로 및 성공 기준 |
+| `base_instructions` | SDK 샌드박스 프롬프트를 대체하는 고급 이스케이프 해치 |
+| `capabilities` | 이 에이전트와 함께 유지되어야 하는 샌드박스 네이티브 도구 및 동작 |
+| `run_as` | 셸 명령, 파일 읽기, 패치 같은 모델 대상 샌드박스 도구의 사용자 ID |
 
 </div>
 
-샌드박스 클라이언트 선택, 샌드박스 세션 재사용, 매니페스트 재정의, 스냅샷 선택은 에이전트가 아니라 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에 속합니다.
+샌드박스 클라이언트 선택, 샌드박스 세션 재사용, 매니페스트 재정의 및 스냅샷 선택은 에이전트가 아니라 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에 속합니다.
 
 ### `default_manifest`
 
-`default_manifest`는 러너가 이 에이전트의 새 샌드박스 세션을 생성할 때 사용하는 기본 [`Manifest`][agents.sandbox.manifest.Manifest]입니다. 에이전트가 일반적으로 시작할 때 갖추어야 할 파일, 저장소, 보조 자료, 출력 디렉터리, 마운트에 사용합니다.
+`default_manifest`는 러너가 이 에이전트를 위해 새 샌드박스 세션을 생성할 때 사용하는 기본 [`Manifest`][agents.sandbox.manifest.Manifest]입니다. 에이전트가 일반적으로 시작할 때 필요한 파일, 저장소, 보조 자료, 출력 디렉터리 및 마운트에 사용하세요.
 
-이는 기본값일 뿐입니다. 실행에서 `SandboxRunConfig(manifest=...)`로 재정의할 수 있으며, 재사용하거나 재개한 샌드박스 세션은 기존 워크스페이스 상태를 유지합니다.
+이는 기본값일 뿐입니다. 실행에서 `SandboxRunConfig(manifest=...)`를 사용해 재정의할 수 있으며, 재사용되거나 재개된 샌드박스 세션은 기존 작업 공간 상태를 유지합니다.
 
-### `instructions`와 `base_instructions`
+### `instructions` 및 `base_instructions`
 
-여러 프롬프트에서도 유지되어야 하는 짧은 규칙에는 `instructions`를 사용하세요. `SandboxAgent`에서는 이러한 지침이 SDK의 샌드박스 기본 프롬프트 뒤에 추가되므로, 기본 제공 샌드박스 지침을 유지하면서 자체 역할, 워크플로, 성공 기준을 추가할 수 있습니다.
+여러 프롬프트에서도 유지되어야 하는 짧은 규칙에는 `instructions`를 사용하세요. `SandboxAgent`에서 이러한 지침은 SDK의 샌드박스 기본 프롬프트 뒤에 추가되므로, 기본 제공 샌드박스 지침을 유지하면서 역할, 워크플로 및 성공 기준을 추가할 수 있습니다.
 
-SDK 샌드박스 기본 프롬프트를 대체하려는 경우에만 `base_instructions`를 사용하세요. 대부분의 에이전트에서는 설정하지 않는 것이 좋습니다.
+SDK 샌드박스 기본 프롬프트를 교체하려는 경우에만 `base_instructions`를 사용하세요. 대부분의 에이전트에서는 이를 설정하지 않는 것이 좋습니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 배치 위치 | 용도 | 예시 |
 | --- | --- | --- |
-| `instructions` | 에이전트의 일관된 역할, 워크플로 규칙, 성공 기준 | "온보딩 문서를 검사한 다음 핸드오프하세요.", "최종 파일을 `output/`에 작성하세요." |
-| `base_instructions` | SDK 샌드박스 기본 프롬프트의 전체 대체 | 사용자 정의 저수준 샌드박스 래퍼 프롬프트 |
-| 사용자 프롬프트 | 이 실행을 위한 일회성 요청 | "이 워크스페이스를 요약하세요." |
-| 매니페스트의 워크스페이스 파일 | 더 긴 작업 명세, 저장소 로컬 지침 또는 범위가 한정된 참조 자료 | `repo/task.md`, 문서 번들, 샘플 패킷 |
+| `instructions` | 에이전트의 안정적인 역할, 워크플로 규칙 및 성공 기준 | "온보딩 문서를 검사한 다음 핸드오프하세요.", "최종 파일을 `output/`에 작성하세요." |
+| `base_instructions` | SDK 샌드박스 기본 프롬프트의 완전한 대체 | 사용자 지정 저수준 샌드박스 래퍼 프롬프트 |
+| 사용자 프롬프트 | 이 실행을 위한 일회성 요청 | "이 작업 공간을 요약하세요." |
+| 매니페스트의 작업 공간 파일 | 더 긴 작업 명세, 저장소 로컬 지침 또는 범위가 제한된 참고 자료 | `repo/task.md`, 문서 번들, 샘플 문서 묶음 |
 
 </div>
 
-`instructions`를 효과적으로 사용하는 예시는 다음과 같습니다.
+`instructions`의 적절한 사용 예시는 다음과 같습니다.
 
-- [examples/sandbox/unix_local_pty.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_pty.py)는 PTY 상태가 중요한 경우 에이전트가 하나의 대화형 프로세스에서 작업하도록 합니다.
+- [examples/sandbox/unix_local_pty.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_pty.py)는 PTY 상태가 중요할 때 에이전트를 하나의 대화형 프로세스에 유지합니다.
 - [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py)는 샌드박스 검토자가 검사 후 사용자에게 직접 답변하지 못하도록 합니다.
-- [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)는 최종 작성 파일이 실제로 `output/`에 저장되도록 요구합니다.
-- [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)는 정확한 검증 명령을 지정하고 워크스페이스 루트 기준 패치 경로를 명확히 설명합니다.
+- [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)는 작성이 완료된 최종 파일이 실제로 `output/`에 저장되도록 요구합니다.
+- [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)는 정확한 검증 명령을 고정하고 작업 공간 루트 기준 패치 경로를 명확히 설명합니다.
 
-사용자의 일회성 작업을 `instructions`에 복사하거나, 매니페스트에 속하는 긴 참조 자료를 포함하거나, 기본 제공 기능이 이미 주입하는 도구 문서를 반복하거나, 모델이 실행 시 필요로 하지 않는 로컬 설치 참고 사항을 섞지 마세요.
+사용자의 일회성 작업을 `instructions`에 복사하거나, 매니페스트에 속해야 하는 긴 참고 자료를 포함하거나, 기본 제공 기능이 이미 주입하는 도구 문서를 반복하거나, 모델이 실행 시 필요로 하지 않는 로컬 설치 참고 사항을 섞지 마세요.
 
-`instructions`를 생략해도 SDK는 기본 샌드박스 프롬프트를 포함합니다. 저수준 래퍼에는 이것으로 충분하지만, 대부분의 사용자 대상 에이전트는 명시적인 `instructions`도 제공해야 합니다.
+`instructions`를 생략해도 SDK는 기본 샌드박스 프롬프트를 포함합니다. 저수준 래퍼에는 이것만으로 충분하지만, 대부분의 사용자 대상 에이전트는 여전히 명시적인 `instructions`를 제공해야 합니다.
 
 ### `capabilities`
 
-기능은 샌드박스 네이티브 동작을 `SandboxAgent`에 연결합니다. 실행이 시작되기 전에 워크스페이스를 구성하고, 샌드박스 전용 지침을 추가하며, 실제 샌드박스 세션에 바인딩되는 도구를 노출하고, 해당 에이전트의 모델 동작이나 입력 처리를 조정할 수 있습니다.
+기능은 샌드박스 네이티브 동작을 `SandboxAgent`에 연결합니다. 실행이 시작되기 전에 작업 공간을 구성하고, 샌드박스별 지침을 추가하고, 활성 샌드박스 세션에 바인딩되는 도구를 노출하고, 해당 에이전트의 모델 동작이나 입력 처리를 조정할 수 있습니다.
 
 기본 제공 기능은 다음과 같습니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 기능 | 추가 시점 | 참고 |
+| 기능 | 추가 시점 | 참고 사항 |
 | --- | --- | --- |
-| `Shell` | 에이전트에 셸 액세스가 필요할 때 | `exec_command`를 추가하며, 샌드박스 클라이언트가 PTY 상호작용을 지원하면 `write_stdin`도 추가합니다. |
-| `Filesystem` | 에이전트가 파일을 편집하거나 로컬 이미지를 검사해야 할 때 | `apply_patch`와 `view_image`를 추가하며, 패치 경로는 워크스페이스 루트 기준입니다. |
-| `Skills` | 샌드박스에서 스킬 검색과 구체화를 사용하려고 할 때 | `.agents` 또는 `.agents/skills`를 수동으로 마운트하는 대신 이를 사용하는 것이 좋습니다. `Skills`가 스킬의 인덱스를 생성하고 샌드박스에 구체화합니다. |
-| `Memory` | 후속 실행에서 메모리 아티팩트를 읽거나 생성해야 할 때 | `Shell`이 필요하며, 실시간 업데이트에는 `Filesystem`도 필요합니다. |
-| `Compaction` | 장기 실행 흐름에서 압축 항목 이후 컨텍스트 축소가 필요할 때 | 모델 샘플링과 입력 처리를 조정합니다. |
+| `Shell` | 에이전트에 셸 액세스가 필요한 경우 | `exec_command`를 추가하며, 샌드박스 클라이언트가 PTY 상호 작용을 지원하는 경우 `write_stdin`도 추가합니다. |
+| `Filesystem` | 에이전트가 파일을 편집하거나 로컬 이미지를 검사해야 하는 경우 | `apply_patch` 및 `view_image`를 추가합니다. 패치 경로는 작업 공간 루트를 기준으로 합니다. |
+| `Skills` | 샌드박스에서 스킬 탐색 및 구체화를 사용하려는 경우 | `.agents` 또는 `.agents/skills`를 수동으로 마운트하는 대신 이를 사용하는 것이 좋습니다. `Skills`가 스킬을 인덱싱하고 샌드박스에 구체화합니다. |
+| `Memory` | 후속 실행에서 메모리 아티팩트를 읽거나 생성해야 하는 경우 | `Shell`이 필요하며, 실시간 업데이트에는 `Filesystem`도 필요합니다. |
+| `Compaction` | 장기 실행 흐름에서 압축 항목 후 컨텍스트를 축소해야 하는 경우 | 모델 샘플링 및 입력 처리를 조정합니다. |
 
 </div>
 
-기본적으로 `SandboxAgent.capabilities`는 `Filesystem()`, `Shell()`, `Compaction()`을 포함하는 `Capabilities.default()`를 사용합니다. `capabilities=[...]`를 전달하면 해당 목록이 기본값을 대체하므로, 계속 사용하려는 기본 기능을 모두 포함하세요.
+기본적으로 `SandboxAgent.capabilities`는 `Filesystem()`, `Shell()`, `Compaction()`을 포함하는 `Capabilities.default()`를 사용합니다. `capabilities=[...]`를 전달하면 해당 목록이 기본값을 대체하므로, 계속 사용하려는 기본 기능을 포함하세요.
 
-스킬은 원하는 구체화 방식에 따라 소스를 선택하세요.
+스킬의 경우 원하는 구체화 방식에 따라 소스를 선택하세요.
 
-- `Skills(lazy_from=LocalDirLazySkillSource(...))`는 모델이 먼저 인덱스를 검색하고 필요한 항목만 로드할 수 있으므로 규모가 큰 로컬 스킬 디렉터리에 적합한 기본 선택입니다.
-- `LocalDirLazySkillSource(source=LocalDir(src=...))`는 SDK 프로세스가 실행 중인 파일 시스템에서 읽습니다. 샌드박스 이미지나 워크스페이스 내부에만 존재하는 경로가 아니라 원래 호스트 측 스킬 디렉터리를 전달하세요.
-- `Skills(from_=LocalDir(src=...))`는 사전에 스테이징하려는 소규모 로컬 번들에 더 적합합니다.
+- `Skills(lazy_from=LocalDirLazySkillSource(...))`는 모델이 먼저 인덱스를 탐색하고 필요한 항목만 로드할 수 있으므로 규모가 큰 로컬 스킬 디렉터리에 적합한 기본 선택입니다.
+- `LocalDirLazySkillSource(source=LocalDir(src=...))`는 SDK 프로세스가 실행되는 파일 시스템에서 읽습니다. 샌드박스 이미지나 작업 공간 내부에만 존재하는 경로가 아니라 원래 호스트 측 스킬 디렉터리를 전달하세요.
+- `Skills(from_=LocalDir(src=...))`는 미리 스테이징하려는 소규모 로컬 번들에 더 적합합니다.
 - `Skills(from_=GitRepo(repo=..., ref=...))`는 스킬 자체를 저장소에서 가져와야 할 때 적합합니다.
 
-`LocalDir.src`는 SDK 호스트의 소스 경로입니다. `skills_path`는 `load_skill`을 호출할 때 스킬이 스테이징되는 샌드박스 워크스페이스 내부의 상대 대상 경로입니다.
+`LocalDir.src`는 SDK 호스트의 소스 경로입니다. `skills_path`는 `load_skill`이 호출될 때 스킬이 스테이징되는 샌드박스 작업 공간 내부의 상대 대상 경로입니다.
 
-스킬이 이미 `.agents/skills/<name>/SKILL.md` 같은 경로의 디스크에 있다면 `LocalDir(...)`가 해당 소스 루트를 가리키도록 하고, 계속 `Skills(...)`를 사용하여 노출하세요. 다른 샌드박스 내부 레이아웃에 의존하는 기존 워크스페이스 계약이 없다면 기본값인 `skills_path=".agents"`를 유지하세요.
+스킬이 이미 `.agents/skills/<name>/SKILL.md` 같은 디스크 경로에 있다면 `LocalDir(...)`이 해당 소스 루트를 가리키도록 하고, 스킬을 노출할 때는 계속 `Skills(...)`를 사용하세요. 다른 샌드박스 내부 레이아웃에 의존하는 기존 작업 공간 계약이 없다면 기본 `skills_path=".agents"`를 유지하세요.
 
-적합한 기본 제공 기능이 있으면 이를 우선 사용하세요. 기본 제공 기능이 다루지 않는 샌드박스 전용 도구나 지침 인터페이스가 필요한 경우에만 사용자 정의 기능을 작성하세요.
+적합한 기본 제공 기능이 있다면 이를 우선 사용하세요. 기본 제공 기능이 지원하지 않는 샌드박스별 도구 또는 지침 인터페이스가 필요할 때만 사용자 지정 기능을 작성하세요.
 
 ## 개념
 
 ### 매니페스트
 
-[`Manifest`][agents.sandbox.manifest.Manifest]는 새 샌드박스 세션의 워크스페이스를 설명합니다. 워크스페이스 `root`를 설정하고, 파일과 디렉터리를 선언하며, 로컬 파일을 복사하고, Git 저장소를 복제하고, 원격 스토리지 마운트를 연결하고, 환경 변수를 설정하고, 사용자나 그룹을 정의하며, 워크스페이스 외부의 특정 절대 경로에 대한 액세스를 허용할 수 있습니다.
+[`Manifest`][agents.sandbox.manifest.Manifest]는 새 샌드박스 세션의 작업 공간을 설명합니다. 작업 공간 `root`를 설정하고, 파일과 디렉터리를 선언하고, 로컬 파일을 복사하고, Git 저장소를 복제하고, 원격 스토리지 마운트를 연결하고, 환경 변수를 설정하고, 사용자 또는 그룹을 정의하고, 작업 공간 외부의 특정 절대 경로에 대한 액세스를 허용할 수 있습니다.
 
-매니페스트 항목의 경로는 워크스페이스 기준 상대 경로입니다. 절대 경로를 사용하거나 `..`로 워크스페이스를 벗어날 수 없으므로, 로컬, Docker, 호스티드 클라이언트 간에 워크스페이스 계약의 이식성을 유지할 수 있습니다.
+매니페스트 항목 경로는 작업 공간 기준 상대 경로입니다. 절대 경로를 사용할 수 없으며 `..`을 사용해 작업 공간을 벗어날 수도 없습니다. 따라서 로컬, Docker 및 호스티드 클라이언트 간에 작업 공간 계약의 이식성을 유지할 수 있습니다.
 
 작업을 시작하기 전에 에이전트에 필요한 자료에는 매니페스트 항목을 사용하세요.
 
@@ -1743,20 +1743,20 @@ SDK 샌드박스 기본 프롬프트를 대체하려는 경우에만 `base_instr
 | --- | --- |
 | `File`, `Dir` | 소규모 합성 입력, 보조 파일 또는 출력 디렉터리 |
 | `LocalFile`, `LocalDir` | 샌드박스에 구체화해야 하는 호스트 파일 또는 디렉터리 |
-| `GitRepo` | 워크스페이스로 가져와야 하는 저장소 |
-| `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`, `S3FilesMount` 같은 마운트 | 샌드박스 내부에 표시되어야 하는 외부 스토리지 |
+| `GitRepo` | 작업 공간으로 가져와야 하는 저장소 |
+| `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`, `S3FilesMount` 같은 마운트 | 샌드박스 내부에 표시해야 하는 외부 스토리지 |
 
 </div>
 
-`Dir`은 합성 자식 항목으로 샌드박스 워크스페이스 내부에 디렉터리를 생성하거나 출력 위치를 만듭니다. 호스트 파일 시스템에서는 읽지 않습니다. 기존 호스트 디렉터리를 샌드박스 워크스페이스로 복사해야 할 때는 `LocalDir`을 사용하세요.
+`Dir`은 합성 하위 항목으로 샌드박스 작업 공간 내부에 디렉터리를 생성하거나 출력 위치를 생성합니다. 호스트 파일 시스템에서 읽지는 않습니다. 기존 호스트 디렉터리를 샌드박스 작업 공간으로 복사해야 할 때는 `LocalDir`을 사용하세요.
 
-기본적으로 `LocalFile.src`와 `LocalDir.src`는 SDK 프로세스 작업 디렉터리를 기준으로 확인됩니다. `extra_path_grants`에 포함되지 않는 한 소스는 해당 기본 디렉터리 아래에 있어야 합니다. 이를 통해 로컬 소스 구체화가 나머지 샌드박스 매니페스트와 동일한 호스트 경로 신뢰 경계 안에 유지됩니다.
+기본적으로 `LocalFile.src` 및 `LocalDir.src`는 SDK 프로세스의 작업 디렉터리를 기준으로 해석됩니다. 소스가 `extra_path_grants`에 포함되지 않는 한 해당 기본 디렉터리 아래에 있어야 합니다. 이를 통해 로컬 소스 구체화가 나머지 샌드박스 매니페스트와 동일한 호스트 경로 신뢰 경계 내부에서 이루어집니다.
 
-마운트 항목은 노출할 스토리지를 설명하고, 마운트 전략은 샌드박스 백엔드가 해당 스토리지를 연결하는 방식을 설명합니다. 마운트 옵션과 공급자 지원은 [샌드박스 클라이언트](clients.md#mounts-and-remote-storage)를 참고하세요.
+마운트 항목은 노출할 스토리지를 설명하고, 마운트 전략은 샌드박스 백엔드가 해당 스토리지를 연결하는 방법을 설명합니다. 마운트 옵션과 제공자 지원은 [샌드박스 클라이언트](clients.md#mounts-and-remote-storage)를 참조하세요.
 
-좋은 매니페스트 설계는 일반적으로 워크스페이스 계약의 범위를 좁게 유지하고, 긴 작업 절차는 `repo/task.md` 같은 워크스페이스 파일에 배치하며, 지침에서는 `repo/task.md` 또는 `output/report.md`처럼 워크스페이스 기준 상대 경로를 사용하는 것입니다. 에이전트가 `Filesystem` 기능의 `apply_patch` 도구로 파일을 편집하는 경우, 패치 경로는 셸 `workdir`이 아니라 샌드박스 워크스페이스 루트를 기준으로 한다는 점을 기억하세요.
+좋은 매니페스트 설계는 일반적으로 작업 공간 계약을 좁게 유지하고, 긴 작업 절차를 `repo/task.md` 같은 작업 공간 파일에 배치하며, 지침에서 `repo/task.md` 또는 `output/report.md` 같은 작업 공간 상대 경로를 사용하는 것입니다. 에이전트가 `Filesystem` 기능의 `apply_patch` 도구로 파일을 편집하는 경우 패치 경로는 셸 `workdir`이 아니라 샌드박스 작업 공간 루트를 기준으로 한다는 점에 유의하세요.
 
-에이전트에 워크스페이스 외부의 구체적인 절대 경로가 필요하거나, 매니페스트가 SDK 프로세스 작업 디렉터리 외부의 신뢰할 수 있는 로컬 소스를 복사해야 하는 경우에만 `extra_path_grants`를 사용하세요. 예를 들어 임시 도구 출력을 위한 `/tmp`, 읽기 전용 런타임을 위한 `/opt/toolchain`, 샌드박스에 구체화해야 하는 생성된 스킬 디렉터리 등이 있습니다. 백엔드에서 파일 시스템 정책을 적용할 수 있는 경우 권한 부여는 로컬 소스 구체화, SDK 파일 API, 셸 실행에 적용됩니다.
+에이전트가 작업 공간 외부의 구체적인 절대 경로를 필요로 하거나 매니페스트가 SDK 프로세스 작업 디렉터리 외부의 신뢰할 수 있는 로컬 소스를 복사해야 하는 경우에만 `extra_path_grants`를 사용하세요. 예를 들어 임시 도구 출력용 `/tmp`, 읽기 전용 런타임용 `/opt/toolchain`, 샌드박스에 구체화해야 하는 생성된 스킬 디렉터리가 있습니다. 백엔드에서 파일 시스템 정책을 적용할 수 있는 경우 권한 부여는 로컬 소스 구체화, SDK 파일 API 및 셸 실행에 적용됩니다.
 
 ```python
 from agents.sandbox import Manifest, SandboxPathGrant
@@ -1769,15 +1769,17 @@ manifest = Manifest(
 )
 ```
 
-`extra_path_grants`가 포함된 매니페스트는 신뢰할 수 있는 구성으로 취급하세요. 애플리케이션이 해당 호스트 경로를 이미 승인한 경우가 아니라면 모델 출력이나 기타 신뢰할 수 없는 페이로드에서 권한 부여를 로드하지 마세요.
+Docker가 컨테이너 내부의 절대 POSIX `path`에 다른 절대 호스트 경로를 바인드 마운트해야 하는 경우 `host_path`를 설정하세요. `UnixLocalSandboxClient`는 두 경로가 동일한 경로 전용 권한 부여만 지원하며 `host_path`를 거부합니다. 샌드박스가 수정해서는 안 되는 호스트 데이터에는 `read_only=True`를 사용하고, 복사본으로 충분하다면 `LocalFile` 또는 `LocalDir`을 사용하세요.
 
-스냅샷과 `persist_workspace()`에는 여전히 워크스페이스 루트만 포함됩니다. 추가로 권한이 부여된 경로는 런타임 액세스이며, 영구 워크스페이스 상태가 아닙니다.
+`extra_path_grants`가 포함된 매니페스트는 신뢰할 수 있는 구성으로 취급하세요. 애플리케이션에서 해당 호스트 경로를 이미 승인한 경우가 아니라면 모델 출력이나 기타 신뢰할 수 없는 페이로드에서 권한 부여를 로드하지 마세요.
+
+스냅샷과 `persist_workspace()`에는 여전히 작업 공간 루트만 포함됩니다. 추가로 권한이 부여된 경로는 런타임 액세스이며, 영구적인 작업 공간 상태가 아닙니다.
 
 ### 권한
 
-`Permissions`는 매니페스트 항목의 파일 시스템 권한을 제어합니다. 이는 샌드박스에서 구체화하는 파일에 관한 것이며, 모델 권한, 승인 정책 또는 API 자격 증명과는 관련이 없습니다.
+`Permissions`는 매니페스트 항목의 파일 시스템 권한을 제어합니다. 이는 샌드박스가 구체화하는 파일에 관한 것으로, 모델 권한, 승인 정책 또는 API 자격 증명과는 관련이 없습니다.
 
-기본적으로 매니페스트 항목은 소유자가 읽고 쓰고 실행할 수 있으며, 그룹과 기타 사용자는 읽고 실행할 수 있습니다. 스테이징된 파일을 비공개, 읽기 전용 또는 실행 가능 상태로 지정해야 한다면 이를 재정의하세요.
+기본적으로 매니페스트 항목은 소유자가 읽기/쓰기/실행할 수 있고 그룹 및 기타 사용자가 읽기/실행할 수 있습니다. 스테이징된 파일이 비공개, 읽기 전용 또는 실행 가능해야 할 때 이 설정을 재정의하세요.
 
 ```python
 from agents.sandbox import FileMode, Permissions
@@ -1793,9 +1795,9 @@ private_notes = File(
 )
 ```
 
-`Permissions`는 항목이 디렉터리인지 여부와 함께 소유자, 그룹, 기타 사용자의 비트를 각각 저장합니다. 직접 구성하거나, `Permissions.from_str(...)`로 모드 문자열에서 파싱하거나, `Permissions.from_mode(...)`로 OS 모드에서 파생할 수 있습니다.
+`Permissions`는 소유자, 그룹 및 기타 사용자 비트를 각각 저장하며, 해당 항목이 디렉터리인지 여부도 저장합니다. 직접 생성하거나, `Permissions.from_str(...)`을 사용해 모드 문자열에서 파싱하거나, `Permissions.from_mode(...)`를 사용해 OS 모드에서 파생할 수 있습니다.
 
-사용자는 샌드박스에서 작업을 실행할 수 있는 ID입니다. 샌드박스에 특정 ID가 존재해야 한다면 매니페스트에 `User`를 추가하고, 셸 명령, 파일 읽기, 패치 같은 모델에 노출되는 샌드박스 도구가 해당 사용자로 실행되어야 한다면 `SandboxAgent.run_as`를 설정하세요. `run_as`가 매니페스트에 아직 없는 사용자를 가리키면 러너가 해당 사용자를 유효 매니페스트에 자동으로 추가합니다.
+사용자는 작업을 실행할 수 있는 샌드박스 ID입니다. 해당 ID가 샌드박스에 존재하도록 하려면 매니페스트에 `User`를 추가하고, 셸 명령, 파일 읽기, 패치 같은 모델 대상 샌드박스 도구를 해당 사용자로 실행해야 한다면 `SandboxAgent.run_as`를 설정하세요. `run_as`가 매니페스트에 아직 없는 사용자를 가리키면 러너가 해당 사용자를 실질적인 매니페스트에 자동으로 추가합니다.
 
 ```python
 from agents import Runner
@@ -1847,13 +1849,13 @@ result = await Runner.run(
 )
 ```
 
-파일 수준 공유 규칙도 필요하다면 사용자를 매니페스트 그룹 및 항목의 `group` 메타데이터와 결합하세요. `run_as` 사용자는 샌드박스 네이티브 작업을 실행하는 주체를 제어하며, `Permissions`는 샌드박스가 워크스페이스를 구체화한 후 해당 사용자가 어떤 파일을 읽고, 쓰고, 실행할 수 있는지 제어합니다.
+파일 수준의 공유 규칙도 필요하다면 사용자와 매니페스트 그룹 및 항목의 `group` 메타데이터를 함께 사용하세요. `run_as` 사용자는 샌드박스 네이티브 작업을 실행하는 주체를 제어하며, `Permissions`는 샌드박스가 작업 공간을 구체화한 후 해당 사용자가 어떤 파일을 읽고, 쓰고, 실행할 수 있는지 제어합니다.
 
 ### SnapshotSpec
 
-`SnapshotSpec`은 새 샌드박스 세션에서 저장된 워크스페이스 콘텐츠를 복원할 위치와 다시 영구 저장할 위치를 지정합니다. 이는 샌드박스 워크스페이스의 스냅샷 정책이며, `session_state`는 특정 샌드박스 백엔드를 재개하기 위한 직렬화된 연결 상태입니다.
+`SnapshotSpec`은 새 샌드박스 세션에 저장된 작업 공간 콘텐츠를 복원할 위치와 다시 영구 저장할 위치를 지정합니다. 이는 샌드박스 작업 공간의 스냅샷 정책이며, `session_state`는 특정 샌드박스 백엔드를 재개하기 위한 직렬화된 연결 상태입니다.
 
-로컬 영구 스냅샷에는 `LocalSnapshotSpec`을 사용하고, 앱에서 원격 스냅샷 클라이언트를 제공하는 경우 `RemoteSnapshotSpec`을 사용하세요. 로컬 스냅샷 설정을 사용할 수 없으면 대체 수단으로 아무 작업도 하지 않는 스냅샷이 사용되며, 워크스페이스 스냅샷 영속성을 원하지 않는 고급 호출자는 이를 명시적으로 사용할 수도 있습니다.
+로컬 영구 스냅샷에는 `LocalSnapshotSpec`을 사용하고, 애플리케이션에서 원격 스냅샷 클라이언트를 제공하는 경우 `RemoteSnapshotSpec`을 사용하세요. 로컬 스냅샷을 설정할 수 없을 때는 무작업 스냅샷을 대체 수단으로 사용하며, 작업 공간 스냅샷을 영구 저장하지 않으려는 고급 호출자는 이를 명시적으로 사용할 수도 있습니다.
 
 ```python
 from pathlib import Path
@@ -1870,13 +1872,13 @@ run_config = RunConfig(
 )
 ```
 
-러너가 새 샌드박스 세션을 생성하면 샌드박스 클라이언트가 해당 세션의 스냅샷 인스턴스를 구성합니다. 시작 시 스냅샷을 복원할 수 있다면 실행이 계속되기 전에 샌드박스가 저장된 워크스페이스 콘텐츠를 복원합니다. 정리 시 러너가 소유한 샌드박스 세션은 워크스페이스를 아카이브하고 스냅샷을 통해 다시 영구 저장합니다.
+러너가 새 샌드박스 세션을 생성하면 샌드박스 클라이언트가 해당 세션의 스냅샷 인스턴스를 구성합니다. 시작 시 스냅샷을 복원할 수 있으면 실행을 계속하기 전에 샌드박스가 저장된 작업 공간 콘텐츠를 복원합니다. 정리 시 러너가 소유한 샌드박스 세션은 작업 공간을 보관하고 스냅샷을 통해 다시 영구 저장합니다.
 
-`snapshot`을 생략하면 런타임은 가능한 경우 기본 로컬 스냅샷 위치를 사용하려고 합니다. 설정할 수 없다면 아무 작업도 하지 않는 스냅샷을 대신 사용합니다. 마운트된 경로와 임시 경로는 영구 워크스페이스 콘텐츠로 스냅샷에 복사되지 않습니다.
+`snapshot`을 생략하면 런타임은 가능한 경우 기본 로컬 스냅샷 위치를 사용하려고 시도합니다. 이를 설정할 수 없으면 무작업 스냅샷으로 대체합니다. 마운트된 경로와 임시 경로는 영구 작업 공간 콘텐츠로 스냅샷에 복사되지 않습니다.
 
 ### 샌드박스 수명 주기
 
-수명 주기에는 **SDK 소유**와 **개발자 소유**라는 두 가지 모드가 있습니다.
+수명 주기 모드는 **SDK 소유**와 **개발자 소유** 두 가지입니다.
 
 <div class="sandbox-lifecycle-diagram" markdown="1">
 
@@ -1904,7 +1906,7 @@ sequenceDiagram
 
 </div>
 
-샌드박스가 한 번의 실행 동안만 유지되어도 된다면 SDK 소유 수명 주기를 사용하세요. `client`, 선택적 `manifest`, 선택적 `snapshot`, 클라이언트 `options`를 전달하면 러너가 샌드박스를 생성하거나 재개하고, 시작하고, 에이전트를 실행하고, 스냅샷 기반 워크스페이스 상태를 영구 저장하고, 샌드박스를 종료한 다음, 클라이언트가 러너 소유 리소스를 정리하도록 합니다.
+샌드박스가 한 번의 실행 동안만 유지되면 되는 경우 SDK 소유 수명 주기를 사용하세요. `client`, 선택적 `manifest`, 선택적 `snapshot` 및 클라이언트 `options`를 전달하면 러너가 샌드박스를 생성하거나 재개하고, 시작하고, 에이전트를 실행하고, 스냅샷 기반 작업 공간 상태를 영구 저장하고, 샌드박스를 종료한 후 클라이언트가 러너 소유 리소스를 정리하도록 합니다.
 
 ```python
 result = await Runner.run(
@@ -1916,7 +1918,7 @@ result = await Runner.run(
 )
 ```
 
-샌드박스를 미리 생성하거나, 여러 실행에서 하나의 실제 샌드박스를 재사용하거나, 실행 후 파일을 검사하거나, 직접 생성한 샌드박스를 통해 스트리밍하거나, 정리 시점을 정확히 결정하려면 개발자 소유 수명 주기를 사용하세요. `session=...`을 전달하면 러너가 해당 실제 샌드박스를 사용하지만 대신 닫지는 않습니다.
+샌드박스를 미리 생성하거나, 여러 실행에서 하나의 활성 샌드박스를 재사용하거나, 실행 후 파일을 검사하거나, 직접 생성한 샌드박스에서 스트리밍하거나, 정리 시점을 정확히 결정하려면 개발자 소유 수명 주기를 사용하세요. `session=...`을 전달하면 러너가 해당 활성 샌드박스를 사용하지만 대신 닫지는 않습니다.
 
 ```python
 sandbox = await client.create(manifest=agent.default_manifest)
@@ -1927,7 +1929,7 @@ async with sandbox:
     await Runner.run(agent, "Write the final report.", run_config=run_config)
 ```
 
-일반적으로 컨텍스트 관리자를 사용합니다. 진입 시 샌드박스를 시작하고 종료 시 세션 정리 수명 주기를 실행합니다. 앱에서 컨텍스트 관리자를 사용할 수 없다면 수명 주기 메서드를 직접 호출하세요.
+일반적으로는 컨텍스트 관리자를 사용합니다. 진입 시 샌드박스를 시작하고 종료 시 세션 정리 수명 주기를 실행합니다. 애플리케이션에서 컨텍스트 관리자를 사용할 수 없다면 수명 주기 메서드를 직접 호출하세요.
 
 ```python
 sandbox = await client.create(
@@ -1948,32 +1950,32 @@ finally:
     await sandbox.aclose()
 ```
 
-`stop()`은 스냅샷 기반 워크스페이스 콘텐츠만 영구 저장하며 샌드박스를 해제하지 않습니다. `aclose()`는 전체 세션 정리 경로입니다. 중지 전 훅을 실행하고, `stop()`을 호출하고, 샌드박스 리소스를 종료하고, 세션 범위 종속성을 닫습니다.
+`stop()`은 스냅샷 기반 작업 공간 콘텐츠만 영구 저장하며 샌드박스를 해제하지 않습니다. `aclose()`는 전체 세션 정리 경로입니다. 중지 전 훅을 실행하고, `stop()`을 호출하고, 샌드박스 리소스를 종료하고, 세션 범위 종속성을 닫습니다.
 
 ## `SandboxRunConfig` 옵션
 
-[`SandboxRunConfig`][agents.run_config.SandboxRunConfig]는 샌드박스 세션을 가져오는 위치와 새 세션을 초기화하는 방식을 결정하는 실행별 옵션을 보유합니다.
+[`SandboxRunConfig`][agents.run_config.SandboxRunConfig]는 샌드박스 세션의 출처와 새 세션 초기화 방법을 결정하는 실행별 옵션을 보유합니다.
 
 ### 샌드박스 소스
 
-다음 옵션은 러너가 샌드박스 세션을 재사용, 재개 또는 생성할지 결정합니다.
+다음 옵션은 러너가 샌드박스 세션을 재사용, 재개 또는 생성해야 하는지 결정합니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 옵션 | 사용 시점 | 참고 |
+| 옵션 | 사용 시점 | 참고 사항 |
 | --- | --- | --- |
-| `client` | 러너가 샌드박스 세션을 생성, 재개, 정리하도록 하려는 경우 | 실제 샌드박스 `session`을 제공하지 않는 한 필수입니다. |
-| `session` | 실제 샌드박스 세션을 이미 직접 생성한 경우 | 호출자가 수명 주기를 소유하며, 러너는 해당 실제 샌드박스 세션을 재사용합니다. |
-| `session_state` | 직렬화된 샌드박스 세션 상태는 있지만 실제 샌드박스 세션 객체는 없는 경우 | `client`가 필요하며, 러너는 해당 명시적 상태에서 소유 세션으로 재개합니다. |
+| `client` | 러너가 샌드박스 세션을 생성, 재개 및 정리하도록 하려는 경우 | 활성 샌드박스 `session`을 제공하지 않는 한 필수입니다. |
+| `session` | 활성 샌드박스 세션을 이미 직접 생성한 경우 | 호출자가 수명 주기를 소유하며, 러너는 해당 활성 샌드박스 세션을 재사용합니다. |
+| `session_state` | 직렬화된 샌드박스 세션 상태는 있지만 활성 샌드박스 세션 객체는 없는 경우 | `client`가 필요하며, 러너는 명시된 상태에서 소유 세션으로 재개합니다. |
 
 </div>
 
-실제로 러너는 다음 순서로 샌드박스 세션을 결정합니다.
+실제로 러너는 다음 순서로 샌드박스 세션을 확인합니다.
 
-1. `run_config.sandbox.session`을 주입하면 해당 실제 샌드박스 세션을 직접 재사용합니다.
-2. 그렇지 않고 `RunState`에서 실행을 재개하는 경우 저장된 샌드박스 세션 상태를 재개합니다.
-3. 그렇지 않고 `run_config.sandbox.session_state`를 전달하면 해당 명시적인 직렬화된 샌드박스 세션 상태에서 재개합니다.
-4. 그렇지 않으면 러너가 새 샌드박스 세션을 생성합니다. 새 세션에서는 제공된 경우 `run_config.sandbox.manifest`를 사용하고, 그렇지 않으면 `agent.default_manifest`를 사용합니다.
+1. `run_config.sandbox.session`을 주입하면 해당 활성 샌드박스 세션을 직접 재사용합니다.
+2. 그렇지 않고 실행이 `RunState`에서 재개되는 경우 저장된 샌드박스 세션 상태를 재개합니다.
+3. 그렇지 않고 `run_config.sandbox.session_state`를 전달하면 명시적으로 직렬화된 해당 샌드박스 세션 상태에서 재개합니다.
+4. 그렇지 않으면 러너가 새 샌드박스 세션을 생성합니다. 새 세션에는 제공된 경우 `run_config.sandbox.manifest`를 사용하고, 제공되지 않으면 `agent.default_manifest`를 사용합니다.
 
 ### 새 세션 입력
 
@@ -1981,31 +1983,31 @@ finally:
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 옵션 | 사용 시점 | 참고 |
+| 옵션 | 사용 시점 | 참고 사항 |
 | --- | --- | --- |
-| `manifest` | 일회성 새 세션 워크스페이스 재정의가 필요한 경우 | 생략하면 `agent.default_manifest`를 사용합니다. |
-| `snapshot` | 새 샌드박스 세션을 스냅샷에서 초기화해야 하는 경우 | 재개와 유사한 흐름이나 원격 스냅샷 클라이언트에 유용합니다. |
-| `options` | 샌드박스 클라이언트에 생성 시점 옵션이 필요한 경우 | Docker 이미지, Modal 앱 이름, E2B 템플릿, 타임아웃 및 유사한 클라이언트별 설정에 자주 사용됩니다. |
+| `manifest` | 새 세션 작업 공간을 일회성으로 재정의하려는 경우 | 생략하면 `agent.default_manifest`로 대체됩니다. |
+| `snapshot` | 스냅샷을 기반으로 새 샌드박스 세션을 시작해야 하는 경우 | 재개와 유사한 흐름 또는 원격 스냅샷 클라이언트에 유용합니다. |
+| `options` | 샌드박스 클라이언트에 생성 시점 옵션이 필요한 경우 | Docker 이미지, Modal 앱 이름, E2B 템플릿, 타임아웃 및 유사한 클라이언트별 설정에서 흔히 사용됩니다. |
 
 </div>
 
 ### 구체화 제어
 
-`concurrency_limits`는 동시에 실행할 수 있는 샌드박스 구체화 작업량을 제어합니다. 대규모 매니페스트나 로컬 디렉터리 복사에 더 엄격한 리소스 제어가 필요하다면 `SandboxConcurrencyLimits(manifest_entries=..., local_dir_files=...)`를 사용하세요. 특정 제한을 비활성화하려면 해당 값을 `None`으로 설정하세요.
+`concurrency_limits`는 병렬로 실행할 수 있는 샌드박스 구체화 작업의 양을 제어합니다. 대규모 매니페스트 또는 로컬 디렉터리 복사에 더 엄격한 리소스 제어가 필요한 경우 `SandboxConcurrencyLimits(manifest_entries=..., local_dir_files=...)`를 사용하세요. 특정 제한을 비활성화하려면 해당 값을 `None`으로 설정하세요.
 
-`archive_limits`는 아카이브 추출에 대한 SDK 측 리소스 검사를 제어합니다. SDK 기본 임곗값을 활성화하려면 `archive_limits=SandboxArchiveLimits()`를 설정하고, 아카이브에 더 엄격한 리소스 제어가 필요하면 `SandboxArchiveLimits(max_input_bytes=..., max_extracted_bytes=..., max_members=...)` 같은 명시적 값을 전달하세요. SDK 아카이브 리소스 제한이 없는 기본 동작을 유지하려면 `archive_limits=None`으로 두고, 특정 제한만 비활성화하려면 개별 필드를 `None`으로 설정하세요.
+`archive_limits`는 아카이브 추출에 대한 SDK 측 리소스 검사를 제어합니다. SDK 기본 임계값을 활성화하려면 `archive_limits=SandboxArchiveLimits()`를 설정하고, 아카이브에 더 엄격한 리소스 제어가 필요하면 `SandboxArchiveLimits(max_input_bytes=..., max_extracted_bytes=..., max_members=...)` 같은 명시적 값을 전달하세요. SDK 아카이브 리소스 제한이 없는 기본 동작을 유지하려면 `archive_limits=None`으로 두고, 개별 제한만 비활성화하려면 해당 필드를 `None`으로 설정하세요.
 
-다음과 같은 사항에 유의해야 합니다.
+다음과 같은 몇 가지 사항에 유의해야 합니다.
 
-- 새 세션: `manifest=`와 `snapshot=`은 러너가 새 샌드박스 세션을 생성할 때만 적용됩니다.
-- 재개와 스냅샷의 차이: `session_state=`는 이전에 직렬화된 샌드박스 상태에 다시 연결하지만, `snapshot=`은 저장된 워크스페이스 콘텐츠에서 새 샌드박스 세션을 초기화합니다.
-- 클라이언트별 옵션: `options=`는 샌드박스 클라이언트에 따라 달라지며, Docker와 다수의 호스티드 클라이언트에서 필수입니다.
-- 주입된 실제 세션: 실행 중인 샌드박스 `session`을 전달하면 기능이 주도하는 매니페스트 업데이트로 호환되는 비마운트 항목을 추가할 수 있습니다. 그러나 `manifest.root`, `manifest.environment`, `manifest.users`, `manifest.groups`를 변경하거나, 기존 항목을 제거하거나, 항목 유형을 대체하거나, 마운트 항목을 추가 또는 변경할 수는 없습니다.
-- 러너 API: `SandboxAgent` 실행도 일반적인 `Runner.run()`, `Runner.run_sync()`, `Runner.run_streamed()` API를 사용합니다.
+- 새 세션: `manifest=` 및 `snapshot=`은 러너가 새 샌드박스 세션을 생성할 때만 적용됩니다.
+- 재개와 스냅샷의 차이: `session_state=`는 이전에 직렬화된 샌드박스 상태에 다시 연결하는 반면, `snapshot=`은 저장된 작업 공간 콘텐츠를 기반으로 새 샌드박스 세션을 시작합니다.
+- 클라이언트별 옵션: `options=`는 샌드박스 클라이언트에 따라 달라집니다. Docker 및 많은 호스티드 클라이언트에서 필수입니다.
+- 주입된 활성 세션: 실행 중인 샌드박스 `session`을 전달하면 기능 기반 매니페스트 업데이트를 통해 호환되는 비마운트 항목을 추가할 수 있습니다. 하지만 `manifest.root`, `manifest.environment`, `manifest.users`, `manifest.groups`를 변경하거나, 기존 항목을 제거하거나, 항목 유형을 교체하거나, 마운트 항목을 추가 또는 변경할 수는 없습니다.
+- 러너 API: `SandboxAgent` 실행은 계속 일반적인 `Runner.run()`, `Runner.run_sync()`, `Runner.run_streamed()` API를 사용합니다.
 
 ## 전체 예제: 코딩 작업
 
-다음 코딩 스타일 예제는 기본 출발점으로 적합합니다.
+다음 코딩 스타일 예제는 기본 시작점으로 적합합니다.
 
 ```python
 import asyncio
@@ -2084,17 +2086,17 @@ if __name__ == "__main__":
     )
 ```
 
-[examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)를 참고하세요. 이 예제는 Unix 로컬 실행 전반에서 결정론적으로 검증할 수 있도록 소규모 셸 기반 저장소를 사용합니다. 실제 작업 저장소는 물론 Python, JavaScript 또는 기타 어떤 언어로 작성되어도 됩니다.
+[examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)를 참조하세요. 이 예제는 Unix 로컬 실행에서 결정론적으로 검증할 수 있도록 간단한 셸 기반 저장소를 사용합니다. 실제 작업 저장소는 물론 Python, JavaScript 또는 다른 어떤 언어로도 구성할 수 있습니다.
 
-## 일반적인 패턴
+## 일반 패턴
 
-위의 전체 예제에서 시작하세요. 대부분의 경우 동일한 `SandboxAgent`를 그대로 유지하면서 샌드박스 클라이언트, 샌드박스 세션 소스 또는 워크스페이스 소스만 변경할 수 있습니다.
+위의 전체 예제에서 시작하세요. 많은 경우 샌드박스 클라이언트, 샌드박스 세션 소스 또는 작업 공간 소스만 변경하면서 동일한 `SandboxAgent`를 그대로 유지할 수 있습니다.
 
 ### 샌드박스 클라이언트 전환
 
-에이전트 정의는 그대로 유지하고 실행 구성만 변경하세요. 컨테이너 격리나 이미지 일관성이 필요하면 Docker를 사용하고, 공급자가 관리하는 실행이 필요하면 호스티드 공급자를 사용하세요. 예제와 공급자 옵션은 [샌드박스 클라이언트](clients.md)를 참고하세요.
+에이전트 정의는 그대로 유지하고 실행 구성만 변경하세요. 컨테이너 격리 또는 이미지 일관성이 필요하면 Docker를 사용하고, 제공자가 관리하는 실행을 원하면 호스티드 제공자를 사용하세요. 예제와 제공자 옵션은 [샌드박스 클라이언트](clients.md)를 참조하세요.
 
-### 워크스페이스 재정의
+### 작업 공간 재정의
 
 에이전트 정의는 그대로 유지하고 새 세션 매니페스트만 교체하세요.
 
@@ -2116,11 +2118,11 @@ run_config = RunConfig(
 )
 ```
 
-에이전트를 다시 구성하지 않고 동일한 에이전트 역할을 서로 다른 저장소, 패킷 또는 작업 번들에 적용하려면 이 방식을 사용하세요. 위에서 검증한 코딩 예제는 일회성 재정의 대신 `default_manifest`를 사용하여 동일한 패턴을 보여줍니다.
+에이전트를 다시 구성하지 않고 동일한 에이전트 역할을 서로 다른 저장소, 문서 묶음 또는 작업 번들에 실행하려면 이 방식을 사용하세요. 위의 검증된 코딩 예제에서는 일회성 재정의 대신 `default_manifest`를 사용해 동일한 패턴을 보여 줍니다.
 
 ### 샌드박스 세션 주입
 
-수명 주기를 명시적으로 제어하거나, 실행 후 검사하거나, 출력을 복사해야 한다면 실제 샌드박스 세션을 주입하세요.
+수명 주기를 명시적으로 제어하거나, 실행 후 검사하거나, 출력을 복사해야 한다면 활성 샌드박스 세션을 주입하세요.
 
 ```python
 from agents import Runner
@@ -2141,11 +2143,11 @@ async with sandbox:
     )
 ```
 
-실행 후 워크스페이스를 검사하거나 이미 시작된 샌드박스 세션을 통해 스트리밍하려면 이 방식을 사용하세요. [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)와 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)를 참고하세요.
+실행 후 작업 공간을 검사하거나 이미 시작된 샌드박스 세션에서 스트리밍하려면 이 방식을 사용하세요. [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py) 및 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)를 참조하세요.
 
 ### 세션 상태에서 재개
 
-`RunState` 외부에서 샌드박스 상태를 이미 직렬화했다면 러너가 해당 상태에 다시 연결하도록 하세요.
+`RunState` 외부에서 샌드박스 상태를 이미 직렬화했다면 러너가 해당 상태에서 다시 연결하도록 하세요.
 
 ```python
 from agents.run import RunConfig
@@ -2162,11 +2164,13 @@ run_config = RunConfig(
 )
 ```
 
-샌드박스 상태를 자체 스토리지나 작업 시스템에 저장하고 있으며 `Runner`가 해당 상태에서 직접 재개하도록 하려면 이 방식을 사용하세요. 직렬화/역직렬화 흐름은 [examples/sandbox/extensions/blaxel_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py)를 참고하세요.
+샌드박스 상태가 자체 스토리지나 작업 시스템에 있고 `Runner`가 해당 상태에서 직접 재개하도록 하려면 이 방식을 사용하세요. 직렬화/역직렬화 흐름은 [examples/sandbox/extensions/blaxel_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py)를 참조하세요.
+
+세션 상태 직렬화에서는 네이티브 `host_path` 값이 생략됩니다. 호스트 기반 권한 부여를 재개하려면 현재 신뢰할 수 있는 매니페스트를 `SandboxRunConfig.manifest` 또는 `agent.default_manifest`를 통해 제공하세요. 그렇지 않으면 샌드박스가 시작되기 전에 재개가 실패합니다. 직렬화된 입력 또는 기타 신뢰할 수 없는 입력에서 호스트 경로를 파생해서는 안 됩니다.
 
 ### 스냅샷에서 시작
 
-저장된 파일과 아티팩트로 새 샌드박스를 초기화합니다.
+저장된 파일과 아티팩트를 기반으로 새 샌드박스를 시작하세요.
 
 ```python
 from pathlib import Path
@@ -2183,11 +2187,11 @@ run_config = RunConfig(
 )
 ```
 
-새 실행이 `agent.default_manifest`만 사용하는 대신 저장된 워크스페이스 콘텐츠에서 시작해야 한다면 이 방식을 사용하세요. 로컬 스냅샷 흐름은 [examples/sandbox/memory.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/memory.py)를, 원격 스냅샷 클라이언트는 [examples/sandbox/sandbox_agent_with_remote_snapshot.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_remote_snapshot.py)를 참고하세요.
+새 실행이 `agent.default_manifest`만이 아니라 저장된 작업 공간 콘텐츠에서 시작해야 할 때 이 방식을 사용하세요. 로컬 스냅샷 흐름은 [examples/sandbox/memory.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/memory.py)를, 원격 스냅샷 클라이언트는 [examples/sandbox/sandbox_agent_with_remote_snapshot.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_remote_snapshot.py)를 참조하세요.
 
 ### Git에서 스킬 로드
 
-로컬 스킬 소스를 저장소 기반 소스로 교체합니다.
+로컬 스킬 소스를 저장소 기반 소스로 교체하세요.
 
 ```python
 from agents.sandbox.capabilities import Capabilities, Skills
@@ -2198,11 +2202,11 @@ capabilities = Capabilities.default() + [
 ]
 ```
 
-스킬 번들에 자체 릴리스 주기가 있거나 여러 샌드박스에서 공유해야 한다면 이 방식을 사용하세요. [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)를 참고하세요.
+스킬 번들에 자체 릴리스 주기가 있거나 여러 샌드박스에서 공유해야 할 때 이 방식을 사용하세요. [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)를 참조하세요.
 
 ### 도구로 노출
 
-도구 에이전트는 자체 샌드박스 경계를 사용하거나 상위 실행의 실제 샌드박스를 재사용할 수 있습니다. 빠른 읽기 전용 탐색기 에이전트에는 재사용 방식이 유용합니다. 다른 샌드박스를 생성하고, 초기 콘텐츠를 채우고, 스냅샷을 만드는 비용 없이 상위 에이전트가 사용하는 정확한 워크스페이스를 검사할 수 있습니다.
+도구 에이전트에는 자체 샌드박스 경계를 제공하거나 상위 실행의 활성 샌드박스를 재사용할 수 있습니다. 빠른 읽기 전용 탐색 에이전트에는 재사용이 유용합니다. 다른 샌드박스를 생성하고, 구성하고, 스냅샷으로 저장하는 비용 없이 상위 에이전트가 사용하는 정확한 작업 공간을 검사할 수 있습니다.
 
 ```python
 from agents import Runner
@@ -2284,7 +2288,7 @@ async with sandbox:
     )
 ```
 
-여기에서 상위 에이전트는 `coordinator`로 실행되고, 탐색기 도구 에이전트는 동일한 실제 샌드박스 세션 내에서 `explorer`로 실행됩니다. `pricing_packet/` 항목은 `other` 사용자가 읽을 수 있으므로 탐색기가 빠르게 검사할 수 있지만 쓰기 비트는 없습니다. `work/` 디렉터리는 코디네이터의 사용자/그룹만 사용할 수 있으므로, 상위 에이전트는 최종 아티팩트를 작성할 수 있고 탐색기는 읽기 전용으로 유지됩니다.
+여기서 상위 에이전트는 `coordinator`로 실행되고, 탐색 도구 에이전트는 동일한 활성 샌드박스 세션 내부에서 `explorer`로 실행됩니다. `pricing_packet/` 항목은 `other` 사용자가 읽을 수 있으므로 탐색 에이전트가 빠르게 검사할 수 있지만 쓰기 비트는 없습니다. `work/` 디렉터리는 코디네이터의 사용자/그룹만 사용할 수 있으므로, 탐색 에이전트가 읽기 전용으로 유지되는 동안 상위 에이전트가 최종 아티팩트를 작성할 수 있습니다.
 
 도구 에이전트에 실제 격리가 필요하다면 자체 샌드박스 `RunConfig`를 제공하세요.
 
@@ -2312,11 +2316,11 @@ rollout_agent.as_tool(
 )
 ```
 
-도구 에이전트가 자유롭게 변경하거나, 신뢰할 수 없는 명령을 실행하거나, 다른 백엔드/이미지를 사용해야 한다면 별도의 샌드박스를 사용하세요. [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)를 참고하세요.
+도구 에이전트가 자유롭게 변경 작업을 수행하거나, 신뢰할 수 없는 명령을 실행하거나, 다른 백엔드/이미지를 사용해야 한다면 별도의 샌드박스를 사용하세요. [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)를 참조하세요.
 
-### 로컬 도구 및 MCP와 결합
+### 로컬 도구 및 MCP와의 결합
 
-샌드박스 워크스페이스를 유지하면서 동일한 에이전트에서 일반 도구도 사용할 수 있습니다.
+샌드박스 작업 공간을 유지하면서 동일한 에이전트에서 일반 도구도 사용하세요.
 
 ```python
 from agents.sandbox import SandboxAgent
@@ -2331,49 +2335,49 @@ agent = SandboxAgent(
 )
 ```
 
-워크스페이스 검사가 에이전트 작업의 일부일 뿐이라면 이 방식을 사용하세요. [examples/sandbox/sandbox_agent_with_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_tools.py)를 참고하세요.
+작업 공간 검사가 에이전트 작업의 일부에 불과할 때 이 방식을 사용하세요. [examples/sandbox/sandbox_agent_with_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_tools.py)를 참조하세요.
 
 ## 메모리
 
-향후 샌드박스 에이전트 실행이 이전 실행에서 학습해야 한다면 `Memory` 기능을 사용하세요. 메모리는 SDK의 대화형 `Session` 메모리와 별개입니다. 학습한 내용을 샌드박스 워크스페이스 내부의 파일로 정제하고, 이후 실행에서 해당 파일을 읽을 수 있도록 합니다.
+향후 샌드박스 에이전트 실행이 이전 실행에서 학습해야 한다면 `Memory` 기능을 사용하세요. 메모리는 SDK의 대화형 `Session` 메모리와 별개입니다. 메모리는 학습한 내용을 샌드박스 작업 공간 내부의 파일로 정제하며, 이후 실행에서 해당 파일을 읽을 수 있습니다.
 
-설정, 읽기/생성 동작, 멀티턴 대화, 레이아웃 격리는 [에이전트 메모리](memory.md)를 참고하세요.
+설정, 읽기/생성 동작, 멀티턴 대화 및 레이아웃 격리는 [에이전트 메모리](memory.md)를 참조하세요.
 
 ## 구성 패턴
 
-단일 에이전트 패턴을 이해한 다음에는 더 큰 시스템에서 샌드박스 경계를 어디에 둘지 결정해야 합니다.
+단일 에이전트 패턴을 이해한 후에는 더 큰 시스템에서 샌드박스 경계를 어디에 둘 것인지 결정해야 합니다.
 
-샌드박스 에이전트는 SDK의 나머지 기능과 계속 함께 구성할 수 있습니다.
+샌드박스 에이전트는 계속 SDK의 나머지 요소와 결합할 수 있습니다.
 
-- [핸드오프](../handoffs.md): 샌드박스를 사용하지 않는 접수 에이전트에서 문서 중심 작업을 샌드박스 검토자에게 전달합니다.
+- [핸드오프](../handoffs.md): 샌드박스를 사용하지 않는 접수 에이전트에서 문서 중심 작업을 샌드박스 검토자에게 핸드오프합니다.
 - [Agents as tools](../tools.md#agents-as-tools): 여러 샌드박스 에이전트를 도구로 노출합니다. 일반적으로 각 `Agent.as_tool(...)` 호출에 `run_config=RunConfig(sandbox=SandboxRunConfig(...))`를 전달하여 각 도구에 자체 샌드박스 경계를 제공합니다.
-- [MCP](../mcp.md)와 일반 함수 도구: 샌드박스 기능은 `mcp_servers` 및 일반 Python 도구와 함께 사용할 수 있습니다.
+- [MCP](../mcp.md) 및 일반 함수 도구: 샌드박스 기능은 `mcp_servers` 및 일반 Python 도구와 함께 사용할 수 있습니다.
 - [에이전트 실행](../running_agents.md): 샌드박스 실행도 일반적인 `Runner` API를 사용합니다.
 
-특히 일반적인 두 가지 패턴은 다음과 같습니다.
+특히 다음 두 가지 패턴이 일반적입니다.
 
-- 샌드박스를 사용하지 않는 에이전트가 워크스페이스 격리가 필요한 워크플로 부분만 샌드박스 에이전트에 핸드오프
-- 오케스트레이터가 여러 샌드박스 에이전트를 도구로 노출하고, 일반적으로 각 `Agent.as_tool(...)` 호출에 별도의 샌드박스 `RunConfig`를 사용하여 각 도구에 자체 격리 워크스페이스 제공
+- 작업 공간 격리가 필요한 워크플로 부분에만 샌드박스를 사용하지 않는 에이전트가 샌드박스 에이전트로 핸드오프하는 패턴
+- 오케스트레이터가 여러 샌드박스 에이전트를 도구로 노출하고, 일반적으로 각 `Agent.as_tool(...)` 호출에 별도의 샌드박스 `RunConfig`를 사용하여 각 도구에 자체 격리 작업 공간을 제공하는 패턴
 
 ### 턴과 샌드박스 실행
 
-핸드오프와 에이전트 도구 호출은 별도로 설명하는 것이 이해에 도움이 됩니다.
+핸드오프와 `Agent.as_tool(...)` 호출을 구분해 설명하면 이해하기 쉽습니다.
 
-핸드오프에서는 여전히 하나의 최상위 실행과 하나의 최상위 턴 루프가 유지됩니다. 활성 에이전트는 변경되지만 실행이 중첩되지는 않습니다. 샌드박스를 사용하지 않는 접수 에이전트가 샌드박스 검토자에게 핸드오프하면, 동일한 실행의 다음 모델 호출이 샌드박스 에이전트용으로 준비되며 해당 샌드박스 에이전트가 다음 턴을 수행합니다. 즉, 핸드오프는 동일한 실행의 다음 턴을 담당하는 에이전트를 변경합니다. [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py)를 참고하세요.
+핸드오프에서는 여전히 하나의 최상위 실행과 하나의 최상위 턴 루프가 있습니다. 활성 에이전트는 변경되지만 실행이 중첩되지는 않습니다. 샌드박스를 사용하지 않는 접수 에이전트가 샌드박스 검토자에게 핸드오프하면 동일한 실행의 다음 모델 호출이 샌드박스 에이전트용으로 준비되며, 해당 샌드박스 에이전트가 다음 턴을 수행합니다. 즉, 핸드오프는 동일한 실행의 다음 턴을 담당할 에이전트를 변경합니다. [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py)를 참조하세요.
 
-`Agent.as_tool(...)`에서는 관계가 다릅니다. 외부 오케스트레이터는 외부 턴 하나를 사용하여 도구 호출을 결정하고, 해당 도구 호출은 샌드박스 에이전트의 중첩 실행을 시작합니다. 중첩 실행에는 자체 턴 루프, `max_turns`, 승인, 일반적으로 자체 샌드박스 `RunConfig`가 있습니다. 중첩 턴 하나로 완료될 수도 있고 여러 턴이 걸릴 수도 있습니다. 외부 오케스트레이터의 관점에서는 이 모든 작업이 하나의 도구 호출 뒤에서 이루어지므로, 중첩 턴은 외부 실행의 턴 카운터를 증가시키지 않습니다. [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)를 참고하세요.
+`Agent.as_tool(...)`에서는 관계가 다릅니다. 외부 오케스트레이터는 하나의 외부 턴을 사용해 도구 호출을 결정하고, 해당 도구 호출은 샌드박스 에이전트의 중첩 실행을 시작합니다. 중첩 실행에는 자체 턴 루프, `max_turns`, 승인 및 일반적으로 자체 샌드박스 `RunConfig`가 있습니다. 하나의 중첩 턴에서 완료될 수도 있고 여러 턴이 걸릴 수도 있습니다. 외부 오케스트레이터의 관점에서는 이 모든 작업이 여전히 한 번의 도구 호출 뒤에서 수행되므로 중첩된 턴은 외부 실행의 턴 카운터를 증가시키지 않습니다. [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)를 참조하세요.
 
 승인 동작도 동일한 구분을 따릅니다.
 
 - 핸드오프에서는 샌드박스 에이전트가 해당 실행의 활성 에이전트가 되므로 승인이 동일한 최상위 실행에 유지됩니다.
-- `Agent.as_tool(...)`에서는 샌드박스 도구 에이전트 내부에서 발생한 승인도 외부 실행에 표시되지만, 저장된 중첩 실행 상태에서 가져오며 외부 실행이 재개될 때 중첩 샌드박스 실행을 재개합니다.
+- `Agent.as_tool(...)`에서는 샌드박스 도구 에이전트 내부에서 발생한 승인도 외부 실행에 표시되지만, 저장된 중첩 실행 상태에서 발생하며 외부 실행이 재개될 때 중첩된 샌드박스 실행을 재개합니다.
 
 ## 추가 자료
 
 - [빠른 시작](../sandbox_agents.md): 샌드박스 에이전트 하나를 실행합니다.
-- [샌드박스 클라이언트](clients.md): 로컬, Docker, 호스티드, 마운트 옵션을 선택합니다.
-- [에이전트 메모리](memory.md): 이전 샌드박스 실행에서 얻은 학습 내용을 보존하고 재사용합니다.
-- [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox): 실행 가능한 로컬, 코딩, 메모리, 핸드오프, 에이전트 구성 패턴입니다.
+- [샌드박스 클라이언트](clients.md): 로컬, Docker, 호스티드 및 마운트 옵션을 선택합니다.
+- [에이전트 메모리](memory.md): 이전 샌드박스 실행에서 학습한 내용을 보존하고 재사용합니다.
+- [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox): 실행 가능한 로컬, 코딩, 메모리, 핸드오프 및 에이전트 구성 패턴입니다.
 
 ================
 File: docs/ko/sandbox/memory.md
@@ -11822,6 +11826,8 @@ For most users, start with one of these two sandbox clients:
 
 Unix-local is the easiest way to start developing against a local filesystem. Move to Docker or a hosted provider when you need stronger environment isolation or production-style parity.
 
+`SandboxPathGrant.host_path` is Docker-only and maps a host path to a different POSIX path inside the container. Unix-local supports only same-path grants. See [Manifest path grants](guide.md#manifest) for details.
+
 To switch from Unix-local to Docker, keep the agent definition the same and change only the run config:
 
 ```python
@@ -12179,6 +12185,8 @@ manifest = Manifest(
     ),
 )
 ```
+
+Set `host_path` when Docker should bind-mount a different absolute host path at the absolute POSIX `path` inside the container. `UnixLocalSandboxClient` supports only path-only grants, where both paths are the same, and rejects `host_path`. Use `read_only=True` for host data the sandbox should not modify, or use `LocalFile` or `LocalDir` when a copy is sufficient.
 
 Treat manifests that contain `extra_path_grants` as trusted configuration. Do not load grants from model output or other untrusted payloads unless your application has already approved those host paths.
 
@@ -12574,6 +12582,8 @@ run_config = RunConfig(
 ```
 
 Use this when sandbox state lives in your own storage or job system and you want `Runner` to resume from it directly. See [examples/sandbox/extensions/blaxel_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py) for the serialize/deserialize flow.
+
+Session-state serialization omits native `host_path` values. To resume host-backed grants, provide the current trusted manifest through `SandboxRunConfig.manifest` or `agent.default_manifest`; otherwise resume fails before the sandbox starts. Never derive host paths from serialized or other untrusted input.
 
 ### Start from a snapshot
 
@@ -15219,40 +15229,42 @@ search:
 ---
 # 沙盒客户端
 
-使用本页选择沙盒任务应在哪里运行。大多数情况下，`SandboxAgent`定义保持不变，而沙盒客户端和客户端特定选项会在[`SandboxRunConfig`][agents.run_config.SandboxRunConfig]中变化。
+使用本页面选择沙盒任务的运行位置。在大多数情况下，`SandboxAgent` 定义保持不变，仅需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端和客户端专属选项。
 
-!!! warning "Beta 功能"
+!!! warning "Beta 测试功能"
 
-    沙盒智能体处于 Beta 阶段。在正式发布前，API 的细节、默认值和支持的功能可能会发生变化；未来也会陆续提供更高级的功能。
+    沙盒智能体目前处于 Beta 测试阶段。在正式发布之前，API 细节、默认值和支持的功能可能会发生变化，未来还将逐步提供更多高级功能。
 
 ## 决策指南
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 目标 | 起点 | 原因 |
+| 目标 | 首选 | 原因 |
 | --- | --- | --- |
-| 在 macOS 或 Linux 上进行最快的本地迭代 | `UnixLocalSandboxClient` | 无需额外安装，便于进行简单的本地文件系统开发。 |
-| 基本容器隔离 | `DockerSandboxClient` | 使用特定镜像在 Docker 中运行任务。 |
-| 托管执行或生产风格隔离 | 一个托管沙盒客户端 | 将工作区边界移动到由提供商管理的环境中。 |
+| 在 macOS 或 Linux 上实现最快的本地迭代 | `UnixLocalSandboxClient` | 无需额外安装，便于在本地文件系统上开发。 |
+| 基本的容器隔离 | `DockerSandboxClient` | 使用指定镜像在 Docker 内运行任务。 |
+| 托管执行或生产环境级隔离 | 托管沙盒客户端 | 将工作区边界迁移至由服务提供商管理的环境。 |
 
 </div>
 
 ## 本地客户端
 
-对于大多数用户，请从以下两个沙盒客户端之一开始：
+对于大多数用户，建议从以下两个沙盒客户端之一开始：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 客户端 | 安装 | 选择场景 | 代码示例 |
+| 客户端 | 安装 | 适用场景 | 代码示例 |
 | --- | --- | --- | --- |
-| `UnixLocalSandboxClient` | 无 | 在 macOS 或 Linux 上进行最快的本地迭代。适合作为本地开发的默认选择。 | [Unix-local 入门示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
-| `DockerSandboxClient` | `openai-agents[docker]` | 你需要容器隔离，或需要特定镜像来保持本地环境一致性。 | [Docker 入门示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
+| `UnixLocalSandboxClient` | 无 | 在 macOS 或 Linux 上实现最快的本地迭代。适合作为本地开发的默认选择。 | [Unix 本地入门代码示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
+| `DockerSandboxClient` | `openai-agents[docker]` | 需要容器隔离，或使用指定镜像以确保本地环境的一致性。 | [Docker 入门代码示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
 
 </div>
 
-Unix-local 是开始基于本地文件系统进行开发的最简单方式。当你需要更强的环境隔离或生产风格的一致性时，再迁移到 Docker 或托管提供商。
+Unix 本地模式是在本地文件系统上开始开发的最简单方式。当需要更强的环境隔离或与生产环境保持一致时，可以迁移到 Docker 或托管服务提供商。
 
-要从 Unix-local 切换到 Docker，请保持智能体定义不变，只更改运行配置：
+`SandboxPathGrant.host_path` 仅适用于 Docker，用于将主机路径映射到容器内的另一个 POSIX 路径。Unix 本地模式仅支持相同路径的授权。有关详细信息，请参阅[清单路径授权](guide.md#manifest)。
+
+要从 Unix 本地模式切换到 Docker，请保持智能体定义不变，仅更改运行配置：
 
 ```python
 from docker import from_env as docker_from_env
@@ -15269,41 +15281,41 @@ run_config = RunConfig(
 )
 ```
 
-当你需要容器隔离或镜像一致性时使用此方式。参见[examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
+当需要容器隔离或镜像一致性时，请使用此方式。请参阅 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
 
 ## 挂载与远程存储
 
-挂载条目描述要暴露哪些存储；挂载策略描述沙盒后端如何附加该存储。请从`agents.sandbox.entries`导入内置挂载条目和通用策略。托管提供商策略可从`agents.extensions.sandbox`或提供商特定的扩展包获得。
+挂载条目用于描述要公开的存储；挂载策略用于描述沙盒后端如何连接该存储。可从 `agents.sandbox.entries` 导入内置挂载条目和通用策略。托管服务提供商的策略可从 `agents.extensions.sandbox` 或服务提供商专属扩展包中获取。
 
-常见挂载选项：
+常用挂载选项：
 
-- `mount_path`: 存储在沙盒中的显示位置。相对路径会在清单根目录下解析；绝对路径按原样使用。
-- `read_only`: 默认值为`True`。仅当沙盒需要写回挂载的存储时，才设置为`False`。
-- `mount_strategy`: 必填。使用同时匹配挂载条目和沙盒后端的策略。
+- `mount_path`：存储在沙盒中的显示位置。相对路径基于清单根目录解析；绝对路径则按原样使用。
+- `read_only`：默认为 `True`。仅当沙盒需要将内容写回已挂载存储时，才将其设置为 `False`。
+- `mount_strategy`：必填。应使用同时兼容挂载条目和沙盒后端的策略。
 
-挂载会被视为临时工作区条目。快照和持久化流程会分离或跳过已挂载路径，而不是将已挂载的远程存储复制到保存的工作区中。
+挂载会被视为临时工作区条目。快照和持久化流程会分离或跳过已挂载路径，而不会将已挂载的远程存储复制到保存的工作区中。
 
-通用本地/容器策略：
+通用本地和容器策略：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 策略或模式 | 适用场景 | 说明 |
+| 策略或模式 | 适用场景 | 备注 |
 | --- | --- | --- |
-| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 沙盒镜像可以运行`rclone`。 | 支持 S3、GCS、R2、Azure Blob 和 Box。`RcloneMountPattern`可以在`fuse`模式或`nfs`模式下运行。 |
-| `InContainerMountStrategy(pattern=MountpointMountPattern(...))` | 镜像包含`mount-s3`，并且你需要 Mountpoint 风格的 S3 或 S3 兼容访问。 | 支持`S3Mount`和`GCSMount`。 |
-| `InContainerMountStrategy(pattern=FuseMountPattern(...))` | 镜像包含`blobfuse2`并支持 FUSE。 | 支持`AzureBlobMount`。 |
-| `InContainerMountStrategy(pattern=S3FilesMountPattern(...))` | 镜像包含`mount.s3files`，并且可以访问现有的 S3 Files 挂载目标。 | 支持`S3FilesMount`。 |
-| `DockerVolumeMountStrategy(driver=...)` | Docker 应在容器启动前附加由卷驱动支持的挂载。 | 仅限 Docker。S3、GCS、R2、Azure Blob 和 Box 支持`rclone`；S3 和 GCS 还支持`mountpoint`。 |
+| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 沙盒镜像能够运行 `rclone`。 | 支持 S3、GCS、R2、Azure Blob 和 Box。`RcloneMountPattern` 可以在 `fuse` 模式或 `nfs` 模式下运行。 |
+| `InContainerMountStrategy(pattern=MountpointMountPattern(...))` | 镜像包含 `mount-s3`，并且需要以 Mountpoint 方式访问 S3 或 S3 兼容存储。 | 支持 `S3Mount` 和 `GCSMount`。 |
+| `InContainerMountStrategy(pattern=FuseMountPattern(...))` | 镜像包含 `blobfuse2` 并支持 FUSE。 | 支持 `AzureBlobMount`。 |
+| `InContainerMountStrategy(pattern=S3FilesMountPattern(...))` | 镜像包含 `mount.s3files`，并且可以访问现有的 S3 Files 挂载目标。 | 支持 `S3FilesMount`。 |
+| `DockerVolumeMountStrategy(driver=...)` | Docker 应在容器启动前连接由卷驱动支持的挂载。 | 仅适用于 Docker。S3、GCS、R2、Azure Blob 和 Box 支持 `rclone`；S3 和 GCS 还支持 `mountpoint`。 |
 
 </div>
 
 ## 支持的托管平台
 
-当你需要托管环境时，通常可以沿用相同的`SandboxAgent`定义，只在[`SandboxRunConfig`][agents.run_config.SandboxRunConfig]中更改沙盒客户端。
+当需要托管环境时，通常可以继续使用相同的 `SandboxAgent` 定义，仅需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端。
 
-如果你使用的是已发布的 SDK，而不是此仓库的检出版本，请通过匹配的软件包 extra 安装沙盒客户端依赖。
+如果使用已发布的 SDK，而不是此代码仓库的检出版本，请通过对应的软件包额外依赖安装沙盒客户端依赖项。
 
-有关提供商特定的设置说明，以及仓库中已提交的扩展代码示例链接，请参见[examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)。
+有关特定服务提供商的设置说明，以及代码仓库中扩展代码示例的链接，请参阅 [examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)。
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
@@ -15319,24 +15331,24 @@ run_config = RunConfig(
 
 </div>
 
-托管沙盒客户端会提供特定于提供商的挂载策略。请选择最适合你的存储提供商的后端和挂载策略：
+托管沙盒客户端会提供服务提供商专属的挂载策略。请选择最适合相应存储服务提供商的后端和挂载策略：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 后端 | 挂载说明 |
 | --- | --- |
-| Docker | 支持将`S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount`和`S3FilesMount`与`InContainerMountStrategy`、`DockerVolumeMountStrategy`等本地策略配合使用。 |
-| `ModalSandboxClient` | 支持在`S3Mount`、`R2Mount`和经过 HMAC 认证的`GCSMount`上使用`ModalCloudBucketMountStrategy`进行 Modal 云存储桶挂载。你可以使用内联凭据或命名的 Modal Secret。 |
-| `CloudflareSandboxClient` | 支持在`S3Mount`、`R2Mount`和经过 HMAC 认证的`GCSMount`上使用`CloudflareBucketMountStrategy`进行 Cloudflare 存储桶挂载。 |
-| `BlaxelSandboxClient` | 支持在`S3Mount`、`R2Mount`和`GCSMount`上使用`BlaxelCloudBucketMountStrategy`进行云存储桶挂载。还支持使用来自`agents.extensions.sandbox.blaxel`的`BlaxelDriveMount`和`BlaxelDriveMountStrategy`实现持久化 Blaxel Drives。 |
-| `DaytonaSandboxClient` | 支持通过`DaytonaCloudBucketMountStrategy`进行由 rclone 支持的云存储挂载；可将其与`S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`和`BoxMount`配合使用。 |
-| `E2BSandboxClient` | 支持通过`E2BCloudBucketMountStrategy`进行由 rclone 支持的云存储挂载；可将其与`S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`和`BoxMount`配合使用。 |
-| `RunloopSandboxClient` | 支持通过`RunloopCloudBucketMountStrategy`进行由 rclone 支持的云存储挂载；可将其与`S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`和`BoxMount`配合使用。 |
-| `VercelSandboxClient` | 支持通过 `VercelCloudBucketMountStrategy` 和 `S3Mount` 创建仅在沙箱创建时配置的 S3 及 S3 兼容存储桶挂载。包含挂载的会话无法恢复，使用内联凭证时必须设置 `allow_s3_credential_exposure=True`。 |
+| Docker | 支持通过 `InContainerMountStrategy` 和 `DockerVolumeMountStrategy` 等本地策略挂载 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount` 和 `S3FilesMount`。 |
+| `ModalSandboxClient` | 支持通过 `ModalCloudBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和使用 HMAC 身份验证的 `GCSMount` 上挂载 Modal 云存储桶。可以使用内联凭据或具名 Modal Secret。 |
+| `CloudflareSandboxClient` | 支持通过 `CloudflareBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和使用 HMAC 身份验证的 `GCSMount` 上挂载 Cloudflare 存储桶。 |
+| `BlaxelSandboxClient` | 支持通过 `BlaxelCloudBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和 `GCSMount` 上挂载云存储桶。还支持使用 `agents.extensions.sandbox.blaxel` 中的 `BlaxelDriveMount` 和 `BlaxelDriveMountStrategy` 挂载持久化 Blaxel Drive。 |
+| `DaytonaSandboxClient` | 支持通过 `DaytonaCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
+| `E2BSandboxClient` | 支持通过 `E2BCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
+| `RunloopSandboxClient` | 支持通过 `RunloopCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
+| `VercelSandboxClient` | 支持通过 `VercelCloudBucketMountStrategy`，在 `S3Mount` 上挂载仅能在创建时配置的 S3 和 S3 兼容存储桶；已挂载存储的会话无法恢复，并且使用内联凭据时必须设置 `allow_s3_credential_exposure=True`。 |
 
 </div>
 
-下表总结了每个后端可以直接挂载哪些远程存储条目。
+下表汇总了每个后端可以直接挂载的远程存储条目。
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
@@ -15353,7 +15365,7 @@ run_config = RunConfig(
 
 </div>
 
-如需更多可运行代码示例，请浏览[examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)，了解本地、代码编写、记忆、任务转移和智能体组合模式；并浏览[examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)，了解托管沙盒客户端。
+如需更多可运行的代码示例，请浏览 [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)，了解本地运行、编码、记忆、任务转移和智能体组合模式；还可浏览 [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)，查看托管沙盒客户端。
 
 ================
 File: docs/zh/sandbox/guide.md
@@ -15366,35 +15378,35 @@ search:
 
 !!! warning "Beta 功能"
 
-    沙盒智能体目前处于 Beta 阶段。在正式发布前，API 细节、默认值和支持的功能可能会发生变化，未来也将提供更多高级功能。
+    沙箱智能体目前处于 Beta 阶段。在正式发布前，API 细节、默认设置和支持的功能可能会发生变化，并且随着时间推移还会提供更多高级功能。
 
-现代智能体在能够操作文件系统中的真实文件时效果最佳。**沙盒智能体**可以使用专用工具和 shell 命令搜索及处理大型文档集、编辑文件、生成产物并运行命令。沙盒为模型提供了一个持久工作区，智能体可以在其中代您完成工作。Agents SDK 中的沙盒智能体可帮助您轻松运行与沙盒环境配套的智能体，便于将正确的文件放入文件系统并编排沙盒，从而轻松地大规模启动、停止和恢复任务。
+现代智能体在能够操作文件系统中的真实文件时效果最佳。**沙箱智能体**可以利用专用工具和 shell 命令检索和处理大型文档集、编辑文件、生成工件并运行命令。沙箱为模型提供持久工作区，智能体可在其中代表您完成工作。Agents SDK 中的沙箱智能体可帮助您轻松运行与沙箱环境配套的智能体，方便在文件系统中准备所需文件，并编排沙箱，从而轻松地大规模启动、停止和恢复任务。
 
-您可以围绕智能体所需的数据定义工作区。工作区可以从 GitHub 仓库、本地文件和目录、合成任务文件、S3 或 Azure Blob Storage 等远程文件系统，以及您提供的其他沙盒输入开始构建。
+您可以围绕智能体所需的数据定义工作区。工作区可以从 GitHub 仓库、本地文件和目录、合成任务文件、S3 或 Azure Blob Storage 等远程文件系统，以及您提供的其他沙箱输入开始构建。
 
 <div class="sandbox-harness-image" markdown="1">
 
-![带计算环境的沙盒智能体框架](../assets/images/harness_with_compute.png)
+![带计算环境的沙箱智能体执行框架](../assets/images/harness_with_compute.png)
 
 </div>
 
-`SandboxAgent` 仍然是一个 `Agent`。它保留了常规的智能体接口，例如 `instructions`、`prompt`、`tools`、`handoffs`、`mcp_servers`、`model_settings`、`output_type`、安全防护措施和钩子，并且仍通过常规的 `Runner` API 运行。变化之处在于执行边界：
+`SandboxAgent` 仍然是一个 `Agent`。它保留了常规智能体接口，例如 `instructions`、`prompt`、`tools`、`handoffs`、`mcp_servers`、`model_settings`、`output_type`、安全防护措施和钩子，并且仍通过常规的 `Runner` API 运行。变化在于执行边界：
 
-- `SandboxAgent` 定义智能体本身：包括常规智能体配置，以及 `default_manifest`、`base_instructions`、`run_as` 等沙盒专用默认值，还有文件系统工具、shell 访问、技能、记忆或压缩等能力。
-- `Manifest` 声明全新沙盒工作区所需的初始内容和布局，包括文件、仓库、挂载和环境。
-- 沙盒会话是命令运行和文件发生变化的实时隔离环境。
-- [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 决定一次运行如何获得该沙盒会话，例如直接注入会话、根据序列化的沙盒会话状态重新连接，或通过沙盒客户端创建全新的沙盒会话。
-- 保存的沙盒状态和快照允许后续运行重新连接到之前的工作，或使用保存的内容初始化全新的沙盒会话。
+- `SandboxAgent` 定义智能体本身：包括常规智能体配置，以及 `default_manifest`、`base_instructions`、`run_as` 等沙箱专用默认设置，还有文件系统工具、shell 访问、技能、记忆或压缩等能力。
+- `Manifest` 声明新沙箱工作区所需的初始内容和布局，包括文件、仓库、挂载和环境。
+- 沙箱会话是运行命令和修改文件的实时隔离环境。
+- [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 决定运行如何获得该沙箱会话，例如直接注入会话、从已序列化的沙箱会话状态重新连接，或通过沙箱客户端创建新的沙箱会话。
+- 保存的沙箱状态和快照让后续运行能够重新连接到先前的工作，或使用已保存的内容初始化新的沙箱会话。
 
-`Manifest` 是全新会话的工作区契约，而不是每个实时沙盒全部状态的唯一事实来源。一次运行的有效工作区也可能来自复用的沙盒会话、序列化的沙盒会话状态，或运行时选择的快照。
+`Manifest` 是新会话的工作区约定，而不是每个实时沙箱的完整事实来源。一次运行的实际工作区也可以来自复用的沙箱会话、已序列化的沙箱会话状态，或运行时选择的快照。
 
-在本页中，“沙盒会话”是指由沙盒客户端管理的实时执行环境。它不同于[会话](../sessions/index.md)中介绍的 SDK 对话式 [`Session`][agents.memory.session.Session] 接口。
+在本页中，“沙箱会话”是指由沙箱客户端管理的实时执行环境。它不同于[会话](../sessions/index.md)中所述的 SDK 对话式 [`Session`][agents.memory.session.Session] 接口。
 
-外层运行时仍负责审批、追踪、任务转移和恢复记录。沙盒会话负责命令、文件变更和环境隔离。这种职责划分是该模型的核心组成部分。
+外层运行时仍负责审批、追踪、任务转移和恢复记录。沙箱会话负责命令、文件变更和环境隔离。这种职责划分是该模型的核心组成部分。
 
-### 组件协作方式
+### 各组成部分的协作方式
 
-一次沙盒运行会将智能体定义与每次运行的沙盒配置结合起来。运行器会准备智能体，将其绑定到实时沙盒会话，并可保存状态供后续运行使用。
+沙箱运行将智能体定义与每次运行的沙箱配置结合起来。运行器会准备智能体，将其绑定到实时沙箱会话，并可保存状态以供后续运行使用。
 
 ```mermaid
 flowchart LR
@@ -15410,138 +15422,138 @@ flowchart LR
     sandbox --> saved
 ```
 
-沙盒专用默认值保留在 `SandboxAgent` 上。每次运行的沙盒会话选项则保留在 `SandboxRunConfig` 中。
+沙箱专用默认设置保留在 `SandboxAgent` 上。每次运行的沙箱会话选项保留在 `SandboxRunConfig` 中。
 
 可以将生命周期分为三个阶段：
 
-1. 使用 `SandboxAgent`、`Manifest` 和能力定义智能体及全新工作区契约。
-2. 通过向 `Runner` 提供可注入、恢复或创建沙盒会话的 `SandboxRunConfig` 来执行一次运行。
-3. 稍后从运行器管理的 `RunState`、显式沙盒 `session_state` 或保存的工作区快照继续运行。
+1. 使用 `SandboxAgent`、`Manifest` 和能力定义智能体以及新工作区约定。
+2. 通过向 `Runner` 提供 `SandboxRunConfig` 来执行运行，由其注入、恢复或创建沙箱会话。
+3. 稍后从运行器管理的 `RunState`、显式沙箱 `session_state` 或已保存的工作区快照继续运行。
 
-如果 shell 访问只是偶尔使用的工具，请从[工具指南](../tools.md)中的托管 shell 开始。当工作区隔离、沙盒客户端选择或沙盒会话恢复行为属于整体设计的一部分时，再使用沙盒智能体。
+如果只是偶尔需要将 shell 访问作为一种工具，请从[工具指南](../tools.md)中的托管 shell 开始。当工作区隔离、沙箱客户端选择或沙箱会话恢复行为属于设计的一部分时，请使用沙箱智能体。
 
 ## 适用场景
 
-沙盒智能体非常适合以工作区为中心的工作流，例如：
+沙箱智能体非常适合以工作区为中心的工作流，例如：
 
 - 编码和调试，例如针对 GitHub 仓库中的问题报告编排自动修复并运行针对性测试
-- 文档处理和编辑，例如从用户的财务文档中提取信息并创建填写完成的税务表单草稿
-- 基于文件的审查或分析，例如在回答前检查入职资料包、生成的报告或产物包
-- 隔离式多智能体模式，例如为每个审查智能体或编码子智能体提供独立工作区
-- 多步骤工作区任务，例如在一次运行中修复错误，稍后再添加回归测试，或从快照或沙盒会话状态恢复
+- 文档处理和编辑，例如从用户的财务文档中提取信息并创建填写完成的税表草稿
+- 基于文件的审核或分析，例如在回答前检查入职资料包、生成的报告或工件包
+- 隔离的多智能体模式，例如为每个审核智能体或编码子智能体提供独立工作区
+- 多步骤工作区任务，例如在一次运行中修复错误，之后再添加回归测试，或从快照或沙箱会话状态恢复
 
-如果不需要访问文件或持续存在的文件系统，请继续使用 `Agent`。如果 shell 访问只是偶尔使用的能力，请添加托管 shell；如果工作区边界本身就是功能的一部分，请使用沙盒智能体。
+如果不需要访问文件或持续存在的文件系统，请继续使用 `Agent`。如果 shell 访问只是偶尔使用的一项能力，请添加托管 shell；如果工作区边界本身就是功能的一部分，请使用沙箱智能体。
 
-## 沙盒客户端的选择
+## 沙箱客户端的选择
 
-在 macOS 或 Linux 上进行本地开发时，首先使用 `UnixLocalSandboxClient`。在 Windows 上，请改用 `DockerSandboxClient` 或托管提供商。在任何受支持的平台上，当需要容器隔离或镜像一致性时，请改用 `DockerSandboxClient`；当需要由提供商管理执行环境时，请改用托管提供商。
+在 macOS 或 Linux 上进行本地开发时，请从 `UnixLocalSandboxClient` 开始。在 Windows 上，请改用 `DockerSandboxClient` 或托管提供商。在任何受支持的平台上，如果需要容器隔离或镜像一致性，请转用 `DockerSandboxClient`；如果需要由提供商管理执行，请转用托管提供商。
 
-大多数情况下，`SandboxAgent` 定义保持不变，只需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端及其选项。有关本地、Docker、托管和远程挂载选项，请参阅[沙盒客户端](clients.md)。
+大多数情况下，`SandboxAgent` 定义保持不变，只需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙箱客户端及其选项。有关本地、Docker、托管和远程挂载选项，请参阅[沙箱客户端](clients.md)。
 
-## 核心组件
-
-<div class="sandbox-nowrap-first-column-table" markdown="1">
-
-| 层级 | 主要 SDK 组件 | 解答的问题 |
-| --- | --- | --- |
-| 智能体定义 | `SandboxAgent`、`Manifest`、能力 | 将运行哪个智能体，以及它应从什么样的全新会话工作区契约开始？ |
-| 沙盒执行 | `SandboxRunConfig`、沙盒客户端和实时沙盒会话 | 此次运行如何获得实时沙盒会话，以及工作在哪里执行？ |
-| 保存的沙盒状态 | `RunState` 沙盒有效负载、`session_state` 和快照 | 此工作流如何重新连接到之前的沙盒工作，或根据保存的内容初始化全新的沙盒会话？ |
-
-</div>
-
-主要 SDK 组件与这些层级的对应关系如下：
+## 核心组成部分
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 组件 | 负责的内容 | 应提出的问题 |
+| 层级 | 主要 SDK 组成部分 | 解答的问题 |
 | --- | --- | --- |
-| [`SandboxAgent`][agents.sandbox.sandbox_agent.SandboxAgent] | 智能体定义 | 此智能体应执行什么任务，以及哪些默认值应随其一同使用？ |
-| [`Manifest`][agents.sandbox.manifest.Manifest] | 全新会话的工作区文件和文件夹 | 运行开始时，文件系统中应存在哪些文件和文件夹？ |
-| [`Capability`][agents.sandbox.capabilities.capability.Capability] | 沙盒原生行为 | 哪些工具、指令片段或运行时行为应附加到此智能体？ |
-| [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] | 每次运行的沙盒客户端和沙盒会话来源 | 此次运行应注入、恢复还是创建沙盒会话？ |
-| [`RunState`][agents.run_state.RunState] | 由运行器管理的已保存沙盒状态 | 我是否正在恢复之前由运行器管理的工作流，并自动延续其沙盒状态？ |
-| [`SandboxRunConfig.session_state`][agents.run_config.SandboxRunConfig.session_state] | 显式序列化的沙盒会话状态 | 我是否希望从已在 `RunState` 外部序列化的沙盒状态恢复？ |
-| [`SandboxRunConfig.snapshot`][agents.run_config.SandboxRunConfig.snapshot] | 用于全新沙盒会话的已保存工作区内容 | 新的沙盒会话是否应从保存的文件和产物开始？ |
+| 智能体定义 | `SandboxAgent`、`Manifest`、能力 | 将运行什么智能体，它应从什么新会话工作区约定开始？ |
+| 沙箱执行 | `SandboxRunConfig`、沙箱客户端和实时沙箱会话 | 本次运行如何获得实时沙箱会话，工作在哪里执行？ |
+| 保存的沙箱状态 | `RunState` 沙箱载荷、`session_state` 和快照 | 此工作流如何重新连接到先前的沙箱工作，或使用已保存的内容初始化新的沙箱会话？ |
 
 </div>
 
-实用的设计顺序如下：
+主要 SDK 组成部分与这些层级的对应关系如下：
 
-1. 使用 `Manifest` 定义全新会话工作区契约。
+<div class="sandbox-nowrap-first-column-table" markdown="1">
+
+| 组成部分 | 负责的内容 | 应提出的问题 |
+| --- | --- | --- |
+| [`SandboxAgent`][agents.sandbox.sandbox_agent.SandboxAgent] | 智能体定义 | 此智能体应执行什么操作，哪些默认设置应随它一起使用？ |
+| [`Manifest`][agents.sandbox.manifest.Manifest] | 新会话工作区的文件和文件夹 | 运行开始时，文件系统中应存在哪些文件和文件夹？ |
+| [`Capability`][agents.sandbox.capabilities.capability.Capability] | 沙箱原生行为 | 应为此智能体附加哪些工具、指令片段或运行时行为？ |
+| [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] | 每次运行的沙箱客户端和沙箱会话来源 | 本次运行应注入、恢复还是创建沙箱会话？ |
+| [`RunState`][agents.run_state.RunState] | 运行器管理的已保存沙箱状态 | 我是否正在恢复先前由运行器管理的工作流，并自动将其沙箱状态延续下去？ |
+| [`SandboxRunConfig.session_state`][agents.run_config.SandboxRunConfig.session_state] | 显式序列化的沙箱会话状态 | 我是否希望从已在 `RunState` 外部序列化的沙箱状态恢复？ |
+| [`SandboxRunConfig.snapshot`][agents.run_config.SandboxRunConfig.snapshot] | 用于新沙箱会话的已保存工作区内容 | 新沙箱会话是否应从已保存的文件和工件开始？ |
+
+</div>
+
+实际的设计顺序如下：
+
+1. 使用 `Manifest` 定义新会话工作区约定。
 2. 使用 `SandboxAgent` 定义智能体。
 3. 添加内置或自定义能力。
-4. 在 `RunConfig(sandbox=SandboxRunConfig(...))` 中决定每次运行应如何获取沙盒会话。
+4. 决定每次运行应如何在 `RunConfig(sandbox=SandboxRunConfig(...))` 中获取其沙箱会话。
 
-## 沙盒运行的准备过程
+## 沙箱运行的准备过程
 
-运行时，运行器会将该定义转换为由具体沙盒支持的运行：
+运行时，运行器会将该定义转换为由沙箱支持的具体运行：
 
-1. 它会从 `SandboxRunConfig` 解析沙盒会话。如果传入 `session=...`，则复用该实时沙盒会话。否则，它会使用 `client=...` 创建或恢复会话。
-2. 它会确定此次运行的有效工作区输入。如果此次运行注入或恢复了沙盒会话，则以现有沙盒状态为准。否则，运行器将从一次性清单覆盖项或 `agent.default_manifest` 开始。这正是仅凭 `Manifest` 无法定义每次运行最终实时工作区的原因。
-3. 它会让各项能力处理生成的清单。通过这种方式，能力可以在最终智能体准备完成前添加文件、挂载或其他工作区范围的行为。
-4. 它会按固定顺序构建最终指令：SDK 的默认沙盒提示词；如果显式覆盖，则使用 `base_instructions`；随后依次加入 `instructions`、能力指令片段、所有远程挂载策略文本，最后加入渲染后的文件系统树。
-5. 它会将能力工具绑定到实时沙盒会话，并通过常规 `Runner` API 运行准备好的智能体。
+1. 它从 `SandboxRunConfig` 解析沙箱会话。如果传入 `session=...`，则复用该实时沙箱会话。否则，它使用 `client=...` 创建或恢复会话。
+2. 它确定本次运行的实际工作区输入。如果运行注入或恢复沙箱会话，则以现有沙箱状态为准。否则，运行器会从一次性清单覆盖项或 `agent.default_manifest` 开始。这就是为什么仅靠 `Manifest` 无法定义每次运行的最终实时工作区。
+3. 它让能力处理生成的清单。这样，能力就可以在最终智能体准备完成前添加文件、挂载或其他工作区范围内的行为。
+4. 它按固定顺序构建最终指令：首先是 SDK 的默认沙箱提示词，或在您显式覆盖时使用 `base_instructions`；然后是 `instructions`；接着是能力指令片段；之后是任何远程挂载策略文本；最后是渲染后的文件系统树。
+5. 它将能力工具绑定到实时沙箱会话，并通过常规 `Runner` API 运行准备好的智能体。
 
-沙盒不会改变一轮交互的含义。一轮仍然是一个模型步骤，而不是一条 shell 命令或一次沙盒操作。沙盒侧操作与轮次之间没有固定的 1:1 对应关系：有些工作可能始终位于沙盒执行层内，而其他操作会返回工具结果、审批或其他需要额外模型步骤的状态。作为实用原则，只有在沙盒工作完成后，智能体运行时需要模型再次响应时，才会消耗新的一轮。
+沙箱不会改变轮次的含义。一个轮次仍是一个模型步骤，而不是单条 shell 命令或单个沙箱操作。沙箱侧操作与轮次之间不存在固定的 1:1 映射：部分工作可能保留在沙箱执行层内，而其他操作则会返回工具结果、审批或其他需要额外模型步骤的状态。实际而言，只有在完成沙箱工作后，智能体运行时还需要另一个模型响应时，才会消耗额外轮次。
 
-这些准备步骤说明了为什么在设计 `SandboxAgent` 时，`default_manifest`、`instructions`、`base_instructions`、`capabilities` 和 `run_as` 是需要重点考虑的沙盒专用选项。
+这些准备步骤说明了为什么在设计 `SandboxAgent` 时，`default_manifest`、`instructions`、`base_instructions`、`capabilities` 和 `run_as` 是需要重点考虑的沙箱专用选项。
 
 ## `SandboxAgent` 选项
 
-除常规 `Agent` 字段外，还提供以下沙盒专用选项：
+除常规 `Agent` 字段之外，还提供以下沙箱专用选项：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 选项 | 最佳用途 |
 | --- | --- |
-| `default_manifest` | 由运行器创建的全新沙盒会话所使用的默认工作区。 |
-| `instructions` | 追加在 SDK 沙盒提示词后的额外角色、工作流和成功标准。 |
-| `base_instructions` | 用于替换 SDK 沙盒提示词的高级逃生舱机制。 |
-| `capabilities` | 应随此智能体一同使用的沙盒原生工具和行为。 |
-| `run_as` | 面向模型的沙盒工具所使用的用户身份，例如 shell 命令、文件读取和补丁操作。 |
+| `default_manifest` | 运行器创建的新沙箱会话所使用的默认工作区。 |
+| `instructions` | 追加在 SDK 沙箱提示词之后的额外角色、工作流和成功标准。 |
+| `base_instructions` | 用于替换 SDK 沙箱提示词的高级应急选项。 |
+| `capabilities` | 应随此智能体一起使用的沙箱原生工具和行为。 |
+| `run_as` | 面向模型的沙箱工具所使用的用户身份，例如 shell 命令、文件读取和补丁。 |
 
 </div>
 
-沙盒客户端选择、沙盒会话复用、清单覆盖和快照选择应放在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中，而不是智能体上。
+沙箱客户端选择、沙箱会话复用、清单覆盖和快照选择应放在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中，而不是智能体上。
 
 ### `default_manifest`
 
-`default_manifest` 是运行器为此智能体创建全新沙盒会话时使用的默认 [`Manifest`][agents.sandbox.manifest.Manifest]。它适用于智能体通常应以其为起点的文件、仓库、辅助材料、输出目录和挂载。
+`default_manifest` 是运行器为此智能体创建新沙箱会话时使用的默认 [`Manifest`][agents.sandbox.manifest.Manifest]。可使用它指定智能体通常应在启动时具备的文件、仓库、辅助材料、输出目录和挂载。
 
-这只是默认值。一次运行可以使用 `SandboxRunConfig(manifest=...)` 覆盖它，而复用或恢复的沙盒会话会保留其现有工作区状态。
+这只是默认设置。运行可以通过 `SandboxRunConfig(manifest=...)` 覆盖它，而复用或恢复的沙箱会话会保留其现有工作区状态。
 
 ### `instructions` 和 `base_instructions`
 
-使用 `instructions` 设置应在不同提示词之间保持不变的简短规则。在 `SandboxAgent` 中，这些指令会追加到 SDK 的沙盒基础提示词之后，因此您可以保留内置沙盒指导，并添加自己的角色、工作流和成功标准。
+对于应在不同提示词下保持不变的简短规则，请使用 `instructions`。在 `SandboxAgent` 中，这些指令会追加到 SDK 的沙箱基础提示词之后，因此您可以保留内置沙箱指导，并添加自己的角色、工作流和成功标准。
 
-仅当希望替换 SDK 的沙盒基础提示词时，才使用 `base_instructions`。大多数智能体不应设置它。
+仅当您希望替换 SDK 的沙箱基础提示词时，才使用 `base_instructions`。大多数智能体都不应设置它。
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 放置位置 | 用途 | 示例 |
 | --- | --- | --- |
 | `instructions` | 智能体的稳定角色、工作流规则和成功标准。 | “检查入职文档，然后进行任务转移。”、“将最终文件写入 `output/`。” |
-| `base_instructions` | 完整替换 SDK 的沙盒基础提示词。 | 自定义底层沙盒包装器提示词。 |
-| 用户提示词 | 此次运行的一次性请求。 | “总结此工作区。” |
-| 清单中的工作区文件 | 更长的任务规范、仓库本地指令或范围受限的参考材料。 | `repo/task.md`、文档包、样本资料包。 |
+| `base_instructions` | 完整替换 SDK 的沙箱基础提示词。 | 自定义底层沙箱包装器提示词。 |
+| 用户提示词 | 本次运行的一次性请求。 | “总结此工作区。” |
+| 清单中的工作区文件 | 较长的任务规范、仓库本地指令或范围有限的参考资料。 | `repo/task.md`、文档包、样本资料包。 |
 
 </div>
 
 `instructions` 的良好用法包括：
 
-- [examples/sandbox/unix_local_pty.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_pty.py) 会在 PTY 状态很重要时，让智能体始终在同一个交互式进程中运行。
-- [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py) 禁止沙盒审查智能体在检查后直接回答用户。
-- [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py) 要求最终填写完成的文件必须实际写入 `output/`。
-- [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py) 固定确切的验证命令，并明确补丁路径相对于工作区根目录。
+- [examples/sandbox/unix_local_pty.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_pty.py) 在 PTY 状态很重要时，让智能体始终处于同一个交互式进程中。
+- [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py) 禁止沙箱审核智能体在检查后直接回答用户。
+- [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py) 要求最终填写的文件实际写入 `output/`。
+- [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py) 固定准确的验证命令，并明确补丁路径是相对于工作区根目录的。
 
-应避免将用户的一次性任务复制到 `instructions`，避免嵌入应放在清单中的长篇参考材料，避免重复内置能力已注入的工具文档，也不要混入模型在运行时不需要的本地安装说明。
+请避免将用户的一次性任务复制到 `instructions` 中、嵌入本应放入清单的长篇参考资料、重复内置能力已经注入的工具文档，或混入模型在运行时并不需要的本地安装说明。
 
-如果省略 `instructions`，SDK 仍会包含默认沙盒提示词。这对于底层包装器已经足够，但大多数面向用户的智能体仍应提供明确的 `instructions`。
+如果省略 `instructions`，SDK 仍会包含默认沙箱提示词。对于底层包装器而言，这已经足够，但大多数面向用户的智能体仍应提供明确的 `instructions`。
 
 ### `capabilities`
 
-能力会将沙盒原生行为附加到 `SandboxAgent`。它们可以在运行开始前调整工作区、追加沙盒专用指令、公开绑定到实时沙盒会话的工具，以及调整该智能体的模型行为或输入处理。
+能力会将沙箱原生行为附加到 `SandboxAgent`。它们可以在运行开始前调整工作区、追加沙箱专用指令、公开绑定到实时沙箱会话的工具，并调整该智能体的模型行为或输入处理方式。
 
 内置能力包括：
 
@@ -15549,59 +15561,59 @@ flowchart LR
 
 | 能力 | 添加时机 | 说明 |
 | --- | --- | --- |
-| `Shell` | 智能体需要 shell 访问。 | 添加 `exec_command`；当沙盒客户端支持 PTY 交互时，还会添加 `write_stdin`。 |
+| `Shell` | 智能体需要 shell 访问。 | 添加 `exec_command`；当沙箱客户端支持 PTY 交互时，还会添加 `write_stdin`。 |
 | `Filesystem` | 智能体需要编辑文件或检查本地图像。 | 添加 `apply_patch` 和 `view_image`；补丁路径相对于工作区根目录。 |
-| `Skills` | 希望在沙盒中发现并具现化技能。 | 应优先使用此能力，而不是手动挂载 `.agents` 或 `.agents/skills`；`Skills` 会为您索引技能并将其具现化到沙盒中。 |
-| `Memory` | 后续运行应读取或生成记忆产物。 | 需要 `Shell`；实时更新还需要 `Filesystem`。 |
-| `Compaction` | 长时间运行的流程需要在压缩项后裁剪上下文。 | 调整模型采样和输入处理。 |
+| `Skills` | 您希望在沙箱中发现并具现化技能。 | 应优先使用它，而不是手动挂载 `.agents` 或 `.agents/skills`；`Skills` 会为您将技能编入索引并具现化到沙箱中。 |
+| `Memory` | 后续运行应读取或生成记忆工件。 | 需要 `Shell`；实时更新还需要 `Filesystem`。 |
+| `Compaction` | 长时间运行的流程需要在压缩项之后裁剪上下文。 | 调整模型采样和输入处理。 |
 
 </div>
 
-默认情况下，`SandboxAgent.capabilities` 使用 `Capabilities.default()`，其中包括 `Filesystem()`、`Shell()` 和 `Compaction()`。如果传入 `capabilities=[...]`，该列表会替换默认值，因此请将仍需使用的默认能力包含在内。
+默认情况下，`SandboxAgent.capabilities` 使用 `Capabilities.default()`，其中包括 `Filesystem()`、`Shell()` 和 `Compaction()`。如果传入 `capabilities=[...]`，该列表会替换默认列表，因此请包含仍希望使用的所有默认能力。
 
-对于技能，请根据所需的具现化方式选择来源：
+对于技能，请根据希望采用的具现化方式选择来源：
 
 - `Skills(lazy_from=LocalDirLazySkillSource(...))` 是较大本地技能目录的良好默认选择，因为模型可以先发现索引，然后仅加载所需内容。
-- `LocalDirLazySkillSource(source=LocalDir(src=...))` 从 SDK 进程运行所在的文件系统读取内容。请传入原始主机侧技能目录，而不是仅存在于沙盒镜像或工作区内的路径。
+- `LocalDirLazySkillSource(source=LocalDir(src=...))` 从运行 SDK 进程的文件系统读取内容。请传入原始主机端技能目录，而不是仅存在于沙箱镜像或工作区中的路径。
 - `Skills(from_=LocalDir(src=...))` 更适合希望预先暂存的小型本地技能包。
-- 当技能本身应来自仓库时，`Skills(from_=GitRepo(repo=..., ref=...))` 更合适。
+- 当技能本身应来自仓库时，`Skills(from_=GitRepo(repo=..., ref=...))` 是合适的选择。
 
-`LocalDir.src` 是 SDK 主机上的源路径。`skills_path` 是沙盒工作区内的相对目标路径，在调用 `load_skill` 时，技能会被暂存到该位置。
+`LocalDir.src` 是 SDK 主机上的源路径。`skills_path` 是沙箱工作区中的相对目标路径，调用 `load_skill` 时，技能会暂存到该路径。
 
-如果技能已位于磁盘上的 `.agents/skills/<name>/SKILL.md` 等路径下，请将 `LocalDir(...)` 指向该源根目录，并仍使用 `Skills(...)` 将其公开。除非现有工作区契约依赖其他沙盒内布局，否则请保留默认的 `skills_path=".agents"`。
+如果您的技能已存储在磁盘上的 `.agents/skills/<name>/SKILL.md` 等位置，请将 `LocalDir(...)` 指向该源根目录，并仍使用 `Skills(...)` 公开这些技能。除非现有工作区约定依赖其他沙箱内布局，否则请保留默认的 `skills_path=".agents"`。
 
-当内置能力能够满足需求时，应优先使用内置能力。仅当需要内置能力未涵盖的沙盒专用工具或指令接口时，才编写自定义能力。
+如果内置能力能够满足需求，应优先使用它们。只有在需要内置能力未涵盖的沙箱专用工具或指令接口时，才编写自定义能力。
 
 ## 概念
 
 ### 清单
 
-[`Manifest`][agents.sandbox.manifest.Manifest] 描述全新沙盒会话的工作区。它可以设置工作区 `root`、声明文件和目录、复制本地文件、克隆 Git 仓库、附加远程存储挂载、设置环境变量、定义用户或组，以及授予对工作区外特定绝对路径的访问权限。
+[`Manifest`][agents.sandbox.manifest.Manifest] 描述新沙箱会话的工作区。它可以设置工作区 `root`、声明文件和目录、复制本地文件、克隆 Git 仓库、附加远程存储挂载、设置环境变量、定义用户或组，以及授予对工作区外特定绝对路径的访问权限。
 
-清单条目路径相对于工作区。它们不能是绝对路径，也不能使用 `..` 逃逸工作区，因此工作区契约可以在本地、Docker 和托管客户端之间保持可移植性。
+清单条目路径相对于工作区。它们不能是绝对路径，也不能使用 `..` 逸出工作区，这可使工作区约定在本地、Docker 和托管客户端之间保持可移植性。
 
-使用清单条目提供智能体开始工作前所需的材料：
+使用清单条目指定智能体在开始工作前所需的材料：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 清单条目 | 用途 |
 | --- | --- |
 | `File`、`Dir` | 小型合成输入、辅助文件或输出目录。 |
-| `LocalFile`、`LocalDir` | 应具现化到沙盒中的主机文件或目录。 |
+| `LocalFile`、`LocalDir` | 应具现化到沙箱中的主机文件或目录。 |
 | `GitRepo` | 应提取到工作区中的仓库。 |
-| `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount`、`S3FilesMount` 等挂载 | 应显示在沙盒内的外部存储。 |
+| `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount`、`S3FilesMount` 等挂载 | 应显示在沙箱内的外部存储。 |
 
 </div>
 
-`Dir` 会根据合成子项在沙盒工作区内创建目录，或创建一个输出位置；它不会从主机文件系统读取内容。如果需要将现有主机目录复制到沙盒工作区，请使用 `LocalDir`。
+`Dir` 会根据合成子项在沙箱工作区内创建目录，或创建一个输出位置；它不会从主机文件系统读取内容。现有主机目录需要复制到沙箱工作区时，请使用 `LocalDir`。
 
-默认情况下，`LocalFile.src` 和 `LocalDir.src` 相对于 SDK 进程的工作目录进行解析。除非源路径已包含在 `extra_path_grants` 中，否则它必须位于该基础目录下。这样可以让本地源材料的具现化与沙盒清单的其他部分保持在同一个主机路径信任边界内。
+默认情况下，`LocalFile.src` 和 `LocalDir.src` 会相对于 SDK 进程的工作目录进行解析。源必须位于该基础目录下，除非它包含在 `extra_path_grants` 中。这样可确保本地源材料的具现化与沙箱清单的其余部分位于相同的主机路径信任边界内。
 
-挂载条目描述要公开哪些存储；挂载策略则描述沙盒后端如何附加这些存储。有关挂载选项和提供商支持，请参阅[沙盒客户端](clients.md#mounts-and-remote-storage)。
+挂载条目描述要公开的存储；挂载策略描述沙箱后端如何附加该存储。有关挂载选项和提供商支持，请参阅[沙箱客户端](clients.md#mounts-and-remote-storage)。
 
-良好的清单设计通常意味着保持工作区契约精简，将较长的任务步骤放入 `repo/task.md` 等工作区文件，并在指令中使用工作区相对路径，例如 `repo/task.md` 或 `output/report.md`。如果智能体使用 `Filesystem` 能力的 `apply_patch` 工具编辑文件，请记住，补丁路径相对于沙盒工作区根目录，而不是 shell 的 `workdir`。
+良好的清单设计通常意味着保持工作区约定精简，将较长的任务流程放入 `repo/task.md` 等工作区文件，并在指令中使用相对工作区路径，例如 `repo/task.md` 或 `output/report.md`。如果智能体使用 `Filesystem` 能力的 `apply_patch` 工具编辑文件，请记住，补丁路径相对于沙箱工作区根目录，而不是 shell 的 `workdir`。
 
-仅当智能体需要工作区外的具体绝对路径，或清单需要复制 SDK 进程工作目录外的可信本地源时，才使用 `extra_path_grants`。示例包括：用于临时工具输出的 `/tmp`、用作只读运行时的 `/opt/toolchain`，或应具现化到沙盒中的已生成技能目录。授权适用于本地源具现化、SDK 文件 API，以及后端可以执行文件系统策略的 shell 执行：
+仅当智能体需要访问工作区外的具体绝对路径，或清单需要复制 SDK 进程工作目录之外的受信任本地源时，才使用 `extra_path_grants`。例如，用于临时工具输出的 `/tmp`、用于只读运行时的 `/opt/toolchain`，或应具现化到沙箱中的已生成技能目录。授权适用于本地源具现化、SDK 文件 API，以及后端能够实施文件系统策略时的 shell 执行：
 
 ```python
 from agents.sandbox import Manifest, SandboxPathGrant
@@ -15614,15 +15626,17 @@ manifest = Manifest(
 )
 ```
 
-应将包含 `extra_path_grants` 的清单视为可信配置。除非应用已经批准这些主机路径，否则不要从模型输出或其他不可信有效负载中加载授权。
+当 Docker 应将其他绝对主机路径绑定挂载到容器内的绝对 POSIX `path` 时，请设置 `host_path`。`UnixLocalSandboxClient` 仅支持两个路径相同的纯路径授权，并会拒绝 `host_path`。对于沙箱不应修改的主机数据，请使用 `read_only=True`；如果复制即可满足需求，请使用 `LocalFile` 或 `LocalDir`。
+
+请将包含 `extra_path_grants` 的清单视为受信任配置。除非应用程序已经批准这些主机路径，否则请勿从模型输出或其他不受信任的载荷加载授权。
 
 快照和 `persist_workspace()` 仍然只包含工作区根目录。额外授权的路径属于运行时访问权限，而不是持久工作区状态。
 
 ### 权限
 
-`Permissions` 控制清单条目的文件系统权限。它作用于沙盒具现化的文件，而不是模型权限、审批策略或 API 凭据。
+`Permissions` 控制清单条目的文件系统权限。它针对沙箱具现化的文件，而不是模型权限、审批策略或 API 凭据。
 
-默认情况下，清单条目的所有者拥有读取、写入和执行权限，组和其他用户拥有读取和执行权限。当暂存文件应为私有、只读或可执行时，请覆盖此设置：
+默认情况下，清单条目的所有者具有读取、写入和执行权限，组和其他用户具有读取和执行权限。当暂存文件应为私有、只读或可执行时，请覆盖此设置：
 
 ```python
 from agents.sandbox import FileMode, Permissions
@@ -15638,9 +15652,9 @@ private_notes = File(
 )
 ```
 
-`Permissions` 会分别存储所有者、组和其他用户的权限位，以及该条目是否为目录。您可以直接构建它，使用 `Permissions.from_str(...)` 从模式字符串解析，或使用 `Permissions.from_mode(...)` 从操作系统模式派生。
+`Permissions` 分别存储所有者、组和其他用户的权限位，以及条目是否为目录。您可以直接构建它，通过 `Permissions.from_str(...)` 从模式字符串解析，或通过 `Permissions.from_mode(...)` 从操作系统模式派生。
 
-用户是可以在沙盒中执行工作的身份。当希望某个身份存在于沙盒中时，请向清单添加 `User`；当 shell 命令、文件读取和补丁等面向模型的沙盒工具应以该用户身份运行时，请设置 `SandboxAgent.run_as`。如果 `run_as` 指向清单中尚不存在的用户，运行器会自动将其添加到有效清单中。
+用户是可在沙箱中执行工作的身份。当您希望某个身份存在于沙箱中时，请将 `User` 添加到清单；然后，当 shell 命令、文件读取和补丁等面向模型的沙箱工具应以该用户身份运行时，设置 `SandboxAgent.run_as`。如果 `run_as` 指向清单中尚不存在的用户，运行器会自动将其添加到实际清单中。
 
 ```python
 from agents import Runner
@@ -15692,13 +15706,13 @@ result = await Runner.run(
 )
 ```
 
-如果还需要文件级共享规则，请将用户与清单组及条目的 `group` 元数据结合使用。`run_as` 用户控制由谁执行沙盒原生操作；`Permissions` 则控制沙盒完成工作区具现化后，该用户可以读取、写入或执行哪些文件。
+如果还需要文件级共享规则，请将用户与清单组以及条目 `group` 元数据结合使用。`run_as` 用户控制由谁执行沙箱原生操作；`Permissions` 控制沙箱具现化工作区后，该用户可以读取、写入或执行哪些文件。
 
 ### SnapshotSpec
 
-`SnapshotSpec` 指定全新沙盒会话应从何处恢复保存的工作区内容，以及应将内容持久化回何处。它是沙盒工作区的快照策略，而 `session_state` 是用于恢复特定沙盒后端的序列化连接状态。
+`SnapshotSpec` 指定新沙箱会话应从哪里恢复已保存的工作区内容，以及应将其持久化回哪里。它是沙箱工作区的快照策略，而 `session_state` 是用于恢复特定沙箱后端的序列化连接状态。
 
-对于本地持久快照，请使用 `LocalSnapshotSpec`；当应用提供远程快照客户端时，请使用 `RemoteSnapshotSpec`。当无法设置本地快照时，会使用空操作快照作为后备；当高级调用方不需要工作区快照持久化时，也可以显式使用空操作快照。
+对于本地持久快照，请使用 `LocalSnapshotSpec`；当应用程序提供远程快照客户端时，请使用 `RemoteSnapshotSpec`。本地快照设置不可用时，会使用空操作快照作为回退；当高级调用方不希望持久化工作区快照时，也可以显式使用空操作快照。
 
 ```python
 from pathlib import Path
@@ -15715,11 +15729,11 @@ run_config = RunConfig(
 )
 ```
 
-当运行器创建全新沙盒会话时，沙盒客户端会为该会话构建一个快照实例。启动时，如果快照可恢复，沙盒会在运行继续前恢复保存的工作区内容。清理时，由运行器拥有的沙盒会话会归档工作区，并通过快照将其持久化回去。
+当运行器创建新沙箱会话时，沙箱客户端会为该会话构建快照实例。启动时，如果快照可恢复，沙箱会先恢复已保存的工作区内容，然后再继续运行。清理时，运行器拥有的沙箱会话会归档工作区，并通过快照将其持久化。
 
-如果省略 `snapshot`，运行时会在可行时尝试使用默认本地快照位置。如果无法设置，则回退到空操作快照。挂载路径和临时路径不会作为持久工作区内容复制到快照中。
+如果省略 `snapshot`，运行时会尽可能尝试使用默认本地快照位置。如果无法设置，则回退到空操作快照。挂载路径和临时路径不会作为持久工作区内容复制到快照中。
 
-### 沙盒生命周期
+### 沙箱生命周期
 
 生命周期有两种模式：**SDK 所有**和**开发者所有**。
 
@@ -15749,7 +15763,7 @@ sequenceDiagram
 
 </div>
 
-当沙盒只需在一次运行期间存在时，请使用 SDK 所有的生命周期。传入 `client`、可选的 `manifest`、可选的 `snapshot` 和客户端 `options`；运行器会创建或恢复沙盒、启动沙盒、运行智能体、持久化由快照支持的工作区状态、关闭沙盒，并让客户端清理由运行器拥有的资源。
+当沙箱只需在一次运行期间存在时，请使用 SDK 所有的生命周期。传入 `client`、可选的 `manifest`、可选的 `snapshot` 和客户端 `options`；运行器会创建或恢复沙箱、启动沙箱、运行智能体、持久化由快照支持的工作区状态、关闭沙箱，并让客户端清理运行器拥有的资源。
 
 ```python
 result = await Runner.run(
@@ -15761,7 +15775,7 @@ result = await Runner.run(
 )
 ```
 
-当您希望提前创建沙盒、在多次运行间复用同一个实时沙盒、在运行后检查文件、通过自己创建的沙盒进行流式传输，或精确决定清理时机时，请使用开发者所有的生命周期。传入 `session=...` 会让运行器使用该实时沙盒，但不会代您关闭它。
+当您希望提前创建沙箱、在多次运行间复用同一个实时沙箱、在运行后检查文件、通过自行创建的沙箱进行流式传输，或准确决定何时进行清理时，请使用开发者所有的生命周期。传入 `session=...` 会让运行器使用该实时沙箱，但运行器不会替您关闭它。
 
 ```python
 sandbox = await client.create(manifest=agent.default_manifest)
@@ -15772,7 +15786,7 @@ async with sandbox:
     await Runner.run(agent, "Write the final report.", run_config=run_config)
 ```
 
-通常应使用上下文管理器：它在进入时启动沙盒，并在退出时运行会话清理生命周期。如果应用无法使用上下文管理器，请直接调用生命周期方法：
+上下文管理器是常见用法：进入时启动沙箱，退出时运行会话清理生命周期。如果您的应用无法使用上下文管理器，请直接调用生命周期方法：
 
 ```python
 sandbox = await client.create(
@@ -15793,64 +15807,64 @@ finally:
     await sandbox.aclose()
 ```
 
-`stop()` 只会持久化由快照支持的工作区内容；它不会销毁沙盒。`aclose()` 是完整的会话清理路径：它会运行停止前钩子、调用 `stop()`、关闭沙盒资源并关闭会话范围的依赖项。
+`stop()` 只会持久化由快照支持的工作区内容；它不会拆除沙箱。`aclose()` 是完整的会话清理路径：它会运行停止前钩子、调用 `stop()`、关闭沙箱资源，并关闭会话范围内的依赖项。
 
 ## `SandboxRunConfig` 选项
 
-[`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 保存每次运行的选项，用于决定沙盒会话的来源，以及应如何初始化全新会话。
+[`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 保存每次运行的选项，这些选项决定沙箱会话的来源，以及应如何初始化新会话。
 
-### 沙盒来源
+### 沙箱来源
 
-以下选项决定运行器应复用、恢复还是创建沙盒会话：
+以下选项决定运行器应复用、恢复还是创建沙箱会话：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 选项 | 使用时机 | 说明 |
+| 选项 | 适用场景 | 说明 |
 | --- | --- | --- |
-| `client` | 希望运行器代您创建、恢复和清理沙盒会话。 | 除非提供实时沙盒 `session`，否则为必需项。 |
-| `session` | 已经自行创建了实时沙盒会话。 | 调用方拥有生命周期；运行器复用该实时沙盒会话。 |
-| `session_state` | 拥有序列化的沙盒会话状态，但没有实时沙盒会话对象。 | 需要 `client`；运行器将根据该显式状态，以拥有会话的方式进行恢复。 |
+| `client` | 您希望运行器代您创建、恢复和清理沙箱会话。 | 除非提供实时沙箱 `session`，否则为必需项。 |
+| `session` | 您已经自行创建了实时沙箱会话。 | 调用方拥有生命周期；运行器会复用该实时沙箱会话。 |
+| `session_state` | 您拥有已序列化的沙箱会话状态，但没有实时沙箱会话对象。 | 需要 `client`；运行器会从该显式状态恢复为其拥有的会话。 |
 
 </div>
 
-实际使用中，运行器会按以下顺序解析沙盒会话：
+实际使用中，运行器按以下顺序解析沙箱会话：
 
-1. 如果注入 `run_config.sandbox.session`，则直接复用该实时沙盒会话。
-2. 否则，如果此次运行正在从 `RunState` 恢复，则恢复其中存储的沙盒会话状态。
-3. 否则，如果传入 `run_config.sandbox.session_state`，运行器将根据该显式序列化的沙盒会话状态进行恢复。
-4. 否则，运行器会创建全新的沙盒会话。对于该全新会话，如果提供了 `run_config.sandbox.manifest`，则使用它；否则使用 `agent.default_manifest`。
+1. 如果注入 `run_config.sandbox.session`，则直接复用该实时沙箱会话。
+2. 否则，如果运行正在从 `RunState` 恢复，则恢复其中存储的沙箱会话状态。
+3. 否则，如果传入 `run_config.sandbox.session_state`，运行器会从该显式序列化的沙箱会话状态恢复。
+4. 否则，运行器会创建新的沙箱会话。对于该新会话，如果提供了 `run_config.sandbox.manifest`，则使用它；否则使用 `agent.default_manifest`。
 
-### 全新会话输入
+### 新会话输入
 
-以下选项仅在运行器创建全新沙盒会话时有效：
+以下选项仅在运行器创建新沙箱会话时有效：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 选项 | 使用时机 | 说明 |
+| 选项 | 适用场景 | 说明 |
 | --- | --- | --- |
-| `manifest` | 希望一次性覆盖全新会话的工作区。 | 省略时回退到 `agent.default_manifest`。 |
-| `snapshot` | 全新沙盒会话应由快照初始化。 | 适用于类似恢复的流程或远程快照客户端。 |
-| `options` | 沙盒客户端需要创建时选项。 | 常用于 Docker 镜像、Modal 应用名称、E2B 模板、超时和类似的客户端专用设置。 |
+| `manifest` | 您希望对新会话工作区进行一次性覆盖。 | 省略时回退到 `agent.default_manifest`。 |
+| `snapshot` | 新沙箱会话应从快照初始化。 | 适用于类似恢复的流程或远程快照客户端。 |
+| `options` | 沙箱客户端需要创建时选项。 | 常用于 Docker 镜像、Modal 应用名称、E2B 模板、超时及类似的客户端专用设置。 |
 
 </div>
 
 ### 具现化控制
 
-`concurrency_limits` 控制可并行运行的沙盒具现化工作量。当大型清单或本地目录复制需要更严格的资源控制时，请使用 `SandboxConcurrencyLimits(manifest_entries=..., local_dir_files=...)`。将任一值设置为 `None` 可禁用对应限制。
+`concurrency_limits` 控制可以并行运行的沙箱具现化工作量。当大型清单或本地目录复制需要更严格的资源控制时，请使用 `SandboxConcurrencyLimits(manifest_entries=..., local_dir_files=...)`。将任一值设置为 `None` 可禁用相应限制。
 
-`archive_limits` 控制 SDK 侧对归档提取的资源检查。设置 `archive_limits=SandboxArchiveLimits()` 可启用 SDK 默认阈值；当归档需要更严格的资源控制时，也可以传入 `SandboxArchiveLimits(max_input_bytes=..., max_extracted_bytes=..., max_members=...)` 等显式值。保留 `archive_limits=None` 可维持默认行为，即不设置 SDK 归档资源限制；也可以将单个字段设置为 `None`，仅禁用对应限制。
+`archive_limits` 控制 SDK 端对归档提取的资源检查。设置 `archive_limits=SandboxArchiveLimits()` 可启用 SDK 默认阈值；当归档需要更严格的资源控制时，也可以传入 `SandboxArchiveLimits(max_input_bytes=..., max_extracted_bytes=..., max_members=...)` 等显式值。保留 `archive_limits=None` 可维持不设 SDK 归档资源限制的默认行为；也可以将单个字段设置为 `None`，仅禁用该项限制。
 
 需要注意以下几点：
 
-- 全新会话：`manifest=` 和 `snapshot=` 仅在运行器创建全新沙盒会话时生效。
-- 恢复与快照：`session_state=` 会重新连接到之前序列化的沙盒状态，而 `snapshot=` 会根据保存的工作区内容初始化新的沙盒会话。
-- 客户端专用选项：`options=` 取决于沙盒客户端；Docker 和许多托管客户端都需要该选项。
-- 注入的实时会话：如果传入正在运行的沙盒 `session`，由能力驱动的清单更新可以添加兼容的非挂载条目。但它们不能更改 `manifest.root`、`manifest.environment`、`manifest.users` 或 `manifest.groups`；不能移除现有条目；不能替换条目类型；也不能添加或更改挂载条目。
-- 运行器 API：`SandboxAgent` 仍使用常规的 `Runner.run()`、`Runner.run_sync()` 和 `Runner.run_streamed()` API 执行。
+- 新会话：`manifest=` 和 `snapshot=` 仅在运行器创建新沙箱会话时适用。
+- 恢复与快照：`session_state=` 重新连接到先前序列化的沙箱状态，而 `snapshot=` 使用已保存的工作区内容初始化新的沙箱会话。
+- 客户端专用选项：`options=` 取决于沙箱客户端；Docker 和许多托管客户端都要求提供它。
+- 注入的实时会话：如果传入正在运行的沙箱 `session`，由能力驱动的清单更新可以添加兼容的非挂载条目。它们不能更改 `manifest.root`、`manifest.environment`、`manifest.users` 或 `manifest.groups`；不能删除现有条目；不能替换条目类型；也不能添加或更改挂载条目。
+- 运行器 API：`SandboxAgent` 执行仍使用常规的 `Runner.run()`、`Runner.run_sync()` 和 `Runner.run_streamed()` API。
 
 ## 完整示例：编码任务
 
-以下编码风格示例是一个良好的默认起点：
+以下编码风格示例是很好的默认起点：
 
 ```python
 import asyncio
@@ -15929,19 +15943,19 @@ if __name__ == "__main__":
     )
 ```
 
-请参阅 [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)。它使用一个基于 shell 的微型仓库，因此可以在 Unix 本地运行中以确定性方式验证该示例。您的实际任务仓库当然可以使用 Python、JavaScript 或任何其他语言。
+请参阅 [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py)。它使用基于 shell 的微型仓库，因此可以在 Unix 本地运行中以确定性方式验证该示例。当然，您的实际任务仓库可以使用 Python、JavaScript 或任何其他技术。
 
 ## 常见模式
 
-请从上面的完整示例开始。很多情况下，您可以保持同一个 `SandboxAgent` 不变，只更改沙盒客户端、沙盒会话来源或工作区来源。
+请从上面的完整示例开始。在许多情况下，可以保持同一个 `SandboxAgent` 不变，只更改沙箱客户端、沙箱会话来源或工作区来源。
 
-### 沙盒客户端切换
+### 沙箱客户端的切换
 
-保持智能体定义不变，仅更改运行配置。当需要容器隔离或镜像一致性时，请使用 Docker；当需要由提供商管理执行时，请使用托管提供商。有关代码示例和提供商选项，请参阅[沙盒客户端](clients.md)。
+保持智能体定义不变，只更改运行配置。当您需要容器隔离或镜像一致性时，请使用 Docker；当您需要由提供商管理执行时，请使用托管提供商。有关示例和提供商选项，请参阅[沙箱客户端](clients.md)。
 
-### 工作区覆盖
+### 工作区的覆盖
 
-保持智能体定义不变，仅替换全新会话清单：
+保持智能体定义不变，只替换新会话清单：
 
 ```python
 from agents.run import RunConfig
@@ -15961,11 +15975,11 @@ run_config = RunConfig(
 )
 ```
 
-当同一个智能体角色需要针对不同仓库、资料包或任务包运行，而无需重新构建智能体时，请使用此模式。上面经过验证的编码示例使用 `default_manifest` 而非一次性覆盖，但展示了相同模式。
+当同一个智能体角色应针对不同仓库、资料包或任务包运行，而无需重新构建智能体时，请使用此模式。上面经过验证的编码示例展示了使用 `default_manifest` 而非一次性覆盖项的相同模式。
 
-### 沙盒会话注入
+### 沙箱会话的注入
 
-当需要显式生命周期控制、运行后检查或输出复制时，请注入实时沙盒会话：
+当您需要显式控制生命周期、在运行后检查或复制输出时，请注入实时沙箱会话：
 
 ```python
 from agents import Runner
@@ -15986,11 +16000,11 @@ async with sandbox:
     )
 ```
 
-当希望在运行后检查工作区，或通过已启动的沙盒会话进行流式传输时，请使用此模式。请参阅 [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py) 和 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
+当您希望在运行后检查工作区，或通过已经启动的沙箱会话进行流式传输时，请使用此模式。请参阅 [examples/sandbox/docs/coding_task.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docs/coding_task.py) 和 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
 
-### 会话状态恢复
+### 从会话状态恢复
 
-如果已在 `RunState` 外部序列化沙盒状态，可以让运行器根据该状态重新连接：
+如果您已经在 `RunState` 外部序列化了沙箱状态，请让运行器从该状态重新连接：
 
 ```python
 from agents.run import RunConfig
@@ -16007,11 +16021,13 @@ run_config = RunConfig(
 )
 ```
 
-当沙盒状态存储在您自己的存储系统或作业系统中，并希望 `Runner` 直接从中恢复时，请使用此模式。有关序列化和反序列化流程，请参阅 [examples/sandbox/extensions/blaxel_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py)。
+当沙箱状态保存在您自己的存储或作业系统中，并且希望 `Runner` 直接从中恢复时，请使用此模式。有关序列化和反序列化流程，请参阅 [examples/sandbox/extensions/blaxel_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py)。
 
-### 快照初始化
+会话状态序列化会省略原生 `host_path` 值。要恢复由主机支持的授权，请通过 `SandboxRunConfig.manifest` 或 `agent.default_manifest` 提供当前受信任清单；否则，恢复会在沙箱启动前失败。切勿从序列化输入或其他不受信任的输入派生主机路径。
 
-使用保存的文件和产物初始化新沙盒：
+### 从快照启动
+
+使用已保存的文件和工件初始化新沙箱：
 
 ```python
 from pathlib import Path
@@ -16028,11 +16044,11 @@ run_config = RunConfig(
 )
 ```
 
-当全新运行应从保存的工作区内容开始，而不是仅从 `agent.default_manifest` 开始时，请使用此模式。有关本地快照流程，请参阅 [examples/sandbox/memory.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/memory.py)；有关远程快照客户端，请参阅 [examples/sandbox/sandbox_agent_with_remote_snapshot.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_remote_snapshot.py)。
+当新运行应从已保存的工作区内容开始，而不是仅使用 `agent.default_manifest` 时，请使用此模式。有关本地快照流程，请参阅 [examples/sandbox/memory.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/memory.py)；有关远程快照客户端，请参阅 [examples/sandbox/sandbox_agent_with_remote_snapshot.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agent_with_remote_snapshot.py)。
 
-### Git 技能加载
+### 从 Git 加载技能
 
-将本地技能源替换为由仓库支持的技能源：
+将本地技能来源替换为仓库支持的来源：
 
 ```python
 from agents.sandbox.capabilities import Capabilities, Skills
@@ -16043,11 +16059,11 @@ capabilities = Capabilities.default() + [
 ]
 ```
 
-当技能包有自己的发布周期，或应在多个沙盒间共享时，请使用此模式。请参阅 [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)。
+当技能包有自己的发布周期，或应在多个沙箱之间共享时，请使用此模式。请参阅 [examples/sandbox/tax_prep.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/tax_prep.py)。
 
-### 工具公开
+### 作为工具公开
 
-工具智能体既可以获得自己的沙盒边界，也可以复用父级运行中的实时沙盒。复用适合快速、只读的探索智能体：它可以检查父智能体正在使用的确切工作区，而无需承担创建、填充或快照另一个沙盒的开销。
+工具智能体既可以拥有自己的沙箱边界，也可以复用父运行中的实时沙箱。对于快速的只读探索智能体，复用很有用：它可以检查父智能体正在使用的确切工作区，而无需承担创建、填充或快照另一个沙箱的开销。
 
 ```python
 from agents import Runner
@@ -16129,9 +16145,9 @@ async with sandbox:
     )
 ```
 
-此处，父智能体以 `coordinator` 身份运行，探索工具智能体则在同一个实时沙盒会话中以 `explorer` 身份运行。`pricing_packet/` 条目允许 `other` 用户读取，因此探索智能体可以快速检查这些条目，但没有写入权限位。`work/` 目录仅对协调智能体的用户和组可用，因此父智能体可以写入最终产物，而探索智能体保持只读状态。
+此处，父智能体以 `coordinator` 身份运行，探索工具智能体则在同一个实时沙箱会话中以 `explorer` 身份运行。`pricing_packet/` 条目可由 `other` 用户读取，因此探索智能体可以快速检查这些条目，但没有写入权限位。`work/` 目录仅对协调智能体的用户/组可用，因此父智能体可以写入最终工件，而探索智能体保持只读。
 
-当工具智能体需要真正隔离时，请为其提供独立的沙盒 `RunConfig`：
+当工具智能体需要真正隔离时，请为其提供独立的沙箱 `RunConfig`：
 
 ```python
 from docker import from_env as docker_from_env
@@ -16157,11 +16173,11 @@ rollout_agent.as_tool(
 )
 ```
 
-当工具智能体应自由修改内容、运行不可信命令或使用不同的后端或镜像时，请使用独立沙盒。请参阅 [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)。
+当工具智能体应自由修改内容、运行不受信任的命令或使用不同后端/镜像时，请使用独立沙箱。请参阅 [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)。
 
-### 本地工具与 MCP 组合
+### 与本地工具及 MCP 的组合
 
-在保留沙盒工作区的同时，仍可在同一个智能体上使用普通工具：
+在保留沙箱工作区的同时，仍可在同一个智能体上使用常规工具：
 
 ```python
 from agents.sandbox import SandboxAgent
@@ -16180,44 +16196,44 @@ agent = SandboxAgent(
 
 ## 记忆
 
-当未来的沙盒智能体运行应从之前的运行中学习时，请使用 `Memory` 能力。记忆不同于 SDK 的对话式 `Session` 记忆：它会将经验提炼为沙盒工作区中的文件，后续运行便可读取这些文件。
+当未来的沙箱智能体运行应从先前运行中学习时，请使用 `Memory` 能力。记忆与 SDK 的对话式 `Session` 记忆不同：它会将经验提炼到沙箱工作区内的文件中，供后续运行读取。
 
-有关设置、读取和生成行为、多轮对话及布局隔离，请参阅[智能体记忆](memory.md)。
+有关设置、读取/生成行为、多轮对话和布局隔离，请参阅[智能体记忆](memory.md)。
 
 ## 组合模式
 
-明确单智能体模式后，下一个设计问题是沙盒边界在更大系统中应处于什么位置。
+明确单智能体模式后，下一个设计问题是沙箱边界在更大系统中应位于何处。
 
-沙盒智能体仍可与 SDK 的其他部分组合：
+沙箱智能体仍可与 SDK 的其他部分组合：
 
-- [任务转移](../handoffs.md)：将文档密集型工作从非沙盒接收智能体转移给沙盒审查智能体。
-- [Agents as tools](../tools.md#agents-as-tools)：将多个沙盒智能体公开为工具，通常通过在每次 `Agent.as_tool(...)` 调用中传入 `run_config=RunConfig(sandbox=SandboxRunConfig(...))`，使每个工具拥有自己的沙盒边界。
-- [MCP](../mcp.md) 和普通工具调用：沙盒能力可以与 `mcp_servers` 和普通 Python 工具共存。
-- [运行智能体](../running_agents.md)：沙盒运行仍使用常规 `Runner` API。
+- [任务转移](../handoffs.md)：将文档密集型工作从非沙箱接收智能体转移给沙箱审核智能体。
+- [Agents as tools](../tools.md#agents-as-tools)：将多个沙箱智能体作为工具公开，通常是在每次调用 `Agent.as_tool(...)` 时传入 `run_config=RunConfig(sandbox=SandboxRunConfig(...))`，从而让每个工具拥有自己的沙箱边界。
+- [MCP](../mcp.md) 和常规工具调用：沙箱能力可以与 `mcp_servers` 和普通 Python 工具共存。
+- [运行智能体](../running_agents.md)：沙箱运行仍使用常规 `Runner` API。
 
 以下两种模式尤其常见：
 
-- 非沙盒智能体只在工作流中需要工作区隔离的部分，将任务转移给沙盒智能体
-- 编排智能体将多个沙盒智能体公开为工具，通常为每次 `Agent.as_tool(...)` 调用分别提供沙盒 `RunConfig`，使每个工具拥有独立的隔离工作区
+- 非沙箱智能体仅针对工作流中需要工作区隔离的部分，将任务转移给沙箱智能体
+- 编排智能体将多个沙箱智能体作为工具公开，通常为每次 `Agent.as_tool(...)` 调用提供独立的沙箱 `RunConfig`，从而让每个工具获得自己的隔离工作区
 
-### 轮次与沙盒运行
+### 轮次与沙箱运行
 
-分别说明任务转移和智能体工具调用会更清晰。
+分别说明任务转移和智能体工具调用会更容易理解。
 
-使用任务转移时，仍然只有一个顶层运行和一个顶层轮次循环。活动智能体会发生变化，但运行不会变为嵌套运行。如果非沙盒接收智能体将任务转移给沙盒审查智能体，则同一次运行中的下一次模型调用会为沙盒智能体进行准备，并由该沙盒智能体执行下一轮。换言之，任务转移会改变同一次运行中下一轮的负责智能体。请参阅 [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py)。
+使用任务转移时，仍然只有一个顶层运行和一个顶层轮次循环。活动智能体会发生变化，但运行不会变成嵌套运行。如果非沙箱接收智能体将任务转移给沙箱审核智能体，则同一运行中的下一次模型调用会针对沙箱智能体进行准备，而该沙箱智能体会成为执行下一轮的智能体。换言之，任务转移会改变由哪个智能体负责同一次运行的下一轮。请参阅 [examples/sandbox/handoffs.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/handoffs.py)。
 
-使用 `Agent.as_tool(...)` 时，关系有所不同。外层编排智能体使用外层运行的一轮来决定调用工具，而该工具调用会为沙盒智能体启动嵌套运行。嵌套运行拥有自己的轮次循环、`max_turns`、审批，通常也拥有自己的沙盒 `RunConfig`。它可能在一个嵌套轮次内完成，也可能需要多个轮次。从外层编排智能体的角度看，所有这些工作仍位于一次工具调用之后，因此嵌套轮次不会增加外层运行的轮次计数器。请参阅 [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)。
+使用 `Agent.as_tool(...)` 时，关系有所不同。外层编排智能体使用一个外层轮次来决定调用工具，该工具调用会为沙箱智能体启动嵌套运行。嵌套运行拥有自己的轮次循环、`max_turns`、审批，并且通常拥有自己的沙箱 `RunConfig`。它可能在一个嵌套轮次内完成，也可能需要多个轮次。从外层编排智能体的角度看，所有这些工作仍隐藏在一次工具调用之后，因此嵌套轮次不会增加外层运行的轮次计数器。请参阅 [examples/sandbox/sandbox_agents_as_tools.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/sandbox_agents_as_tools.py)。
 
-审批行为遵循相同的职责划分：
+审批行为也遵循相同的区分：
 
-- 使用任务转移时，审批仍位于同一个顶层运行中，因为沙盒智能体现在是该运行中的活动智能体
-- 使用 `Agent.as_tool(...)` 时，沙盒工具智能体内部触发的审批仍会显示在外层运行中，但它们来自保存的嵌套运行状态，并在外层运行恢复时恢复嵌套沙盒运行
+- 使用任务转移时，审批保留在同一个顶层运行中，因为沙箱智能体现已成为该运行中的活动智能体
+- 使用 `Agent.as_tool(...)` 时，沙箱工具智能体内部触发的审批仍会显示在外层运行中，但它们来自已存储的嵌套运行状态，并会在外层运行恢复时恢复嵌套沙箱运行
 
 ## 延伸阅读
 
-- [快速入门](../sandbox_agents.md)：运行第一个沙盒智能体。
-- [沙盒客户端](clients.md)：选择本地、Docker、托管和挂载选项。
-- [智能体记忆](memory.md)：保留并复用之前沙盒运行中的经验。
+- [快速入门](../sandbox_agents.md)：运行一个沙箱智能体。
+- [沙箱客户端](clients.md)：选择本地、Docker、托管和挂载选项。
+- [智能体记忆](memory.md)：保留和复用先前沙箱运行中的经验。
 - [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)：可运行的本地、编码、记忆、任务转移和智能体组合模式。
 
 ================

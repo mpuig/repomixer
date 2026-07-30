@@ -39805,6 +39805,58 @@ The `SpannerVectorStoreSettings` class used above defines how
 - **`additional_filter`**: An optional SQL filter string to apply during the
   search, for example: "inventoryCount > 0".
 
+## Spanner Admin Toolset
+
+The `SpannerAdminToolset` enables administrative operations on your Spanner instances and databases. Note that this requires a separate library import. 
+
+!!! warning "Use with caution"
+
+    This toolset can create, inspect, and modify Spanner instances and
+    databases, grant access carefully. Ensure that the executing environment
+    (such as Application Default Credentials or Service Account keys) is
+    restricted only to authorized projects and uses the minimum necessary IAM
+    permissions such as, roles/spanner.admin.
+
+### Available tools
+
+* **`list_instances`**: Lists Spanner instances within a project.
+* **`get_instance`**: Retrieves details of a Spanner instance.
+* **`create_database`**: Creates a new Spanner database.
+* **`list_databases`**: Lists Spanner databases within an instance.
+* **`create_instance`**: Creates a new Spanner instance.
+* **`list_instance_configs`**: Lists available Spanner instance configs.
+* **`get_instance_config`**: Retrieves details of a Spanner instance config.
+
+### Configuration
+
+Set your required environment variables before using this toolset:
+
+- `SPANNER_PROJECT`: The GCP project ID for operations.
+- `SPANNER_INSTANCE` (Optional): The default Spanner instance ID.
+- `SPANNER_DATABASE` (Optional): The default database ID.
+
+### Use with agent
+Initialize the `SpannerAdminToolset` to access Google Cloud Spanner management features. Then, pass it into the `tools` list of your `LlmAgent` to enable your agent to manage Spanner resources.
+
+```python
+from google.adk.agents import LlmAgent
+from google.adk.tools.spanner import SpannerAdminToolset
+
+# Initialize the Spanner admin toolset
+spanner_admin_tools = SpannerAdminToolset()
+
+# Register the toolset with your agent, ensuring model and instructions are provided
+agent = LlmAgent(
+    name="SpannerAdminAgent",
+    model="gemini-flash-latest",
+    instruction=(
+        "You are a helpful database administrator. Use the SpannerAdminToolset "
+        "to manage and query Spanner instances and databases in the project."
+    ),
+    tools=[spanner_admin_tools]
+)
+```
+
 ================
 File: docs/integrations/sprites.md
 ================
@@ -59806,7 +59858,11 @@ This example demonstrates how ADK tools can be encapsulated within an MCP server
 
 Refer to the [documentation](https://modelcontextprotocol.io/quickstart/server#core-mcp-concepts), to try it out with Claude Desktop.
 
-## Use MCP Tools in your own Agent out of `adk web`
+## Advanced use cases
+
+The following sections describe how to handle more advanced use cases with MCP Tools in agents.
+
+### Use MCP Tools without `adk web`
 
 This section is relevant to you if:
 
@@ -59916,6 +59972,20 @@ if __name__ == '__main__':
     asyncio.run(async_main())
   except Exception as e:
     print(f"An error occurred: {e}")
+```
+
+### Handling progress updates
+
+For long-running tools, `McpToolset` supports a `progress_callback`. This approach allows you to receive real-time updates from the MCP server. You can provide a simple callback function or a factory that creates callbacks with access to the runtime context, such as updating session state.
+
+```python
+async def my_progress_callback(progress: float, total: float, message: str):
+    print(f"Progress: {progress}/{total} - {message}")
+
+toolset = McpToolset(
+    connection_params=...,
+    progress_callback=my_progress_callback
+)
 ```
 
 ## Deploy Agents with MCP Tools
