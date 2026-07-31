@@ -5521,8 +5521,10 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
 
     ```python
     # Conceptual Setup: Agent as a Tool
+    from google.adk import Event
     from google.adk.agents import LlmAgent, BaseAgent
     from google.adk.tools import agent_tool
+    from google.genai import types
     from pydantic import BaseModel
 
 
@@ -22198,6 +22200,10 @@ A sequential route runs each node once, in the listed order.
     `Event(route=...)` value, which the `edges` dict dispatches to different nodes.
 
     ```python
+    from google.adk import Event, Workflow
+    from google.adk.agents import Agent
+
+
     def router(node_input: str):
         """Route to task B or C based on node_input."""
         if condition(node_input):
@@ -22451,6 +22457,9 @@ lifecycle on each iteration.
 === "Python"
 
     ```python
+    from google.adk import Event, Workflow
+
+
     def router(node_input: str):
         """Route to task B or C based on node_input."""
         if condition(node_input):
@@ -30004,7 +30013,7 @@ File: docs/integrations/code-exec-agent-runtime.md
 ================
 ---
 catalog_title: Code Execution Tool with Agent Runtime
-catalog_description: Run AI-generated code in a secure and scalable GKE environment
+catalog_description: Run AI-generated code in a secure and scalable environment
 catalog_icon: /integrations/assets/agent-platform.svg
 catalog_tags: ["code", "google"]
 ---
