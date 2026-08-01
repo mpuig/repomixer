@@ -1374,21 +1374,21 @@ search:
 ---
 # 샌드박스 클라이언트
 
-이 페이지를 사용하여 샌드박스 작업을 어디에서 실행할지 선택하세요. 대부분의 경우 `SandboxAgent` 정의는 그대로 두고, [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에서 샌드박스 클라이언트와 클라이언트별 옵션만 변경합니다.
+이 페이지를 사용하여 샌드박스 작업을 실행할 위치를 선택하세요. 대부분의 경우 `SandboxAgent` 정의는 그대로 유지하고 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 에서 샌드박스 클라이언트와 클라이언트별 옵션만 변경합니다.
 
 !!! warning "베타 기능"
 
-    샌드박스 에이전트는 베타입니다. API의 세부 사항, 기본값, 지원 기능은 정식 출시 전 변경될 수 있으며, 시간이 지남에 따라 더 고급 기능이 추가될 수 있습니다.
+    샌드박스 에이전트는 베타 버전입니다. 정식 출시 전까지 API 세부 사항, 기본값, 지원 기능이 변경될 수 있으며, 향후 더 고급 기능이 추가될 예정입니다.
 
-## 결정 가이드
+## 선택 가이드
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 목표 | 시작 대상 | 이유 |
+| 목표 | 시작 옵션 | 이유 |
 | --- | --- | --- |
-| macOS 또는 Linux에서 가장 빠른 로컬 반복 개발 | `UnixLocalSandboxClient` | 추가 설치가 필요 없고, 로컬 파일 시스템 개발이 간단합니다. |
-| 기본 컨테이너 격리 | `DockerSandboxClient` | 특정 이미지로 Docker 내부에서 작업을 실행합니다. |
-| 호스티드 실행 또는 프로덕션 스타일 격리 | 호스티드 샌드박스 클라이언트 | 워크스페이스 경계를 제공자가 관리하는 환경으로 이동합니다. |
+| macOS 또는 Linux에서 가장 빠른 로컬 반복 개발 | `UnixLocalSandboxClient` | 추가 설치가 필요 없으며 로컬 파일 시스템에서 간단하게 개발할 수 있습니다. |
+| 기본적인 컨테이너 격리 | `DockerSandboxClient` | 특정 이미지가 적용된 Docker 내부에서 작업을 실행합니다. |
+| 호스티드 실행 또는 프로덕션 수준의 격리 | 호스티드 샌드박스 클라이언트 | 워크스페이스 경계를 제공업체가 관리하는 환경으로 이동합니다. |
 
 </div>
 
@@ -1398,16 +1398,18 @@ search:
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 클라이언트 | 설치 | 선택 시점 | 예시 |
+| 클라이언트 | 설치 | 선택하는 경우 | 예제 |
 | --- | --- | --- | --- |
-| `UnixLocalSandboxClient` | 없음 | macOS 또는 Linux에서 가장 빠른 로컬 반복 개발이 필요할 때. 로컬 개발의 좋은 기본값입니다. | [Unix-local 시작 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
-| `DockerSandboxClient` | `openai-agents[docker]` | 컨테이너 격리 또는 로컬 환경과의 동등성을 위한 특정 이미지가 필요할 때. | [Docker 시작 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
+| `UnixLocalSandboxClient` | 없음 | macOS 또는 Linux에서 가장 빠르게 로컬 반복 개발을 수행하려는 경우입니다. 로컬 개발을 위한 좋은 기본 옵션입니다. | [Unix 로컬 시작 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
+| `DockerSandboxClient` | `openai-agents[docker]` | 컨테이너 격리가 필요하거나 로컬 환경의 동등성을 위해 특정 이미지를 사용하려는 경우입니다. | [Docker 시작 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
 
 </div>
 
-Unix-local은 로컬 파일 시스템을 대상으로 개발을 시작하는 가장 쉬운 방법입니다. 더 강력한 환경 격리 또는 프로덕션 스타일의 동등성이 필요할 때 Docker나 호스티드 제공자로 이동하세요.
+Unix 로컬은 로컬 파일 시스템을 대상으로 개발을 시작하는 가장 쉬운 방법입니다. 더 강력한 환경 격리나 프로덕션 수준의 동등성이 필요할 때 Docker 또는 호스티드 제공업체로 전환하세요.
 
-Unix-local에서 Docker로 전환하려면 에이전트 정의는 그대로 두고 실행 구성만 변경하세요.
+`SandboxPathGrant.host_path` 는 Docker에서만 사용할 수 있으며 호스트 경로를 컨테이너 내부의 다른 POSIX 경로에 매핑합니다. Unix 로컬에서는 동일 경로 허용만 지원합니다. 자세한 내용은 [매니페스트 경로 허용](guide.md#manifest)을 참조하세요.
+
+Unix 로컬에서 Docker로 전환하려면 에이전트 정의는 그대로 유지하고 실행 구성만 변경합니다.
 
 ```python
 from docker import from_env as docker_from_env
@@ -1424,45 +1426,45 @@ run_config = RunConfig(
 )
 ```
 
-컨테이너 격리 또는 이미지 동등성이 필요할 때 사용하세요. [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)를 참고하세요.
+컨테이너 격리 또는 이미지 동등성이 필요한 경우 이 방식을 사용하세요. [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)를 참조하세요.
 
-## 마운트와 원격 스토리지
+## 마운트 및 원격 스토리지
 
-마운트 항목은 노출할 스토리지를 설명하고, 마운트 전략은 샌드박스 백엔드가 해당 스토리지를 연결하는 방식을 설명합니다. 기본 제공 마운트 항목과 일반 전략은 `agents.sandbox.entries`에서 가져오세요. 호스티드 제공자 전략은 `agents.extensions.sandbox` 또는 제공자별 확장 패키지에서 사용할 수 있습니다.
+마운트 항목은 노출할 스토리지를 정의하고, 마운트 전략은 샌드박스 백엔드가 해당 스토리지를 연결하는 방식을 정의합니다. 기본 제공 마운트 항목과 범용 전략은 `agents.sandbox.entries` 에서 가져옵니다. 호스티드 제공업체 전략은 `agents.extensions.sandbox` 또는 제공업체별 확장 패키지에서 사용할 수 있습니다.
 
-일반적인 마운트 옵션:
+일반적인 마운트 옵션은 다음과 같습니다.
 
-- `mount_path`: 샌드박스에서 스토리지가 나타나는 위치입니다. 상대 경로는 매니페스트 루트 아래에서 해석되고, 절대 경로는 그대로 사용됩니다.
-- `read_only`: 기본값은 `True`입니다. 샌드박스가 마운트된 스토리지에 다시 써야 할 때만 `False`로 설정하세요.
-- `mount_strategy`: 필수입니다. 마운트 항목과 샌드박스 백엔드 모두에 맞는 전략을 사용하세요.
+- `mount_path`: 샌드박스에서 스토리지가 표시되는 위치입니다. 상대 경로는 매니페스트 루트를 기준으로 해석되며, 절대 경로는 그대로 사용됩니다.
+- `read_only`: 기본값은 `True` 입니다. 샌드박스가 마운트된 스토리지에 다시 기록해야 하는 경우에만 `False` 로 설정하세요.
+- `mount_strategy`: 필수 항목입니다. 마운트 항목과 샌드박스 백엔드 모두에 적합한 전략을 사용하세요.
 
-마운트는 임시 워크스페이스 항목으로 취급됩니다. 스냅샷 및 지속성 플로우는 마운트된 원격 스토리지를 저장된 워크스페이스로 복사하는 대신, 마운트된 경로를 분리하거나 건너뜁니다.
+마운트는 임시 워크스페이스 항목으로 처리됩니다. 스냅샷 및 영속성 처리 과정에서는 마운트된 원격 스토리지를 저장된 워크스페이스에 복사하지 않고 마운트된 경로를 분리하거나 건너뜁니다.
 
-일반 로컬/컨테이너 전략:
+범용 로컬/컨테이너 전략은 다음과 같습니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 전략 또는 패턴 | 사용 시점 | 참고 사항 |
+| 전략 또는 패턴 | 사용하는 경우 | 참고 사항 |
 | --- | --- | --- |
-| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 샌드박스 이미지에서 `rclone`을 실행할 수 있을 때. | S3, GCS, R2, Azure Blob, Box를 지원합니다. `RcloneMountPattern`은 `fuse` 모드 또는 `nfs` 모드로 실행할 수 있습니다. |
-| `InContainerMountStrategy(pattern=MountpointMountPattern(...))` | 이미지에 `mount-s3`가 있고 Mountpoint 스타일의 S3 또는 S3 호환 액세스를 원할 때. | `S3Mount` 및 `GCSMount`를 지원합니다. |
-| `InContainerMountStrategy(pattern=FuseMountPattern(...))` | 이미지에 `blobfuse2`와 FUSE 지원이 있을 때. | `AzureBlobMount`를 지원합니다. |
-| `InContainerMountStrategy(pattern=S3FilesMountPattern(...))` | 이미지에 `mount.s3files`가 있고 기존 S3 Files 마운트 대상에 접근할 수 있을 때. | `S3FilesMount`를 지원합니다. |
-| `DockerVolumeMountStrategy(driver=...)` | Docker가 컨테이너 시작 전에 볼륨 드라이버 기반 마운트를 연결해야 할 때. | Docker 전용입니다. S3, GCS, R2, Azure Blob, Box는 `rclone`을 지원하며, S3와 GCS는 `mountpoint`도 지원합니다. |
+| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 샌드박스 이미지에서 `rclone` 을 실행할 수 있는 경우입니다. | S3, GCS, R2, Azure Blob, Box를 지원합니다. `RcloneMountPattern` 은 `fuse` 모드 또는 `nfs` 모드로 실행할 수 있습니다. |
+| `InContainerMountStrategy(pattern=MountpointMountPattern(...))` | 이미지에 `mount-s3` 가 있고 Mountpoint 방식으로 S3 또는 S3 호환 스토리지에 액세스하려는 경우입니다. | `S3Mount` 및 `GCSMount` 를 지원합니다. |
+| `InContainerMountStrategy(pattern=FuseMountPattern(...))` | 이미지에 `blobfuse2` 및 FUSE 지원이 있는 경우입니다. | `AzureBlobMount` 를 지원합니다. |
+| `InContainerMountStrategy(pattern=S3FilesMountPattern(...))` | 이미지에 `mount.s3files` 가 있고 기존 S3 Files 마운트 대상에 접근할 수 있는 경우입니다. | `S3FilesMount` 를 지원합니다. |
+| `DockerVolumeMountStrategy(driver=...)` | 컨테이너가 시작되기 전에 Docker가 볼륨 드라이버 기반 마운트를 연결해야 하는 경우입니다. | Docker 전용입니다. S3, GCS, R2, Azure Blob, Box는 `rclone` 을 지원하며, S3와 GCS는 `mountpoint` 도 지원합니다. |
 
 </div>
 
 ## 지원되는 호스티드 플랫폼
 
-호스티드 환경이 필요한 경우 동일한 `SandboxAgent` 정의를 대개 그대로 사용할 수 있으며 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig]에서 샌드박스 클라이언트만 변경하면 됩니다.
+호스티드 환경이 필요한 경우에도 일반적으로 동일한 `SandboxAgent` 정의를 그대로 사용할 수 있으며 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 에서 샌드박스 클라이언트만 변경하면 됩니다.
 
-이 저장소 체크아웃 대신 배포된 SDK를 사용하는 경우, 일치하는 패키지 extra를 통해 샌드박스 클라이언트 종속성을 설치하세요.
+이 저장소의 체크아웃 대신 배포된 SDK를 사용하는 경우, 해당 패키지 extra를 통해 샌드박스 클라이언트 의존성을 설치하세요.
 
-제공자별 설정 참고 사항과 저장소에 포함된 확장 예제 링크는 [examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)를 참고하세요.
+저장소에 포함된 확장 코드 예제에 대한 제공업체별 설정 참고 사항과 링크는 [examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)를 참조하세요.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 클라이언트 | 설치 | 예시 |
+| 클라이언트 | 설치 | 예제 |
 | --- | --- | --- |
 | `BlaxelSandboxClient` | `openai-agents[blaxel]` | [Blaxel 실행 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py) |
 | `CloudflareSandboxClient` | `openai-agents[cloudflare]` | [Cloudflare 실행 예제](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/cloudflare_runner.py) |
@@ -1474,24 +1476,24 @@ run_config = RunConfig(
 
 </div>
 
-호스티드 샌드박스 클라이언트는 제공자별 마운트 전략을 노출합니다. 사용 중인 스토리지 제공자에 가장 적합한 백엔드와 마운트 전략을 선택하세요.
+호스티드 샌드박스 클라이언트는 제공업체별 마운트 전략을 제공합니다. 스토리지 제공업체에 가장 적합한 백엔드와 마운트 전략을 선택하세요.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 백엔드 | 마운트 참고 사항 |
 | --- | --- |
-| Docker | `InContainerMountStrategy` 및 `DockerVolumeMountStrategy` 같은 로컬 전략으로 `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`, `S3FilesMount`를 지원합니다. |
-| `ModalSandboxClient` | `S3Mount`, `R2Mount`, HMAC 인증 `GCSMount`에서 `ModalCloudBucketMountStrategy`로 Modal 클라우드 버킷 마운트를 지원합니다. 인라인 자격 증명 또는 이름이 지정된 Modal Secret을 사용할 수 있습니다. |
-| `CloudflareSandboxClient` | `S3Mount`, `R2Mount`, HMAC 인증 `GCSMount`에서 `CloudflareBucketMountStrategy`로 Cloudflare 버킷 마운트를 지원합니다. |
-| `BlaxelSandboxClient` | `S3Mount`, `R2Mount`, `GCSMount`에서 `BlaxelCloudBucketMountStrategy`로 클라우드 버킷 마운트를 지원합니다. 또한 `agents.extensions.sandbox.blaxel`의 `BlaxelDriveMount` 및 `BlaxelDriveMountStrategy`를 통해 영구 Blaxel Drives도 지원합니다. |
-| `DaytonaSandboxClient` | `DaytonaCloudBucketMountStrategy`로 rclone 기반 클라우드 스토리지 마운트를 지원합니다. `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`와 함께 사용하세요. |
-| `E2BSandboxClient` | `E2BCloudBucketMountStrategy`로 rclone 기반 클라우드 스토리지 마운트를 지원합니다. `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`와 함께 사용하세요. |
-| `RunloopSandboxClient` | `RunloopCloudBucketMountStrategy`로 rclone 기반 클라우드 스토리지 마운트를 지원합니다. `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`와 함께 사용하세요. |
-| `VercelSandboxClient` | `VercelCloudBucketMountStrategy`와 `S3Mount`를 사용한 생성 시점 전용 S3 및 S3 호환 버킷 마운트를 지원합니다. 마운트가 포함된 세션은 재개할 수 없으며, 인라인 자격 증명을 사용하려면 `allow_s3_credential_exposure=True`가 필요합니다. |
+| Docker | `InContainerMountStrategy` 및 `DockerVolumeMountStrategy` 같은 로컬 전략을 사용하여 `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount`, `S3FilesMount` 를 지원합니다. |
+| `ModalSandboxClient` | `S3Mount`, `R2Mount`, HMAC 인증 방식의 `GCSMount` 에서 `ModalCloudBucketMountStrategy` 를 사용하는 Modal 클라우드 버킷 마운트를 지원합니다. 인라인 자격 증명 또는 이름이 지정된 Modal Secret을 사용할 수 있습니다. |
+| `CloudflareSandboxClient` | `S3Mount`, `R2Mount`, HMAC 인증 방식의 `GCSMount` 에서 `CloudflareBucketMountStrategy` 를 사용하는 Cloudflare 버킷 마운트를 지원합니다. |
+| `BlaxelSandboxClient` | `S3Mount`, `R2Mount`, `GCSMount` 에서 `BlaxelCloudBucketMountStrategy` 를 사용하는 클라우드 버킷 마운트를 지원합니다. 또한 `agents.extensions.sandbox.blaxel` 의 `BlaxelDriveMount` 및 `BlaxelDriveMountStrategy` 를 사용하여 영속적 Blaxel Drive를 지원합니다. |
+| `DaytonaSandboxClient` | `DaytonaCloudBucketMountStrategy` 를 사용하는 rclone 기반 클라우드 스토리지 마운트를 지원하며, `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount` 와 함께 사용할 수 있습니다. |
+| `E2BSandboxClient` | `E2BCloudBucketMountStrategy` 를 사용하는 rclone 기반 클라우드 스토리지 마운트를 지원하며, `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount` 와 함께 사용할 수 있습니다. |
+| `RunloopSandboxClient` | `RunloopCloudBucketMountStrategy` 를 사용하는 rclone 기반 클라우드 스토리지 마운트를 지원하며, `S3Mount`, `GCSMount`, `R2Mount`, `AzureBlobMount`, `BoxMount` 와 함께 사용할 수 있습니다. |
+| `VercelSandboxClient` | `S3Mount` 에서 `VercelCloudBucketMountStrategy` 를 사용하는, 생성 시점에만 적용 가능한 S3 및 S3 호환 버킷 마운트를 지원합니다. 마운트된 세션은 재개할 수 없으며, 인라인 자격 증명을 사용하려면 `allow_s3_credential_exposure=True` 가 필요합니다. |
 
 </div>
 
-아래 표는 각 백엔드가 직접 마운트할 수 있는 원격 스토리지 항목을 요약합니다.
+다음 표에는 각 백엔드가 직접 마운트할 수 있는 원격 스토리지 항목이 요약되어 있습니다.
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
@@ -1508,7 +1510,7 @@ run_config = RunConfig(
 
 </div>
 
-실행 가능한 더 많은 예제는 로컬, 코딩, 메모리, 핸드오프 및 에이전트 구성 패턴에 대해 [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)를, 호스티드 샌드박스 클라이언트에 대해 [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)를 둘러보세요.
+실행 가능한 더 많은 코드 예제를 보려면 로컬, 코딩, 메모리, 핸드오프, 에이전트 구성 패턴은 [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)에서, 호스티드 샌드박스 클라이언트는 [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)에서 확인하세요.
 
 ================
 File: docs/ko/sandbox/guide.md
@@ -7212,31 +7214,31 @@ search:
 ---
 # 도구
 
-도구를 사용하면 에이전트가 데이터 가져오기, 코드 실행, 외부 API 호출, 컴퓨터 사용 등의 작업을 수행할 수 있습니다. SDK는 다음과 같은 다섯 가지 카테고리를 지원합니다.
+도구를 사용하면 에이전트가 데이터 가져오기, 코드 실행, 외부 API 호출, 컴퓨터 사용 등의 작업을 수행할 수 있습니다. SDK는 다음 다섯 가지 카테고리를 지원합니다.
 
--   OpenAI 호스티드 툴: OpenAI 서버에서 모델과 함께 실행됩니다.
--   로컬/런타임 실행 도구: `ComputerTool`과 `ApplyPatchTool`은 항상 사용자의 환경에서 실행되며, `ShellTool`은 로컬 또는 호스티드 컨테이너에서 실행될 수 있습니다.
--   Function calling: 모든 Python 함수를 도구로 래핑합니다.
+-   호스티드 OpenAI 도구: OpenAI 서버에서 모델과 함께 실행됩니다.
+-   로컬/런타임 실행 도구: `ComputerTool`과 `ApplyPatchTool`은 항상 사용자의 환경에서 실행되며, `ShellTool`은 로컬 또는 호스티드 컨테이너에서 실행할 수 있습니다.
+-   함수 호출: 모든 Python 함수를 도구로 래핑합니다.
 -   Agents as tools: 전체 핸드오프 없이 에이전트를 호출 가능한 도구로 노출합니다.
--   실험적 기능: Codex 도구: 도구 호출에서 워크스페이스 범위의 Codex 작업을 실행합니다.
+-   실험적 기능: Codex 도구: 도구 호출에서 작업 공간 범위의 Codex 작업을 실행합니다.
 
 ## 도구 유형 선택
 
-이 페이지를 카탈로그로 활용한 다음, 제어하는 런타임과 일치하는 섹션으로 이동하세요.
+이 페이지를 카탈로그로 활용한 다음, 제어하는 런타임에 해당하는 섹션으로 이동하세요.
 
-| 원하는 작업 | 시작 위치 |
+| 원하는 작업 | 시작 지점 |
 | --- | --- |
-| OpenAI 관리형 도구 사용(웹 검색, 파일 검색, Code Interpreter, 호스티드 MCP, 이미지 생성) | [호스티드 툴](#hosted-tools) |
+| OpenAI 관리형 도구(웹 검색, 파일 검색, Code Interpreter, 호스티드 MCP, 이미지 생성) 사용 | [호스티드 툴](#hosted-tools) |
 | 도구 검색을 사용하여 대규모 도구 표면을 런타임까지 지연 | [호스티드 툴 검색](#hosted-tool-search) |
-| 생성된 JavaScript에서 여러 도구 호출 조정 | [프로그래매틱 도구 호출](#programmatic-tool-calling) |
+| 생성된 JavaScript에서 여러 도구 호출 조정 | [프로그래밍 방식 도구 호출](#programmatic-tool-calling) |
 | 자체 프로세스 또는 환경에서 도구 실행 | [로컬 런타임 도구](#local-runtime-tools) |
 | Python 함수를 도구로 래핑 | [함수 도구](#function-tools) |
 | 핸드오프 없이 한 에이전트가 다른 에이전트를 호출하도록 설정 | [Agents as tools](#agents-as-tools) |
-| 에이전트에서 워크스페이스 범위의 Codex 작업 실행 | [실험적 기능: Codex 도구](#experimental-codex-tool) |
+| 에이전트에서 작업 공간 범위의 Codex 작업 실행 | [실험적 기능: Codex 도구](#experimental-codex-tool) |
 
 ## 호스티드 툴
 
-OpenAI는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]을 사용할 때 다음과 같은 몇 가지 기본 제공 도구를 제공합니다.
+OpenAI는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]을 사용할 때 몇 가지 기본 제공 도구를 제공합니다.
 
 -   [`WebSearchTool`][agents.tool.WebSearchTool]을 사용하면 에이전트가 웹을 검색할 수 있습니다.
 -   [`FileSearchTool`][agents.tool.FileSearchTool]을 사용하면 OpenAI 벡터 스토어에서 정보를 검색할 수 있습니다.
@@ -7248,7 +7250,7 @@ OpenAI는 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponse
 
 고급 호스티드 검색 옵션:
 
--   `FileSearchTool`은 `vector_store_ids` 및 `max_num_results` 외에도 `filters`, `ranking_options`, `include_search_results`를 지원합니다.
+-   `FileSearchTool`은 `vector_store_ids`와 `max_num_results` 외에도 `filters`, `ranking_options`, `include_search_results`를 지원합니다.
 -   `WebSearchTool`은 `filters`, `user_location`, `search_context_size`를 지원합니다.
 
 ```python
@@ -7272,9 +7274,9 @@ async def main():
 
 ### 호스티드 툴 검색
 
-도구 검색을 사용하면 OpenAI Responses 모델이 대규모 도구 표면을 런타임까지 지연하므로, 모델은 현재 턴에 필요한 하위 집합만 로드합니다. 함수 도구, 네임스페이스 그룹 또는 호스티드 MCP 서버가 많고 모든 도구를 미리 노출하지 않으면서 도구 스키마 토큰을 줄이고자 할 때 유용합니다.
+도구 검색을 사용하면 OpenAI Responses 모델이 대규모 도구 표면의 로드를 런타임까지 지연하여 현재 턴에 필요한 일부 도구만 로드할 수 있습니다. 함수 도구, 네임스페이스 그룹 또는 호스티드 MCP 서버가 많고 모든 도구를 처음부터 노출하지 않으면서 도구 스키마 토큰을 줄이려는 경우에 유용합니다.
 
-에이전트를 구축할 때 후보 도구가 이미 정해져 있다면 호스티드 툴 검색으로 시작하세요. 애플리케이션에서 로드할 항목을 동적으로 결정해야 하는 경우 Responses API는 클라이언트 실행 도구 검색도 지원하지만, 표준 `Runner`는 이 모드를 자동으로 실행하지 않습니다.
+에이전트를 빌드할 때 후보 도구가 이미 정해져 있다면 호스티드 툴 검색부터 사용하세요. 애플리케이션에서 로드할 항목을 동적으로 결정해야 하는 경우 Responses API는 클라이언트 실행형 도구 검색도 지원하지만, 표준 `Runner`는 이 모드를 자동으로 실행하지 않습니다.
 
 ```python
 from typing import Annotated
@@ -7320,25 +7322,25 @@ print(result.final_output)
 알아둘 사항:
 
 -   호스티드 툴 검색은 OpenAI Responses 모델에서만 사용할 수 있습니다. 현재 Python SDK 지원 여부는 `openai>=2.25.0`에 따라 달라집니다.
--   에이전트에서 지연 로딩 표면을 구성할 때 `ToolSearchTool()`을 정확히 하나 추가하세요.
+-   에이전트에서 지연 로드 표면을 구성할 때 정확히 하나의 `ToolSearchTool()`을 추가하세요.
 -   검색 가능한 표면에는 `@function_tool(defer_loading=True)`, `tool_namespace(name=..., description=..., tools=[...])`, `HostedMCPTool(tool_config={..., "defer_loading": True})`가 포함됩니다.
--   지연 로딩 함수 도구는 `ToolSearchTool()`과 함께 사용해야 합니다. 네임스페이스만 사용하는 구성에서도 모델이 필요할 때 적절한 그룹을 로드하도록 `ToolSearchTool()`을 사용할 수 있습니다.
--   `tool_namespace()`는 `FunctionTool` 인스턴스를 공유 네임스페이스 이름 및 설명 아래에 그룹화합니다. 일반적으로 `crm`, `billing`, `shipping`처럼 관련 도구가 많은 경우 가장 적합합니다.
+-   지연 로드 함수 도구는 `ToolSearchTool()`과 함께 사용해야 합니다. 네임스페이스만 사용하는 설정에서도 모델이 필요할 때 적절한 그룹을 로드하도록 `ToolSearchTool()`을 사용할 수 있습니다.
+-   `tool_namespace()`는 `FunctionTool` 인스턴스를 공유 네임스페이스 이름과 설명 아래에 그룹화합니다. `crm`, `billing`, `shipping`처럼 서로 관련된 도구가 많은 경우 일반적으로 가장 적합합니다.
 -   OpenAI의 공식 모범 사례 지침은 [가능한 경우 네임스페이스 사용](https://developers.openai.com/api/docs/guides/tools-tool-search#use-namespaces-where-possible)입니다.
--   가능하면 개별적으로 지연된 여러 함수보다 네임스페이스나 호스티드 MCP 서버를 우선 사용하세요. 일반적으로 모델에 더 나은 상위 수준 검색 표면을 제공하고 토큰을 더 많이 절약할 수 있습니다.
--   네임스페이스에는 즉시 사용 가능한 도구와 지연된 도구를 함께 포함할 수 있습니다. `defer_loading=True`가 없는 도구는 즉시 호출할 수 있지만, 같은 네임스페이스의 지연된 도구는 도구 검색을 통해 로드됩니다.
--   일반적으로 각 네임스페이스를 비교적 작게 유지하고, 가급적 함수 수를 10개 미만으로 제한하세요.
+-   가능하면 개별적으로 지연되는 여러 함수보다 네임스페이스 또는 호스티드 MCP 서버를 사용하세요. 일반적으로 모델에 더 나은 상위 수준 검색 표면을 제공하고 토큰을 더 많이 절약할 수 있습니다.
+-   네임스페이스에는 즉시 사용 가능한 도구와 지연된 도구를 함께 포함할 수 있습니다. `defer_loading=True`가 없는 도구는 즉시 호출할 수 있으며, 같은 네임스페이스의 지연된 도구는 도구 검색을 통해 로드됩니다.
+-   일반적으로 각 네임스페이스는 비교적 작게 유지하며, 함수 수는 10개 미만이 이상적입니다.
 -   이름이 지정된 `tool_choice`는 단독 네임스페이스 이름이나 지연 전용 도구를 대상으로 지정할 수 없습니다. `auto`, `required` 또는 실제 최상위 호출 가능 도구 이름을 사용하세요.
--   `ToolSearchTool(execution="client")`는 수동 Responses 오케스트레이션용입니다. 모델이 클라이언트에서 실행되는 `tool_search_call`을 내보내면 표준 `Runner`는 이를 대신 실행하지 않고 예외를 발생시킵니다.
--   도구 검색 활동은 전용 항목 및 이벤트 유형과 함께 [`RunResult.new_items`](results.md#new-items) 및 [`RunItemStreamEvent`](streaming.md#run-item-event-names)에 표시됩니다.
--   네임스페이스 기반 로딩과 최상위 지연 도구를 모두 다루는 완전한 실행 가능 코드 예제는 `examples/tools/tool_search.py`를 참조하세요.
+-   `ToolSearchTool(execution="client")`는 수동 Responses 오케스트레이션을 위한 것입니다. 모델이 클라이언트 실행형 `tool_search_call`을 내보내면 표준 `Runner`는 이를 대신 실행하지 않고 예외를 발생시킵니다.
+-   도구 검색 활동은 [`RunResult.new_items`](results.md#new-items)와 [`RunItemStreamEvent`](streaming.md#run-item-event-names)에 전용 항목 및 이벤트 유형으로 표시됩니다.
+-   네임스페이스 기반 로드와 최상위 지연 도구를 모두 다루는 완전한 실행 가능 코드 예제는 `examples/tools/tool_search.py`를 참조하세요.
 -   공식 플랫폼 가이드: [도구 검색](https://developers.openai.com/api/docs/guides/tools-tool-search)
 
-### 프로그래매틱 도구 호출
+### 프로그래밍 방식 도구 호출
 
-프로그래매틱 도구 호출을 사용하면 지원되는 OpenAI Responses 모델이 사용 가능한 도구를 호출하고, 그 출력을 결합하며, 하나의 결과를 모델에 반환하는 JavaScript를 생성할 수 있습니다. 모든 도구 호출 후 모델 왕복을 수행하지 않고도 루프, 분기, 병렬 호출 또는 중간 계산을 활용하는 범위가 제한된 워크플로에 유용합니다.
+프로그래밍 방식 도구 호출을 사용하면 지원되는 OpenAI Responses 모델이 사용 가능한 도구를 호출하고, 출력을 결합하고, 하나의 결과를 모델에 반환하는 JavaScript를 생성할 수 있습니다. 모든 도구 호출 후 모델을 왕복하지 않고도 반복, 분기, 병렬 호출 또는 중간 계산을 활용할 수 있는 제한된 워크플로에 유용합니다.
 
-생성된 프로그램은 새로운 호스티드 V8 환경에서 실행됩니다. 이 환경에는 Node.js API, 파일 시스템 또는 네트워크 액세스, 영구 프로세스가 없습니다. 프로그램은 명시적으로 허용한 도구와만 상호 작용할 수 있습니다.
+생성된 프로그램은 새로운 호스티드 V8 환경에서 실행됩니다. Node.js API, 파일 시스템 또는 네트워크에 접근할 수 없으며 영구 프로세스도 제공되지 않습니다. 프로그램은 명시적으로 허용한 도구와만 상호 작용할 수 있습니다.
 
 ```python
 from pydantic import BaseModel
@@ -7375,21 +7377,22 @@ print(result.final_output)
 
 알아둘 사항:
 
--   프로그래매틱 도구 호출은 지원되는 OpenAI Responses 모델에서만 사용할 수 있습니다. `ProgrammaticToolCallingTool()` 및 `tool_choice="programmatic_tool_calling"`은 Chat Completions 모델과 Responses 이외의 백엔드에서 거부됩니다.
--   에이전트에는 `ProgrammaticToolCallingTool()`을 최대 하나만 추가하세요. 에이전트는 프로그래밍 방식으로 호출 가능한 도구, `ToolSearchTool()` 또는 프롬프트로 관리되는 도구 표면 중 하나 이상도 노출해야 합니다.
--   `allowed_callers`는 도구를 호출할 수 있는 방식을 제어합니다. 생략하면 모델의 직접 호출만 허용됩니다. 프로그램에서만 액세스하려면 `["programmatic"]`을 사용하고, 두 방식 모두 허용하려면 `["direct", "programmatic"]`을 사용하세요.
--   이 기능을 선택적으로 사용할 수 있는 SDK 도구 유형은 `FunctionTool`, `CustomTool`, `ShellTool`, `ApplyPatchTool`, `HostedMCPTool`, `CodeInterpreterTool`입니다. 함수, 사용자 지정, 셸 및 패치 적용 도구는 `allowed_callers`를 직접 노출합니다. 호스티드 MCP와 Code Interpreter의 경우 `tool_config` 내부에 `allowed_callers`를 설정하세요.
--   `@function_tool(allowed_callers=[...])`의 경우 Pydantic 모델, TypedDict 또는 데이터 클래스와 같은 구조화된 반환 어노테이션은 자동으로 엄격한 객체 출력 스키마가 되며, 값이 프로그램에 반환되기 전에 검증됩니다. 함수에 사용할 수 있는 어노테이션이 없다면 `output_type=...`을 사용하고, 엄격한 객체 스키마가 이미 있다면 하위 수준의 우회 수단인 `output_json_schema={...}`를 사용하세요. `output_type`과 `output_json_schema`는 함께 사용할 수 없습니다. 일반 `str`, `Any`, `None` 반환은 타입이 지정되지 않은 상태로 유지됩니다.
--   프로그램 소유 SDK 도구에서도 일반적인 Runner 수명 주기가 계속 사용됩니다. 도구 입력 및 출력 가드레일, 훅, 시간 제한, 동시성 제한, 재시도, 승인, 세션, `RunState` 일시 중지/재개 동작이 계속 적용되며, SDK는 각 하위 호출의 프로그램 호출자 관계를 유지합니다.
--   승인이 필요하거나 영향이 큰 도구는 일반적으로 직접 호출로 유지하는 것이 좋습니다. 그러면 더 큰 프로그램의 일부가 되기 전에 사람이 각 작업을 검토할 수 있습니다. 프로그램 소유 호출이 승인을 위해 일시 중지되면 `RunState`를 통해 인터럽션(중단 처리)을 해결하고 평소와 같이 원래 실행을 재개하세요.
--   프로그래매틱 도구 호출은 [호스티드 툴 검색](#hosted-tool-search)과 함께 사용할 수 있습니다. 생성된 프로그램이 지연된 도구를 호출하려면 먼저 모델이 해당 도구를 로드해야 합니다.
--   `program` 항목과 프로그램 소유 하위 호출은 [`ToolCallItem`][agents.items.ToolCallItem] 항목으로 표시됩니다. 일치하는 `program_output`은 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]으로 표시됩니다. 검사에 관한 자세한 내용은 [결과](results.md#new-items) 및 [스트리밍](streaming.md#run-item-event-names)을 참조하세요.
--   완전한 동시 실행 재고 계획 코드 예제는 `examples/tools/programmatic_tool_calling.py`를 참조하세요.
--   공식 플랫폼 가이드: [프로그래매틱 도구 호출](https://developers.openai.com/api/docs/guides/tools-programmatic-tool-calling)
+-   프로그래밍 방식 도구 호출은 지원되는 OpenAI Responses 모델에서만 사용할 수 있습니다. `ProgrammaticToolCallingTool()`과 `tool_choice="programmatic_tool_calling"`은 Chat Completions 모델 및 Responses가 아닌 백엔드에서 거부됩니다.
+-   에이전트에는 `ProgrammaticToolCallingTool()`을 최대 하나만 추가하세요. 에이전트는 프로그래밍 방식으로 호출할 수 있는 도구를 하나 이상 노출하거나, 네임스페이스, 지연 함수 또는 지연된 호스티드 MCP 서버를 기반으로 하는 `ToolSearchTool()`을 제공하거나, 불투명한 프롬프트 관리형 도구 표면을 제공해야 합니다. 검색 가능한 표면이 없는 단독 `ToolSearchTool()`은 거부됩니다.
+-   `allowed_callers`는 도구를 호출할 수 있는 방식을 제어합니다. 생략하면 모델의 직접 호출만 허용됩니다. 프로그램에서만 접근하도록 하려면 `["programmatic"]`을 사용하고, 두 방식 모두 허용하려면 `["direct", "programmatic"]`을 사용하세요.
+-   이 기능을 선택적으로 사용할 수 있는 SDK 도구 유형은 `FunctionTool`, `CustomTool`, `ShellTool`, `ApplyPatchTool`, `HostedMCPTool`, `CodeInterpreterTool`입니다. 함수, 사용자 지정, 셸, 패치 적용 도구는 `allowed_callers`를 직접 노출합니다. 호스티드 MCP와 Code Interpreter의 경우 `tool_config` 내부에서 `allowed_callers`를 설정하세요.
+-   `@function_tool(allowed_callers=[...])`의 경우 Pydantic 모델, TypedDict 또는 dataclass와 같은 구조화된 반환 어노테이션은 자동으로 엄격한 객체 출력 스키마가 되며, 값이 프로그램에 반환되기 전에 검증됩니다. 함수에 사용할 수 있는 어노테이션이 없다면 `output_type=...`을 사용하고, 이미 엄격한 객체 스키마가 있다면 하위 수준의 우회 수단인 `output_json_schema={...}`를 사용하세요. `output_type`과 `output_json_schema`는 함께 사용할 수 없습니다. 일반 `str`, `Any`, `None` 반환은 유형이 지정되지 않은 상태로 유지됩니다. 스키마를 기반으로 하는 프로그램 소유 호출에서는 자유 형식 텍스트가 출력 스키마를 충족하지 않으므로 기본 실패 포매터가 비활성화됩니다. 따라서 스키마를 준수하는 JSON을 반환하는 사용자 지정 `failure_error_function`을 제공하지 않으면 핸들러 예외가 전파됩니다.
+-   프로그램 소유 SDK 도구에도 일반적인 Runner 수명 주기가 그대로 적용됩니다. 도구 입력 및 출력 가드레일, 훅, 시간 제한, 동시성 제한, 승인, 세션, `RunState` 일시 중지/재개 동작이 계속 적용되며, SDK는 각 하위 호출과 프로그램 호출자의 관계를 보존합니다.
+-   `ProgrammaticToolCallingTool()`이 있으면 프로그램이 실행되기 전이라도 모델 요청 재시도에 더 엄격한 재실행 안전성 경계가 적용됩니다. SDK는 이러한 요청에 대해 제공자 관리형 재시도와 WebSocket 사전 이벤트 재시도를 비활성화합니다. Runner 재시도 정책은 제공자의 지침이 재실행해도 안전하다고 명시적으로 표시한 경우에만 재시도합니다. `retry_policies.network_error()`만으로는 이 경계를 재정의하지 않습니다.
+-   승인에 민감하거나 영향이 큰 도구는 일반적으로 직접 호출로 유지하는 것이 좋습니다. 그러면 더 큰 프로그램의 일부가 되기 전에 각 작업을 사람이 검토할 수 있습니다. 프로그램 소유 호출이 승인을 위해 일시 중지되면 평소와 같이 `RunState`를 통해 인터럽션(중단 처리)을 해결하고 원래 실행을 재개하세요.
+-   프로그래밍 방식 도구 호출은 [호스티드 툴 검색](#hosted-tool-search)과 함께 사용할 수 있습니다. 생성된 프로그램이 지연된 도구를 호출하려면 모델이 먼저 해당 도구를 로드해야 합니다.
+-   `program` 항목과 일반적인 프로그램 소유 하위 도구 호출은 [`ToolCallItem`][agents.items.ToolCallItem] 항목으로 표시됩니다. 이에 대응하는 `program_output`은 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]으로 표시됩니다. 호스티드 MCP 승인 요청과 도구 카탈로그에는 대신 특수 MCP 항목과 스트림 이벤트가 사용됩니다. 검사에 관한 자세한 내용은 [결과](results.md#new-items)와 [스트리밍](streaming.md#run-item-event-names)을 참조하세요.
+-   완전한 동시성 재고 계획 코드 예제는 `examples/tools/programmatic_tool_calling.py`를 참조하세요.
+-   공식 플랫폼 가이드: [프로그래밍 방식 도구 호출](https://developers.openai.com/api/docs/guides/tools-programmatic-tool-calling)
 
 ### 호스티드 컨테이너 셸 + 스킬
 
-`ShellTool`은 OpenAI 호스티드 컨테이너 실행도 지원합니다. 로컬 런타임 대신 관리형 컨테이너에서 모델이 셸 명령을 실행하도록 하려면 이 모드를 사용하세요.
+`ShellTool`은 OpenAI 호스티드 컨테이너 실행도 지원합니다. 모델이 로컬 런타임이 아닌 관리형 컨테이너에서 셸 명령을 실행하도록 하려면 이 모드를 사용하세요.
 
 ```python
 from agents import Agent, Runner, ShellTool, ShellToolSkillReference
@@ -7422,52 +7425,52 @@ result = await Runner.run(
 print(result.final_output)
 ```
 
-이후 실행에서 기존 컨테이너를 재사용하려면 `environment={"type": "container_reference", "container_id": "cntr_..."}`를 설정하세요.
+후속 실행에서 기존 컨테이너를 재사용하려면 `environment={"type": "container_reference", "container_id": "cntr_..."}`를 설정하세요.
 
 알아둘 사항:
 
 -   호스티드 셸은 Responses API 셸 도구를 통해 사용할 수 있습니다.
--   `container_auto`는 요청을 위한 컨테이너를 프로비저닝하고, `container_reference`는 기존 컨테이너를 재사용합니다.
--   `container_auto`에는 `file_ids` 및 `memory_limit`도 포함할 수 있습니다.
--   `environment.skills`는 스킬 참조 및 인라인 스킬 번들을 허용합니다.
+-   `container_auto`는 요청을 위한 컨테이너를 프로비저닝하며, `container_reference`는 기존 컨테이너를 재사용합니다.
+-   `container_auto`에는 `file_ids`와 `memory_limit`도 포함할 수 있습니다.
+-   `environment.skills`는 스킬 참조와 인라인 스킬 번들을 허용합니다.
 -   호스티드 환경에서는 `ShellTool`에 `executor`, `needs_approval`, `on_approval`을 설정하지 마세요.
 -   `network_policy`는 `disabled` 및 `allowlist` 모드를 지원합니다.
--   허용 목록 모드에서는 `network_policy.domain_secrets`가 이름을 통해 도메인 범위의 비밀 값을 주입할 수 있습니다.
--   완전한 코드 예제는 `examples/tools/container_shell_skill_reference.py` 및 `examples/tools/container_shell_inline_skill.py`를 참조하세요.
+-   허용 목록 모드에서 `network_policy.domain_secrets`는 이름을 기준으로 도메인 범위의 보안 비밀을 주입할 수 있습니다.
+-   완전한 코드 예제는 `examples/tools/container_shell_skill_reference.py`와 `examples/tools/container_shell_inline_skill.py`를 참조하세요.
 -   OpenAI 플랫폼 가이드: [셸](https://platform.openai.com/docs/guides/tools-shell) 및 [스킬](https://platform.openai.com/docs/guides/tools-skills)
 
 ## 로컬 런타임 도구
 
-로컬 런타임 도구는 모델 응답 자체의 외부에서 실행됩니다. 모델이 도구를 호출할 시점을 계속 결정하지만, 실제 작업은 애플리케이션 또는 구성된 실행 환경에서 수행합니다.
+로컬 런타임 도구는 모델 응답 자체의 외부에서 실행됩니다. 호출 시점은 여전히 모델이 결정하지만, 실제 작업은 애플리케이션이나 구성된 실행 환경에서 수행합니다.
 
-`ComputerTool`과 `ApplyPatchTool`에는 항상 사용자가 제공하는 로컬 구현이 필요합니다. `ShellTool`은 두 모드를 모두 지원합니다. 관리형 실행을 사용하려면 위의 호스티드 컨테이너 구성을 사용하고, 자체 프로세스에서 명령을 실행하려면 아래의 로컬 런타임 구성을 사용하세요.
+`ComputerTool`과 `ApplyPatchTool`에는 항상 사용자가 제공하는 로컬 구현이 필요합니다. `ShellTool`은 두 모드를 모두 지원합니다. 관리형 실행을 원한다면 위의 호스티드 컨테이너 구성을 사용하고, 자체 프로세스에서 명령을 실행하려면 아래의 로컬 런타임 구성을 사용하세요.
 
-로컬 런타임 도구에는 다음 구현을 제공해야 합니다.
+로컬 런타임 도구를 사용하려면 구현을 제공해야 합니다.
 
--   [`ComputerTool`][agents.tool.ComputerTool]: GUI/브라우저 자동화를 사용하려면 [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 인터페이스를 구현하세요.
--   [`ShellTool`][agents.tool.ShellTool]: 로컬 실행과 호스티드 컨테이너 실행을 모두 지원하는 최신 셸 도구
--   [`LocalShellTool`][agents.tool.LocalShellTool]: 레거시 로컬 셸 통합
--   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]: 로컬에서 diff를 적용하려면 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor]를 구현하세요.
--   로컬 셸 스킬은 `ShellTool(environment={"type": "local", "skills": [...]})`을 통해 사용할 수 있습니다.
+-   [`ComputerTool`][agents.tool.ComputerTool]: GUI/브라우저 자동화를 사용하려면 [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 인터페이스를 구현합니다.
+-   [`ShellTool`][agents.tool.ShellTool]: 로컬 실행과 호스티드 컨테이너 실행을 모두 지원하는 최신 셸 도구입니다.
+-   [`LocalShellTool`][agents.tool.LocalShellTool]: 레거시 로컬 셸 통합입니다.
+-   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]: 로컬에서 diff를 적용하려면 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor]를 구현합니다.
+-   `ShellTool(environment={"type": "local", "skills": [...]})`을 사용하여 로컬 셸 스킬을 사용할 수 있습니다.
 
-### ComputerTool 및 Responses 컴퓨터 도구
+### ComputerTool과 Responses 컴퓨터 도구
 
-`ComputerTool`은 여전히 로컬 하네스입니다. 사용자가 [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 구현을 제공하면 SDK가 해당 하네스를 OpenAI Responses API의 컴퓨터 표면에 매핑합니다.
+`ComputerTool`은 여전히 로컬 하네스입니다. 사용자가 [`Computer`][agents.computer.Computer] 또는 [`AsyncComputer`][agents.computer.AsyncComputer] 구현을 제공하면 SDK가 이 하네스를 OpenAI Responses API의 컴퓨터 표면에 매핑합니다.
 
-명시적인 [`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5) 요청의 경우 SDK는 정식 출시(GA)된 기본 제공 도구 페이로드 `{"type": "computer"}`를 전송합니다. 이전 `computer-use-preview` 모델은 프리뷰 페이로드 `{"type": "computer_use_preview", "environment": ..., "display_width": ..., "display_height": ...}`를 유지합니다. 이는 OpenAI의 [컴퓨터 사용 가이드](https://developers.openai.com/api/docs/guides/tools-computer-use/)에 설명된 플랫폼 마이그레이션을 반영합니다.
+명시적인 [`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5) 요청의 경우 SDK는 GA 기본 제공 도구 페이로드 `{"type": "computer"}`를 전송합니다. 이전 `computer-use-preview` 모델은 프리뷰 페이로드 `{"type": "computer_use_preview", "environment": ..., "display_width": ..., "display_height": ...}`를 계속 사용합니다. 이는 OpenAI의 [컴퓨터 사용 가이드](https://developers.openai.com/api/docs/guides/tools-computer-use/)에 설명된 플랫폼 마이그레이션과 동일합니다.
 
 -   모델: `computer-use-preview` -> `gpt-5.5`
 -   도구 선택자: `computer_use_preview` -> `computer`
--   컴퓨터 호출 형태: `computer_call`당 하나의 `action` -> `computer_call`의 일괄 처리된 `actions[]`
--   잘림: 프리뷰 경로에서는 `ModelSettings(truncation="auto")` 필요 -> GA 경로에서는 불필요
+-   컴퓨터 호출 형식: 각 `computer_call`당 하나의 `action` -> `computer_call`의 일괄 처리된 `actions[]`
+-   잘림: 프리뷰 경로에서는 `ModelSettings(truncation="auto")` 필요 -> GA 경로에서는 필요하지 않음
 
-SDK는 실제 Responses 요청의 유효 모델을 기준으로 해당 전송 형식을 선택합니다. 프롬프트 템플릿을 사용하며 프롬프트가 모델을 소유하기 때문에 요청에서 `model`을 생략하는 경우, `model="gpt-5.5"`를 명시적으로 유지하거나 `ModelSettings(tool_choice="computer")` 또는 `ModelSettings(tool_choice="computer_use")`로 GA 선택자를 강제하지 않으면 SDK는 프리뷰 호환 컴퓨터 페이로드를 유지합니다.
+SDK는 실제 Responses 요청의 유효 모델을 기준으로 해당 전송 형식을 선택합니다. 프롬프트 템플릿을 사용하고 프롬프트가 모델을 소유하기 때문에 요청에서 `model`을 생략하면, `model="gpt-5.5"`를 명시적으로 유지하거나 `ModelSettings(tool_choice="computer")` 또는 `ModelSettings(tool_choice="computer_use")`로 GA 선택자를 강제하지 않는 한 SDK는 프리뷰 호환 컴퓨터 페이로드를 유지합니다.
 
-[`ComputerTool`][agents.tool.ComputerTool]이 있으면 `tool_choice="computer"`, `"computer_use"`, `"computer_use_preview"`가 모두 허용되며 유효 요청 모델과 일치하는 기본 제공 선택자로 정규화됩니다. `ComputerTool`이 없으면 이러한 문자열은 여전히 일반 함수 이름처럼 동작합니다.
+[`ComputerTool`][agents.tool.ComputerTool]이 있으면 `tool_choice="computer"`, `"computer_use"`, `"computer_use_preview"`가 모두 허용되며 유효한 요청 모델과 일치하는 기본 제공 선택자로 정규화됩니다. `ComputerTool`이 없으면 이러한 문자열은 계속 일반 함수 이름처럼 동작합니다.
 
-`ComputerTool`이 [`ComputerProvider`][agents.tool.ComputerProvider] 팩토리를 기반으로 할 때는 이 차이가 중요합니다. GA `computer` 페이로드는 직렬화 시 `environment` 또는 크기 정보가 필요하지 않으므로 확인되지 않은 팩토리도 사용할 수 있습니다. 프리뷰 호환 직렬화에는 SDK가 `environment`, `display_width`, `display_height`를 전송할 수 있도록 확인된 `Computer` 또는 `AsyncComputer` 인스턴스가 여전히 필요합니다.
+`ComputerTool`이 [`ComputerProvider`][agents.tool.ComputerProvider] 팩토리를 기반으로 하는 경우 이 차이가 중요합니다. GA `computer` 페이로드는 직렬화 시점에 `environment` 또는 크기가 필요하지 않으므로 아직 해석되지 않은 팩토리도 사용할 수 있습니다. 프리뷰 호환 직렬화에서는 SDK가 `environment`, `display_width`, `display_height`를 전송할 수 있도록 해석된 `Computer` 또는 `AsyncComputer` 인스턴스가 필요합니다.
 
-런타임에서 두 경로는 모두 동일한 로컬 하네스를 계속 사용합니다. 프리뷰 응답은 단일 `action`이 포함된 `computer_call` 항목을 내보냅니다. `gpt-5.5`는 일괄 처리된 `actions[]`를 내보낼 수 있으며, SDK는 `computer_call_output` 스크린샷 항목을 생성하기 전에 해당 작업을 순서대로 실행합니다. 실행 가능한 Playwright 기반 하네스는 `examples/tools/computer_use.py`를 참조하세요.
+런타임에서는 두 경로 모두 동일한 로컬 하네스를 계속 사용합니다. 프리뷰 응답은 하나의 `action`이 포함된 `computer_call` 항목을 내보냅니다. `gpt-5.5`는 일괄 처리된 `actions[]`를 내보낼 수 있으며, SDK는 `computer_call_output` 스크린샷 항목을 생성하기 전에 이를 순서대로 실행합니다. Playwright 기반의 실행 가능한 하네스는 `examples/tools/computer_use.py`를 참조하세요.
 
 ```python
 from agents import Agent, ApplyPatchTool, ShellTool
@@ -7513,14 +7516,16 @@ agent = Agent(
 
 모든 Python 함수를 도구로 사용할 수 있습니다. Agents SDK가 도구를 자동으로 설정합니다.
 
--   도구 이름은 Python 함수 이름이 됩니다. 또는 이름을 직접 제공할 수 있습니다.
--   도구 설명은 함수의 docstring에서 가져옵니다. 또는 설명을 직접 제공할 수 있습니다.
--   함수 입력의 스키마는 함수 인수에서 자동으로 생성됩니다.
--   비활성화하지 않는 한 각 입력의 설명은 함수의 docstring에서 가져옵니다.
+-   도구 이름은 Python 함수의 이름이 됩니다. 또는 이름을 직접 제공할 수 있습니다
+-   도구 설명은 함수의 docstring에서 가져옵니다. 또는 설명을 직접 제공할 수 있습니다
+-   함수 입력 스키마는 함수의 인수에서 자동으로 생성됩니다
+-   비활성화하지 않는 한 각 입력에 대한 설명은 함수의 docstring에서 가져옵니다
 
-함수 시그니처를 추출하기 위해 Python의 `inspect` 모듈을 사용하고, docstring을 파싱하기 위해 [`griffe`](https://mkdocstrings.github.io/griffe/)를, 스키마 생성을 위해 `pydantic`을 함께 사용합니다.
+`@tool`로 생성한 도구는 읽기 전용 `__wrapped__` 속성을 통해 원래 Python 호출 가능 객체를 노출합니다. 이는 검사 및 테스트에 유용하지만, 직접 호출하면 스키마 검증, 컨텍스트 주입, 가드레일, 시간 제한, 실패 처리, 트레이싱을 포함한 도구 런타임 파이프라인을 우회합니다. 직접 구성한 `FunctionTool` 인스턴스는 `__wrapped__`를 노출하지 않습니다.
 
-OpenAI Responses 모델을 사용하는 경우 `@function_tool(defer_loading=True)`는 `ToolSearchTool()`이 함수 도구를 로드할 때까지 해당 도구를 숨깁니다. [`tool_namespace()`][agents.tool.tool_namespace]를 사용하여 관련 함수 도구를 그룹화할 수도 있습니다. 전체 설정 및 제약 조건은 [호스티드 툴 검색](#hosted-tool-search)을 참조하세요.
+함수 시그니처를 추출하기 위해 Python의 `inspect` 모듈을 사용하며, docstring을 파싱하기 위해 [`griffe`](https://mkdocstrings.github.io/griffe/)를 사용하고 스키마 생성에는 `pydantic`을 사용합니다.
+
+OpenAI Responses 모델을 사용할 때 `@function_tool(defer_loading=True)`는 `ToolSearchTool()`이 로드할 때까지 함수 도구를 숨깁니다. [`tool_namespace()`][agents.tool.tool_namespace]를 사용하여 관련 함수 도구를 그룹화할 수도 있습니다. 전체 설정과 제약 조건은 [호스티드 툴 검색](#hosted-tool-search)을 참조하세요.
 
 ```python
 import json
@@ -7573,12 +7578,12 @@ for tool in agent.tools:
 
 ```
 
-1.  모든 Python 타입을 함수 인수로 사용할 수 있으며, 함수는 동기식 또는 비동기식일 수 있습니다.
-2.  docstring이 있으면 설명 및 인수 설명을 가져오는 데 사용됩니다.
-3.  함수는 선택적으로 `context`를 받을 수 있습니다. 이 인수는 첫 번째 인수여야 합니다. 도구 이름, 설명, 사용할 docstring 스타일 등의 재정의도 설정할 수 있습니다.
+1.  모든 Python 유형을 함수의 인수로 사용할 수 있으며, 함수는 동기식 또는 비동기식일 수 있습니다.
+2.  docstring이 있으면 설명과 인수 설명을 추출하는 데 사용됩니다.
+3.  함수는 선택적으로 `context`를 받을 수 있습니다. 이 인수는 첫 번째 인수여야 합니다. 도구 이름, 설명, 사용할 docstring 스타일 등의 재정의 항목도 설정할 수 있습니다.
 4.  데코레이팅된 함수를 도구 목록에 전달할 수 있습니다.
 
-??? note "출력을 확인하려면 펼치기"
+??? note "출력을 보려면 펼치기"
 
     ```
     fetch_weather
@@ -7650,20 +7655,20 @@ for tool in agent.tools:
 
 ### 함수 도구의 이미지 또는 파일 반환
 
-텍스트 출력뿐만 아니라 하나 이상의 이미지나 파일을 함수 도구의 출력으로 반환할 수 있습니다. 이를 위해 다음 항목 중 하나를 반환할 수 있습니다.
+텍스트 출력뿐만 아니라 하나 이상의 이미지나 파일을 함수 도구의 출력으로 반환할 수 있습니다. 다음 중 하나를 반환하면 됩니다.
 
 -   이미지: [`ToolOutputImage`][agents.tool.ToolOutputImage] 또는 TypedDict 버전인 [`ToolOutputImageDict`][agents.tool.ToolOutputImageDict]
 -   파일: [`ToolOutputFileContent`][agents.tool.ToolOutputFileContent] 또는 TypedDict 버전인 [`ToolOutputFileContentDict`][agents.tool.ToolOutputFileContentDict]
--   텍스트: 문자열, 문자열로 변환 가능한 객체 또는 [`ToolOutputText`][agents.tool.ToolOutputText] 또는 TypedDict 버전인 [`ToolOutputTextDict`][agents.tool.ToolOutputTextDict]
+-   텍스트: 문자열이나 문자열로 변환 가능한 객체 또는 [`ToolOutputText`][agents.tool.ToolOutputText] 또는 TypedDict 버전인 [`ToolOutputTextDict`][agents.tool.ToolOutputTextDict]
 
 ### 사용자 지정 함수 도구
 
-Python 함수를 도구로 사용하고 싶지 않은 경우도 있습니다. 원하는 경우 [`FunctionTool`][agents.tool.FunctionTool]을 직접 생성할 수 있습니다. 다음 항목을 제공해야 합니다.
+Python 함수를 도구로 사용하고 싶지 않은 경우도 있습니다. 원한다면 [`FunctionTool`][agents.tool.FunctionTool]을 직접 생성할 수 있습니다. 다음 항목을 제공해야 합니다.
 
 -   `name`
 -   `description`
 -   인수의 JSON 스키마인 `params_json_schema`
--   [`ToolContext`][agents.tool_context.ToolContext]와 JSON 문자열 형태의 인수를 받아 도구 출력(예: 텍스트, 구조화된 도구 출력 객체 또는 출력 목록)을 반환하는 비동기 함수인 `on_invoke_tool`
+-   [`ToolContext`][agents.tool_context.ToolContext]와 JSON 문자열 형식의 인수를 받고 도구 출력(예: 텍스트, 구조화된 도구 출력 객체 또는 출력 목록)을 반환하는 비동기 함수인 `on_invoke_tool`
 
 ```python
 from typing import Any
@@ -7696,12 +7701,12 @@ tool = FunctionTool(
 )
 ```
 
-### 자동 인수 및 docstring 파싱
+### 인수 및 docstring 자동 파싱
 
-앞서 설명했듯이 도구의 스키마를 추출하기 위해 함수 시그니처를 자동으로 파싱하고, 도구와 개별 인수의 설명을 추출하기 위해 docstring을 파싱합니다. 이에 관한 참고 사항은 다음과 같습니다.
+앞서 설명했듯이 도구의 스키마를 추출하기 위해 함수 시그니처를 자동으로 파싱하고, 도구 및 개별 인수의 설명을 추출하기 위해 docstring을 파싱합니다. 다음 사항을 참고하세요.
 
-1. 시그니처 파싱은 `inspect` 모듈을 통해 수행됩니다. 타입 어노테이션을 사용하여 인수의 타입을 파악하고 전체 스키마를 나타내는 Pydantic 모델을 동적으로 구축합니다. Python 기본 타입, Pydantic 모델, TypedDict 등을 포함한 대부분의 타입을 지원합니다.
-2. docstring 파싱에는 `griffe`를 사용합니다. 지원되는 docstring 형식은 `google`, `sphinx`, `numpy`입니다. docstring 형식을 자동 감지하려고 시도하지만 이는 최선형 방식이며, `function_tool`을 호출할 때 명시적으로 설정할 수 있습니다. `use_docstring_info`를 `False`로 설정하여 docstring 파싱을 비활성화할 수도 있습니다. Google 스타일 docstring의 경우 파서는 요약 텍스트 바로 뒤에 빈 줄 없이 오는 `Args:`, `Arguments:`, `Params:`, `Parameters:` 섹션도 허용합니다.
+1. 시그니처 파싱은 `inspect` 모듈을 통해 수행됩니다. 유형 어노테이션을 사용하여 인수의 유형을 파악하고, 전체 스키마를 나타내는 Pydantic 모델을 동적으로 빌드합니다. Python 기본 유형, Pydantic 모델, TypedDict 등을 포함한 대부분의 유형을 지원합니다.
+2. docstring을 파싱하는 데 `griffe`를 사용합니다. 지원되는 docstring 형식은 `google`, `sphinx`, `numpy`입니다. docstring 형식을 자동으로 감지하려고 시도하지만 완벽하지 않을 수 있으므로 `function_tool`을 호출할 때 명시적으로 설정할 수 있습니다. `use_docstring_info`를 `False`로 설정하여 docstring 파싱을 비활성화할 수도 있습니다. Google 스타일 docstring의 경우 파서는 요약 텍스트 바로 다음에 빈 줄 없이 배치된 `Args:`, `Arguments:`, `Params:`, `Parameters:` 섹션도 허용합니다.
 
 스키마 추출 코드는 [`agents.function_schema`][]에 있습니다.
 
@@ -7748,13 +7753,13 @@ agent = Agent(
 )
 ```
 
-시간 제한에 도달하면 기본 동작은 `timeout_behavior="error_as_result"`이며, 모델에 표시되는 시간 제한 메시지(예: `Tool 'slow_lookup' timed out after 2 seconds.`)를 전송합니다.
+시간 제한에 도달하면 기본 동작은 `timeout_behavior="error_as_result"`이며, 모델이 확인할 수 있는 시간 초과 메시지(예: `Tool 'slow_lookup' timed out after 2 seconds.`)를 전송합니다.
 
-시간 제한 처리는 다음과 같이 제어할 수 있습니다.
+시간 초과 처리를 제어할 수 있습니다.
 
--   `timeout_behavior="error_as_result"`(기본값): 모델이 복구할 수 있도록 시간 제한 메시지를 반환합니다.
+-   `timeout_behavior="error_as_result"`(기본값): 모델이 복구할 수 있도록 시간 초과 메시지를 반환합니다.
 -   `timeout_behavior="raise_exception"`: [`ToolTimeoutError`][agents.exceptions.ToolTimeoutError]를 발생시키고 실행을 실패 처리합니다.
--   `timeout_error_function=...`: `error_as_result`를 사용할 때 시간 제한 메시지를 사용자 지정합니다.
+-   `timeout_error_function=...`: `error_as_result`를 사용할 때 시간 초과 메시지를 사용자 지정합니다.
 
 ```python
 import asyncio
@@ -7782,11 +7787,11 @@ except ToolTimeoutError as e:
 
 ### 함수 도구의 오류 처리
 
-`@function_tool`을 통해 함수 도구를 생성할 때 `failure_error_function`을 전달할 수 있습니다. 이 함수는 도구 호출이 비정상 종료될 경우 LLM에 오류 응답을 제공합니다.
+`@function_tool`을 통해 함수 도구를 생성할 때 `failure_error_function`을 전달할 수 있습니다. 이 함수는 도구 호출이 실패하는 경우 LLM에 오류 응답을 제공합니다.
 
--   기본적으로 아무것도 전달하지 않으면 오류가 발생했음을 LLM에 알리는 `default_tool_error_function`이 실행됩니다.
--   자체 오류 함수를 전달하면 해당 함수가 대신 실행되고 응답이 LLM에 전송됩니다.
--   `None`을 명시적으로 전달하면 도구 호출 오류가 다시 발생하므로 사용자가 처리할 수 있습니다. 모델이 잘못된 JSON을 생성한 경우 `ModelBehaviorError`가 될 수 있고, 코드가 비정상 종료된 경우 `UserError`가 될 수 있습니다.
+-   기본적으로 아무것도 전달하지 않으면 오류가 발생했음을 LLM에 알리는 `default_tool_error_function`을 실행합니다.
+-   자체 오류 함수를 전달하면 해당 함수를 대신 실행하고 응답을 LLM에 전송합니다.
+-   명시적으로 `None`을 전달하면 도구 호출 오류가 다시 발생하며 사용자가 직접 처리해야 합니다. 모델이 잘못된 JSON을 생성한 경우 `ModelBehaviorError`, 코드가 실패한 경우 `UserError` 등이 발생할 수 있습니다.
 
 ```python
 from agents import RunContextWrapper
@@ -7814,7 +7819,7 @@ def get_user_profile(user_id: str) -> str:
 
 ## Agents as tools
 
-일부 워크플로에서는 제어권을 핸드오프하는 대신 중앙 에이전트가 전문 에이전트 네트워크를 오케스트레이션하도록 할 수 있습니다. 에이전트를 도구로 모델링하여 이를 구현할 수 있습니다.
+일부 워크플로에서는 제어권을 핸드오프하는 대신 중앙 에이전트가 전문 에이전트 네트워크를 오케스트레이션하도록 할 수 있습니다. 에이전트를 agents as tools로 모델링하여 이를 구현할 수 있습니다.
 
 ```python
 import asyncio
@@ -7860,9 +7865,9 @@ if __name__ == "__main__":
 
 ### 도구 에이전트 사용자 지정
 
-`agent.as_tool` 함수는 에이전트를 도구로 쉽게 변환할 수 있는 편의 메서드입니다. `max_turns`, `run_config`, `hooks`, `previous_response_id`, `conversation_id`, `session`, `needs_approval`과 같은 일반적인 런타임 옵션을 지원합니다. 또한 `parameters`, `input_builder`, `include_input_schema`를 사용하는 구조화된 입력도 지원합니다.
+`agent.as_tool` 함수는 에이전트를 도구로 쉽게 변환할 수 있는 편의 메서드입니다. `max_turns`, `run_config`, `hooks`, `previous_response_id`, `conversation_id`, `session`, `needs_approval`과 같은 일반적인 런타임 옵션을 지원합니다. 또한 `parameters`, `input_builder`, `include_input_schema`를 통한 구조화된 입력도 지원합니다.
 
-상태 옵션은 도구 호출로 시작된 중첩 에이전트 실행을 구성하며, 상위 실행의 대화 상태는 자동으로 상속되지 않습니다. 상위 실행과 중첩 실행 간에 클라이언트 관리형 기록을 공유하려면 동일한 `session`을 두 실행 모두에 명시적으로 전달하세요. `Runner.run`과 마찬가지로 중첩 실행에는 하나의 상태 전략을 선택하세요. 클라이언트 관리형 `session`을 사용하거나 `previous_response_id` 또는 `conversation_id`를 통한 서버 관리형 연속 실행을 사용해야 합니다.
+상태 옵션은 도구 호출로 시작되는 중첩 에이전트 실행을 구성하며, 상위 실행의 대화 상태는 자동으로 상속되지 않습니다. 상위 실행과 중첩 실행 간에 클라이언트 관리형 기록을 공유하려면 동일한 `session`을 양쪽에 명시적으로 전달하세요. `Runner.run`과 마찬가지로 중첩 실행에는 하나의 상태 전략을 선택하세요. 클라이언트 관리형 `session`을 사용하거나 `previous_response_id` 또는 `conversation_id`를 통한 서버 관리형 연속 실행을 사용합니다.
 
 ```python
 from agents.decorators import tool
@@ -7886,12 +7891,12 @@ async def run_my_agent() -> str:
 
 ### 도구 에이전트의 구조화된 입력
 
-기본적으로 `Agent.as_tool()`은 단일 문자열 입력(`{"input": "..."}`)을 예상하지만, `parameters`에 Pydantic 모델 또는 데이터 클래스 타입을 전달하여 구조화된 스키마를 노출할 수 있습니다.
+기본적으로 `Agent.as_tool()`은 단일 문자열 입력(`{"input": "..."}`)을 예상하지만, `parameters`에 Pydantic 모델 또는 dataclass 유형을 전달하여 구조화된 스키마를 노출할 수 있습니다.
 
 추가 옵션:
 
-- `include_input_schema=True`는 생성된 중첩 입력에 전체 JSON 스키마를 포함합니다.
-- `input_builder=...`를 사용하면 구조화된 도구 인수가 중첩 에이전트 입력으로 변환되는 방식을 완전히 사용자 지정할 수 있습니다.
+- `include_input_schema=True`는 생성된 중첩 입력에 전체 JSON Schema를 포함합니다.
+- `input_builder=...`를 사용하면 구조화된 도구 인수를 중첩 에이전트 입력으로 변환하는 방식을 완전히 사용자 지정할 수 있습니다.
 - `RunContextWrapper.tool_input`은 중첩 실행 컨텍스트 내부에 파싱된 구조화 페이로드를 포함합니다.
 
 ```python
@@ -7920,11 +7925,11 @@ translator_tool = translator_agent.as_tool(
 
 ### 사용자 지정 출력 추출
 
-경우에 따라 중앙 에이전트에 반환하기 전에 도구 에이전트의 출력을 수정할 수 있습니다. 다음과 같은 상황에서 유용합니다.
+특정한 경우 중앙 에이전트에 반환하기 전에 도구 에이전트의 출력을 수정할 수 있습니다. 다음과 같은 작업을 수행할 때 유용합니다.
 
--   하위 에이전트의 채팅 기록에서 특정 정보(예: JSON 페이로드)를 추출
--   에이전트의 최종 답변을 변환하거나 형식을 변경(예: Markdown을 일반 텍스트 또는 CSV로 변환)
--   출력을 검증하거나 에이전트 응답이 없거나 형식이 잘못된 경우 대체 값 제공
+-   하위 에이전트의 채팅 기록에서 특정 정보(예: JSON 페이로드) 추출
+-   에이전트의 최종 답변 변환 또는 형식 변경(예: Markdown을 일반 텍스트나 CSV로 변환)
+-   출력 검증 또는 에이전트의 응답이 누락되었거나 형식이 잘못된 경우 대체 값 제공
 
 `as_tool` 메서드에 `custom_output_extractor` 인수를 제공하여 이를 수행할 수 있습니다.
 
@@ -7945,11 +7950,11 @@ json_tool = data_agent.as_tool(
 )
 ```
 
-사용자 지정 추출기 내부에서 중첩된 [`RunResult`][agents.result.RunResult]는 [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]도 노출합니다. 이는 중첩된 결과를 후처리하는 동안 외부 도구 이름, 호출 ID 또는 원문 인수가 필요할 때 유용합니다. [결과 가이드](results.md#agent-as-tool-metadata)를 참조하세요.
+사용자 지정 추출기 내부에서 중첩된 [`RunResult`][agents.result.RunResult]는 [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]도 노출합니다. 이는 중첩된 결과를 후처리할 때 외부 도구 이름, 호출 ID 또는 원문 인수가 필요한 경우 유용합니다. [결과 가이드](results.md#agent-as-tool-metadata)를 참조하세요.
 
-### 중첩 에이전트 실행의 스트리밍
+### 중첩 에이전트 실행 스트리밍
 
-`as_tool`에 `on_stream` 콜백을 전달하면 중첩 에이전트가 내보내는 스트리밍 이벤트를 수신하면서도 스트림이 완료된 후 최종 출력을 반환할 수 있습니다.
+스트림이 완료되면 최종 출력을 반환하면서 중첩 에이전트가 내보내는 스트리밍 이벤트를 수신하려면 `on_stream` 콜백을 `as_tool`에 전달하세요.
 
 ```python
 from agents import AgentToolStreamEvent
@@ -7969,8 +7974,8 @@ billing_agent_tool = billing_agent.as_tool(
 
 예상 동작:
 
-- 이벤트 유형은 `StreamEvent["type"]`을 따릅니다: `raw_response_event`, `run_item_stream_event`, `agent_updated_stream_event`
-- `on_stream`을 제공하면 중첩 에이전트가 자동으로 스트리밍 모드에서 실행되고, 최종 출력을 반환하기 전에 스트림을 모두 소비합니다.
+- 이벤트 유형은 `StreamEvent["type"]`을 반영합니다: `raw_response_event`, `run_item_stream_event`, `agent_updated_stream_event`
+- `on_stream`을 제공하면 중첩 에이전트가 자동으로 스트리밍 모드로 실행되고 최종 출력을 반환하기 전에 스트림을 모두 소비합니다.
 - 핸들러는 동기식 또는 비동기식일 수 있으며, 각 이벤트는 도착하는 순서대로 전달됩니다.
 - 모델 도구 호출을 통해 도구가 호출되면 `tool_call`이 존재합니다. 직접 호출에서는 `None`일 수 있습니다.
 - 완전한 실행 가능 코드 예제는 `examples/agent_patterns/agents_as_tools_streaming.py`를 참조하세요.
@@ -8035,21 +8040,21 @@ asyncio.run(main())
 `is_enabled` 매개변수는 다음을 허용합니다.
 
 -   **불리언 값**: `True`(항상 활성화) 또는 `False`(항상 비활성화)
--   **호출 가능 함수**: `(context, agent)`를 받아 불리언 값을 반환하는 함수
+-   **호출 가능 함수**: `(context, agent)`를 받고 불리언을 반환하는 함수
 -   **비동기 함수**: 복잡한 조건부 로직을 위한 비동기 함수
 
-비활성화된 도구는 런타임에 LLM에서 완전히 숨겨지므로 다음과 같은 용도에 유용합니다.
+비활성화된 도구는 런타임에 LLM에서 완전히 숨겨지므로 다음과 같은 용도로 유용합니다.
 
--   사용자 권한에 따른 기능 게이팅
+-   사용자 권한 기반 기능 게이팅
 -   환경별 도구 가용성(개발 환경과 프로덕션 환경)
 -   서로 다른 도구 구성의 A/B 테스트
--   런타임 상태에 따른 동적 도구 필터링
+-   런타임 상태 기반 동적 도구 필터링
 
 ## 실험적 기능: Codex 도구
 
-`codex_tool`은 Codex CLI를 래핑하여 에이전트가 도구 호출 중에 워크스페이스 범위의 작업(셸, 파일 편집, MCP 도구)을 실행할 수 있도록 합니다. 이 기능은 실험적이며 변경될 수 있습니다.
+`codex_tool`은 Codex CLI를 래핑하여 에이전트가 도구 호출 중에 작업 공간 범위의 작업(셸, 파일 편집, MCP 도구)을 실행할 수 있도록 합니다. 이 기능 표면은 실험적이며 변경될 수 있습니다.
 
-현재 실행을 벗어나지 않고 기본 에이전트가 범위가 제한된 워크스페이스 작업을 Codex에 위임하도록 하려면 이 도구를 사용하세요. 기본 도구 이름은 `codex`입니다. 사용자 지정 이름을 설정하는 경우 `codex`이거나 `codex_`로 시작해야 합니다. 에이전트에 여러 Codex 도구가 포함된 경우 각 도구는 고유한 이름을 사용해야 합니다.
+메인 에이전트가 현재 실행을 벗어나지 않고 제한된 작업 공간 작업을 Codex에 위임하도록 하려면 사용하세요. 기본 도구 이름은 `codex`입니다. 사용자 지정 이름을 설정하는 경우 이름은 `codex`이거나 `codex_`로 시작해야 합니다. 에이전트에 여러 Codex 도구가 포함된 경우 각 도구는 고유한 이름을 사용해야 합니다.
 
 ```python
 from agents import Agent
@@ -8080,34 +8085,34 @@ agent = Agent(
 
 다음 옵션 그룹부터 시작하세요.
 
--   실행 표면: `sandbox_mode` 및 `working_directory`는 Codex가 작업할 수 있는 위치를 정의합니다. 두 옵션을 함께 사용하고, 작업 디렉터리가 Git 저장소 내부에 없으면 `skip_git_repo_check=True`를 설정하세요.
--   스레드 기본값: `default_thread_options=ThreadOptions(...)`는 모델, 추론 강도, 승인 정책, 추가 디렉터리, 네트워크 액세스 및 웹 검색 모드를 구성합니다. 레거시 `web_search_enabled`보다 `web_search_mode`를 우선 사용하세요.
+-   실행 표면: `sandbox_mode`와 `working_directory`는 Codex가 작업할 수 있는 위치를 정의합니다. 두 옵션을 함께 사용하고, 작업 디렉터리가 Git 저장소 내부에 없으면 `skip_git_repo_check=True`를 설정하세요.
+-   스레드 기본값: `default_thread_options=ThreadOptions(...)`는 모델, 추론 수준, 승인 정책, 추가 디렉터리, 네트워크 접근, 웹 검색 모드를 구성합니다. 레거시 `web_search_enabled`보다 `web_search_mode`를 사용하세요.
 -   턴 기본값: `default_turn_options=TurnOptions(...)`는 `idle_timeout_seconds` 및 선택적 취소 `signal`과 같은 턴별 동작을 구성합니다.
--   도구 I/O: 도구 호출에는 `{ "type": "text", "text": ... }` 또는 `{ "type": "local_image", "path": ... }`가 포함된 `inputs` 항목이 하나 이상 있어야 합니다. `output_schema`를 사용하면 구조화된 Codex 응답을 요구할 수 있습니다.
+-   도구 I/O: 도구 호출에는 `{ "type": "text", "text": ... }` 또는 `{ "type": "local_image", "path": ... }` 형식의 `inputs` 항목이 하나 이상 포함되어야 합니다. `output_schema`를 사용하면 구조화된 Codex 응답을 요구할 수 있습니다.
 
-스레드 재사용과 영속성은 별도의 제어 항목입니다.
+스레드 재사용과 지속성은 별도의 제어 항목입니다.
 
--   `persist_session=True`는 동일한 도구 인스턴스에 대한 반복 호출에서 하나의 Codex 스레드를 재사용합니다.
--   `use_run_context_thread_id=True`는 동일한 변경 가능 컨텍스트 객체를 공유하는 여러 실행에서 실행 컨텍스트에 스레드 ID를 저장하고 재사용합니다.
--   스레드 ID의 우선순위는 호출별 `thread_id`, 실행 컨텍스트 스레드 ID(활성화된 경우), 구성된 `thread_id` 옵션 순입니다.
--   기본 실행 컨텍스트 키는 `name="codex"`일 때 `codex_thread_id`이고, `name="codex_<suffix>"`일 때 `codex_thread_id_<suffix>`입니다. `run_context_thread_id_key`를 사용하여 재정의할 수 있습니다.
+-   `persist_session=True`는 동일한 도구 인스턴스를 반복 호출할 때 하나의 Codex 스레드를 재사용합니다.
+-   `use_run_context_thread_id=True`는 동일한 가변 컨텍스트 객체를 공유하는 여러 실행에서 스레드 ID를 실행 컨텍스트에 저장하고 재사용합니다.
+-   스레드 ID 우선순위는 호출별 `thread_id`, 실행 컨텍스트 스레드 ID(활성화된 경우), 구성된 `thread_id` 옵션 순입니다.
+-   기본 실행 컨텍스트 키는 `name="codex"`일 때 `codex_thread_id`이고, `name="codex_<suffix>"`일 때 `codex_thread_id_<suffix>`입니다. `run_context_thread_id_key`로 재정의할 수 있습니다.
 
 런타임 구성:
 
--   인증: `CODEX_API_KEY`(권장) 또는 `OPENAI_API_KEY`를 설정하거나 `codex_options={"api_key": "..."}`를 전달하세요.
+-   인증: `CODEX_API_KEY`(권장) 또는 `OPENAI_API_KEY`를 설정하거나 `codex_options={"api_key": "..."}`를 전달합니다.
 -   런타임: `codex_options.base_url`은 CLI 기본 URL을 재정의합니다.
--   바이너리 확인: CLI 경로를 고정하려면 `codex_options.codex_path_override` 또는 `CODEX_PATH`를 설정하세요. 그렇지 않으면 SDK는 `PATH`에서 `codex`를 확인한 후 번들로 제공되는 벤더 바이너리를 대체 경로로 사용합니다.
--   환경: `codex_options.env`는 하위 프로세스 환경을 완전히 제어합니다. 이 옵션이 제공되면 하위 프로세스는 `os.environ`을 상속하지 않습니다.
--   스트림 제한: `codex_options.codex_subprocess_stream_limit_bytes` 또는 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`는 stdout/stderr 리더 제한을 제어합니다. 유효 범위는 `65536`~`67108864`이며, 기본값은 `8388608`입니다.
+-   바이너리 확인: CLI 경로를 고정하려면 `codex_options.codex_path_override` 또는 `CODEX_PATH`를 설정합니다. 그렇지 않으면 SDK는 `PATH`에서 `codex`를 확인한 다음, 찾지 못하면 번들로 제공되는 벤더 바이너리를 사용합니다.
+-   환경: `codex_options.env`는 하위 프로세스 환경을 완전히 제어합니다. 이를 제공하면 하위 프로세스가 `os.environ`을 상속하지 않습니다.
+-   스트림 제한: `codex_options.codex_subprocess_stream_limit_bytes` 또는 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`는 stdout/stderr 리더 제한을 제어합니다. 유효 범위는 `65536`에서 `67108864`이며, 기본값은 `8388608`입니다.
 -   스트리밍: `on_stream`은 스레드/턴 수명 주기 이벤트와 항목 이벤트(`reasoning`, `command_execution`, `mcp_tool_call`, `file_change`, `web_search`, `todo_list`, `error` 항목 업데이트)를 수신합니다.
 -   출력: 결과에는 `response`, `usage`, `thread_id`가 포함되며, 사용량은 `RunContextWrapper.usage`에 추가됩니다.
 
 참조:
 
--   [Codex 도구 API 참조](ref/extensions/experimental/codex/codex_tool.md)
--   [ThreadOptions 참조](ref/extensions/experimental/codex/thread_options.md)
--   [TurnOptions 참조](ref/extensions/experimental/codex/turn_options.md)
--   완전한 실행 가능 코드 예제는 `examples/tools/codex.py` 및 `examples/tools/codex_same_thread.py`를 참조하세요.
+-   [Codex 도구 API 레퍼런스](ref/extensions/experimental/codex/codex_tool.md)
+-   [ThreadOptions 레퍼런스](ref/extensions/experimental/codex/thread_options.md)
+-   [TurnOptions 레퍼런스](ref/extensions/experimental/codex/turn_options.md)
+-   완전한 실행 가능 코드 예제는 `examples/tools/codex.py`와 `examples/tools/codex_same_thread.py`를 참조하세요.
 
 ================
 File: docs/ko/tracing.md
@@ -15227,42 +15232,42 @@ File: docs/zh/sandbox/clients.md
 search:
   exclude: true
 ---
-# 沙盒客户端
+# 沙箱客户端
 
-使用本页面选择沙盒任务的运行位置。在大多数情况下，`SandboxAgent` 定义保持不变，仅需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端和客户端专属选项。
+使用本页选择沙箱任务的运行位置。在大多数情况下，`SandboxAgent` 定义保持不变，只需更改 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中的沙箱客户端及客户端特定选项。
 
-!!! warning "Beta 测试功能"
+!!! warning "Beta 功能"
 
-    沙盒智能体目前处于 Beta 测试阶段。在正式发布之前，API 细节、默认值和支持的功能可能会发生变化，未来还将逐步提供更多高级功能。
+    沙箱智能体目前处于 Beta 阶段。在正式发布之前，API 细节、默认值和支持的功能可能会发生变化，未来还将提供更多高级功能。
 
 ## 决策指南
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 目标 | 首选 | 原因 |
+| 目标 | 首选方案 | 原因 |
 | --- | --- | --- |
-| 在 macOS 或 Linux 上实现最快的本地迭代 | `UnixLocalSandboxClient` | 无需额外安装，便于在本地文件系统上开发。 |
-| 基本的容器隔离 | `DockerSandboxClient` | 使用指定镜像在 Docker 内运行任务。 |
-| 托管执行或生产环境级隔离 | 托管沙盒客户端 | 将工作区边界迁移至由服务提供商管理的环境。 |
+| 在 macOS 或 Linux 上实现最快的本地迭代 | `UnixLocalSandboxClient` | 无需额外安装，便于使用本地文件系统进行开发。 |
+| 基础容器隔离 | `DockerSandboxClient` | 使用指定镜像在 Docker 内运行任务。 |
+| 托管执行或生产环境级隔离 | 托管沙箱客户端 | 将工作区边界迁移到由供应商管理的环境中。 |
 
 </div>
 
 ## 本地客户端
 
-对于大多数用户，建议从以下两个沙盒客户端之一开始：
+对于大多数用户，建议从以下两个沙箱客户端之一开始：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 客户端 | 安装 | 适用场景 | 代码示例 |
+| 客户端 | 安装 | 适用场景 | 示例 |
 | --- | --- | --- | --- |
-| `UnixLocalSandboxClient` | 无 | 在 macOS 或 Linux 上实现最快的本地迭代。适合作为本地开发的默认选择。 | [Unix 本地入门代码示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
-| `DockerSandboxClient` | `openai-agents[docker]` | 需要容器隔离，或使用指定镜像以确保本地环境的一致性。 | [Docker 入门代码示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
+| `UnixLocalSandboxClient` | 无 | 需要在 macOS 或 Linux 上实现最快的本地迭代。适合作为本地开发的默认选择。 | [Unix 本地入门示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/unix_local_runner.py) |
+| `DockerSandboxClient` | `openai-agents[docker]` | 需要容器隔离，或需要使用特定镜像以确保本地环境的一致性。 | [Docker 入门示例](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py) |
 
 </div>
 
-Unix 本地模式是在本地文件系统上开始开发的最简单方式。当需要更强的环境隔离或与生产环境保持一致时，可以迁移到 Docker 或托管服务提供商。
+Unix 本地模式是基于本地文件系统开始开发的最简便方式。当需要更强的环境隔离或与生产环境保持一致时，请迁移到 Docker 或托管供应商。
 
-`SandboxPathGrant.host_path` 仅适用于 Docker，用于将主机路径映射到容器内的另一个 POSIX 路径。Unix 本地模式仅支持相同路径的授权。有关详细信息，请参阅[清单路径授权](guide.md#manifest)。
+`SandboxPathGrant.host_path` 仅适用于 Docker，可将主机路径映射到容器内的另一个 POSIX 路径。Unix 本地模式仅支持相同路径的授权。有关详细信息，请参阅[清单路径授权](guide.md#manifest)。
 
 要从 Unix 本地模式切换到 Docker，请保持智能体定义不变，仅更改运行配置：
 
@@ -15281,74 +15286,74 @@ run_config = RunConfig(
 )
 ```
 
-当需要容器隔离或镜像一致性时，请使用此方式。请参阅 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
+当需要容器隔离或镜像一致性时，请使用此配置。请参阅 [examples/sandbox/docker/docker_runner.py](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/docker/docker_runner.py)。
 
 ## 挂载与远程存储
 
-挂载条目用于描述要公开的存储；挂载策略用于描述沙盒后端如何连接该存储。可从 `agents.sandbox.entries` 导入内置挂载条目和通用策略。托管服务提供商的策略可从 `agents.extensions.sandbox` 或服务提供商专属扩展包中获取。
+挂载条目描述要公开的存储；挂载策略描述沙箱后端如何附加该存储。请从 `agents.sandbox.entries` 导入内置挂载条目和通用策略。托管供应商策略可从 `agents.extensions.sandbox` 或供应商特定的扩展包中获取。
 
 常用挂载选项：
 
-- `mount_path`：存储在沙盒中的显示位置。相对路径基于清单根目录解析；绝对路径则按原样使用。
-- `read_only`：默认为 `True`。仅当沙盒需要将内容写回已挂载存储时，才将其设置为 `False`。
-- `mount_strategy`：必填。应使用同时兼容挂载条目和沙盒后端的策略。
+- `mount_path`：存储在沙箱中的显示位置。相对路径基于清单根目录解析；绝对路径则按原样使用。
+- `read_only`：默认为 `True`。仅当沙箱需要将数据写回已挂载存储时，才将其设为 `False`。
+- `mount_strategy`：必填。请使用同时与挂载条目和沙箱后端匹配的策略。
 
 挂载会被视为临时工作区条目。快照和持久化流程会分离或跳过已挂载路径，而不会将已挂载的远程存储复制到保存的工作区中。
 
-通用本地和容器策略：
+通用本地/容器策略：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 策略或模式 | 适用场景 | 备注 |
+| 策略或模式 | 适用场景 | 说明 |
 | --- | --- | --- |
-| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 沙盒镜像能够运行 `rclone`。 | 支持 S3、GCS、R2、Azure Blob 和 Box。`RcloneMountPattern` 可以在 `fuse` 模式或 `nfs` 模式下运行。 |
+| `InContainerMountStrategy(pattern=RcloneMountPattern(...))` | 沙箱镜像可以运行 `rclone`。 | 支持 S3、GCS、R2、Azure Blob 和 Box。`RcloneMountPattern` 可以在 `fuse` 模式或 `nfs` 模式下运行。 |
 | `InContainerMountStrategy(pattern=MountpointMountPattern(...))` | 镜像包含 `mount-s3`，并且需要以 Mountpoint 方式访问 S3 或 S3 兼容存储。 | 支持 `S3Mount` 和 `GCSMount`。 |
 | `InContainerMountStrategy(pattern=FuseMountPattern(...))` | 镜像包含 `blobfuse2` 并支持 FUSE。 | 支持 `AzureBlobMount`。 |
 | `InContainerMountStrategy(pattern=S3FilesMountPattern(...))` | 镜像包含 `mount.s3files`，并且可以访问现有的 S3 Files 挂载目标。 | 支持 `S3FilesMount`。 |
-| `DockerVolumeMountStrategy(driver=...)` | Docker 应在容器启动前连接由卷驱动支持的挂载。 | 仅适用于 Docker。S3、GCS、R2、Azure Blob 和 Box 支持 `rclone`；S3 和 GCS 还支持 `mountpoint`。 |
+| `DockerVolumeMountStrategy(driver=...)` | Docker 应在容器启动前附加由卷驱动程序支持的挂载。 | 仅适用于 Docker。S3、GCS、R2、Azure Blob 和 Box 支持 `rclone`；S3 和 GCS 还支持 `mountpoint`。 |
 
 </div>
 
 ## 支持的托管平台
 
-当需要托管环境时，通常可以继续使用相同的 `SandboxAgent` 定义，仅需在 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中更改沙盒客户端。
+当需要托管环境时，通常可以沿用同一个 `SandboxAgent` 定义，只需更改 [`SandboxRunConfig`][agents.run_config.SandboxRunConfig] 中的沙箱客户端。
 
-如果使用已发布的 SDK，而不是此代码仓库的检出版本，请通过对应的软件包额外依赖安装沙盒客户端依赖项。
+如果使用已发布的 SDK，而不是当前仓库的检出版本，请通过匹配的软件包附加项安装沙箱客户端依赖项。
 
-有关特定服务提供商的设置说明，以及代码仓库中扩展代码示例的链接，请参阅 [examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)。
+有关供应商特定的设置说明及仓库中扩展代码示例的链接，请参阅 [examples/sandbox/extensions/README.md](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/README.md)。
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
-| 客户端 | 安装 | 代码示例 |
+| 客户端 | 安装 | 示例 |
 | --- | --- | --- |
-| `BlaxelSandboxClient` | `openai-agents[blaxel]` | [Blaxel 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py) |
-| `CloudflareSandboxClient` | `openai-agents[cloudflare]` | [Cloudflare 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/cloudflare_runner.py) |
-| `DaytonaSandboxClient` | `openai-agents[daytona]` | [Daytona 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/daytona/daytona_runner.py) |
-| `E2BSandboxClient` | `openai-agents[e2b]` | [E2B 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/e2b_runner.py) |
-| `ModalSandboxClient` | `openai-agents[modal]` | [Modal 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/modal_runner.py) |
-| `RunloopSandboxClient` | `openai-agents[runloop]` | [Runloop 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/runloop/runner.py) |
-| `VercelSandboxClient` | `openai-agents[vercel]` | [Vercel 运行器](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/vercel_runner.py) |
+| `BlaxelSandboxClient` | `openai-agents[blaxel]` | [Blaxel 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/blaxel_runner.py) |
+| `CloudflareSandboxClient` | `openai-agents[cloudflare]` | [Cloudflare 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/cloudflare_runner.py) |
+| `DaytonaSandboxClient` | `openai-agents[daytona]` | [Daytona 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/daytona/daytona_runner.py) |
+| `E2BSandboxClient` | `openai-agents[e2b]` | [E2B 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/e2b_runner.py) |
+| `ModalSandboxClient` | `openai-agents[modal]` | [Modal 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/modal_runner.py) |
+| `RunloopSandboxClient` | `openai-agents[runloop]` | [Runloop 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/runloop/runner.py) |
+| `VercelSandboxClient` | `openai-agents[vercel]` | [Vercel 运行程序](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/extensions/vercel_runner.py) |
 
 </div>
 
-托管沙盒客户端会提供服务提供商专属的挂载策略。请选择最适合相应存储服务提供商的后端和挂载策略：
+托管沙箱客户端提供供应商特定的挂载策略。请选择最适合存储供应商的后端和挂载策略：
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
 | 后端 | 挂载说明 |
 | --- | --- |
-| Docker | 支持通过 `InContainerMountStrategy` 和 `DockerVolumeMountStrategy` 等本地策略挂载 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount` 和 `S3FilesMount`。 |
-| `ModalSandboxClient` | 支持通过 `ModalCloudBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和使用 HMAC 身份验证的 `GCSMount` 上挂载 Modal 云存储桶。可以使用内联凭据或具名 Modal Secret。 |
-| `CloudflareSandboxClient` | 支持通过 `CloudflareBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和使用 HMAC 身份验证的 `GCSMount` 上挂载 Cloudflare 存储桶。 |
+| Docker | 支持将 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount`、`BoxMount` 和 `S3FilesMount` 与 `InContainerMountStrategy`、`DockerVolumeMountStrategy` 等本地策略配合使用。 |
+| `ModalSandboxClient` | 支持通过 `ModalCloudBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和采用 HMAC 身份验证的 `GCSMount` 上挂载 Modal 云存储桶。可以使用内联凭据或具名 Modal Secret。 |
+| `CloudflareSandboxClient` | 支持通过 `CloudflareBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和采用 HMAC 身份验证的 `GCSMount` 上挂载 Cloudflare 存储桶。 |
 | `BlaxelSandboxClient` | 支持通过 `BlaxelCloudBucketMountStrategy`，在 `S3Mount`、`R2Mount` 和 `GCSMount` 上挂载云存储桶。还支持使用 `agents.extensions.sandbox.blaxel` 中的 `BlaxelDriveMount` 和 `BlaxelDriveMountStrategy` 挂载持久化 Blaxel Drive。 |
 | `DaytonaSandboxClient` | 支持通过 `DaytonaCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
 | `E2BSandboxClient` | 支持通过 `E2BCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
 | `RunloopSandboxClient` | 支持通过 `RunloopCloudBucketMountStrategy` 挂载由 rclone 支持的云存储；可将其与 `S3Mount`、`GCSMount`、`R2Mount`、`AzureBlobMount` 和 `BoxMount` 配合使用。 |
-| `VercelSandboxClient` | 支持通过 `VercelCloudBucketMountStrategy`，在 `S3Mount` 上挂载仅能在创建时配置的 S3 和 S3 兼容存储桶；已挂载存储的会话无法恢复，并且使用内联凭据时必须设置 `allow_s3_credential_exposure=True`。 |
+| `VercelSandboxClient` | 支持通过 `VercelCloudBucketMountStrategy`，在 `S3Mount` 上挂载仅能在创建时指定的 S3 和 S3 兼容存储桶；已挂载的会话无法恢复，并且使用内联凭据时需要设置 `allow_s3_credential_exposure=True`。 |
 
 </div>
 
-下表汇总了每个后端可以直接挂载的远程存储条目。
+下表汇总了各后端可以直接挂载的远程存储条目。
 
 <div class="sandbox-nowrap-first-column-table" markdown="1">
 
@@ -15365,7 +15370,7 @@ run_config = RunConfig(
 
 </div>
 
-如需更多可运行的代码示例，请浏览 [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)，了解本地运行、编码、记忆、任务转移和智能体组合模式；还可浏览 [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)，查看托管沙盒客户端。
+如需更多可运行的代码示例，请浏览 [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox)，其中包含本地、编码、记忆、任务转移和智能体组合模式；托管沙箱客户端的代码示例请参阅 [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions)。
 
 ================
 File: docs/zh/sandbox/guide.md
@@ -18994,31 +18999,34 @@ search:
 ---
 # Model context protocol (MCP)
 
-[Model context protocol](https://modelcontextprotocol.io/introduction)（MCP）标准化了应用如何向语言模型公开工具和
-上下文。来自官方文档：
+[Model context protocol](https://modelcontextprotocol.io/introduction)（MCP）对应用程序向语言模型提供工具和上下文的方式进行了标准化。官方文档中的说明如下：
 
-> MCP是一种开放协议，标准化了应用向LLM提供上下文的方式。可以把MCP想象成AI
-> 应用的USB-C端口。正如USB-C提供了一种标准化方式，用于将你的设备连接到各种外设和配件，MCP
-> 也提供了一种标准化方式，用于将AI模型连接到不同的数据源和工具。
+> MCP是一种开放协议，用于标准化应用程序向LLM提供上下文的方式。可以将MCP视为AI
+> 应用程序的USB-C端口。正如USB-C提供了一种将设备连接到各种外围设备和配件的标准化方式，MCP
+> 也提供了一种将AI模型连接到不同数据源和工具的标准化方式。
 
-Agents Python SDK支持多种MCP传输方式。这使你可以复用现有的MCP服务，或构建自己的服务，向智能体公开由文件系统、HTTP或连接器支持的工具。
+Agents Python SDK支持多种MCP传输方式。这样，你就可以复用现有MCP服务，也可以构建自己的MCP服务，从而向智能体提供由文件系统、HTTP或连接器支持的工具。
+
+!!! warning "连接MCP服务前的信任要求"
+
+    MCP工具可以公开模型上下文中的数据，并使用你提供的凭据执行操作。请仅连接你信任的服务、使用最小权限凭据、将访问令牌放在授权字段或请求头中而非URL中，并要求对敏感操作进行审批。请参阅[OpenAI MCP安全指南](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#risks-and-safety)。
 
 ## MCP集成方案选择
 
-在将MCP服务接入智能体之前，请先决定工具调用应在哪里执行，以及你可以访问哪些传输方式。下表总结了Python SDK支持的选项。
+在将MCP服务接入智能体之前，应先确定工具调用的执行位置，以及可访问的传输方式。下表总结了Python SDK支持的选项。
 
-| 你的需求                                                                        | 推荐选项                                    |
+| 需求                                                                        | 推荐选项                                    |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| 让OpenAI的Responses API代表模型调用可公开访问的MCP服务| 通过[`HostedMCPTool`][agents.tool.HostedMCPTool]使用**托管MCP服务工具** |
+| 让OpenAI的Responses API代表模型调用可公开访问的MCP服务| 通过[`HostedMCPTool`][agents.tool.HostedMCPTool]使用**托管式MCP服务工具** |
 | 连接到你在本地或远程运行的Streamable HTTP服务                  | 通过[`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]使用**Streamable HTTP MCP服务** |
-| 与实现HTTP with Server-Sent Events的服务通信                          | 通过[`MCPServerSse`][agents.mcp.server.MCPServerSse]使用**HTTP with SSE MCP服务** |
+| 与实现了采用服务端发送事件的HTTP协议的服务通信                          | 通过[`MCPServerSse`][agents.mcp.server.MCPServerSse]使用**采用SSE的HTTP MCP服务** |
 | 启动本地进程并通过stdin/stdout通信                             | 通过[`MCPServerStdio`][agents.mcp.server.MCPServerStdio]使用**stdio MCP服务** |
 
-下面各节会逐一介绍每个选项、如何配置它，以及何时优先选择某种传输方式。
+以下各节将逐一介绍每个选项、配置方式，以及何时应优先选择某种传输方式。
 
 ## 智能体级MCP配置
 
-除了选择传输方式，你还可以通过设置`Agent.mcp_config`来调整MCP工具的准备方式。
+除了选择传输方式外，你还可以通过设置`Agent.mcp_config`来调整MCP工具的准备方式。
 
 ```python
 from agents import Agent
@@ -19038,33 +19046,33 @@ agent = Agent(
 )
 ```
 
-说明：
+注意事项：
 
-- `convert_schemas_to_strict`是尽力而为的。如果某个schema无法转换，则使用原始schema。
-- `failure_error_function`控制MCP工具调用失败如何呈现给模型。
-- 当未设置`failure_error_function`时，SDK会使用默认的工具错误格式化器。
+- `convert_schemas_to_strict`采用尽力而为的方式。如果某个模式无法转换，则使用原始模式。
+- `failure_error_function`控制如何将MCP工具调用失败呈现给模型。
+- 未设置`failure_error_function`时，SDK会使用默认的工具错误格式化程序。
 - 服务级`failure_error_function`会覆盖该服务的`Agent.mcp_config["failure_error_function"]`。
-- `include_server_in_tool_names`是可选启用项。启用后，每个本地MCP工具都会以确定性的、带服务前缀的名称公开给模型，这有助于在多个MCP服务发布同名工具时避免冲突。生成的名称是ASCII安全的，会保持在工具调用名称长度限制内，并避免与同一智能体上的现有本地工具调用和已启用的任务转移名称冲突。SDK仍会在原服务上调用原始的MCP工具名称。
+- `include_server_in_tool_names`需要选择启用。启用后，每个本地MCP工具都会以带有确定性服务前缀的名称提供给模型，有助于避免多个MCP服务发布同名工具时发生冲突。生成的名称符合ASCII安全要求，不会超过工具调用名称的长度限制，并会避开同一智能体中已有的本地工具调用名称和已启用的任务转移名称。SDK仍会在原始服务上调用原始MCP工具名称。
 
-## 跨传输方式的通用模式
+## 各传输方式的通用模式
 
 选择传输方式后，大多数集成都需要做出相同的后续决策：
 
-- 如何仅公开工具的一个子集（[工具筛选](#tool-filtering)）。
+- 如何仅公开工具的子集（[工具筛选](#tool-filtering)）。
 - 服务是否还提供可复用的提示词（[提示词](#prompts)）。
 - 是否应缓存`list_tools()`（[缓存](#caching)）。
-- MCP活动如何显示在追踪中（[追踪](#tracing)）。
+- MCP活动如何显示在追踪记录中（[追踪](#tracing)）。
 
-对于本地MCP服务（`MCPServerStdio`、`MCPServerSse`、`MCPServerStreamableHttp`），审批策略和每次调用的`_meta`载荷也是通用概念。Streamable HTTP一节展示了最完整的示例，同样的模式也适用于其他本地传输方式。
+对于本地MCP服务（`MCPServerStdio`、`MCPServerSse`、`MCPServerStreamableHttp`），审批策略和每次调用的`_meta`载荷也是通用概念。Streamable HTTP一节提供了最完整的示例，相同模式也适用于其他本地传输方式。
 
-## 1. 托管MCP服务工具
+## 1. 托管式MCP服务工具
 
-托管工具会把整个工具往返过程推送到OpenAI基础设施中执行。你的代码无需列出并调用工具，[`HostedMCPTool`][agents.tool.HostedMCPTool]会将服务标签（以及可选的连接器元数据）转发给Responses API。模型会列出远程服务的工具并调用它们，而无需额外回调到你的Python进程。托管工具目前适用于支持Responses API托管MCP集成的OpenAI模型。
+托管工具会将整个工具往返流程交由OpenAI的基础设施处理。你的代码无需列出和调用工具，[`HostedMCPTool`][agents.tool.HostedMCPTool]会将服务标签（以及可选的连接器元数据）转发给Responses API。模型会列出远程服务的工具并调用它们，无需额外回调你的Python进程。托管工具目前适用于支持Responses API托管式MCP集成的OpenAI模型。
 
-### 基础托管MCP工具
+### 基础托管式MCP工具
 
-通过向智能体的`tools`列表添加[`HostedMCPTool`][agents.tool.HostedMCPTool]来创建托管工具。`tool_config`
-字典与发送给REST API的JSON保持一致：
+将[`HostedMCPTool`][agents.tool.HostedMCPTool]添加到智能体的`tools`列表中，即可创建托管工具。`tool_config`
+字典对应于你会发送给REST API的JSON：
 
 ```python
 import asyncio
@@ -19096,14 +19104,14 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-托管服务会自动公开其工具；你无需将其添加到`mcp_servers`。
+托管式服务会自动公开其工具；无需将其添加到`mcp_servers`。
 
-如果你希望托管工具搜索延迟加载托管MCP服务，请设置`tool_config["defer_loading"] = True`并将[`ToolSearchTool`][agents.tool.ToolSearchTool]添加到智能体。这仅在OpenAI Responses模型上受支持。有关完整的工具搜索设置和限制，请参阅[工具](tools.md#hosted-tool-search)。
+如果希望托管工具搜索延迟加载托管式MCP服务，请设置`tool_config["defer_loading"] = True`，并将[`ToolSearchTool`][agents.tool.ToolSearchTool]添加到智能体。此功能仅支持OpenAI Responses模型。有关完整的工具搜索设置和限制，请参阅[工具](tools.md#hosted-tool-search)。
 
-### 托管MCP结果的流式传输
+### 托管式MCP结果的流式传输
 
-托管工具支持结果流式传输，方式与工具调用完全相同。使用`Runner.run_streamed`在模型仍在工作时
-消费增量MCP输出：
+托管工具对流式结果的支持方式与工具调用完全相同。使用`Runner.run_streamed`可以在模型仍在工作时
+接收增量MCP输出：
 
 ```python
 result = Runner.run_streamed(agent, "Summarise this repository's top languages")
@@ -19115,7 +19123,7 @@ print(result.final_output)
 
 ### 可选审批流程
 
-如果某个服务可能执行敏感操作，你可以要求每次工具执行前都经过人工或程序化审批。在`tool_config`中使用单一策略（`"always"`、`"never"`）或将工具名称映射到策略的字典来配置`require_approval`。要在Python中做出决定，请提供`on_approval_request`回调。
+如果服务可以执行敏感操作，你可以要求在每次执行工具前进行人工或程序化审批。在`tool_config`中配置`require_approval`，其值可以是单一策略（`"always"`、`"never"`），也可以是将工具名称映射到策略的字典。如需在Python中做出决定，请提供`on_approval_request`回调。
 
 ```python
 from agents import MCPToolApprovalFunctionResult, MCPToolApprovalRequest
@@ -19143,11 +19151,11 @@ agent = Agent(
 )
 ```
 
-该回调可以是同步或异步的，并会在模型需要审批数据才能继续运行时被调用。
+该回调可以是同步或异步的，并且每当模型需要审批信息才能继续运行时都会被调用。
 
-### 连接器支持的托管服务
+### 连接器支持的托管式服务
 
-托管MCP还支持OpenAI连接器。无需指定`server_url`，而是提供`connector_id`和访问令牌。Responses API会处理身份验证，托管服务会公开连接器的工具。
+托管式MCP还支持OpenAI连接器。你无需指定`server_url`，只需提供`connector_id`和访问令牌。Responses API会处理身份验证，托管式服务则会公开连接器的工具。
 
 ```python
 import os
@@ -19163,11 +19171,11 @@ HostedMCPTool(
 )
 ```
 
-完整可运行的托管工具代码示例——包括流式传输、审批和连接器——位于[`examples/hosted_mcp`](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp)。
+完整可运行的托管工具示例（包括流式传输、审批和连接器）位于[`examples/hosted_mcp`](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp)。
 
 ## 2. Streamable HTTP MCP服务
 
-当你想自行管理网络连接时，请使用[`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]。当你控制传输方式，或希望在自己的基础设施中运行服务并保持低延迟时，Streamable HTTP服务是理想选择。
+如果希望自行管理网络连接，请使用[`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]。当你需要控制传输方式，或希望在自己的基础设施中运行服务并保持较低延迟时，Streamable HTTP服务是理想选择。
 
 ```python
 import asyncio
@@ -19202,15 +19210,15 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
-构造函数接受其他选项：
+构造函数还接受以下选项：
 
 - `client_session_timeout_seconds`控制HTTP读取超时。
-- `use_structured_content`控制是否优先使用`tool_result.structured_content`而不是文本输出。
+- `use_structured_content`控制是否优先使用`tool_result.structured_content`而非文本输出。
 - `max_retry_attempts`和`retry_backoff_seconds_base`为`list_tools()`和`call_tool()`添加自动重试。
-- `tool_filter`允许你仅公开工具的一个子集（参见[工具筛选](#tool-filtering)）。
-- `require_approval`为本地MCP工具启用人在回路审批策略。
-- `failure_error_function`自定义模型可见的MCP工具失败消息；将其设置为`None`则改为抛出错误。
-- `tool_meta_resolver`会在`call_tool()`之前注入每次调用的MCP`_meta`载荷。
+- `tool_filter`用于仅公开工具的子集（请参阅[工具筛选](#tool-filtering)）。
+- `require_approval`为本地MCP工具启用人工介入审批策略。
+- `failure_error_function`用于自定义模型可见的MCP工具失败消息；将其设置为`None`则改为抛出错误。
+- `tool_meta_resolver`会在`call_tool()`之前注入每次调用的MCP `_meta`载荷。
 
 ### 本地MCP服务的审批策略
 
@@ -19219,8 +19227,8 @@ asyncio.run(main())
 支持的形式：
 
 - 对所有工具使用`"always"`或`"never"`。
-- `True` / `False`（等同于always/never）。
-- 按工具的映射，例如`{"delete_file": "always", "read_file": "never"}`。
+- `True` / `False`（分别等同于always/never）。
+- 按工具配置的映射，例如`{"delete_file": "always", "read_file": "never"}`。
 - 分组对象：`{"always": {"tool_names": [...]}, "never": {"tool_names": [...]}}`。
 
 ```python
@@ -19232,11 +19240,11 @@ async with MCPServerStreamableHttp(
     ...
 ```
 
-有关完整的暂停/恢复流程，请参阅[人在回路](human_in_the_loop.md)和`examples/mcp/get_all_mcp_tools_example/main.py`。
+有关完整的暂停/恢复流程，请参阅[人工介入](human_in_the_loop.md)和`examples/mcp/get_all_mcp_tools_example/main.py`。
 
 ### 使用`tool_meta_resolver`的每次调用元数据
 
-当你的MCP服务期望在`_meta`中接收请求元数据（例如租户ID或追踪上下文）时，请使用`tool_meta_resolver`。下面的示例假定你将一个`dict`作为`context`传递给`Runner.run(...)`。
+当MCP服务要求在`_meta`中包含请求元数据（例如租户ID或追踪上下文）时，请使用`tool_meta_resolver`。以下示例假设你将`dict`作为`context`传递给`Runner.run(...)`。
 
 ```python
 from agents.mcp import MCPServerStreamableHttp, MCPToolMetaContext
@@ -19257,19 +19265,19 @@ server = MCPServerStreamableHttp(
 )
 ```
 
-如果你的运行上下文是Pydantic模型、dataclass或自定义类，请改用属性访问读取租户ID。
+如果运行上下文是Pydantic模型、数据类或自定义类，请改为通过属性访问读取租户ID。
 
-### MCP工具输出：文本和图像
+### MCP工具输出：文本与图像
 
-当MCP工具返回图像内容时，SDK会自动将其映射为图像工具输出条目。混合的文本/图像响应会作为输出项列表转发，因此智能体可以像消费常规工具调用的图像输出一样消费MCP图像结果。
+当MCP工具返回图像内容时，SDK会自动将其映射为图像工具输出条目。混合文本/图像响应会作为输出项列表转发，因此智能体可以像使用普通工具调用产生的图像输出一样使用MCP图像结果。
 
-## 3. HTTP with SSE MCP服务
+## 3. 采用SSE的HTTP MCP服务
 
 !!! warning
 
-    MCP项目已弃用Server-Sent Events传输。对于新的集成，请优先选择Streamable HTTP或stdio；仅为旧服务保留SSE。
+    MCP项目已弃用服务端发送事件传输方式。新集成应优先使用Streamable HTTP或stdio，仅为旧版服务保留SSE。
 
-如果MCP服务实现了HTTP with SSE传输，请实例化[`MCPServerSse`][agents.mcp.server.MCPServerSse]。除传输方式外，API与Streamable HTTP服务相同。
+如果MCP服务实现了采用SSE的HTTP传输方式，请实例化[`MCPServerSse`][agents.mcp.server.MCPServerSse]。除传输方式外，其API与Streamable HTTP服务完全相同。
 
 ```python
 
@@ -19298,7 +19306,7 @@ async with MCPServerSse(
 
 ## 4. stdio MCP服务
 
-对于作为本地子进程运行的MCP服务，请使用[`MCPServerStdio`][agents.mcp.server.MCPServerStdio]。SDK会启动该进程、保持管道打开，并在上下文管理器退出时自动关闭它们。此选项适合快速概念验证，或服务仅公开命令行入口点的情况。
+对于作为本地子进程运行的MCP服务，请使用[`MCPServerStdio`][agents.mcp.server.MCPServerStdio]。SDK会启动进程、保持管道打开，并在退出上下文管理器时自动关闭它们。此选项适用于快速构建概念验证，或服务仅提供命令行入口点的情况。
 
 ```python
 from pathlib import Path
@@ -19326,7 +19334,7 @@ async with MCPServerStdio(
 
 ## 5. MCP服务管理器
 
-当你有多个MCP服务时，请使用`MCPServerManager`预先连接它们，并向你的智能体公开已连接的子集。有关构造函数选项和重新连接行为，请参阅[MCPServerManager API参考](ref/mcp/manager.md)。
+当你有多个MCP服务时，可使用`MCPServerManager`预先连接它们，并向智能体公开已连接的服务子集。有关构造函数选项和重新连接行为，请参阅[MCPServerManager API参考](ref/mcp/manager.md)。
 
 ```python
 from agents import Agent, Runner
@@ -19350,18 +19358,18 @@ async with MCPServerManager(servers) as manager:
 关键行为：
 
 - 当`drop_failed_servers=True`（默认值）时，`active_servers`仅包含成功连接的服务。
-- 失败会记录在`failed_servers`和`errors`中。
-- 设置`strict=True`会在首次连接失败时抛出错误。
-- 调用`reconnect(failed_only=True)`以重试失败的服务，或调用`reconnect(failed_only=False)`以重启所有服务。
-- 使用`connect_timeout_seconds`、`cleanup_timeout_seconds`和`connect_in_parallel`来调整生命周期行为。
+- 失败信息会记录在`failed_servers`和`errors`中。
+- 设置`strict=True`可在第一次连接失败时抛出异常。
+- 调用`reconnect(failed_only=True)`可重试连接失败的服务，调用`reconnect(failed_only=False)`则会重启所有服务。
+- 使用`connect_timeout_seconds`、`cleanup_timeout_seconds`和`connect_in_parallel`调整生命周期行为。
 
-## 通用服务能力
+## 常见服务能力
 
-以下各节适用于各种MCP服务传输方式（确切API范围取决于服务类）。
+以下各节适用于各种MCP服务传输方式（确切的API接口取决于服务类）。
 
 ## 工具筛选
 
-每个MCP服务都支持工具筛选器，以便你仅公开智能体所需的函数。筛选可以在构造时进行，也可以在每次运行时动态进行。
+每个MCP服务都支持工具筛选，因此你可以仅公开智能体所需的函数。筛选既可以在构造时执行，也可以在每次运行时动态执行。
 
 ### 静态工具筛选
 
@@ -19387,7 +19395,7 @@ filesystem_server = MCPServerStdio(
 
 ### 动态工具筛选
 
-对于更复杂的逻辑，请传入一个接收[`ToolFilterContext`][agents.mcp.ToolFilterContext]的可调用对象。该可调用对象可以是同步或异步的；当工具应被公开时返回`True`。
+对于更复杂的逻辑，请传入一个接收[`ToolFilterContext`][agents.mcp.ToolFilterContext]的可调用对象。该可调用对象可以是同步或异步的，并在应公开工具时返回`True`。
 
 ```python
 from pathlib import Path
@@ -19411,15 +19419,15 @@ async with MCPServerStdio(
     ...
 ```
 
-筛选上下文会公开当前活动的`run_context`、请求这些工具的`agent`以及`server_name`。
+筛选上下文会提供当前`run_context`、请求工具的`agent`以及`server_name`。
 
 ## 提示词
 
 MCP服务还可以提供用于动态生成智能体指令的提示词。支持提示词的服务会公开两个
 方法：
 
-- `list_prompts()`枚举可用的提示词模板。
-- `get_prompt(name, arguments)`获取一个具体提示词，可选带有参数。
+- `list_prompts()`列出可用的提示词模板。
+- `get_prompt(name, arguments)`获取具体提示词，并可选择附带参数。
 
 ```python
 from agents import Agent
@@ -19439,22 +19447,22 @@ agent = Agent(
 
 ## 缓存
 
-每次智能体运行都会在每个MCP服务上调用`list_tools()`。远程服务可能引入明显延迟，因此所有MCP服务类都公开了`cache_tools_list`选项。仅当你确信工具定义不会频繁变化时，才将其设置为`True`。要在之后强制获取新列表，请在服务实例上调用`invalidate_tools_cache()`。
+每次智能体运行都会在每个MCP服务上调用`list_tools()`。远程服务可能会引入明显延迟，因此所有MCP服务类都提供`cache_tools_list`选项。仅当你确信工具定义不会频繁变化时，才将其设置为`True`。如需之后强制获取最新列表，请在服务实例上调用`invalidate_tools_cache()`。
 
 ## 追踪
 
 [追踪](./tracing.md)会自动捕获MCP活动，包括：
 
-1. 调用MCP服务以列出工具。
-2. 工具调用中的MCP相关信息。
+1. 为列出工具而对MCP服务发起的调用。
+2. 工具调用中与MCP相关的信息。
 
 ![MCP追踪截图](../assets/images/mcp-tracing.jpg)
 
 ## 延伸阅读
 
-- [Model Context Protocol](https://modelcontextprotocol.io/) – 规范和设计指南。
-- [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) – 可运行的stdio、SSE和Streamable HTTP示例代码。
-- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 完整的托管MCP演示，包括审批和连接器。
+- [Model Context Protocol](https://modelcontextprotocol.io/) – 规范与设计指南。
+- [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) – 可运行的stdio、SSE和Streamable HTTP代码示例。
+- [examples/hosted_mcp](https://github.com/openai/openai-agents-python/tree/main/examples/hosted_mcp) – 包含审批和连接器的完整托管式MCP演示。
 
 ================
 File: docs/zh/multi_agent.md
@@ -21069,43 +21077,43 @@ search:
 ---
 # 工具
 
-工具让智能体能够执行操作：例如获取数据、运行代码、调用外部 API，甚至使用计算机。SDK 支持五个目录：
+工具让智能体能够执行操作，例如获取数据、运行代码、调用外部 API，甚至操作计算机。SDK 支持五个目录：
 
--   由OpenAI托管的工具：与模型一起在OpenAI服务上运行。
+-   由OpenAI托管的工具：与模型一同在OpenAI服务上运行。
 -   本地/运行时执行工具：`ComputerTool` 和 `ApplyPatchTool` 始终在你的环境中运行，而 `ShellTool` 可以在本地或托管容器中运行。
--   Function calling：将任意 Python 函数封装为工具。
+-   Function Calling：将任意 Python 函数封装为工具。
 -   Agents as tools：将智能体公开为可调用工具，而无需完整的任务转移。
--   实验性 Codex 工具：通过工具调用运行限定于工作区的 Codex 任务。
+-   实验性功能：Codex 工具：通过工具调用运行限定于工作区的 Codex 任务。
 
 ## 工具类型选择
 
-将本页面用作目录，然后跳转到与你所控制运行时相匹配的章节。
+可将本页面作为目录，然后跳转到与你所控制的运行时相匹配的部分。
 
 | 如果你想要…… | 从这里开始 |
 | --- | --- |
-| 使用由OpenAI管理的工具（网络检索、文件检索、Code Interpreter、托管MCP、图像生成） | [托管工具](#hosted-tools) |
-| 使用工具搜索将大型工具集合推迟到运行时加载 | [托管工具搜索](#hosted-tool-search) |
-| 通过生成的 JavaScript 协调多个工具调用 | [编程式工具调用](#programmatic-tool-calling) |
-| 在自己的进程或环境中运行工具 | [本地运行时工具](#local-runtime-tools) |
+| 使用由OpenAI管理的工具（网络检索、文件检索、Code Interpreter、托管 MCP、图像生成） | [托管工具](#hosted-tools) |
+| 通过工具搜索将大型工具集延迟到运行时加载 | [托管工具搜索](#hosted-tool-search) |
+| 通过生成的 JavaScript 协调多个工具调用 | [程序化工具调用](#programmatic-tool-calling) |
+| 在你自己的进程或环境中运行工具 | [本地运行时工具](#local-runtime-tools) |
 | 将 Python 函数封装为工具 | [工具调用](#function-tools) |
 | 让一个智能体在不进行任务转移的情况下调用另一个智能体 | [Agents as tools](#agents-as-tools) |
-| 从智能体运行限定于工作区的 Codex 任务 | [实验性 Codex 工具](#experimental-codex-tool) |
+| 从智能体运行限定于工作区的 Codex 任务 | [实验性功能：Codex 工具](#experimental-codex-tool) |
 
 ## 托管工具
 
-使用 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 时，OpenAI 提供了一些内置工具：
+使用 [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] 时，OpenAI提供了一些内置工具：
 
--   [`WebSearchTool`][agents.tool.WebSearchTool] 让智能体能够进行网络检索。
+-   [`WebSearchTool`][agents.tool.WebSearchTool] 允许智能体检索网络。
 -   [`FileSearchTool`][agents.tool.FileSearchTool] 允许从你的 OpenAI 向量存储中检索信息。
--   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 让 LLM 能够在沙盒环境中执行代码。
--   [`HostedMCPTool`][agents.tool.HostedMCPTool] 将远程MCP服务的工具公开给模型。
+-   [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool] 允许 LLM 在沙盒环境中执行代码。
+-   [`HostedMCPTool`][agents.tool.HostedMCPTool] 将远程 MCP 服务的工具公开给模型。
 -   [`ImageGenerationTool`][agents.tool.ImageGenerationTool] 根据提示词生成图像。
--   [`ToolSearchTool`][agents.tool.ToolSearchTool] 让模型能够按需加载延迟加载的工具、命名空间或托管MCP服务。
--   [`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool] 让模型能够通过生成的 JavaScript 协调符合条件的工具。
+-   [`ToolSearchTool`][agents.tool.ToolSearchTool] 允许模型按需加载延迟加载的工具、命名空间或托管 MCP 服务。
+-   [`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool] 允许模型通过生成的 JavaScript 协调符合条件的工具。
 
 高级托管搜索选项：
 
--   除了 `vector_store_ids` 和 `max_num_results`，`FileSearchTool` 还支持 `filters`、`ranking_options` 和 `include_search_results`。
+-   除 `vector_store_ids` 和 `max_num_results` 外，`FileSearchTool` 还支持 `filters`、`ranking_options` 和 `include_search_results`。
 -   `WebSearchTool` 支持 `filters`、`user_location` 和 `search_context_size`。
 
 ```python
@@ -21129,9 +21137,9 @@ async def main():
 
 ### 托管工具搜索
 
-工具搜索让 OpenAI Responses 模型能够将大型工具集合推迟到运行时加载，使模型仅加载当前轮次所需的子集。当你有大量工具调用、命名空间组或托管MCP服务，并且希望在不预先公开每个工具的情况下减少工具架构所占的 token 时，这非常有用。
+工具搜索允许 OpenAI Responses 模型将大型工具集延迟到运行时加载，使模型仅加载当前轮次所需的工具子集。当你拥有大量工具调用、命名空间组或托管 MCP 服务，并希望在不预先公开所有工具的情况下减少工具模式所占用的 token 时，此功能非常有用。
 
-如果候选工具在构建智能体时已经确定，请优先使用托管工具搜索。如果你的应用需要动态决定加载哪些内容，Responses API 也支持由客户端执行的工具搜索，但标准 `Runner` 不会自动执行该模式。
+如果构建智能体时已经知道候选工具，请从托管工具搜索开始。如果你的应用需要动态决定加载哪些内容，Responses API 也支持由客户端执行的工具搜索，但标准 `Runner` 不会自动执行该模式。
 
 ```python
 from typing import Annotated
@@ -21176,26 +21184,26 @@ print(result.final_output)
 
 注意事项：
 
--   托管工具搜索仅适用于 OpenAI Responses 模型。当前 Python SDK 支持依赖于 `openai>=2.25.0`。
--   在智能体上配置延迟加载的工具集合时，只添加一个 `ToolSearchTool()`。
--   可搜索的工具集合包括 `@function_tool(defer_loading=True)`、`tool_namespace(name=..., description=..., tools=[...])` 和 `HostedMCPTool(tool_config={..., "defer_loading": True})`。
+-   托管工具搜索仅适用于 OpenAI Responses 模型。当前 Python SDK 支持情况取决于 `openai>=2.25.0`。
+-   在智能体上配置延迟加载的工具集时，只添加一个 `ToolSearchTool()`。
+-   可搜索的工具集包括 `@function_tool(defer_loading=True)`、`tool_namespace(name=..., description=..., tools=[...])` 和 `HostedMCPTool(tool_config={..., "defer_loading": True})`。
 -   延迟加载的工具调用必须与 `ToolSearchTool()` 配合使用。仅包含命名空间的设置也可以使用 `ToolSearchTool()`，让模型按需加载正确的工具组。
--   `tool_namespace()` 将 `FunctionTool` 实例归入一个具有共享名称和描述的命名空间。当你有许多相关工具（例如 `crm`、`billing` 或 `shipping`）时，这通常是最合适的方式。
--   OpenAI 的官方最佳实践指南是[尽可能使用命名空间](https://developers.openai.com/api/docs/guides/tools-tool-search#use-namespaces-where-possible)。
--   在可能的情况下，优先使用命名空间或托管MCP服务，而不是大量单独延迟加载的函数。它们通常能为模型提供更好的高级搜索界面，并节省更多 token。
--   命名空间可以混合包含立即可用和延迟加载的工具。没有 `defer_loading=True` 的工具仍可立即调用，而同一命名空间中的延迟加载工具则通过工具搜索加载。
--   根据经验，每个命名空间应保持相对精简，最好少于 10 个函数。
--   具名 `tool_choice` 不能以单独的命名空间名称或仅延迟加载的工具为目标。请优先使用 `auto`、`required` 或真正的顶层可调用工具名称。
--   `ToolSearchTool(execution="client")` 用于手动编排 Responses。如果模型发出由客户端执行的 `tool_search_call`，标准 `Runner` 会引发异常，而不会替你执行。
--   工具搜索活动会出现在 [`RunResult.new_items`](results.md#new-items) 和 [`RunItemStreamEvent`](streaming.md#run-item-event-names) 中，并具有专用的项目和事件类型。
--   有关命名空间加载和顶层延迟加载工具的完整可运行代码示例，请参阅 `examples/tools/tool_search.py`。
+-   `tool_namespace()` 将多个 `FunctionTool` 实例归入一个共享的命名空间名称和描述下。当你拥有大量相关工具（例如 `crm`、`billing` 或 `shipping`）时，这通常是最佳选择。
+-   OpenAI官方最佳实践指南建议[尽可能使用命名空间](https://developers.openai.com/api/docs/guides/tools-tool-search#use-namespaces-where-possible)。
+-   如有可能，优先使用命名空间或托管 MCP 服务，而不是大量单独延迟加载的函数。它们通常能为模型提供更好的高层级搜索界面，并节省更多 token。
+-   命名空间可以混合包含立即可用和延迟加载的工具。没有 `defer_loading=True` 的工具仍可立即调用，而同一命名空间中的延迟工具则通过工具搜索加载。
+-   根据经验，应让每个命名空间保持较小规模，最好少于 10 个函数。
+-   具名 `tool_choice` 不能以单独的命名空间名称或仅延迟加载的工具为目标。请优先使用 `auto`、`required` 或实际可在顶层调用的工具名称。
+-   `ToolSearchTool(execution="client")` 用于手动编排 Responses。如果模型发出由客户端执行的 `tool_search_call`，标准 `Runner` 会引发异常，而不会替你执行它。
+-   工具搜索活动会以专用条目和事件类型出现在 [`RunResult.new_items`](results.md#new-items) 和 [`RunItemStreamEvent`](streaming.md#run-item-event-names) 中。
+-   有关涵盖命名空间加载和顶层延迟工具的完整可运行代码示例，请参阅 `examples/tools/tool_search.py`。
 -   官方平台指南：[工具搜索](https://developers.openai.com/api/docs/guides/tools-tool-search)。
 
-### 编程式工具调用
+### 程序化工具调用
 
-编程式工具调用让受支持的 OpenAI Responses 模型能够生成 JavaScript，以调用符合条件的工具、组合其输出，并向模型返回一个结果。它适用于范围明确的工作流，这些工作流可受益于循环、分支、并行调用或中间计算，而无需在每次工具调用后都与模型往返交互。
+程序化工具调用允许受支持的 OpenAI Responses 模型生成 JavaScript，以调用符合条件的工具、组合其输出，并向模型返回一个结果。它适用于边界明确的工作流，这些工作流能够受益于循环、分支、并行调用或中间计算，并且不需要在每次工具调用后都与模型往返交互。
 
-生成的程序在全新的托管 V8 环境中运行。它不具备 Node.js API、文件系统或网络访问权限，也不是持久进程。该程序只能与明确允许的工具交互。
+生成的程序在全新的托管 V8 环境中运行。它无法使用 Node.js API，不能访问文件系统或网络，也没有持久化进程。程序只能与明确允许的工具交互。
 
 ```python
 from pydantic import BaseModel
@@ -21232,21 +21240,22 @@ print(result.final_output)
 
 注意事项：
 
--   编程式工具调用仅适用于受支持的 OpenAI Responses 模型。Chat Completions 模型和非 Responses 后端会拒绝 `ProgrammaticToolCallingTool()` 和 `tool_choice="programmatic_tool_calling"`。
--   一个智能体最多只能添加一个 `ProgrammaticToolCallingTool()`。该智能体还必须公开至少一个可通过编程方式调用的工具、一个 `ToolSearchTool()`，或由提示词管理的工具集合。
--   `allowed_callers` 控制工具的调用方式。省略该参数时，仅允许模型直接调用。使用 `["programmatic"]` 可仅允许程序访问，使用 `["direct", "programmatic"]` 则允许两种方式。
--   可选择启用此功能的 SDK 工具类型包括 `FunctionTool`、`CustomTool`、`ShellTool`、`ApplyPatchTool`、`HostedMCPTool` 和 `CodeInterpreterTool`。函数、自定义、shell 和补丁应用工具直接公开 `allowed_callers`。对于托管MCP和 Code Interpreter，请在 `tool_config` 中设置 `allowed_callers`。
--   对于 `@function_tool(allowed_callers=[...])`，Pydantic 模型、TypedDict 或 dataclass 等结构化返回注解会自动转换为严格的对象输出架构，并在值返回给程序之前进行验证。如果函数没有可用的注解，请使用 `output_type=...`；如果你已有严格的对象架构，则可使用较低层级的 `output_json_schema={...}` 作为替代方案。`output_type` 和 `output_json_schema` 互斥。返回普通 `str`、`Any` 和 `None` 时仍不指定类型。
--   由程序拥有的 SDK 工具仍使用常规 Runner 生命周期。工具输入和输出安全防护措施、钩子、超时、并发限制、重试、审批、会话以及 `RunState` 暂停/恢复行为仍然适用，并且 SDK 会保留每个子调用与程序调用方之间的关系。
--   对审批敏感或影响较大的工具通常更适合作为直接调用保留，以便人员在每项操作成为大型程序的一部分之前进行审查。如果由程序拥有的调用因审批而暂停，请通过 `RunState` 处理中断，并照常恢复原始运行。
--   编程式工具调用可以与[托管工具搜索](#hosted-tool-search)结合使用。生成的程序必须先由模型加载延迟工具，然后才能调用它们。
--   `program` 项目及其由程序拥有的子调用会显示为 [`ToolCallItem`][agents.items.ToolCallItem] 条目。对应的 `program_output` 会显示为 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]。有关检查详情，请参阅[结果](results.md#new-items)和[流式传输](streaming.md#run-item-event-names)。
+-   程序化工具调用仅适用于受支持的 OpenAI Responses 模型。Chat Completions 模型和非 Responses 后端会拒绝 `ProgrammaticToolCallingTool()` 和 `tool_choice="programmatic_tool_calling"`。
+-   一个智能体最多添加一个 `ProgrammaticToolCallingTool()`。智能体还必须公开至少一个可由程序调用的工具、一个由命名空间、延迟函数或延迟托管 MCP 服务支持的 `ToolSearchTool()`，或者一个由提示词管理的不透明工具集。没有可搜索工具集的单独 `ToolSearchTool()` 会被拒绝。
+-   `allowed_callers` 控制工具的调用方式。省略它时，仅允许模型直接调用。使用 `["programmatic"]` 可限制为仅由程序访问，使用 `["direct", "programmatic"]` 则可同时允许两种方式。
+-   可选择启用此功能的 SDK 工具类型包括 `FunctionTool`、`CustomTool`、`ShellTool`、`ApplyPatchTool`、`HostedMCPTool` 和 `CodeInterpreterTool`。函数、自定义、Shell 和补丁应用工具直接公开 `allowed_callers`。对于托管 MCP 和 Code Interpreter，请在 `tool_config` 内设置 `allowed_callers`。
+-   对于 `@function_tool(allowed_callers=[...])`，Pydantic 模型、TypedDict 或 dataclass 等结构化返回注解会自动转换为严格的对象输出模式，并在将值返回给程序之前进行验证。如果函数没有可用的注解，请使用 `output_type=...`；如果你已经拥有严格的对象模式，可使用更底层的 `output_json_schema={...}` 备用方式。`output_type` 与 `output_json_schema` 互斥。普通 `str`、`Any` 和 `None` 返回值仍不带类型。对于由模式支持且归程序所有的调用，默认失败格式化程序会被禁用，因为其自由格式文本不符合输出模式。因此，除非你提供返回符合模式的 JSON 的自定义 `failure_error_function`，否则处理程序异常将继续向上传播。
+-   归程序所有的 SDK 工具仍使用正常的 Runner 生命周期。工具输入和输出安全防护措施、钩子、超时、并发限制、审批、会话以及 `RunState` 暂停/恢复行为仍然适用，SDK 也会保留每个子调用与程序调用者之间的关系。
+-   只要存在 `ProgrammaticToolCallingTool()`，模型请求重试就会采用更严格的重放安全边界，即使程序尚未执行也是如此。SDK 会为这些请求禁用提供方管理的重试和 WebSocket 事件前重试。仅当提供方建议明确将重放标记为安全时，Runner 重试策略才会重试；单独使用 `retry_policies.network_error()` 不会覆盖此边界。
+-   涉及审批或影响较大的工具通常更适合作为直接调用，以便人工在每个操作成为大型程序的一部分之前进行审查。如果归程序所有的调用因等待审批而暂停，请通过 `RunState` 处理中断，并照常恢复原始运行。
+-   程序化工具调用可以与[托管工具搜索](#hosted-tool-search)结合使用。模型必须先加载延迟工具，生成的程序才能调用它们。
+-   `program` 条目及其普通的归程序所有的子工具调用会显示为 [`ToolCallItem`][agents.items.ToolCallItem] 条目。对应的 `program_output` 会显示为 [`ToolCallOutputItem`][agents.items.ToolCallOutputItem]。托管 MCP 审批请求和工具目录则使用专用的 MCP 条目和流式事件。有关检查详情，请参阅[结果](results.md#new-items)和[流式传输](streaming.md#run-item-event-names)。
 -   有关完整的并发库存规划代码示例，请参阅 `examples/tools/programmatic_tool_calling.py`。
--   官方平台指南：[编程式工具调用](https://developers.openai.com/api/docs/guides/tools-programmatic-tool-calling)。
+-   官方平台指南：[程序化工具调用](https://developers.openai.com/api/docs/guides/tools-programmatic-tool-calling)。
 
-### 托管容器 shell 与技能
+### 托管容器 Shell 与技能
 
-`ShellTool` 还支持在OpenAI托管的容器中执行。当你希望模型在托管容器中运行 shell 命令，而不是在本地运行时中运行时，请使用此模式。
+`ShellTool` 还支持在OpenAI托管的容器中执行。当你希望模型在托管容器中而不是本地运行时中执行 Shell 命令时，请使用此模式。
 
 ```python
 from agents import Agent, Runner, ShellTool, ShellToolSkillReference
@@ -21279,52 +21288,52 @@ result = await Runner.run(
 print(result.final_output)
 ```
 
-若要在后续运行中复用现有容器，请设置 `environment={"type": "container_reference", "container_id": "cntr_..."}`。
+要在后续运行中复用现有容器，请设置 `environment={"type": "container_reference", "container_id": "cntr_..."}`。
 
 注意事项：
 
--   托管 shell 可通过 Responses API 的 shell 工具使用。
+-   托管 Shell 可通过 Responses API 的 Shell 工具使用。
 -   `container_auto` 为请求预配容器；`container_reference` 复用现有容器。
 -   `container_auto` 还可以包含 `file_ids` 和 `memory_limit`。
 -   `environment.skills` 接受技能引用和内联技能包。
 -   使用托管环境时，请勿在 `ShellTool` 上设置 `executor`、`needs_approval` 或 `on_approval`。
 -   `network_policy` 支持 `disabled` 和 `allowlist` 模式。
--   在允许列表模式下，`network_policy.domain_secrets` 可以按名称注入限定于域的密钥。
+-   在允许列表模式下，`network_policy.domain_secrets` 可以按名称注入限定于域名的密钥。
 -   有关完整代码示例，请参阅 `examples/tools/container_shell_skill_reference.py` 和 `examples/tools/container_shell_inline_skill.py`。
--   OpenAI 平台指南：[Shell](https://platform.openai.com/docs/guides/tools-shell)和[技能](https://platform.openai.com/docs/guides/tools-skills)。
+-   OpenAI平台指南：[Shell](https://platform.openai.com/docs/guides/tools-shell)和[技能](https://platform.openai.com/docs/guides/tools-skills)。
 
 ## 本地运行时工具
 
-本地运行时工具在模型响应本身之外执行。模型仍然决定何时调用它们，但实际工作由你的应用或配置的执行环境完成。
+本地运行时工具在模型响应本身之外执行。模型仍会决定何时调用它们，但实际工作由你的应用或已配置的执行环境完成。
 
-`ComputerTool` 和 `ApplyPatchTool` 始终需要由你提供本地实现。`ShellTool` 横跨两种模式：如果需要托管执行，请使用上述托管容器配置；如果希望命令在你自己的进程中运行，请使用下述本地运行时配置。
+`ComputerTool` 和 `ApplyPatchTool` 始终需要由你提供本地实现。`ShellTool` 横跨两种模式：如果需要托管执行，请使用上面的托管容器配置；如果希望命令在你自己的进程中运行，请使用下面的本地运行时配置。
 
 本地运行时工具要求你提供实现：
 
 -   [`ComputerTool`][agents.tool.ComputerTool]：实现 [`Computer`][agents.computer.Computer] 或 [`AsyncComputer`][agents.computer.AsyncComputer] 接口，以启用 GUI/浏览器自动化。
--   [`ShellTool`][agents.tool.ShellTool]：适用于本地执行和托管容器执行的最新 shell 工具。
--   [`LocalShellTool`][agents.tool.LocalShellTool]：旧版本地 shell 集成。
--   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]：实现 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor]，以便在本地应用差异。
--   本地 shell 技能可通过 `ShellTool(environment={"type": "local", "skills": [...]})` 使用。
+-   [`ShellTool`][agents.tool.ShellTool]：同时适用于本地执行和托管容器执行的最新 Shell 工具。
+-   [`LocalShellTool`][agents.tool.LocalShellTool]：旧版本地 Shell 集成。
+-   [`ApplyPatchTool`][agents.tool.ApplyPatchTool]：实现 [`ApplyPatchEditor`][agents.editor.ApplyPatchEditor]，以在本地应用差异。
+-   可通过 `ShellTool(environment={"type": "local", "skills": [...]})` 使用本地 Shell 技能。
 
 ### ComputerTool 与 Responses 计算机工具
 
-`ComputerTool` 仍然是一个本地执行框架：你需要提供 [`Computer`][agents.computer.Computer] 或 [`AsyncComputer`][agents.computer.AsyncComputer] 实现，SDK 会将该执行框架映射到 OpenAI Responses API 的计算机操作界面。
+`ComputerTool` 仍是本地运行框架：你需要提供 [`Computer`][agents.computer.Computer] 或 [`AsyncComputer`][agents.computer.AsyncComputer] 实现，SDK 会将该运行框架映射到 OpenAI Responses API 的计算机操作界面。
 
-对于明确的 [`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5) 请求，SDK 会发送正式发布版内置工具载荷 `{"type": "computer"}`。较旧的 `computer-use-preview` 模型则继续使用预览版载荷 `{"type": "computer_use_preview", "environment": ..., "display_width": ..., "display_height": ...}`。这与 OpenAI 的[计算机操作指南](https://developers.openai.com/api/docs/guides/tools-computer-use/)中所述的平台迁移一致：
+对于显式的 [`gpt-5.5`](https://developers.openai.com/api/docs/models/gpt-5.5) 请求，SDK 会发送正式发布版内置工具载荷 `{"type": "computer"}`。较旧的 `computer-use-preview` 模型仍使用预览版载荷 `{"type": "computer_use_preview", "environment": ..., "display_width": ..., "display_height": ...}`。这与 OpenAI[计算机操作指南](https://developers.openai.com/api/docs/guides/tools-computer-use/)中所述的平台迁移一致：
 
 -   模型：`computer-use-preview` -> `gpt-5.5`
 -   工具选择器：`computer_use_preview` -> `computer`
--   计算机调用结构：每个 `computer_call` 包含一个 `action` -> `computer_call` 上批量的 `actions[]`
+-   计算机调用形式：每个 `computer_call` 包含一个 `action` -> `computer_call` 上的批量 `actions[]`
 -   截断：预览版路径要求使用 `ModelSettings(truncation="auto")` -> 正式发布版路径不要求
 
-SDK 会根据实际 Responses 请求中的有效模型选择相应的传输结构。如果你使用提示词模板，并且由于模型由提示词指定而使请求省略 `model`，SDK 会继续使用兼容预览版的计算机载荷；除非你明确保留 `model="gpt-5.5"`，或通过 `ModelSettings(tool_choice="computer")` 或 `ModelSettings(tool_choice="computer_use")` 强制使用正式发布版选择器。
+SDK 会根据实际 Responses 请求中的有效模型选择该传输格式。如果你使用提示词模板，并且由于模型由提示词指定而在请求中省略 `model`，SDK 会继续使用与预览版兼容的计算机载荷，除非你显式保留 `model="gpt-5.5"`，或者使用 `ModelSettings(tool_choice="computer")` 或 `ModelSettings(tool_choice="computer_use")` 强制选择正式发布版选择器。
 
-存在 [`ComputerTool`][agents.tool.ComputerTool] 时，`tool_choice="computer"`、`"computer_use"` 和 `"computer_use_preview"` 均会被接受，并规范化为与有效请求模型匹配的内置选择器。不存在 `ComputerTool` 时，这些字符串仍然会像普通函数名称一样处理。
+存在 [`ComputerTool`][agents.tool.ComputerTool] 时，`tool_choice="computer"`、`"computer_use"` 和 `"computer_use_preview"` 都会被接受，并被规范化为与有效请求模型相匹配的内置选择器。不存在 `ComputerTool` 时，这些字符串仍会被视为普通函数名称。
 
-当 `ComputerTool` 由 [`ComputerProvider`][agents.tool.ComputerProvider] 工厂支持时，这一区别很重要。正式发布版 `computer` 载荷在序列化时不需要 `environment` 或尺寸，因此工厂尚未解析也没有问题。兼容预览版的序列化仍然需要已解析的 `Computer` 或 `AsyncComputer` 实例，以便 SDK 可以发送 `environment`、`display_width` 和 `display_height`。
+当 `ComputerTool` 由 [`ComputerProvider`][agents.tool.ComputerProvider] 工厂支持时，这一区别非常重要。正式发布版 `computer` 载荷在序列化时不需要 `environment` 或尺寸，因此工厂尚未解析也没有问题。与预览版兼容的序列化仍需要已解析的 `Computer` 或 `AsyncComputer` 实例，以便 SDK 发送 `environment`、`display_width` 和 `display_height`。
 
-在运行时，两条路径仍然使用同一个本地执行框架。预览版响应会发出包含单个 `action` 的 `computer_call` 项目；`gpt-5.5` 可以发出批量的 `actions[]`，SDK 会按顺序执行这些操作，然后生成一个 `computer_call_output` 截图项目。有关基于 Playwright 的可运行执行框架，请参阅 `examples/tools/computer_use.py`。
+在运行时，两条路径仍使用相同的本地运行框架。预览版响应会发出包含单个 `action` 的 `computer_call` 条目；`gpt-5.5` 可以发出批量 `actions[]`，SDK 会依次执行这些操作，然后生成 `computer_call_output` 屏幕截图条目。有关基于 Playwright 的可运行框架，请参阅 `examples/tools/computer_use.py`。
 
 ```python
 from agents import Agent, ApplyPatchTool, ShellTool
@@ -21370,14 +21379,16 @@ agent = Agent(
 
 你可以将任意 Python 函数用作工具。Agents SDK 会自动设置该工具：
 
--   工具名称将是 Python 函数的名称（也可以自行提供名称）
--   工具描述将取自函数的文档字符串（也可以自行提供描述）
--   函数输入的架构会根据函数参数自动创建
+-   工具名称将使用 Python 函数的名称（你也可以提供名称）
+-   工具描述将取自函数的文档字符串（你也可以提供描述）
+-   函数输入的模式会根据函数参数自动创建
 -   除非禁用，否则每个输入的描述都取自函数的文档字符串
 
-我们使用 Python 的 `inspect` 模块提取函数签名，使用 [`griffe`](https://mkdocstrings.github.io/griffe/) 解析文档字符串，并使用 `pydantic` 创建架构。
+由 `@tool` 创建的工具通过只读 `__wrapped__` 属性公开原始 Python 可调用对象。这对检查和测试很有用，但直接调用它会绕过工具运行时管线，包括模式验证、上下文注入、安全防护措施、超时、失败处理和追踪。手动构建的 `FunctionTool` 实例不公开 `__wrapped__`。
 
-使用 OpenAI Responses 模型时，`@function_tool(defer_loading=True)` 会隐藏工具调用，直到 `ToolSearchTool()` 将其加载。你还可以使用 [`tool_namespace()`][agents.tool.tool_namespace] 对相关工具调用进行分组。有关完整设置和限制，请参阅[托管工具搜索](#hosted-tool-search)。
+我们使用 Python 的 `inspect` 模块提取函数签名，并结合 [`griffe`](https://mkdocstrings.github.io/griffe/) 解析文档字符串，再使用 `pydantic` 创建模式。
+
+使用 OpenAI Responses 模型时，`@function_tool(defer_loading=True)` 会隐藏工具调用，直到 `ToolSearchTool()` 加载它。你也可以使用 [`tool_namespace()`][agents.tool.tool_namespace] 对相关的工具调用进行分组。有关完整设置和限制，请参阅[托管工具搜索](#hosted-tool-search)。
 
 ```python
 import json
@@ -21430,10 +21441,10 @@ for tool in agent.tools:
 
 ```
 
-1.  你可以使用任意 Python 类型作为函数参数，并且函数可以是同步或异步的。
-2.  如果存在文档字符串，则会使用它来获取描述和参数描述
+1.  你可以使用任意 Python 类型作为函数参数，函数可以是同步或异步函数。
+2.  如果存在文档字符串，则会使用它来获取描述和参数描述。
 3.  函数可以选择接收 `context`（必须是第一个参数）。你还可以设置覆盖项，例如工具名称、描述、要使用的文档字符串样式等。
-4.  你可以将经过装饰的函数传递给工具列表。
+4.  你可以将经过装饰的函数传入工具列表。
 
 ??? note "展开以查看输出"
 
@@ -21507,11 +21518,11 @@ for tool in agent.tools:
 
 ### 从工具调用返回图像或文件
 
-除了返回文本输出之外，你还可以返回一个或多个图像或文件作为工具调用的输出。为此，可以返回以下任意内容：
+除了返回文本输出外，你还可以将一个或多个图像或文件作为工具调用的输出返回。为此，你可以返回以下任意内容：
 
--   图像：[`ToolOutputImage`][agents.tool.ToolOutputImage]（或其 TypedDict 版本 [`ToolOutputImageDict`][agents.tool.ToolOutputImageDict]）
--   文件：[`ToolOutputFileContent`][agents.tool.ToolOutputFileContent]（或其 TypedDict 版本 [`ToolOutputFileContentDict`][agents.tool.ToolOutputFileContentDict]）
--   文本：字符串、可转换为字符串的对象，或 [`ToolOutputText`][agents.tool.ToolOutputText]（或其 TypedDict 版本 [`ToolOutputTextDict`][agents.tool.ToolOutputTextDict]）
+-   图像：[`ToolOutputImage`][agents.tool.ToolOutputImage]（或 TypedDict 版本 [`ToolOutputImageDict`][agents.tool.ToolOutputImageDict]）
+-   文件：[`ToolOutputFileContent`][agents.tool.ToolOutputFileContent]（或 TypedDict 版本 [`ToolOutputFileContentDict`][agents.tool.ToolOutputFileContentDict]）
+-   文本：字符串、可转换为字符串的对象，或 [`ToolOutputText`][agents.tool.ToolOutputText]（或 TypedDict 版本 [`ToolOutputTextDict`][agents.tool.ToolOutputTextDict]）
 
 ### 自定义工具调用
 
@@ -21519,8 +21530,8 @@ for tool in agent.tools:
 
 -   `name`
 -   `description`
--   `params_json_schema`，即参数的 JSON 架构
--   `on_invoke_tool`，它是一个异步函数，接收 [`ToolContext`][agents.tool_context.ToolContext] 和 JSON 字符串形式的参数，并返回工具输出（例如文本、结构化工具输出对象或输出列表）。
+-   `params_json_schema`，即参数的 JSON 模式
+-   `on_invoke_tool`，即一个异步函数，它接收 [`ToolContext`][agents.tool_context.ToolContext] 和以 JSON 字符串形式提供的参数，并返回工具输出（例如文本、结构化工具输出对象或输出列表）。
 
 ```python
 from typing import Any
@@ -21555,16 +21566,16 @@ tool = FunctionTool(
 
 ### 参数与文档字符串的自动解析
 
-如前所述，我们会自动解析函数签名以提取工具架构，并解析文档字符串以提取工具和各个参数的描述。相关注意事项如下：
+如前所述，我们会自动解析函数签名以提取工具模式，并解析文档字符串以提取工具及各个参数的描述。相关注意事项如下：
 
-1. 签名解析通过 `inspect` 模块完成。我们使用类型注解了解参数类型，并动态构建 Pydantic 模型来表示整体架构。它支持大多数类型，包括 Python 基本类型、Pydantic 模型、TypedDict 等。
-2. 我们使用 `griffe` 解析文档字符串。支持的文档字符串格式包括 `google`、`sphinx` 和 `numpy`。我们会尝试自动检测文档字符串格式，但这只是尽力而为；你可以在调用 `function_tool` 时明确设置格式。也可以将 `use_docstring_info` 设置为 `False` 来禁用文档字符串解析。对于 Google 风格的文档字符串，解析器还接受紧跟在摘要文本之后且中间没有空行的 `Args:`、`Arguments:`、`Params:` 或 `Parameters:` 章节。
+1. 签名解析通过 `inspect` 模块完成。我们使用类型注解理解参数类型，并动态构建 Pydantic 模型来表示整体模式。它支持大多数类型，包括 Python 基本类型、Pydantic 模型、TypedDict 等。
+2. 我们使用 `griffe` 解析文档字符串。支持的文档字符串格式包括 `google`、`sphinx` 和 `numpy`。我们会尝试自动检测文档字符串格式，但这属于尽力而为；你也可以在调用 `function_tool` 时显式设置格式。还可以将 `use_docstring_info` 设置为 `False`，以禁用文档字符串解析。对于 Google 风格的文档字符串，解析器还接受紧接在摘要文本之后且中间没有空行的 `Args:`、`Arguments:`、`Params:` 或 `Parameters:` 部分。
 
-架构提取代码位于 [`agents.function_schema`][]。
+模式提取代码位于 [`agents.function_schema`][]。
 
 ### 使用 Pydantic Field 约束和描述参数
 
-你可以使用 Pydantic 的 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 为工具参数添加约束（例如数字的最小值/最大值、字符串的长度或模式）和描述。与 Pydantic 相同，两种形式都受支持：基于默认值的形式（`arg: int = Field(..., ge=1)`）和 `Annotated` 形式（`arg: Annotated[int, Field(..., ge=1)]`）。生成的 JSON 架构和验证均包含这些约束。
+你可以使用 Pydantic 的 [`Field`](https://docs.pydantic.dev/latest/concepts/fields/) 为工具参数添加约束（例如数字的最小值/最大值、字符串的长度或模式）和描述。与 Pydantic 一样，两种形式均受支持：基于默认值的形式（`arg: int = Field(..., ge=1)`）和 `Annotated` 形式（`arg: Annotated[int, Field(..., ge=1)]`）。生成的 JSON 模式和验证会包含这些约束。
 
 ```python
 from typing import Annotated
@@ -21635,15 +21646,15 @@ except ToolTimeoutError as e:
 
 !!! note
 
-    仅异步 `@function_tool` 处理程序支持超时配置。
+    超时配置仅支持异步 `@function_tool` 处理程序。
 
-### 工具调用中的错误处理
+### 工具调用错误处理
 
-通过 `@function_tool` 创建工具调用时，可以传入 `failure_error_function`。当工具调用崩溃时，此函数会向 LLM 提供错误响应。
+通过 `@function_tool` 创建工具调用时，可以传入 `failure_error_function`。如果工具调用崩溃，该函数会向 LLM 提供错误响应。
 
--   默认情况下（即未传入任何内容时），它会运行 `default_tool_error_function`，告知 LLM 发生了错误。
--   如果传入自己的错误函数，则会改为运行该函数，并将响应发送给 LLM。
--   如果明确传入 `None`，则任何工具调用错误都会重新引发，由你处理。如果模型生成了无效 JSON，这可能是 `ModelBehaviorError`；如果你的代码崩溃，则可能是 `UserError`，等等。
+-   默认情况下（即不传入任何内容时），它会运行 `default_tool_error_function`，告知 LLM 发生了错误。
+-   如果传入自定义错误函数，则会改为运行该函数，并将响应发送给 LLM。
+-   如果显式传入 `None`，任何工具调用错误都会重新引发，供你自行处理。如果模型生成了无效 JSON，这可能是 `ModelBehaviorError`；如果你的代码崩溃，则可能是 `UserError`，等等。
 
 ```python
 from agents import RunContextWrapper
@@ -21667,11 +21678,11 @@ def get_user_profile(user_id: str) -> str:
 
 ```
 
-如果手动创建 `FunctionTool` 对象，则必须在 `on_invoke_tool` 函数内部处理错误。
+如果手动创建 `FunctionTool` 对象，则必须在 `on_invoke_tool` 函数中处理错误。
 
 ## Agents as tools
 
-在某些工作流中，你可能希望由一个中心智能体编排专用智能体网络，而不是转移控制权。你可以通过将智能体建模为工具来实现这一点。
+在某些工作流中，你可能希望由一个中央智能体编排由多个专用智能体组成的网络，而不是转移控制权。你可以通过将智能体建模为工具来实现这一点。
 
 ```python
 import asyncio
@@ -21717,9 +21728,9 @@ if __name__ == "__main__":
 
 ### 工具智能体自定义
 
-`agent.as_tool` 函数是一种便捷方法，可以轻松地将智能体转换为工具。它支持 `max_turns`、`run_config`、`hooks`、`previous_response_id`、`conversation_id`、`session` 和 `needs_approval` 等常见运行时选项。它还通过 `parameters`、`input_builder` 和 `include_input_schema` 支持结构化输入。
+`agent.as_tool` 函数是一种便捷方法，可轻松将智能体转换为工具。它支持常见运行时选项，例如 `max_turns`、`run_config`、`hooks`、`previous_response_id`、`conversation_id`、`session` 和 `needs_approval`。它还通过 `parameters`、`input_builder` 和 `include_input_schema` 支持结构化输入。
 
-状态选项用于配置由工具调用启动的嵌套智能体运行；父运行的对话状态不会自动继承。若要在父运行和嵌套运行之间共享由客户端管理的历史记录，请明确向两者传入相同的 `session`。与 `Runner.run` 一样，应为嵌套运行选择一种状态策略：使用由客户端管理的 `session`，或通过 `previous_response_id` 或 `conversation_id` 在服务端管理延续状态。
+状态选项用于配置由工具调用启动的嵌套智能体运行；父运行的对话状态不会自动继承。若要在父运行和嵌套运行之间共享由客户端管理的历史记录，请显式向两者传入相同的 `session`。与 `Runner.run` 一样，请为嵌套运行选择一种状态策略：使用由客户端管理的 `session`，或者通过 `previous_response_id` 或 `conversation_id` 在服务端延续。
 
 ```python
 from agents.decorators import tool
@@ -21743,12 +21754,12 @@ async def run_my_agent() -> str:
 
 ### 工具智能体的结构化输入
 
-默认情况下，`Agent.as_tool()` 需要单个字符串输入（`{"input": "..."}`），但你可以通过传入 `parameters`（Pydantic 模型或 dataclass 类型）公开结构化架构。
+默认情况下，`Agent.as_tool()` 需要单个字符串输入（`{"input": "..."}`），但你可以通过传入 `parameters`（Pydantic 模型或 dataclass 类型）公开结构化模式。
 
 其他选项：
 
 - `include_input_schema=True` 会在生成的嵌套输入中包含完整的 JSON Schema。
-- `input_builder=...` 让你可以完全自定义如何将结构化工具参数转换为嵌套智能体输入。
+- `input_builder=...` 允许你完全自定义如何将结构化工具参数转换为嵌套智能体输入。
 - `RunContextWrapper.tool_input` 包含嵌套运行上下文中已解析的结构化载荷。
 
 ```python
@@ -21773,17 +21784,17 @@ translator_tool = translator_agent.as_tool(
 
 ### 工具智能体的审批门控
 
-`Agent.as_tool(..., needs_approval=...)` 使用与 `function_tool` 相同的审批流程。如果需要审批，运行会暂停，待处理项目将显示在 `result.interruptions` 中；然后使用 `result.to_state()`，并在调用 `state.approve(...)` 或 `state.reject(...)` 后恢复运行。有关完整的暂停/恢复模式，请参阅[人工介入指南](human_in_the_loop.md)。
+`Agent.as_tool(..., needs_approval=...)` 使用与 `function_tool` 相同的审批流程。如果需要审批，运行会暂停，待处理条目会出现在 `result.interruptions` 中；然后使用 `result.to_state()`，并在调用 `state.approve(...)` 或 `state.reject(...)` 后恢复运行。有关完整的暂停/恢复模式，请参阅[人工介入指南](human_in_the_loop.md)。
 
 ### 自定义输出提取
 
-在某些情况下，你可能希望先修改工具智能体的输出，再将其返回给中心智能体。以下情况可能会需要这样做：
+在某些情况下，你可能希望先修改工具智能体的输出，再将其返回给中央智能体。以下情况可能会用到此功能：
 
--   从子智能体的聊天历史中提取特定信息（例如 JSON 载荷）。
+-   从子智能体的聊天历史记录中提取特定信息（例如 JSON 载荷）。
 -   转换或重新格式化智能体的最终答案（例如将 Markdown 转换为纯文本或 CSV）。
--   验证输出，或在智能体响应缺失或格式错误时提供回退值。
+-   验证输出，或者在智能体响应缺失或格式错误时提供回退值。
 
-你可以通过向 `as_tool` 方法提供 `custom_output_extractor` 参数来实现：
+可以通过向 `as_tool` 方法提供 `custom_output_extractor` 参数来实现：
 
 ```python
 async def extract_json_payload(run_result: RunResult) -> str:
@@ -21802,11 +21813,11 @@ json_tool = data_agent.as_tool(
 )
 ```
 
-在自定义提取器内部，嵌套的 [`RunResult`][agents.result.RunResult] 还会公开 [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]。当你需要在对嵌套结果进行后处理时获取外层工具名称、调用 ID 或原始参数，这会很有用。请参阅[结果指南](results.md#agent-as-tool-metadata)。
+在自定义提取器内部，嵌套的 [`RunResult`][agents.result.RunResult] 还会公开 [`agent_tool_invocation`][agents.result.RunResultBase.agent_tool_invocation]。当你需要在后处理嵌套结果时获取外层工具名称、调用 ID 或原始参数，这一属性非常有用。请参阅[结果指南](results.md#agent-as-tool-metadata)。
 
 ### 嵌套智能体运行的流式传输
 
-向 `as_tool` 传入 `on_stream` 回调，以侦听嵌套智能体发出的流式传输事件，同时仍在流完成后返回其最终输出。
+向 `as_tool` 传入 `on_stream` 回调，以监听嵌套智能体发出的流式事件，同时仍会在流完成后返回其最终输出。
 
 ```python
 from agents import AgentToolStreamEvent
@@ -21827,12 +21838,12 @@ billing_agent_tool = billing_agent.as_tool(
 预期行为：
 
 - 事件类型与 `StreamEvent["type"]` 一致：`raw_response_event`、`run_item_stream_event`、`agent_updated_stream_event`。
-- 提供 `on_stream` 会自动以流式传输模式运行嵌套智能体，并在返回最终输出前耗尽该流。
+- 提供 `on_stream` 后，嵌套智能体会自动以流式传输模式运行，并在返回最终输出前读取完流。
 - 处理程序可以是同步或异步的；每个事件都会按到达顺序传递。
-- 通过模型工具调用来调用工具时，会提供 `tool_call`；直接调用时，其值可能为 `None`。
-- 有关完整的可运行示例，请参阅 `examples/agent_patterns/agents_as_tools_streaming.py`。
+- 通过模型工具调用来调用工具时，会存在 `tool_call`；直接调用时，其值可能为 `None`。
+- 有关完整的可运行代码示例，请参阅 `examples/agent_patterns/agents_as_tools_streaming.py`。
 
-### 条件式工具启用
+### 工具的条件启用
 
 你可以使用 `is_enabled` 参数，在运行时有条件地启用或禁用智能体工具。这样便可根据上下文、用户偏好或运行时条件，动态筛选可供 LLM 使用的工具。
 
@@ -21895,18 +21906,18 @@ asyncio.run(main())
 -   **可调用函数**：接收 `(context, agent)` 并返回布尔值的函数
 -   **异步函数**：用于复杂条件逻辑的异步函数
 
-禁用的工具在运行时对 LLM 完全隐藏，因此适用于：
+禁用的工具在运行时对 LLM 完全不可见，因此此功能适用于：
 
--   根据用户权限进行功能门控
--   特定环境下的工具可用性（开发环境与生产环境）
+-   根据用户权限控制功能
+-   特定于环境的工具可用性（开发环境与生产环境）
 -   对不同工具配置进行 A/B 测试
 -   根据运行时状态动态筛选工具
 
-## 实验性 Codex 工具
+## 实验性功能：Codex 工具
 
-`codex_tool` 封装 Codex CLI，使智能体能够在工具调用期间运行限定于工作区的任务（shell、文件编辑、MCP工具）。此功能为实验性功能，可能会发生变化。
+`codex_tool` 封装了 Codex CLI，使智能体能够在工具调用期间运行限定于工作区的任务（Shell、文件编辑、MCP 工具）。此功能为实验性功能，将来可能发生变化。
 
-当你希望主智能体在不离开当前运行的情况下，将范围明确的工作区任务委托给 Codex 时，请使用它。默认情况下，工具名称为 `codex`。如果设置自定义名称，该名称必须是 `codex` 或以 `codex_` 开头。当智能体包含多个 Codex 工具时，每个工具必须使用唯一名称。
+当你希望主智能体在不退出当前运行的情况下，将边界明确的工作区任务委派给 Codex 时，可以使用它。默认工具名称为 `codex`。如果设置自定义名称，该名称必须是 `codex` 或以 `codex_` 开头。当智能体包含多个 Codex 工具时，每个工具必须使用唯一名称。
 
 ```python
 from agents import Agent
@@ -21937,34 +21948,34 @@ agent = Agent(
 
 可从以下选项组开始：
 
--   执行范围：`sandbox_mode` 和 `working_directory` 定义 Codex 可以在何处操作。请配合设置这两个选项；当工作目录不在 Git 仓库内时，请设置 `skip_git_repo_check=True`。
--   线程默认值：`default_thread_options=ThreadOptions(...)` 配置模型、推理强度、审批策略、其他目录、网络访问和网络检索模式。请优先使用 `web_search_mode`，而不是旧版的 `web_search_enabled`。
--   轮次默认值：`default_turn_options=TurnOptions(...)` 配置每轮行为，例如 `idle_timeout_seconds` 和可选的取消 `signal`。
--   工具输入/输出：工具调用必须至少包含一个 `inputs` 项目，其格式为 `{ "type": "text", "text": ... }` 或 `{ "type": "local_image", "path": ... }`。`output_schema` 让你可以要求 Codex 返回结构化响应。
+-   执行范围：`sandbox_mode` 和 `working_directory` 定义 Codex 可操作的位置。请将两者配对使用；如果工作目录不在 Git 仓库中，请设置 `skip_git_repo_check=True`。
+-   线程默认值：`default_thread_options=ThreadOptions(...)` 用于配置模型、推理强度、审批策略、其他目录、网络访问和网络检索模式。请优先使用 `web_search_mode`，而不是旧版 `web_search_enabled`。
+-   轮次默认值：`default_turn_options=TurnOptions(...)` 用于配置每轮行为，例如 `idle_timeout_seconds` 和可选的取消 `signal`。
+-   工具输入/输出：工具调用必须至少包含一个 `inputs` 条目，其形式为 `{ "type": "text", "text": ... }` 或 `{ "type": "local_image", "path": ... }`。`output_schema` 允许你要求 Codex 返回结构化响应。
 
-线程复用和持久化是独立的控制项：
+线程复用和持久化是相互独立的控制项：
 
--   `persist_session=True` 会让对同一工具实例的重复调用复用一个 Codex 线程。
--   `use_run_context_thread_id=True` 会在运行上下文中存储并复用线程 ID，适用于共享同一可变上下文对象的多个运行。
--   线程 ID 的优先级依次为：每次调用的 `thread_id`、运行上下文线程 ID（如果已启用），然后是已配置的 `thread_id` 选项。
--   对于 `name="codex"`，默认运行上下文键为 `codex_thread_id`；对于 `name="codex_<suffix>"`，则为 `codex_thread_id_<suffix>`。可使用 `run_context_thread_id_key` 覆盖该键。
- 
+-   `persist_session=True` 会让对同一工具实例的重复调用复用同一个 Codex 线程。
+-   `use_run_context_thread_id=True` 会在运行上下文中存储并复用线程 ID，适用于共享同一可变上下文对象的多次运行。
+-   线程 ID 的优先顺序为：单次调用的 `thread_id`、运行上下文线程 ID（如果启用），最后是已配置的 `thread_id` 选项。
+-   当 `name="codex"` 时，默认运行上下文键为 `codex_thread_id`；当 `name="codex_<suffix>"` 时，则为 `codex_thread_id_<suffix>`。可以使用 `run_context_thread_id_key` 覆盖它。
+
 运行时配置：
 
--   身份验证：设置 `CODEX_API_KEY`（首选）或 `OPENAI_API_KEY`，或者传入 `codex_options={"api_key": "..."}`。
+-   身份验证：设置 `CODEX_API_KEY`（推荐）或 `OPENAI_API_KEY`，或者传入 `codex_options={"api_key": "..."}`。
 -   运行时：`codex_options.base_url` 会覆盖 CLI 基础 URL。
 -   二进制文件解析：设置 `codex_options.codex_path_override`（或 `CODEX_PATH`）以固定 CLI 路径。否则，SDK 会先从 `PATH` 中解析 `codex`，然后回退到捆绑的供应商二进制文件。
--   环境：`codex_options.env` 完全控制子进程环境。提供该选项时，子进程不会继承 `os.environ`。
+-   环境：`codex_options.env` 完全控制子进程环境。提供该选项后，子进程不会继承 `os.environ`。
 -   流限制：`codex_options.codex_subprocess_stream_limit_bytes`（或 `OPENAI_AGENTS_CODEX_SUBPROCESS_STREAM_LIMIT_BYTES`）控制 stdout/stderr 读取器限制。有效范围为 `65536` 到 `67108864`；默认值为 `8388608`。
--   流式传输：`on_stream` 接收线程/轮次生命周期事件和项目事件（`reasoning`、`command_execution`、`mcp_tool_call`、`file_change`、`web_search`、`todo_list` 和 `error` 项目更新）。
--   输出：结果包括 `response`、`usage` 和 `thread_id`；用量会添加到 `RunContextWrapper.usage`。
+-   流式传输：`on_stream` 接收线程/轮次生命周期事件和条目事件（`reasoning`、`command_execution`、`mcp_tool_call`、`file_change`、`web_search`、`todo_list` 和 `error` 条目更新）。
+-   输出：结果包括 `response`、`usage` 和 `thread_id`；使用量会添加到 `RunContextWrapper.usage`。
 
-参考：
+参考资料：
 
 -   [Codex 工具 API 参考](ref/extensions/experimental/codex/codex_tool.md)
 -   [ThreadOptions 参考](ref/extensions/experimental/codex/thread_options.md)
 -   [TurnOptions 参考](ref/extensions/experimental/codex/turn_options.md)
--   有关完整的可运行示例，请参阅 `examples/tools/codex.py` 和 `examples/tools/codex_same_thread.py`。
+-   有关完整的可运行代码示例，请参阅 `examples/tools/codex.py` 和 `examples/tools/codex_same_thread.py`。
 
 ================
 File: docs/zh/tracing.md
@@ -23418,6 +23429,8 @@ See the code snippet below for details.
 
 If the input or output fails the guardrail, the Guardrail can signal this with a tripwire. As soon as we see a guardrail that has triggered the tripwires, we immediately raise a `{Input,Output}GuardrailTripwireTriggered` exception and halt the Agent execution.
 
+The exception's `guardrail_result` identifies the guardrail that triggered the tripwire. For an input tripwire raised by the runner, `exception.run_data.input_guardrail_results` contains every input guardrail result completed before the run stopped, including the result that triggered the tripwire. The streamed result exposes the same accumulated results through `input_guardrail_results` after `stream_events()` raises. `run_data` can be `None` when an exception is raised outside a runner-managed execution path.
+
 ## Implementing a guardrail
 
 You need to provide a function that receives input, and returns a [`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput]. In this example, we'll do this by running an Agent under the hood.
@@ -24054,6 +24067,10 @@ context to language models. From the official documentation:
 > provides a standardized way to connect AI models to different data sources and tools.
 
 The Agents Python SDK understands multiple MCP transports. This lets you reuse existing MCP servers or build your own to expose filesystem, HTTP, or connector backed tools to an agent.
+
+!!! warning "Trust MCP servers before connecting"
+
+    MCP tools can expose data from the model context and perform actions with the credentials you provide. Connect only to servers you trust, use least-privilege credentials, keep access tokens in authorization fields or headers rather than URLs, and require approval for sensitive operations. See the [OpenAI MCP security guidance](https://developers.openai.com/api/docs/guides/tools-connectors-mcp#risks-and-safety).
 
 ## Choosing an MCP integration
 
@@ -26391,6 +26408,8 @@ You can use any Python function as a tool. The Agents SDK will set up the tool a
 -   Tool description will be taken from the docstring of the function (or you can provide a description)
 -   The schema for the function inputs is automatically created from the function's arguments
 -   Descriptions for each input are taken from the docstring of the function, unless disabled
+
+Tools created by `@tool` expose the original Python callable through the read-only `__wrapped__` attribute. This is useful for inspection and testing, but calling it directly bypasses the tool runtime pipeline, including schema validation, context injection, guardrails, timeouts, failure handling, and tracing. Hand-built `FunctionTool` instances do not expose `__wrapped__`.
 
 We use Python's `inspect` module to extract the function signature, along with [`griffe`](https://mkdocstrings.github.io/griffe/) to parse docstrings and `pydantic` for schema creation.
 

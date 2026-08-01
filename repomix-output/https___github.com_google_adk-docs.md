@@ -3869,6 +3869,108 @@ http://localhost:11434/api/chat \
 ```
 
 ================
+File: docs/agents/models/openai.md
+================
+# OpenAI models for ADK agents
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.1.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+!!! example "Experimental"
+
+    The `openaimodel` package is experimental and its behavior may change or be removed in the future. We welcome your
+		[feedback](https://github.com/google/adk-go/issues/new?template=feature_request.md)!
+
+You can use OpenAI models with ADK. How you connect depends on the language:
+
+- **Go — native support:** ADK Go provides a direct `openaimodel` package that implements the `model.LLM` interface, targeting the OpenAI Responses API. [Get started](#get-started).
+- **Python — via LiteLLM:** ADK Python accesses OpenAI models (and many other providers) through the LiteLLM connector. See [LiteLLM](/agents/models/litellm/).
+
+## Get started
+
+The `openaimodel` package provides a client for interacting with OpenAI's API. It implements the `model.LLM` interface, making it compatible with providers that expose the OpenAI Responses API surface.
+The following code example shows a basic implementation for using OpenAI models in your agents:
+
+=== "Go"
+
+    ```go
+    import (
+    	"context"
+    	"log"
+
+    	"github.com/openai/openai-go/v3"
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model/openaimodel"
+    )
+
+    // Instantiate the model
+    llm, err := openaimodel.NewModel(context.Background(), openai.ChatModelGPT4oMini, &openaimodel.ClientConfig{})
+    if err != nil {
+      log.Fatal(err)
+    }
+
+    // Create the agent
+    agent, err := llmagent.New(llmagent.Config{
+      Name:        "openai_agent",
+      Model:       llm,
+      Instruction: "You are a helpful AI assistant.",
+    })
+    if err != nil {
+      log.Fatal(err)
+    }
+    ```
+
+For a complete, runnable sample, see [examples/openai/](https://github.com/google/adk-go/tree/main/examples/openai) in the ADK Go repository.
+
+## Supported features
+
+- Text generation (streaming and non-streaming)
+- Function (tool) calling
+- Structured output via `OutputSchema` (JSON schema)
+- Reasoning models (e.g. o-series), including reasoning-token accounting
+- Token logprobs
+
+## Limitations
+
+- **Text only** — multimodal input (images, audio, files) is not supported.
+- **Function tools only** — built-in tools (Google Search, code execution, etc.) are not supported.
+- **Structured output uses OpenAI strict mode** — every field declared in an `OutputSchema` is treated as required.
+- Some `GenerateContentConfig` options return an error rather than being silently ignored: `TopK`, stop sequences, multiple candidates, frequency/presence penalties, request labels, and safety settings.
+
+## Configuration options
+
+The `ClientConfig` provides several options for configuring the client:
+
+- `APIKey`: Your OpenAI API key.
+- `BaseURL`: Custom endpoint URL, which can be useful for OpenAI-compatible endpoints.
+- `HTTPClient`: A custom `*http.Client`.
+- `Options`: Advanced `openai-go` request options (`[]option.RequestOption`).
+
+If `APIKey` or `BaseURL` are left empty, they will automatically fall back to the `OPENAI_API_KEY` and `OPENAI_BASE_URL` environment variables, handled by the default behavior of the underlying `openai-go` SDK.
+
+## OpenAI model authentication
+
+When using OpenAI models, you must provide an API key to authenticate with the OpenAI API. The most direct way to provide this information is to use environment variables or an `.env` file.
+
+The `openaimodel` package also supports OpenAI-compatible endpoints (such as local models served via Ollama, LM Studio, or vLLM) by configuring the base URL.
+
+=== "OpenAI API"
+
+    ```bash
+    # .env configuration file
+    OPENAI_API_KEY="PASTE_YOUR_OPENAI_API_KEY_HERE"
+    ```
+
+=== "OpenAI-compatible Endpoint"
+
+    ```bash
+    # .env configuration file
+    OPENAI_API_KEY="api-key-if-required"
+    OPENAI_BASE_URL="http://localhost:11434/v1" # example: local Ollama endpoint
+    ```
+
+================
 File: docs/agents/models/routing.md
 ================
 # Route between models
@@ -30849,15 +30951,12 @@ catalog_tags: ["data", "google"]
 # Google Cloud Data Agents tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.23.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.23.0</span>
 </div>
 
 These are a set of tools aimed to provide integration with Data Agents powered by [Conversational Analytics API](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/overview).
 
 Data Agents are AI-powered agents that help you analyze your data using natural language. When configuring a Data Agent, you can choose from supported data sources, including **BigQuery**, **Looker**, and **Looker Studio**.
-
-!!! example "Experimental"
-    This feature is experimental and may be updated in future releases.
 
 **Prerequisites**
 
@@ -39667,6 +39766,80 @@ The `GCPSkillRegistry` client constructor accepts the following options:
     Fetches the remote skill payload using the Vertex AI Client SDK for a specific skill name (and optional revision/version), unpacks it, and returns a loaded `Skill` object.
 
 ================
+File: docs/integrations/slack.md
+================
+---
+catalog_title: Slack
+catalog_description: Run agents as bots that reply to mentions, DMs, and threads
+catalog_icon: /integrations/assets/slack.png
+catalog_tags: ["connectors"]
+---
+
+# Slack runner for ADK
+
+<div class="language-support-tag"><span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span></div>
+
+ADK provides the `SlackRunner` class to allow you to deploy your agents directly on Slack using [Socket Mode](https://api.slack.com/apis/connections/socket). This integration acts as an adapter that handles event listening, response dispatching, and automated conversation thread management.
+
+## Use cases
+
+- **Socket Mode deployment**: Route workspace events to your agent without exposing public HTTP endpoints.
+- **Thread management**: Maintain continuous conversation context across direct messages and nested thread replies.
+- **Event-driven triggers**: Activate agent workflows automatically using direct messages or app mentions.
+
+## Prerequisites
+
+- Slack App configured in your [Slack API Dashboard](https://api.slack.com/apps). You must sign in to your Slack account first.
+- Bot User OAuth Token (`xoxb-...`) with `app_mentions:read`, `chat:write`, and `im:history` bot token scopes.
+- Websocket App-Level Token (`xapp-...`) with the `connections:write` scope.
+
+## Installation
+
+Run the following command in your terminal to install the ADK along with all necessary Slack Socket Mode dependencies
+
+```bash
+pip install "google-adk[slack]"
+```
+
+## Use with agent
+
+This example shows you the end-to-end setup for deploying an agent to Slack. It configures a core agent, establishes an in-memory session to manage conversation history, and uses SlackRunner with Socket Mode to connect to your workspace and handle incoming events.
+
+```python
+import asyncio
+import os
+from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.adk.integrations.slack import SlackRunner
+from slack_bolt.app.async_app import AsyncApp
+
+# Define the core agent
+root_agent = Agent(
+    model="gemini-flash-latest",
+    name="slack_agent",
+    instruction="You are a helpful team assistant running on Slack.",
+)
+
+# Wire it up to Slack over Socket Mode
+runner = Runner(
+    app_name="slack_agent",
+    agent=root_agent,
+    session_service=InMemorySessionService(),
+    auto_create_session=True,
+)
+slack_app = AsyncApp(token=os.environ["SLACK_BOT_TOKEN"])
+slack_runner = SlackRunner(runner, slack_app)
+
+asyncio.run(slack_runner.start(os.environ["SLACK_APP_TOKEN"]))
+```
+
+## Additional resources
+
+- [Slack API Documentation](https://api.slack.com/docs)
+- [google-adk on PyPI](https://pypi.org/project/google-adk/)
+
+================
 File: docs/integrations/spanner.md
 ================
 ---
@@ -47085,6 +47258,8 @@ whether the context window is compressed:
   history on every invocation.
 - `context_window_compression`: Enables context window compression for LLM
   input, useful when sessions approach model context limits.
+- `include_thoughts_from_other_agents`: Controls whether thought parts from
+  other agents are included in the LLM context. Disabled by default.
 
 === "Python"
 
@@ -47278,6 +47453,8 @@ additional parameters:
   and artifact service.
 - `tool_thread_pool_config`: Runs tool executions in a background thread pool
   to keep the event loop responsive to user interruptions.
+- `explicit_vad_signal`: Enables explicit voice activity detection (VAD)
+  signals from the model.
 
 Not all parameters are available in every language. See the
 [API reference](#api-reference) for language-specific details.
@@ -49171,6 +49348,53 @@ For example, you can automate this step with a callback:
     ```kotlin
     --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:auto_save_callback"
     ```
+
+## Extend memory capabilities
+
+Memory services extended from `BaseMemoryService` support adding sessions and
+events to agent memory, including custom metadata. Use the
+`add_session_to_memory` and `add_events_to_memory` methods of memory services
+such as `InMemoryMemoryService` to amend memory data, as shown in the
+following code example:
+
+```python
+import asyncio
+from google.adk.memory import InMemoryMemoryService
+
+# Assume my_memory_service is an instance of InMemoryMemoryService
+# and my_latest_events is a list of new adk.Event objects from the latest turn.
+my_latest_events = [...]
+
+async def update_incremental_memory(my_memory_service, my_latest_events):
+    # Example 1: Basic incremental update
+    await my_memory_service.add_events_to_memory(
+        app_name="my-app",
+        user_id="my-user",
+        events=my_latest_events,
+        session_id="my-optional-session-id"
+    )
+
+    # Example 2: Incremental update with Custom Metadata
+    await my_memory_service.add_events_to_memory(
+        app_name="my-app",
+        user_id="my-user",
+        events=my_latest_events,
+        session_id="my-optional-session-id",
+        custom_metadata={
+            "my_custom_key": "my_custom_value"
+        }
+    )
+
+async def update_session_memory(my_memory_service, my_completed_session):
+    # Example 3: Applying custom metadata to a full session
+    await my_memory_service.add_session_to_memory(
+        session=my_completed_session,
+        custom_metadata={
+            "category": "user_preference"
+        }
+    )
+
+```
 
 ## Advanced concepts
 
@@ -58451,13 +58675,15 @@ To use an agent as a tool, wrap the agent with the `AgentTool` class.
 ### Customize your agent tool
 
 The `AgentTool` class provides the following attributes for customizing its
-behavior:
+behavior.
 
-- **skip_summarization** (Python/TypeScript) / **skipSummarization**
-  (Kotlin/Java): (boolean) If set to True, the framework will **bypass the
-  LLM-based summarization** of the tool agent's response. This can be useful
-  when the tool's response is already well-formatted and requires no further
-  processing.
+#### Skip summarization
+
+**`skip_summarization`** (boolean)
+If set to `True`, this customization instructs the framework to bypass the LLM-based summarization of the tool agent's response. This feature is best used when the tool's output is already well-formatted and requires no further processing.
+
+- **Use:** Python/TypeScript (`skip_summarization`); Kotlin/Java
+  (`skipSummarization`).
 
 ??? "Example"
 
@@ -58500,7 +58726,7 @@ behavior:
         --8<-- "examples/kotlin/snippets/tools/function-tools/AgentTool.kt:agent_tool"
         ```
         
-#### How it works
+##### How it works
 1. When the `root_agent` receives the long text, its instruction tells it to use
    the 'summarize' tool for long texts.
 2. The framework recognizes 'summarize' as an `AgentTool` that wraps the
@@ -58513,6 +58739,45 @@ behavior:
    `root_agent`.**
 6. The `root_agent` can then take the summary and formulate its final response
    to the user (e.g., "Here's a summary of the text: ...")
+
+#### Propagate grounding metadata
+
+**`propagate_grounding_metadata`** (boolean, default: `False`)
+If set to `True`, the tool automatically forwards any grounding metadata, such as Google Search citations, generated by the sub-agent up to the parent agent's session state. This customization ensures that citations are preserved when using specialized search agents as tools.
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools import AgentTool
+
+    search_specialist_agent = Agent(
+        # Specify your generative model
+        model="gemini-flash-latest",
+        name="search_specialist_agent",
+        instruction=(
+            "You are a search expert. Find and "
+            "compile citations on requested topics."
+        ),
+        # Add any search tools here
+    )
+
+    search_agent_tool = AgentTool(
+        agent=search_specialist_agent,
+        # Keeps citations intact back to the root
+        propagate_grounding_metadata=True
+    )
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="root_agent",
+        description=(
+            "A central coordinator that delegates "
+            "to specialist agents."
+        ),
+        tools=[search_agent_tool]
+    )
+    ```
         
 #### Control plugin inheritance
 
