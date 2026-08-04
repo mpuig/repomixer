@@ -2173,14 +2173,16 @@ Agent Platform.
 === "Python"
 
     **Integration Method:** Uses the direct model string (e.g.,
-    `"claude-3-sonnet@20240229"`), *but requires manual registration* within ADK.
+    `"claude-3-sonnet@20240229"`).
 
-    **Why Registration?** ADK's registry automatically recognizes `gemini-*` strings
-    and standard Agent Platform endpoint strings (`projects/.../endpoints/...`) and
-    routes them via the `google-genai` library. For other model types used directly
-    via Agent Platform (like Claude), you must explicitly tell the ADK registry which
-    specific wrapper class (`Claude` in this case) knows how to handle that model
-    identifier string with the Agent Platform backend.
+    **How Resolution Works:** ADK's registry automatically recognizes `gemini-*`
+    strings and standard Agent Platform endpoint strings
+    (`projects/.../locations/.../endpoints/...`) and routes them via the `google-genai`
+    library. Claude model strings matching `claude-3-*` or `claude-*-4*` route
+    to the `Claude` wrapper class the same way. For a Claude model identifier
+    that does not match those patterns, import `Claude` from
+    `google.adk.models` and pass an instance instead of a string:
+    `LlmAgent(model=Claude(model="..."), ...)`.
 
     **Setup:**
 
@@ -2194,25 +2196,11 @@ Agent Platform.
         pip install "anthropic[vertex]"
         ```
 
-    3. **Register Model Class:** Add this code near the start of your application,
-       *before* creating an agent using the Claude model string:
-
-        ```python
-        # Required for using Claude model strings directly via Agent Platform with LlmAgent
-        from google.adk.models.anthropic_llm import Claude
-        from google.adk.models.registry import LLMRegistry
-
-        LLMRegistry.register(Claude)
-        ```
+    3. **Create the Agent:** Pass the Claude model string to `LlmAgent`:
 
        ```python
        from google.adk.agents import LlmAgent
-       from google.adk.models.anthropic_llm import Claude # Import needed for registration
-       from google.adk.models.registry import LLMRegistry # Import needed for registration
        from google.genai import types
-
-       # --- Register Claude class (do this once at startup) ---
-       LLMRegistry.register(Claude)
 
        # --- Example Agent using Claude 3 Sonnet on Agent Platform ---
 
@@ -2220,7 +2208,7 @@ Agent Platform.
        claude_model_vertexai = "claude-3-sonnet@20240229"
 
        agent_claude_vertexai = LlmAgent(
-           model=claude_model_vertexai, # Pass the direct string after registration
+           model=claude_model_vertexai, # Pass the direct model string
            name="claude_vertexai_agent",
            instruction="You are an assistant powered by Claude 3 Sonnet on Agent Platform.",
            generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
@@ -2314,10 +2302,6 @@ The recommended way to control reasoning depth is the `effort` field on
 ```python
 from google.adk.agents import LlmAgent
 from google.adk.models import AnthropicGenerateContentConfig
-from google.adk.models.anthropic_llm import Claude
-from google.adk.models.registry import LLMRegistry
-
-LLMRegistry.register(Claude)
 
 agent = LlmAgent(
     model="claude-sonnet-4@20250514",  # Your Agent Platform Claude model ID.
@@ -2329,8 +2313,10 @@ agent = LlmAgent(
 )
 ```
 
-*   The standard `thinking_config.thinking_level` is not supported for Claude and
-    is ignored (with a warning). Use `effort` instead.
+*   The standard `thinking_config.thinking_level` is not supported for Claude.
+    Setting it on `AnthropicGenerateContentConfig` raises a validation error; on
+    a plain `types.GenerateContentConfig` it is ignored with a warning. Use
+    `effort` instead.
 
 ## Open Models on Agent Platform {#open-models}
 
@@ -2352,9 +2338,9 @@ Agent Platform offers a curated selection of open-source models, such as Meta Ll
     1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
        Vars, `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`) is complete.
 
-    2. **Install LiteLLM:**
+    2. **Install LiteLLM:** ADK requires `litellm>=1.84`.
             ```shell
-            pip install litellm
+            pip install "litellm>=1.84"
             ```
 
     **Example:**
@@ -2389,8 +2375,8 @@ the path that matches your language and backend below.
 
 You can use Claude models from Python in the following ways:
 
-- **Native, on Agent Platform:** Register the `Claude` wrapper and use a Claude
-  model string. See [Anthropic Claude on Agent
+- **Native, on Agent Platform:** Pass a Claude model string directly; ADK's
+  registry routes it to the `Claude` wrapper. See [Anthropic Claude on Agent
   Platform](/agents/models/agent-platform/#anthropic-claude).
 - **Direct Anthropic API, via LiteLLM:** Use the `LiteLlm` connector with an
   Anthropic API key. See
@@ -2506,7 +2492,7 @@ Apigee proxy, you immediately gain enterprise-grade capabilities:
 
 - **Monitoring & Visibility:** Get granular monitoring, analysis, and auditing of all your AI requests.
 
-   The `ApigeeLLM` wrapper is designed for use with Agent Platform
+   The `ApigeeLlm` wrapper is designed for use with Agent Platform
    and the Gemini API (generateContent). We are continually expanding support for
    other models and interfaces. For OpenAI compatible models, including self-hosted or 
    other providers, use the `CompletionsHTTPClient` to route traffic through your Apigee proxy.
@@ -2578,7 +2564,7 @@ The `CompletionsHTTPClient` is a generic HTTP client designed for compatibility 
 
 - **Payload construction**: Converts LlmRequest objects into the format required by OpenAI-compatible APIs.
 - **Response handling**: Manages streaming and non-streaming responses from the proxy.
-- **Reliability**: Uses `tenacity` for built-in retry logic.
+- **Reliability**: Uses `tenacity` to retry non-streaming requests, but only when you pass `retry_options=types.HttpRetryOptions(...)` to the constructor. By default each request is attempted once, and streaming requests are never retried.
 - **Normalization**: Parses responses and streaming chunks into the standard format expected by the rest of the ADK framework.
 
 ### Implementation example
@@ -2605,7 +2591,8 @@ async def test_client():
 
     # 3. Execute a non-streaming generation
     async for response in client.generate_content_async(request, stream=False):
-        print(f"Response: {response.text}")
+        if response.content and response.content.parts:
+            print(f"Response: {response.content.parts[0].text}")
 
 if __name__ == "__main__":
     asyncio.run(test_client())
@@ -2829,12 +2816,16 @@ To mitigate this, you can do one of the following:
 
     **Option 1:** Set retry options on the Agent as a part of `generate_content_config`.
 
-    You would use this option if you are instantiating this model adapter by
-    yourself.
+    You would use this option if you are passing the model as a name string and
+    letting ADK create the model adapter for you.
 
     === "Python"
 
         ```python
+        from google.genai import types
+
+        # ...
+
         root_agent = Agent(
             model='gemini-flash-latest',
             # ...
@@ -2846,7 +2837,8 @@ To mitigate this, you can do one of the following:
                     # ...
                 ),
                 # ...
-            )
+            ),
+        )
         ```
 
     === "Java"
@@ -2963,6 +2955,13 @@ or with one of many self-hosting options on Google Cloud:
 [Google Kubernetes Engine](https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/serve-gemma-gpu-vllm),
 [Cloud Run](https://docs.cloud.google.com/run/docs/run-gemma-on-cloud-run).
 
+Gemma 3 needs a different model class than the Gemma 4 examples below. It has
+no native function calling or system instruction support, so ADK supplies
+workarounds in dedicated classes: use `Gemma(model="gemma-3-27b-it")` for the
+Gemini API and `Gemma3Ollama()` for Ollama, both from `google.adk.models`.
+`Gemma3Ollama` is only defined when [LiteLLM](/agents/models/litellm/) is
+installed (`litellm>=1.84`).
+
 ## Gemini API Example
 
 Create an API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
@@ -3073,7 +3072,7 @@ The following example shows how to use a Gemma 4 vLLM endpoint with ADK agents.
             model=model_name_at_endpoint,
             api_base=api_base_url,
             # Pass authentication headers if needed
-            extra_headers=auth_headers
+            extra_headers=auth_headers,
             # Alternatively, if endpoint uses an API key:
             # api_key="YOUR_ENDPOINT_API_KEY",
             extra_body={
@@ -3191,7 +3190,7 @@ import os
 import dotenv
 from google.adk.agents import LlmAgent
 from google.adk.models import Gemini
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 
 dotenv.load_dotenv()
@@ -3220,7 +3219,7 @@ def get_maps_mcp_toolset():
         print("Warning: MAPS_API_KEY environment variable not found.")
         maps_api_key = "no_api_found"
 
-    tools = MCPToolset(
+    tools = McpToolset(
         connection_params=StreamableHTTPConnectionParams(
             url=MAPS_MCP_URL,
             headers={
@@ -3361,9 +3360,9 @@ You can use the LiteLLM library to access remote or locally hosted AI models:
 
 ## Setup
 
-1. **Install LiteLLM:**
+1. **Install LiteLLM:** ADK requires `litellm>=1.84`.
         ```shell
-        pip install litellm
+        pip install "litellm>=1.84"
         ```
 2. **Set Provider API Keys:** Configure API keys as environment variables for
    the specific providers you intend to use.
@@ -3492,7 +3491,8 @@ model class with the model identifier and local network address.
 
 To use LiteRT-LM with ADK and a Gemma model:
 
-1.  Set `base_url` to the LiteRT-LM server URL, for example: `localhost:8001`.
+1.  Set `base_url` to the LiteRT-LM server URL, including the scheme, for
+    example: `http://localhost:8001`.
 2.  Set `model` to the LiteRT-LM model name, for example: `gemma3n-e2b`.
 
 The following example code shows how to configure an agent to
