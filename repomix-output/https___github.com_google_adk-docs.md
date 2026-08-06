@@ -2604,7 +2604,7 @@ File: docs/agents/models/google-gemini.md
 # Google Gemini models for ADK agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 ADK supports the Google Gemini family of generative AI models that provide a
@@ -3267,7 +3267,7 @@ File: docs/agents/models/index.md
 # AI Models for ADK agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">Typescript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 Agent Development Kit (ADK) is designed for flexibility, allowing you to
@@ -4120,7 +4120,7 @@ File: docs/agents/workflow-agents/index.md
 # Template agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 This section introduces *template workflows*, also known as *workflow agents*,
@@ -4184,7 +4184,7 @@ File: docs/agents/workflow-agents/loop-agents.md
 # Loop template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The ***LoopAgent*** class is a [template workflow](/agents/workflow-agents/) agent
@@ -4249,7 +4249,7 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
         --8<-- "examples/python/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.py:init"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/agents/workflow-agents/loop_agent_doc_improv_agent.ts:init"
         ```
@@ -4270,7 +4270,7 @@ File: docs/agents/workflow-agents/parallel-agents.md
 # Parallel template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The ***ParallelAgent*** class is a [template workflow](/agents/workflow-agents/)
@@ -4337,7 +4337,7 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
          --8<-- "examples/python/snippets/agents/workflow-agents/parallel_agent_web_research.py:init"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
          --8<-- "examples/typescript/snippets/agents/workflow-agents/parallel_agent_web_research.ts:init"
         ```
@@ -4358,7 +4358,7 @@ File: docs/agents/workflow-agents/sequential-agents.md
 # Sequential template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
 The ***SequentialAgent*** class is a [template workflow](/agents/workflow-agents/)
@@ -4425,7 +4425,7 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
         --8<-- "examples/python/snippets/agents/workflow-agents/sequential_agent_code_development_agent.py:init"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/agents/workflow-agents/sequential_agent_code_development_agent.ts:init"
         ```
@@ -4759,7 +4759,7 @@ File: docs/agents/custom-agents.md
 # Custom agent template workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Custom agents and agent-based workflows allow you to define arbitrary
@@ -5059,7 +5059,7 @@ The foundation for structuring multi-agent systems is the parent-child relations
     # assert task_doer.parent_agent == coordinator
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Example: Defining Hierarchy
@@ -5167,7 +5167,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     # When pipeline runs, Step2 can access the state['data'] set by Step1.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Example: Sequential Pipeline
@@ -5230,7 +5230,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
     # A subsequent agent could read state['weather'] and state['news'].
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Example: Parallel Execution
@@ -5322,7 +5322,7 @@ ADK includes specialized agents derived from `BaseAgent` that don't perform task
       # until Checker escalates (state['status'] == 'completed') or 10 iterations pass.
       ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Example: Loop with Condition
@@ -5444,7 +5444,7 @@ The most fundamental way for agents operating within the same invocation (and th
     # AgentB runs, its instruction processor reads state['capital_city'] to get "Paris".
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Example: Using outputKey and reading state
@@ -5536,7 +5536,7 @@ Leverages an [`LlmAgent`](llm-agents.md)'s understanding to dynamically route ta
     # ADK framework then routes execution to booking_agent.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Setup: LLM Transfer
@@ -5659,7 +5659,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
     # The resulting image Part is returned to the Artist agent as the tool result.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Setup: Agent as a Tool
@@ -6121,7 +6121,7 @@ File: docs/agents/llm-agents.md
 # Simple agents with LlmAgent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The `LlmAgent` class, often aliased simply as `Agent`, is a core component in
@@ -6173,7 +6173,7 @@ First, you need to establish what the agent *is* and what it's *for*.
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Example: Defining the basic identity
@@ -6268,7 +6268,7 @@ tells the agent:
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Example: Adding instructions
@@ -6368,7 +6368,7 @@ on the conversation and its instructions.
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {z} from 'zod';
@@ -6493,7 +6493,7 @@ You can adjust how the underlying AI model generates responses using
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import { GenerateContentConfig } from '@google/genai';
@@ -6626,7 +6626,7 @@ schema definitions.
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {z} from 'zod';
@@ -6711,7 +6711,7 @@ Control whether the agent receives the prior conversation history.
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     const statelessAgent = new LlmAgent({
@@ -6987,9 +6987,9 @@ More complex agents might incorporate schemas, context control, and planning.
         --8<-- "examples/python/snippets/agents/llm-agent/capital_agent.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
-        ```javascript
+        ```typescript
         --8<-- "examples/typescript/snippets/agents/llm-agent/capital_agent.ts"
         ```
 
@@ -7644,12 +7644,12 @@ The Agent Development Kit (ADK) provides comprehensive API references across sup
 
 <!-- This comment forces a block separation -->
 
--   :fontawesome-brands-js:{ .lg .middle } **Typescript API Reference**
+-   :fontawesome-brands-js:{ .lg .middle } **TypeScript API Reference**
 
     ---
     Access the complete API documentation for the TypeScript Agent Development Kit. Find detailed information on all packages, classes, and methods to build powerful and flexible AI agents with TypeScript.
 
-    [:octicons-arrow-right-24: View Typescript API Docs](https://adk.dev/api-reference/typescript/) <br>
+    [:octicons-arrow-right-24: View TypeScript API Docs](https://adk.dev/api-reference/typescript/) <br>
 
 <!-- This comment forces a block separation -->
 
@@ -7944,7 +7944,7 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
     print(f"Artifact Data (first 10 bytes): {image_artifact.inline_data.data[:10]}...")
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {createPartFromBase64, type Part} from '@google/genai';
@@ -8088,7 +8088,7 @@ Understanding artifacts involves grasping a few key components: the service that
     # Now, contexts within runs managed by this runner can use artifact methods
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {
@@ -8188,7 +8188,7 @@ Understanding artifacts involves grasping a few key components: the service that
     print(f"Created Python artifact with MIME type: {pdf_artifact_py.inline_data.mime_type}")
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {createPartFromBase64, type Part} from '@google/genai';
@@ -8274,7 +8274,7 @@ Understanding artifacts involves grasping a few key components: the service that
     # and scope it to app_name and user_id, making it accessible across sessions for that user.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Example illustrating namespace difference (conceptual)
@@ -8364,7 +8364,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
     ```
     If no `artifact_service` is configured in the `InvocationContext` (which happens if it's not passed to the `Runner`), calling `save_artifact`, `load_artifact`, or `list_artifacts` on the context objects will raise a `ValueError`.
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import {
@@ -8494,7 +8494,7 @@ The artifact interaction methods are available directly on instances of `Callbac
         #   await save_generated_report_py(callback_context, report_data)
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         import {Context} from '@google/adk';
@@ -8619,7 +8619,7 @@ The artifact interaction methods are available directly on instances of `Callbac
         #   await process_latest_report_py(callback_context)
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         import {Context} from '@google/adk';
@@ -8858,7 +8858,7 @@ artifact in a later turn.
         # list_files_tool = FunctionTool(func=list_user_files_py)
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         import {Context} from '@google/adk';
@@ -8984,7 +8984,7 @@ artifact in a later turn.
     --8<-- "examples/kotlin/snippets/artifacts/ArtifactExamples.kt:listing_artifacts"
     ```
 
-These methods for saving, loading, and listing provide a convenient and consistent way to manage binary data persistence within ADK, whether using Python's context objects or directly interacting with the `BaseArtifactService` in Java, regardless of the chosen backend storage implementation.
+These methods for saving, loading, and listing provide a convenient and consistent way to manage binary data persistence within ADK, whether you reach them through the context object passed to your callbacks and tools or by interacting with the `BaseArtifactService` directly, regardless of the chosen backend storage implementation.
 
 ## Available Implementations
 
@@ -9016,7 +9016,7 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
         # runner = Runner(..., artifact_service=in_memory_service_py)
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         import {InMemoryArtifactService} from '@google/adk';
@@ -9107,7 +9107,7 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
             # Handle the error appropriately - maybe fall back to InMemory or raise
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         import {GcsArtifactService} from '@google/adk';
@@ -9383,7 +9383,7 @@ Callbacks are a cornerstone feature of ADK, providing a powerful mechanism to ho
         --8<-- "examples/python/snippets/callbacks/callback_basic.py:callback_basic"
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/callback_basic.ts:callback_basic"
@@ -9446,7 +9446,7 @@ This example demonstrates the common pattern for a guardrail using `before_model
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/before_model_callback.ts"
         ```
@@ -9530,7 +9530,7 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         --8<-- "examples/python/snippets/callbacks/before_agent_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/before_agent_callback.ts"
         ```
@@ -9580,7 +9580,7 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
         --8<-- "examples/python/snippets/callbacks/after_agent_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/after_agent_callback.ts"
         ```
@@ -9632,7 +9632,7 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
         --8<-- "examples/python/snippets/callbacks/before_model_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/before_model_callback.ts"
         ```
@@ -9671,7 +9671,7 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
         --8<-- "examples/python/snippets/callbacks/after_model_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/after_model_callback.ts"
         ```
@@ -9714,7 +9714,7 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/python/snippets/callbacks/before_tool_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/before_tool_callback.ts"
         ```
@@ -9752,7 +9752,7 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
         --8<-- "examples/python/snippets/callbacks/after_tool_callback.py"
         ```
 
-    === "Typescript"
+    === "TypeScript"
         ```typescript
         --8<-- "examples/typescript/snippets/callbacks/after_tool_callback.ts"
         ```
@@ -9960,6 +9960,16 @@ for updates on the next call. Recent recordings are below, or browse the full
 playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5RR3).
 
 <div class="resource-grid">
+  <a href="https://www.youtube.com/watch?v=-L8ys-nKCWc" class="resource-card">
+    <div class="card-image-wrapper">
+      <img src="https://img.youtube.com/vi/-L8ys-nKCWc/maxresdefault.jpg" alt="ADK Community Call July 2026">
+    </div>
+    <div class="card-content">
+      <div class="type">Community Call</div>
+      <h3>📞 July 2026 Recording</h3>
+      <p>Discussions include the ADK Go 2.0 release, the Agents CLI reaching GA with automated evaluations, using ADK to automate PR and issue triage, the new Managed Agents and Antigravity integration, and a community spotlight on CopilotKit with the AG-UI and A2UI protocols.</p>
+    </div>
+  </a>
   <a href="https://www.youtube.com/watch?v=XAvXSACGdEQ" class="resource-card">
     <div class="card-image-wrapper">
       <img src="https://img.youtube.com/vi/XAvXSACGdEQ/maxresdefault.jpg" alt="ADK Community Call June 2026">
@@ -9980,17 +9990,6 @@ playlist](https://www.youtube.com/playlist?list=PLwi6PfxEP7zZbBPmWiZ8QbPcuKyAY5R
       <p>Discussions include the ADK Python 2.0 GA release, initial release of ADK for Kotlin and Android, demos of Agents CLI and Skills for dynamic capability loading, and a community spotlight on Beever Atlas.</p>
     </div>
   </a>
-  <a href="https://www.youtube.com/watch?v=bPngDY7EuOQ" class="resource-card">
-    <div class="card-image-wrapper">
-      <img src="https://img.youtube.com/vi/bPngDY7EuOQ/maxresdefault.jpg" alt="ADK Community Call Mar 2026">
-    </div>
-    <div class="card-content">
-      <div class="type">Community Call</div>
-      <h3>📞 Mar 2026 Recording</h3>
-      <p>Discussions include the ADK 2.0 alpha release, Workflows for graph-based agent composition, Agent Modes for structured multi-agent coordination, and a community spotlight on Restate durable agents.</p>
-    </div>
-  </a>
-
 </div>
 
 ## Courses & Deep Dives
@@ -13606,7 +13605,7 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
 
     If you deployed your agent with the UI enabled:
 
-    *   **adk CLI:** You included the corresponding flag (`--webui` in Go or `--with_ui` in Python or Typescript) during deployment.
+    *   **adk CLI:** You included the corresponding flag (`--webui` in Go or `--with_ui` in Python or TypeScript) during deployment.
     *   **gcloud CLI:** You set `SERVE_WEB_INTERFACE = True` in your `main.py`.
 
     You can test your agent by simply navigating to the Cloud Run service URL provided after deployment in your web browser.
@@ -25905,7 +25904,8 @@ transfers, state checkpoints, event compaction, and long-running tools. It adds
 four new event types — `AGENT_TRANSFER`, `AGENT_STATE_CHECKPOINT`,
 `EVENT_COMPACTION`, and `TOOL_PAUSED` — and stamps an `attributes.adk` envelope
 on every row so you can reconstruct the agent execution graph and join a paused
-tool to the row that resumes it. See [Agent workflow and pause/resume events
+tool to the row that resumes it. Java emits `TOOL_PAUSED` and its pause/resume
+keys only. See [Agent workflow and pause/resume events
 (ADK 2.0)](#adk-2-events) for details.
 
 The plugin includes three reliability and observability fixes:
@@ -25916,10 +25916,10 @@ The plugin includes three reliability and observability fixes:
   fail with a "session not found" / stream-not-found error and silently drop
   every row.
 - **Dropped-event observability.** Dropped rows are tracked per drop reason
-  (`queue_full`, `arrow_prep_failed`, `retry_exhausted`, `non_retryable`,
-  `unexpected_error`) and exposed via
-  `BigQueryAgentAnalyticsPlugin.get_drop_stats()` so a host can poll and export
-  the counts to its own monitoring.
+  and exposed via `BigQueryAgentAnalyticsPlugin.get_drop_stats()` (Python) or
+  `getDropStats()` (Java) so a host can poll and export the counts to its own
+  monitoring. The reason keys differ per language — see [Dropped-event
+  observability](#dropped-event-observability).
 - **No duplicate spans in Cloud Trace.** When Agent Engine telemetry
   (`GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true`) or any other Cloud Trace
   exporter is wired to the global tracer provider, the plugin no longer
@@ -26599,7 +26599,7 @@ provides a comprehensive reference with example values.
 | **session_id** | `STRING` | `NULLABLE` | A persistent identifier for the entire conversation thread. Stays constant across multiple turns and sub-agent calls. | `04275a01-1649-4a30-b6a7-5b443c69a7bc` |
 | **invocation_id** | `STRING` | `NULLABLE` | The unique identifier for a single execution turn or request cycle. Corresponds to `trace_id` in many contexts. | `e-b55b2000-68c6-4e8b-b3b3-ffb454a92e40` |
 | **user_id** | `STRING` | `NULLABLE` | The identifier of the user (human or system) initiating the session. Extracted from the `User` object or metadata. | `test_user` |
-| **trace_id** | `STRING` | `NULLABLE` | 32-character hex Trace ID. Inherited from the ambient OpenTelemetry span when one is active (e.g. Agent Engine's invocation span or the ADK Runner span) so BigQuery rows join cleanly to your existing Cloud Trace traces; otherwise generated by the plugin per invocation. Links all operations within a single distributed request lifecycle. | `a2c7f13d3a3f0bbb8793692f76a6012a` |
+| **trace_id** | `STRING` | `NULLABLE` | Trace identifier. It is a 32-character hex OpenTelemetry trace ID when inherited from an ambient span (e.g. Agent Engine's invocation span or the ADK Runner span), so BigQuery rows join cleanly to your existing Cloud Trace traces. Without an ambient span, Python also generates that format as its per-invocation fallback, while Java falls back to the ADK invocation ID. Links all operations within a single distributed request lifecycle. | `a2c7f13d3a3f0bbb8793692f76a6012a` |
 | **span_id** | `STRING` | `NULLABLE` | 16-character hex Span ID identifying this specific atomic operation. **Tracked on the plugin's internal stack, not exported as an OTel span** — the plugin does not call `tracer.start_span` against your configured OpenTelemetry provider. The root invocation span reuses the ambient OTel span's id when one is active; child spans are generated internally (see [Tracing and observability](#tracing-and-observability)). | `3916f5762bcd4d42` |
 | **parent_span_id** | `STRING` | `NULLABLE` | 16-character hex Span ID of the immediate caller. Used to reconstruct the parent-child execution tree (DAG). | `4c4a42bfdeb84934` |
 | **content** | `JSON` | `NULLABLE` | The primary event payload. Structure is polymorphic based on `event_type`. | `{"system_prompt": "You are...", "prompt": [{"role": "user", "content": "hello"}], "response": "Hi", "usage": {"total": 15}}` |
@@ -26724,7 +26724,10 @@ columns:
 The four workflow views (`v_agent_transfer`, `v_agent_state_checkpoint`,
 `v_event_compaction`, `v_tool_paused`) and the `pause_kind` / `function_call_id`
 columns on `v_tool_completed` come with the [ADK 2.0 workflow event
-support](#adk-2-events).
+support](#adk-2-events). In **Java**, only `v_tool_paused` and the `pause_kind` /
+`function_call_id` columns on `v_tool_completed` are created;
+`v_agent_transfer`, `v_agent_state_checkpoint`, and `v_event_compaction` are
+Python-only (the Java plugin does not emit those events).
 
 ## Event types and payloads {#event-types}
 
@@ -26913,8 +26916,8 @@ updated by tools).
 !!! note "Built-in redaction"
 
     State keys prefixed with `temp:` or `secret:` are automatically redacted to
-    `[REDACTED]` in the logged `state_delta`. See [Built-in
-    redaction](#built-in-redaction) for details.
+    `[REDACTED]` in the logged `state_delta` (Java: `temp:` only). See
+    [Built-in redaction](#built-in-redaction) for details.
 
 ```json
 {
@@ -27017,8 +27020,15 @@ Logged when an A2A remote agent call completes.
 ### Agent workflow and pause/resume events (ADK 2.0) {#adk-2-events}
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.3.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.3.0</span><span class="lst-java">Java v1.7.0</span>
 </div>
+
+!!! note "Java support"
+
+    The **Java** plugin supports a subset of this section: it emits
+    `TOOL_PAUSED` and the pause/resume pairing described below, but does **not**
+    emit `AGENT_TRANSFER`, `AGENT_STATE_CHECKPOINT`, or `EVENT_COMPACTION`, and
+    does not write the `attributes.adk` envelope.
 
 ADK 2.0 introduced multi-agent workflows (agents that transfer control,
 checkpoint their state, and compact long histories) and long-running tools that
@@ -27028,8 +27038,9 @@ rows back to the ADK event that produced them.
 
 #### The `attributes.adk` envelope
 
-Every row now carries an `attributes.adk` object. `schema_version` and
-`app_name` are always present; the remaining fields are added only for rows that
+The envelope is written by the **Python** plugin only. Every row now carries an
+`attributes.adk` object. `schema_version` and `app_name` are always present;
+the remaining fields are added only for rows that
 originate from an ADK event (lifecycle and workflow events), so on a callback-only
 row they are simply absent (and resolve to SQL `NULL` when queried).
 
@@ -27129,6 +27140,20 @@ see the note below.)
   }
 }
 ```
+
+!!! note "Java attribute location"
+
+    The Java plugin writes the pair keys at the top level of `attributes` —
+    `"attributes": {"pause_kind": "tool", "function_call_id": "call-789"}` —
+    with no `adk` wrapper. In the base-table query below, replace
+    `'$.adk.pause_kind'` / `'$.adk.function_call_id'` with `'$.pause_kind'` /
+    `'$.function_call_id'`. The view-based query works unchanged for both
+    languages, because the views expose the keys as flat columns.
+
+    Java also stamps the same top-level pair keys on `HITL_*_REQUEST_COMPLETED`
+    rows, so a HITL `TOOL_PAUSED` row can be joined directly to its completion
+    on `function_call_id` in the base table (there is no dedicated view for
+    HITL completions).
 
 !!! note "Relationship to HITL events"
 
@@ -27781,6 +27806,10 @@ secrets. For additional control, you can layer custom redaction on top.
 
 ### Built-in redaction {#built-in-redaction}
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java v1.7.0</span>
+</div>
+
 The plugin automatically redacts values for the following well-known key names
 (case-insensitive) wherever they appear in `content` or `attributes` JSON:
 
@@ -27799,6 +27828,20 @@ by credential services) is never persisted in BigQuery.
     strings within attribute values. Custom `content_formatter` runs **first**
     on raw content, so use it to add masking for secrets that may appear in
     free-form payloads.
+
+!!! note "Built-in redaction in Java"
+
+    The Java plugin redacts the same six key names (case-insensitive)
+    recursively across the assembled `attributes` tree — including session state
+    and state deltas — and any key prefixed with **`temp:`**. Unlike Python, the
+    Java plugin does **not** redact keys prefixed `secret:`; keep secrets out of
+    non-`temp:` state scopes or mask them with a custom `contentFormatter`.
+
+    A custom Java `contentFormatter` must be **thread-safe** (it is called
+    concurrently across invocations) and **fast/non-blocking** (it runs on the
+    event-processing path), and it must return a **new object** rather than
+    mutating the content it receives. If it throws, the Java plugin drops the
+    row's content (fail-closed) rather than logging the unformatted payload.
 
 ### Use `content_formatter` to redact additional secrets
 
@@ -27995,7 +28038,8 @@ call) reconstructs cleanly from BigQuery.
   `TracerProvider`, so its instrumentation never reaches your configured
   exporter — this is what prevents duplicate spans in Cloud Trace when Agent
   Engine telemetry is enabled (`GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true`)
-  or when you wire any other Cloud Trace exporter into the host process.
+  or when you wire any other Cloud Trace exporter into the host process. The
+  Java plugin uses the same internal, ID-only span tracking.
 - **`trace_id` inherited from the ambient OTel span when present.** If the
   surrounding runtime has already started an OTel span — Agent Engine's
   invocation span, the ADK `Runner` invocation span, or any span you opened
@@ -28004,7 +28048,8 @@ call) reconstructs cleanly from BigQuery.
   Cloud Trace traces via a shared `trace_id`.
 - **Fallback when no ambient span is present.** If no ambient OTel span is
   active (e.g. a non-Agent-Engine deployment with no host-side tracer
-  configured), the plugin generates a per-invocation 32-hex `trace_id` so the
+  configured), the plugin generates a per-invocation 32-hex `trace_id` (the
+  Java plugin falls back to the ADK invocation ID as the `trace_id`) so the
   parent-child hierarchy is always preserved in BigQuery, even without any
   external tracer setup.
 - **No `TracerProvider` is required.** Configuring an OpenTelemetry
@@ -28057,6 +28102,14 @@ call) reconstructs cleanly from BigQuery.
 
     - **`plugin.close()`**: Gracefully shuts down the plugin, flushing pending events and releasing resources (including the BigQuery write client and executors).
     - **Automatic Closure**: If you are using `InMemoryRunner`, calling `runner.close()` will automatically close all registered plugins, including the BigQuery Agent Analytics plugin.
+    - **`plugin.getDropStats()`**: Returns an `ImmutableMap<String, Long>` of
+      dropped-event counts per drop reason. See [Dropped-event
+      observability](#dropped-event-observability).
+    - **JVM shutdown hook**: The plugin registers a shutdown hook at
+      construction, so pending events are drained (best-effort, bounded by
+      `shutdownTimeout`) at JVM exit even if `close()` is never called. An
+      explicit `close()` deregisters the hook. Still prefer calling `close()`
+      for a deterministic flush.
 
     ```java
     // Manual shutdown
@@ -28065,6 +28118,10 @@ call) reconstructs cleanly from BigQuery.
 
 ### Dropped-event observability {#dropped-event-observability}
 
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-java">Java v1.7.0</span>
+</div>
+
 BigQuery logging is best-effort — events can be dropped when the in-memory
 queue overflows or when a write ultimately fails. The plugin tracks dropped
 rows per `drop_reason` and exposes a polling API so a host can detect, alert
@@ -28072,23 +28129,44 @@ on, and ship the counts to its own monitoring.
 
 **Drop reasons:**
 
-| Reason | Cause |
-|---|---|
-| `queue_full` | The in-memory batch queue overflowed (host produces events faster than the drainer can ship). Increase `queue_max_size` on `BigQueryLoggerConfig`, raise `batch_size` to drain in larger chunks, or scale the consumer side (more concurrent invocations finishing faster). |
-| `arrow_prep_failed` | A row could not be converted to its Arrow representation (typically schema/type mismatch). Inspect logs for the offending field. |
-| `retry_exhausted` | The Storage Write API call kept returning a retryable error (e.g. transient gRPC failures) until the retry budget was used up. |
-| `non_retryable` | Storage Write API returned a non-retryable error (permissions, quota, schema rejection). Usually requires operator intervention. |
-| `unexpected_error` | Any other exception caught while preparing or writing the batch. |
+| Reason | Language | Cause |
+|---|---|---|
+| `queue_full` | Python, Java | The in-memory batch queue overflowed (host produces events faster than the drainer can ship). Increase `queue_max_size` / `queueMaxSize` on `BigQueryLoggerConfig`, raise `batch_size` / `batchSize` to drain in larger chunks, or scale the consumer side (more concurrent invocations finishing faster). |
+| `arrow_prep_failed` | Python | A row could not be converted to its Arrow representation (typically schema/type mismatch). Inspect logs for the offending field. |
+| `retry_exhausted` | Python | The Storage Write API call kept returning a retryable error (e.g. transient gRPC failures) until the retry budget was used up. |
+| `non_retryable` | Python | Storage Write API returned a non-retryable error (permissions, quota, schema rejection). Usually requires operator intervention. |
+| `unexpected_error` | Python | Any other exception caught while preparing or writing the batch. |
+| `serialization_error` | Java | A row could not be serialized for the write stream (typically a schema/type mismatch). Inspect logs for the offending field. |
+| `append_error` | Java | Batch preparation or append failed for a cause other than `AppendSerializationError` — including timeouts, exhausted or non-retryable writes, and unexpected conversion failures. |
+| `after_close` | Java | A row reached an already-closed per-invocation processor. |
+| `shutdown_timeout` | Java | Queued rows remained when the bounded final drain expired. |
+| `writer_permit_exhausted` | Java | The live-writer safety cap was exhausted — normally during a Storage Write outage or delayed cleanup. |
+| `writer_create_error` | Java | `StreamWriter` construction or processor startup failed. |
+| `late_after_finalize` | Java | Async work completed after its invocation was finalized or while the plugin was closing. |
 
 **Reading the counts:**
 
-```python
-# Snapshot of {drop_reason: count} since plugin start.
-stats = plugin.get_drop_stats()
-# Example: {"queue_full": 12, "retry_exhausted": 0, ...}
+=== "Python"
 
-total_dropped = sum(stats.values())
-```
+    ```python
+    # Snapshot of {drop_reason: count} since plugin start.
+    stats = plugin.get_drop_stats()
+    # Example: {"queue_full": 12, "retry_exhausted": 0, ...}
+
+    total_dropped = sum(stats.values())
+    ```
+
+=== "Java"
+
+    ```java
+    // Snapshot of {drop_reason: count} since plugin start.
+    ImmutableMap<String, Long> stats = plugin.getDropStats();
+    // Example: {queue_full=12, append_error=0, serialization_error=0,
+    //           after_close=0, shutdown_timeout=0, writer_permit_exhausted=0,
+    //           writer_create_error=0, late_after_finalize=0}
+
+    long totalDropped = stats.values().stream().mapToLong(Long::longValue).sum();
+    ```
 
 **Exporting to your monitoring system** — poll periodically and ship the deltas:
 
@@ -28113,9 +28191,10 @@ async def export_loop(plugin):
         await asyncio.sleep(60)
 ```
 
-A non-zero `queue_full` or `retry_exhausted` count on a sustained basis is the
-clearest signal that BQAA is at risk of data loss — surface it on a dashboard or
-alert.
+Any non-zero count means analytics rows were dropped before reaching BigQuery.
+Alert on every reason; sustained `queue_full` or write-error counts
+(`retry_exhausted` / `non_retryable` in Python, `append_error` in Java)
+generally indicate throughput or Storage Write health problems.
 
 ### Multiprocessing and fork safety
 
@@ -34687,7 +34766,7 @@ catalog_tags: ["mcp","data","google"]
 # MCP Toolbox for Databases tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">Typescript</span><span class="lst-go">Go</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
 [MCP Toolbox for Databases](https://github.com/googleapis/mcp-toolbox) is an
@@ -34844,7 +34923,7 @@ documentation:
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ADK relies on the `@toolbox-sdk/adk` TS package to use MCP Toolbox. Install the
     package before getting started:
@@ -49272,7 +49351,7 @@ methods, as shown in the following code example:
         print(f"[Plugin] LLM request count: {self.llm_request_count}")
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript title="count_plugin.ts"
     import { BaseAgent, BasePlugin, Context } from "@google/adk";
@@ -49476,7 +49555,7 @@ a simple ADK agent.
         asyncio.run(main())
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     import { InMemoryRunner, LlmAgent, FunctionTool } from "@google/adk";
@@ -49737,7 +49816,7 @@ command line:
     python3 -m path.to.main.py
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```sh
     npx ts-node path.to.main.ts
@@ -49914,7 +49993,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[types.Content]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async onUserMessageCallback(
@@ -49969,7 +50048,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[types.Content]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async beforeRunCallback(invocationContext: InvocationContext): Promise<Content | undefined> {
@@ -50062,7 +50141,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[LlmResponse]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async onModelErrorCallback(
@@ -50143,7 +50222,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[dict]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async onToolErrorCallback(
@@ -50200,7 +50279,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[Event]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async onEventCallback(
@@ -50254,7 +50333,7 @@ The following code example shows the basic syntax of this callback:
     ) -> Optional[None]:
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     async afterRunCallback(invocationContext: InvocationContext): Promise<void> {
@@ -51977,7 +52056,7 @@ File: docs/runtime/event-loop.md
 # Runtime Event Loop
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The ADK Runtime is the underlying engine that powers your agent application during user interactions. It's the system that takes your defined agents, tools, and callbacks and orchestrates their execution in response to user input, managing the flow of information, state changes, and interactions with external services like LLMs or storage.
@@ -53951,7 +54030,7 @@ File: docs/sessions/session/index.md
 # Session: Tracking individual conversations
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 A `Session` represents a single conversation thread between a user and your
@@ -58062,7 +58141,7 @@ File: docs/tools-custom/function-tools.md
 # Function tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 When pre-built ADK tools don't meet your requirements, you can create custom
@@ -58439,7 +58518,7 @@ afterwards.
         {"result": "$123"}
         ```
 
-    === "Typescript"
+    === "TypeScript"
 
         This tool retrieves the mocked value of a stock price.
 
@@ -58965,7 +59044,7 @@ File: docs/tools-custom/index.md
 # Custom Tools for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 In an ADK agent workflow, Tools are programming functions with structured input
@@ -59463,8 +59542,8 @@ By adhering to these guidelines, you provide the LLM with the clarity and struct
 
 ## Toolsets: Grouping and Dynamically Providing Tools
 
-<div class="language-support-tag" title="This feature is currently available for Python and Typescript.">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-typescript">Typescript v0.2.0</span>
+<div class="language-support-tag" title="This feature is currently available for Python and TypeScript.">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.5.0</span><span class="lst-typescript">TypeScript v0.2.0</span>
 </div>
 
 
@@ -59535,7 +59614,7 @@ File: docs/tools-custom/mcp-tools.md
 # Model Context Protocol Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 This guide walks you through two ways of integrating Model Context Protocol (MCP) with ADK.
@@ -59793,7 +59872,7 @@ Event received: {"id":"8728380b-bfad-4d14-8421-fa98d09364f1","invocationId":"e-c
 Event received: {"id":"8fe7e594-3e47-4254-8b57-9106ad8463cb","invocationId":"e-c2458c56-e57a-45b2-97de-ae7292e505ef","author":"enterprise_assistant","content":{"parts":[{"text":"There are three files in the directory: first, second, and third."}],"role":"model"},"actions":{"stateDelta":{},"artifactDelta":{},"requestedAuthConfigs":{}},"timestamp":1747377544689}
 ```
 
-For Typescript, you can define an agent that initializes the `MCPToolset` as follows:
+For TypeScript, you can define an agent that initializes the `MCPToolset` as follows:
 
 ```typescript
 import 'dotenv/config';
@@ -63192,7 +63271,7 @@ File: docs/tutorials/multi-tool-agent.md
 # Build a multi-tool agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 This quickstart guides you through installing Agent Development Kit (ADK),
@@ -64285,7 +64364,7 @@ File: docs/workflows/index.md
 # Workflows: multi-agent, multi-node applications
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 As agentic applications grow in complexity, structuring them as a single,
@@ -64346,7 +64425,7 @@ File: docs/workflows/patterns.md
 # Multi-agent workflow patterns
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 This guide provides a number of agent patterns which you can implement with
@@ -64385,7 +64464,7 @@ your project requirements before committing to a full implementation.
     # User asks "I can't log in" -> Coordinator's LLM should call transfer_to_agent(agent_name='Support')
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Coordinator using LLM Transfer
@@ -64484,7 +64563,7 @@ your project requirements before committing to a full implementation.
     # reporter runs -> reads state['result']
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Sequential Data Pipeline
@@ -64598,7 +64677,7 @@ your project requirements before committing to a full implementation.
     # synthesizer runs afterwards, reading state['api1_data'] and state['api2_data'].
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Parallel Information Gathering
@@ -64727,7 +64806,7 @@ your project requirements before committing to a full implementation.
     # Results flow back up.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Hierarchical Research Task
@@ -64863,7 +64942,7 @@ your project requirements before committing to a full implementation.
     # reviewer runs -> reads state['draft_text'], saves status to state['review_status']
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Generator-Critic
@@ -64997,7 +65076,7 @@ your project requirements before committing to a full implementation.
     # Loop stops if QualityChecker outputs 'pass' (leading to StopChecker escalating) or after 5 iterations.
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Iterative Code Refinement
@@ -65007,7 +65086,7 @@ your project requirements before committing to a full implementation.
     // Agent to generate/refine code based on state['current_code'] and state['requirements']
     const codeRefiner = new LlmAgent({
         name: 'CodeRefiner',
-        instruction: 'Read state["current_code"] (if exists) and state["requirements"]. Generate/refine Typescript code to meet requirements. Save to state["current_code"].',
+        instruction: 'Read state["current_code"] (if exists) and state["requirements"]. Generate/refine TypeScript code to meet requirements. Save to state["current_code"].',
         outputKey: 'current_code' // Overwrites previous code in state
     });
 
@@ -65188,7 +65267,7 @@ your project requirements before committing to a full implementation.
     )
     ```
 
-=== "Typescript"
+=== "TypeScript"
 
     ```typescript
     // Conceptual Code: Using a Tool for Human Approval
