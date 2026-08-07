@@ -6108,12 +6108,15 @@ dive deeper into how they work and how to use them effectively:
 * [**Managed agents:**](/agents/managed-agents/) Use Google's first-party,
   out-of-the-box agents (backed by the Managed Agents API) directly in your ADK
   flows, with built-in server-side tools like web search and code execution.
-* [**Graph workflows:**](/graphs/) Discover how evolve your agents from
+* [**Graph workflows:**](/graphs/) Discover how to evolve your agents from
   plain language instructions to composable, reliable execution paths that
   combine AI reasoning with deterministic code logic.
 * [**Multi-agent workflows:**](/workflows/) Explore how to build agent
   applications that combine multiple agents, execution nodes, a variety of task
   execution control mechanisms to fit the needs of your project.
+* [**Agent optimization:**](/optimize/) Discover methodologies
+  to evaluate, test, and enhance the performance, reliability, and
+  cost-efficiency of your agent applications.
 
 ================
 File: docs/agents/llm-agents.md
@@ -6323,8 +6326,11 @@ tells the agent:
     --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:instruction"
     ```
 
-**Note:** For instructions that apply to *all* agents in a system, consider
-using `global_instruction` on the root agent.
+!!! note "GlobalInstructionPlugin"
+
+    To apply shared rules or a consistent personality to *all* 
+    agents in your system, use `GlobalInstructionPlugin` instead of 
+    the deprecated `global_instruction` parameter.
 
 ## Equip the agent with tools
 
@@ -7023,8 +7029,8 @@ the following:
   graph-based pipelines using [Graph-based agent workflows](/graphs/). In Go
   v2.0.0, use `workflow.NewAgentNode` to wrap any LLM agent as a workflow node.
 - **Multi-agent systems:** Advanced strategies for agent interaction, including
-  agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`)
-  and shared instructions (`global_instruction`). See [Multi-agent
+  agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`),
+  and consistent identity and rules for every agent in your app (`GlobalInstructionPlugin`). See [Multi-agent
   workflows](/workflows/) and [collaborative agent
   teams](/workflows/collaboration/).
 
@@ -13070,18 +13076,19 @@ For more information on connecting to Google Cloud from ADK agents, see
 
 ## Prerequisites
 
-1. You should have a Google Cloud project. You need to know your:
-    1. Project name (i.e. "my-project")
-    1. Project location (i.e. "us-central1")
-    1. Service account (i.e. "1234567890-compute@developer.gserviceaccount.com")
-    1. GOOGLE_API_KEY
+You should have a Google Cloud project. You need to know your:
+
+  1. Project name, for example: "my-project"
+  2. Project location, for example: "us-central1"
+  3. Service account, for example: "1234567890-compute@developer.gserviceaccount.com"
+  4. GOOGLE_API_KEY
 
 ## Secret
 
-Please make sure you have created a secret which can be read by your service account.
+Make sure you have created a secret which can be read by your service account.
 
 
-### Cloud Build Permissions
+### Cloud Build permissions
 
 Since the `adk deploy` command uses Google Cloud Build to automate the build process, you must set your default compute service account to have permission to use Cloud Build.
 The following command example shows how to grant this permission:
@@ -13090,6 +13097,7 @@ The following command example shows how to grant this permission:
 gcloud projects add-iam-policy-binding [PROJECT_ID] \
     --member="serviceAccount:[PROJECT_NUMBER]-compute@developer.gserviceaccount.com" \
     --role="roles/cloudbuild.builds.builder"
+```
 
 ### Entry for GOOGLE_API_KEY secret
 
@@ -13125,7 +13133,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     The `adk deploy cloud_run` command deploys your agent code to Google Cloud Run.
 
-    Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
+    Ensure you have authenticated with Google Cloud: `gcloud auth login` and `gcloud config set project <your-project-id>`.
 
     #### Setup environment variables
 
@@ -13173,17 +13181,18 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     ##### Arguments
 
-    * `AGENT_PATH`: (Required) Positional argument specifying the path to the directory containing your agent's source code (e.g., `$AGENT_PATH` in the examples, or `capital_agent/`). This directory must contain at least an `__init__.py` and your main agent file (e.g., `agent.py`).
+    * `AGENT_PATH`: (Required) Positional argument specifying the path to the directory containing your agent's source code, for example: `$AGENT_PATH` or `capital_agent/`. This directory must contain at least an `__init__.py` and your main agent file, for example: `agent.py`.
 
     ##### Options
-
-    * `--project TEXT`: (Required) Your Google Cloud project ID (e.g., `$GOOGLE_CLOUD_PROJECT`).
-    * `--region TEXT`: (Required) The Google Cloud location for deployment (e.g., `$GOOGLE_CLOUD_LOCATION`, `us-central1`).
-    * `--service_name TEXT`: (Optional) The name for the Cloud Run service (e.g., `$SERVICE_NAME`). Defaults to `adk-default-service-name`.
-    * `--app_name TEXT`: (Optional) The application name for the ADK API server (e.g., `$APP_NAME`). Defaults to the name of the directory specified by `AGENT_PATH` (e.g., `capital_agent` if `AGENT_PATH` is `./capital_agent`).
-    * `--session_service_uri TEXT`: (Optional) The URI of the session service. If you are using a managed session service via Agent Runtime, pass `agentengine://<agent_engine>`, where `<agent_engine>` is either the resource ID or the full `projects/*/locations/*/reasoningEngines/*` resource name. Other supported forms are `memory://` and any SQLAlchemy database URL (e.g., `sqlite://<path>`).
-    * `--artifact_service_uri TEXT`: (Optional) The URI of the artifact service (e.g., `gs://<bucket_name>` for Cloud Storage, `file://<path>`, or `memory://`).
-    * `--memory_service_uri TEXT`: (Optional) The URI of the memory service (e.g., `rag://<rag_corpus_id>`, `agentengine://<agent_engine>`, or `memory://`).
+    
+    * `--project TEXT`: (Required) Your Google Cloud project ID, for example: `$GOOGLE_CLOUD_PROJECT`.
+    * `--region TEXT`: (Required) The Google Cloud location for deployment, for example: `$GOOGLE_CLOUD_LOCATION`, `us-central1`.
+    * `--allow_origins`: (Optional) A comma-separated list of origins for CORS (Cross-Origin Sharing). To allow a regular expression pattern, prefix the origin with `regex`. For example: `http://localhost:8000,regex:https://.*\.example\.com`.
+    * `--service_name TEXT`: (Optional) The name for the Cloud Run service, for example: `$SERVICE_NAME`, defaults to `adk-default-service-name`.
+    * `--app_name TEXT`: (Optional) The application name for the ADK API server, for example: `$APP_NAME`. Defaults to the name of the directory specified by `AGENT_PATH`, for example: `capital_agent` if `AGENT_PATH` is `./capital_agent`.
+    * `--session_service_uri TEXT`: (Optional) The URI of the session service. If you are using a managed session service via Agent Runtime, pass `agentengine://<agent_engine>`, where `<agent_engine>` is either the resource ID or the full `projects/*/locations/*/reasoningEngines/*` resource name. Other supported forms are `memory://` and any SQLAlchemy database URL, for example: `sqlite://<path>`.
+    * `--artifact_service_uri TEXT`: (Optional) The URI of the artifact service, for example: `gs://<bucket_name>` for Cloud Storage, `file://<path>`, or `memory://`.
+    * `--memory_service_uri TEXT`: (Optional) The URI of the memory service, for example: `rag://<rag_corpus_id>`, `agentengine://<agent_engine>`, or `memory://`.
     * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
     * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
     * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
@@ -13195,7 +13204,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     To pass specific gcloud flags through the `adk deploy cloud_run` command, use the double-dash separator (`--`) after the ADK arguments. Any flags (except ADK-managed) following the `--` will be passed directly to the underlying gcloud command.
 
-    ###### Syntax Example:
+    ###### Syntax example:
 
     ```bash
     adk deploy cloud_run [ADK_FLAGS] -- [GCLOUD_FLAGS]
@@ -13211,7 +13220,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     During the deployment process, you might be prompted: `Allow unauthenticated invocations to [your-service-name] (y/N)?`.
 
     * Enter `y` to allow public access to your agent's API endpoint without authentication.
-    * Enter `N` (or press Enter for the default) to require authentication (e.g., using an identity token as shown in the "Testing your agent" section).
+    * Enter `N` (or press Enter for the default) to require authentication, for example: using an identity token as shown in the "Testing your agent" section.
 
     Upon successful execution, the command deploys your agent to Cloud Run and provide the URL of the deployed service.
 
@@ -13223,7 +13232,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
 
-    #### Project Structure
+    #### Project structure
 
     Organize your project files as follows:
 
@@ -13252,7 +13261,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
         # Get the directory where main.py is located
         AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
-        # Example session service URI (e.g., SQLite)
+        # Example session service URI, for example, SQLite
         # Note: Use 'sqlite+aiosqlite' instead of 'sqlite' because DatabaseSessionService requires an async driver
         SESSION_SERVICE_URI = "sqlite+aiosqlite:///./sessions.db"
         # Example allowed origins for CORS
@@ -13310,7 +13319,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
         CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
         ```
 
-    #### Defining Multiple Agents
+    #### Define Multiple Agents
 
     You can define and deploy multiple agents within the same Cloud Run instance by creating separate folders in the root of `your-project-directory/`. Each folder represents one agent and must define a `root_agent` in its configuration.
 
@@ -13360,7 +13369,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     Ensure you have authenticated with Google Cloud (`gcloud auth login` and `gcloud config set project <your-project-id>`).
 
-    #### Setup environment variables
+    #### Set up environment variables
 
     Optional but recommended: Setting environment variables can make the deployment commands cleaner.
 
@@ -13399,19 +13408,19 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     ##### Options
 
-    * `--project TEXT`: (Required) Your Google Cloud project ID (e.g., `$GOOGLE_CLOUD_PROJECT`).
-    * `--region TEXT`: (Required) The Google Cloud location for deployment (e.g., `$GOOGLE_CLOUD_LOCATION`, `us-central1`).
-    * `--service_name TEXT`: (Optional) The name for the Cloud Run service (e.g., `$SERVICE_NAME`). Defaults to `adk-default-service-name`.
+    * `--project TEXT`: (Required) Your Google Cloud project ID.
+    * `--region TEXT`: (Required) The Google Cloud location for deployment, for example: `$GOOGLE_CLOUD_LOCATION`, `us-central1`.
+    * `--service_name TEXT`: (Optional) The name for the Cloud Run service, for example: `$SERVICE_NAME`. Defaults to `adk-default-service-name`.
     * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
     * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
-    * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
+    * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *This option is generally not needed unless troubleshooting issues.*
     * `--help`: Show the help message and exit.
 
     ##### Authenticated access
     During the deployment process, you might be prompted: `Allow unauthenticated invocations to [your-service-name] (y/N)?`.
 
     * Enter `y` to allow public access to your agent's API endpoint without authentication.
-    * Enter `N` (or press Enter for the default) to require authentication (e.g., using an identity token as shown in the "Testing your agent" section).
+    * Enter `N` (or press Enter for the default) to require authentication, for example, using an identity token as shown in the "Testing your agent" section.
 
     Upon successful execution, the command deploys your agent to Cloud Run and provides the URL of the deployed service.
 
@@ -13477,10 +13486,10 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
 
     ##### Required
 
-    * `-p, --project_name`: Your Google Cloud project ID (e.g., $GOOGLE_CLOUD_PROJECT).
-    * `-r, --region`: The Google Cloud location for deployment (e.g., $GOOGLE_CLOUD_LOCATION, us-central1).
-    * `-s, --service_name`: The name for the Cloud Run service (e.g., $SERVICE_NAME).
-    * `-e, --entry_point_path`: Path to the main Go file containing your agent's source code (e.g., $AGENT_PATH).
+    * `-p, --project_name`: Your Google Cloud project ID.
+    * `-r, --region`: The Google Cloud location for deployment, for example: $GOOGLE_CLOUD_LOCATION, us-central1.
+    * `-s, --service_name`: The name for the Cloud Run service, for example: $SERVICE_NAME.
+    * `-e, --entry_point_path`: Path to the main Go file containing your agent's source code, for example: $AGENT_PATH.
 
     ##### Optional
 
@@ -13589,15 +13598,15 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     * `--region`: Specifies the deployment region.
     * `--project`: Specifies the GCP project.
     * `--allow-unauthenticated`: Allows public access to the service. Remove this flag for private services.
-    * `--set-env-vars`: Passes necessary environment variables to the running container. Ensure you include all variables required by ADK and your agent (like API keys if not using Application Default Credentials).
+    * `--set-env-vars`: Passes necessary environment variables to the running container. Ensure you include all variables required by ADK and your agent, such as API keys if not using Application Default Credentials.
 
     `gcloud` will build the Docker image, push it to Google Artifact Registry, and deploy it to Cloud Run. Upon completion, it will output the URL of your deployed service.
 
     For a full list of deployment options, see the [`gcloud run deploy` reference documentation](https://cloud.google.com/sdk/gcloud/reference/run/deploy).
 
-## Testing your agent
+## Test your agent
 
-Once your agent is deployed to Cloud Run, you can interact with it via the deployed UI (if enabled) or directly with its API endpoints using tools like `curl`. You'll need the service URL provided after deployment.
+Once your agent is deployed to Cloud Run, you can interact with it via the deployed UI, if enabled, or directly with its API endpoints using tools like `curl`. You'll need the service URL provided after deployment.
 
 === "UI Testing"
 
@@ -13643,7 +13652,7 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
 
     #### Get an identity token (if needed)
 
-    If your service requires authentication (i.e., you didn't use `--allow-unauthenticated` with `gcloud` or answered 'N' to the prompt with `adk`), obtain an identity token.
+    If your service requires authentication, for example, you didn't use `--allow-unauthenticated` with `gcloud` or answered 'N' to the prompt with `adk`, obtain an identity token.
 
     ```bash
     export TOKEN=$(gcloud auth print-identity-token)
@@ -13659,7 +13668,7 @@ Once your agent is deployed to Cloud Run, you can interact with it via the deplo
     curl -X GET -H "Authorization: Bearer $TOKEN" $APP_URL/list-apps
     ```
 
-    *(Adjust the `app_name` in the following commands based on this output if needed. The default is often the agent directory name, e.g., `capital_agent`)*.
+    *Adjust the `app_name` in the following commands based on this output if needed. The default is often the agent directory name, for example: `capital_agent`*.
 
     #### Create or Update a Session
 
@@ -31101,6 +31110,111 @@ The `ELEVENLABS_MCP_OUTPUT_MODE` environment variable supports three modes:
 - [ElevenLabs MCP Server Repository](https://github.com/elevenlabs/elevenlabs-mcp)
 - [Introducing ElevenLabs MCP](https://elevenlabs.io/blog/introducing-elevenlabs-mcp)
 - [ElevenLabs Documentation](https://elevenlabs.io/docs)
+
+================
+File: docs/integrations/enterprise-web-search.md
+================
+---
+catalog_title: Enterprise Web Search
+catalog_description: Ground ADK agents with policy-compliant web search results
+catalog_icon: /integrations/assets/enterprise-web-search.png
+catalog_tags: ["google", "search"]
+---
+
+# Enterprise Web Search tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.9.0</span><span class="lst-typescript">TypeScript v1.5.0</span>
+</div>
+
+  The Google Cloud [Enterprise Web Search](https://docs.cloud.google.com/gemini-enterprise-agent-platform/reference/rest/Shared.Types/EnterpriseWebSearch) grounds ADK agents with information from the
+web while maintaining enterprise compliance and source control. Designed for
+enterprise-grade workloads, this tool ensures grounding data aligns with
+organizational security and compliance policies.
+
+!!! note "Enterprise Web Search vs. Agent Search"
+
+    Enterprise Web Search is distinct from 
+    [Agent Search](https://adk.dev/integrations/agent-search/). While the Agent 
+    Search queries indexed private data stores, Enterprise Web Search 
+    retrieves compliant public web data.
+
+!!! warning "Service Specific Terms"
+    
+    When using the Enterprise Web Search tool, you are obligated to comply with Google's Service Specific Terms, which include properly displaying search suggestions and required Google logos in your UI.
+
+## Use cases
+
+- **Enterprise Grounding**: Provide up-to-date web information to agents while
+  maintaining organizational compliance standards.
+- **Controlled Web Access**: Ensure agents query trusted web sources for
+  research, market intelligence, or customer support tasks.
+- **Regulated Workflows**: Deploy grounding capabilities in environments
+  requiring strict auditability and data governance.
+
+## Prerequisites
+
+- Access to Google Cloud Platform with Agent Search enabled.
+- Configured GCP project with necessary permissions for Gemini models.
+- The environment variable `GOOGLE_GENAI_USE_ENTERPRISE=TRUE` must be set.
+- The `google-adk` package (Python) or `@google/adk` package (TypeScript) installed:
+
+=== "Python"
+
+    ```bash
+    pip install google-adk
+    ```
+
+=== "TypeScript"
+
+    ```bash
+    npm install @google/adk
+    ```
+
+## Use with agent
+
+The following example demonstrates how to configure an ADK agent with the
+pre-instantiated `enterprise_web_search` tool:
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.tools import enterprise_web_search
+
+    root_agent = Agent(
+        model="gemini-flash-latest",
+        name="enterprise_search_agent",
+        instruction="Answer user questions accurately using enterprise-compliant web search results.",
+        tools=[enterprise_web_search],
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import { LlmAgent, ENTERPRISE_WEB_SEARCH } from "@google/adk";
+
+    const rootAgent = new LlmAgent({
+      model: "gemini-flash-latest",
+      name: "enterprise_search_agent",
+      instruction: "Answer user questions accurately using enterprise-compliant web search results.",
+      tools: [ENTERPRISE_WEB_SEARCH],
+    });
+
+    export { rootAgent };
+    ```
+    
+## Selection guidance
+
+- Use standard Google Search for general-purpose applications requiring broad
+  web coverage across any Gemini model.
+- Use Enterprise Web Search when building enterprise agents that mandate
+  compliance control, source auditing, and deployment on Gemini 2+ models.
+
+## Additional resources
+
+- [Agent Search Web Grounding Overview](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/grounding/web-grounding-enterprise)
 
 ================
 File: docs/integrations/environment-toolset.md
