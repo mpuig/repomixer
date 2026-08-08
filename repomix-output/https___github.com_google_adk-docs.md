@@ -630,11 +630,11 @@ To activate the extension, the client can instantiate the `RemoteA2aAgent` with 
 Activating this extension implies that the server will use the new agent executor implementation.
 
 ```python
-from google.adk.agents import RemoteA2aAgent
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 
 remote_agent = RemoteA2aAgent(
     name="remote_agent",
-    url="http://localhost:8000/a2a/remote_agent",
+    agent_card="http://localhost:8000/a2a/remote_agent/.well-known/agent-card.json",
     use_legacy=False,
 )
 ```
@@ -1330,15 +1330,15 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8001 (Press CTRL+C to quit)
 ```
 
-### 3. Look out for the required agent card (`agent-card.json`) of the remote agent { #look-out-for-the-required-agent-card-agent-json-of-the-remote-agent }
+### 3. Look out for the required agent card (`agent.json`) of the remote agent { #look-out-for-the-required-agent-card-agent-json-of-the-remote-agent }
 
 A2A Protocol requires that each agent must have an agent card that describes what it does.
 
-If someone else has already built the remote A2A agent that you are looking to consume in your agent, then you should confirm that they have an agent card (`agent-card.json`).
+If someone else has already built the remote A2A agent that you are looking to consume in your agent, then you should confirm that they have an agent card (`agent.json`). The `adk api_server --a2a` command exposes over A2A only the agent folders that contain a file named exactly `agent.json`.
 
 In the sample, the `check_prime_agent` already has an agent card provided:
 
-```json title="a2a_basic/remote_a2a/check_prime_agent/agent-card.json"
+```json title="a2a_basic/remote_a2a/check_prime_agent/agent.json"
 
 {
   "capabilities": {},
@@ -1367,12 +1367,12 @@ In the sample, the `check_prime_agent` already has an agent card provided:
 
   ```bash
   # In a separate terminal, run the adk web server
-  adk web contributing/samples/
+  adk web contributing/samples/a2a/
   ```
 
 #### How it works
 
-The main agent uses the `RemoteA2aAgent()` function to consume the remote agent (`prime_agent` in our example). As you can see below, `RemoteA2aAgent()` requires the `name`, `description`, and the URL of the `agent_card`.
+The main agent uses the `RemoteA2aAgent` class to consume the remote agent (`prime_agent` in our example). As you can see below, `RemoteA2aAgent` requires the `name` and an `agent_card`, which can be an `AgentCard` object, a URL (as in the example below), or a path to a local agent card file; the `description` field is optional and defaults to an empty string.
 
 ```python title="a2a_basic/agent.py"
 <...code truncated...>
@@ -1386,14 +1386,13 @@ prime_agent = RemoteA2aAgent(
     agent_card=(
         f"http://localhost:8001/a2a/check_prime_agent{AGENT_CARD_WELL_KNOWN_PATH}"
     ),
-    use_legacy=False,
 )
 
 <...code truncated>
 ```
 
 !!! note "Using the new A2A integration"
-    By setting `use_legacy=False`, the agent will use the new ADK-A2A integration, as it will send the [A2A extension](a2a-extension.md) to the remote agent.
+    The `use_legacy` parameter defaults to `True`, so the sample above uses the legacy path. Set `use_legacy=False` to use the new ADK-A2A integration, which sends the [A2A extension](a2a-extension.md) to the remote agent.
 
 Then, you can simply use the `RemoteA2aAgent` in your agent. In this case, `prime_agent` is used as one of the sub-agents in the `root_agent` below:
 
@@ -1465,6 +1464,7 @@ Through interceptors, you can also modify the `ParametersConfig` for the A2A req
 ```python
 <...code truncated...>
 
+from google.adk.a2a.agent import A2aRemoteAgentConfig
 from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 
@@ -1871,10 +1871,13 @@ When you call `to_a2a()`, ADK automatically handles several setup steps to expos
 * **Starlette App & Agent Card:** Creates a Starlette application. During the startup phase, it either loads your provided Agent Card or automatically builds one from your agent's configuration using an `AgentCardBuilder`. It then mounts all the necessary A2A API routes.
 
 #### Parameters
-* **`root_agent` (required):** The primary ADK agent instance you want to expose via the A2A protocol.
-* **`port` (optional):**  The port number the application will run on.
+* **`agent` (required):** The primary ADK agent instance you want to expose via the A2A protocol.
+* **`host` (optional):** The host used to build the A2A RPC URL advertised in the generated agent card. Defaults to `"localhost"`.
+* **`protocol` (optional):** The protocol used in that same URL. Defaults to `"http"`.
+* **`port` (optional):** The port used in that same URL. Defaults to `8000`. `to_a2a()` does not bind a port itself, so this must match the port you actually serve on (see the `uvicorn --port` flag below), or the advertised card will point somewhere unreachable.
 * **`push_config_store` (optional):** A custom store implementation for managing A2A push notifications. If not provided, the system defaults to an in-memory store (`InMemoryPushNotificationConfigStore`).
 * **`agent_card` (optional):** An `AgentCard` object or a path to a JSON file. If omitted, ADK automatically generates an agent card from your agent's code.
+* **`runner` (optional):** A pre-built `Runner`. If omitted, a default runner backed by in-memory services is created.
 
 ### Getting the Sample Code { #getting-the-sample-code }
 
@@ -1921,7 +1924,7 @@ You can now start the remote agent server, which will host the `a2a_app` within 
 ```bash
 # Ensure current working directory is adk-python/
 # Start the remote agent using uvicorn
-uvicorn contributing.samples.a2a_root.remote_a2a.hello_world.agent:a2a_app --host localhost --port 8001
+uvicorn contributing.samples.a2a.a2a_root.remote_a2a.hello_world.agent:a2a_app --host localhost --port 8001
 ```
 
 ??? note "Why use port 8001?"
@@ -1954,7 +1957,7 @@ Now that your remote agent is running, you can launch the dev UI and select "a2a
 
 ```bash
 # In a separate terminal, run the adk web server
-adk web contributing/samples/
+adk web contributing/samples/a2a/
 ```
 
 To open the adk web server, go to: [http://localhost:8000](http://localhost:8000).
@@ -2019,7 +2022,7 @@ The new version of the [agent executor](https://github.com/google/adk-python/blo
 However, you can also bypass the extension and force the server to use the new executor version by setting the `force_new_version=True` flag when instantiating the `A2aAgentExecutor`. This allows you to use the new executor logic without needing to modify existing clients to send the extension.
 
 ```python
-from google.adk.a2a.executor import A2aAgentExecutor
+from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 
 executor = A2aAgentExecutor(
             ...,
@@ -15753,7 +15756,7 @@ specify it in your `EvalConfig` JSON file.
 
 ### Example `EvalConfig`
 
-Assuming your `check_final_response_match` function is defined in
+Assuming your `check_final_response_exact_match` function is defined in
 `my_agent.metrics.py`, your `EvalConfig` might look like this:
 
 ```json
@@ -15779,7 +15782,8 @@ Assuming your `check_final_response_match` function is defined in
 With this configuration, when you run
 `adk eval --config_file_path=<path_to_this_config>`, ADK will execute
 `check_final_response_exact_match` for each eval case, and check if the returned
-score is >= 0.8 to mark the `response_match` criterion as passed or failed.
+score is >= 0.8 to mark the `my_check_final_response_exact_match` criterion as
+passed or failed.
 
 ### Providing Metric Information
 
@@ -22068,17 +22072,19 @@ The following is an example of the content object returned by the model after a 
   "groundingMetadata": {
     "groundingChunks": [
       {
-        "document": {
+        "retrievedContext": {
           "title": "AI in Medical Scribing: Technical Challenges",
-          "uri": "projects/your-project/locations/global/dataStores/your-datastore-id/documents/doc-medical-scribe-ai-tech-challenges",
-          "id": "doc-medical-scribe-ai-tech-challenges"
+          "uri": "https://storage.googleapis.com/your-bucket/doc-medical-scribe-ai-tech-challenges.pdf",
+          "documentName": "projects/your-project/locations/global/collections/default_collection/dataStores/your-datastore-id/branches/0/documents/doc-medical-scribe-ai-tech-challenges",
+          "text": "Medical documentation requires extremely high levels of accuracy, as errors can lead to misdiagnoses..."
         }
       },
       {
-        "document": {
+        "retrievedContext": {
           "title": "Regulatory and Ethical Hurdles for AI in Healthcare",
-          "uri": "projects/your-project/locations/global/dataStores/your-datastore-id/documents/doc-ai-healthcare-ethics",
-          "id": "doc-ai-healthcare-ethics"
+          "uri": "https://storage.googleapis.com/your-bucket/doc-ai-healthcare-ethics.pdf",
+          "documentName": "projects/your-project/locations/global/collections/default_collection/dataStores/your-datastore-id/branches/0/documents/doc-ai-healthcare-ethics",
+          "text": "HIPAA compliance imposes strict requirements on how patient data may be stored and processed..."
         }
       }
     ],
@@ -22105,7 +22111,7 @@ The following is an example of the content object returned by the model after a 
 
 The metadata provides a link between the text generated by the model and the enterprise documents that support it. Here is a step-by-step breakdown:
 
-- **groundingChunks**: This is a list of the enterprise documents the model consulted. Each chunk contains the document `title`, `uri` (document path), and `id`.
+- **groundingChunks**: This is a list of the enterprise documents the model consulted. Each chunk retrieved from your datastore carries a `retrievedContext` object holding the document `title`, its `uri`, the `documentName` (the full Agent Search resource name of the document), and the `text` that was retrieved.
 - **groundingSupports**: This list connects specific sentences in the final answer back to the `groundingChunks`.
 - **segment**: This object identifies a specific portion of the final text answer, defined by its `startIndex`, `endIndex`, and the `text` itself.
 - **groundingChunkIndices**: This array contains the index numbers that correspond to the sources listed in the `groundingChunks`. For example, the text about "HIPAA compliance" is supported by information from `groundingChunks` at index 1 (the "Regulatory and Ethical Hurdles" document).
@@ -22125,11 +22131,11 @@ Since grounding metadata is provided, you can choose to implement citation displ
 
     ```python
     for event in events:
-        if event.is_final_response():
+        if event.is_final_response() and event.content and event.content.parts:
             print(event.content.parts[0].text)
 
             # Optional: Show source count
-            if event.grounding_metadata:
+            if event.grounding_metadata and event.grounding_metadata.grounding_chunks:
                 print(f"\nBased on {len(event.grounding_metadata.grounding_chunks)} documents")
     ```
 
@@ -31417,6 +31423,12 @@ Before using the `EventarcToolset`, you need to complete the following setup ste
         --logging-config=DEBUG
     ```
 
+4.  **Install required dependencies**: Install the `gcp` extra package to include the required Google Cloud Eventarc client library:
+
+    ```bash
+    pip install "google-adk[gcp]"
+    ```
+
 ## Use with agent
 
 The following example shows how to configure and equip an agent with the `EventarcToolset` to publish CloudEvents:
@@ -31439,7 +31451,7 @@ Publishes a structured CloudEvent to a Google Cloud Eventarc Advanced Message Bu
 | `type`              | `str`              | The CloudEvents type identifier representing the occurrence (for example, `com.example.user.signup`).                                                    |
 | `source`            | `str`              | The CloudEvents source URI identifying the context in which an event happened (for example, `//my-service/auth`).                                        |
 | `data`              | `dict \| str \| Any` | (Optional) The event payload data to include in the CloudEvent.                                                                                          |
-| `datacontenttype`   | `str`              | (Optional) The media type of `data` (for example, `application/json`). Defaults to `application/json` when dictionary or JSON data is provided.             |
+| `datacontenttype`   | `str`              | (Optional) The media type of `data` (for example, `application/json`). Defaults to `application/json` when dictionary or list data is provided, and `text/plain` for string payloads. |
 | `subject`           | `str`              | (Optional) The subject of the event in the context of the event producer.                                                                                |
 | `id`                | `str`              | (Optional) A unique identifier for the event. If not provided, a UUID is automatically generated.                                                        |
 | `time`              | `str`              | (Optional) Timestamp of when the occurrence happened in RFC 3339 format. If not provided, the current UTC timestamp is used.                             |
@@ -31479,10 +31491,10 @@ The `CloudEventAttributesBinding` dataclass configures how individual CloudEvent
 | Binding Type       | Example                                     | Exposed to LLM | Description                                                                                                                                           |
 | ------------------ | ------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Static String**  | `type="vendor_outreach.completed"`          | No             | Enforces a fixed literal string. The attribute is hidden from the LLM signature and automatically applied on every call.                              |
-| **Runtime Lambda** | `source=lambda ctx: f"//agent/{ctx.id}"`    | No             | A callable (`Callable[[Any], str]`) evaluated dynamically at execution time using the tool runtime context. Hidden from the LLM signature.            |
+| **Runtime Lambda** | `source=lambda ctx: f"//agent/{ctx.session_id}"`    | No             | A callable (`Callable[[Any], str]`) evaluated dynamically at execution time using the event payload, runtime context, or both. Hidden from the LLM signature.            |
 | **`AgentProvided`**| `subject=AgentProvided("Customer ID")`      | Yes            | Instructs ADK to expose the attribute as an explicit parameter in the function signature so the LLM can provide it. Accepts a `description` string.     |
 | **`MISSING`**      | `time=MISSING`                              | No             | The default sentinel for optional attributes. Indicates default behavior applies (for example, automatically generating the current UTC timestamp for `time` or a UUID for `id`). |
-| **`OMIT`**         | `time=OMIT`                                 | No             | Explicitly excludes an optional attribute from the generated CloudEvent. Mandatory attributes (`type`, `source`, `bus`) cannot be set to `OMIT`.                                      |
+| **`OMIT`**         | `time=OMIT`                                 | No             | Explicitly excludes an optional attribute from the generated CloudEvent. Mandatory attributes (`type`, `source`, `bus`, `id`, `specversion`) cannot be set to `OMIT`.                                      |
 
 #### Example: Understanding `MISSING` versus `OMIT`
 
@@ -38684,9 +38696,9 @@ error_handling_plugin = CustomRetryPlugin(max_retries=5)
 
 For complete code samples using the Reflect and Retry plugin, see the following:
 
-*   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_reflect_tool_retry/basic)
+*   [Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugins/plugin_reflect_tool_retry/basic)
     code sample
-*   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_reflect_tool_retry/hallucinating_func_name)
+*   [Hallucinating function name](https://github.com/google/adk-python/tree/main/contributing/samples/plugins/plugin_reflect_tool_retry/hallucinating_func_name)
     code sample
 
 ================
@@ -47753,7 +47765,7 @@ Stop `adk web` by pressing `Ctrl-C` on the console.
 
 ### Note on ADK Streaming
 
-The following features will be supported in the future versions of the ADK Streaming: Callback, LongRunningTool, ExampleTool, and Shell agent (e.g. SequentialAgent).
+Model callbacks (`before_model_callback` and `after_model_callback`) are not invoked on the streaming path; ADK only runs them on the `run_async` path. Agent callbacks (`before_agent_callback`, `after_agent_callback`) and tool callbacks (`before_tool_callback`, `after_tool_callback`) do run while streaming, as do `LongRunningFunctionTool` and `ExampleTool`. Of the workflow agents, only `SequentialAgent` supports streaming: `LoopAgent` and `ParallelAgent` raise `NotImplementedError`.
 
 Congratulations\! You've successfully created and interacted with your first Streaming agent using ADK\!
 
@@ -48366,6 +48378,13 @@ prompt logging using the environment variable:
 export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true
 ```
 
+The available values for this variable are: `NO_CONTENT`, `EVENT_ONLY`,
+`SPAN_ONLY`, and `SPAN_AND_EVENT`. A boolean `true` or `1` means `EVENT_ONLY`,
+which records content on the emitted log events; any value outside these four
+falls back to `NO_CONTENT`. To record content on the inference span, `SPAN_ONLY`
+and `SPAN_AND_EVENT` also require
+`OTEL_SEMCONV_STABILITY_OPT_IN=gen_ai_latest_experimental`.
+
 !!! warning
     The `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT` setting logs the
     full content of user prompts and agent responses. This is useful for
@@ -48426,6 +48445,20 @@ import os
 os.environ["OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT"] = "true"
 ```
 
+To scope content capture to a single run instead of the whole process, set
+`RunConfig.telemetry` rather than the environment variable:
+
+```python
+from google.adk.agents.run_config import RunConfig
+from google.adk.telemetry import ContentCapturingMode, TelemetryConfig
+
+run_config = RunConfig(
+    telemetry=TelemetryConfig(
+        capture_message_content=ContentCapturingMode.SPAN_AND_EVENT,
+    ),
+)
+```
+
 #### OTLP export
 
 To export logs to an OpenTelemetry Collector (or an OTLP-compatible backend)
@@ -48468,8 +48501,7 @@ In Kotlin, ADK uses standard JVM logging facilities (defaulting to Flogger) and 
 You can enable full prompt logging by configuring the global `TelemetryConfig`:
 
 ```kotlin
---8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:
-capture_content"
+--8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:capture_content"
 ```
 
 #### Activity logging with Plugins
@@ -48556,23 +48588,27 @@ standard Go `log` package. These logs are written to `stderr` by default.
 ### Sample Python log entry
 
 ```text
-2025-07-08 11:22:33,456 - DEBUG - google_adk.models.google_llm - LLM Request: contents { ... }
+2025-07-08 11:22:33,456 - DEBUG - google_adk.google.adk.models.google_llm - LLM Request: contents { ... }
 ```
 
 | Log Segment                     | Format Specifier | Meaning                                        |
 | ------------------------------- | ---------------- | ---------------------------------------------- |
 | `2025-07-08 11:22:33,456`       | `%(asctime)s`    | Timestamp                                      |
 | `DEBUG`                         | `%(levelname)s`  | Severity level                                 |
-| `google_adk.models.google_llm`  | `%(name)s`       | Logger name (the module that produced the log) |
+| `google_adk.google.adk.models.google_llm`  | `%(name)s`       | Logger name (the module that produced the log) |
 | `LLM Request: contents { ... }` | `%(message)s`    | The actual log message                         |
 
 By reading the logger name, you can immediately pinpoint the source of the log
 and understand its context within the agent's architecture.
+ADK loggers are named `google_adk.` followed by the module's fully-qualified
+name, so every ADK logger is a child of the `google_adk` logger. Configure them
+as a group with `logging.getLogger("google_adk")`.
 
 ### Debugging example
 
 After enabling `DEBUG` logging (see [Logging level](#logging-level) above), run
-your agent and look for messages from the `google.adk.models.google_llm` logger.
+your agent and look for messages from the
+`google_adk.google.adk.models.google_llm` logger.
 The output shows the full LLM request and response:
 
 ```text
@@ -48636,11 +48672,13 @@ When metrics are enabled, ADK automatically instruments the agent's lifecycle, w
 
 | Metric Name | Type | Description | Key Attributes (Dimensions) |
 | :--- | :--- | :--- | :--- |
-| **`gen_ai.agent.invocation.duration`** | Histogram | The total time taken for an agent to process a prompt and return a response. | `gen_ai.agent.name`, `error.type` |
-| **`gen_ai.tool.execution.duration`** | Histogram | The execution latency of individual tools called by the agent. Useful for spotting slow external APIs. | `gen_ai.tool.name`, `error.type` |
-| **`gen_ai.agent.request.size`** | Histogram | The size or complexity of the incoming request sent to the agent. | `gen_ai.agent.name` |
-| **`gen_ai.agent.response.size`** | Histogram | The size or complexity of the final response generated by the agent. | `gen_ai.agent.name` |
-| **`gen_ai.agent.workflow.steps`** | Histogram | Tracks the number of iterative steps or reasoning loops an agent takes to complete a workflow. | `gen_ai.agent.name` |
+| **`gen_ai.invoke_agent.duration`** | Histogram (seconds) | The total time taken for an agent to process a prompt and return a response. | `gen_ai.agent.name`, `error.type` |
+| **`gen_ai.invoke_workflow.duration`** | Histogram (seconds) | The time taken to run a workflow. | `gen_ai.operation.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only), `error.type` |
+| **`gen_ai.execute_tool.duration`** | Histogram (seconds) | The execution latency of individual tools called by the agent. Useful for spotting slow external APIs. | `gen_ai.agent.name`, `gen_ai.tool.name`, `gen_ai.tool.type`, `error.type` |
+| **`gen_ai.invoke_agent.inference_calls`** | Histogram (count) | The number of inference (model) calls made during one agent invocation. | `gen_ai.agent.name` |
+| **`gen_ai.invoke_agent.tool_calls`** | Histogram (count) | The number of tool calls made during one agent invocation. | `gen_ai.agent.name` |
+| **`gen_ai.client.operation.duration`** | Histogram (seconds) | The latency of a single model `generate_content` call. | `gen_ai.agent.name`, `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`, `error.type` |
+| **`gen_ai.client.token.usage`** | Histogram (tokens) | Token consumption per model call, split into input and output by `gen_ai.token.type`. | `gen_ai.agent.name`, `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.token.type` |
 
 ---
 
@@ -48745,10 +48783,10 @@ When tracing is enabled, ADK automatically instruments key operations following 
 
 | Span Name | Type | Description | Key Attributes |
 | :--- | :--- | :--- | :--- |
-| **[`invoke_agent`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)** | Client / Internal Span | Describes GenAI agent invocation over a remote service or locally. Represents the lifecycle of an agent interaction.| `gen_ai.agent.name`, `gen_ai.system` |
-| **[`invoke_workflow`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-workflow-span)** | Child Span | Describes the invocation of a multi-step agentic workflow. | `gen_ai.workflow.name`, `gen_ai.system`|
-| **[`execute_tool`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#execute-tool-span)**       | Child Span | Represents the execution of a specific tool or function call requested by the GenAI system.| `gen_ai.tool.name`, `gen_ai.system`|
-| **[`generate_content {model.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)** | Internal Span | Represents the invocation of the underlying language model (via the GenAI SDK) to generate content. It tracks the request parameters, response details, and usage metrics. | `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.agent.name`, `gen_ai.conversation.id`, `user.id`, `gen_ai.request.top_p`, `gen_ai.request.max_tokens`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
+| **[`invoke_agent {agent.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-agent-client-span)** | Client / Internal Span | Describes GenAI agent invocation over a remote service or locally. Represents the lifecycle of an agent interaction.| `gen_ai.operation.name`, `gen_ai.agent.name`, `gen_ai.agent.description`, `gen_ai.conversation.id` |
+| **[`invoke_workflow {workflow.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#invoke-workflow-span)** | Child Span | Describes the invocation of a multi-step agentic workflow. | `gen_ai.operation.name`, `gen_ai.workflow.name`, `gen_ai.conversation.id`, `gen_ai.workflow.nested` (nested workflows only) |
+| **[`execute_tool {tool.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-agent-spans.md#execute-tool-span)**       | Child Span | Represents the execution of a specific tool or function call requested by the GenAI system.| `gen_ai.operation.name`, `gen_ai.tool.name`, `gen_ai.tool.description`, `gen_ai.tool.type`, `gen_ai.tool.call.id`, `error.type`|
+| **[`generate_content {model.name}`](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)** | Internal Span | Represents the invocation of the underlying language model (via the GenAI SDK) to generate content. It tracks the request parameters, response details, and usage metrics. | `gen_ai.operation.name`, `gen_ai.system`, `gen_ai.request.model`, `gen_ai.agent.name`, `gen_ai.conversation.id`, `gen_ai.response.finish_reasons`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens` |
 
 ---
 
@@ -49424,7 +49462,7 @@ immediately:
 
 This section explains how to define Plugin classes and register them as part of
 your agent workflow. For a complete code example, see
-[Plugin Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugin/plugin_basic)
+[Plugin Basic](https://github.com/google/adk-python/tree/main/contributing/samples/plugins/plugin_basic)
 in the repository.
 
 ### Create Plugin class
@@ -50725,6 +50763,35 @@ browser to use the web interface:
     ```shell
     go run agent.go web -port 9090 api -path_prefix /myapi webui -api_server_address http://localhost:9090/myapi
     ```
+
+## Usage telemetry
+
+The ADK Web UI collects anonymous usage telemetry to understand feature adoption, discover usability issues, and improve your overall developer experience. Data collection is OFF by default until you explicitly choose to enable it. 
+
+You can enable or disable usage telemetry at any time by navigating to User Settings, the user icon on the top right of the screen, in the Web UI. This setting updates a single unified preference stored locally on your machine at `~/.adk/config.json`. If you prefer, you can manually deactivate data collection by editing this file directly and setting the `telemetry` attribute to `false`:
+
+```json
+{
+  "telemetry": false
+}
+```
+
+**What data is collected**
+
+When enabled, Web UI telemetry captures standard page events and feature interaction, including:
+
+- **Standard Navigation**: Page views, session starts, and active session duration.
+- **Environment**: ADK version and runtime language.
+- **Feature Usage**: Using the builder mode feature, using the agent chat, toggling execution trace or event log viewers, creating evaluation sets, and clicking the agent structure graph view.
+
+**What data is not collected**
+
+The Web UI does not collect sensitive, private, or personal data, specifically:
+
+- Contents of agent prompts, system instructions, or LLM responses.
+- User credentials, usernames, API keys, OAuth tokens, or secrets.
+- Google Cloud Project IDs or Cloud Account details.
+- Personally Identifiable Information (PII).
 
 ================
 File: docs/runtime/ambient-agents.md
@@ -52163,6 +52230,39 @@ adk run --session_service_uri "sqlite:///my_sessions.db" path/to/my_agent
     ```shell
     go run agent.go -streaming_mode sse
     ```
+
+## Usage telemetry
+
+The ADK CLI collects anonymous usage telemetry to understand feature adoption, guide development priorities, and improve tool performance. Data collection is OFF by default until you explicitly choose to enable it.
+
+Your telemetry preference is stored locally on your machine in `~/.adk/config.json`. You can manage telemetry data collection at any time through the terminal:
+
+- **Enable**: `adk telemetry enable`
+- **Disable**: `adk telemetry disable`
+- **Check status**: `adk telemetry status`
+
+You can also manually deactivate telemetry data collection at any time by opening `~/.adk/config.json` and setting the `telemetry` attribute to `false`:
+
+```json
+{
+  "telemetry": false
+}
+```
+
+**What data is collected**
+
+- **Environment Properties**: Operating system information, runtime language and version, and installed ADK CLI version.
+- **Command Execution Events**: Generic command and subcommand names, flags passed, execution duration, exit codes, and exception types if an error occurs. We also log a sequence number and an ephemeral session ID that is discarded after command execution.
+
+**What data is not collected**
+
+The CLI does not collect sensitive, private, or personal data, specifically:
+
+- Arguments or parameter values passed to commands or flags, such as agent names, prompt strings, file paths.
+- User credentials, usernames, API keys, OAuth tokens, or secrets.
+- Google Cloud Project IDs or Cloud Account details.
+- Source code files, file contents, or directory paths.
+- Personally Identifiable Information (PII).
 
 ================
 File: docs/runtime/event-loop.md
@@ -61361,7 +61461,7 @@ If you prefer a setup that handles the runner and session management automatical
 # Install ADK and LiteLLM for multi-model support
 
 !pip install google-adk -q
-!pip install litellm -q
+!pip install "litellm>=1.84" -q
 
 print("Installation complete.")
 ```
@@ -61422,7 +61522,7 @@ os.environ["GOOGLE_GENAI_USE_ENTERPRISE"] = "False"
 # --- Define Model Constants for easier use ---
 
 # More supported models can be referenced here: https://ai.google.dev/gemini-api/docs/models#model-variations
-MODEL_GEMINI_2_5_FLASH = "gemini-flash-latest"
+MODEL_GEMINI_FLASH = "gemini-flash-latest"
 
 # More supported models can be referenced here: https://docs.litellm.ai/docs/providers/openai#openai-chat-completion-models
 MODEL_GPT_4O = "openai/gpt-4.1" # You can also try: gpt-4.1-mini, gpt-4o etc.
@@ -61503,7 +61603,7 @@ Now, let's create the **Agent** itself. An `Agent` in ADK orchestrates the inter
 We configure it with several key parameters:
 
 * `name`: A unique identifier for this agent (e.g., "weather\_agent\_v1").
-* `model`: Specifies which LLM to use (e.g., `MODEL_GEMINI_2_5_FLASH`). We'll start with a specific Gemini model.
+* `model`: Specifies which LLM to use (e.g., `MODEL_GEMINI_FLASH`). We'll start with a specific Gemini model.
 * `description`: A concise summary of the agent's overall purpose. This becomes crucial later when other agents need to decide whether to delegate tasks to *this* agent.
 * `instruction`: Detailed guidance for the LLM on how to behave, its persona, its goals, and specifically *how and when* to utilize its assigned `tools`.
 * `tools`: A list containing the actual Python tool functions the agent is allowed to use (e.g., `[get_weather]`).
@@ -61516,7 +61616,7 @@ We configure it with several key parameters:
 ```python
 # @title Define the Weather Agent
 # Use one of the model constants defined earlier
-AGENT_MODEL = MODEL_GEMINI_2_5_FLASH # Starting with Gemini
+AGENT_MODEL = MODEL_GEMINI_FLASH # Starting with Gemini
 
 weather_agent = Agent(
     name="weather_agent_v1",
@@ -61568,7 +61668,9 @@ print(f"Session created: App='{APP_NAME}', User='{USER_ID}', Session='{SESSION_I
 
 # Uncomment the following lines if running as a standard Python script (.py file):
 
-# async def init_session(app_name:str,user_id:str,session_id:str) -> InMemorySessionService:
+# from google.adk.sessions import Session
+#
+# async def init_session(app_name:str,user_id:str,session_id:str) -> Session:
 #     session = await session_service.create_session(
 #         app_name=app_name,
 #         user_id=user_id,
@@ -61992,14 +62094,14 @@ Now, create the `Agent` instances for our specialists. Notice their highly focus
 # If you want to use models other than Gemini, Ensure LiteLlm is imported and API keys are set (from Step 0/2)
 # from google.adk.models.lite_llm import LiteLlm
 # MODEL_GPT_4O, MODEL_CLAUDE_SONNET etc. should be defined
-# Or else, continue to use: model = MODEL_GEMINI_2_5_FLASH
+# Or else, continue to use: model = MODEL_GEMINI_FLASH
 
 # --- Greeting Agent ---
 greeting_agent = None
 try:
     greeting_agent = Agent(
         # Using a potentially different/cheaper model for a simple task
-        model = MODEL_GEMINI_2_5_FLASH,
+        model = MODEL_GEMINI_FLASH,
         # model=LiteLlm(model=MODEL_GPT_4O), # If you would like to experiment with other models
         name="greeting_agent",
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting to the user. "
@@ -62018,7 +62120,7 @@ farewell_agent = None
 try:
     farewell_agent = Agent(
         # Can use the same or a different model
-        model = MODEL_GEMINI_2_5_FLASH,
+        model = MODEL_GEMINI_FLASH,
         # model=LiteLlm(model=MODEL_GPT_4O), # If you would like to experiment with other models
         name="farewell_agent",
         instruction="You are the Farewell Agent. Your ONLY task is to provide a polite goodbye message. "
@@ -62057,7 +62159,7 @@ runner_root = None # Initialize runner
 
 if greeting_agent and farewell_agent and 'get_weather' in globals():
     # Let's use a capable Gemini model for the root agent to handle orchestration
-    root_agent_model = MODEL_GEMINI_2_5_FLASH
+    root_agent_model = MODEL_GEMINI_FLASH
 
     weather_agent_team = Agent(
         name="weather_agent_v2", # Give it a new version name
@@ -62221,7 +62323,7 @@ So far, our agent team can handle different tasks through delegation, but each i
 
 **How Agents Interact with State:**
 
-1. **`ToolContext` (Primary Method):** Tools can accept a `ToolContext` object (automatically provided by ADK if declared as the last argument). This object gives direct access to the session state via `tool_context.state`, allowing tools to read preferences or save results *during* execution.
+1. **`ToolContext` (Primary Method):** Tools can accept a `ToolContext` object (automatically provided by ADK for any parameter annotated `ToolContext`, whatever its position). This object gives direct access to the session state via `tool_context.state`, allowing tools to read preferences or save results *during* execution.
 2. **`output_key` (Auto-Save Agent Response):** An `Agent` can be configured with an `output_key="your_key"`. ADK will then automatically save the agent's final textual response for a turn into `session.state["your_key"]`.
 
 **In this step, we will enhance our Weather Bot team by:**
@@ -62285,7 +62387,7 @@ else:
 Now, we create a new version of the weather tool. Its key feature is accepting `tool_context: ToolContext` which allows it to access `tool_context.state`. It will read the `user_preference_temperature_unit` and format the temperature accordingly.
 
 
-* **Key Concept: `ToolContext`** This object is the bridge allowing your tool logic to interact with the session's context, including reading and writing state variables. ADK injects it automatically if defined as the last parameter of your tool function.
+* **Key Concept: `ToolContext`** This object is the bridge allowing your tool logic to interact with the session's context, including reading and writing state variables. ADK finds the parameter by its `ToolContext` annotation and injects it automatically, so it can sit at any position in your tool function's signature. The annotated parameter is also hidden from the schema the LLM sees.
 
 
 * **Best Practice:** When reading from state, use `dictionary.get('key', default_value)` to handle cases where the key might not exist yet, ensuring your tool doesn't crash.
@@ -62362,13 +62464,13 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 from google.adk.runners import Runner
 # Ensure tools 'say_hello', 'say_goodbye' are defined (from Step 3)
-# Ensure model constants MODEL_GPT_4O, MODEL_GEMINI_2_5_FLASH etc. are defined
+# Ensure model constants MODEL_GPT_4O, MODEL_GEMINI_FLASH etc. are defined
 
 # --- Redefine Greeting Agent (from Step 3) ---
 greeting_agent = None
 try:
     greeting_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="greeting_agent",
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting using the 'say_hello' tool. Do nothing else.",
         description="Handles simple greetings and hellos using the 'say_hello' tool.",
@@ -62382,7 +62484,7 @@ except Exception as e:
 farewell_agent = None
 try:
     farewell_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="farewell_agent",
         instruction="You are the Farewell Agent. Your ONLY task is to provide a polite goodbye message using the 'say_goodbye' tool. Do not perform any other actions.",
         description="Handles simple farewells and goodbyes using the 'say_goodbye' tool.",
@@ -62399,7 +62501,7 @@ runner_root_stateful = None # Initialize runner
 # Check prerequisites before creating the root agent
 if greeting_agent and farewell_agent and 'get_weather_stateful' in globals():
 
-    root_agent_model = MODEL_GEMINI_2_5_FLASH # Choose orchestration model
+    root_agent_model = MODEL_GEMINI_FLASH # Choose orchestration model
 
     root_agent_stateful = Agent(
         name="weather_agent_v4_stateful", # New version name
@@ -62497,7 +62599,8 @@ if 'runner_root_stateful' in globals() and runner_root_stateful:
                               )
 
         # 4. Test basic delegation (should still work)
-        # This will update 'last_weather_report' again, overwriting the NY weather report
+        # The greeting is authored by the delegated sub-agent, not the root agent,
+        # so output_key does NOT fire: 'last_weather_report' keeps the NY report.
         print("\n--- Turn 3: Sending a greeting ---")
         await call_agent_async(query= "Hi!",
                                runner=runner_root_stateful,
@@ -62689,7 +62792,7 @@ greeting_agent = None
 try:
     # Use a defined model constant
     greeting_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="greeting_agent", # Keep original name for consistency
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting using the 'say_hello' tool. Do nothing else.",
         description="Handles simple greetings and hellos using the 'say_hello' tool.",
@@ -62703,7 +62806,7 @@ farewell_agent = None
 try:
     # Use a defined model constant
     farewell_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="farewell_agent", # Keep original name
         instruction="You are the Farewell Agent. Your ONLY task is to provide a polite goodbye message using the 'say_goodbye' tool. Do not perform any other actions.",
         description="Handles simple farewells and goodbyes using the 'say_goodbye' tool.",
@@ -62722,7 +62825,7 @@ runner_root_model_guardrail = None
 if greeting_agent and farewell_agent and 'get_weather_stateful' in globals() and 'block_keyword_guardrail' in globals():
 
     # Use a defined model constant
-    root_agent_model = MODEL_GEMINI_2_5_FLASH
+    root_agent_model = MODEL_GEMINI_FLASH
 
     root_agent_model_guardrail = Agent(
         name="weather_agent_v5_model_guardrail", # New version name for clarity
@@ -62981,7 +63084,7 @@ greeting_agent = None
 try:
     # Use a defined model constant
     greeting_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="greeting_agent", # Keep original name for consistency
         instruction="You are the Greeting Agent. Your ONLY task is to provide a friendly greeting using the 'say_hello' tool. Do nothing else.",
         description="Handles simple greetings and hellos using the 'say_hello' tool.",
@@ -62995,7 +63098,7 @@ farewell_agent = None
 try:
     # Use a defined model constant
     farewell_agent = Agent(
-        model=MODEL_GEMINI_2_5_FLASH,
+        model=MODEL_GEMINI_FLASH,
         name="farewell_agent", # Keep original name
         instruction="You are the Farewell Agent. Your ONLY task is to provide a polite goodbye message using the 'say_goodbye' tool. Do not perform any other actions.",
         description="Handles simple farewells and goodbyes using the 'say_goodbye' tool.",
@@ -63015,7 +63118,7 @@ if ('greeting_agent' in globals() and greeting_agent and
     'block_keyword_guardrail' in globals() and
     'block_paris_tool_guardrail' in globals()):
 
-    root_agent_model = MODEL_GEMINI_2_5_FLASH
+    root_agent_model = MODEL_GEMINI_FLASH
 
     root_agent_tool_guardrail = Agent(
         name="weather_agent_v6_tool_guardrail", # New version name
@@ -63188,7 +63291,7 @@ Your Weather Bot team is a great starting point. Here are some ideas to further 
     *   Use `after_tool_callback` to process or log the results returned by a tool.
     *   Implement `before_agent_callback` or `after_agent_callback` for agent-level entry/exit logic.
 5.  **Error Handling:** Improve how the agent handles tool errors or unexpected API responses. Maybe add retry logic within a tool.
-6.  **Persistent Session Storage:** Explore alternatives to `InMemorySessionService` for storing session state persistently (e.g., using databases like Firestore or Cloud SQL – requires custom implementation or future ADK integrations).
+6.  **Persistent Session Storage:** Consider changing `InMemorySessionService` to one of ADK's persistent implementations, such as `DatabaseSessionService` which is SQLAlchemy-backed and installed with `pip install google-adk[db]`, or `VertexAiSessionService`. For more information, see the [Session](/sessions/session/) page.
 7.  **Streaming UI:** Integrate your agent team with a web framework (like FastAPI, as shown in the ADK Streaming Quickstart) to create a real-time chat interface.
 
 The Agent Development Kit provides a robust foundation for building sophisticated LLM-powered applications. By mastering the concepts covered in this tutorial – tools, state, delegation, and callbacks – you are well-equipped to tackle increasingly complex agentic systems.
