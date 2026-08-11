@@ -2015,6 +2015,14 @@ You can inject a list of `execute_interceptors` to add middleware logic to the `
 *   **`after_event`**: Executed *after* an ADK event is converted to an A2A event. Allows you to mutate the outgoing event before it is enqueued, or return `None` to filter out and drop the event entirely.
 *   **`after_agent`**: Executed after the agent finishes and the final event is prepared. Use this to inspect or modify the terminal status event (e.g., `completed` or `failed`) before it is sent.
 
+!!! tip "Suppress experimental warnings"
+
+    ADK_SUPPRESS_A2A_EXPERIMENTAL_FEATURE_WARNINGS environment variable can be set to true to suppress warnings related to experimental A2A features. This is useful for developers who are knowingly using these features and wish to have cleaner logs:
+
+    ```bash
+    export ADK_SUPPRESS_A2A_EXPERIMENTAL_FEATURE_WARNINGS=true
+    ```
+
 ## Agent Executor V2
 
 The new version of the [agent executor](https://github.com/google/adk-python/blob/main/src/google/adk/a2a/executor/a2a_agent_executor_impl.py) is typically enabled when a client sends the required [A2A extension](a2a-extension.md).
@@ -10211,7 +10219,7 @@ File: docs/context/caching.md
 # Context caching with Gemini
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.15.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.15.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.7.0</span>
 </div>
 
 When working with agents to complete tasks, you may want to reuse extended
@@ -10272,6 +10280,41 @@ these settings, as shown in the following code sample:
                          Duration.ofMinutes(10), /* ttl */
                          2048 /* min_tokens */))
                  .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    @file:OptIn(ExperimentalContextCachingFeature::class)
+
+    import com.google.adk.kt.agents.ContextCacheConfig
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.annotations.ExperimentalContextCachingFeature
+    import com.google.adk.kt.apps.App
+    import com.google.adk.kt.models.Gemini
+    import kotlin.time.Duration.Companion.minutes
+
+    val rootAgent =
+        LlmAgent(
+            name = "my_caching_agent",
+            // configure an agent using Gemini 2.0 or higher
+            model = Gemini(name = "gemini-flash-latest"),
+        )
+
+    // Create the app with context caching configuration
+    val app =
+        App(
+            appName = "my-caching-agent-app",
+            rootAgent = rootAgent,
+            contextCacheConfig =
+                ContextCacheConfig(
+                    // Gemini enforces a hard 4096-token floor of its own, so only a
+                    // value above that has any further effect.
+                    minTokens = 8192,
+                    ttl = 10.minutes, // Store for up to 10 minutes
+                    cacheIntervals = 5, // Refresh after 5 uses
+                ),
+        )
     ```
 
 ## Configuration settings
@@ -33871,7 +33914,7 @@ catalog_tags: ["data","google"]
 # Knowledge Engine tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.7.0</span>
 </div>
 
 The `vertex_ai_rag_retrieval` tool allows the agent to perform private data
@@ -33892,6 +33935,12 @@ for setting it up.
 
     ```py
     --8<-- "examples/python/snippets/tools/built-in-tools/rag_engine.py"
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/integrations/RagEngine.kt:full_code"
     ```
 
 ================
@@ -55320,6 +55369,12 @@ instantiating the `VertexAiMemoryBankService` and passing it to the `Runner`.
     )
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:memory_bank"
+    ```
+
 ## RAG memory
 
 The `VertexAiRagMemoryService` stores conversations in [Knowledge
@@ -55338,6 +55393,12 @@ memories produced by Memory Bank. Requires the Agent Platform SDK.
         similarity_top_k=5,
         vector_distance_threshold=0.6,
     )
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:rag_memory"
     ```
 
 ## Use memory in your agent
