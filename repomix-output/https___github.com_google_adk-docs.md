@@ -23595,7 +23595,8 @@ for a complete example.
 
 ```python
 from google.adk.integrations.agent_identity import GcpAuthProviderScheme
-from google.adk.tools.mcp import McpToolset
+from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool import StreamableHTTPConnectionParams
 
 auth_scheme = GcpAuthProviderScheme(
     name="projects/PROJECT_ID/locations/LOCATION/connectors/AUTH_PROVIDER_NAME",
@@ -23702,25 +23703,15 @@ integration is part of the core ADK library.
 pip install google-adk
 ```
 
-### Optional Dependencies
+### Required dependencies
 
-To use the full capabilities of the AgentRegistry integration, you may need to
-install additional extras depending on your use case:
-
-**For A2A (Agent-to-Agent) Support:** If you plan to use `get_remote_a2a_agent`
-or interact with remote A2A-compliant agents, install the `a2a` extra:
-
-```bash
-pip install "google-adk[a2a]"
-```
-
-**For Agent Identity (GCP Auth Provider):** If you need to use the
-`GcpAuthProvider` (e.g., when `get_mcp_toolset` automatically resolves
-authentication via IAM bindings for registered MCP servers), install the
-`agent-identity` extra:
+`google.adk.integrations.agent_registry` imports both the A2A SDK and the Agent
+Identity auth provider at module scope, so importing `AgentRegistry` raises
+`ImportError` on a core-only install. Install both the `a2a` and
+`agent-identity` extras:
 
 ```bash
-pip install "google-adk[agent-identity]"
+pip install "google-adk[a2a,agent-identity]"
 ```
 
 ## Use with Agent
@@ -23859,10 +23850,13 @@ The AgentRegistry constructor accepts the following arguments:
 - `header_provider` (Callable, optional): A callable that takes a
   ReadonlyContext and returns a dictionary of custom headers to be included in
   requests made by the [McpToolset](/tools-custom/mcp-tools/#mcptoolset-class)
-  or
-  [RemoteA2aAgent](/a2a/quickstart-consuming-go/#quickstart-consuming-a-remote-agent-via-a2a)
-  to the target services. This does not affect headers used to call the Agent
-  Registry API itself.
+  that `get_mcp_toolset` returns, to the target MCP server. These headers do not
+  affect calls to the Agent Registry API itself, and they do not affect requests
+  made by
+  [RemoteA2aAgent](/a2a/quickstart-consuming-go/#quickstart-consuming-a-remote-agent-via-a2a).
+  For those requests, pass an authenticated `httpx.AsyncClient` to
+  `get_remote_a2a_agent`, as shown in
+  [Remote A2A Agents](#remote-a2a-agents).
 
 ## Additional resources
 - [Sample Agent Code](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/agent_registry_agent)
@@ -24549,7 +24543,7 @@ API Registry. This agent is designed to interact with BigQuery:
 ```python
 import os
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.tools.api_registry import ApiRegistry
+from google.adk.integrations.api_registry import ApiRegistry
 
 # Configure with your Google Cloud Project ID and registered MCP server name
 PROJECT_ID = "your-google-cloud-project-id"
@@ -24776,7 +24770,7 @@ you only need to follow a subset of these steps.
         model='gemini-flash-latest',
         name='enterprise_assistant',
         instruction='Help user, leverage the tools you have access to',
-        tools=sample_toolset.get_tools(),
+        tools=[sample_toolset],
     )
     ```
 
@@ -25071,13 +25065,15 @@ workflow as a tool for your agent or create a new one.
               integration="test-integration", #TODO: replace with integration name
               triggers=["api_trigger/test_trigger"],#TODO: replace with trigger id(s). Empty list would mean all api triggers in the integration to be considered.
               service_account_json='{...}', #optional. Stringified json for service account key
-              tool_name_prefix="tool_prefix1",
-              tool_instructions="..."
           )
       ```
 
       **Note:** You can provide a service account to be used instead of using default credentials. To do this, generate a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating) and provide the correct
          [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account. For more details about the IAM roles, refer to the [Prerequisites](#prerequisites) section.
+
+      **Note:** `tool_name_prefix` and `tool_instructions` apply only when you
+         pass `connection=`. On the `integration=` path they are accepted but
+         silently ignored.
 
 === "Java"
 
@@ -29051,6 +29047,8 @@ agent = defend(agent, mode="enforce")
 Or get a plugin for the entire app:
 
 ```python
+from google.adk.apps import App
+
 from aidefense_google_adk import defend
 
 plugin = defend(mode="enforce")
@@ -29145,6 +29143,8 @@ For automatic retry with exponential backoff, fail-open/fail-closed semantics,
 and structured `Decision` objects, use the `AgentsecPlugin` variant:
 
 ```python
+from google.adk.apps import App
+
 from aidefense_google_adk import AgentsecPlugin
 
 app = App(
@@ -29319,10 +29319,10 @@ agent using the ADK CLI.
 
 === "Python"
 
-    If you are using the `AdkApp` abstraction, you can enable cloud tracing by adding `enable_tracing=True`:
+    If you are using the Agent Platform SDK `AdkApp` abstraction, you can enable cloud tracing by adding `enable_tracing=True`:
 
     ```python
-    from google.adk.apps import AdkApp
+    from vertexai.agent_engines import AdkApp
 
     adk_app = AdkApp(
         agent=root_agent,
@@ -29337,14 +29337,14 @@ For fully customized agent runtimes, you can enable cloud tracing by using the b
 === "Python"
 
     ```python
-    from google.adk import telemetry
     from google.adk.telemetry import google_cloud
+    from google.adk.telemetry.setup import maybe_set_otel_providers
 
     # Get GCP exporters configuration
     hooks = google_cloud.get_gcp_exporters(enable_cloud_tracing=True)
 
     # Initialize and set global OTel providers
-    telemetry.maybe_set_otel_providers(otel_hooks_to_setup=[hooks])
+    maybe_set_otel_providers(otel_hooks_to_setup=[hooks])
     ```
 
 === "TypeScript"
@@ -29517,7 +29517,7 @@ example](#advanced-example) or the full
 
 ## How it works
 
-The `AgentEngineCodeExecutor` Tool maintains a single sandbox throughout an
+The `AgentEngineSandboxCodeExecutor` Tool maintains a single sandbox throughout an
 agent's task, meaning the sandbox's state persists across all operations within
 an ADK workflow session.
 
@@ -29624,7 +29624,7 @@ def base_system_instruction():
       print(df.shape)
       ```
       The output will be presented to you as:
-      ```tool_outputs
+      ```tool_output
       (49, 7)
 
       ```
@@ -29634,11 +29634,11 @@ def base_system_instruction():
       print(f'{{x=}}')
       ```
       The output will be presented to you as:
-      ```tool_outputs
+      ```tool_output
       x=999751168
 
       ```
-    - You **never** generate ```tool_outputs yourself.
+    - You **never** generate ```tool_output yourself.
     - You can then use this output to decide on next steps.
     - Print just variables (e.g., `print(f'{{variable=}}')`.
 
@@ -29814,9 +29814,7 @@ agent sample project.
 
 ```python
 from google.adk import Agent
-from google.adk.models.google_llm import Gemini
 from google.adk.tools.computer_use.computer_use_toolset import ComputerUseToolset
-from typing_extensions import override
 
 from .playwright import PlaywrightComputer
 
@@ -32015,7 +32013,7 @@ You'll also want to pass in the Freeplay plugin to your App:
 ```python
 from app.agent import root_agent
 from freeplay_python_adk.freeplay_observability_plugin import FreeplayObservabilityPlugin
-from google.adk.runners import App
+from google.adk.apps import App
 
 app = App(
     name="app",
@@ -32256,7 +32254,7 @@ async def main():
             parts=[types.Part(text="What is the weather in New York?")],
         ),
     ):
-        if event.is_final_response():
+        if event.is_final_response() and event.content and event.content.parts:
             print(event.content.parts[0].text.strip())
 
 
@@ -32608,18 +32606,23 @@ Tool | Description
 `gcs_get_bucket` | Get metadata information about a GCS bucket.
 `gcs_list_objects` | List object names in a GCS bucket. Supports optional prefix filtering and pagination.
 `gcs_get_object_metadata` | Get metadata properties of a specific GCS object (blob).
-`gcs_create_object` | Create a new object (blob) in a bucket from in-memory string data or a local file upload.
+`gcs_create_object` | Create a new object (blob) in a bucket from in-memory string data or a local file upload. Requires `Capabilities.READ_WRITE`.
 `gcs_get_object_data` | Get content of a GCS object as a string, or download it directly to a local file.
-`gcs_delete_objects` | Delete multiple GCS objects (blobs) from a bucket.
+`gcs_delete_objects` | Delete multiple GCS objects (blobs) from a bucket. Requires `Capabilities.READ_WRITE`.
 
 ### GCS Admin Tools (`GCSAdminToolset`)
 
 Tool | Description
 ---- | -----------
 `gcs_list_buckets` | List GCS bucket names in a Google Cloud project.
-`gcs_create_bucket` | Create a new GCS bucket in a specific location.
-`gcs_update_bucket` | Update properties of a GCS bucket (e.g. versioning or uniform bucket-level access).
-`gcs_delete_bucket` | Delete a GCS bucket (bucket must be empty first).
+`gcs_create_bucket` | Create a new GCS bucket in a specific location. Requires `Capabilities.READ_WRITE`.
+`gcs_update_bucket` | Update properties of a GCS bucket, such as versioning or uniform bucket-level access. Requires `Capabilities.READ_WRITE`.
+`gcs_delete_bucket` | Delete a GCS bucket (bucket must be empty first). Requires `Capabilities.READ_WRITE`.
+
+!!! note
+
+    The tool names listed here are the ones exposed to the model (prefixed with `gcs_`).
+    When using `tool_filter`, reference the unprefixed names such as `get_bucket`.
 
 ## Sample agents
 
@@ -35742,7 +35745,7 @@ response_eval = ResponseEvaluation(
 hallucination = Hallucination(model="gemini-flash-latest", threshold=0.5)
 ```
 
-The model must be a name that ADK's `LlmRegistry` can resolve, such as
+The model must be a name that ADK's `LLMRegistry` can resolve, such as
 `gemini-flash-latest` or `gemini-pro-latest`. MLflow model URIs like `databricks` or
 `openai:/gpt-4o` aren't supported here because ADK's evaluators wire directly
 into Google's model registry.
@@ -37543,6 +37546,8 @@ tracer_provider = register(
 Now that you have tracing setup, all Google ADK SDK requests will be streamed to Phoenix for observability and evaluation.
 
 ```python
+import asyncio
+
 import nest_asyncio
 nest_asyncio.apply()
 
@@ -37589,22 +37594,26 @@ session_id = "test_session"
 runner = InMemoryRunner(agent=agent, app_name=app_name)
 session_service = runner.session_service
 
-await session_service.create_session(
-    app_name=app_name,
-    user_id=user_id,
-    session_id=session_id
-)
-
-# Run the agent (all interactions will be traced)
-async for event in runner.run_async(
-    user_id=user_id,
-    session_id=session_id,
-    new_message=types.Content(role="user", parts=[
-        types.Part(text="What is the weather in New York?")]
+async def main():
+    await session_service.create_session(
+        app_name=app_name,
+        user_id=user_id,
+        session_id=session_id
     )
-):
-    if event.is_final_response():
-        print(event.content.parts[0].text.strip())
+
+    # Run the agent (all interactions will be traced)
+    async for event in runner.run_async(
+        user_id=user_id,
+        session_id=session_id,
+        new_message=types.Content(role="user", parts=[
+            types.Part(text="What is the weather in New York?")]
+        )
+    ):
+        if event.is_final_response() and event.content and event.content.parts:
+            print(event.content.parts[0].text.strip())
+
+
+asyncio.run(main())
 ```
 
 ## Support and Resources
@@ -38703,8 +38712,11 @@ ADK project's App object, as shown below:
     ```
 
 
-With this configuration, if any tool called by an agent returns an error, the
-request is updated and tried again, up to a maximum of 3 attempts, per tool.
+With this configuration, if any tool called by an agent *fails* with an error,
+the request is updated and tried again, up to 3 retries per tool, for a maximum
+of 4 attempts. A tool that instead reports the problem in an otherwise
+successful result is not retried by default; see [Advanced
+configuration](#advanced-configuration) for how to opt into that.
 
 ## Configuration settings
 
@@ -38714,8 +38726,11 @@ The Reflect and Retry Plugin has the following configuration options:
     makes to receive a non-error response. Default value is 3.
 *   **`throw_exception_if_retry_exceeded`**: (optional) If set to `False`, the
     system does not raise an error if the final retry attempt fails. Default
-    value is `True`.
-*   **`tracking_scope`**: (optional)
+    value is `True`. The Go equivalent, `WithErrorIfRetryExceeded`, defaults to
+    `false`, so once retries are exhausted Go returns a message telling the
+    model to stop using the tool, where Python raises the original error.
+*   **`tracking_scope`**: (optional) A `TrackingScope` value, imported from
+    `google.adk.plugins.reflect_retry_tool_plugin`:
     *   **`TrackingScope.INVOCATION`**: Track tool failures across a single
         invocation and user. This value is the default.
     *   **`TrackingScope.GLOBAL`**: Track tool failures across all invocations
@@ -39258,7 +39273,7 @@ To configure an agent to dynamically discover and load skills on demand, instant
 ```python
 import os
 from google.adk import Agent
-from google.adk.integrations.gcp_skill_registry import GCPSkillRegistry
+from google.adk.integrations.skill_registry import GCPSkillRegistry
 from google.adk.tools.skill_toolset import SkillToolset
 
 # 1. Initialize the GCP Skill Registry
@@ -39348,10 +39363,13 @@ The `GCPSkillRegistry` client constructor accepts the following options:
 
 ### Methods
 
-*   **`search_skills(query: str) -> List[Frontmatter]`**:
+Both methods are coroutines and take keyword-only arguments, so call them with
+`await` from an `async def`:
+
+*   **`async search_skills(*, query: str) -> list[Frontmatter]`**:
     Performs a semantic or keyword query against the registry catalog, returning a list of skill frontmatter metadata (names and descriptions).
-*   **`get_skill(name: str, version: Optional[str] = None) -> Skill`**:
-    Fetches the remote skill payload using the Vertex AI Client SDK for a specific skill name (and optional revision/version), unpacks it, and returns a loaded `Skill` object.
+*   **`async get_skill(*, name: str) -> Skill`**:
+    Fetches the remote skill payload using the Vertex AI Client SDK for a specific skill name, unpacks it, and returns a loaded `Skill` object.
 
 ================
 File: docs/integrations/slack.md
@@ -40736,10 +40754,12 @@ def toolset_factory(_):
 toolset_provider = TemporalMcpToolSetProvider("my-tools", toolset_factory)
 
 # Configure the client with the toolset provider
-client = await Client.connect(
-    "localhost:7233",
-    plugins=[GoogleAdkPlugin(toolset_providers=[toolset_provider])]
-)
+async def main():
+    client = await Client.connect(
+        "localhost:7233",
+        plugins=[GoogleAdkPlugin(toolset_providers=[toolset_provider])]
+    )
+    # ... start a worker or execute a workflow with this client
 
 # Reference the toolset by name when you declare your Agent (inside a @workflow.run).
 # not_in_workflow_toolset lets this agent also run locally with `adk web`.
@@ -41183,13 +41203,9 @@ business data using natural language, without writing SQL or custom scripts.
     === "Remote MCP Server"
 
         ```python
-        import os
         from google.adk.agents import Agent
         from google.adk.tools.mcp_tool import McpToolset
         from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
-
-        # Required for recursive $ref in MCP schema (https://github.com/google/adk-python/issues/3870)
-        os.environ["ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL"] = "1"
 
         WINDSOR_API_KEY = "YOUR_WINDSOR_API_KEY"
 
