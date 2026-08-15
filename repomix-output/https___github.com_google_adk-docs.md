@@ -7780,8 +7780,8 @@ for the primary controller agent and any additional sub-agents.
 
 ### Define app with root agent
 
-Create a ***root agent*** for your workflow by creating a subclass from the
-***Agent*** base class. Then define an ***App*** object and configure it with
+Create a ***root agent*** for your workflow by creating an instance of the
+***Agent*** class. Then define an ***App*** object and configure it with
 the ***root agent*** object and optional features, as shown in the following
 sample code:
 
@@ -7802,7 +7802,8 @@ sample code:
         name="agents",
         root_agent=root_agent,
         # Optionally include App-level features:
-        # plugins, context_cache_config, resumability_config
+        # plugins, context_cache_config, events_compaction_config,
+        # resumability_config
     )
     ```
 
@@ -7891,7 +7892,7 @@ You can use the ***Runner*** class to run your agent workflow using the
 
     The `Runner.run_debug()` command requires ADK Python v1.18.0 or higher.
     You can also use `Runner.run()`, which requires more setup code. For
-    more details, see the
+    more details, see the [Agent Runtime](/runtime/) guide.
 
 === "Python"
 
@@ -8080,6 +8081,7 @@ Understanding artifacts involves grasping a few key components: the service that
     * `List Artifact keys`: Lists the unique filenames of artifacts within a given scope.
     * `Delete Artifact`: Removes an artifact (and potentially all its versions, depending on implementation).
     * `List versions`: Lists all available version numbers for a specific artifact filename.
+    * `List artifact versions` and `Get artifact version`: In Python, these return `ArtifactVersion` metadata, covering the version number, canonical URI, MIME type, creation time and custom metadata, rather than the artifact payload.
 
 * **Configuration:** You provide an instance of an artifact service (e.g., `InMemoryArtifactService`, `GcsArtifactService`) when initializing the `Runner`. The `Runner` then makes this service available to agents and tools via the `InvocationContext`.
 
@@ -8271,6 +8273,8 @@ Understanding artifacts involves grasping a few key components: the service that
 
 * **User Scope (`"user:"` prefix):** If you prefix the filename with `"user:"`, like `"user:profile.png"`, the artifact is associated only with the `app_name` and `user_id`. It can be accessed or updated from *any* session belonging to that user within the app.
 
+* **Listing behavior:** In Python, listing artifacts from within a session returns the session-scoped filenames *and* that user's user-scoped filenames, with the `"user:"` prefix retained, for example `["summary.txt", "user:settings.json"]`.
+
 
 === "Python"
 
@@ -8349,7 +8353,7 @@ These core concepts work together to provide a flexible system for managing bina
 
 The primary way you interact with artifacts within your agent's logic (specifically within callbacks or tools) is through methods provided by the `CallbackContext` and `ToolContext` objects. These methods abstract away the underlying storage details managed by the `ArtifactService`.
 
-*(Note: In TypeScript, `CallbackContext` and `ToolContext` are unified into a single `Context` type.)*
+*(Note: In Python and TypeScript, `CallbackContext` and `ToolContext` are unified into a single `Context` type, and in Python both names remain usable as aliases of it.)*
 
 ### Prerequisite: Configuring the `ArtifactService`
 
@@ -8473,7 +8477,7 @@ Before you can use any artifact methods via the context objects, you **must** pr
 
 ### Accessing Methods
 
-The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks) in Python, Go, and Java and available on the unified `Context` in TypeScript.
+The artifact interaction methods are available directly on instances of `CallbackContext` (passed to agent and model callbacks) and `ToolContext` (passed to tool callbacks) in Go and Java, and available on the unified `Context` in Python and TypeScript.
 
 #### Saving Artifacts
 
@@ -8853,7 +8857,7 @@ artifact in a later turn.
         ```python
         from google.adk.tools.tool_context import ToolContext
 
-        def list_user_files_py(tool_context: ToolContext) -> str:
+        async def list_user_files_py(tool_context: ToolContext) -> str:
             """Tool to list available artifacts for the user."""
             try:
                 available_files = await tool_context.list_artifacts()
@@ -9010,7 +9014,7 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
 ### InMemoryArtifactService
 
 *   **Storage Mechanism:**
-    *   Python: Uses a Python dictionary (`self.artifacts`) held in the application's memory. The dictionary keys represent the artifact path, and the values are lists of `types.Part`, where each list element is a version.
+    *   Python: Uses a Python dictionary (`self.artifacts`) held in the application's memory. The dictionary keys represent the artifact path, and the values are lists of entries, where each list element is a version holding the `types.Part` payload plus its `ArtifactVersion` metadata.
     *   Java: Uses nested `HashMap` instances (`private final Map<String, Map<String, Map<String, Map<String, List<Part>>>>> artifacts;`) held in memory. The keys at each level are `appName`, `userId`, `sessionId`, and `filename` respectively. The innermost `List<Part>` stores the versions of the artifact, where the list index corresponds to the version number.
 *   **Key Features:**
     *   **Simplicity:** Requires no external setup or dependencies beyond the core ADK library.
@@ -9093,7 +9097,7 @@ ADK provides concrete implementations of the `BaseArtifactService` interface, of
 *   **Key Features:**
     *   **Persistence:** Artifacts stored in GCS persist across application restarts and deployments.
     *   **Scalability:** Leverages the scalability and durability of Google Cloud Storage.
-    *   **Versioning:** Explicitly stores each version as a distinct GCS object. The `saveArtifact` method in `GcsArtifactService`.
+    *   **Versioning:** Explicitly stores each version as a distinct GCS object. In Python, `save_artifact` assigns the next version number, starting at `0`, rather than overwriting an existing object.
     *   **Permissions Required:** The application environment needs appropriate credentials (e.g., Application Default Credentials) and IAM permissions to read from and write to the specified GCS bucket.
 *   **Use Cases:**
     *   Production environments requiring persistent artifact storage.
@@ -9259,7 +9263,7 @@ Alter data just before it's sent to the LLM/tool or just after it's received.
 - **`before_model_callback`:** Modify `llm_request` (e.g., add system instructions based on `state`)
 - **`after_model_callback`:** Modify the returned `LlmResponse` (e.g., format text, filter content)
 - **`before_tool_callback`:** Modify the tool `args` dictionary (or Map in Java)
-- **`after_tool_callback`:** Modify the `tool_response` dictionary (or Map in Java)
+- **`after_tool_callback`:** Modify the `tool_response`, the tool's raw return value (or Map in Java)
 
 **Example Use Case:**
 `before_model_callback` appends "User language preference: Spanish" to `llm_request.config.system_instruction` if `context.state['lang'] == 'es'`.
@@ -9299,15 +9303,15 @@ A `before_tool_callback` for a secure API checks for an auth token in state; if 
 Save or load session-related files or large data blobs during the agent lifecycle.
 
 **Implementation:**
-- **Saving:** Use `callback_context.save_artifact` / `await tool_context.save_artifact` to store data:
+- **Saving:** Use `await callback_context.save_artifact` / `await tool_context.save_artifact` to store data:
   - Generated reports
   - Logs
   - Intermediate data
-- **Loading:** Use `load_artifact` to retrieve previously stored artifacts
+- **Loading:** Use `await callback_context.load_artifact` / `await tool_context.load_artifact` to retrieve previously stored artifacts
 - **Tracking:** Changes are tracked via `Event.actions.artifact_delta`
 
 **Example Use Case:**
-An `after_tool_callback` for a "generate_report" tool saves the output file using `await tool_context.save_artifact("report.pdf", report_part)`. A `before_agent_callback` might load a configuration artifact using `callback_context.load_artifact("agent_config.json")`.
+An `after_tool_callback` for a "generate_report" tool saves the output file using `await tool_context.save_artifact("report.pdf", report_part)`. A `before_agent_callback` might load a configuration artifact using `await callback_context.load_artifact("agent_config.json")`.
 
 ## Best Practices for Callbacks
 
@@ -9317,7 +9321,7 @@ An `after_tool_callback` for a "generate_report" tool saves the output file usin
 Design each callback for a single, well-defined purpose (e.g., just logging, just validation). Avoid monolithic callbacks.
 
 **Mind Performance:**
-Callbacks execute synchronously within the agent's processing loop. Avoid long-running or blocking operations (network calls, heavy computation). Offload if necessary, but be aware this adds complexity.
+Callbacks execute inline within the agent's processing loop, and the loop waits for each one to finish. In Python, declare a callback `async def` when it must `await` something itself, such as `save_artifact`; ADK awaits it. Either way, avoid long-running or blocking operations, such as network calls or heavy computation. Offload if necessary, but be aware this adds complexity.
 
 ### Error Handling
 
@@ -9351,7 +9355,7 @@ If a callback performs actions with external side effects (e.g., incrementing an
 - Add clear docstrings explaining their purpose, when they run, and any side effects (especially state modifications)
 
 **Use Correct Context Type:**
-Always use the specific context type provided (`CallbackContext` for agent/model, `ToolContext` for tools) to ensure access to the appropriate methods and properties.
+Use the context type your SDK documents for the hook you are implementing. In Python, a unified `Context` type supersedes `CallbackContext` and `ToolContext`, so prefer `Context` for new code; the older names remain for backward compatibility and you may still encounter them in existing code. See [Context objects](../context/index.md) for the full set of context types.
 
 By applying these patterns and best practices, you can effectively use callbacks to create more robust, observable, and customized agent behaviors in ADK.
 
@@ -9439,18 +9443,18 @@ When the ADK framework encounters a point where a callback can run (e.g., just b
 
     * The specific return type can vary depending on the language. In Java, the equivalent return type is `Optional.empty()`. In Kotlin, it is `CallbackChoice.Continue(value)` (for `before_*` callbacks) or returning the original object (for `after_*` callbacks). Refer to the API documentation for language specific guidance.
     * This is the standard way to signal that your callback has finished its work (e.g., logging, inspection, minor modifications to input arguments) and that the ADK agent should **proceed with its normal operation**.
-    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `CallbackChoice.Continue(...)` means the next step in the sequence (running the agent logic, calling the LLM, executing the tool) will occur.
-    * For `after_*` callbacks (`after_agent`, `after_model`, `after_tool`), returning the result just produced (the agent's output, the LLM's response, the tool's result) as is means the framework will continue processing.
+    * For `before_*` callbacks (`before_agent`, `before_model`, `before_tool`), returning `None` means the next step in the sequence occurs, whether that step is running the agent logic, calling the LLM, or executing the tool.
+    * For `after_*` callbacks (`after_agent`, `after_model`, `after_tool`), returning `None` leaves the result just produced untouched, whether that result is the agent's output, the LLM's response, or the tool's result. In Python, returning that result back instead of `None` is not equivalent for `after_agent_callback`: ADK emits a second event carrying the same content.
 
 2. **`return <Specific Object>` (Override Default Behavior):**
 
     * Returning a *specific type of object* (instead of signaling "Continue") is how you **override** the ADK agent's default behavior. In Kotlin, this is achieved by returning `CallbackChoice.Break(value)` (for `before_*` callbacks) or a replacement object (for `after_*` callbacks). The framework will use the object you return and *skip* the step that would normally follow or *replace* the result that was just generated.
-    * **`before_agent_callback` → `CallbackChoice.Break(Content)`**: Skips the agent's main execution logic. The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.
-    * **`before_model_callback` → `CallbackChoice.Break(LlmResponse)`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.
-    * **`before_tool_callback` → `CallbackChoice.Break(Map<String, Any>)`**: Skips the execution of the actual tool function (or sub-agent). The returned `Map` is used as the result of the tool call, which is then typically passed back to the LLM. Perfect for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.
-    * **`after_agent_callback` → `Content`**: *Replaces* the `Content` that the agent's run logic just produced.
+    * **`before_agent_callback` → `Content`**: Skips the agent's main execution logic. The returned `Content` object is immediately treated as the agent's final output for this turn. Useful for handling simple requests directly or enforcing access control.
+    * **`before_model_callback` → `LlmResponse`**: Skips the call to the external Large Language Model. The returned `LlmResponse` object is processed as if it were the actual response from the LLM. Ideal for implementing input guardrails, prompt validation, or serving cached responses.
+    * **`before_tool_callback` → Python: `dict`, Kotlin: `Map<String, Any>`**: Skips the execution of the actual tool function (or sub-agent). The returned `dict` or `Map` is used as the result of the tool call, which is then passed back to the LLM. The behavior allows for validating tool arguments, applying policy restrictions, or returning mocked/cached tool results.
+    * **`after_agent_callback` → `Content`**: *Appends* the returned `Content` as an additional event after the output the agent's run logic already produced. It does not replace that output; use `after_model_callback` to change a model response.
     * **`after_model_callback` → `LlmResponse`**: *Replaces* the `LlmResponse` received from the LLM. Useful for sanitizing outputs, adding standard disclaimers, or modifying the LLM's response structure.
-    * **`after_tool_callback` → `Map<String, Any>`**: *Replaces* the `Map` result returned by the tool. Allows for post-processing or standardization of tool outputs before they are sent back to the LLM.
+    * **`after_tool_callback` → Python: `dict`, Kotlin: `Map<String, Any>`**: *Replaces* the result returned by the tool. Allows for post-processing or standardization of tool outputs before they are sent back to the LLM.
 
 **Conceptual Code Example (Guardrail):**
 
@@ -9530,8 +9534,40 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
     | `after_agent_callback` | `callback_context` |
     | `before_model_callback` | `callback_context`, `llm_request` |
     | `after_model_callback` | `callback_context`, `llm_response` |
+    | `on_model_error_callback` | `callback_context`, `llm_request`, `error` |
     | `before_tool_callback` | `tool`, `args`, `tool_context` |
     | `after_tool_callback` | `tool`, `args`, `tool_context`, `tool_response` |
+    | `on_tool_error_callback` | `tool`, `args`, `tool_context`, `error` |
+
+    Only `before_agent_callback` and `after_agent_callback` are fields on every
+    `BaseAgent`. The six model and tool callbacks in this table are fields on
+    `LlmAgent` only.
+
+??? note "Python: `async` callbacks and lists of callbacks"
+
+    In Python, a callback may be a plain `def` or an `async def`. ADK awaits
+    the result either way.
+
+    Every callback field also accepts a list of functions instead of a single
+    function. ADK invokes them in the order listed and stops at the first one
+    that returns a result: that value becomes the callback result, and the
+    remaining callbacks are skipped. What counts as a result differs by family.
+    The six `before_`/`after_` agent, model and tool hooks stop only on a
+    *truthy* value, so a callback returning `None`, or another falsy value such
+    as an empty `dict`, lets the next one run. `on_model_error_callback` and
+    `on_tool_error_callback` stop on any value that is not `None`, so an empty
+    `dict` from an `on_tool_error_callback` ends the chain, suppresses the
+    exception, and becomes the tool result.
+
+    Assign the list to the callback field on the agent:
+
+    ```python
+    root_agent = LlmAgent(
+        name="my_agent",
+        model="gemini-flash-latest",
+        before_model_callback=[check_policy, log_request],
+    )
+    ```
 
 ### Before Agent Callback
 
@@ -9582,7 +9618,7 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 ### After Agent Callback
 
-**When:** Called *immediately after* the agent's `_run_async_impl` (or `_run_live_impl`) method successfully completes. It does *not* run if the agent was skipped due to `before_agent_callback` returning content or if `end_invocation` was set during the agent's run.
+**When:** Called *immediately after* the agent's `_run_async_impl` (or `_run_live_impl`) method successfully completes. It does *not* run if the agent was skipped due to `before_agent_callback` returning content. In Python, setting `end_invocation` during the agent's run also skips it, but only on the `run_async` path; `run_live` does not re-check `end_invocation` after `_run_live_impl` finishes, so the callback still runs there.
 
 **Purpose:** Useful for cleanup tasks, post-execution validation, logging the completion of an agent's activity, or modifying final state.
 
@@ -9627,11 +9663,11 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 *   **Expected Outcome:** You'll see two scenarios:
     1. In the session *without* the `add_concluding_note: True` state, the callback allows the agent's original output ("Processing complete!") to be used.
     2. In the session *with* that state flag, the callback intercepts the agent's original output and appends it with its own message ("Concluding note added...").
-* **Understanding Callbacks:** This highlights how `after_` callbacks allow **post-processing** or **modification**. You can inspect the result of a step (the agent's run) and decide whether to let it pass through, change it, or completely replace it based on your logic.
+* **Understanding Callbacks:** This example highlights how `after_` callbacks allow **post-processing**. You can inspect the result of a step and decide whether to let it pass through or add to it. An `after_agent_callback` cannot replace the agent's output: the content it returns is emitted as an *additional* event after the agent's own events.
 
 ## LLM Interaction Callbacks
 
-These callbacks are specific to `LlmAgent` and provide hooks around the interaction with the Large Language Model.
+These callbacks are specific to `LlmAgent` and provide hooks around the interaction with the Large Language Model. In Python, `LlmAgent` also accepts an `on_model_error_callback`, which runs when the model call raises an exception. If it returns an `LlmResponse`, the exception is suppressed and that response is used instead.
 
 ### Before Model Callback
 
@@ -9710,7 +9746,7 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
 
 ## Tool Execution Callbacks
 
-These callbacks are also specific to `LlmAgent` and trigger around the execution of tools (including `FunctionTool`, `AgentTool`, etc.) that the LLM might request.
+These callbacks are also specific to `LlmAgent` and trigger around the execution of tools that the LLM might request, including `FunctionTool` and `AgentTool`. In Python, `LlmAgent` also accepts an `on_tool_error_callback`, which runs when the tool raises an exception. If it returns a `dict`, the exception is suppressed and that `dict` value is used as the tool result.
 
 ### Before Tool Callback
 
@@ -9723,6 +9759,14 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
 1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the tool's `run_async` method is executed with the (potentially modified) `args`.
 2. If a dictionary (or `Map` in Java) is returned, the tool's `run_async` method is **skipped**. The returned dictionary is used directly as the result of the tool call. This is useful for caching or overriding tool behavior.
 
+!!! note "Python: only `None` lets the tool run"
+
+    ADK compares the returned value against `None`, so an empty `dict` counts
+    as an override: the tool is skipped and `{}` becomes the tool result.
+    Return `None`, not `{}`, when you want the tool to execute. With a list of
+    callbacks this applies to the last value produced, because an empty `dict`
+    does not stop the chain and is discarded if a later callback returns
+    something else.
 
 ??? "Code"
     === "Python"
@@ -9761,6 +9805,16 @@ These callbacks are also specific to `LlmAgent` and trigger around the execution
 
 1. If the callback returns `None` (or a `Maybe.empty()` object in Java), the original `tool_response` is used.
 2. If a new dictionary is returned, it **replaces** the original `tool_response`. This allows modifying or filtering the result seen by the LLM.
+
+!!! note "Python: `tool_response` types and return values"
+
+    ADK wraps a non-`dict` result into `{"result": <value>}` only *after* the
+    callback has run, so a tool annotated `-> str` hands your
+    `after_tool_callback` a `str`, not a `dict`. Check the type before calling
+    dictionary methods on it.
+
+    ADK also compares the returned value against `None`, so returning `{}`
+    replaces the tool response with `{}`. Return `None` to keep the original.
 
 ??? "Code"
     === "Python"
@@ -14771,6 +14825,7 @@ Criterion                                | Description                          
 :--------------------------------------- | :-------------------------------------------------------- | :-------------- | :--------------- | :------------- | :----------------------------------------
 `tool_trajectory_avg_score`              | Exact match of tool call trajectory                       | Yes             | No               | No             | No
 `response_match_score`                   | ROUGE-1 similarity to reference response                  | Yes             | No               | No             | No
+`response_evaluation_score`              | Vertex AI coherence score for the agent response          | Yes             | No               | Yes            | No
 `final_response_match_v2`                | LLM-judged semantic match to reference response           | Yes             | No               | Yes            | No
 `rubric_based_final_response_quality_v1` | LLM-judged final response quality based on custom rubrics | No              | Yes              | Yes            | Yes
 `rubric_based_tool_use_quality_v1`       | LLM-judged tool usage quality based on custom rubrics     | No              | Yes              | Yes            | Yes
@@ -14991,10 +15046,9 @@ Example `EvalConfig` entry:
     "final_response_match_v2": {
       "threshold": 0.8,
       "judge_model_options": {
-            "judge_model": "gemini-flash-latest",
-            "num_samples": 5
-          }
-        }
+        "judge_model": "gemini-flash-latest",
+        "num_samples": 5
+      }
     }
   }
 }
@@ -15097,7 +15151,7 @@ The merged rubric list passed to the judge is the union of the criterion-level l
 
 #### Notes On Rubrics
 
-- Rubrics on `EvalConfig.criteria["rubric_based_final_response_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- The effective rubric list **must be non-empty**, otherwise `RubricBasedEvaluator` raises a `ValueError` at evaluation time. The criterion-level list on `EvalConfig.criteria["rubric_based_final_response_quality_v1"].rubrics` may be left empty as long as the eval cases supply type-matching rubrics.
 - Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
 - Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"FINAL_RESPONSE_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
 
@@ -15199,7 +15253,7 @@ The merged rubric list passed to the judge is the union of the criterion-level l
 
 #### Notes On Rubrics
 
-- Rubrics on `EvalConfig.criteria["rubric_based_tool_use_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- The effective rubric list **must be non-empty**, otherwise `RubricBasedEvaluator` raises a `ValueError` at evaluation time. The criterion-level list on `EvalConfig.criteria["rubric_based_tool_use_quality_v1"].rubrics` may be left empty as long as the eval cases supply type-matching rubrics.
 - Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
 - Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"TOOL_USE_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
 
@@ -15298,7 +15352,7 @@ The merged rubric list passed to the judge is the union of the criterion-level l
 
 #### Notes On Rubrics
 
-- Rubrics on `EvalConfig.criteria["rubric_based_multi_turn_trajectory_quality_v1"].rubrics` **must be non-empty** — `RubricBasedEvaluator` asserts this at init time.
+- The effective rubric list **must be non-empty**, otherwise `RubricBasedEvaluator` raises a `ValueError` at evaluation time. The criterion-level list on `EvalConfig.criteria["rubric_based_multi_turn_trajectory_quality_v1"].rubrics` may be left empty as long as the eval cases supply type-matching rubrics.
 - Rubrics on `EvalCase.rubrics` are *additive* on top of the criterion-level list, not a replacement. The effective rubric set passed to the judge is the union of both.
 - Rubrics supplied per-case via `EvalCase.rubrics` are filtered by `type`: only those whose `type` is `"TRAJECTORY_QUALITY"` are merged in. Criterion-level rubrics in `EvalConfig` are **not** filtered by `type`.
 
@@ -15352,8 +15406,8 @@ Example `EvalConfig` entry:
     "hallucinations_v1": {
       "threshold": 0.8,
       "judge_model_options": {
-            "judge_model": "gemini-flash-latest",
-          },
+        "judge_model": "gemini-flash-latest"
+      },
       "evaluate_intermediate_nl_responses": true
     }
   }
@@ -15994,7 +16048,8 @@ config = EnvironmentSimulationConfig(
 )
 
 app = App(
-    agent=my_agent,
+    name="my_app",
+    root_agent=my_agent,
     plugins=[EnvironmentSimulationFactory.create_plugin(config)],
 )
 ```
@@ -16659,11 +16714,13 @@ tests
 
 In your target test folder, create a `spec.yaml` file. This file outlines the initial conditions, configurations, and user prompts that the agent will execute during the baseline recording and subsequent conformance runs. Ensure your file matches the following basic schema, this is an example only:
 
-```
-# Example spec.yaml for a Weather Agent name: "current_weather_check" description:
-"Verifies the agent correctly identifies location and calls the weather tool."
-user_prompts: - "What's the temperature in San Francisco right now?" expected_tools:
- - "get_weather_api"
+```yaml
+# Example spec.yaml for a Weather Agent.
+# The test case name and category are inferred from the folder structure.
+description: "Verifies the agent correctly identifies location and calls the weather tool."
+agent: "weather_agent"
+user_messages:
+  - text: "What's the temperature in San Francisco right now?"
 ```
 
 #### Automate the baseline
@@ -16679,8 +16736,10 @@ adk web -v --extra_plugins=google.adk.cli.plugins.recordings_plugin.RecordingsPl
    2. Next, open a new terminal window and tell ADK to create the baseline files based on your spec.yaml:
 
 ```shell
-adk conformance create tests/category/test_name
+adk conformance record tests/category/test_name none
 ```
+
+   The trailing streaming-mode argument is required. Use `none` to record `generated-recordings.yaml` and `generated-session.yaml`, or `sse` to record `generated-recordings-sse.yaml` and `generated-session-sse.yaml` instead. The `bidi` mode is not supported for recording.
 
 This automatically runs the scenario, records all the interactions, and saves the generated-recordings.yaml and generated-session.yaml files exactly where they need to be.
 
@@ -16708,6 +16767,8 @@ Here is a summary of all the available criteria:
     quality based on custom rubrics.
 *   **rubric_based_tool_use_quality_v1**: LLM-judged tool usage quality based on
     custom rubrics.
+*   **rubric_based_multi_turn_trajectory_quality_v1**: LLM-judged multi-turn
+    trajectory quality based on custom rubrics.
 *   **hallucinations_v1**: LLM-judged groundedness of agent response against
     context.
 *   **safety_v1**: Safety/harmlessness of agent response.
@@ -16783,7 +16844,9 @@ Choose criteria based on your evaluation goals:
 In addition, criteria which require information on expected agent tool use
 and/or responses are not supported in combination with
 [User Simulation](./user-sim.md).
-Currently, only the `hallucinations_v1` and `safety_v1` criteria support such evals.
+The affected criteria include `tool_trajectory_avg_score`, `response_match_score`
+and `final_response_match_v2`. Support for user simulation is listed per
+criterion in the support column of [Evaluation Criteria](./criteria.md).
 
 ### User simulation
 
@@ -16903,7 +16966,7 @@ Here is the command:
 ```shell
 adk eval \
     <AGENT_MODULE_FILE_PATH> \
-    <EVAL_SET_FILE_PATH> \
+    <EVAL_SET_FILE_PATH_OR_ID>... \
     [--config_file_path=<PATH_TO_TEST_JSON_CONFIG_FILE>] \
     [--print_detailed_results]
 ```
@@ -16918,8 +16981,8 @@ adk eval \
 
 Here are the details for each command line argument:
 
-* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a module by the name "agent". "agent" module contains a `root_agent`.
-* `EVAL_SET_FILE_PATH`: The path to evaluations file(s). You can specify one or more eval set file paths. For each file, all evals will be run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name, demarcated by a colon `:` .
+* `AGENT_MODULE_FILE_PATH`: The path to the agent directory, not a file, whose `__init__.py` exposes a module by the name "agent". "agent" module contains a `root_agent`.
+* `EVAL_SET_FILE_PATH_OR_ID`: The path to evaluations file(s), or the id of an eval set managed by ADK and created with `adk eval_set create`. You can specify one or more of either, but you cannot mix file paths and eval set ids in the same command. For each eval set, all evals run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name or id, demarcated by a colon `:` .
 * For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`
 * `CONFIG_FILE_PATH`: The path to the config file.
@@ -17162,7 +17225,8 @@ The below `EvalConfig` shows the default user simulator configuration:
         "thinking_budget": 10240
       }
     },
-    "max_allowed_invocations": 20
+    "max_allowed_invocations": 20,
+    "include_function_calls": false
   }
 }
 ```
@@ -17174,7 +17238,11 @@ The below `EvalConfig` shows the default user simulator configuration:
 *   `max_allowed_invocations`: The maximum user-agent interactions allowed
     before the conversation is forcefully terminated. This should be set to be
     greater than the longest reasonable user-agent interaction in your
-    `EvalSet`.
+    `EvalSet`. The initial fixed prompt counts as an invocation. Setting this
+    value to `-1` removes the innovation limit, which is not recommended.
+*   `include_function_calls`: Optional. Whether to include function calls and
+    responses in the conversation history prompt given to the user simulator.
+    Defaults to `false`.
 *   `custom_instructions`: Optional. Overrides the default instructions for the
     user simulator. The instruction string must contain the following formatting
     placeholders using
@@ -17271,7 +17339,7 @@ Events are the fundamental units of information flow within the Agent Developmen
 
 ## What Events Are and Why They Matter
 
-An `Event` in ADK is an immutable record representing a specific point in the agent's execution. It captures user messages, agent replies, requests to use tools (function calls), tool results, state changes, control signals, and errors.
+An `Event` in ADK is a record representing a specific point in the agent's execution. It captures user messages, agent replies, requests to use tools (function calls), tool results, state changes, control signals, and errors.
 
 === "Python"
     Technically, it's an instance of the `google.adk.events.Event` class, which builds upon the basic `LlmResponse` structure by adding essential ADK-specific metadata and an `actions` payload.
@@ -17420,7 +17488,7 @@ In essence, the entire process, from a user's query to the agent's final answer,
 As a developer, you'll primarily interact with the stream of events yielded by the `Runner`. Here's how to understand and extract information from them:
 
 !!! Note
-    The specific parameters or method names for the primitives may vary slightly by SDK language (e.g., `event.content()` in Python, `event.content().get().parts()` in Java). Refer to the language-specific API documentation for details.
+    The specific parameters or method names for the primitives may vary slightly by SDK language, for example the `event.content` attribute in Python and `event.content().get().parts()` in Java. Refer to the language-specific API documentation for details.
 
 ### Identifying Event Origin and Type
 
@@ -17996,10 +18064,10 @@ The `event.actions` object signals changes that occurred or should occur. Always
 
 Use the built-in helper method `event.is_final_response()` to identify events suitable for display as the agent's complete output for a turn.
 
-*   **Purpose:** Filters out intermediate steps (like tool calls, partial streaming text, internal state updates) from the final user-facing message(s).
+*   **Purpose:** Filters out intermediate steps, such as tool calls and partial streaming text, from the final user-facing message(s).
 *   **When `True`?**
-    1.  The event contains a tool result (`function_response`) and `skip_summarization` is `True`.
-    2.  The event contains a tool call (`function_call`) for a tool marked as `is_long_running=True`. In Java, check if the `longRunningToolIds` list is empty:
+    1.  The `skip_summarization` action is `True`. In Python this flag alone is enough, and the event does not need to carry a `function_response` tool result.
+    2.  The event's `long_running_tool_ids` is non-empty, meaning a tool marked as `is_long_running=True` was called. In Python this list alone is enough, and the event does not need to carry the `function_call` itself. In Java, check if the `longRunningToolIds` list is empty:
         *   `event.longRunningToolIds().isPresent() && !event.longRunningToolIds().get().isEmpty()` is `true`.
     3.  OR, **all** of the following are met:
         *   No function calls (`get_function_calls()` is empty).
@@ -18218,7 +18286,7 @@ Events are created at different points and processed systematically by the frame
     2.  **Runner Receives:** The main `Runner` executing the agent receives the event.
     3.  **SessionService Processing:** The `Runner` sends the event to the configured `SessionService`. This is a critical step:
         *   **Applies Deltas:** The service merges `event.actions.state_delta` into `session.state` and updates internal records based on `event.actions.artifact_delta`. (Note: The actual artifact *saving* usually happened earlier when `context.save_artifact` was called).
-        *   **Finalizes Metadata:** Assigns a unique `event.id` if not present, may update `event.timestamp`.
+        *   **Event Metadata:** In Python, the `Event` object already carries an `id` and a `timestamp` from the moment it is constructed, so the service does not assign them and records the event as it received it.
         *   **Persists to History:** Appends the processed event to the `session.events` list.
     4.  **External Yield:** The `Runner` yields (Python) or returns/emits (Java) the processed event outwards to the calling application (e.g., the code that invoked `runner.run_async`).
 
@@ -18281,7 +18349,7 @@ Here are concise examples of typical events you might see in the stream:
       // actions might have skip_summarization=True
     }
     ```
-*   **State/Artifact Update Only:** (`is_final_response() == False`)
+*   **State/Artifact Update Only:** (`is_final_response() == True`)
     ```json
     {
       "author": "InternalUpdater",
@@ -18302,7 +18370,7 @@ Here are concise examples of typical events you might see in the stream:
       "actions": {"transfer_to_agent": "BillingAgent"} // Added by framework
     }
     ```
-*   **Loop Escalation Signal:** (`is_final_response() == False`)
+*   **Loop Escalation Signal:** (`is_final_response() == True`)
     ```json
     {
       "author": "CheckerAgent",
@@ -49179,8 +49247,8 @@ Optimized root agent instructions:
 adk optimize [OPTIONS] AGENT_MODULE_FILE_PATH
 ```
 
-* `AGENT_MODULE_FILE_PATH`: The path to the `__init__.py` file that contains a
-module by the name `agent`.
+* `AGENT_MODULE_FILE_PATH`: The path to the agent directory, not a file, whose
+`__init__.py` exposes a module by the name `agent`.
 The `agent` module must contain a `root_agent`.
 For an example of a valid setup, examine the
 [`hello_world`](https://github.com/google/adk-python/tree/main/contributing/samples/core/hello_world)
@@ -49250,12 +49318,15 @@ additional metrics collected during optimization.
 Note: The `GEPARootAgentPromptOptimizer` does not improve any sub-agents, agent
 tools, skills, or any other aspect of the root agent.
 
+Note: The `GEPARootAgentPromptOptimizer` is experimental.
+It emits a warning when constructed, and its API may change or be removed
+without notice.
+
 You can configure the `GEPARootAgentPromptOptimizer` with a
 `GEPARootAgentPromptOptimizerConfig` that contains the following fields:
 
 * `optimizer_model` (optional): The model used to analyze evaluation results and
 optimize the agent.
-Defaults to `"gemini-flash-latest"`.
 * `model_configuration` (optional): The configuration for the optimizer model.
 Defaults to a config with a 10K token thinking budget.
 * `max_metric_calls` (optional): The maximum number of evaluations to run during
@@ -49287,12 +49358,15 @@ additional metrics collected during optimization.
 Note: The `GEPARootAgentOptimizer` does not improve any sub-agents or agent
 tools.
 
+Note: The `GEPARootAgentOptimizer` is experimental.
+It emits a warning when constructed, and its API may change or be removed
+without notice.
+
 You can configure the `GEPARootAgentOptimizer` with a
 `GEPARootAgentOptimizerConfig` that contains the following fields:
 
 * `optimizer_model` (optional): The model used to analyze evaluation results and
 optimize the agent.
-Defaults to `"gemini-3.5-flash"`.
 * `model_configuration` (optional): The configuration for the optimizer model.
 Defaults to a config with a `ThinkingLevel` of `HIGH`.
 * `max_metric_calls` (optional): The maximum number of evaluations to run during
@@ -49317,7 +49391,7 @@ The optimizer automatically executes an asynchronous, four-stage feedback loop:
 
 1. **Execute:** The target agent processes a specific batch of evaluation tasks managed by an implementation of the `Sampler` class.  
 2. **Evaluate**: The Sampler scores the agent's outputs against your evaluation datasets and returns a structured `SamplingResult`.  
-3. **Critique**: An underlying optimization large language model (LLM) (defaulting to Gemini-2.5-flash) analyzes the historical evaluation scores alongside the current prompt to isolate specific behavioral weaknesses or gaps.  
+3. **Critique**: An underlying optimization large language model (LLM) analyzes the historical evaluation scores alongside the current prompt to isolate specific behavioral weaknesses or gaps.  
 4. **Rewrite**: The optimization model generates an updated variation of the system prompt tailored to address the discovered weaknesses. This new prompt is then fed directly into the next iteration.
 
 **Note:** The optimization loop does not mutate your initial agent instance in place. Upon completion, it returns an `OptimizerResult` containing the highest-scoring agent variation extracted during the process.
@@ -49328,15 +49402,18 @@ Configure the behavior of the loop by passing a `SimplePromptOptimizerConfig` in
 
 | Parameter | Type | Default | Description |
 | :---- | :---- | :---- | :---- |
-| `num_iterations` | int | *Required* | The total number of optimization rounds to execute. |
-| `batch_size` | int | *Required* | The number of evaluation sample cases processed by the sampler during each individual iteration. |
+| `num_iterations` | int | `10` | The total number of optimization rounds to execute. |
+| `batch_size` | int | `5` | The number of evaluation sample cases processed by the sampler during each individual iteration. |
+| `optimizer_model` | str | `"gemini-2.5-flash"` | The model used to critique the current prompt and generate the next one. |
+| `model_configuration` | GenerateContentConfig | thinking budget of 10K tokens | The configuration for the optimizer model. |
 
 #### Implementation Example
 
 Once your configuration is defined, run the optimization with:
 
 ```python
-from google.adk.optimization import SimplePromptOptimizer, SimplePromptOptimizerConfig
+from google.adk.optimization.simple_prompt_optimizer import SimplePromptOptimizer
+from google.adk.optimization.simple_prompt_optimizer import SimplePromptOptimizerConfig
 
 # Define your Agent and Sampler first...
 
@@ -49533,7 +49610,7 @@ File: docs/plugins/index.md
 # Plugins
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.7.0</span><span class="lst-typescript">TypeScript v0.2.5</span><span class="lst-go">Go v0.4.0</span><span class="lst-java">Java v0.3.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.7.0</span><span class="lst-typescript">TypeScript v0.2.5</span><span class="lst-go">Go v0.4.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-kotlin">Kotlin v0.7.0</span>
 </div>
 
 A Plugin in Agent Development Kit (ADK) is a custom code module that can be
@@ -49784,6 +49861,12 @@ methods, as shown in the following code example:
     	fmt.Printf("[Plugin] LLM request count: %d\n", p.LlmRequestCount)
     	return nil, nil
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/plugins/CountInvocationPlugin.kt:create_plugin"
     ```
 
 This example code implements callbacks for `before_agent_callback` and
@@ -50100,6 +50183,12 @@ a simple ADK agent.
     		}
     	}
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/plugins/CountInvocationPlugin.kt:register_plugin"
     ```
 
 ### Run the agent with the Plugin
@@ -50835,9 +50924,12 @@ browser to use the web interface:
     |--------|-------------|---------|
     | `--port` | Port to run the server on | `8000` |
     | `--host` | Host binding address | `127.0.0.1` |
-    | `--session_service_uri` | Custom session storage URI | In-memory |
-    | `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+    | `--session_service_uri` | Custom session storage URI | Per-agent SQLite at `<agents_dir>/<agent>/.adk/session.db` |
+    | `--artifact_service_uri` | Custom artifact storage URI | Per-agent directory at `<agents_dir>/<agent>/.adk/artifacts` |
     | `--reload/--no-reload` | Enable auto-reload on code changes | `true` |
+
+    Pass `--no_use_local_storage` to fall back to in-memory session and
+    artifact services instead of the local `.adk` folder.
 
     For example:
 
@@ -51025,7 +51117,7 @@ This pattern works with any event source that can make an HTTP request.
         payload = request.get_json(silent=True) or {}
 
         requests.post(
-            f"{AGENT_URL}/apps/my_agent/run",
+            f"{AGENT_URL}/run",
             json={
                 "app_name": "my_agent",
                 "user_id": payload.get("account", "webhook-caller"),
@@ -51043,7 +51135,7 @@ This pattern works with any event source that can make an HTTP request.
 ??? "Example: Send an event with curl"
 
     ```bash
-    curl -X POST http://localhost:8000/apps/my_agent/run \
+    curl -X POST http://localhost:8000/run \
       -H "Content-Type: application/json" \
       -d '{
         "app_name": "my_agent",
@@ -51946,8 +52038,9 @@ curl -X DELETE http://localhost:8000/apps/my_sample_agent/users/u_123/sessions/s
 ```
 
 **Example Response**
-A successful deletion returns an empty response. Python and TypeScript return a
-`204 No Content` status code. Go returns `200 OK` with an empty body.
+A successful deletion returns no session data. Python returns `200 OK` with a
+`null` body. TypeScript returns a `204 No Content` status code. Go returns
+`200 OK` with an empty body.
 
 ---
 
@@ -52322,8 +52415,8 @@ The input file should contain initial state and queries:
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--session_service_uri` | Custom session storage URI | SQLite under `.adk/session.db` |
-| `--artifact_service_uri` | Custom artifact storage URI | Local `.adk/artifacts` |
+| `--session_service_uri` | Custom session storage URI | Per-agent SQLite at `<agents_dir>/<agent>/.adk/session.db` |
+| `--artifact_service_uri` | Custom artifact storage URI | Per-agent directory at `<agents_dir>/<agent>/.adk/artifacts` |
 | `--memory_service_uri` | Custom memory service URI | In-memory |
 
 ### Example with storage options
@@ -52336,6 +52429,13 @@ adk run --session_service_uri "sqlite:///my_sessions.db" path/to/my_agent
 
 === "Python"
 
+    To send a single message and exit instead of starting an interactive
+    session, pass the query as an argument:
+
+    ```shell
+    adk run path/to/my_agent "hello"
+    ```
+
     | Option | Description |
     |--------|-------------|
     | `--save_session` | Save the session to a JSON file on exit |
@@ -52345,6 +52445,12 @@ adk run --session_service_uri "sqlite:///my_sessions.db" path/to/my_agent
     | `--session_service_uri` | Custom session storage URI |
     | `--artifact_service_uri` | Custom artifact storage URI |
     | `--memory_service_uri` | Custom memory service URI |
+    | `--use_local_storage/--no_use_local_storage` | Use the local `.adk` folder when no service URI is set |
+    | `--state` | Initial state for the run as a JSON string |
+    | `--timeout` | Timeout for a single turn or query, such as `30s` or `5m` |
+    | `--in_memory` | Do not persist session data |
+    | `--jsonl` | Output structured JSONL instead of human-readable text |
+    | `--default_llm_model` | Default model when the agent does not set one |
 
 === "Go"
 
@@ -52463,16 +52569,16 @@ The `Runner` acts as the central coordinator for a single user invocation. Its r
 
     ```py
     # Simplified view of Runner's main loop logic
-    def run(new_query, ...) -> Generator[Event]:
+    async def run_async(new_query, ...) -> AsyncGenerator[Event, None]:
         # 1. Append new_query to session event history (via SessionService)
-        session_service.append_event(session, Event(author='user', content=new_query))
+        await session_service.append_event(session, Event(author='user', content=new_query))
 
         # 2. Kick off event loop by calling the agent
         agent_event_generator = agent_to_run.run_async(context)
 
         async for event in agent_event_generator:
             # 3. Process the generated event and commit changes
-            session_service.append_event(session, event) # Commits state/artifact deltas etc.
+            await session_service.append_event(session, event) # Commits state/artifact deltas etc.
             # memory_service.update_memory(...) # If applicable
             # artifact_service might have already been called via context during agent run
 
@@ -52807,7 +52913,7 @@ Several components work together within the ADK Runtime to execute an agent invo
 1. ### `Runner`
 
       * **Role:** The main entry point and orchestrator for a single user query (`run_async`).
-      * **Function:** Manages the overall Event Loop, receives events yielded by the Execution Logic, coordinates with Services to process and commit event actions (state/artifact changes), and forwards processed events upstream (e.g., to the UI). It essentially drives the conversation turn by turn based on yielded events. (Defined in `google.adk.runners.runner`).
+      * **Function:** Manages the overall Event Loop, receives events yielded by the Execution Logic, coordinates with Services to process and commit event actions (state/artifact changes), and forwards processed events upstream (e.g., to the UI). It essentially drives the conversation turn by turn based on yielded events. (Defined in `google.adk.runners`).
 
 2. ### Execution Logic Components
 
@@ -53127,7 +53233,7 @@ This primarily relates to how responses from the LLM are handled, especially whe
 * **Synchronous Convenience (`run`):** A synchronous `Runner.run` method exists mainly for convenience (e.g., in simple scripts or testing environments). However, internally, `Runner.run` typically just calls `Runner.run_async` and manages the async event loop execution for you.
 * **Developer Experience:** We recommend designing your applications (e.g., web servers using ADK) to be asynchronous for best performance. In Python, this means using `asyncio`; in Java, leverage `RxJava`'s reactive programming model; and in TypeScript, this means building using native `Promise`s and `AsyncGenerator`s.
 * **Sync Callbacks/Tools:** The ADK framework supports both asynchronous and synchronous functions for tools and callbacks.
-    * **Blocking I/O:** For long-running synchronous I/O operations, the framework attempts to prevent stalls. Python ADK may use asyncio.to_thread, while Java ADK often relies on appropriate RxJava schedulers or wrappers for blocking calls. In TypeScript, the framework simply awaits the function; if a synchronous function performs blocking I/O, it will stall the event loop. Developers should use asynchronous I/O APIs (which return a Promise) whenever possible.
+    * **Blocking I/O:** For long-running synchronous I/O operations, the framework does not always prevent stalls. Python ADK calls a synchronous tool function inline on the asyncio event loop, so blocking input or output inside it stalls the loop; in live mode you can set `RunConfig.tool_thread_pool_config` to run tool executions in a background thread pool instead. Java ADK often relies on appropriate RxJava schedulers or wrappers for blocking calls. In TypeScript, the framework simply awaits the function; if a synchronous function performs blocking I/O, it will stall the event loop. Developers should use asynchronous I/O APIs (which return a Promise) whenever possible.
     * **CPU-Bound Work:** Purely CPU-intensive synchronous tasks will still block their execution thread in both environments.
 
 Understanding these behaviors helps you write more robust ADK applications and debug issues related to state consistency, streaming updates, and asynchronous execution.
@@ -53204,7 +53310,7 @@ File: docs/runtime/resume.md
 # Resume stopped agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 An ADK agent's execution can be interrupted by various factors including
@@ -53281,7 +53387,7 @@ curl -X POST http://localhost:8000/run_sse \
    "app_name": "my_resumable_agent",
    "user_id": "u_123",
    "session_id": "s_abc",
-   "invocation_id": "invocation-123",
+   "invocation_id": "invocation-123"
  }'
 ```
 
@@ -53291,8 +53397,9 @@ shown below:
 === "Python"
 
     ```python
-    runner.run_async(user_id='u_123', session_id='s_abc',
-        invocation_id='invocation-123')
+    async for event in runner.run_async(user_id='u_123', session_id='s_abc',
+        invocation_id='invocation-123'):
+      print(event)
 
     # When new_message is set to a function response,
     # we are trying to resume a long running function.
@@ -53382,9 +53489,10 @@ class WorkflowStep(int, Enum):
 
 # Extend BaseAgentState
 
-### class StoryFlowAgentState(BaseAgentState):
+class StoryFlowAgentState(BaseAgentState):
+  step: WorkflowStep
 
-###   step = WorkflowStep
+# In the StoryFlowAgent class, replace the existing run implementation with:
 
 @override
 async def _run_async_impl(
@@ -53394,12 +53502,13 @@ async def _run_async_impl(
     Implements the custom orchestration logic for the story workflow.
     Uses the instance attributes assigned by Pydantic (e.g., self.story_generator).
     """
-    agent_state = self._load_agent_state(ctx, WorkflowStep)
+    agent_state = self._load_agent_state(ctx, StoryFlowAgentState)
 
     if agent_state is None:
       # Record the start of the agent
       agent_state = StoryFlowAgentState(step=WorkflowStep.INITIAL_STORY_GENERATION)
-      yield self._create_agent_state_event(ctx, agent_state)
+      ctx.set_agent_state(self.name, agent_state=agent_state)
+      yield self._create_agent_state_event(ctx)
 
     next_step = agent_state.step
     logger.info(f"[{self.name}] Starting story generation workflow.")
@@ -53417,7 +53526,8 @@ async def _run_async_impl(
           return  # Stop processing if initial story failed
 
     agent_state = StoryFlowAgentState(step=WorkflowStep.CRITIC_REVISER_LOOP)
-    yield self._create_agent_state_event(ctx, agent_state)
+    ctx.set_agent_state(self.name, agent_state=agent_state)
+    yield self._create_agent_state_event(ctx)
 
     # Step 2. Critic-Reviser Loop
     if next_step <= WorkflowStep.CRITIC_REVISER_LOOP:
@@ -53430,7 +53540,8 @@ async def _run_async_impl(
           yield event
 
     agent_state = StoryFlowAgentState(step=WorkflowStep.POST_PROCESSING)
-    yield self._create_agent_state_event(ctx, agent_state)
+    ctx.set_agent_state(self.name, agent_state=agent_state)
+    yield self._create_agent_state_event(ctx)
 
     # Step 3. Sequential Post-Processing (Grammar and Tone Check)
     if next_step <= WorkflowStep.POST_PROCESSING:
@@ -53443,7 +53554,8 @@ async def _run_async_impl(
           yield event
 
     agent_state = StoryFlowAgentState(step=WorkflowStep.CONDITIONAL_REGENERATION)
-    yield self._create_agent_state_event(ctx, agent_state)
+    ctx.set_agent_state(self.name, agent_state=agent_state)
+    yield self._create_agent_state_event(ctx)
 
     # Step 4. Tone-Based Conditional Logic
     if next_step <= WorkflowStep.CONDITIONAL_REGENERATION:
@@ -53460,7 +53572,8 @@ async def _run_async_impl(
           logger.info(f"[{self.name}] Tone is not negative. Keeping current story.")
 
     logger.info(f"[{self.name}] Workflow finished.")
-    yield self._create_agent_state_event(ctx, end_of_agent=True)
+    ctx.set_agent_state(self.name, end_of_agent=True)
+    yield self._create_agent_state_event(ctx)
 ```
 
 ================
@@ -53548,6 +53661,9 @@ whether the context window is compressed:
   input, useful when sessions approach model context limits.
 - `include_thoughts_from_other_agents`: Controls whether thought parts from
   other agents are included in the LLM context. Disabled by default.
+- `model_input_context`: A list of `types.Content` added to the LLM request for
+  this invocation only. The runner does not persist it to the session, so you
+  can supply per-turn context without changing the conversation history.
 
 === "Python"
 
@@ -53743,6 +53859,10 @@ additional parameters:
   to keep the event loop responsive to user interruptions.
 - `explicit_vad_signal`: Enables explicit voice activity detection (VAD)
   signals from the model.
+- `history_config`: Configures the exchange of history between the client and
+  the server.
+- `translation_config`: Configures real-time speech-to-speech translation. Only
+  translation models support it.
 
 Not all parameters are available in every language. See the
 [API reference](#api-reference) for language-specific details.
@@ -53783,9 +53903,10 @@ Use these parameters to control runtime guardrails and debugging:
 
 - `max_llm_calls`: Caps the total number of LLM calls per run (default: 500).
   Set to 0 or negative for unlimited calls, though this is not recommended for
-  production. Values at or above `sys.maxsize` raise an error.
+  production. Values at or above `sys.maxsize` raises an error.
 - `save_input_blobs_as_artifacts`: When `True`, saves input blobs (e.g.,
-  uploaded files) as run artifacts for debugging and auditing.
+  uploaded files) as run artifacts for debugging and auditing. Deprecated in
+  Python in favor of `SaveFilesAsArtifactsPlugin`.
 - `custom_metadata`: A `dict[str, Any]` of arbitrary metadata attached to the
   invocation, useful for tracing or logging.
 
@@ -54188,7 +54309,6 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     ```py
     # Hypothetical callback function
     def validate_tool_params(
-        callback_context: CallbackContext, # Correct context type
         tool: BaseTool,
         args: Dict[str, Any],
         tool_context: ToolContext
@@ -54197,7 +54317,7 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
       print(f"Callback triggered for tool: {tool.name}, args: {args}")
 
       # Example validation: Check if a required user ID from state matches an arg
-      expected_user_id = callback_context.state.get("session_user_id")
+      expected_user_id = tool_context.state.get("session_user_id")
       actual_user_id_in_args = args.get("user_id_param") # Assuming tool takes 'user_id_param'
 
       if actual_user_id_in_args != expected_user_id:
@@ -54673,7 +54793,8 @@ the storage backend that best suits your needs:
 * **Persistence:** Yes. Data is managed reliably and scalably via [Agent
   Runtime](/deploy/agent-runtime/).
 * **Requires:**
-    * A Google Cloud project (`pip install vertexai`)
+    * A Google Cloud project.
+    * The `gcp` extra, installed with `pip install google-adk[gcp]`.
     * A Google Cloud storage bucket that can be configured by this
       [step](https://cloud.google.com/vertex-ai/docs/pipelines/configure-project#storage).
     * An Agent Runtime resource name/ID that can setup following this
@@ -54687,7 +54808,7 @@ the storage backend that best suits your needs:
 === "Python"
 
     ```py
-    # Requires: pip install google-adk[vertexai]
+    # Requires: pip install google-adk[gcp]
     # Plus GCP setup and authentication
     from google.adk.sessions import VertexAiSessionService
 
@@ -54698,7 +54819,7 @@ the storage backend that best suits your needs:
 
     session_service = VertexAiSessionService(project=PROJECT_ID, location=LOCATION)
     # Use REASONING_ENGINE_APP_NAME when calling service methods, e.g.:
-    # session_service = await session_service.create_session(app_name=REASONING_ENGINE_APP_NAME, ...)
+    # session = await session_service.create_session(app_name=REASONING_ENGINE_APP_NAME, ...)
     ```
 
 === "Go"
@@ -54757,7 +54878,8 @@ For more information on connecting to Google Cloud from ADK agents, see
 * **How it works:** Connects to a relational database (e.g., PostgreSQL, MySQL,
   SQLite) to store session data persistently in tables.
 * **Persistence:** Yes. Data survives application restarts.
-* **Requires:** A configured database.
+* **Requires:** A configured database and the `db` extra, installed with
+  `pip install google-adk[db]`.
 * **Best for:** Applications needing reliable, persistent storage that you
   manage yourself.
 
@@ -55104,8 +55226,9 @@ to decide which is the best fit for your agent.
 | **Dependencies** | None. | Google Cloud Project, Agent Platform API | Google Cloud Project, Knowledge Engine, the Agent Platform SDK (optional install). |
 | **When to use it** | When you want to search across multiple sessions’ chat histories for prototyping. | When you want your agent to remember and learn from past interactions. | When you already have RAG infrastructure or want to retrieve over raw conversation transcripts. |
 
-`VertexAiRagMemoryService` is only exported from `google.adk.memory` when the
-Agent Platform SDK is installed. Memory Bank and RAG-backed memory are
+You can always import `VertexAiRagMemoryService` from `google.adk.memory`, but
+constructing it raises `ImportError` unless the Agent Platform SDK is installed
+with `pip install google-adk[gcp]`. Memory Bank and RAG-backed memory are
 documented in [Memory Bank](#memory-bank) and [RAG Memory](#rag-memory) below.
 
 
@@ -55722,7 +55845,7 @@ The memory workflow includes the following steps:
 6. **Results Returned:** The `MemoryService` searches its store, using keyword
    matching or semantic search, and returns matching snippets as a
    `SearchMemoryResponse` containing a list of `MemoryEntry` objects, each
-   holding `content`, and all optional: `author`, `timestamp`, and
+   holding `content`, and all optional: `id`, `author`, `timestamp`, and
    `custom_metadata`.
 7. **Agent Uses Results:** The tool returns these results to the agent, usually
    as part of the context or function response. The agent can then use this
@@ -55855,6 +55978,7 @@ Prefixes on state keys define their scope and persistence behavior, especially w
     * **Scope:** Tied to the `user_id`, shared across *all* sessions for that user (within the same `app_name`).
     * **Persistence:** Persistent with `Database` or `VertexAI`. (Stored by `InMemory` but lost on restart).
     * **Use Cases:** User preferences (e.g., `'user:theme'`), profile details (e.g., `'user:name'`).
+    * **Reading without a session:** In Python, `await session_service.get_user_state(app_name=..., user_id=...)` returns the user-scoped keys with the `user:` prefix stripped, so you can read them before a session exists. `VertexAiSessionService` is the exception: it always raises `NotImplementedError`, because the Agent Runtime API does not expose user state independently of a session. There, enumerate sessions with `list_sessions` and call `get_session` on each result instead.
     * **Example:** `session.state['user:preferred_language'] = 'fr'`
 
 * **`app:` Prefix (App State):**
@@ -56141,8 +56265,9 @@ This is the simplest method for saving an agent's final text response directly i
     print(f"Initial state: {session.state}")
 
     # --- Run the Agent ---
-    # Runner handles calling append_event, which uses the output_key
-    # to automatically create the state_delta.
+    # The agent uses the output_key to put its response into the event's
+    # state_delta; the Runner hands that event to append_event, which
+    # applies the delta to the session state.
     user_message = Content(parts=[Part(text="Hello")])
     for event in runner.run(user_id=user_id,
                             session_id=session_id,
@@ -56219,7 +56344,7 @@ This is the simplest method for saving an agent's final text response directly i
     --8<-- "examples/java/snippets/src/main/java/state/GreetingAgentExample.java:full_code"
     ```
 
-Behind the scenes, the `Runner` uses the `output_key` to create the necessary `EventActions` with a `state_delta` and calls `append_event`.
+Behind the scenes, the agent itself uses the `output_key` to write the response into the `state_delta` of the `EventActions` on the event it yields; the `Runner` then passes that event to the `SessionService`'s `append_event`, which applies the delta.
 
 **2\. The Standard Way: `EventActions.state_delta` (for Complex Updates)**
 
@@ -56352,9 +56477,9 @@ For more complex scenarios (updating multiple keys, non-string values, specific 
 
 **3. Via `CallbackContext` or `ToolContext` (Recommended for Callbacks and Tools)**
 
-*(Note: In TypeScript, this is done via the unified `Context` type.)*
+*(Note: In Python and TypeScript, `CallbackContext` and `ToolContext` are unified into a single `Context` type, and in Python both names remain usable as aliases of it.)*
 
-Modifying state within agent callbacks (e.g., `on_before_agent_call`, `on_after_agent_call`) or tool functions is best done using the `state` attribute of the `CallbackContext` or `ToolContext` provided to your function.
+Modifying state within agent callbacks such as `before_agent_callback` and `after_agent_callback`, or within tool functions, is best done using the `state` attribute of the `CallbackContext` or `ToolContext` provided to your function.
 
 *   `callback_context.state['my_key'] = my_value`
 *   `tool_context.state['my_key'] = my_value`
@@ -56369,7 +56494,8 @@ For more comprehensive details on context objects, refer to the [Context documen
 
     ```python
     # In an agent callback or tool function
-    from google.adk.agents import CallbackContext # or ToolContext
+    from google.adk.agents.callback_context import CallbackContext
+    # or, equivalently: from google.adk.tools.tool_context import ToolContext
 
     def my_callback_or_tool_function(context: CallbackContext, # Or ToolContext
                                      # ... other parameters ...
@@ -56447,7 +56573,7 @@ For more comprehensive details on context objects, refer to the [Context documen
 * Reads the `state_delta` from the event's `actions`.
 * Applies these changes to the state managed by the `SessionService`, correctly handling prefixes and persistence based on the service type.
 * Updates the session's `last_update_time`.
-* Ensures thread-safety for concurrent updates.
+* Serializes concurrent updates to the same session where the service supports it: `DatabaseSessionService` takes a per-session lock, while `InMemorySessionService` is not safe for multi-threaded use.
 
 ### ⚠️ A Warning About Direct State Modification
 
