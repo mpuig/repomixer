@@ -4026,21 +4026,21 @@ search:
 ---
 # 구성
 
-이 페이지에서는 기본 OpenAI 키 또는 클라이언트, 기본 OpenAI API 형식, 트레이싱 내보내기 기본값, 로깅 동작 등 애플리케이션 시작 시 일반적으로 한 번 설정하는 SDK 전역 기본값을 다룹니다.
+이 페이지에서는 기본 OpenAI 키 또는 클라이언트, 기본 OpenAI API 형식, 트레이싱 내보내기 기본값, 로깅 동작처럼 애플리케이션 시작 시 일반적으로 한 번 설정하는 SDK 전역 기본값을 다룹니다.
 
 이러한 기본값은 샌드박스 기반 워크플로에도 적용되지만, 샌드박스 워크스페이스, 샌드박스 클라이언트, 세션 재사용은 별도로 구성합니다.
 
-특정 에이전트나 실행을 구성해야 하는 경우 다음 문서부터 참조하세요.
+대신 특정 에이전트나 실행을 구성해야 한다면 다음 문서부터 확인하세요.
 
--   일반 에이전트 `Agent` 관련 instructions, tools, 출력 유형, 핸드오프, 가드레일은 [에이전트](agents.md)를 참조하세요.
--   `RunConfig`, 세션, 대화 상태 옵션은 [에이전트 실행](running_agents.md)을 참조하세요.
--   `SandboxRunConfig`, 매니페스트, 기능, 샌드박스 클라이언트별 워크스페이스 설정은 [샌드박스 에이전트](sandbox/guide.md)를 참조하세요.
--   모델 선택과 공급자 구성은 [모델](models/index.md)을 참조하세요.
--   실행별 트레이싱 메타데이터와 사용자 지정 트레이스 프로세서는 [트레이싱](tracing.md)을 참조하세요.
+- [에이전트](agents.md): 일반 `Agent`의 instructions, tools, 출력 유형, 핸드오프, 가드레일
+- [에이전트 실행](running_agents.md): `RunConfig`, 세션, 대화 상태 옵션
+- [샌드박스 에이전트](sandbox/guide.md): `SandboxRunConfig`, 매니페스트, 기능, 샌드박스 클라이언트별 워크스페이스 설정
+- [모델](models/index.md): 모델 선택 및 공급자 구성
+- [트레이싱](tracing.md): 실행별 트레이싱 메타데이터 및 맞춤형 트레이스 프로세서
 
 ## 구성 객체와 딕셔너리
 
-SDK에서 정의한 구성 매개변수는 일반적으로 형식이 지정된 설정 객체나 동일한 필드를 포함하는 딕셔너리 중 하나를 허용합니다. 이는 형식 주석에 딕셔너리가 포함된 에이전트, 실행, 모델, 세션, 샌드박스, 음성 구성 경계 전반에 적용됩니다. SDK에서 정의한 중첩 설정 유형에도 딕셔너리를 사용할 수 있습니다.
+SDK에서 정의한 구성 매개변수는 일반적으로 형식이 지정된 설정 객체 또는 동일한 필드를 포함하는 딕셔너리를 허용합니다. 이는 형식 어노테이션에 딕셔너리가 포함된 에이전트, 실행, 모델, 세션, 샌드박스, 음성 구성 경계 전반에 적용됩니다. SDK에서 정의한 중첩 설정 유형에도 딕셔너리를 사용할 수 있습니다.
 
 ```python
 from agents import Agent
@@ -4055,11 +4055,11 @@ agent = Agent(
 )
 ```
 
-SDK는 이러한 딕셔너리를 해당 설정 객체로 정규화합니다. SDK에서 정의한 dataclass 구성 유형에 알 수 없는 필드가 있으면 `TypeError` 오류가 발생하므로, 옵션 이름의 오타를 조기에 발견할 수 있습니다. 특정 경계에서 딕셔너리를 허용하는지 확인하려면 매개변수의 형식 주석이나 API 레퍼런스를 확인하세요.
+SDK는 이러한 딕셔너리를 해당 설정 객체로 정규화합니다. SDK에서 정의한 데이터 클래스 구성 유형에 알 수 없는 필드가 있으면 `TypeError`가 발생하므로, 옵션 이름의 오타를 조기에 발견하는 데 도움이 됩니다. 특정 경계에서 딕셔너리를 허용하는지 확인하려면 해당 매개변수의 형식 어노테이션 또는 API 레퍼런스를 확인하세요.
 
 ## API 키와 클라이언트
 
-기본적으로 SDK는 LLM 요청과 트레이싱에 `OPENAI_API_KEY` 환경 변수를 사용합니다. SDK가 처음 OpenAI 클라이언트를 생성할 때 키가 확인되므로(지연 초기화), 첫 번째 모델 호출 전에 환경 변수를 설정하세요. 앱이 시작되기 전에 이 환경 변수를 설정할 수 없다면 [set_default_openai_key()][agents.set_default_openai_key] 함수를 사용하여 키를 설정할 수 있습니다.
+기본적으로 SDK는 LLM 요청과 트레이싱에 `OPENAI_API_KEY` 환경 변수를 사용합니다. SDK가 OpenAI 클라이언트를 처음 생성할 때 키가 확인되므로(지연 초기화), 첫 모델 호출 전에 환경 변수를 설정하세요. 앱 시작 전에 해당 환경 변수를 설정할 수 없다면 [set_default_openai_key()][agents.set_default_openai_key] 함수를 사용하여 키를 설정할 수 있습니다.
 
 ```python
 from agents import set_default_openai_key
@@ -4067,7 +4067,7 @@ from agents import set_default_openai_key
 set_default_openai_key("sk-...")
 ```
 
-또는 사용할 OpenAI 클라이언트를 구성할 수도 있습니다. 기본적으로 SDK는 환경 변수의 API 키나 위에서 설정한 기본 키를 사용하여 `AsyncOpenAI` 인스턴스를 생성합니다. [set_default_openai_client()][agents.set_default_openai_client] 함수를 사용하여 이를 변경할 수 있습니다.
+또는 사용할 OpenAI 클라이언트를 구성할 수도 있습니다. 기본적으로 SDK는 환경 변수의 API 키 또는 위에서 설정한 기본 키를 사용하여 `AsyncOpenAI` 인스턴스를 생성합니다. [set_default_openai_client()][agents.set_default_openai_client] 함수를 사용하여 이를 변경할 수 있습니다.
 
 ```python
 from openai import AsyncOpenAI
@@ -4077,14 +4077,38 @@ custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
 
-환경 기반 엔드포인트 구성을 선호하는 경우 기본 OpenAI 공급자는 `OPENAI_BASE_URL` 환경 변수도 읽습니다. Responses WebSocket 전송을 활성화하면 WebSocket `/responses` 엔드포인트에 사용할 `OPENAI_WEBSOCKET_BASE_URL` 환경 변수도 읽습니다.
+### `openai` v3 기반 맞춤형 HTTP 클라이언트
+
+버전 0.21.0에는 `openai>=3.0.0,<4`이 필요합니다. 기본 OpenAI 공급자는 HTTPX2를 사용하므로 대부분의 애플리케이션에서는 HTTP 클라이언트를 직접 구성할 필요가 없습니다. 애플리케이션이 `AsyncOpenAI`에 `http_client=`을 전달하는 경우, 맞춤형 클라이언트와 전송 관련 옵션에 HTTPX2 유형을 사용하세요.
+
+```python
+import httpx2
+from openai import AsyncOpenAI, DefaultAsyncHttpx2Client
+
+from agents import set_default_openai_client
+
+http_client = DefaultAsyncHttpx2Client(
+    timeout=httpx2.Timeout(30.0, connect=5.0),
+)
+custom_client = AsyncOpenAI(
+    api_key="...",
+    http_client=http_client,
+)
+set_default_openai_client(custom_client)
+```
+
+동일한 마이그레이션이 맞춤형 전송, 인증, 이벤트 훅, 모의 전송, URL, 요청, 응답, 전송 예외 처리에도 적용됩니다. 각각에 해당하는 `httpx2`을 사용하세요. Agents SDK는 임의의 레거시 `httpx` 객체를 HTTPX2로 변환하지 않습니다. 애플리케이션에서 `httpx`을 명시적으로 설치하면 OpenAI Python SDK가 레거시 클라이언트를 위한 임시 호환성 경로를 제공하지만, 새 코드와 마이그레이션된 코드는 HTTPX2를 사용해야 합니다.
+
+이 OpenAI 클라이언트 경계는 로컬 MCP 전송 맞춤 설정과 별개입니다. MCP Python SDK v1은 자체 레거시 `httpx` 종속성을 사용하고, MCP Python SDK v2는 `httpx2`을 사용합니다. 자세한 내용은 [MCP Python SDK v1 및 v2](mcp.md#mcp-python-sdk-v1-and-v2)를 참조하세요.
+
+환경 기반 엔드포인트 구성을 선호하는 경우 기본 OpenAI 공급자는 `OPENAI_BASE_URL`도 읽습니다. Responses 웹소켓 전송을 활성화하면 웹소켓 `/responses` 엔드포인트에 사용할 `OPENAI_WEBSOCKET_BASE_URL`도 읽습니다.
 
 ```bash
 export OPENAI_BASE_URL="https://your-openai-compatible-endpoint.example/v1"
 export OPENAI_WEBSOCKET_BASE_URL="wss://your-openai-compatible-endpoint.example/v1"
 ```
 
-마지막으로 사용되는 OpenAI API도 사용자 지정할 수 있습니다. 기본적으로 OpenAI Responses API를 사용합니다. [set_default_openai_api()][agents.set_default_openai_api] 함수를 사용하면 이를 재정의하여 Chat Completions API를 사용할 수 있습니다.
+마지막으로 사용할 OpenAI API도 맞춤 설정할 수 있습니다. 기본적으로 OpenAI Responses API를 사용합니다. [set_default_openai_api()][agents.set_default_openai_api] 함수를 사용하여 Chat Completions API를 사용하도록 재정의할 수 있습니다.
 
 ```python
 from agents import set_default_openai_api
@@ -4094,7 +4118,7 @@ set_default_openai_api("chat_completions")
 
 ## OpenAI 공급자 기본값
 
-SDK의 OpenAI 백엔드를 사용하는 공급자는 모델 이름 문자열을 모델에 매핑할 때 SDK 전역 기본값도 읽습니다. OpenAI Responses 모델이 기본적으로 WebSocket 전송을 사용하도록 하려면 [`set_default_openai_responses_transport()`][agents.set_default_openai_responses_transport]를 사용하세요.
+SDK의 OpenAI 백엔드를 사용하는 공급자는 모델 이름 문자열을 모델에 매핑할 때 SDK 전역 기본값도 읽습니다. OpenAI Responses 모델에서 기본적으로 웹소켓 전송을 사용하도록 하려면 [`set_default_openai_responses_transport()`][agents.set_default_openai_responses_transport]을 사용하세요.
 
 ```python
 from agents import set_default_openai_responses_transport
@@ -4102,9 +4126,9 @@ from agents import set_default_openai_responses_transport
 set_default_openai_responses_transport("websocket")
 ```
 
-이는 기본 OpenAI 공급자가 모델 이름을 해석할 때 생성되는 OpenAI Responses 모델에 영향을 줍니다. 공급자 수준 설정, 연결 재사용, keepalive 옵션, 사용자 지정 WebSocket 엔드포인트에 관한 자세한 내용은 [Responses WebSocket 전송](models/index.md#responses-websocket-transport)을 참조하세요.
+이는 기본 OpenAI 공급자가 모델 이름을 확인하여 생성한 OpenAI Responses 모델에 영향을 줍니다. 공급자 수준 설정, 연결 재사용, keepalive 옵션, 맞춤형 웹소켓 엔드포인트에 관한 자세한 내용은 [Responses WebSocket 전송](models/index.md#responses-websocket-transport)을 참조하세요.
 
-OpenAI 설정에 공급자 수준의 에이전트 등록 메타데이터가 필요한 경우 시작 시 기본 하네스 ID를 한 번 구성하세요.
+OpenAI 설정에서 공급자 수준 에이전트 등록 메타데이터가 필요한 경우 시작 시 기본 하네스 ID를 한 번 구성하세요.
 
 ```python
 from agents import set_default_openai_harness
@@ -4122,11 +4146,11 @@ set_default_openai_agent_registration(
 )
 ```
 
-SDK 기본값이 설정되지 않은 경우 SDK의 OpenAI 백엔드를 사용하는 공급자는 `OPENAI_AGENT_HARNESS_ID` 환경 변수를 대신 사용합니다. 하네스 ID가 구성되어 있으면 `RunConfig.trace_metadata` 내에 해당 키가 이미 존재하지 않는 한 SDK는 이를 `agent_harness_id` 항목으로 트레이스 메타데이터에 추가합니다.
+SDK 기본값을 설정하지 않으면 SDK의 OpenAI 백엔드를 사용하는 공급자는 `OPENAI_AGENT_HARNESS_ID` 환경 변수를 대신 사용합니다. 하네스 ID가 구성된 경우 `RunConfig.trace_metadata`에 해당 키가 아직 없으면 SDK가 이를 `agent_harness_id`으로 트레이스 메타데이터에 추가합니다.
 
 ## 트레이싱
 
-트레이싱은 기본적으로 활성화되어 있습니다. 기본적으로 위 섹션의 모델 요청과 동일한 OpenAI API 키, 즉 환경 변수 또는 설정한 기본 키를 사용합니다. 트레이싱에 사용할 API 키는 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 함수를 사용하여 별도로 설정할 수 있습니다.
+트레이싱은 기본적으로 활성화되어 있습니다. 기본적으로 위 섹션의 모델 요청과 동일한 OpenAI API 키, 즉 환경 변수 또는 설정한 기본 키를 사용합니다. 트레이싱에 사용할 API 키를 별도로 설정하려면 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 함수를 사용하세요.
 
 ```python
 from agents import set_tracing_export_api_key
@@ -4134,7 +4158,7 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-모델 트래픽에는 특정 키나 클라이언트를 사용하지만 트레이싱에는 다른 OpenAI 키를 사용해야 하는 경우 기본 키나 클라이언트를 설정할 때 `use_for_tracing=False` 옵션을 전달한 다음 트레이싱을 별도로 구성하세요. 사용자 지정 클라이언트를 사용하지 않는 경우 [`set_default_openai_key()`][agents.set_default_openai_key]에도 동일한 패턴을 적용할 수 있습니다.
+모델 트래픽에는 한 키 또는 클라이언트를 사용하지만 트레이싱에는 다른 OpenAI 키를 사용해야 하는 경우, 기본 키 또는 클라이언트를 설정할 때 `use_for_tracing=False`을 전달한 다음 트레이싱을 별도로 구성하세요. 맞춤형 클라이언트를 사용하지 않는다면 [`set_default_openai_key()`][agents.set_default_openai_key]에도 같은 방식을 사용할 수 있습니다.
 
 ```python
 from openai import AsyncOpenAI
@@ -4149,14 +4173,14 @@ set_default_openai_client(custom_client, use_for_tracing=False)
 set_tracing_export_api_key("sk-tracing")
 ```
 
-기본 익스포터를 사용할 때 트레이스를 특정 조직이나 프로젝트에 귀속해야 하는 경우 앱이 시작되기 전에 다음 환경 변수를 설정하세요.
+기본 내보내기를 사용할 때 트레이스를 특정 조직이나 프로젝트에 귀속해야 한다면 앱 시작 전에 다음 환경 변수를 설정하세요.
 
 ```bash
 export OPENAI_ORG_ID="org_..."
 export OPENAI_PROJECT_ID="proj_..."
 ```
 
-전역 익스포터를 변경하지 않고 실행별 트레이싱 API 키를 설정할 수도 있습니다.
+전역 내보내기를 변경하지 않고 실행별 트레이싱 API 키를 설정할 수도 있습니다.
 
 ```python
 from agents import Runner, RunConfig
@@ -4176,7 +4200,7 @@ from agents import set_tracing_disabled
 set_tracing_disabled(True)
 ```
 
-트레이싱은 활성화된 상태로 유지하면서 잠재적으로 민감한 입력과 출력을 트레이스 페이로드에서 제외하려면 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 설정에 `False` 값을 지정하세요.
+트레이싱을 활성화된 상태로 유지하되 민감할 수 있는 입력과 출력을 트레이스 페이로드에서 제외하려면 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data]을 `False`로 설정하세요.
 
 ```python
 from agents import Runner, RunConfig
@@ -4188,13 +4212,13 @@ await Runner.run(
 )
 ```
 
-앱이 시작되기 전에 다음 환경 변수를 설정하면 코드 없이 기본값을 변경할 수도 있습니다.
+앱 시작 전에 다음 환경 변수를 설정하여 코드 없이 기본값을 변경할 수도 있습니다.
 
 ```bash
 export OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA=0
 ```
 
-트레이싱의 모든 제어 옵션은 [트레이싱 가이드](tracing.md)를 참조하세요.
+전체 트레이싱 제어 옵션은 [트레이싱 가이드](tracing.md)를 참조하세요.
 
 ## 디버그 로깅
 
@@ -4208,7 +4232,7 @@ from agents import enable_verbose_stdout_logging
 enable_verbose_stdout_logging()
 ```
 
-또는 핸들러, 필터, 포매터 등을 추가하여 로그를 사용자 지정할 수 있습니다. 자세한 내용은 [Python 로깅 가이드](https://docs.python.org/3/howto/logging.html)를 참조하세요.
+또는 핸들러, 필터, 포매터 등을 추가하여 로그를 맞춤 설정할 수 있습니다. 자세한 내용은 [Python 로깅 가이드](https://docs.python.org/3/howto/logging.html)를 참조하세요.
 
 ```python
 import logging
@@ -4227,25 +4251,25 @@ logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 ```
 
-### 로그와 진단의 민감한 데이터
+### 로그 및 진단의 민감한 데이터
 
-일부 로그와 진단 예외에는 민감한 데이터(예: 모델 또는 도구의 입력과 출력)가 포함될 수 있습니다.
+일부 로그와 진단 예외에는 민감한 데이터가 포함될 수 있습니다(예: 모델 또는 도구의 입력과 출력).
 
-기본적으로 SDK는 LLM 입력과 출력 또는 도구 입력과 출력을 **로그에 기록하지 않습니다**. 이러한 보호 기능은 다음 설정으로 제어합니다.
+기본적으로 SDK는 LLM 입력/출력이나 도구 입력/출력을 로그에 기록하지 **않습니다**. 이러한 보호 기능은 다음 항목으로 제어합니다.
 
 ```bash
 OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
 ```
 
-디버깅을 위해 이 데이터를 일시적으로 포함해야 하는 경우 앱이 시작되기 전에 두 변수 중 하나에 `0` 값(또는 `false`)을 설정하세요.
+디버깅을 위해 이 데이터를 일시적으로 포함해야 한다면 앱 시작 전에 두 변수 중 하나를 `0`(또는 `false`)로 설정하세요.
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=0
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=0
 ```
 
-이 플래그는 영향을 받는 오류가 페이로드를 포함한 진단 세부정보를 유지할지 여부도 제어합니다. 예를 들어 도구 데이터 비식별화가 활성화된 상태에서 `FunctionTool` 인수가 유효하지 않으면, 근본적인 유효성 검사 오류를 예외 체인에 연결하지 않고 일반적인 `ModelBehaviorError` 오류가 발생합니다. 두 변수 중 하나에 `0` 값을 설정하면 가공되지 않은 모델 또는 도구 데이터가 로그, 예외 메시지, 예외 체인, 기타 진단 컨텍스트에 노출될 수 있으므로 통제된 개발 환경에서만 활성화하세요.
+이 플래그는 영향을 받는 실패가 페이로드를 포함한 진단 세부 정보를 유지할지 여부도 제어합니다. 예를 들어 도구 데이터 마스킹이 활성화된 경우 `FunctionTool`에 대한 잘못된 인수는 내부 검증 오류를 예외 체인으로 연결하지 않고 일반적인 `ModelBehaviorError`을 발생시킵니다. 두 변수 중 하나를 `0`로 설정하면 로그, 예외 메시지, 예외 체인, 기타 진단 컨텍스트에 가공되지 않은 모델 또는 도구 데이터가 노출될 수 있으므로 통제된 개발 환경에서만 활성화하세요.
 
 ================
 File: docs/ko/context.md
@@ -6078,66 +6102,79 @@ search:
 ---
 # 릴리스 프로세스/변경 로그
 
-이 프로젝트는 `0.Y.Z` 형식으로 의미론적 버전 관리(semantic versioning)를 약간 수정한 방식을 따릅니다. 앞의 `0`은 SDK가 아직 빠르게 발전하고 있음을 나타냅니다. 각 구성 요소는 다음과 같이 증가시킵니다.
+이 프로젝트는 `0.Y.Z` 형식을 사용하는, 약간 수정된 시맨틱 버전 관리 방식을 따릅니다. 앞의 `0`은 SDK가 여전히 빠르게 발전하고 있음을 나타냅니다. 각 구성 요소는 다음과 같이 증가시킵니다.
 
 ## 마이너(`Y`) 버전
 
-베타로 표시되지 않은 공개 인터페이스의 **호환성을 깨는 변경 사항**이 있을 때 마이너 버전 `Y`을 증가시킵니다. 예를 들어 `0.0.x`에서 `0.1.x`로 변경될 때 호환성을 깨는 변경 사항이 포함될 수 있습니다.
+베타로 표시되지 않은 공개 인터페이스에 **호환성을 깨는 변경 사항**이 있으면 마이너 버전 `Y`을 증가시킵니다. 예를 들어 `0.0.x`에서 `0.1.x`로 변경될 때 호환성을 깨는 변경 사항이 포함될 수 있습니다.
 
 호환성을 깨는 변경 사항을 원하지 않는다면 프로젝트에서 `0.0.x` 버전으로 고정하는 것이 좋습니다.
 
 ## 패치(`Z`) 버전
 
-호환성을 깨지 않는 다음 변경 사항이 있을 때 `Z`을 증가시킵니다.
+호환성을 깨지 않는 다음 변경 사항에는 `Z`을 증가시킵니다.
 
 -   버그 수정
 -   새로운 기능
 -   비공개 인터페이스 변경
 -   베타 기능 업데이트
 
-## 호환성을 깨는 변경 사항 변경 로그
+## 호환성을 깨는 변경 사항의 변경 로그
+
+### 0.21.0
+
+버전 0.21.0에는 `openai` v3이 필요하며 Agents SDK의 OpenAI HTTP 통합이 HTTPX2로 이전됩니다. 기본 OpenAI 클라이언트를 사용하는 애플리케이션은 클라이언트 설정을 변경할 필요가 없지만, OpenAI HTTP 계층을 사용자 지정하는 애플리케이션은 전송 계층 관련 코드를 마이그레이션해야 할 수 있습니다.
+
+주요 변경 사항:
+
+-   이제 필수 OpenAI 종속성은 `openai>=3.0.0,<4`입니다. 코어를 새로 설치하면 HTTPX2가 사용되며 더 이상 레거시 `httpx`이 직접 종속성으로 설치되지 않습니다.
+-   이제 기본 OpenAI 제공자, 음성 제공자, Responses WebSocket 지원, 트레이싱 내보내기 도구, 제공자 재시도 정규화에서 HTTPX2를 사용합니다. 기존 Agents SDK 공개 구성과 런타임 동작은 변경되지 않습니다.
+-   `AsyncOpenAI`에 `http_client=`를 전달하는 애플리케이션은 사용자 지정 클라이언트, 전송, 인증, 이벤트 훅, 모의 전송, 시간 제한 값, URL, 요청, 응답, 전송 예외 처리를 `httpx`에서 `httpx2`로 마이그레이션해야 합니다. 애플리케이션에 OpenAI 클라이언트의 기본값과 사용자 지정 HTTP 옵션이 모두 필요한 경우 OpenAI Python SDK의 `DefaultAsyncHttpx2Client`을 사용하는 것이 좋습니다. [`openai` v3을 사용하는 사용자 지정 HTTP 클라이언트](config.md#custom-http-clients-with-openai-v3)를 참고하세요.
+-   Agents SDK는 임의의 레거시 HTTPX 객체를 HTTPX2로 변환하지 않습니다. OpenAI Python SDK의 임시 레거시 클라이언트 호환성 경로에는 명시적으로 `httpx`을 설치해야 하며, 이를 마이그레이션을 위한 임시 연결 수단으로 간주해야 합니다.
+-   로컬 MCP HTTP 사용자 지정은 계속해서 설치된 MCP 패키지를 따릅니다. MCP Python SDK v1은 레거시 `httpx`을 제공하고 사용하며, MCP Python SDK v2는 `httpx2`을 사용합니다. 일반적인 MCP 연결은 애플리케이션을 변경할 필요가 없습니다. [MCP Python SDK v1 및 v2](mcp.md#mcp-python-sdk-v1-and-v2)를 참고하세요.
+-   이제 제공자와 무관한 공개 테스트 유틸리티를 사용하여 제공자 또는 프로세스 종속성 없이 에이전트 모델, 샌드박스 세션, 실시간 세션, 음성 파이프라인 워크플로를 테스트할 수 있습니다. 사용 방법과 실제 제공자 어댑터 또는 통합 경계를 유지해야 하는 경우에 관한 지침은 [테스트](testing.md)를 참고하세요.
 
 ### 0.20.0
 
-버전 0.20.0에는 로컬 MCP HTTP 전송을 사용자 지정하는 애플리케이션에 호환성을 깨는 변경이 될 수 있는 MCP 종속성 마이그레이션이 포함됩니다. 또한 에이전트나 실행에서 모델을 명시적으로 선택하지 않을 때 사용하는 SDK 기본 모델도 업데이트됩니다.
+버전 0.20.0에는 로컬 MCP HTTP 전송을 사용자 지정하는 애플리케이션에서 호환성을 깨뜨릴 가능성이 있는 MCP 종속성 마이그레이션이 포함됩니다. 에이전트나 실행에서 모델을 명시적으로 선택하지 않을 때 사용하는 SDK 기본 모델도 업데이트됩니다.
 
-주요 내용:
+주요 변경 사항:
 
--   이제 SDK 기본 모델은 `gpt-5.4-mini`이 아니라 `gpt-5.6-luna`입니다. 기본 `reasoning.effort="none"` 및 `verbosity="low"` 설정은 변경되지 않았습니다.
--   명시적인 에이전트 모델, 실행 수준 모델 재정의 및 `OPENAI_DEFAULT_MODEL` 환경 변수는 계속해서 SDK 기본값보다 우선합니다.
--   이제 실시간 입력 전사 설정에서 `gpt-transcribe`, `gpt-live-transcribe`, `gpt-realtime-whisper`을 인식합니다. 지연 시간이 짧은 `gpt-live-transcribe` 세션에서는 중첩된 `audio.input.transcription` 설정으로 `prompt`, `keywords` 및 예상되는 여러 `languages`을 제공할 수 있습니다. 이 SDK가 고정하여 사용하는 OpenAI 클라이언트 버전은 `delay` 지연 시간/정확도 수준을 `gpt-realtime-whisper`에서만 지원합니다. 커밋된 오디오 턴 이후의 전사 또는 감지된 언어 출력을 위해서는 WebSocket에서 `gpt-transcribe`을 사용합니다. `audio.input.turn_detection=None`을 명시적으로 설정하면 자동 턴 감지가 비활성화됩니다. [입력 전사 설정](realtime/guide.md#input-transcription-settings)을 참조하세요.
--   이제 Agents SDK에서 생성한 로컬 MCP 연결은 `mcp>=1.19.0,<3`을 통해 v1 호환성을 유지하면서 MCP Python SDK v2를 지원합니다. Agents SDK는 일반적인 stdio, SSE 및 Streamable HTTP 연결을 자동으로 조정합니다. MCP v2가 설치되어 있으면 이러한 연결은 `mcp.Client(mode="auto")`을 사용해 지원되는 최신 프로토콜을 탐색하고, 이전 서버에서는 레거시 `initialize` 핸드셰이크로 대체합니다. 종속성 확인 결과 MCP v2가 선택되는 경우, 사용자 지정 `httpx.Auth` 객체 또는 `httpx.AsyncClient` 팩토리를 제공하는 애플리케이션은 해당 값을 `httpx2`로 마이그레이션하거나, v1 HTTP 스택을 유지하도록 `mcp<2`을 고정해야 합니다. `MCPServerStreamableHttp`의 `params["ignore_initialized_notification_failure"] = True` 옵션도 계속 v1에서만 사용할 수 있습니다. 마이그레이션 세부 정보는 [MCP Python SDK v1 및 v2](mcp.md#mcp-python-sdk-v1-and-v2)를 참조하세요.
--   이제 샌드박스 마운트 검증은 샌드박스나 마운트 헬퍼의 부작용이 발생하기 전에 안전하지 않은 자격 증명 배치를 거부합니다. 신뢰할 수 있는 애플리케이션은 스토리지 기능 테이블을 변경하지 않고도 컨테이너 내부의 정확한 마운트 경로에 대한 마운트 범위 또는 광범위한 자격 증명 노출을 확인할 수 있습니다. 이러한 확인은 런타임에서만 유효하며, 직렬화된 샌드박스 상태만으로는 자격 증명 권한이 부여되지 않습니다. 보호된 마운트 경계에서 SDK는 새로 생성한 수정된 예외를 반환합니다. 소스 예외가 정확히 인식되는 SDK 샌드박스 오류이고 승인된 구조화 필드가 검증을 통과하면, 대체 예외는 해당 하위 유형과 검증된 안전 필드를 유지합니다. 인식된 `MountConfigError`도 SDK에서 생성한 안전한 검증 메시지를 유지할 수 있습니다. 그 외의 경우 SDK는 새로 생성한 일반적인 수정된 오류를 반환합니다. 제공자가 제어하거나 승인되지 않은 메시지, 명령 데이터, 메모, 컨텍스트, 원인 및 소스 트레이스백 상태는 유지되지 않습니다. [마운트 및 원격 스토리지](sandbox/clients.md#mounts-and-remote-storage)와 [세션 상태에서 재개](sandbox/guide.md#resume-from-session-state)를 참조하세요.
--   재시도 정책은 안정적인 재실행 안전성 정보를 검사하고, 제공자가 안전하지 않다고 표시한 비스트리밍 요청에 대해 `RetryDecision(approve_unsafe_replay=True)`을 명시적으로 설정할 수 있습니다. 이 승인은 중단, 이미 방출된 스트리밍 출력 또는 프로그래밍 방식 도구 호출과 같은 별도의 로컬 부작용 거부를 우회하지 않습니다. [Runner 관리형 재시도](models/index.md#runner-managed-retries)를 참조하세요.
--   이제 재개 가능한 `RunState` 객체는 다음 모델 호출 전에 `add_input()`을 사용해 지속 가능한 사용자 입력을 스테이징할 수 있습니다. 스테이징된 입력은 직렬화 후에도 유지되고 입력 가드레일을 거치며, 로컬 세션 및 서버 관리형 대화 전반에서 지속 가능한 SDK 입력 1건을 생성합니다. 안전하지 않은 재실행을 명시적으로 승인하더라도 입력이 제공자에게 다시 전송되어 제공자 측 작업이 반복될 수 있습니다. [재개 전 입력 추가](results.md#add-input-before-resuming)를 참조하세요.
--   런타임 안정성 수정으로 스트리밍 및 비스트리밍 [출력 가드레일 세션 지속성](guardrails.md#output-guardrails)을 일치시키고, 복사 및 네임스페이스 적용 중에 `FunctionTool` 하위 클래스를 유지하며, 지원되지 않는 [Chat Completions 오디오 출력](models/index.md#chat-completions-compatibility-options)에 대해 빈 스트림을 조용히 완료하는 대신 명시적인 오류를 발생시킵니다. `OpenAIResponsesCompactionSession` 래퍼는 취소가 호출자에게 전달되기 전에 [압축 전 기록 복구](sessions/index.md#auto-compaction-can-block-streaming)를 시도하고 완료될 때까지 기다립니다. 이제 [`VoicePipeline`](voice/pipeline.md#results) 소비자는 실행이 정상적으로 완료된 후 전사 세션 종료 실패를 전달받으며, 이전 턴의 실패가 이후 종료 실패보다 우선합니다. 이제 `RunState` 왕복 변환은 로컬 셸 출력, 확인된 컴퓨터 안전 검사, 기본값이 설정된 도구 출력 필드, 그리고 딕셔너리, 목록 또는 튜플을 순회하는 동안 발견한 Pydantic 모델이나 데이터 클래스 출력을 유지합니다. MCP 변환은 자유 형식 객체 스키마와 이미지 출력을 유지하며, 오디오 및 리소스 블록과 같은 기타 raw 콘텐츠 블록을 유효한 JSON 텍스트로 직렬화합니다. `MCPServerManager`은 겹치는 수명 주기 작업을 직렬화하고 연결 및 정리에 유한한 기본 제한 시간을 적용합니다. 모델 재실행은 출력 항목을 입력으로 사용하기 전에 서버 소유의 `created_by` 메타데이터를 제거합니다.
+-   이제 SDK 기본 모델은 `gpt-5.4-mini` 대신 `gpt-5.6-luna`입니다. 기본 `reasoning.effort="none"` 및 `verbosity="low"` 설정은 변경되지 않습니다.
+-   명시적인 에이전트 모델, 실행 수준 모델 재정의, `OPENAI_DEFAULT_MODEL` 환경 변수는 계속해서 SDK 기본값보다 우선합니다.
+-   이제 실시간 입력 전사 설정에서 `gpt-transcribe`, `gpt-live-transcribe`, `gpt-realtime-whisper`을 인식합니다. 지연 시간이 짧은 `gpt-live-transcribe` 세션의 경우 중첩된 `audio.input.transcription` 설정에서 `prompt`, `keywords`, 예상되는 여러 `languages`을 제공할 수 있습니다. 이 SDK에서 고정한 OpenAI 클라이언트 버전은 `delay` 지연 시간/정확도 수준을 `gpt-realtime-whisper`에서만 지원합니다. 확정된 오디오 턴 이후의 전사 또는 감지된 언어 출력에는 WebSocket을 통해 `gpt-transcribe`을 사용하세요. `audio.input.turn_detection=None`을 명시적으로 설정하면 자동 턴 감지가 비활성화됩니다. [입력 전사 설정](realtime/guide.md#input-transcription-settings)을 참고하세요.
+-   이제 Agents SDK에서 생성한 로컬 MCP 연결은 `mcp>=1.19.0,<3`을 통해 v1 호환성을 유지하면서 MCP Python SDK v2를 지원합니다. Agents SDK는 일반적인 stdio, SSE, Streamable HTTP 연결을 자동으로 조정합니다. MCP v2가 설치된 경우 이러한 연결은 `mcp.Client(mode="auto")`을 사용해 지원되는 최신 프로토콜을 탐색하고, 이전 서버에서는 레거시 `initialize` 핸드셰이크로 대체합니다. 종속성 해결 과정에서 MCP v2가 선택된 경우 사용자 지정 `httpx.Auth` 객체나 `httpx.AsyncClient` 팩터리를 제공하는 애플리케이션은 해당 값을 `httpx2`으로 마이그레이션하거나, v1 HTTP 스택을 유지하려면 `mcp<2`을 고정해야 합니다. `MCPServerStreamableHttp`의 `params["ignore_initialized_notification_failure"] = True` 옵션도 계속 v1에서만 사용할 수 있습니다. 마이그레이션 세부 정보는 [MCP Python SDK v1 및 v2](mcp.md#mcp-python-sdk-v1-and-v2)를 참고하세요.
+-   이제 샌드박스 마운트 검증은 샌드박스 또는 마운트 도우미의 부수 효과가 발생하기 전에 안전하지 않은 자격 증명 배치를 거부합니다. 신뢰할 수 있는 애플리케이션은 저장소 기능 표를 변경하지 않고도 컨테이너 내부의 정확한 마운트 경로에 대해 마운트 범위 또는 광범위한 자격 증명 노출을 명시적으로 승인할 수 있습니다. 이러한 승인은 런타임에만 적용되며, 직렬화된 샌드박스 상태 자체로는 자격 증명 권한이 부여되지 않습니다. 보호된 마운트 경계에서 SDK는 민감 정보가 제거된 새 예외를 반환합니다. 소스 예외가 정확히 인식되는 SDK 샌드박스 오류이고 승인된 구조화 필드가 검증되면, 대체 예외는 해당 하위 타입과 검증된 안전 필드를 유지합니다. 인식된 `MountConfigError`은 SDK에서 생성한 안전한 검증 메시지도 유지할 수 있습니다. 그 외에는 SDK가 민감 정보가 제거된 새 일반 오류를 반환합니다. 제공자가 제어하거나 그 밖에 승인되지 않은 메시지, 명령 데이터, 참고 사항, 컨텍스트, 원인, 소스 트레이스백 상태는 유지되지 않습니다. [마운트 및 원격 저장소](sandbox/clients.md#mounts-and-remote-storage)와 [세션 상태에서 재개](sandbox/guide.md#resume-from-session-state)를 참고하세요.
+-   재시도 정책은 안정적인 재실행 안전성 정보를 검사하고, 제공자가 안전하지 않다고 표시한 비스트리밍 요청에 대해 `RetryDecision(approve_unsafe_replay=True)`을 명시적으로 설정할 수 있습니다. 이 승인은 중단, 이미 방출된 스트리밍 출력 또는 프로그래밍 방식 도구 호출과 같은 별도의 로컬 부수 효과 거부를 우회하지 않습니다. [Runner 관리형 재시도](models/index.md#runner-managed-retries)를 참고하세요.
+-   이제 재개 가능한 `RunState` 객체는 다음 모델 호출 전에 `add_input()`을 사용해 영속적인 사용자 입력을 준비할 수 있습니다. 준비된 입력은 직렬화 후에도 유지되고 입력 가드레일을 통과하며, 로컬 세션과 서버 관리형 대화 전반에서 영속적인 SDK 입력 발생 1건을 생성합니다. 안전하지 않은 재실행을 명시적으로 승인하면 입력을 제공자에게 다시 전송하고 제공자 측 작업을 반복할 수 있습니다. [재개 전 입력 추가](results.md#add-input-before-resuming)를 참고하세요.
+-   런타임 안정성 수정으로 스트리밍 및 비스트리밍 [출력 가드레일 세션 영속성](guardrails.md#output-guardrails)이 일관되게 동작하고, 복사 및 네임스페이스 지정 과정에서 `FunctionTool` 하위 클래스가 유지되며, [지원되지 않는 Chat Completions 오디오 출력](models/index.md#chat-completions-compatibility-options)에 대해 빈 스트림으로 조용히 완료하는 대신 명시적인 오류가 발생합니다. `OpenAIResponsesCompactionSession` 래퍼는 취소가 호출자에게 전달되기 전에 [압축 전 기록 복구](sessions/index.md#auto-compaction-can-block-streaming)를 시도하고 완료될 때까지 기다립니다. 이제 [`VoicePipeline`](voice/pipeline.md#results) 소비자는 정상 실행 이후 발생한 전사 세션 종료 실패를 수신하며, 이전 턴의 실패는 이후 종료 실패보다 우선합니다. 이제 `RunState` 왕복 과정에서 로컬 셸 출력, 승인된 컴퓨터 안전 검사, 기본값이 있는 도구 출력 필드, 딕셔너리·목록·튜플을 순회하며 발견한 Pydantic 모델 또는 데이터 클래스 출력이 유지됩니다. MCP 변환은 자유 형식 객체 스키마와 이미지 출력을 유지하며, 오디오 및 리소스 블록과 같은 기타 raw 콘텐츠 블록을 유효한 JSON 텍스트로 직렬화합니다. `MCPServerManager`는 겹치는 수명 주기 작업을 직렬화하고 연결 및 정리에 유한한 기본 시간 제한을 적용합니다. 모델 재실행은 출력 항목을 입력으로 사용하기 전에 서버가 소유한 `created_by` 메타데이터를 제거합니다.
 
 ### 0.19.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않습니다**. 마이너 버전 증가는 OpenAI Responses의 중요한 새로운 기능 영역인 프로그래밍 방식 도구 호출을 반영합니다.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않습니다**. 마이너 버전 증가는 중요한 새 OpenAI Responses 기능 영역인 프로그래밍 방식 도구 호출을 반영합니다.
 
-주요 내용:
+주요 변경 사항:
 
--   지원되는 OpenAI Responses 모델이 프로그래밍 방식 도구 호출에 적합한 도구를 조정할 JavaScript를 생성할 수 있도록 하는 [`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool]을 추가했습니다. 도구별 `allowed_callers`, `FunctionTool` 인스턴스의 structured outputs, Runner 스트리밍, 가드레일, 승인, 세션 및 `RunState`과의 통합을 지원합니다. 설정 및 제약 조건은 [프로그래밍 방식 도구 호출](tools.md#programmatic-tool-calling)을 참조하세요.
--   공개 `agents.decorators` 모듈과 기존 `@function_tool` 데코레이터의 짧은 별칭인 `@tool`을 기존 가드레일 데코레이터와 함께 추가했습니다. 이제 `FunctionTool` 인스턴스는 비동기 호출 가능 객체도 지원합니다.
--   이제 SDK 구성은 에이전트, 실행, 모델, 세션, 샌드박스 및 음성 파이프라인 전반에서 형식이 지정된 설정 객체나 딕셔너리를 일관되게 허용하며, 알 수 없는 설정을 검증합니다.
--   모델, 도구, MCP, Realtime, 세션, 샌드박스 및 트레이싱 전반의 오류 및 진단 로깅을 강화하여, 유용한 디버깅 컨텍스트를 유지하면서도 가공되지 않은 민감한 페이로드가 노출되지 않도록 했습니다.
--   AnyLLM, LiteLLM 및 Chat Completions 호환성을 개선하고, 모델 재시도 전반에서 세션 기록을 유지하며, 응답이 시작되기 전에 발생하는 WebSocket 과부하에 대한 제공자 재시도 지침을 추가했습니다. 따라서 허용되는 경우 옵트인 Runner 재시도 정책이 실패한 시도를 다시 실행할 수 있습니다.
--   `VercelCloudBucketMountStrategy`을 통해 [Vercel 샌드박스를 생성할 때만 구성할 수 있는 S3 마운트](sandbox/clients.md#mounts-and-remote-storage)를 추가했습니다. 마운트된 세션은 작업 공간 지속성에서 버킷 콘텐츠를 제외하며, 의도적으로 동적 마운트 변경이나 세션 재개를 지원하지 않습니다.
+-   지원되는 OpenAI Responses 모델이 프로그래밍 방식 도구 호출에 적합한 도구를 조정하기 위한 JavaScript를 생성할 수 있게 해 주는 [`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool]이 추가되었습니다. 도구별 `allowed_callers`, `FunctionTool` 인스턴스의 structured outputs, Runner 스트리밍, 가드레일, 승인, 세션, `RunState`과의 통합을 지원합니다. 설정 및 제약 조건은 [프로그래밍 방식 도구 호출](tools.md#programmatic-tool-calling)을 참고하세요.
+-   공개 `agents.decorators` 모듈과 기존 가드레일 데코레이터에 더해 기존 `@function_tool` 데코레이터의 더 짧은 별칭인 `@tool`가 추가되었습니다. 이제 `FunctionTool` 인스턴스는 비동기 호출 가능 객체도 지원합니다.
+-   이제 SDK 구성은 에이전트, 실행, 모델, 세션, 샌드박스, 음성 파이프라인 전반에서 타입이 지정된 설정 객체 또는 딕셔너리를 일관되게 허용하며, 알 수 없는 설정을 검증합니다.
+-   유용한 디버깅 컨텍스트를 유지하면서 가공되지 않은 민감한 페이로드가 노출되지 않도록 모델, 도구, MCP, 실시간 기능, 세션, 샌드박스, 트레이싱 전반의 오류 및 진단 로깅을 강화했습니다.
+-   AnyLLM, LiteLLM, Chat Completions 호환성을 개선하고, 모델 재시도 간에 세션 기록을 유지하며, 응답 시작 전에 발생한 WebSocket 과부하에 대한 제공자 재시도 지침을 추가했습니다. 따라서 명시적으로 활성화된 Runner 재시도 정책은 허용되는 경우 실패한 시도를 재실행할 수 있습니다.
+-   `VercelCloudBucketMountStrategy`을 통해 [Vercel 샌드박스를 생성할 때만 구성할 수 있는 S3 마운트](sandbox/clients.md#mounts-and-remote-storage)가 추가되었습니다. 마운트된 세션은 워크스페이스 영속성에서 버킷 콘텐츠를 제외하며, 의도적으로 동적 마운트 변경이나 세션 재개를 지원하지 않습니다.
 
 ### 0.18.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않습니다**. 마이너 버전 증가는 실시간 에이전트의 기본 모델 업데이트만을 위한 것입니다.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않습니다**. 마이너 버전 증가는 실시간 에이전트 기본 모델 업데이트만을 위한 것입니다.
 
-주요 내용:
+주요 변경 사항:
 
--   이제 실시간 에이전트는 `gpt-realtime-2.1`을 기본 모델로 사용하므로, 새로운 Realtime 설정에서 추가 구성 없이 권장되는 최신 모델을 사용합니다.
+-   이제 실시간 에이전트는 `gpt-realtime-2.1`을 기본 모델로 사용하므로, 새로운 실시간 설정에서는 추가 구성 없이 최신 권장 모델을 사용합니다.
 
 ### 0.17.0
 
-이 버전에서는 소스 경로가 `Manifest.extra_path_grants`에 포함되지 않는 한, 샌드박스 로컬 소스 구체화 과정에서 `LocalFile.src`와 `LocalDir.src`이 구체화 `base_dir` 내부에 유지됩니다. `base_dir`은 매니페스트가 적용될 때 SDK 프로세스의 현재 작업 디렉터리입니다. 상대 로컬 소스는 해당 디렉터리를 기준으로 확인되며, 절대 로컬 소스는 이미 그 안에 있거나 명시적으로 허용된 경로 아래에 있어야 합니다. 이는 로컬 아티팩트 경계 문제를 해결하지만, 해당 기본 디렉터리 외부의 신뢰할 수 있는 호스트 파일이나 디렉터리를 의도적으로 샌드박스 작업 공간에 복사하는 애플리케이션에 영향을 줄 수 있습니다.
+이 버전에서 샌드박스 로컬 소스 구체화는 소스 경로가 `Manifest.extra_path_grants`의 적용 대상이 아닌 한 `LocalFile.src` 및 `LocalDir.src`을 구체화 `base_dir` 내부로 제한합니다. `base_dir`은 매니페스트가 적용되는 시점의 SDK 프로세스 현재 작업 디렉터리입니다. 상대 로컬 소스는 해당 디렉터리를 기준으로 해석되며, 절대 로컬 소스는 이미 그 내부 또는 명시적으로 허용된 경로 아래에 있어야 합니다. 이 변경으로 로컬 아티팩트 경계 문제가 해결되지만, 해당 기본 디렉터리 외부의 신뢰할 수 있는 호스트 파일이나 디렉터리를 샌드박스 워크스페이스로 의도적으로 복사하는 애플리케이션에는 영향을 줄 수 있습니다.
 
-마이그레이션하려면 매니페스트 수준에서 `SandboxPathGrant`을 사용해 신뢰할 수 있는 호스트 루트를 허용하세요. 샌드박스에서 해당 파일을 읽기만 하면 되는 경우 읽기 전용으로 설정하는 것이 좋습니다.
+마이그레이션하려면 매니페스트 수준에서 `SandboxPathGrant`을 사용해 신뢰할 수 있는 호스트 루트를 허용하세요. 샌드박스가 해당 파일을 읽기만 하면 되는 경우에는 읽기 전용으로 설정하는 것이 좋습니다.
 
 ```python
 from pathlib import Path
@@ -6168,24 +6205,24 @@ manifest = Manifest(
 
 ### 0.16.0
 
-이 버전에서는 이제 SDK 기본 모델이 `gpt-4.1`이 아니라 `gpt-5.4-mini`입니다. 이는 모델을 명시적으로 설정하지 않은 에이전트와 실행에 영향을 줍니다. 새 기본값이 GPT-5 모델이므로 암시적인 기본 모델 설정에 이제 `reasoning.effort="none"` 및 `verbosity="low"`와 같은 GPT-5 기본값이 포함됩니다.
+이 버전에서 SDK 기본 모델은 이제 `gpt-4.1` 대신 `gpt-5.4-mini`입니다. 이는 모델을 명시적으로 설정하지 않은 에이전트와 실행에 영향을 줍니다. 새 기본값은 GPT-5 모델이므로 암시적인 기본 모델 설정에 이제 `reasoning.effort="none"` 및 `verbosity="low"`과 같은 GPT-5 기본값이 포함됩니다.
 
-이전 기본 모델 동작을 유지해야 한다면 에이전트나 실행 구성에 모델을 명시적으로 설정하거나 `OPENAI_DEFAULT_MODEL` 환경 변수를 설정하세요.
+이전 기본 모델 동작을 유지해야 한다면 에이전트 또는 실행 구성에 모델을 명시적으로 설정하거나 `OPENAI_DEFAULT_MODEL` 환경 변수를 설정하세요.
 
 ```python
 agent = Agent(name="Assistant", model="gpt-4.1")
 ```
 
-주요 내용:
+주요 변경 사항:
 
--   이제 `Runner.run`, `Runner.run_sync`, `Runner.run_streamed`은 턴 제한을 비활성화하기 위한 `max_turns=None`을 허용합니다.
--   이제 샌드박스 작업 공간 하이드레이션은 로컬, Docker 및 제공자 지원 샌드박스 구현 전반에서 절대 심볼릭 링크 대상을 포함해 아카이브 루트 외부를 가리키는 심볼릭 링크가 있는 tar 아카이브를 거부합니다.
+-   이제 `Runner.run`, `Runner.run_sync`, `Runner.run_streamed`은 턴 제한을 비활성화하는 `max_turns=None`을 허용합니다.
+-   이제 샌드박스 워크스페이스 하이드레이션은 로컬, Docker, 제공자 기반 샌드박스 구현 전반에서 절대 심볼릭 링크 대상을 포함하여 아카이브 루트 외부를 가리키는 심볼릭 링크가 있는 tar 아카이브를 거부합니다.
 
 ### 0.15.0
 
-이 버전에서는 모델 거부가 빈 텍스트 출력으로 처리되거나 structured outputs의 경우 실행 루프가 `MaxTurnsExceeded`까지 재시도하도록 하는 대신, 이제 `ModelRefusalError`로 명시적으로 노출됩니다.
+이 버전에서 모델 거부는 더 이상 빈 텍스트 출력으로 처리되거나, structured outputs의 경우 실행 루프가 `MaxTurnsExceeded`까지 재시도하게 하지 않고 `ModelRefusalError`으로 명시적으로 노출됩니다.
 
-이는 이전에 거부만 포함된 모델 응답이 `final_output == ""`으로 완료될 것으로 예상했던 코드에 영향을 줍니다. 예외를 발생시키지 않고 거부를 처리하려면 `model_refusal` 실행 오류 핸들러를 제공하세요.
+이 변경은 이전에 거부만 포함된 모델 응답이 `final_output == ""`으로 완료될 것으로 예상했던 코드에 영향을 줍니다. 예외를 발생시키지 않고 거부를 처리하려면 `model_refusal` 실행 오류 핸들러를 제공하세요.
 
 ```python
 result = Runner.run_sync(
@@ -6195,97 +6232,97 @@ result = Runner.run_sync(
 )
 ```
 
-structured outputs 에이전트의 경우 핸들러가 에이전트의 출력 스키마와 일치하는 값을 반환할 수 있으며, SDK는 다른 실행 오류 핸들러의 최종 출력과 동일하게 이를 검증합니다.
+structured outputs 에이전트의 경우 핸들러는 에이전트의 출력 스키마과 일치하는 값을 반환할 수 있으며, SDK는 다른 실행 오류 핸들러의 최종 출력과 동일하게 이를 검증합니다.
 
 ### 0.14.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않지만**, 샌드박스 에이전트라는 주요 새 베타 기능 영역과 함께 로컬, 컨테이너화 및 호스팅 환경 전반에서 이를 사용하는 데 필요한 런타임, 백엔드 및 문서 지원이 추가됩니다.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않지만**, 샌드박스 에이전트라는 주요 새 베타 기능 영역과 로컬, 컨테이너화, 호스팅 환경 전반에서 이를 사용하는 데 필요한 런타임, 백엔드, 문서 지원이 추가됩니다.
 
-주요 내용:
+주요 변경 사항:
 
--   `SandboxAgent`, `Manifest`, `SandboxRunConfig`을 중심으로 하는 새로운 베타 샌드박스 런타임 인터페이스를 추가하여 에이전트가 파일, 디렉터리, Git 저장소, 마운트, 스냅샷 및 재개 기능을 갖춘 지속적이고 격리된 작업 공간에서 작업할 수 있도록 했습니다.
--   `UnixLocalSandboxClient` 및 `DockerSandboxClient`을 통해 로컬 및 컨테이너화된 개발을 위한 샌드박스 실행 백엔드를 추가했으며, Python 패키지의 선택적 종속성 extras를 통해 Blaxel, Cloudflare, Daytona, E2B, Modal, Runloop 및 Vercel용 호스팅 제공자 통합도 추가했습니다.
--   이후 실행에서 이전 실행으로부터 얻은 교훈을 재사용할 수 있도록 샌드박스 메모리 지원을 추가했습니다. 여기에는 점진적 공개, 멀티턴 그룹화, 구성 가능한 격리 경계 및 S3 기반 워크플로를 포함한 지속형 메모리 예제가 포함됩니다.
--   로컬 및 합성 작업 공간 항목, S3/R2/GCS/Azure Blob Storage/S3 Files용 원격 스토리지 마운트, 이식 가능한 스냅샷, 그리고 `RunState`, `SandboxSessionState` 또는 저장된 스냅샷을 통한 재개 흐름을 포함하는 더 광범위한 작업 공간 및 재개 모델을 추가했습니다.
--   `examples/sandbox/` 아래에 기술을 활용한 코딩 작업, 핸드오프, 메모리, 제공자별 설정 및 코드 검토, 데이터룸 QA, 웹사이트 복제와 같은 엔드투엔드 워크플로를 다루는 다양한 샌드박스 예제와 튜토리얼을 추가했습니다.
--   샌드박스를 인식하는 세션 준비, 기능 바인딩, 상태 직렬화, 통합 트레이싱, 프롬프트 캐시 키 기본값 및 더 안전한 민감한 MCP 출력 수정을 통해 핵심 런타임과 트레이싱 스택을 확장했습니다.
+-   `SandboxAgent`, `Manifest`, `SandboxRunConfig`을 중심으로 하는 새로운 베타 샌드박스 런타임 인터페이스가 추가되어 에이전트가 파일, 디렉터리, Git 저장소, 마운트, 스냅샷, 재개 지원을 갖춘 영속적인 격리 워크스페이스 내부에서 작업할 수 있습니다.
+-   `UnixLocalSandboxClient` 및 `DockerSandboxClient`을 통해 로컬 및 컨테이너화된 개발을 위한 샌드박스 실행 백엔드가 추가되었으며, Python 패키지의 선택적 종속성 extras를 통해 Blaxel, Cloudflare, Daytona, E2B, Modal, Runloop, Vercel용 호스팅 제공자 통합도 추가되었습니다.
+-   향후 실행에서 이전 실행의 교훈을 재사용할 수 있도록 샌드박스 메모리 지원이 추가되었습니다. 여기에는 점진적 공개, 멀티턴 그룹화, 구성 가능한 격리 경계, S3 기반 워크플로를 포함한 영속 메모리 코드 예제가 포함됩니다.
+-   로컬 및 합성 워크스페이스 항목, S3/R2/GCS/Azure Blob Storage/S3 Files용 원격 저장소 마운트, 이식 가능한 스냅샷, `RunState`, `SandboxSessionState` 또는 저장된 스냅샷을 통한 재개 흐름을 포함하여 더 광범위한 워크스페이스 및 재개 모델이 추가되었습니다.
+-   `examples/sandbox/` 아래에 기술, 핸드오프, 메모리, 제공자별 설정을 사용하는 코딩 작업과 코드 검토, 데이터룸 QA, 웹사이트 복제 같은 엔드투엔드 워크플로를 다루는 상당한 규모의 샌드박스 코드 예제 및 튜토리얼이 추가되었습니다.
+-   샌드박스를 인식하는 세션 준비, 기능 바인딩, 상태 직렬화, 통합 트레이싱, 프롬프트 캐시 키 기본값, 더 안전한 민감 MCP 출력 제거 기능으로 핵심 런타임과 트레이싱 스택이 확장되었습니다.
 
 ### 0.13.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않지만**, 주목할 만한 Realtime 기본값 업데이트와 새로운 MCP 기능 및 런타임 안정성 수정이 포함됩니다.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않지만**, 주목할 만한 실시간 기본값 업데이트와 새로운 MCP 기능 및 런타임 안정성 수정이 포함됩니다.
 
-주요 내용:
+주요 변경 사항:
 
--   이제 기본 WebSocket Realtime 모델은 `gpt-realtime-1.5`이므로 새로운 실시간 에이전트 설정에서 추가 구성 없이 더 최신 모델을 사용합니다.
--   이제 `MCPServer`에서 `list_resources()`, `list_resource_templates()`, `read_resource()`을 노출하고, `MCPServerStreamableHttp`에서 `session_id`을 노출하므로 MCP Streamable HTTP 전송을 사용하는 세션을 재연결 또는 상태 비저장 워커 전반에서 재개할 수 있습니다.
--   이제 Chat Completions 통합에서 `should_replay_reasoning_content`을 통해 기존 추론 콘텐츠 재전송을 옵트인할 수 있어 LiteLLM/DeepSeek 같은 어댑터의 제공자별 추론/도구 호출 연속성이 향상됩니다.
--   `SQLAlchemySession`의 동시 첫 쓰기, 추론 제거 후 고립된 어시스턴트 메시지 ID가 포함된 압축 요청, MCP/추론 항목을 남기는 `remove_all_tools()`, `FunctionTool` 인스턴스용 배치 실행기의 경합 상태를 비롯한 여러 런타임 및 세션의 극단적 사례를 수정했습니다.
+-   이제 기본 WebSocket 실시간 모델은 `gpt-realtime-1.5`이므로, 새로운 실시간 에이전트 설정에서는 추가 구성 없이 더 최신 모델을 사용합니다.
+-   이제 `MCPServer`은 `list_resources()`, `list_resource_templates()`, `read_resource()`을 노출하고, `MCPServerStreamableHttp`은 `session_id`을 노출합니다. 따라서 MCP Streamable HTTP 전송을 사용하는 세션을 재연결 또는 상태 비저장 워커 간에 재개할 수 있습니다.
+-   이제 Chat Completions 통합에서 `should_replay_reasoning_content`을 통해 기존 추론 콘텐츠 재전송을 활성화할 수 있어 LiteLLM/DeepSeek 같은 어댑터의 제공자별 추론/도구 호출 연속성이 향상됩니다.
+-   `SQLAlchemySession`의 동시 최초 쓰기, 추론 제거 후 고립된 어시스턴트 메시지 ID가 포함된 압축 요청, MCP/추론 항목을 남겨 두는 `remove_all_tools()`, `FunctionTool` 인스턴스용 배치 실행기의 경합 상태 등 여러 런타임 및 세션 경계 사례를 수정했습니다.
 
 ### 0.12.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않습니다**. 주요 기능 추가 사항은 [릴리스 노트](https://github.com/openai/openai-agents-python/releases/tag/v0.12.0)를 확인하세요.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않습니다**. 주요 기능 추가 사항은 [릴리스 노트](https://github.com/openai/openai-agents-python/releases/tag/v0.12.0)를 확인하세요.
 
 ### 0.11.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않습니다**. 주요 기능 추가 사항은 [릴리스 노트](https://github.com/openai/openai-agents-python/releases/tag/v0.11.0)를 확인하세요.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않습니다**. 주요 기능 추가 사항은 [릴리스 노트](https://github.com/openai/openai-agents-python/releases/tag/v0.11.0)를 확인하세요.
 
 ### 0.10.0
 
-이 마이너 릴리스에는 호환성을 깨는 변경 사항이 **포함되지 않지만**, OpenAI Responses 사용자를 위한 중요한 새 기능 영역인 Responses API의 WebSocket 전송 지원이 포함됩니다.
+이 마이너 릴리스에는 호환성을 깨는 변경 사항이 도입되지 **않지만**, OpenAI Responses 사용자를 위한 중요한 새 기능 영역인 Responses API의 WebSocket 전송 지원이 포함됩니다.
 
-주요 내용:
+주요 변경 사항:
 
--   OpenAI Responses 모델에 대한 WebSocket 전송 지원을 추가했습니다(옵트인이며 HTTP가 계속 기본 전송 방식입니다).
--   여러 턴의 실행에서 공유 WebSocket 지원 제공자와 `RunConfig`을 재사용하기 위한 `responses_websocket_session()` 헬퍼 / `ResponsesWebSocketSession`을 추가했습니다.
--   스트리밍, 도구, 승인 및 후속 턴을 다루는 새로운 WebSocket 스트리밍 예제(`examples/basic/stream_ws.py`)를 추가했습니다.
+-   OpenAI Responses 모델에 WebSocket 전송 지원이 추가되었습니다. 선택적으로 활성화할 수 있으며 HTTP가 계속 기본 전송 방식입니다.
+-   여러 턴의 실행에서 공유 WebSocket 지원 제공자와 `RunConfig`을 재사용할 수 있도록 `responses_websocket_session()` 도우미/`ResponsesWebSocketSession`이 추가되었습니다.
+-   스트리밍, 도구, 승인, 후속 턴을 다루는 새로운 WebSocket 스트리밍 코드 예제(`examples/basic/stream_ws.py`)가 추가되었습니다.
 
 ### 0.9.0
 
-이 버전에서는 주요 버전이 3개월 전에 지원 종료(EOL)에 도달함에 따라 Python 3.9를 더 이상 지원하지 않습니다. 더 최신 런타임 버전으로 업그레이드하세요.
+이 버전에서는 해당 메이저 버전이 3개월 전에 EOL에 도달했으므로 Python 3.9가 더 이상 지원되지 않습니다. 더 최신 런타임 버전으로 업그레이드하세요.
 
-또한 `Agent#as_tool()` 메서드가 반환하는 값의 타입 힌트가 `Tool`에서 `FunctionTool`으로 좁혀졌습니다. 이 변경으로 일반적으로 호환성이 깨지는 문제가 발생하지는 않지만, 코드가 더 넓은 유니언 타입에 의존한다면 일부 조정이 필요할 수 있습니다.
+또한 `Agent#as_tool()` 메서드가 반환하는 값의 타입 힌트가 `Tool`에서 `FunctionTool`으로 좁혀졌습니다. 일반적으로 이 변경으로 호환성 문제가 발생하지는 않지만, 코드가 더 넓은 유니언 타입에 의존하는 경우에는 일부 조정이 필요할 수 있습니다.
 
 ### 0.8.0
 
-이 버전에서는 런타임 동작 변경 사항 두 가지로 인해 마이그레이션 작업이 필요할 수 있습니다.
+이 버전에서는 다음 두 가지 런타임 동작 변경으로 인해 마이그레이션 작업이 필요할 수 있습니다.
 
-- `FunctionTool` 인스턴스가 래핑하는 **동기식** Python 호출 가능 객체는 이제 이벤트 루프 스레드에서 실행되는 대신 `asyncio.to_thread(...)`을 통해 워커 스레드에서 실행됩니다. 도구 로직이 스레드 로컬 상태 또는 특정 스레드에 종속된 리소스에 의존한다면 비동기 도구 구현으로 마이그레이션하거나 도구 코드에서 스레드 종속성을 명시적으로 지정하세요.
-- 이제 로컬 MCP 도구 실패 처리를 구성할 수 있으며, 기본 동작은 전체 실행을 실패시키는 대신 모델에 표시되는 오류 출력을 반환할 수 있습니다. 즉시 실패 동작에 의존한다면 `mcp_config={"failure_error_function": None}`을 설정하세요. 서버 수준 `failure_error_function` 값은 에이전트 수준 설정을 재정의하므로, 명시적 핸들러가 있는 각 로컬 MCP 서버에 `failure_error_function=None`을 설정하세요.
+- **동기식** Python 호출 가능 객체를 래핑하는 `FunctionTool` 인스턴스는 이제 이벤트 루프 스레드에서 실행되는 대신 `asyncio.to_thread(...)`을 통해 워커 스레드에서 실행됩니다. 도구 로직이 스레드 로컬 상태 또는 스레드 종속 리소스에 의존한다면 비동기 도구 구현으로 마이그레이션하거나 도구 코드에서 스레드 종속성을 명시하세요.
+- 이제 로컬 MCP 도구 실패 처리를 구성할 수 있으며, 기본 동작은 전체 실행을 실패시키는 대신 모델에 표시되는 오류 출력을 반환할 수 있습니다. 즉시 실패 동작에 의존한다면 `mcp_config={"failure_error_function": None}`을 설정하세요. 서버 수준의 `failure_error_function` 값은 에이전트 수준 설정을 재정의하므로 명시적인 핸들러가 있는 각 로컬 MCP 서버에 `failure_error_function=None`을 설정하세요.
 
 ### 0.7.0
 
 이 버전에는 기존 애플리케이션에 영향을 줄 수 있는 몇 가지 동작 변경 사항이 있습니다.
 
-- 이제 중첩된 핸드오프 기록은 **옵트인** 방식입니다(기본적으로 비활성화됨). v0.6.x의 기본 중첩 동작에 의존했다면 `RunConfig(nest_handoff_history=True)`을 명시적으로 설정하세요.
-- `gpt-5.1` / `gpt-5.2`의 기본 `reasoning.effort`이 SDK 기본값으로 구성되었던 이전 기본값 `"low"`에서 `"none"`으로 변경되었습니다. 프롬프트나 품질/비용 프로필이 `"low"`에 의존했다면 `model_settings`에서 이를 명시적으로 설정하세요.
+- 이제 중첩 핸드오프 기록은 **선택적 활성화** 방식이며 기본적으로 비활성화됩니다. v0.6.x의 기본 중첩 동작에 의존했다면 `RunConfig(nest_handoff_history=True)`을 명시적으로 설정하세요.
+- `gpt-5.1`/`gpt-5.2`의 기본 `reasoning.effort`이 SDK 기본값으로 구성되던 이전 기본값 `"low"`에서 `"none"`으로 변경되었습니다. 프롬프트 또는 품질/비용 프로필이 `"low"`에 의존했다면 `model_settings`에서 이를 명시적으로 설정하세요.
 
 ### 0.6.0
 
-이 버전에서는 사용자와 어시스턴트 턴을 별도의 메시지로 전달하는 대신, 기본 핸드오프 기록을 단일 어시스턴트 메시지로 패키징하여 후속 에이전트에 간결하고 예측 가능한 요약을 제공합니다
-- 이제 기존의 단일 메시지 핸드오프 대화 기록은 기본적으로 `<CONVERSATION HISTORY>` 블록 앞에서 정확한 리터럴 텍스트 `For context, here is the conversation so far between the user and the previous agent:`으로 시작하므로 후속 에이전트가 명확한 레이블이 있는 요약을 받습니다
+이 버전에서는 사용자와 어시스턴트의 턴을 별도 메시지로 전달하는 대신 기본 핸드오프 기록을 단일 어시스턴트 메시지로 패키징하여, 이후 에이전트에 간결하고 예측 가능한 요약을 제공합니다
+- 기존 단일 메시지 핸드오프 기록은 이제 기본적으로 `<CONVERSATION HISTORY>` 블록 앞에 정확한 리터럴 텍스트 `For context, here is the conversation so far between the user and the previous agent:`으로 시작하므로 이후 에이전트가 명확하게 표시된 요약을 받습니다
 
 ### 0.5.0
 
-이 버전은 눈에 보이는 호환성을 깨는 변경 사항을 도입하지 않지만, 내부적으로 새로운 기능과 몇 가지 중요한 업데이트가 포함되어 있습니다.
+이 버전에는 눈에 보이는 호환성을 깨는 변경 사항이 도입되지 않지만, 새로운 기능과 몇 가지 중요한 내부 업데이트가 포함됩니다.
 
-- `RealtimeRunner`에 [SIP 프로토콜 연결](https://platform.openai.com/docs/guides/realtime-sip) 처리 지원을 추가했습니다.
+- [SIP 프로토콜 연결](https://platform.openai.com/docs/guides/realtime-sip)을 처리하기 위한 지원이 `RealtimeRunner`에 추가되었습니다.
 - Python 3.14 호환성을 위해 `Runner#run_sync`의 내부 로직을 대폭 수정했습니다.
 
 ### 0.4.0
 
-이 버전에서는 [openai](https://pypi.org/project/openai/) 패키지 v1.x 버전을 더 이상 지원하지 않습니다. 이 SDK와 함께 openai v2.x를 사용하세요.
+이 버전에서는 [openai](https://pypi.org/project/openai/) 패키지 v1.x 버전이 더 이상 지원되지 않습니다. 이 SDK와 함께 openai v2.x를 사용하세요.
 
 ### 0.3.0
 
-이 버전에서는 Realtime API 지원이 gpt-realtime 모델 및 해당 API 인터페이스(GA 버전)로 마이그레이션됩니다.
+이 버전에서는 Realtime API 지원이 gpt-realtime 모델과 해당 API 인터페이스(GA 버전)로 마이그레이션됩니다.
 
 ### 0.2.0
 
-이 버전에서는 이전에 `Agent`을 인수로 받던 몇몇 위치가 이제 `AgentBase`을 인수로 받습니다. 예를 들어 MCP 서버의 `list_tools()` 메서드 시그니처에 이 변경이 적용됩니다. 이는 순수한 타입 변경이며, 계속해서 `Agent` 객체를 받습니다. 업데이트하려면 `Agent`을 `AgentBase`으로 바꿔 타입 오류를 수정하면 됩니다.
+이 버전에서는 이전에 인수로 `Agent`을 받던 일부 위치가 이제 대신 `AgentBase`을 인수로 받습니다. 예를 들어 MCP 서버의 `list_tools()` 메서드 시그니처에 적용됩니다. 이는 순수한 타입 변경이며 계속 `Agent` 객체를 받게 됩니다. 업데이트하려면 `Agent`을 `AgentBase`으로 바꿔 타입 오류만 수정하면 됩니다.
 
 ### 0.1.0
 
-이 버전에서 [`MCPServer.list_tools()`][agents.mcp.server.MCPServer]에는 `run_context`와 `agent`이라는 두 개의 새로운 매개변수가 추가되었습니다. `MCPServer` 하위 클래스에서 재정의한 모든 `MCPServer.list_tools()` 메서드에 이러한 매개변수를 추가해야 합니다.
+이 버전에서 [`MCPServer.list_tools()`][agents.mcp.server.MCPServer]에는 `run_context` 및 `agent`이라는 두 개의 새로운 매개변수가 있습니다. `MCPServer`의 하위 클래스에서 재정의한 모든 `MCPServer.list_tools()` 메서드에 이 매개변수를 추가해야 합니다.
 
 ================
 File: docs/ko/repl.md
@@ -7422,6 +7459,585 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+================
+File: docs/ko/testing.md
+================
+---
+search:
+  exclude: true
+---
+# 테스트
+
+SDK는 에이전트 워크플로, Sandbox 세션, Realtime 세션 및 Voice 파이프라인을 위한 결정론적이고 공급자 중립적인 테스트 유틸리티를 제공합니다. 이러한 유틸리티는 메모리에서 실행되고 모델, Sandbox 공급자 또는 Realtime API에 요청하지 않으며 SDK가 관리하는 정규화된 상호작용을 기록합니다. 아래의 실행 가능한 레시피는 각 실행에서 트레이싱을 비활성화하므로 OpenAI API 키가 구성되어 있어도 기본 트레이스 프로세서가 테스트 활동을 업로드하지 않습니다.
+
+이러한 유틸리티를 사용하여 애플리케이션과 SDK가 관리하는 오케스트레이션을 테스트할 수 있습니다. 여기에는 도구 실행, 핸드오프, 가드레일, 재시도, 스트리밍, 세션 동작, Sandbox 기능, Realtime 이벤트 처리 및 Voice 파이프라인 구성이 포함됩니다. 외부 모델, 네트워크 프로토콜, Sandbox 공급자 또는 오디오 시스템이 관리하는 동작에는 실제 공급자 어댑터나 통합 환경을 사용하세요.
+
+## 필요한 레시피 찾기
+
+| 원하는 작업 | 사용 항목 | 이동 위치 |
+| --- | --- | --- |
+| 고정된 최종 답변 반환 | `ScriptedModel` 및 `assistant_message()` | [고정 응답 반환](#return-a-fixed-response) |
+| 여러 턴에 걸친 도구 루프 실행 | `function_call()` 후 어시스턴트 응답 | [도구 워크플로 테스트](#test-a-tool-workflow) |
+| 요청에서 응답 선택 | `ModelStep.respond()` 또는 `responder` 매핑 | [요청에서 응답 도출](#derive-a-response-from-the-request) |
+| 러너가 모델에 전송한 내용 검증 | `calls`, `first_call` 또는 `last_call` | [모델 호출 검사](#inspect-model-calls) |
+| 스트리밍 실행 테스트 | 일반 응답 단계 또는 정확한 이벤트를 위한 `ModelStep.stream()` | [스트리밍 테스트](#test-streaming) |
+| 오류 또는 재시도 결정 테스트 | `ModelStep.raise_error()` | [모델 실패 주입](#inject-model-failures) |
+| 의도하지 않은 워크플로 변경 감지 | 정확한 FIFO 단계 및 `assert_complete()` | [워크플로 드리프트 감지](#detect-workflow-drift) |
+| Sandbox를 시작하지 않고 `SandboxAgent` 테스트 | `scripted_sandbox_session()` 및 `ScriptedModel` | [Sandbox 에이전트 워크플로 테스트](#test-a-sandbox-agent-workflow) |
+| Sandbox 호출 매칭 또는 결과 도출 | Sandbox 단계의 `match` 또는 `responder` | [Sandbox 단계 구성](#configure-sandbox-steps) |
+| 연결을 열지 않고 Realtime 세션 테스트 | `ScriptedRealtimeModel` 및 `RealtimeStep` | [Realtime 세션 테스트](#test-a-realtime-session) |
+| Realtime 도구 워크플로 테스트 | `RealtimeModelToolCallEvent`을 내보내고 도구 출력 예상 | [Realtime 도구 워크플로 테스트](#test-a-realtime-tool-workflow) |
+| 정적 또는 스트리밍 Voice 파이프라인 테스트 | `ScriptedSTTModel`, `ScriptedTTSModel` 및 스크립트된 워크플로나 실제 워크플로 | [Voice 파이프라인 테스트](#test-a-voice-pipeline) |
+| 공급자 직렬화 또는 전송 페이로드 테스트 | 제어된 네트워크 전송을 사용하는 실제 공급자 어댑터 | [올바른 경계 선택](#choose-the-correct-boundary) |
+
+## 가져오기
+
+테스트 API는 대체하는 런타임 경계와 나란히 위치합니다.
+
+| 경계 | 가져오기 경로 |
+| --- | --- |
+| 에이전트 모델 및 Sandbox 워크플로 | `agents.testing` |
+| Realtime 모델 전송 | `agents.realtime.testing` |
+| Voice STT, TTS 및 워크플로 구성 요소 | `agents.voice.testing` |
+
+테스트 심벌은 의도적으로 최상위 `agents` 가져오기에서 제외됩니다.
+
+## 에이전트 워크플로 레시피
+
+### 고정 응답 반환
+
+예상되는 각 모델 호출마다 정규화된 출력 항목 시퀀스를 하나씩 전달합니다. 출력 시퀀스 축약형은 하나의 요청에 대해 결정론적인 응답 ID와 사용량을 받습니다.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ScriptedModel, assistant_message
+
+
+@pytest.mark.asyncio
+async def test_fixed_response() -> None:
+    model = ScriptedModel(
+        [[assistant_message("Paris is the capital of France.")]]
+    )
+    agent = Agent(name="Geography assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "What is the capital of France?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Paris is the capital of France."
+    assert len(model.calls) == 1
+    model.assert_complete()
+```
+
+결정론적 워크플로 테스트는 `model.assert_complete()`로 마무리하세요. 이 메서드는 구성된 모든 단계를 소비하기 전에 워크플로가 중지된 경우를 포착합니다.
+
+### 도구 워크플로 테스트
+
+도구를 호출하는 모델 응답 하나와 최종 답변을 생성하는 두 번째 응답을 스크립트로 구성합니다. 이러한 모델 호출 사이에서 실제 SDK 도구 파이프라인이 실행됩니다.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.decorators import tool
+from agents.testing import ScriptedModel, assistant_message, function_call
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Return the weather for a city."""
+    return f"{city}: sunny"
+
+
+@pytest.mark.asyncio
+async def test_tool_workflow() -> None:
+    model = ScriptedModel(
+        [
+            [function_call("get_weather", {"city": "Tokyo"}, call_id="call_1")],
+            [assistant_message("It is sunny in Tokyo.")],
+        ]
+    )
+    agent = Agent(name="Weather assistant", model=model, tools=[get_weather])
+
+    result = await Runner.run(
+        agent,
+        "What is the weather in Tokyo?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "It is sunny in Tokyo."
+    assert len(model.calls) == 2
+    assert model.last_call is not None
+    assert any(
+        item.get("type") == "function_call_output"
+        for item in model.last_call.input
+    )
+    model.assert_complete()
+```
+
+이 패턴은 도구 입력 검증, 실행, 결과 변환, 훅, 가드레일 및 다음 모델 턴을 포괄합니다. Python 함수를 직접 호출하면 이러한 SDK 동작을 우회하게 됩니다.
+
+### 요청에서 응답 도출
+
+응답이 실제로 정규화된 모델 호출에 따라 달라지거나 모델 경계에서 검증해야 할 때 `ModelStep.respond()`을 사용하세요. 응답자는 동기식 또는 비동기식일 수 있으며 `ScriptedModel`이 허용하는 모든 단계 형식을 반환할 수 있습니다.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ModelCall, ModelStep, ScriptedModel, assistant_message
+
+
+def respond(call: ModelCall):
+    assert call.streamed is False
+    assert call.input == [{"content": "Summarize this", "role": "user"}]
+    return {"output": [assistant_message("Handled the normalized request.")]}
+
+
+@pytest.mark.asyncio
+async def test_request_aware_response() -> None:
+    model = ScriptedModel([ModelStep.respond(respond)])
+    agent = Agent(name="Assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "Summarize this",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Handled the normalized request."
+    model.assert_complete()
+```
+
+`ScriptedModel`은 `ModelStep`, 이에 해당하는 딕셔너리 형식, `ModelResponse`, 정규화된 출력 항목 시퀀스 또는 예외를 허용합니다. 응답이 호출에 따라 달라지지 않을 때는 고정 출력 시퀀스를 사용하는 것이 좋습니다. 고정 스크립트를 사용하면 예상하지 못한 턴을 더 쉽게 진단할 수 있습니다.
+
+### 모델 호출 검사
+
+`ScriptedModel`은 선택된 단계를 해결하거나 예외를 발생시키기 전에 각 호출을 기록합니다.
+
+| 멤버 | 포함 내용 |
+| --- | --- |
+| `calls` | 호출 순서에 따른 모든 `ModelCall` |
+| `first_call` | 첫 번째 호출 또는 `None` |
+| `last_call` | 가장 최근 호출 또는 `None` |
+| `remaining_steps` | 아직 소비되지 않은 구성된 단계의 수 |
+
+일반적으로 `call.input`, `call.model_settings`, `call.tools`, `call.handoffs` 및 `call.streamed`을 검증합니다. 변경 가능한 요청 데이터는 호출 경계에서 스냅샷으로 저장되며 각 공개 기록 접근자는 분리된 스냅샷을 반환합니다. 도구, 핸드오프, 출력 스키마 및 트레이싱 객체는 런타임 정체성을 유지합니다.
+
+구조화된 `call_index` 및 `input_index` 오류 필드는 0부터 시작하므로 `calls[...]` 또는 제공된 단계 시퀀스를 직접 인덱싱할 수 있습니다. 사람이 읽을 수 있는 오류 메시지에는 1부터 시작하는 호출 또는 단계 번호가 표시됩니다.
+
+하나의 테스트에서 모델 단계를 점진적으로 추가해야 할 때는 `enqueue()` 또는 `extend()`을 사용하세요. 독립적인 시나리오에는 새 `ScriptedModel`를 생성하세요. 이 유틸리티는 소비된 단계나 호출 기록을 재설정하지 않습니다.
+
+### 스트리밍 테스트
+
+일반 응답 단계는 `Runner.run()`과 `Runner.run_streamed()`을 모두 지원합니다. 일반적인 어시스턴트 메시지, 추론 항목, 함수 호출 및 패치 적용 호출의 경우 `ScriptedModel`가 정규화된 시작, 델타, 항목 완료 및 최종 응답 이벤트를 생성합니다. 최종 응답에는 전체 출력과 사용량이 포함됩니다.
+
+정확히 정규화된 `TResponseStreamEvent` 시퀀스가 테스트 대상 동작의 일부인 경우에만 `ModelStep.stream()`을 사용하세요.
+
+```python
+step = ModelStep.stream(
+    events,
+    output=[assistant_message("The terminal output used by the runner.")],
+)
+```
+
+`events`는 고정 시퀀스이거나 기록된 `ModelCall`을 받는 비동기 팩토리일 수 있습니다. 선택적 `output`은 동일한 단계가 비스트리밍 호출에 사용될 때 반환되는 응답입니다. 정확한 스트림 이벤트는 SDK에서 정규화한 이벤트이며 Responses API 또는 Chat Completions의 전송 청크가 아닙니다.
+
+자동 스트리밍은 증분 수명 주기가 구현되지 않은 정규화된 출력 항목 유형을 거부합니다. 이러한 항목에는 부분적인 이벤트 시퀀스에 의존하지 말고 `ModelStep.stream(...)`을 사용하세요.
+
+### 모델 실패 주입
+
+모델 호출 하나를 실패시키려면 `ModelStep.raise_error()`를 사용하세요. 선택적 재시도 권고는 해당 스크립트 오류에만 적용됩니다.
+
+```python
+from agents import ModelRetryAdvice
+from agents.testing import ModelStep
+
+
+step = ModelStep.raise_error(
+    RuntimeError("temporary failure"),
+    retry_advice=ModelRetryAdvice(suggested=True, replay_safety="safe"),
+)
+```
+
+러너의 재시도 정책에 따라 권고가 추가 시도를 유발할지 결정됩니다. 각 재시도는 또 다른 모델 호출이며 다음 스크립트 단계를 소비합니다. Python 헬퍼는 고정된 `ModelRetryAdvice` 값을 허용합니다. 재시도 권고 자체가 시도마다 동적으로 달라져야 하는 경우 사용자 지정 `Model`을 사용하세요.
+
+### 워크플로 드리프트 감지
+
+스크립트된 호출을 예상 워크플로 형태로 간주하세요. 추가 모델 요청이 발생하면 `UnexpectedModelCall`가 발생하며, 조기에 종료되면 `assert_complete()`이 보고할 단계가 남습니다.
+
+테스트 프레임워크가 정리 작업이나 finalizer를 지원하고 다른 검증이 실패한 후에도 소비되지 않은 단계를 보고하려면 `assert_complete()`를 그 위치에 배치하세요. 일반적인 회귀 테스트에서는 불일치 오류를 포착하지 마세요.
+
+| 오류 | 구조화된 필드 | 의미 |
+| --- | --- | --- |
+| `InvalidModelStep` | `reason`, `input_index` | 단계 형식이 잘못되어 큐에 들어가기 전에 거부됨 |
+| `UnexpectedModelCall` | `call`, `call_index` | 스크립트가 끝난 후 워크플로가 또 다른 모델 호출을 수행함 |
+| `UnconsumedModelSteps` | `remaining_steps` | 모든 단계를 사용하기 전에 워크플로가 종료됨 |
+
+## Sandbox 에이전트 레시피
+
+### Sandbox 에이전트 워크플로 테스트
+
+`ScriptedModel`과 `scripted_sandbox_session()`를 결합하면 로컬 컨테이너나 원격 Sandbox를 생성하지 않고도 실제 `SandboxAgent` 런타임을 실행할 수 있습니다. 모델 스크립트는 기능 도구를 선택하고, Sandbox 스크립트는 해당 `SandboxSession` 메서드가 반환할 값을 정의합니다.
+
+```python
+import pytest
+
+from agents import RunConfig, Runner
+from agents.sandbox import ExecResult, SandboxAgent
+from agents.sandbox.capabilities import Shell
+from agents.testing import (
+    ScriptedModel,
+    assistant_message,
+    function_call,
+    scripted_sandbox_session,
+)
+
+
+@pytest.mark.asyncio
+async def test_sandbox_workflow() -> None:
+    sandbox = scripted_sandbox_session(
+        [
+            {
+                "method": "exec",
+                "match": lambda call: call.args == ("pwd",),
+                "result": ExecResult(
+                    stdout=b"/workspace\n",
+                    stderr=b"",
+                    exit_code=0,
+                ),
+            }
+        ]
+    )
+    model = ScriptedModel(
+        [
+            [function_call("exec_command", {"cmd": "pwd"}, call_id="call_1")],
+            [assistant_message("The workspace is /workspace.")],
+        ]
+    )
+    agent = SandboxAgent(
+        name="Workspace assistant",
+        model=model,
+        capabilities=[Shell()],
+    )
+
+    async with sandbox:
+        result = await Runner.run(
+            agent,
+            "Which directory are you in?",
+            run_config=RunConfig(
+                sandbox={"session": sandbox},
+                tracing_disabled=True,
+            ),
+        )
+
+    assert result.final_output == "The workspace is /workspace."
+    assert [call.method for call in sandbox.calls] == ["exec"]
+    sandbox.assert_complete()
+    model.assert_complete()
+```
+
+이 테스트는 정규화된 SDK 경계 두 개를 통과합니다. 도구 인수 검증, 기능 라우팅, Sandbox 세션 호출, 다음 모델 턴으로의 도구 결과 전달 및 최종 출력 처리를 포괄합니다. 실제 모델이 명령을 선택하는지 또는 실제 Sandbox 공급자가 이를 어떻게 실행하는지는 테스트하지 않습니다.
+
+### Sandbox 단계 구성
+
+일치하는 각 Sandbox 호출은 하나의 전역 FIFO 시퀀스에서 다음 단계를 소비합니다. 메서드 불일치, 매처 거부 또는 매처 예외가 발생하면 해당 단계는 대기 상태로 남습니다. `method`을 설정하고 결과를 정확히 하나 선택하며, 호출 세부 정보가 중요한 경우에만 `match`을 추가하세요.
+
+| 단계 멤버 | 사용 시점 |
+| --- | --- |
+| `result` | 메서드가 고정된 타입 값을 반환해야 할 때 |
+| `responder` | 결과가 분리된 `SandboxCall`에 따라 달라질 때 |
+| `error` | 메서드가 특정 예외를 발생시켜야 할 때 |
+| `match` | 매처가 `False` 이외의 값을 반환하지 않으면 결과를 생성하기 전에 호출이 거부되어야 할 때 |
+
+지원되는 스크립트 메서드 이름은 `apply_patch`, `exec`, `ls`, `mkdir`, `pty_exec_start`, `pty_write_stdin`, `read`, `rm` 및 `write`입니다. 구성된 모델 대상 기능만 노출됩니다. 두 PTY 메서드는 하나의 대화형 셸 기능을 구성하므로 둘 중 하나라도 구성되면 함께 노출되지만, 호출은 계속 전역 FIFO 스크립트를 소비합니다.
+
+`sandbox.calls`에는 0부터 시작하는 `call_index`, `method`, 위치 인수 `args` 및 읽기 전용 `kwargs`이 포함된 분리된 `SandboxCall` 스냅샷이 들어 있습니다. 정적 결과도 스크립트가 생성될 때 스냅샷으로 저장됩니다. `io.BytesIO` 및 `io.StringIO` 값이 지원됩니다. 다른 라이브 스트림 객체나 수명 주기 동작에는 사용자 지정 Sandbox 세션을 사용하세요.
+
+| 오류 | 구조화된 필드 | 의미 |
+| --- | --- | --- |
+| `InvalidSandboxStep` | `reason`, `input_index`, `method` | 단계 형식이 잘못되었거나 지원되지 않는 메서드 이름을 사용함 |
+| `UnexpectedSandboxCall` | `call`, `call_index`, `actual_method`, `expected_method`, `remaining_steps` | 워크플로가 잘못된 메서드를 호출했거나 스크립트가 끝난 후에도 계속 실행됨 |
+| `SandboxCallMatcherError` | `call`, `call_index`, `method` | 단계 매처가 `False`을 반환함 |
+| `UnconsumedSandboxSteps` | `remaining_steps`, `pending_methods` | 모든 단계를 사용하기 전에 워크플로가 종료됨 |
+
+반환되는 객체는 세션 자체입니다. 이를 `RunConfig(sandbox={"session": sandbox})`에 직접 전달하세요. 래퍼 `.session` 속성은 없습니다.
+
+## Realtime 레시피
+
+### Realtime 세션 테스트
+
+`ScriptedRealtimeModel`는 Python SDK의 정규화된 `RealtimeModel` 경계를 구현합니다. 각 `RealtimeStep`는 발신 `RealtimeModelSendEvent` 하나와 일치한 다음 정규화된 수신 `RealtimeModelEvent` 객체를 내보내거나 주입된 오류를 발생시킵니다.
+
+```python
+import pytest
+
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelOutputTextDeltaEvent,
+    RealtimeModelSendUserInput,
+    RealtimeRawModelEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@pytest.mark.asyncio
+async def test_realtime_message() -> None:
+    reply = RealtimeModelOutputTextDeltaEvent(
+        item_id="item_1",
+        delta="Hello!",
+        response_id="response_1",
+    )
+    model = ScriptedRealtimeModel(
+        [
+            RealtimeStep(
+                expect=RealtimeModelSendUserInput(user_input="Hello"),
+                emit=[reply],
+            )
+        ]
+    )
+    runner = RealtimeRunner(
+        RealtimeAgent(name="Assistant"),
+        model=model,
+        config={"tracing_disabled": True},
+    )
+
+    observed_reply = False
+    async with await runner.run() as session:
+        await session.send_message("Hello")
+        async for event in session:
+            if isinstance(event, RealtimeRawModelEvent) and event.data == reply:
+                observed_reply = True
+                break
+
+    assert observed_reply
+    assert model.sent_events == (RealtimeModelSendUserInput(user_input="Hello"),)
+    assert model.closed is True
+    model.assert_complete()
+```
+
+예상값은 정확한 이벤트 값, `isinstance`로 일치 여부를 판단하는 이벤트 클래스 또는 발신 이벤트를 받아 일치하면 `True`을 반환하는 호출 가능 객체일 수 있습니다. 엄격 모드는 기본적으로 활성화됩니다. `strict=False`를 사용하면 관련 없는 발신 이벤트는 기록되지만 대기 중인 단계를 소비하지 않습니다. 이는 세션이 테스트 대상 동작 범위 밖의 부수적인 이벤트를 내보낼 때 유용합니다.
+
+연결 중에 수신 이벤트를 내보내려면 `connect_events`을 사용하세요. 수명 주기 실패에는 `connect_error` 또는 `close_error`를 사용하고, 일치한 전송 하나와 관련된 실패에는 `RealtimeStep(error=...)`을 사용하세요. 한 단계에는 `emit`와 `error`를 동시에 정의할 수 없습니다.
+
+### Realtime 도구 워크플로 테스트
+
+실제 함수 도구를 `RealtimeAgent`에 연결하고 정규화된 도구 호출을 내보낸 다음 SDK가 모델 경계를 통해 도구 출력을 전송하는지 확인합니다. `async_tool_calls`을 `False`로 설정하면 이 간단한 예제가 테스트 전용 대기 메커니즘 없이 연결 중에 완료됩니다.
+
+```python
+import pytest
+
+from agents.decorators import tool
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelSendToolOutput,
+    RealtimeModelToolCallEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@tool
+def lookup_order(order_id: str) -> str:
+    """Look up an order by ID."""
+    return f"Order {order_id} has shipped."
+
+
+@pytest.mark.asyncio
+async def test_realtime_tool_workflow() -> None:
+    tool_call = RealtimeModelToolCallEvent(
+        name="lookup_order",
+        call_id="call_1",
+        arguments='{"order_id":"order_123"}',
+    )
+
+    def matches_tool_output(event) -> bool:
+        return (
+            isinstance(event, RealtimeModelSendToolOutput)
+            and event.tool_call.call_id == "call_1"
+            and event.output == "Order order_123 has shipped."
+        )
+
+    model = ScriptedRealtimeModel(
+        [RealtimeStep(expect=matches_tool_output)],
+        connect_events=[tool_call],
+    )
+    agent = RealtimeAgent(
+        name="Order assistant",
+        tools=[lookup_order],
+    )
+    runner = RealtimeRunner(
+        agent,
+        model=model,
+        config={"async_tool_calls": False, "tracing_disabled": True},
+    )
+
+    async with await runner.run():
+        pass
+
+    model.assert_complete()
+```
+
+이 테스트는 실제 Realtime 도구 조회, 인수 검증, 실행 및 출력 라우팅을 수행합니다. 실제 모델이 해당 도구를 선택한다는 사실까지 입증하지는 않습니다.
+
+### Realtime 호출 및 수명 주기 검사
+
+| 멤버 | 포함 내용 |
+| --- | --- |
+| `connect_calls` | 자격 증명이 없고 분리된 연결 스냅샷 |
+| `sent_events` | 호출 순서에 따른 분리된 발신 이벤트 스냅샷 |
+| `remaining_steps` | 아직 남아 있는 예상 발신 전송 |
+| `listeners` | 현재 등록된 리스너 객체 |
+| `connected`, `closed`, `close_calls` | 현재 메모리 내 수명 주기 상태 |
+
+연결 기록에는 API 키 또는 헤더 필드가 제공되었는지만 기록되며 해당 값은 저장하지 않습니다. URL 스냅샷에서는 사용자 정보, 쿼리 매개변수 및 프래그먼트가 제거됩니다. 변경 가능한 이벤트 데이터와 설정은 분리되지만 도구, 핸드오프 및 재생 추적기와 같은 라이브 SDK 객체는 정체성을 유지합니다.
+
+`model.assert_complete()`으로 마무리하고 `RealtimeSession` 비동기 컨텍스트 관리자가 모델을 닫도록 하세요. Python 유틸리티는 의도적으로 대기 중인 예상값 프로미스, 암시적 시간 제한 또는 별도의 `assert_closed()` 헬퍼를 제공하지 않습니다.
+
+| 오류 | 구조화된 필드 | 의미 |
+| --- | --- | --- |
+| `UnexpectedRealtimeSend` | `actual`, `expected` | 엄격한 발신 전송이 다음 단계와 일치하지 않았거나 남은 단계가 없음 |
+| `UnconsumedRealtimeSteps` | `remaining_steps` | 예상된 모든 전송을 사용하기 전에 세션이 종료됨 |
+| `RealtimeScriptError` | 없음 | 연결이 끊긴 상태에서 전송하는 등 잘못된 수명 주기 상태에서 스크립트가 사용됨 |
+
+## Voice 파이프라인 레시피
+
+### Voice 파이프라인 테스트
+
+스크립트된 STT 및 TTS 모델을 `SingleAgentVoiceWorkflow`, 그리고 `ScriptedModel`이 지원하는 에이전트와 결합하면 공급자 요청 없이 전체 음성-텍스트 변환 -> 에이전트 -> 텍스트-음성 변환 파이프라인을 테스트할 수 있습니다.
+
+```python
+import numpy as np
+import pytest
+
+from agents import Agent
+from agents.testing import ScriptedModel, assistant_message
+from agents.voice import AudioInput, SingleAgentVoiceWorkflow, VoicePipeline
+from agents.voice.testing import (
+    ScriptedSTTModel,
+    ScriptedTTSModel,
+    TTSResult,
+    pcm16_samples,
+)
+
+
+@pytest.mark.asyncio
+async def test_voice_pipeline() -> None:
+    model = ScriptedModel([[assistant_message("Hello there.")]])
+    stt = ScriptedSTTModel("hello")
+    pcm = pcm16_samples([0, 100, -100, 0])
+    tts = ScriptedTTSModel([TTSResult([pcm])])
+    pipeline = VoicePipeline(
+        workflow=SingleAgentVoiceWorkflow(
+            Agent(name="Voice assistant", model=model)
+        ),
+        stt_model=stt,
+        tts_model=tts,
+        config={"tracing_disabled": True, "tts_settings": {"buffer_size": 1}},
+    )
+
+    result = await pipeline.run(AudioInput(np.zeros(2, dtype=np.int16)))
+    events = [event async for event in result.stream()]
+
+    assert events
+    assert [call.text for call in tts.calls] == ["Hello there."]
+    stt.assert_complete()
+    tts.assert_complete()
+    model.assert_complete()
+```
+
+파이프라인의 STT/TTS 수명 주기가 테스트 대상이지만 에이전트 오케스트레이션은 대상이 아닐 때는 대신 `ScriptedVoiceWorkflow`을 사용하세요.
+
+```python
+from agents.voice.testing import ScriptedVoiceWorkflow
+
+
+workflow = ScriptedVoiceWorkflow(
+    turns=["Hello there."],
+    start="Welcome.",
+)
+```
+
+`start` 단계는 `on_start()`에서 소비됩니다. `VoicePipeline`은 `StreamedAudioInput`에 대해서만 `on_start()`을 호출합니다. 정적 `AudioInput` 실행은 `start`를 소비하지 않습니다. 각 일반 턴은 전사 결과를 기록하고 구성된 결과 하나를 소비합니다. 문자열 하나는 하나의 프래그먼트이며, 문자열 시퀀스는 텍스트 분할 및 TTS 전에 프래그먼트 경계를 제어합니다.
+
+### 스트리밍 전사 테스트
+
+`ScriptedSTTModel`는 정적 `transcriptions`과 독립적으로 스크립트된 스트리밍 `sessions`을 허용합니다. 세션은 `ScriptedTranscriptionSession`, 전사 턴 시퀀스, 예외 또는 단일 문자열일 수 있습니다.
+
+```python
+from agents.voice.testing import ScriptedSTTModel, ScriptedTranscriptionSession
+
+
+session = ScriptedTranscriptionSession(["first turn", "second turn"])
+stt = ScriptedSTTModel(sessions=[session])
+```
+
+`ScriptedTranscriptionSession`을 닫으면 반복이 중지되고 건너뛴 턴이 남아 `assert_complete()`에서 보고됩니다. 마찬가지로 `ScriptedTTSModel`은 호출마다 `TTSResult`, 바이트 청크 시퀀스 또는 예외 하나를 소비합니다.
+
+### Voice 호출 검사
+
+| 구성 요소 | 기록된 내역 |
+| --- | --- |
+| `ScriptedSTTModel` | `calls`, `session_calls` 및 라이브 `created_sessions` 정체성 |
+| `ScriptedTTSModel` | 텍스트와 분리된 설정을 포함하는 `calls` |
+| `ScriptedVoiceWorkflow` | 턴 순서에 따른 `transcriptions` |
+
+정적 오디오 버퍼와 변경 가능한 설정은 호출 시점에 스냅샷으로 저장됩니다. 파이프라인에서 계속 사용하므로 `StreamedAudioInput` 및 생성된 전사 세션 객체는 라이브 정체성을 유지합니다.
+
+| 오류 | 구조화된 필드 | 의미 |
+| --- | --- | --- |
+| `UnexpectedVoiceCall` | `operation` | 정적 전사, 스트리밍 세션, TTS 호출, 워크플로 시작 또는 워크플로 턴에 구성된 단계가 없음 |
+| `UnconsumedVoiceSteps` | `remaining_steps` | 구성된 Voice 단계가 하나 이상 남아 있음 |
+
+테스트에서 구성한 모든 스크립트형 Voice 구성 요소에 `assert_complete()`을 호출하세요. `ScriptedSTTModel.assert_complete()`은 자신이 생성한 전사 세션의 턴도 검사합니다.
+
+## 올바른 경계 선택
+
+모델 공급자에 의존하지 않고 SDK 실행 루프, 도구, 핸드오프, 가드레일, 세션, 재시도 또는 정규화된 스트리밍을 테스트해야 할 때 `ScriptedModel`을 사용하세요.
+
+Sandbox 공급자를 시작하지 않고 `SandboxAgent` 기능 및 오케스트레이션을 테스트해야 할 때 `ScriptedModel`과 함께 `scripted_sandbox_session()`을 사용하세요. 공급자 생성, 프로세스 실행, 파일 시스템 충실도, 지속성, 리소스 제한 및 격리 검사는 실제 Sandbox 공급자를 대상으로 하는 통합 테스트에서 수행하세요.
+
+WebSocket 연결을 열지 않고 `RealtimeSession` 동작 또는 `RealtimeAgent` 도구 및 핸드오프 오케스트레이션을 테스트해야 할 때 `ScriptedRealtimeModel`를 사용하세요. 가공되지 않은 Realtime 클라이언트/서버 이벤트, 인증, 네트워크 복구 및 오디오 전송 동작은 실제 전송 계층이나 통합 환경에서 테스트하세요. Realtime API 세션은 클라이언트가 입력을 보내고 이벤트를 수신하는 동안 연결을 열린 상태로 유지하므로 이러한 네트워크 및 프로토콜 문제는 정규화된 모델 경계 아래에 속합니다. 프로덕션 연결 아키텍처는 [OpenAI Realtime API 가이드](https://developers.openai.com/api/docs/guides/realtime)를 참조하세요.
+
+음성 공급자 없이 STT/TTS 순서, 스트리밍 전사 정리, 워크플로 프래그먼트 전달 또는 전체 Voice 파이프라인 구성을 테스트해야 할 때 Voice 테스트 구성 요소를 사용하세요. 전사 품질, 생성된 음성, 인코딩 호환성, 지연 시간 또는 재생이 테스트 대상인 경우 실제 오디오 모델과 대표성 있는 오디오를 사용하세요.
+
+이러한 유틸리티를 Responses API 또는 Chat Completions 요청 직렬화, 인증 헤더, 공급자 기본값, HTTP 페이로드, 공급자 스트림 청크, Realtime 전송 프레임 또는 공급자별 수명 주기 동작을 테스트하는 데 사용하지 마세요. 이러한 테스트에는 실제 어댑터를 유지하면서 해당 네트워크 경계를 대체하거나 제어하세요. `openai` v3에서는 OpenAI 어댑터 테스트에 `httpx2` 요청, 응답, 전송 및 예외 타입을 사용해야 합니다. 레거시 `httpx`은 Agents SDK의 핵심 종속성이 아닙니다.
+
+## 최종 체크리스트
+
+- 정규화된 모델, Sandbox 세션, Realtime 모델 또는 Voice 파이프라인 경계가 관리하는 상호작용만 스크립트로 구성합니다.
+- 비공개 러너 상태 대신 중요한 공개 요청 또는 호출 필드를 검증합니다.
+- 고정 응답 단계를 우선 사용하고, 요청에 따라 달라지는 동작에만 응답자를 사용합니다.
+- 자동 모델 스트리밍을 우선 사용하고, 이벤트 수준의 동작이 중요할 때만 정확한 스트림을 사용합니다.
+- 각 스크립트형 구성 요소 테스트를 해당 `assert_complete()` 메서드로 마무리합니다.
+- 주변 테스트가 Realtime 및 Sandbox 수명 주기를 소유하는 경우 수명 주기 정리에 비동기 컨텍스트 관리자를 사용합니다.
+- 사람이 읽을 수 있는 메시지를 파싱하는 대신 구조화된 오류 필드를 검증합니다.
+- 공급자 전송 테스트는 제어된 네트워크 전송을 사용하는 실제 어댑터에서 수행합니다.
+
+## 범위 및 현재 제한 사항
+
+테스트 모듈은 의도적으로 다음 기능을 제공하지 않습니다.
+
+- 모든 정규화된 모델 출력 항목을 위한 편의 빌더. 일반적인 경우에는 `assistant_message()` 및 `function_call()`을 사용하고 다른 정규화된 항목은 직접 전달하세요.
+- 공급자 프로토콜 시뮬레이터. 정확한 모델 스트림은 Responses API 또는 Chat Completions 전송 청크 대신 정규화된 SDK 이벤트를 사용합니다.
+- 고수준 시뮬레이션 Realtime 서버. 테스트는 정규화된 발신 전송을 명시적으로 매칭하고 시나리오에 필요한 정규화된 수신 이벤트를 내보냅니다.
+- 순서가 지정되지 않은 Sandbox 또는 Realtime 예상값. 두 유틸리티 모두 하나의 전역 순서로 예상 단계를 소비합니다.
+- 테스트 러너별 매처, 픽스처, 암시적 시간 제한 또는 자동 정리
+- 재설정 API. `ScriptedModel`은 점진적 스크립트를 위한 `enqueue()` 및 `extend()`을 지원하지만, 독립적인 시나리오에는 새 스크립트형 구성 요소를 생성하세요.
+
+테스트에 잘못된 형식의 스트림, 제어된 일시 중지 또는 동시성, 정확한 취소, 혹은 스크립트형 유틸리티가 보존할 수 없는 수명 주기 경계가 필요한 경우 해당 공개 인터페이스의 사용자 지정 구현을 사용하세요. 테스트에 그 특수한 경계를 문서화하세요.
+
+## API 레퍼런스
+
+- [`agents.testing`](ref/testing.md)
+- [`agents.realtime.testing`](ref/realtime/testing.md)
+- [`agents.voice.testing`](ref/voice/testing.md)
 
 ================
 File: docs/ko/tools.md
@@ -10832,6 +11448,13 @@ File: docs/ref/realtime/session.md
 ::: agents.realtime.session.RealtimeSession
 
 ================
+File: docs/ref/realtime/testing.md
+================
+# `Testing`
+
+::: agents.realtime.testing
+
+================
 File: docs/ref/run_internal/agent_bindings.md
 ================
 # `Agent Bindings`
@@ -11602,6 +12225,20 @@ File: docs/ref/sandbox/workspace_paths.md
 ::: agents.sandbox.workspace_paths
 
 ================
+File: docs/ref/testing/model.md
+================
+# `Model`
+
+::: agents.testing.model
+
+================
+File: docs/ref/testing/sandbox.md
+================
+# `Sandbox`
+
+::: agents.testing.sandbox
+
+================
 File: docs/ref/tracing/config.md
 ================
 # `Config`
@@ -11795,6 +12432,13 @@ File: docs/ref/voice/result.md
 # `Result`
 
 ::: agents.voice.result
+
+================
+File: docs/ref/voice/testing.md
+================
+# `Testing`
+
+::: agents.voice.testing
 
 ================
 File: docs/ref/voice/utils.md
@@ -12062,6 +12706,13 @@ File: docs/ref/strict_schema.md
 # `Strict Schema`
 
 ::: agents.strict_schema
+
+================
+File: docs/ref/testing.md
+================
+# `Testing`
+
+::: agents.testing
 
 ================
 File: docs/ref/tool_context.md
@@ -18237,21 +18888,21 @@ search:
 ---
 # 配置
 
-本页介绍通常在应用启动时仅需设置一次的 SDK 全局默认配置，例如默认 OpenAI 密钥或客户端、默认 OpenAI API 形式、追踪导出默认值以及日志记录行为。
+本页介绍通常在应用启动期间一次性设置的 SDK 全局默认值，例如默认OpenAI密钥或客户端、默认OpenAI API 形态、追踪导出默认设置以及日志行为。
 
-这些默认配置仍适用于基于沙箱的工作流，但沙箱工作区、沙箱客户端和会话复用需单独配置。
+这些默认值仍适用于基于沙箱的工作流，但沙箱工作区、沙箱客户端和会话复用需要单独配置。
 
-如果需要配置特定的智能体或运行，请从以下内容开始：
+如果需要配置特定智能体或运行，请先参阅：
 
-- [智能体](agents.md)：了解普通 `Agent` 的指令、工具、输出类型、任务转移和安全防护措施。
-- [运行智能体](running_agents.md)：了解 `RunConfig`、会话和对话状态选项。
-- [沙箱智能体](sandbox/guide.md)：了解 `SandboxRunConfig`、清单、能力以及特定于沙箱客户端的工作区设置。
-- [模型](models/index.md)：了解模型选择和提供商配置。
-- [追踪](tracing.md)：了解每次运行的追踪元数据和自定义追踪处理器。
+-   [智能体](agents.md)：普通 `Agent` 的指令、工具、输出类型、任务转移和安全防护措施。
+-   [运行智能体](running_agents.md)：`RunConfig`、会话和对话状态选项。
+-   [沙箱智能体](sandbox/guide.md)：`SandboxRunConfig`、清单、能力和沙箱客户端专用的工作区设置。
+-   [模型](models/index.md)：模型选择和提供商配置。
+-   [追踪](tracing.md)：每次运行的追踪元数据和自定义追踪处理器。
 
 ## 配置对象与字典
 
-SDK 定义的配置参数通常既接受其类型化设置对象，也接受包含相同字段的字典。这适用于类型注解中包含字典的智能体、运行、模型、会话、沙箱和语音配置边界。SDK 定义的嵌套设置类型也可以使用字典。
+SDK 定义的配置参数通常既接受相应的类型化设置对象，也接受包含相同字段的字典。此规则适用于类型注解中包含字典的智能体、运行、模型、会话、沙箱和语音配置边界。SDK 定义的嵌套设置类型也可以使用字典。
 
 ```python
 from agents import Agent
@@ -18266,11 +18917,11 @@ agent = Agent(
 )
 ```
 
-SDK 会将这些字典规范化为相应的设置对象。对于 SDK 定义的数据类配置类型，未知字段会引发 `TypeError`，这有助于尽早发现拼写错误的选项名称。请检查参数的类型注解或 API 参考文档，以确认特定边界是否接受字典。
+SDK 会将这些字典规范化为相应的设置对象。对于 SDK 定义的数据类配置类型，未知字段会引发 `TypeError`，这有助于及早发现拼写错误的选项名称。请查看参数的类型注解或 API 参考，确认特定边界是否接受字典。
 
 ## API 密钥与客户端
 
-默认情况下，SDK 使用 `OPENAI_API_KEY` 环境变量处理 LLM 请求和追踪。SDK 首次创建 OpenAI 客户端时才会解析该密钥（延迟初始化），因此请在首次调用模型之前设置此环境变量。如果无法在应用启动前设置该环境变量，可以使用 [set_default_openai_key()][agents.set_default_openai_key] 函数设置密钥。
+默认情况下，SDK 使用 `OPENAI_API_KEY` 环境变量处理LLM请求和追踪。SDK 首次创建OpenAI客户端时会解析该密钥（延迟初始化），因此请在首次调用模型前设置该环境变量。如果无法在应用启动前设置此环境变量，可以使用 [set_default_openai_key()][agents.set_default_openai_key] 函数设置密钥。
 
 ```python
 from agents import set_default_openai_key
@@ -18278,7 +18929,7 @@ from agents import set_default_openai_key
 set_default_openai_key("sk-...")
 ```
 
-或者，也可以配置要使用的 OpenAI 客户端。默认情况下，SDK 会创建一个 `AsyncOpenAI` 实例，并使用环境变量中的 API 密钥或上面设置的默认密钥。可以使用 [set_default_openai_client()][agents.set_default_openai_client] 函数更改此行为。
+或者，也可以配置要使用的OpenAI客户端。默认情况下，SDK 会创建一个 `AsyncOpenAI` 实例，并使用环境变量中的 API 密钥或上面设置的默认密钥。可以使用 [set_default_openai_client()][agents.set_default_openai_client] 函数更改此设置。
 
 ```python
 from openai import AsyncOpenAI
@@ -18288,14 +18939,38 @@ custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
 
-如果偏好基于环境变量的端点配置，默认 OpenAI 提供商还会读取 `OPENAI_BASE_URL`。启用 Responses WebSocket 传输时，它还会读取 WebSocket `/responses` 端点的 `OPENAI_WEBSOCKET_BASE_URL`。
+### 使用 `openai` v3 的自定义 HTTP 客户端
+
+0.21.0 版本要求使用 `openai>=3.0.0,<4`。默认OpenAI提供商使用 HTTPX2，因此大多数应用不需要直接配置 HTTP 客户端。如果应用将 `http_client=` 传递给 `AsyncOpenAI`，请为自定义客户端及其面向传输层的选项使用 HTTPX2 类型：
+
+```python
+import httpx2
+from openai import AsyncOpenAI, DefaultAsyncHttpx2Client
+
+from agents import set_default_openai_client
+
+http_client = DefaultAsyncHttpx2Client(
+    timeout=httpx2.Timeout(30.0, connect=5.0),
+)
+custom_client = AsyncOpenAI(
+    api_key="...",
+    http_client=http_client,
+)
+set_default_openai_client(custom_client)
+```
+
+同样的迁移方式也适用于自定义传输、身份验证、事件钩子、模拟传输、URL、请求、响应和传输异常处理。请使用它们对应的 `httpx2` 类型。Agents SDK不会将任意旧版 `httpx` 对象转换为 HTTPX2。当应用显式安装 `httpx` 时，OpenAI Python SDK 会为旧版客户端提供临时兼容路径，但新增代码和迁移后的代码应使用 HTTPX2。
+
+此OpenAI客户端边界独立于本地MCP传输自定义。MCP Python SDK v1 使用自己的旧版 `httpx` 依赖项，而 MCP Python SDK v2 使用 `httpx2`；请参阅 [MCP Python SDK v1 和 v2](mcp.md#mcp-python-sdk-v1-and-v2)。
+
+如果倾向于使用基于环境变量的端点配置，默认OpenAI提供商还会读取 `OPENAI_BASE_URL`。启用 Responses websocket 传输后，它还会读取 websocket `/responses` 端点所使用的 `OPENAI_WEBSOCKET_BASE_URL`。
 
 ```bash
 export OPENAI_BASE_URL="https://your-openai-compatible-endpoint.example/v1"
 export OPENAI_WEBSOCKET_BASE_URL="wss://your-openai-compatible-endpoint.example/v1"
 ```
 
-最后，还可以自定义使用的 OpenAI API。默认情况下，我们使用 OpenAI Responses API。可以使用 [set_default_openai_api()][agents.set_default_openai_api] 函数将其覆盖为 Chat Completions API。
+最后，还可以自定义所使用的OpenAI API。默认情况下，我们使用OpenAI Responses API。可以使用 [set_default_openai_api()][agents.set_default_openai_api] 函数将其改为Chat Completions API。
 
 ```python
 from agents import set_default_openai_api
@@ -18303,9 +18978,9 @@ from agents import set_default_openai_api
 set_default_openai_api("chat_completions")
 ```
 
-## OpenAI 提供商默认配置
+## OpenAI提供商默认设置
 
-使用 SDK OpenAI 后端的提供商在将模型名称字符串映射到模型时，也会读取 SDK 全局默认配置。使用 [`set_default_openai_responses_transport()`][agents.set_default_openai_responses_transport] 可使 OpenAI Responses 模型默认使用 WebSocket 传输：
+使用 SDK 的OpenAI后端的提供商在将模型名称字符串映射到模型时，也会读取 SDK 全局默认值。使用 [`set_default_openai_responses_transport()`][agents.set_default_openai_responses_transport] 可使OpenAI Responses 模型默认使用 websocket 传输：
 
 ```python
 from agents import set_default_openai_responses_transport
@@ -18313,9 +18988,9 @@ from agents import set_default_openai_responses_transport
 set_default_openai_responses_transport("websocket")
 ```
 
-当默认 OpenAI 提供商解析模型名称时，这会影响由此生成的 OpenAI Responses 模型。有关提供商级别的设置、连接复用、keepalive 选项和自定义 WebSocket 端点，请参阅 [Responses WebSocket 传输](models/index.md#responses-websocket-transport)。
+这会影响默认OpenAI提供商解析模型名称后生成的OpenAI Responses 模型。有关提供商级设置、连接复用、保活选项和自定义 websocket 端点，请参阅 [Responses WebSocket 传输](models/index.md#responses-websocket-transport)。
 
-如果 OpenAI 设置需要提供商级别的智能体注册元数据，请在启动时一次性配置默认 harness ID：
+如果OpenAI设置需要提供商级智能体注册元数据，请在启动时配置一次默认 harness ID：
 
 ```python
 from agents import set_default_openai_harness
@@ -18333,11 +19008,11 @@ set_default_openai_agent_registration(
 )
 ```
 
-如果未设置 SDK 默认值，使用 SDK OpenAI 后端的提供商会回退到 `OPENAI_AGENT_HARNESS_ID` 环境变量。配置 harness ID 后，SDK 会将其作为 `agent_harness_id` 添加到追踪元数据中，除非 `RunConfig.trace_metadata` 中已存在该键。
+如果未设置 SDK 默认值，使用 SDK 的OpenAI后端的提供商将回退到 `OPENAI_AGENT_HARNESS_ID` 环境变量。配置 harness ID 后，SDK 会将其作为 `agent_harness_id` 添加到追踪元数据中，除非 `RunConfig.trace_metadata` 中已存在该键。
 
 ## 追踪
 
-追踪默认启用。默认情况下，它使用上一节中模型请求所用的同一 OpenAI API 密钥（即环境变量中的密钥或设置的默认密钥）。可以使用 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 函数专门设置用于追踪的 API 密钥。
+追踪默认启用。默认情况下，它使用与上一节模型请求相同的OpenAI API 密钥，即环境变量中的密钥或设置的默认密钥。可以使用 [`set_tracing_export_api_key`][agents.set_tracing_export_api_key] 函数专门设置用于追踪的 API 密钥。
 
 ```python
 from agents import set_tracing_export_api_key
@@ -18345,7 +19020,7 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-如果模型流量使用一个密钥或客户端，但追踪应使用另一个 OpenAI 密钥，请在设置默认密钥或客户端时传入 `use_for_tracing=False`，然后单独配置追踪。如果不使用自定义客户端，也可以对 [`set_default_openai_key()`][agents.set_default_openai_key] 使用相同模式。
+如果模型流量使用一个密钥或客户端，而追踪需要使用另一个OpenAI密钥，请在设置默认密钥或客户端时传入 `use_for_tracing=False`，然后单独配置追踪。如果没有使用自定义客户端，也可以对 [`set_default_openai_key()`][agents.set_default_openai_key] 使用相同方式。
 
 ```python
 from openai import AsyncOpenAI
@@ -18367,7 +19042,7 @@ export OPENAI_ORG_ID="org_..."
 export OPENAI_PROJECT_ID="proj_..."
 ```
 
-也可以为每次运行设置追踪 API 密钥，而无需更改全局导出器。
+也可以为每次运行设置追踪 API 密钥，而不更改全局导出器。
 
 ```python
 from agents import Runner, RunConfig
@@ -18387,7 +19062,7 @@ from agents import set_tracing_disabled
 set_tracing_disabled(True)
 ```
 
-如果希望保持追踪启用，但从追踪载荷中排除可能敏感的输入/输出，请将 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 设置为 `False`：
+如果希望保持追踪启用，但从追踪负载中排除可能包含敏感信息的输入或输出，请将 [`RunConfig.trace_include_sensitive_data`][agents.run.RunConfig.trace_include_sensitive_data] 设置为 `False`：
 
 ```python
 from agents import Runner, RunConfig
@@ -18399,7 +19074,7 @@ await Runner.run(
 )
 ```
 
-也可以在应用启动前设置以下环境变量，从而无需编写代码即可更改默认值：
+也可以在应用启动前设置以下环境变量，无需编写代码即可更改默认值：
 
 ```bash
 export OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA=0
@@ -18409,9 +19084,9 @@ export OPENAI_AGENTS_TRACE_INCLUDE_SENSITIVE_DATA=0
 
 ## 调试日志
 
-SDK 定义了两个 Python 日志记录器（`openai.agents` 和 `openai.agents.tracing`），默认不附加处理器。日志遵循应用的 Python 日志配置。
+SDK 定义了两个 Python 日志记录器（`openai.agents` 和 `openai.agents.tracing`），默认不附加任何处理器。日志遵循应用的 Python 日志配置。
 
-如需启用详细日志记录，请使用 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 函数。
+要启用详细日志记录，请使用 [`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 函数。
 
 ```python
 from agents import enable_verbose_stdout_logging
@@ -18419,7 +19094,7 @@ from agents import enable_verbose_stdout_logging
 enable_verbose_stdout_logging()
 ```
 
-或者，也可以通过添加处理器、过滤器、格式化程序等来自定义日志。更多信息请参阅 [Python 日志指南](https://docs.python.org/3/howto/logging.html)。
+或者，也可以通过添加处理器、过滤器和格式化程序等方式自定义日志。有关更多信息，请参阅 [Python 日志指南](https://docs.python.org/3/howto/logging.html)。
 
 ```python
 import logging
@@ -18438,25 +19113,25 @@ logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 ```
 
-### 日志和诊断中的敏感数据
+### 日志与诊断中的敏感数据
 
-某些日志和诊断异常可能包含敏感数据（例如模型或工具的输入和输出）。
+某些日志和诊断异常可能包含敏感数据，例如模型或工具的输入和输出。
 
-默认情况下，SDK **不会**记录 LLM 输入/输出或工具输入/输出。这些保护由以下设置控制：
+默认情况下，SDK **不会**记录LLM输入和输出，也不会记录工具输入和输出。这些保护措施由以下变量控制：
 
 ```bash
 OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
 ```
 
-如果需要在调试期间临时包含这些数据，请在应用启动前将任一变量设置为 `0`（或 `false`）：
+如果为了调试而需要临时包含这些数据，请在应用启动前将任一变量设置为 `0`（或 `false`）：
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=0
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=0
 ```
 
-这些标志还控制受影响的故障是否保留包含载荷的诊断详细信息。例如，启用工具数据脱敏后，`FunctionTool` 的无效参数会引发通用的 `ModelBehaviorError`，而不会以异常链形式附带底层验证错误。将任一变量设置为 `0` 可能会在日志、异常消息、异常链和其他诊断上下文中暴露原始模型或工具数据，因此只能在受控的开发环境中启用。
+这些标志还会控制受影响的故障是否保留含有负载的诊断详细信息。例如，启用工具数据脱敏后，`FunctionTool` 的无效参数会引发通用的 `ModelBehaviorError`，且不会将底层验证错误链接到异常链中。将任一变量设置为 `0` 可能会在日志、异常消息、异常链和其他诊断上下文中暴露原始模型数据或工具数据，因此只能在受控的开发环境中启用。
 
 ================
 File: docs/zh/context.md
@@ -20288,66 +20963,79 @@ search:
 ---
 # 发布流程/变更日志
 
-本项目采用略作修改的语义化版本控制，格式为 `0.Y.Z`。开头的 `0` 表示 SDK 仍在快速演进。各组成部分按以下方式递增：
+本项目采用略作修改的语义化版本控制，版本格式为`0.Y.Z`。开头的`0`表示 SDK 仍在快速演进。各组成部分按以下方式递增：
 
 ## 次版本（`Y`）
 
-对于任何未标记为 beta 的公共接口发生的**破坏性变更**，我们将递增次版本号 `Y`。例如，从 `0.0.x` 升级到 `0.1.x` 时可能包含破坏性变更。
+对于任何未标记为 beta 的公共接口，如果存在**破坏性变更**，我们将递增次版本`Y`。例如，从`0.0.x`升级到`0.1.x`时可能包含破坏性变更。
 
-如果不希望引入破坏性变更，建议在项目中固定使用 `0.0.x` 版本。
+如果您不希望遇到破坏性变更，建议在项目中锁定`0.0.x`版本。
 
 ## 补丁版本（`Z`）
 
-对于非破坏性变更，我们将递增 `Z`：
+对于非破坏性变更，我们将递增`Z`：
 
--   Bug 修复
+-   错误修复
 -   新功能
 -   私有接口变更
 -   beta 功能更新
 
 ## 破坏性变更日志
 
+### 0.21.0
+
+版本 0.21.0 要求使用`openai` v3，并将 Agents SDK 的OpenAI HTTP 集成迁移至 HTTPX2。使用默认OpenAI客户端的应用程序无需更改客户端设置，但自定义OpenAI HTTP 层的应用程序可能需要迁移面向传输层的代码。
+
+要点：
+
+-   现在要求的OpenAI依赖项为`openai>=3.0.0,<4`。全新安装核心包时将使用 HTTPX2，并且不再将旧版`httpx`作为直接依赖项安装。
+-   默认OpenAI提供方、语音提供方、Responses WebSocket 支持、追踪导出器以及提供方重试规范化现在均使用 HTTPX2。它们现有的 Agents SDK 公共配置和运行时行为保持不变。
+-   向`AsyncOpenAI`传递`http_client=`的应用程序，应将自定义客户端、传输、身份验证、事件钩子、模拟传输、超时值、URL、请求、响应以及传输异常处理从`httpx`迁移至`httpx2`。如果应用程序既需要OpenAI客户端的默认设置，又需要自定义 HTTP 选项，请优先使用OpenAI Python SDK 的`DefaultAsyncHttpx2Client`。请参阅[使用`openai` v3 的自定义 HTTP 客户端](config.md#custom-http-clients-with-openai-v3)。
+-   Agents SDK 不会将任意旧版 HTTPX 对象转换为 HTTPX2。OpenAI Python SDK 的临时旧版客户端兼容路径要求显式安装`httpx`，并且应仅将其视为迁移桥梁。
+-   本地 MCP HTTP 自定义继续遵循已安装的 MCP 软件包：MCP Python SDK v1 提供并使用旧版`httpx`，而 MCP Python SDK v2 使用`httpx2`。普通 MCP 连接无需更改应用程序。请参阅[MCP Python SDK v1 和 v2](mcp.md#mcp-python-sdk-v1-and-v2)。
+-   公共的提供方中立测试实用工具现在可以覆盖智能体模型、沙箱会话、Realtime 会话和语音管线工作流，而无需依赖提供方或进程。有关使用方法以及何时应保留实际提供方适配器或集成边界的指导，请参阅[测试](testing.md)。
+
 ### 0.20.0
 
-0.20.0 版本包含一项可能具有破坏性的 MCP 依赖迁移，会影响自定义本地 MCP HTTP 传输的应用程序。它还更新了智能体或运行未显式选择模型时使用的 SDK 默认模型。
+版本 0.20.0 包含一项可能造成破坏性变更的 MCP 依赖项迁移，会影响自定义本地 MCP HTTP 传输的应用程序。它还更新了智能体或运行未显式选择模型时使用的 SDK 默认模型。
 
-重点：
+要点：
 
--   SDK 默认模型现已从 `gpt-5.4-mini` 改为 `gpt-5.6-luna`。默认的 `reasoning.effort="none"` 和 `verbosity="low"` 设置保持不变。
--   显式指定的智能体模型、运行级模型覆盖项以及 `OPENAI_DEFAULT_MODEL` 环境变量仍优先于 SDK 默认值。
--   Realtime 输入转录设置现在可识别 `gpt-transcribe`、`gpt-live-transcribe` 和 `gpt-realtime-whisper`。对于低延迟 `gpt-live-transcribe` 会话，嵌套的 `audio.input.transcription` 设置可以提供 `prompt`、`keywords` 和多个预期的 `languages`。此 SDK 固定使用的 OpenAI 客户端版本仅在搭配 `gpt-realtime-whisper` 时支持 `delay` 延迟/准确度级别。通过 WebSocket 使用 `gpt-transcribe`，可在已提交音频轮次后进行转录或输出检测到的语言。显式设置 `audio.input.turn_detection=None` 会禁用自动轮次检测。请参阅[输入转录设置](realtime/guide.md#input-transcription-settings)。
--   Agents SDK 创建的本地 MCP 连接现在支持 MCP Python SDK v2，同时通过 `mcp>=1.19.0,<3` 保持对 v1 的兼容性。Agents SDK 会自动适配普通的 stdio、SSE 和 Streamable HTTP 连接。安装 MCP v2 后，这些连接会使用 `mcp.Client(mode="auto")` 探测最新的受支持协议，并针对旧版服务器回退到传统的 `initialize` 握手。如果依赖解析选择了 MCP v2，提供自定义 `httpx.Auth` 对象或 `httpx.AsyncClient` 工厂的应用程序必须将这些值迁移至 `httpx2`，或者固定使用 `mcp<2` 以保留 v1 HTTP 栈。`MCPServerStreamableHttp` 的 `params["ignore_initialized_notification_failure"] = True` 选项也仍然仅支持 v1。有关迁移详情，请参阅[MCP Python SDK v1 和 v2](mcp.md#mcp-python-sdk-v1-and-v2)。
--   沙盒挂载验证现在会在产生沙盒或挂载辅助程序的副作用之前，拒绝不安全的凭据放置。可信应用程序可以针对准确的容器内挂载路径，确认挂载范围内或更广泛的凭据暴露，而无需更改存储能力表。这些确认仅在运行时有效，序列化后的沙盒状态本身绝不会授予凭据权限。在受保护的挂载边界处，SDK 会返回一个全新的、经过脱敏的异常。如果源异常是完全匹配的、可识别的 SDK 沙盒错误，且其获准的结构化字段通过验证，则替代异常会保留该子类型和已验证的安全字段。可识别的 `MountConfigError` 还可以保留由 SDK 生成的安全验证消息。否则，SDK 会返回一个全新的通用脱敏错误。由提供商控制或未经批准的消息、命令数据、注释、上下文、原因及源回溯状态均不会保留。请参阅[挂载与远程存储](sandbox/clients.md#mounts-and-remote-storage)和[从会话状态恢复](sandbox/guide.md#resume-from-session-state)。
--   重试策略可以检查稳定的重放安全事实，并针对提供商标记为不安全的非流式请求显式设置 `RetryDecision(approve_unsafe_replay=True)`。此批准不会绕过中止、已发出的流式输出或单独的本地副作用否决机制，例如程序化工具调用。请参阅[由 Runner 管理的重试](models/index.md#runner-managed-retries)。
--   可恢复的 `RunState` 对象现在可以在下一次模型调用前使用 `add_input()` 暂存持久用户输入。暂存的输入会在序列化后保留、经过输入安全防护措施，并在本地会话和服务器管理的对话中生成一次持久的 SDK 输入记录。经过显式批准的不安全重放仍可能向提供商重新发送输入，并重复提供商侧的工作。请参阅[恢复前添加输入](results.md#add-input-before-resuming)。
--   运行时可靠性修复统一了流式与非流式的[输出安全防护措施会话持久化](guardrails.md#output-guardrails)，在复制和命名空间处理期间保留 `FunctionTool` 子类，并针对[不受支持的 Chat Completions 音频输出](models/index.md#chat-completions-compatibility-options)抛出明确错误，而不是静默完成空流。`OpenAIResponsesCompactionSession` 包装器会在取消传递至调用方前，尝试并等待[压缩前的历史记录恢复](sessions/index.md#auto-compaction-can-block-streaming)。[`VoicePipeline`](voice/pipeline.md#results) 使用方现在会在正常运行结束后收到转录会话关闭失败，而较早发生的轮次失败仍优先于之后发生的关闭失败。`RunState` 往返转换现在会保留本地 shell 输出、已确认的计算机安全检查、采用默认值的工具输出字段，以及遍历字典、列表或元组时遇到的 Pydantic 模型或 dataclass 输出。MCP 转换会保留自由格式对象 schema 和图像输出，并将音频块、资源块等其他原始内容块序列化为有效的 JSON 文本。`MCPServerManager` 会对重叠的生命周期操作进行串行化，并为连接和清理应用有限的默认超时时间。模型重放会先从输出项中移除服务器所有的 `created_by` 元数据，再将其用作输入。
+-   SDK 默认模型现在是`gpt-5.6-luna`，而不再是`gpt-5.4-mini`。默认的`reasoning.effort="none"`和`verbosity="low"`设置保持不变。
+-   显式指定的智能体模型、运行级模型覆盖以及`OPENAI_DEFAULT_MODEL`环境变量仍然优先于 SDK 默认值。
+-   Realtime 输入转录设置现在可识别`gpt-transcribe`、`gpt-live-transcribe`和`gpt-realtime-whisper`。对于低延迟`gpt-live-transcribe`会话，嵌套的`audio.input.transcription`设置可以提供`prompt`、`keywords`以及多个预期的`languages`。此 SDK 锁定的OpenAI客户端版本仅在使用`gpt-realtime-whisper`时支持`delay`延迟/准确性级别。若要在提交一个音频轮次后进行转录，或输出检测到的语言，请通过 WebSocket 使用`gpt-transcribe`。显式设置`audio.input.turn_detection=None`会禁用自动轮次检测。请参阅[输入转录设置](realtime/guide.md#input-transcription-settings)。
+-   Agents SDK 创建的本地 MCP 连接现在支持 MCP Python SDK v2，同时通过`mcp>=1.19.0,<3`保留对 v1 的兼容性。Agents SDK 会自动适配普通的 stdio、SSE 和 Streamable HTTP 连接。安装 MCP v2 后，这些连接会使用`mcp.Client(mode="auto")`探测支持的最新协议，并针对较旧的服务器回退到旧版`initialize`握手。如果依赖项解析选择 MCP v2，则提供自定义`httpx.Auth`对象或`httpx.AsyncClient`工厂的应用程序必须将这些值迁移至`httpx2`，或者锁定`mcp<2`以保留 v1 HTTP 栈。`MCPServerStreamableHttp`的`params["ignore_initialized_notification_failure"] = True`选项也仍然仅支持 v1。有关迁移详情，请参阅[MCP Python SDK v1 和 v2](mcp.md#mcp-python-sdk-v1-and-v2)。
+-   沙箱挂载验证现在会在产生沙箱或挂载辅助程序的副作用之前，拒绝不安全的凭据放置。受信任的应用程序可以针对容器内的确切挂载路径，确认挂载范围或广泛的凭据暴露，而无需更改存储能力表。这些确认仅在运行时有效，序列化后的沙箱状态本身绝不会授予凭据权限。在受保护的挂载边界处，SDK 会返回一个新的、已脱敏的异常。如果源异常是 SDK 可准确识别的沙箱错误，且其获准的结构化字段通过验证，则替代异常会保留该子类型以及通过验证的安全字段。可识别的`MountConfigError`也可以保留由 SDK 生成的安全验证消息。否则，SDK 会返回一个新的通用脱敏错误。提供方控制的消息或其他未经批准的消息、命令数据、注释、上下文、原因以及源回溯状态均不会保留。请参阅[挂载与远程存储](sandbox/clients.md#mounts-and-remote-storage)和[从会话状态恢复](sandbox/guide.md#resume-from-session-state)。
+-   重试策略可以检查稳定的重放安全性事实，并针对被提供方标记为不安全的非流式请求显式设置`RetryDecision(approve_unsafe_replay=True)`。此批准不会绕过中止、已发出的流式输出或其他针对本地副作用的否决机制，例如程序化工具调用。请参阅[Runner 管理的重试](models/index.md#runner-managed-retries)。
+-   可恢复的`RunState`对象现在可以在下一次模型调用前，使用`add_input()`暂存持久化的用户输入。暂存的输入可以在序列化后继续保留，会经过输入安全防护措施，并在本地会话和服务器管理的对话中生成一次持久化的 SDK 输入记录。经显式批准的不安全重放仍可能将输入重新发送给提供方，并重复提供方侧的工作。请参阅[恢复前添加输入](results.md#add-input-before-resuming)。
+-   运行时可靠性修复统一了流式和非流式[输出安全防护措施的会话持久化行为](guardrails.md#output-guardrails)，在复制和添加命名空间时保留`FunctionTool`子类，并针对[不受支持的 Chat Completions 音频输出](models/index.md#chat-completions-compatibility-options)引发明确错误，而不是静默完成空流。`OpenAIResponsesCompactionSession`包装器会在取消操作传递给调用方之前，尝试并等待[压缩前历史记录恢复](sessions/index.md#auto-compaction-can-block-streaming)。[`VoicePipeline`](voice/pipeline.md#results)使用方现在会在运行正常完成后收到转录会话关闭失败，而较早发生的轮次失败仍优先于稍后发生的关闭失败。`RunState`往返转换现在会保留本地 shell 输出、已确认的计算机安全检查、使用默认值的工具输出字段，以及遍历字典、列表或元组时遇到的 Pydantic 模型或 dataclass 输出。MCP 转换会保留自由形式的对象 schema 和图像输出，并将音频和资源块等其他原始内容块序列化为有效的 JSON 文本。`MCPServerManager`会串行化重叠的生命周期操作，并为连接和清理应用有限的默认超时。模型重放会先从输出项中移除服务器拥有的`created_by`元数据，再将其用作输入。
 
 ### 0.19.0
 
-此次次版本发布**未**引入破坏性变更。次版本号递增反映了一项重要的 OpenAI Responses 新功能领域：程序化工具调用。
+此次次版本发布**没有**引入破坏性变更。次版本号的递增反映了一个重要的新OpenAI Responses 功能领域：程序化工具调用。
 
-重点：
+要点：
 
--   新增 [`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool]，使受支持的 OpenAI Responses 模型能够生成 JavaScript，以协调符合程序化工具调用条件的工具。它支持每个工具的 `allowed_callers`、来自 `FunctionTool` 实例的 structured outputs，以及与 Runner 流式传输、安全防护措施、批准、会话和 `RunState` 的集成。有关设置和限制，请参阅[程序化工具调用](tools.md#programmatic-tool-calling)。
--   新增公共 `agents.decorators` 模块和 `@tool`，后者是现有 `@function_tool` 装饰器的较短别名，与现有安全防护措施装饰器并列提供。`FunctionTool` 实例现在也支持异步可调用对象。
--   SDK 配置现在可在智能体、运行、模型、会话、沙盒和语音管线中统一接受类型化设置对象或字典，并会验证未知设置。
--   加强了模型、工具、MCP、Realtime、会话、沙盒和追踪中的错误与诊断日志记录，在保留有用调试上下文的同时，避免暴露原始敏感载荷。
--   改进了 AnyLLM、LiteLLM 和 Chat Completions 兼容性，在模型重试期间保留会话历史记录，并针对响应开始前发生的 WebSocket 过载添加了提供商重试指引，使选择启用的 Runner 重试策略能够在获准时重放失败的尝试。
--   通过 `VercelCloudBucketMountStrategy` 新增[只能在创建 Vercel 沙盒时配置的 S3 挂载](sandbox/clients.md#mounts-and-remote-storage)。具有挂载的会话不会将存储桶内容纳入工作区持久化，并且有意不支持动态挂载变更或会话恢复。
+-   新增[`ProgrammaticToolCallingTool`][agents.tool.ProgrammaticToolCallingTool]，使受支持的OpenAI Responses 模型能够生成 JavaScript，以协调符合程序化工具调用条件的工具。它支持按工具设置`allowed_callers`、来自`FunctionTool`实例的 structured outputs，并支持与 Runner 流式传输、安全防护措施、批准、会话和`RunState`集成。有关设置方式和约束，请参阅[程序化工具调用](tools.md#programmatic-tool-calling)。
+-   新增公共`agents.decorators`模块和`@tool`，后者是现有`@function_tool`装饰器的较短别名，与现有安全防护措施装饰器并列提供。`FunctionTool`实例现在还支持异步可调用对象。
+-   SDK 配置现在可在智能体、运行、模型、会话、沙箱和语音管线中一致地接受类型化设置对象或字典，并会验证未知设置。
+-   加强了模型、工具、MCP、Realtime、会话、沙箱和追踪中的错误与诊断日志，避免暴露原始敏感载荷，同时保留有用的调试上下文。
+-   改进了 AnyLLM、LiteLLM 和 Chat Completions 兼容性，在模型重试期间保留会话历史记录，并针对响应开始前发生的 WebSocket 过载新增了提供方重试指导，使选择启用的 Runner 重试策略能够在获得许可时重放失败的尝试。
+-   通过`VercelCloudBucketMountStrategy`新增了[只能在创建 Vercel 沙箱时配置的 S3 挂载](sandbox/clients.md#mounts-and-remote-storage)。已挂载的会话不会将存储桶内容纳入工作区持久化，并且有意不支持动态挂载变更或会话恢复。
 
 ### 0.18.0
 
-此次次版本发布**未**引入破坏性变更。次版本号递增仅用于 Realtime 智能体默认模型更新。
+此次次版本发布**没有**引入破坏性变更。次版本号仅因 Realtime 智能体默认模型更新而递增。
 
-重点：
+要点：
 
--   Realtime 智能体现在使用 `gpt-realtime-2.1` 作为默认模型，因此新的 Realtime 设置无需额外配置即可使用最新的推荐模型。
+-   Realtime智能体现在使用`gpt-realtime-2.1`作为默认模型，因此新的 Realtime 设置无需额外配置即可使用最新推荐模型。
 
 ### 0.17.0
 
-在此版本中，沙盒本地源具体化会将 `LocalFile.src` 和 `LocalDir.src` 限制在具体化 `base_dir` 内，除非源路径由 `Manifest.extra_path_grants` 覆盖。应用清单时，`base_dir` 是 SDK 进程的当前工作目录；相对本地源会从该目录解析，而绝对本地源必须已经位于该目录内或处于显式授权范围内。此项变更修复了本地工件边界问题，但可能影响有意将该基础目录之外的可信主机文件或目录复制到沙盒工作区的应用程序。
+在此版本中，沙箱本地源具体化会将`LocalFile.src`和`LocalDir.src`限制在具体化`base_dir`之内，除非源路径受`Manifest.extra_path_grants`覆盖。应用清单时，`base_dir`是 SDK 进程的当前工作目录；相对本地源将从该目录解析，而绝对本地源必须已位于该目录内或显式授权的目录下。此变更修复了一个本地制品边界问题，但可能会影响有意将该基础目录之外的受信任主机文件或目录复制到沙箱工作区的应用程序。
 
-若要迁移，请使用 `SandboxPathGrant` 在清单级别授权可信主机根目录；如果沙盒只需读取这些文件，最好将其设为只读：
+若要迁移，请在清单级别使用`SandboxPathGrant`授予对受信任主机根目录的访问权限；如果沙箱只需读取这些文件，最好授予只读权限：
 
 ```python
 from pathlib import Path
@@ -20374,28 +21062,28 @@ manifest = Manifest(
 )
 ```
 
-应将 `extra_path_grants` 视为可信应用程序配置。除非应用程序已经批准相关主机路径，否则不要根据模型输出或其他不可信的清单输入填充授权项。
+请将`extra_path_grants`视为受信任的应用程序配置。除非应用程序已批准这些主机路径，否则不要根据模型输出或其他不受信任的清单输入填充授权。
 
 ### 0.16.0
 
-在此版本中，SDK 默认模型现已从 `gpt-4.1` 改为 `gpt-5.4-mini`。这会影响未显式设置模型的智能体和运行。由于新的默认模型是 GPT-5 模型，隐式默认模型设置现在包含 `reasoning.effort="none"` 和 `verbosity="low"` 等 GPT-5 默认值。
+在此版本中，SDK 默认模型现在是`gpt-5.4-mini`，而不再是`gpt-4.1`。这会影响未显式设置模型的智能体和运行。由于新的默认模型是 GPT-5 模型，隐式默认模型设置现在包含`reasoning.effort="none"`和`verbosity="low"`等 GPT-5 默认值。
 
-如果需要保留此前的默认模型行为，请在智能体或运行配置中显式设置模型，或设置 `OPENAI_DEFAULT_MODEL` 环境变量：
+如果需要保留之前的默认模型行为，请在智能体或运行配置中显式设置模型，或者设置`OPENAI_DEFAULT_MODEL`环境变量：
 
 ```python
 agent = Agent(name="Assistant", model="gpt-4.1")
 ```
 
-重点：
+要点：
 
--   `Runner.run`、`Runner.run_sync` 和 `Runner.run_streamed` 现在接受 `max_turns=None`，以禁用轮次限制。
--   在本地、Docker 和提供商支持的各种沙盒实现中，沙盒工作区水合现在会拒绝包含指向归档根目录之外的符号链接的 tar 归档，包括目标为绝对路径的符号链接。
+-   `Runner.run`、`Runner.run_sync`和`Runner.run_streamed`现在接受`max_turns=None`以禁用轮次限制。
+-   对于本地、Docker 和提供方支持的沙箱实现，沙箱工作区填充现在会拒绝包含指向归档根目录之外的符号链接的 tar 归档，包括目标为绝对路径的符号链接。
 
 ### 0.15.0
 
-在此版本中，模型拒绝现在会显式呈现为 `ModelRefusalError`，而不再被视为空文本输出；对于 structured outputs，也不再导致运行循环持续重试直至 `MaxTurnsExceeded`。
+在此版本中，模型拒绝现在会显式呈现为`ModelRefusalError`，而不再被视为空文本输出；对于结构化输出，也不会再导致运行循环不断重试，直至触发`MaxTurnsExceeded`。
 
-这会影响此前预期仅包含拒绝的模型响应以 `final_output == ""` 完成的代码。若要处理拒绝而不抛出异常，请提供 `model_refusal` 运行错误处理程序：
+这会影响此前预期仅包含拒绝的模型响应以`final_output == ""`完成的代码。若要在不引发异常的情况下处理拒绝，请提供`model_refusal`运行错误处理程序：
 
 ```python
 result = Runner.run_sync(
@@ -20405,97 +21093,97 @@ result = Runner.run_sync(
 )
 ```
 
-对于使用 structured outputs 的智能体，该处理程序可以返回与智能体输出 schema 匹配的值，SDK 会像验证其他运行错误处理程序的最终输出一样对其进行验证。
+对于结构化输出智能体，处理程序可以返回与智能体输出 schema 匹配的值，SDK 会像验证其他运行错误处理程序的最终输出一样验证该值。
 
 ### 0.14.0
 
-此次次版本发布**未**引入破坏性变更，但新增了一个重要的 beta 功能领域：沙盒智能体，以及在本地、容器化和托管环境中使用它们所需的运行时、后端和文档支持。
+此次次版本发布**没有**引入破坏性变更，但新增了一个重要的 beta 功能领域：沙箱智能体，以及在本地、容器化和托管环境中使用它们所需的运行时、后端和文档支持。
 
-重点：
+要点：
 
--   新增以 `SandboxAgent`、`Manifest` 和 `SandboxRunConfig` 为核心的 beta 沙盒运行时接口，使智能体能够在支持文件、目录、Git 仓库、挂载、快照和恢复的持久隔离工作区中工作。
--   通过 `UnixLocalSandboxClient` 和 `DockerSandboxClient` 新增用于本地和容器化开发的沙盒执行后端，并通过 Python 包中的可选依赖 extras，为 Blaxel、Cloudflare、Daytona、E2B、Modal、Runloop 和 Vercel 提供托管提供商集成。
--   新增沙盒记忆支持，使未来运行能够复用此前运行中的经验，并支持渐进式披露、多轮分组、可配置的隔离边界，以及包括 S3 支持工作流在内的持久化记忆代码示例。
--   新增更广泛的工作区和恢复模型，包括本地与合成工作区条目、S3/R2/GCS/Azure Blob Storage/S3 Files 的远程存储挂载、可移植快照，以及通过 `RunState`、`SandboxSessionState` 或已保存快照实现的恢复流程。
--   在 `examples/sandbox/` 下新增大量沙盒代码示例和教程，涵盖使用技能、任务转移和记忆的编码任务，特定于提供商的设置，以及代码审查、数据室问答和网站克隆等端到端工作流。
--   扩展核心运行时和追踪栈，增加可感知沙盒的会话准备、能力绑定、状态序列化、统一追踪、提示词缓存键默认值，以及更安全的敏感 MCP 输出脱敏。
+-   新增以`SandboxAgent`、`Manifest`和`SandboxRunConfig`为核心的 beta 沙箱运行时接口，使智能体可以在持久化的隔离工作区中处理文件、目录、Git 仓库、挂载和快照，并支持恢复。
+-   通过`UnixLocalSandboxClient`和`DockerSandboxClient`新增用于本地及容器化开发的沙箱执行后端，并通过 Python 软件包中的可选依赖 extras，为 Blaxel、Cloudflare、Daytona、E2B、Modal、Runloop 和 Vercel 新增托管提供方集成。
+-   新增沙箱记忆支持，使未来的运行能够复用以往运行中获得的经验，并提供渐进式披露、多轮分组、可配置的隔离边界，以及包括 S3 支持工作流在内的持久化记忆代码示例。
+-   新增更全面的工作区和恢复模型，包括本地及合成工作区条目、S3/R2/GCS/Azure Blob Storage/S3 Files 的远程存储挂载、可移植快照，以及通过`RunState`、`SandboxSessionState`或已保存快照执行的恢复流程。
+-   在`examples/sandbox/`下新增大量沙箱代码示例和教程，涵盖使用技能、任务转移和记忆完成编码任务、特定于提供方的设置，以及代码审查、数据室问答和网站克隆等端到端工作流。
+-   扩展核心运行时和追踪栈，新增可感知沙箱的会话准备、能力绑定、状态序列化、统一追踪、提示词缓存键默认值，以及更安全的敏感 MCP 输出脱敏。
 
 ### 0.13.0
 
-此次次版本发布**未**引入破坏性变更，但包含一项重要的 Realtime 默认值更新，以及新的 MCP 功能和运行时稳定性修复。
+此次次版本发布**没有**引入破坏性变更，但包含一项值得注意的 Realtime 默认值更新、新的 MCP 功能以及运行时稳定性修复。
 
-重点：
+要点：
 
--   默认 WebSocket Realtime 模型现为 `gpt-realtime-1.5`，因此新的 Realtime 智能体设置无需额外配置即可使用较新的模型。
--   `MCPServer` 现在会公开 `list_resources()`、`list_resource_templates()` 和 `read_resource()`，而 `MCPServerStreamableHttp` 现在会公开 `session_id`，从而使使用 MCP Streamable HTTP 传输的会话能够在重新连接后或无状态工作进程之间恢复。
--   Chat Completions 集成现在可以通过 `should_replay_reasoning_content` 选择重新发送现有推理内容，从而改进 LiteLLM/DeepSeek 等适配器中特定于提供商的推理/工具调用连续性。
--   修复了若干运行时和会话边界情况，包括 `SQLAlchemySession` 中并发的首次写入、移除推理内容后存在孤立 assistant 消息 ID 的压缩请求、`remove_all_tools()` 遗留 MCP/推理项，以及 `FunctionTool` 实例批量执行器中的竞争条件。
+-   默认 WebSocket Realtime 模型现在是`gpt-realtime-1.5`，因此新的 Realtime 智能体设置无需额外配置即可使用更新的模型。
+-   `MCPServer`现在公开`list_resources()`、`list_resource_templates()`和`read_resource()`，而`MCPServerStreamableHttp`现在公开`session_id`，因此使用 MCP Streamable HTTP 传输的会话可以在重新连接或无状态工作进程之间恢复。
+-   Chat Completions 集成现在可以通过`should_replay_reasoning_content`选择重新发送现有推理内容，从而改善 LiteLLM/DeepSeek 等适配器中特定于提供方的推理/工具调用连续性。
+-   修复了若干运行时和会话边界情况，包括`SQLAlchemySession`中的并发首次写入、移除推理内容后存在孤立助手消息 ID 的压缩请求、`remove_all_tools()`遗留 MCP/推理项，以及`FunctionTool`实例的批处理执行器中的竞态条件。
 
 ### 0.12.0
 
-此次次版本发布**未**引入破坏性变更。有关重要功能新增内容，请查看[发布说明](https://github.com/openai/openai-agents-python/releases/tag/v0.12.0)。
+此次次版本发布**没有**引入破坏性变更。有关主要新增功能，请查看[发布说明](https://github.com/openai/openai-agents-python/releases/tag/v0.12.0)。
 
 ### 0.11.0
 
-此次次版本发布**未**引入破坏性变更。有关重要功能新增内容，请查看[发布说明](https://github.com/openai/openai-agents-python/releases/tag/v0.11.0)。
+此次次版本发布**没有**引入破坏性变更。有关主要新增功能，请查看[发布说明](https://github.com/openai/openai-agents-python/releases/tag/v0.11.0)。
 
 ### 0.10.0
 
-此次次版本发布**未**引入破坏性变更，但为 OpenAI Responses 用户新增了一个重要功能领域：Responses API 的 WebSocket 传输支持。
+此次次版本发布**没有**引入破坏性变更，但为OpenAI Responses 用户新增了一个重要功能领域：Responses API 的 WebSocket 传输支持。
 
-重点：
+要点：
 
--   为 OpenAI Responses 模型新增 WebSocket 传输支持（需选择启用；HTTP 仍为默认传输方式）。
--   新增 `responses_websocket_session()` 辅助程序 / `ResponsesWebSocketSession`，用于在多轮运行中复用支持 WebSocket 的共享提供商和 `RunConfig`。
--   新增 WebSocket 流式传输代码示例（`examples/basic/stream_ws.py`），涵盖流式传输、工具、批准和后续轮次。
+-   新增对OpenAI Responses 模型的 WebSocket 传输支持（选择启用；HTTP 仍为默认传输）。
+-   新增`responses_websocket_session()`辅助程序/`ResponsesWebSocketSession`，用于在多轮运行中复用支持共享 WebSocket 的提供方和`RunConfig`。
+-   新增一个 WebSocket 流式传输代码示例（`examples/basic/stream_ws.py`），涵盖流式传输、工具、批准和后续轮次。
 
 ### 0.9.0
 
-在此版本中，不再支持 Python 3.9，因为此主要版本已于三个月前终止生命周期。请升级到较新的运行时版本。
+在此版本中，不再支持 Python 3.9，因为该主版本已于三个月前终止支持。请升级到更新的运行时版本。
 
-此外，`Agent#as_tool()` 方法返回值的类型提示已从 `Tool` 收窄为 `FunctionTool`。此变更通常不会引发破坏性问题，但如果代码依赖范围更广的联合类型，可能需要进行一些相应调整。
+此外，`Agent#as_tool()`方法返回值的类型提示已从`Tool`收窄为`FunctionTool`。此变更通常不会造成破坏性问题，但如果您的代码依赖较宽泛的联合类型，可能需要进行一些调整。
 
 ### 0.8.0
 
-在此版本中，两项运行时行为变更可能需要迁移：
+在此版本中，两项运行时行为变更可能需要执行迁移：
 
-- `FunctionTool` 实例包装的**同步** Python 可调用对象现在会通过 `asyncio.to_thread(...)` 在工作线程上执行，而不再在事件循环线程上运行。如果工具逻辑依赖线程局部状态或具有线程亲和性的资源，请迁移到异步工具实现，或在工具代码中明确处理线程亲和性。
-- 本地 MCP 工具失败处理现在可配置，默认行为可以返回模型可见的错误输出，而不是使整个运行失败。如果依赖快速失败语义，请设置 `mcp_config={"failure_error_function": None}`。服务器级 `failure_error_function` 值会覆盖智能体级设置，因此请在每个具有显式处理程序的本地 MCP 服务器上设置 `failure_error_function=None`。
+- 包装**同步** Python 可调用对象的`FunctionTool`实例现在通过`asyncio.to_thread(...)`在工作线程上执行，而不再在事件循环线程上运行。如果工具逻辑依赖线程局部状态或具有线程亲和性的资源，请迁移至异步工具实现，或者在工具代码中显式指定线程亲和性。
+- 本地 MCP 工具失败处理现在可配置，并且默认行为可以返回模型可见的错误输出，而不是使整个运行失败。如果依赖快速失败语义，请设置`mcp_config={"failure_error_function": None}`。服务器级`failure_error_function`值会覆盖智能体级设置，因此请在每个具有显式处理程序的本地 MCP 服务器上设置`failure_error_function=None`。
 
 ### 0.7.0
 
-在此版本中，有几项行为变更可能影响现有应用程序：
+在此版本中，有几项行为变更可能会影响现有应用程序：
 
-- 嵌套任务转移历史记录现在需要**选择启用**（默认禁用）。如果依赖 v0.6.x 中默认启用的嵌套行为，请显式设置 `RunConfig(nest_handoff_history=True)`。
-- `gpt-5.1` / `gpt-5.2` 的默认 `reasoning.effort` 已更改为 `"none"`（此前默认值为 SDK 默认配置的 `"low"`）。如果提示词或质量/成本配置依赖 `"low"`，请在 `model_settings` 中显式设置它。
+- 嵌套任务转移历史记录现在需要**选择启用**（默认禁用）。如果依赖 v0.6.x 中默认的嵌套行为，请显式设置`RunConfig(nest_handoff_history=True)`。
+- `gpt-5.1`/`gpt-5.2`的默认`reasoning.effort`已改为`"none"`（之前的默认值为 SDK 默认设置配置的`"low"`）。如果您的提示词或质量/成本配置依赖`"low"`，请在`model_settings`中显式设置它。
 
 ### 0.6.0
 
-在此版本中，默认任务转移历史记录现在会打包为一条 assistant 消息，而不再将用户和 assistant 轮次作为单独消息传递，从而为下游智能体提供简洁且可预测的回顾
-- 现有的单消息任务转移记录现在默认在 `<CONVERSATION HISTORY>` 块之前以确切的字面文本 `For context, here is the conversation so far between the user and the previous agent:` 开头，从而为下游智能体提供带有明确标签的回顾
+在此版本中，默认任务转移历史记录现在会打包到单条助手消息中，而不是将用户和助手轮次作为单独消息传递，从而为下游智能体提供简洁、可预测的回顾
+- 现有的单消息任务转移记录现在默认以确切的字面文本`For context, here is the conversation so far between the user and the previous agent:`开头，后接`<CONVERSATION HISTORY>`块，使下游智能体获得带有明确标签的回顾
 
 ### 0.5.0
 
-此版本未引入任何可见的破坏性变更，但包含新功能和一些重要的底层更新：
+此版本没有引入任何可见的破坏性变更，但包含新功能以及一些重要的底层更新：
 
-- 在 `RealtimeRunner` 中新增对处理 [SIP 协议连接](https://platform.openai.com/docs/guides/realtime-sip)的支持。
-- 大幅修订 `Runner#run_sync` 的内部逻辑，以兼容 Python 3.14
+- 在`RealtimeRunner`中新增了对处理[SIP 协议连接](https://platform.openai.com/docs/guides/realtime-sip)的支持。
+- 大幅修改了`Runner#run_sync`的内部逻辑，以兼容 Python 3.14
 
 ### 0.4.0
 
-在此版本中，不再支持 [openai](https://pypi.org/project/openai/) 包的 v1.x 版本。请将 openai v2.x 与此 SDK 配合使用。
+在此版本中，不再支持 [openai](https://pypi.org/project/openai/) 软件包的 v1.x 版本。请将 openai v2.x 与此 SDK 配合使用。
 
 ### 0.3.0
 
-在此版本中，Realtime API 支持迁移至 gpt-realtime 模型及其 API 接口（GA 版本）。
+在此版本中，Realtime API 支持迁移至 gpt-realtime 模型及其 API 接口（正式发布版本）。
 
 ### 0.2.0
 
-在此版本中，少数原本接受 `Agent` 作为参数的位置，现改为接受 `AgentBase`。例如，这适用于 MCP 服务器中的 `list_tools()` 方法签名。这只是类型层面的变更，仍会收到 `Agent` 对象。更新时，只需将 `Agent` 替换为 `AgentBase`，以修复类型错误。
+在此版本中，一些过去接受`Agent`作为参数的位置现在改为接受`AgentBase`。例如，这适用于 MCP 服务器中的`list_tools()`方法签名。这纯粹是类型层面的变更，您仍会收到`Agent`对象。更新时，只需将`Agent`替换为`AgentBase`，以修复类型错误。
 
 ### 0.1.0
 
-在此版本中，[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] 新增两个参数：`run_context` 和 `agent`。需要将这些参数添加到 `MCPServer` 子类中所有被覆盖的 `MCPServer.list_tools()` 方法。
+在此版本中，[`MCPServer.list_tools()`][agents.mcp.server.MCPServer]新增了两个参数：`run_context`和`agent`。您需要将这些参数添加到`MCPServer`子类中每个被重写的`MCPServer.list_tools()`方法。
 
 ================
 File: docs/zh/repl.md
@@ -21632,6 +22320,585 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+================
+File: docs/zh/testing.md
+================
+---
+search:
+  exclude: true
+---
+# 测试
+
+SDK 为智能体工作流、沙箱会话、Realtime 会话和语音管线提供确定性的、提供商中立的测试工具。这些工具在内存中运行，不会向模型、沙箱提供商或 Realtime API 发出请求，并会记录由 SDK 管理的规范化交互。以下可运行配方会在每次运行时禁用追踪，以便在配置了 OpenAI API 密钥时，默认追踪处理器不会上传测试活动。
+
+使用这些工具测试由应用和 SDK 管理的编排：工具执行、任务转移、安全防护措施、重试、流式传输、会话行为、沙箱能力、Realtime 事件处理和语音管线组合。对于由外部模型、网络协议、沙箱提供商或音频系统管理的行为，请使用真实的提供商适配器或集成环境。
+
+## 配方选择
+
+| 目标 | 使用 | 参阅 |
+| --- | --- | --- |
+| 返回固定的最终答案 | 带有 `assistant_message()` 的 `ScriptedModel` | [固定响应返回](#return-a-fixed-response) |
+| 执行多轮工具循环 | `function_call()`，后接智能体响应 | [工具工作流测试](#test-a-tool-workflow) |
+| 根据请求选择响应 | `ModelStep.respond()` 或 `responder` 映射 | [从请求派生响应](#derive-a-response-from-the-request) |
+| 断言运行器发送给模型的内容 | `calls`、`first_call` 或 `last_call` | [模型调用检查](#inspect-model-calls) |
+| 测试流式运行 | 普通响应步骤，或用于精确事件的 `ModelStep.stream()` | [流式传输测试](#test-streaming) |
+| 测试错误或重试决策 | `ModelStep.raise_error()` | [模型故障注入](#inject-model-failures) |
+| 检测意外的工作流变更 | 精确的 FIFO 步骤加 `assert_complete()` | [工作流漂移检测](#detect-workflow-drift) |
+| 在不启动沙箱的情况下测试 `SandboxAgent` | `scripted_sandbox_session()` 加 `ScriptedModel` | [沙箱智能体工作流测试](#test-a-sandbox-agent-workflow) |
+| 匹配沙箱调用或派生其结果 | 沙箱步骤上的 `match` 或 `responder` | [沙箱步骤配置](#configure-sandbox-steps) |
+| 在不建立连接的情况下测试 Realtime 会话 | `ScriptedRealtimeModel` 和 `RealtimeStep` | [Realtime 会话测试](#test-a-realtime-session) |
+| 测试 Realtime 工具工作流 | 发出 `RealtimeModelToolCallEvent` 并预期工具输出 | [Realtime 工具工作流测试](#test-a-realtime-tool-workflow) |
+| 测试静态或流式语音管线 | `ScriptedSTTModel`、`ScriptedTTSModel`，以及脚本化或真实的工作流 | [语音管线测试](#test-a-voice-pipeline) |
+| 测试提供商序列化或线上传输载荷 | 使用受控网络传输的真实提供商适配器 | [正确边界选择](#choose-the-correct-boundary) |
+
+## 导入
+
+测试 API 与其替代的运行时边界位于同一位置：
+
+| 边界 | 导入路径 |
+| --- | --- |
+| 智能体模型和沙箱工作流 | `agents.testing` |
+| Realtime 模型传输 | `agents.realtime.testing` |
+| 语音 STT、TTS 和工作流组件 | `agents.voice.testing` |
+
+测试符号有意不包含在顶层 `agents` 导入中。
+
+## 智能体工作流配方
+
+### 固定响应返回
+
+为每个预期的模型调用传入一个规范化输出项序列。输出序列简写会为一个请求接收确定性的响应 ID 和用量。
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ScriptedModel, assistant_message
+
+
+@pytest.mark.asyncio
+async def test_fixed_response() -> None:
+    model = ScriptedModel(
+        [[assistant_message("Paris is the capital of France.")]]
+    )
+    agent = Agent(name="Geography assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "What is the capital of France?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Paris is the capital of France."
+    assert len(model.calls) == 1
+    model.assert_complete()
+```
+
+使用 `model.assert_complete()` 完成确定性工作流测试。它可以捕获工作流在消耗所有已配置步骤之前停止的情况。
+
+### 工具工作流测试
+
+编写一个调用工具的模型响应脚本，再编写一个生成最终答案的响应脚本。真实的 SDK 工具管线会在这些模型调用之间运行。
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.decorators import tool
+from agents.testing import ScriptedModel, assistant_message, function_call
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Return the weather for a city."""
+    return f"{city}: sunny"
+
+
+@pytest.mark.asyncio
+async def test_tool_workflow() -> None:
+    model = ScriptedModel(
+        [
+            [function_call("get_weather", {"city": "Tokyo"}, call_id="call_1")],
+            [assistant_message("It is sunny in Tokyo.")],
+        ]
+    )
+    agent = Agent(name="Weather assistant", model=model, tools=[get_weather])
+
+    result = await Runner.run(
+        agent,
+        "What is the weather in Tokyo?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "It is sunny in Tokyo."
+    assert len(model.calls) == 2
+    assert model.last_call is not None
+    assert any(
+        item.get("type") == "function_call_output"
+        for item in model.last_call.input
+    )
+    model.assert_complete()
+```
+
+此模式涵盖工具输入验证、执行、结果转换、钩子、安全防护措施和下一轮模型调用。直接调用 Python 函数会绕过这些 SDK 行为。
+
+### 从请求派生响应
+
+当响应确实依赖于规范化模型调用，或者断言应位于模型边界时，请使用 `ModelStep.respond()`。响应器可以是同步或异步的，并且可以返回 `ScriptedModel` 接受的任何步骤形式。
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ModelCall, ModelStep, ScriptedModel, assistant_message
+
+
+def respond(call: ModelCall):
+    assert call.streamed is False
+    assert call.input == [{"content": "Summarize this", "role": "user"}]
+    return {"output": [assistant_message("Handled the normalized request.")]}
+
+
+@pytest.mark.asyncio
+async def test_request_aware_response() -> None:
+    model = ScriptedModel([ModelStep.respond(respond)])
+    agent = Agent(name="Assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "Summarize this",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Handled the normalized request."
+    model.assert_complete()
+```
+
+`ScriptedModel` 接受 `ModelStep`、等效的字典形式、`ModelResponse`、规范化输出项序列或异常。当响应不依赖调用时，优先使用固定输出序列，因为固定脚本更容易诊断意外轮次。
+
+### 模型调用检查
+
+`ScriptedModel` 会在解析每个调用或引发所选步骤之前记录该调用。
+
+| 成员 | 内容 |
+| --- | --- |
+| `calls` | 按调用顺序排列的每个 `ModelCall` |
+| `first_call` | 第一次调用，或 `None` |
+| `last_call` | 最近一次调用，或 `None` |
+| `remaining_steps` | 尚未消耗的已配置步骤数量 |
+
+常见断言包括 `call.input`、`call.model_settings`、`call.tools`、`call.handoffs` 和 `call.streamed`。可变请求数据会在调用边界创建快照，并且每个公共历史记录访问器都会返回分离的快照。工具、任务转移、输出模式和追踪对象会保留其运行时标识。
+
+结构化的 `call_index` 和 `input_index` 错误字段从零开始，因此可以直接索引 `calls[...]` 或提供的步骤序列。供人阅读的错误消息会显示从一开始的调用编号或步骤编号。
+
+当一个测试需要逐步追加模型步骤时，请使用 `enqueue()` 或 `extend()`。对于独立场景，请创建新的 `ScriptedModel`；该工具不会重置已消耗的步骤或调用历史记录。
+
+### 流式传输测试
+
+普通响应步骤同时支持 `Runner.run()` 和 `Runner.run_streamed()`。对于常见的智能体消息、推理项、函数调用和应用补丁调用，`ScriptedModel` 会生成规范化的开始、增量、项目完成和终止响应事件。终止响应包含完整的输出和用量。
+
+仅当精确的规范化 `TResponseStreamEvent` 序列属于被测行为的一部分时，才使用 `ModelStep.stream()`：
+
+```python
+step = ModelStep.stream(
+    events,
+    output=[assistant_message("The terminal output used by the runner.")],
+)
+```
+
+`events` 可以是固定序列，也可以是接收已记录 `ModelCall` 的异步工厂。可选的 `output` 是在非流式调用中使用同一步骤时返回的响应。精确流事件是 SDK 规范化事件，而不是 Responses API 或 Chat Completions 的线上传输分块。
+
+自动流式传输会拒绝尚未实现增量生命周期的规范化输出项类型。对于这些项目，请使用 `ModelStep.stream(...)`，而不要依赖不完整的事件序列。
+
+### 模型故障注入
+
+使用 `ModelStep.raise_error()` 使一次模型调用失败。可选的重试建议属于该特定脚本错误：
+
+```python
+from agents import ModelRetryAdvice
+from agents.testing import ModelStep
+
+
+step = ModelStep.raise_error(
+    RuntimeError("temporary failure"),
+    retry_advice=ModelRetryAdvice(suggested=True, replay_safety="safe"),
+)
+```
+
+运行器的重试策略决定该建议是否会触发另一次尝试。每次重试都是另一次模型调用，并会消耗下一个脚本步骤。Python 辅助工具接受固定的 `ModelRetryAdvice` 值；如果重试建议本身需要根据尝试次数动态变化，请使用自定义 `Model`。
+
+### 工作流漂移检测
+
+将脚本化调用视为预期的工作流形态。额外的模型请求会引发 `UnexpectedModelCall`；提前退出则会留下步骤，供 `assert_complete()` 报告。
+
+如果测试框架支持拆卸或终结器，并且还希望在另一个断言失败后报告未消耗的步骤，请将 `assert_complete()` 放在其中。在常规回归测试中，请勿捕获不匹配错误。
+
+| 错误 | 结构化字段 | 含义 |
+| --- | --- | --- |
+| `InvalidModelStep` | `reason`、`input_index` | 步骤格式不正确，在进入队列前即被拒绝 |
+| `UnexpectedModelCall` | `call`、`call_index` | 脚本结束后，工作流又进行了一次模型调用 |
+| `UnconsumedModelSteps` | `remaining_steps` | 工作流在使用所有步骤之前结束 |
+
+## 沙箱智能体配方
+
+### 沙箱智能体工作流测试
+
+将 `ScriptedModel` 与 `scripted_sandbox_session()` 组合使用，可以在不创建本地容器或远程沙箱的情况下运行真实的 `SandboxAgent` 运行时。模型脚本选择一个能力工具，而沙箱脚本定义对应的 `SandboxSession` 方法返回什么内容。
+
+```python
+import pytest
+
+from agents import RunConfig, Runner
+from agents.sandbox import ExecResult, SandboxAgent
+from agents.sandbox.capabilities import Shell
+from agents.testing import (
+    ScriptedModel,
+    assistant_message,
+    function_call,
+    scripted_sandbox_session,
+)
+
+
+@pytest.mark.asyncio
+async def test_sandbox_workflow() -> None:
+    sandbox = scripted_sandbox_session(
+        [
+            {
+                "method": "exec",
+                "match": lambda call: call.args == ("pwd",),
+                "result": ExecResult(
+                    stdout=b"/workspace\n",
+                    stderr=b"",
+                    exit_code=0,
+                ),
+            }
+        ]
+    )
+    model = ScriptedModel(
+        [
+            [function_call("exec_command", {"cmd": "pwd"}, call_id="call_1")],
+            [assistant_message("The workspace is /workspace.")],
+        ]
+    )
+    agent = SandboxAgent(
+        name="Workspace assistant",
+        model=model,
+        capabilities=[Shell()],
+    )
+
+    async with sandbox:
+        result = await Runner.run(
+            agent,
+            "Which directory are you in?",
+            run_config=RunConfig(
+                sandbox={"session": sandbox},
+                tracing_disabled=True,
+            ),
+        )
+
+    assert result.final_output == "The workspace is /workspace."
+    assert [call.method for call in sandbox.calls] == ["exec"]
+    sandbox.assert_complete()
+    model.assert_complete()
+```
+
+此测试跨越两个规范化 SDK 边界。它涵盖工具参数验证、能力路由、沙箱会话调用、将工具结果传递到下一轮模型调用，以及最终输出处理。它不会测试真实模型是否会选择该命令，也不会测试真实沙箱提供商如何执行该命令。
+
+### 沙箱步骤配置
+
+每个匹配的沙箱调用都会消耗一个全局 FIFO 序列中的下一个步骤。方法不匹配、匹配器拒绝或匹配器异常都会使该步骤保持待处理状态。设置 `method`，仅选择一种结果，并且仅当调用详情很重要时才添加 `match`。
+
+| 步骤成员 | 适用情形 |
+| --- | --- |
+| `result` | 方法应返回固定的类型化值 |
+| `responder` | 结果取决于分离的 `SandboxCall` |
+| `error` | 方法应引发特定异常 |
+| `match` | 除非匹配器返回 `False` 以外的值，否则应在产生结果前拒绝调用 |
+
+支持的脚本化方法名称为 `apply_patch`、`exec`、`ls`、`mkdir`、`pty_exec_start`、`pty_write_stdin`、`read`、`rm` 和 `write`。仅公开已配置的面向模型的能力。当配置了任一 PTY 方法时，两个 PTY 方法会一并公开，因为它们构成一个交互式 shell 能力，但调用仍会消耗全局 FIFO 脚本。
+
+`sandbox.calls` 包含分离的 `SandboxCall` 快照，其中含有从零开始的 `call_index`、`method`、位置参数 `args` 和只读的 `kwargs`。创建脚本时也会为静态结果创建快照。支持 `io.BytesIO` 和 `io.StringIO` 值；对于其他实时流对象或生命周期行为，请使用自定义沙箱会话。
+
+| 错误 | 结构化字段 | 含义 |
+| --- | --- | --- |
+| `InvalidSandboxStep` | `reason`、`input_index`、`method` | 步骤格式不正确或指定了不受支持的方法 |
+| `UnexpectedSandboxCall` | `call`、`call_index`、`actual_method`、`expected_method`、`remaining_steps` | 工作流调用了错误的方法，或在脚本结束后仍继续运行 |
+| `SandboxCallMatcherError` | `call`、`call_index`、`method` | 步骤匹配器返回了 `False` |
+| `UnconsumedSandboxSteps` | `remaining_steps`、`pending_methods` | 工作流在使用所有步骤之前结束 |
+
+返回的对象就是会话本身。请将其直接传给 `RunConfig(sandbox={"session": sandbox})`；不存在包装器 `.session` 属性。
+
+## Realtime 配方
+
+### Realtime 会话测试
+
+`ScriptedRealtimeModel` 实现 Python SDK 的规范化 `RealtimeModel` 边界。每个 `RealtimeStep` 匹配一个出站 `RealtimeModelSendEvent`，然后发出规范化的入站 `RealtimeModelEvent` 对象或引发注入的错误。
+
+```python
+import pytest
+
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelOutputTextDeltaEvent,
+    RealtimeModelSendUserInput,
+    RealtimeRawModelEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@pytest.mark.asyncio
+async def test_realtime_message() -> None:
+    reply = RealtimeModelOutputTextDeltaEvent(
+        item_id="item_1",
+        delta="Hello!",
+        response_id="response_1",
+    )
+    model = ScriptedRealtimeModel(
+        [
+            RealtimeStep(
+                expect=RealtimeModelSendUserInput(user_input="Hello"),
+                emit=[reply],
+            )
+        ]
+    )
+    runner = RealtimeRunner(
+        RealtimeAgent(name="Assistant"),
+        model=model,
+        config={"tracing_disabled": True},
+    )
+
+    observed_reply = False
+    async with await runner.run() as session:
+        await session.send_message("Hello")
+        async for event in session:
+            if isinstance(event, RealtimeRawModelEvent) and event.data == reply:
+                observed_reply = True
+                break
+
+    assert observed_reply
+    assert model.sent_events == (RealtimeModelSendUserInput(user_input="Hello"),)
+    assert model.closed is True
+    model.assert_complete()
+```
+
+预期项可以是精确的事件值、通过 `isinstance` 匹配的事件类，或接收出站事件并在匹配时返回 `True` 的可调用对象。默认启用严格模式。使用 `strict=False` 时，无关的出站事件会被记录，但不会消耗待处理步骤；当会话发出被测行为范围之外的附带事件时，这很有用。
+
+使用 `connect_events` 在连接期间发出入站事件。使用 `connect_error` 或 `close_error` 注入生命周期故障，并使用 `RealtimeStep(error=...)` 注入与一次匹配发送相关的故障。一个步骤不能同时定义 `emit` 和 `error`。
+
+### Realtime 工具工作流测试
+
+将真实的函数工具附加到 `RealtimeAgent`，发出规范化工具调用，并预期 SDK 通过模型边界发送工具输出。将 `async_tool_calls` 设置为 `False`，可使这个小型代码示例在连接期间完成，而无需测试专用的等待机制。
+
+```python
+import pytest
+
+from agents.decorators import tool
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelSendToolOutput,
+    RealtimeModelToolCallEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@tool
+def lookup_order(order_id: str) -> str:
+    """Look up an order by ID."""
+    return f"Order {order_id} has shipped."
+
+
+@pytest.mark.asyncio
+async def test_realtime_tool_workflow() -> None:
+    tool_call = RealtimeModelToolCallEvent(
+        name="lookup_order",
+        call_id="call_1",
+        arguments='{"order_id":"order_123"}',
+    )
+
+    def matches_tool_output(event) -> bool:
+        return (
+            isinstance(event, RealtimeModelSendToolOutput)
+            and event.tool_call.call_id == "call_1"
+            and event.output == "Order order_123 has shipped."
+        )
+
+    model = ScriptedRealtimeModel(
+        [RealtimeStep(expect=matches_tool_output)],
+        connect_events=[tool_call],
+    )
+    agent = RealtimeAgent(
+        name="Order assistant",
+        tools=[lookup_order],
+    )
+    runner = RealtimeRunner(
+        agent,
+        model=model,
+        config={"async_tool_calls": False, "tracing_disabled": True},
+    )
+
+    async with await runner.run():
+        pass
+
+    model.assert_complete()
+```
+
+这会运行真实的 Realtime 工具查找、参数验证、执行和输出路由。它无法证明真实模型会选择该工具。
+
+### Realtime 调用与生命周期检查
+
+| 成员 | 内容 |
+| --- | --- |
+| `connect_calls` | 不含凭据的分离连接快照 |
+| `sent_events` | 按调用顺序排列的分离出站事件快照 |
+| `remaining_steps` | 剩余的预期出站发送 |
+| `listeners` | 当前注册的监听器对象 |
+| `connected`、`closed`、`close_calls` | 当前内存中生命周期状态 |
+
+连接历史记录只记录是否提供了 API 密钥或标头字段，绝不会存储其值。URL 快照会移除用户信息、查询参数和片段。可变事件数据和设置会被分离，而工具、任务转移和播放追踪器等实时 SDK 对象会保留其标识。
+
+使用 `model.assert_complete()` 完成测试，并让 `RealtimeSession` 异步上下文管理器关闭模型。Python 工具有意不提供待处理预期项 Promise、隐式超时或单独的 `assert_closed()` 辅助工具。
+
+| 错误 | 结构化字段 | 含义 |
+| --- | --- | --- |
+| `UnexpectedRealtimeSend` | `actual`、`expected` | 严格的出站发送与下一个步骤不匹配，或已无剩余步骤 |
+| `UnconsumedRealtimeSteps` | `remaining_steps` | 会话在使用所有预期发送之前结束 |
+| `RealtimeScriptError` | 无 | 脚本在无效的生命周期状态下使用，例如在断开连接时发送 |
+
+## 语音管线配方
+
+### 语音管线测试
+
+将脚本化 STT 和 TTS 模型与 `SingleAgentVoiceWorkflow` 以及由 `ScriptedModel` 支持的智能体组合使用，可以在不发出提供商请求的情况下测试完整的语音转文本 -> 智能体 -> 文本转语音管线。
+
+```python
+import numpy as np
+import pytest
+
+from agents import Agent
+from agents.testing import ScriptedModel, assistant_message
+from agents.voice import AudioInput, SingleAgentVoiceWorkflow, VoicePipeline
+from agents.voice.testing import (
+    ScriptedSTTModel,
+    ScriptedTTSModel,
+    TTSResult,
+    pcm16_samples,
+)
+
+
+@pytest.mark.asyncio
+async def test_voice_pipeline() -> None:
+    model = ScriptedModel([[assistant_message("Hello there.")]])
+    stt = ScriptedSTTModel("hello")
+    pcm = pcm16_samples([0, 100, -100, 0])
+    tts = ScriptedTTSModel([TTSResult([pcm])])
+    pipeline = VoicePipeline(
+        workflow=SingleAgentVoiceWorkflow(
+            Agent(name="Voice assistant", model=model)
+        ),
+        stt_model=stt,
+        tts_model=tts,
+        config={"tracing_disabled": True, "tts_settings": {"buffer_size": 1}},
+    )
+
+    result = await pipeline.run(AudioInput(np.zeros(2, dtype=np.int16)))
+    events = [event async for event in result.stream()]
+
+    assert events
+    assert [call.text for call in tts.calls] == ["Hello there."]
+    stt.assert_complete()
+    tts.assert_complete()
+    model.assert_complete()
+```
+
+当被测对象是管线的 STT/TTS 生命周期而不是智能体编排时，请改用 `ScriptedVoiceWorkflow`：
+
+```python
+from agents.voice.testing import ScriptedVoiceWorkflow
+
+
+workflow = ScriptedVoiceWorkflow(
+    turns=["Hello there."],
+    start="Welcome.",
+)
+```
+
+`start` 步骤由 `on_start()` 消耗。`VoicePipeline` 仅针对 `StreamedAudioInput` 调用 `on_start()`；静态 `AudioInput` 运行不会消耗 `start`。每个普通轮次都会记录其转录结果，并消耗一个已配置结果。一个字符串代表一个片段；字符串序列可在文本拆分和 TTS 之前控制片段边界。
+
+### 流式转录测试
+
+`ScriptedSTTModel` 接受静态 `transcriptions` 和独立脚本化的流式 `sessions`。会话可以是 `ScriptedTranscriptionSession`、转录轮次序列、异常或单个字符串：
+
+```python
+from agents.voice.testing import ScriptedSTTModel, ScriptedTranscriptionSession
+
+
+session = ScriptedTranscriptionSession(["first turn", "second turn"])
+stt = ScriptedSTTModel(sessions=[session])
+```
+
+关闭 `ScriptedTranscriptionSession` 会停止迭代，并留下跳过的轮次供 `assert_complete()` 报告。类似地，`ScriptedTTSModel` 每次调用会消耗一个 `TTSResult`、字节块序列或异常。
+
+### 语音调用检查
+
+| 组件 | 记录的历史 |
+| --- | --- |
+| `ScriptedSTTModel` | `calls`、`session_calls` 和实时 `created_sessions` 标识 |
+| `ScriptedTTSModel` | 包含文本和分离设置的 `calls` |
+| `ScriptedVoiceWorkflow` | 按轮次顺序排列的 `transcriptions` |
+
+静态音频缓冲区和可变设置会在调用时创建快照。`StreamedAudioInput` 和已创建的转录会话对象会保留其实时标识，因为管线会继续使用它们。
+
+| 错误 | 结构化字段 | 含义 |
+| --- | --- | --- |
+| `UnexpectedVoiceCall` | `operation` | 静态转录、流式会话、TTS 调用、工作流启动或工作流轮次没有已配置步骤 |
+| `UnconsumedVoiceSteps` | `remaining_steps` | 仍剩余一个或多个已配置的语音步骤 |
+
+请对测试配置的每个脚本化语音组件调用 `assert_complete()`。`ScriptedSTTModel.assert_complete()` 还会检查其创建的转录会话中的轮次。
+
+## 正确边界选择
+
+当测试需要运行 SDK 运行循环、工具、任务转移、安全防护措施、会话、重试或规范化流式传输，而不依赖模型提供商时，请使用 `ScriptedModel`。
+
+当测试需要运行 `SandboxAgent` 的能力和编排，而不启动沙箱提供商时，请将 `scripted_sandbox_session()` 与 `ScriptedModel` 配合使用。针对真实沙箱提供商的集成测试应保留提供商创建、进程执行、文件系统保真度、持久性、资源限制和隔离检查。
+
+当测试需要运行 `RealtimeSession` 行为或 `RealtimeAgent` 工具及任务转移编排，而不建立 WebSocket 连接时，请使用 `ScriptedRealtimeModel`。原始 Realtime 客户端/服务器事件、身份验证、网络恢复和音频传输行为应在真实传输或集成环境中测试。Realtime API 会话会在客户端发送输入和接收事件期间保持连接，因此这些网络和协议问题属于规范化模型边界以下的层级。有关生产环境连接架构，请参阅 [OpenAI Realtime API 指南](https://developers.openai.com/api/docs/guides/realtime)。
+
+当测试需要在不使用语音提供商的情况下运行 STT/TTS 排序、流式转录清理、工作流片段传递或完整的语音管线组合时，请使用语音测试组件。如果测试主题是转录质量、生成语音、编码兼容性、延迟或播放，请使用真实的音频模型和具有代表性的音频。
+
+请勿使用这些工具测试 Responses API 或 Chat Completions 请求序列化、身份验证标头、提供商默认值、HTTP 载荷、提供商流分块、Realtime 线上传输帧或提供商特定的生命周期行为。对于这些测试，请保留真实适配器，并替换或控制其网络边界。使用 `openai` v3 时，OpenAI 适配器测试应使用 `httpx2` 的请求、响应、传输和异常类型；旧版 `httpx` 不是 Agents SDK 的核心依赖项。
+
+## 最终检查清单
+
+- 仅为规范化模型、沙箱会话、Realtime 模型或语音管线边界所管理的交互编写脚本。
+- 断言重要的公共请求或调用字段，而不是运行器私有状态。
+- 优先使用固定响应步骤；仅对依赖请求的行为使用响应器。
+- 优先使用自动模型流式传输；仅当事件级行为很重要时才使用精确流。
+- 每个脚本化组件测试结束时，都调用其 `assert_complete()` 方法。
+- 当外围测试拥有相应生命周期时，使用异步上下文管理器清理 Realtime 和沙箱生命周期。
+- 断言结构化错误字段，而不是解析供人阅读的消息。
+- 使用带受控网络传输的真实适配器进行提供商线上传输测试。
+
+## 范围与当前限制
+
+测试模块有意不提供：
+
+- 针对每种规范化模型输出项的便捷构建器。常见情形请使用 `assistant_message()` 和 `function_call()`，其他规范化项目则直接传入。
+- 提供商协议模拟器。精确模型流使用规范化 SDK 事件，而不是 Responses API 或 Chat Completions 的线上传输分块。
+- 高层级模拟 Realtime 服务器。测试会显式匹配规范化出站发送，并发出场景所需的规范化入站事件。
+- 无序的沙箱或 Realtime 预期项。这两种工具都会按一个全局顺序消耗预期步骤。
+- 测试运行器专用的匹配器、fixture、隐式超时或自动拆卸。
+- 重置 API。`ScriptedModel` 支持用于增量脚本的 `enqueue()` 和 `extend()`，但独立场景应创建新的脚本化组件。
+
+当测试需要格式错误的流、受控暂停或并发、精确取消，或脚本化工具无法保留的生命周期边界时，请使用对应公共接口的自定义实现。在测试中记录该专用边界。
+
+## API 参考
+
+- [`agents.testing`](ref/testing.md)
+- [`agents.realtime.testing`](ref/realtime/testing.md)
+- [`agents.voice.testing`](ref/voice/testing.md)
 
 ================
 File: docs/zh/tools.md
@@ -23512,6 +24779,30 @@ from agents import set_default_openai_client
 custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
+
+### Custom HTTP clients with `openai` v3
+
+Version 0.21.0 requires `openai>=3.0.0,<4`. The default OpenAI provider uses HTTPX2, so most applications do not need to configure an HTTP client directly. If your application passes `http_client=` to `AsyncOpenAI`, use HTTPX2 types for the custom client and its transport-facing options:
+
+```python
+import httpx2
+from openai import AsyncOpenAI, DefaultAsyncHttpx2Client
+
+from agents import set_default_openai_client
+
+http_client = DefaultAsyncHttpx2Client(
+    timeout=httpx2.Timeout(30.0, connect=5.0),
+)
+custom_client = AsyncOpenAI(
+    api_key="...",
+    http_client=http_client,
+)
+set_default_openai_client(custom_client)
+```
+
+The same migration applies to custom transports, authentication, event hooks, mock transports, URLs, requests, responses, and transport exception handling. Use their `httpx2` equivalents. The Agents SDK does not convert arbitrary legacy `httpx` objects to HTTPX2. The OpenAI Python SDK provides a temporary compatibility path for legacy clients when the application installs `httpx` explicitly, but new and migrated code should use HTTPX2.
+
+This OpenAI client boundary is separate from local MCP transport customization. MCP Python SDK v1 uses its own legacy `httpx` dependency, while MCP Python SDK v2 uses `httpx2`; see [MCP Python SDK v1 and v2](mcp.md#mcp-python-sdk-v1-and-v2).
 
 If you prefer environment-based endpoint configuration, the default OpenAI provider also reads `OPENAI_BASE_URL`. When you enable Responses websocket transport, it also reads `OPENAI_WEBSOCKET_BASE_URL` for the websocket `/responses` endpoint.
 
@@ -25493,6 +26784,19 @@ We will increment `Z` for non-breaking changes:
 
 ## Breaking change changelog
 
+### 0.21.0
+
+Version 0.21.0 requires `openai` v3 and moves the Agents SDK's OpenAI HTTP integrations to HTTPX2. Applications that use the default OpenAI client do not need to change their client setup, but applications that customize the OpenAI HTTP layer may need to migrate transport-facing code.
+
+Highlights:
+
+-   The required OpenAI dependency is now `openai>=3.0.0,<4`. A clean core installation uses HTTPX2 and no longer installs legacy `httpx` as a direct dependency.
+-   The default OpenAI provider, Voice provider, Responses WebSocket support, tracing exporter, and provider retry normalization now use HTTPX2. Their existing Agents SDK public configuration and runtime behavior remain unchanged.
+-   Applications that pass `http_client=` to `AsyncOpenAI` should migrate custom clients, transports, authentication, event hooks, mock transports, timeout values, URLs, requests, responses, and transport exception handling from `httpx` to `httpx2`. Prefer the OpenAI Python SDK's `DefaultAsyncHttpx2Client` when the application needs the OpenAI client's defaults plus custom HTTP options. See [Custom HTTP clients with `openai` v3](config.md#custom-http-clients-with-openai-v3).
+-   The Agents SDK does not convert arbitrary legacy HTTPX objects to HTTPX2. The OpenAI Python SDK's temporary legacy-client compatibility path requires an explicit `httpx` installation and should be treated as a migration bridge.
+-   Local MCP HTTP customization continues to follow the installed MCP package: MCP Python SDK v1 supplies and uses legacy `httpx`, while MCP Python SDK v2 uses `httpx2`. Ordinary MCP connections do not need application changes. See [MCP Python SDK v1 and v2](mcp.md#mcp-python-sdk-v1-and-v2).
+-   Public provider-neutral testing utilities now cover Agent model, Sandbox session, Realtime session, and Voice pipeline workflows without provider or process dependencies. See [Testing](testing.md) for recipes and guidance on when to keep the real provider adapter or integration boundary.
+
 ### 0.20.0
 
 Version 0.20.0 includes a potentially breaking MCP dependency migration for applications that customize local MCP HTTP transports. It also updates the SDK default model used when an agent or run does not explicitly select one.
@@ -26800,6 +28104,581 @@ if __name__ == "__main__":
 ```
 
 ================
+File: docs/testing.md
+================
+# Testing
+
+The SDK provides deterministic, provider-neutral testing utilities for Agent workflows, Sandbox sessions, Realtime sessions, and Voice pipelines. These utilities run in memory, make no model, sandbox-provider, or Realtime API requests, and record the normalized interactions that the SDK owns. The runnable recipes below disable tracing for each run so that the default trace processor does not upload test activity when an OpenAI API key is configured.
+
+Use them to test orchestration owned by your application and the SDK: tool execution, handoffs, guardrails, retries, streaming, session behavior, Sandbox capabilities, Realtime event handling, and Voice pipeline composition. Use real provider adapters or integration environments for behavior owned by an external model, network protocol, sandbox provider, or audio system.
+
+## Find the recipe you need
+
+| I want to... | Use | Go to |
+| --- | --- | --- |
+| Return a fixed final answer | `ScriptedModel` with `assistant_message()` | [Return a fixed response](#return-a-fixed-response) |
+| Exercise a multi-turn tool loop | `function_call()` followed by an assistant response | [Test a tool workflow](#test-a-tool-workflow) |
+| Choose a response from the request | `ModelStep.respond()` or a `responder` mapping | [Derive a response from the request](#derive-a-response-from-the-request) |
+| Assert what the runner sent to the model | `calls`, `first_call`, or `last_call` | [Inspect model calls](#inspect-model-calls) |
+| Test a streamed run | A normal response step, or `ModelStep.stream()` for exact events | [Test streaming](#test-streaming) |
+| Test an error or retry decision | `ModelStep.raise_error()` | [Inject model failures](#inject-model-failures) |
+| Detect an accidental workflow change | Exact FIFO steps plus `assert_complete()` | [Detect workflow drift](#detect-workflow-drift) |
+| Test a `SandboxAgent` without starting a sandbox | `scripted_sandbox_session()` plus `ScriptedModel` | [Test a Sandbox Agent workflow](#test-a-sandbox-agent-workflow) |
+| Match Sandbox calls or derive their results | `match` or `responder` on a Sandbox step | [Configure Sandbox steps](#configure-sandbox-steps) |
+| Test a Realtime session without opening a connection | `ScriptedRealtimeModel` and `RealtimeStep` | [Test a Realtime session](#test-a-realtime-session) |
+| Test a Realtime tool workflow | Emit a `RealtimeModelToolCallEvent` and expect tool output | [Test a Realtime tool workflow](#test-a-realtime-tool-workflow) |
+| Test a static or streamed Voice pipeline | `ScriptedSTTModel`, `ScriptedTTSModel`, and a scripted or real workflow | [Test a Voice pipeline](#test-a-voice-pipeline) |
+| Test provider serialization or wire payloads | The real provider adapter with a controlled network transport | [Choose the correct boundary](#choose-the-correct-boundary) |
+
+## Imports
+
+The testing APIs live next to the runtime boundary they replace:
+
+| Boundary | Import path |
+| --- | --- |
+| Agent model and Sandbox workflows | `agents.testing` |
+| Realtime model transport | `agents.realtime.testing` |
+| Voice STT, TTS, and workflow components | `agents.voice.testing` |
+
+Testing symbols are intentionally kept out of the top-level `agents` import.
+
+## Agent workflow recipes
+
+### Return a fixed response
+
+Pass one sequence of normalized output items for each expected model call. The output-sequence shorthand receives a deterministic response ID and usage for one request.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ScriptedModel, assistant_message
+
+
+@pytest.mark.asyncio
+async def test_fixed_response() -> None:
+    model = ScriptedModel(
+        [[assistant_message("Paris is the capital of France.")]]
+    )
+    agent = Agent(name="Geography assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "What is the capital of France?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Paris is the capital of France."
+    assert len(model.calls) == 1
+    model.assert_complete()
+```
+
+Finish deterministic workflow tests with `model.assert_complete()`. It catches the case where the workflow stopped before consuming every configured step.
+
+### Test a tool workflow
+
+Script one model response that calls the tool and a second response that produces the final answer. The real SDK tool pipeline runs between those model calls.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.decorators import tool
+from agents.testing import ScriptedModel, assistant_message, function_call
+
+
+@tool
+def get_weather(city: str) -> str:
+    """Return the weather for a city."""
+    return f"{city}: sunny"
+
+
+@pytest.mark.asyncio
+async def test_tool_workflow() -> None:
+    model = ScriptedModel(
+        [
+            [function_call("get_weather", {"city": "Tokyo"}, call_id="call_1")],
+            [assistant_message("It is sunny in Tokyo.")],
+        ]
+    )
+    agent = Agent(name="Weather assistant", model=model, tools=[get_weather])
+
+    result = await Runner.run(
+        agent,
+        "What is the weather in Tokyo?",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "It is sunny in Tokyo."
+    assert len(model.calls) == 2
+    assert model.last_call is not None
+    assert any(
+        item.get("type") == "function_call_output"
+        for item in model.last_call.input
+    )
+    model.assert_complete()
+```
+
+This pattern covers tool input validation, execution, result conversion, hooks, guardrails, and the next model turn. Calling the Python function directly would bypass those SDK behaviors.
+
+### Derive a response from the request
+
+Use `ModelStep.respond()` when a response genuinely depends on the normalized model call or when an assertion belongs at the model boundary. The responder may be synchronous or asynchronous and may return any step shape accepted by `ScriptedModel`.
+
+```python
+import pytest
+
+from agents import Agent, RunConfig, Runner
+from agents.testing import ModelCall, ModelStep, ScriptedModel, assistant_message
+
+
+def respond(call: ModelCall):
+    assert call.streamed is False
+    assert call.input == [{"content": "Summarize this", "role": "user"}]
+    return {"output": [assistant_message("Handled the normalized request.")]}
+
+
+@pytest.mark.asyncio
+async def test_request_aware_response() -> None:
+    model = ScriptedModel([ModelStep.respond(respond)])
+    agent = Agent(name="Assistant", model=model)
+
+    result = await Runner.run(
+        agent,
+        "Summarize this",
+        run_config=RunConfig(tracing_disabled=True),
+    )
+
+    assert result.final_output == "Handled the normalized request."
+    model.assert_complete()
+```
+
+`ScriptedModel` accepts `ModelStep`, the equivalent dictionary form, `ModelResponse`, a normalized output-item sequence, or an exception. Prefer fixed output sequences when a response does not depend on the call because fixed scripts make unexpected turns easier to diagnose.
+
+### Inspect model calls
+
+`ScriptedModel` records each call before it resolves or raises the selected step.
+
+| Member | Contains |
+| --- | --- |
+| `calls` | Every `ModelCall` in invocation order |
+| `first_call` | The first call, or `None` |
+| `last_call` | The most recent call, or `None` |
+| `remaining_steps` | The number of configured steps not yet consumed |
+
+Common assertions include `call.input`, `call.model_settings`, `call.tools`, `call.handoffs`, and `call.streamed`. Mutable request data is snapshotted at the invocation boundary, and each public history accessor returns detached snapshots. Tool, handoff, output-schema, and tracing objects keep their runtime identity.
+
+Structured `call_index` and `input_index` error fields are zero-based so they directly index `calls[...]` or the supplied step sequence. Human-readable error messages display one-based call or step numbers.
+
+Use `enqueue()` or `extend()` when one test needs to append model steps incrementally. Create a new `ScriptedModel` for an independent scenario; the utility does not reset consumed steps or call history.
+
+### Test streaming
+
+A normal response step supports both `Runner.run()` and `Runner.run_streamed()`. For common assistant messages, reasoning items, function calls, and apply-patch calls, `ScriptedModel` generates normalized start, delta, item-completion, and terminal response events. The terminal response carries the complete output and usage.
+
+Use `ModelStep.stream()` only when the exact normalized `TResponseStreamEvent` sequence is part of the behavior under test:
+
+```python
+step = ModelStep.stream(
+    events,
+    output=[assistant_message("The terminal output used by the runner.")],
+)
+```
+
+`events` may be a fixed sequence or an async factory that receives the recorded `ModelCall`. The optional `output` is the response returned if the same step is used in a non-streaming call. Exact stream events are SDK-normalized events, not Responses API or Chat Completions wire chunks.
+
+Automatic streaming rejects normalized output-item kinds whose incremental lifecycle is not implemented. Use `ModelStep.stream(...)` for those items instead of relying on a partial event sequence.
+
+### Inject model failures
+
+Use `ModelStep.raise_error()` to fail one model call. Optional retry advice belongs to that exact scripted error:
+
+```python
+from agents import ModelRetryAdvice
+from agents.testing import ModelStep
+
+
+step = ModelStep.raise_error(
+    RuntimeError("temporary failure"),
+    retry_advice=ModelRetryAdvice(suggested=True, replay_safety="safe"),
+)
+```
+
+The runner's retry policy decides whether advice causes another attempt. Each retry is another model call and consumes the next scripted step. The Python helper accepts a fixed `ModelRetryAdvice` value; use a custom `Model` when retry advice itself must vary dynamically by attempt.
+
+### Detect workflow drift
+
+Treat the scripted calls as the expected workflow shape. An extra model request raises `UnexpectedModelCall`; an early exit leaves steps for `assert_complete()` to report.
+
+When your test framework supports teardown or finalizers, place `assert_complete()` there if you also want unconsumed steps reported after another assertion fails. Do not catch mismatch errors in a normal regression test.
+
+| Error | Structured fields | Meaning |
+| --- | --- | --- |
+| `InvalidModelStep` | `reason`, `input_index` | A step is malformed and is rejected before entering the queue |
+| `UnexpectedModelCall` | `call`, `call_index` | The workflow made another model call after the script ended |
+| `UnconsumedModelSteps` | `remaining_steps` | The workflow ended before using every step |
+
+## Sandbox Agent recipes
+
+### Test a Sandbox Agent workflow
+
+Combine `ScriptedModel` with `scripted_sandbox_session()` to exercise the real `SandboxAgent` runtime without creating a local container or remote sandbox. The model script chooses a capability tool, while the Sandbox script defines what the corresponding `SandboxSession` method returns.
+
+```python
+import pytest
+
+from agents import RunConfig, Runner
+from agents.sandbox import ExecResult, SandboxAgent
+from agents.sandbox.capabilities import Shell
+from agents.testing import (
+    ScriptedModel,
+    assistant_message,
+    function_call,
+    scripted_sandbox_session,
+)
+
+
+@pytest.mark.asyncio
+async def test_sandbox_workflow() -> None:
+    sandbox = scripted_sandbox_session(
+        [
+            {
+                "method": "exec",
+                "match": lambda call: call.args == ("pwd",),
+                "result": ExecResult(
+                    stdout=b"/workspace\n",
+                    stderr=b"",
+                    exit_code=0,
+                ),
+            }
+        ]
+    )
+    model = ScriptedModel(
+        [
+            [function_call("exec_command", {"cmd": "pwd"}, call_id="call_1")],
+            [assistant_message("The workspace is /workspace.")],
+        ]
+    )
+    agent = SandboxAgent(
+        name="Workspace assistant",
+        model=model,
+        capabilities=[Shell()],
+    )
+
+    async with sandbox:
+        result = await Runner.run(
+            agent,
+            "Which directory are you in?",
+            run_config=RunConfig(
+                sandbox={"session": sandbox},
+                tracing_disabled=True,
+            ),
+        )
+
+    assert result.final_output == "The workspace is /workspace."
+    assert [call.method for call in sandbox.calls] == ["exec"]
+    sandbox.assert_complete()
+    model.assert_complete()
+```
+
+This test crosses two normalized SDK boundaries. It covers tool argument validation, capability routing, Sandbox session invocation, delivery of the tool result to the next model turn, and final output handling. It does not test whether a real model chooses the command or how a real sandbox provider executes it.
+
+### Configure Sandbox steps
+
+Each matching Sandbox call consumes the next step in one global FIFO sequence. A method mismatch, matcher rejection, or matcher exception leaves that step pending. Set `method`, choose exactly one outcome, and add `match` only when the call details matter.
+
+| Step member | Use it when... |
+| --- | --- |
+| `result` | The method should return a fixed typed value |
+| `responder` | The result depends on the detached `SandboxCall` |
+| `error` | The method should raise a specific exception |
+| `match` | The call should be rejected before producing its outcome unless the matcher returns a value other than `False` |
+
+The supported scripted method names are `apply_patch`, `exec`, `ls`, `mkdir`, `pty_exec_start`, `pty_write_stdin`, `read`, `rm`, and `write`. Only configured model-facing capabilities are exposed. The two PTY methods are exposed together when either PTY method is configured because they form one interactive-shell capability, but calls still consume the global FIFO script.
+
+`sandbox.calls` contains detached `SandboxCall` snapshots with zero-based `call_index`, `method`, positional `args`, and read-only `kwargs`. Static results are also snapshotted when the script is created. `io.BytesIO` and `io.StringIO` values are supported; use a custom Sandbox session for other live stream objects or lifecycle behavior.
+
+| Error | Structured fields | Meaning |
+| --- | --- | --- |
+| `InvalidSandboxStep` | `reason`, `input_index`, `method` | A step is malformed or names an unsupported method |
+| `UnexpectedSandboxCall` | `call`, `call_index`, `actual_method`, `expected_method`, `remaining_steps` | The workflow called the wrong method or continued after the script ended |
+| `SandboxCallMatcherError` | `call`, `call_index`, `method` | A step matcher returned `False` |
+| `UnconsumedSandboxSteps` | `remaining_steps`, `pending_methods` | The workflow ended before using every step |
+
+The returned object is the session itself. Pass it directly to `RunConfig(sandbox={"session": sandbox})`; there is no wrapper `.session` attribute.
+
+## Realtime recipes
+
+### Test a Realtime session
+
+`ScriptedRealtimeModel` implements the Python SDK's normalized `RealtimeModel` boundary. Each `RealtimeStep` matches one outbound `RealtimeModelSendEvent` and then emits normalized inbound `RealtimeModelEvent` objects or raises an injected error.
+
+```python
+import pytest
+
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelOutputTextDeltaEvent,
+    RealtimeModelSendUserInput,
+    RealtimeRawModelEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@pytest.mark.asyncio
+async def test_realtime_message() -> None:
+    reply = RealtimeModelOutputTextDeltaEvent(
+        item_id="item_1",
+        delta="Hello!",
+        response_id="response_1",
+    )
+    model = ScriptedRealtimeModel(
+        [
+            RealtimeStep(
+                expect=RealtimeModelSendUserInput(user_input="Hello"),
+                emit=[reply],
+            )
+        ]
+    )
+    runner = RealtimeRunner(
+        RealtimeAgent(name="Assistant"),
+        model=model,
+        config={"tracing_disabled": True},
+    )
+
+    observed_reply = False
+    async with await runner.run() as session:
+        await session.send_message("Hello")
+        async for event in session:
+            if isinstance(event, RealtimeRawModelEvent) and event.data == reply:
+                observed_reply = True
+                break
+
+    assert observed_reply
+    assert model.sent_events == (RealtimeModelSendUserInput(user_input="Hello"),)
+    assert model.closed is True
+    model.assert_complete()
+```
+
+An expectation may be an exact event value, an event class matched with `isinstance`, or a callable that receives the outbound event and returns `True` for a match. Strict mode is enabled by default. With `strict=False`, unrelated outbound events are recorded but do not consume a pending step; this is useful when a session emits incidental events that are outside the behavior under test.
+
+Use `connect_events` to emit inbound events during connection. Use `connect_error` or `close_error` for lifecycle failures, and use `RealtimeStep(error=...)` for a failure tied to one matched send. A step cannot define both `emit` and `error`.
+
+### Test a Realtime tool workflow
+
+Attach a real function tool to `RealtimeAgent`, emit a normalized tool call, and expect the SDK to send the tool output through the model boundary. Setting `async_tool_calls` to `False` makes this small example complete during connection without test-specific waiting machinery.
+
+```python
+import pytest
+
+from agents.decorators import tool
+from agents.realtime import (
+    RealtimeAgent,
+    RealtimeModelSendToolOutput,
+    RealtimeModelToolCallEvent,
+    RealtimeRunner,
+)
+from agents.realtime.testing import RealtimeStep, ScriptedRealtimeModel
+
+
+@tool
+def lookup_order(order_id: str) -> str:
+    """Look up an order by ID."""
+    return f"Order {order_id} has shipped."
+
+
+@pytest.mark.asyncio
+async def test_realtime_tool_workflow() -> None:
+    tool_call = RealtimeModelToolCallEvent(
+        name="lookup_order",
+        call_id="call_1",
+        arguments='{"order_id":"order_123"}',
+    )
+
+    def matches_tool_output(event) -> bool:
+        return (
+            isinstance(event, RealtimeModelSendToolOutput)
+            and event.tool_call.call_id == "call_1"
+            and event.output == "Order order_123 has shipped."
+        )
+
+    model = ScriptedRealtimeModel(
+        [RealtimeStep(expect=matches_tool_output)],
+        connect_events=[tool_call],
+    )
+    agent = RealtimeAgent(
+        name="Order assistant",
+        tools=[lookup_order],
+    )
+    runner = RealtimeRunner(
+        agent,
+        model=model,
+        config={"async_tool_calls": False, "tracing_disabled": True},
+    )
+
+    async with await runner.run():
+        pass
+
+    model.assert_complete()
+```
+
+This exercises the real Realtime tool lookup, argument validation, execution, and output routing. It does not prove that a real model will choose the tool.
+
+### Inspect Realtime calls and lifecycle
+
+| Member | Contains |
+| --- | --- |
+| `connect_calls` | Credential-free, detached connection snapshots |
+| `sent_events` | Detached outbound event snapshots in invocation order |
+| `remaining_steps` | Expected outbound sends that remain |
+| `listeners` | Currently registered listener objects |
+| `connected`, `closed`, `close_calls` | Current in-memory lifecycle state |
+
+Connection history records only whether API-key or header fields were supplied; it never stores their values. URL snapshots remove user information, query parameters, and fragments. Mutable event data and settings are detached, while live SDK objects such as tools, handoffs, and playback trackers preserve identity.
+
+Finish with `model.assert_complete()` and let the `RealtimeSession` async context manager close the model. The Python utility intentionally does not provide pending expectation promises, implicit timeouts, or a separate `assert_closed()` helper.
+
+| Error | Structured fields | Meaning |
+| --- | --- | --- |
+| `UnexpectedRealtimeSend` | `actual`, `expected` | A strict outbound send did not match the next step, or no step remained |
+| `UnconsumedRealtimeSteps` | `remaining_steps` | The session ended before using every expected send |
+| `RealtimeScriptError` | none | The script was used in an invalid lifecycle state, such as sending while disconnected |
+
+## Voice pipeline recipes
+
+### Test a Voice pipeline
+
+Combine scripted STT and TTS models with `SingleAgentVoiceWorkflow` and an Agent backed by `ScriptedModel` to test the full speech-to-text -> Agent -> text-to-speech pipeline without provider requests.
+
+```python
+import numpy as np
+import pytest
+
+from agents import Agent
+from agents.testing import ScriptedModel, assistant_message
+from agents.voice import AudioInput, SingleAgentVoiceWorkflow, VoicePipeline
+from agents.voice.testing import (
+    ScriptedSTTModel,
+    ScriptedTTSModel,
+    TTSResult,
+    pcm16_samples,
+)
+
+
+@pytest.mark.asyncio
+async def test_voice_pipeline() -> None:
+    model = ScriptedModel([[assistant_message("Hello there.")]])
+    stt = ScriptedSTTModel("hello")
+    pcm = pcm16_samples([0, 100, -100, 0])
+    tts = ScriptedTTSModel([TTSResult([pcm])])
+    pipeline = VoicePipeline(
+        workflow=SingleAgentVoiceWorkflow(
+            Agent(name="Voice assistant", model=model)
+        ),
+        stt_model=stt,
+        tts_model=tts,
+        config={"tracing_disabled": True, "tts_settings": {"buffer_size": 1}},
+    )
+
+    result = await pipeline.run(AudioInput(np.zeros(2, dtype=np.int16)))
+    events = [event async for event in result.stream()]
+
+    assert events
+    assert [call.text for call in tts.calls] == ["Hello there."]
+    stt.assert_complete()
+    tts.assert_complete()
+    model.assert_complete()
+```
+
+Use `ScriptedVoiceWorkflow` instead when the pipeline's STT/TTS lifecycle is under test but Agent orchestration is not:
+
+```python
+from agents.voice.testing import ScriptedVoiceWorkflow
+
+
+workflow = ScriptedVoiceWorkflow(
+    turns=["Hello there."],
+    start="Welcome.",
+)
+```
+
+The `start` step is consumed by `on_start()`. `VoicePipeline` calls `on_start()` only for `StreamedAudioInput`; a static `AudioInput` run does not consume `start`. Each normal turn records its transcription and consumes one configured result. A string is one fragment; a sequence of strings controls fragment boundaries before text splitting and TTS.
+
+### Test streamed transcription
+
+`ScriptedSTTModel` accepts static `transcriptions` and independently scripted streamed `sessions`. A session may be a `ScriptedTranscriptionSession`, a sequence of transcription turns, an exception, or a single string:
+
+```python
+from agents.voice.testing import ScriptedSTTModel, ScriptedTranscriptionSession
+
+
+session = ScriptedTranscriptionSession(["first turn", "second turn"])
+stt = ScriptedSTTModel(sessions=[session])
+```
+
+Closing `ScriptedTranscriptionSession` stops iteration and leaves skipped turns for `assert_complete()` to report. `ScriptedTTSModel` similarly consumes one `TTSResult`, byte-chunk sequence, or exception per call.
+
+### Inspect Voice calls
+
+| Component | Recorded history |
+| --- | --- |
+| `ScriptedSTTModel` | `calls`, `session_calls`, and live `created_sessions` identities |
+| `ScriptedTTSModel` | `calls` containing text and detached settings |
+| `ScriptedVoiceWorkflow` | `transcriptions` in turn order |
+
+Static audio buffers and mutable settings are snapshotted at invocation time. A `StreamedAudioInput` and created transcription-session objects keep their live identity because the pipeline continues to use them.
+
+| Error | Structured fields | Meaning |
+| --- | --- | --- |
+| `UnexpectedVoiceCall` | `operation` | A static transcription, streamed session, TTS call, workflow start, or workflow turn had no configured step |
+| `UnconsumedVoiceSteps` | `remaining_steps` | One or more configured Voice steps remain |
+
+Call `assert_complete()` on every scripted Voice component that the test configures. `ScriptedSTTModel.assert_complete()` also checks turns in the transcription sessions that it created.
+
+## Choose the correct boundary
+
+Use `ScriptedModel` when a test should exercise the SDK run loop, tools, handoffs, guardrails, sessions, retries, or normalized streaming without depending on a model provider.
+
+Use `scripted_sandbox_session()` with `ScriptedModel` when a test should exercise `SandboxAgent` capabilities and orchestration without starting a sandbox provider. Keep provider creation, process execution, filesystem fidelity, persistence, resource limits, and isolation checks in integration tests against the real sandbox provider.
+
+Use `ScriptedRealtimeModel` when a test should exercise `RealtimeSession` behavior or `RealtimeAgent` tool and handoff orchestration without opening a WebSocket connection. Keep raw Realtime client/server events, authentication, network recovery, and audio transport behavior on the real transport or in an integration environment. Realtime API sessions keep a connection open while the client sends input and receives events, so those network and protocol concerns belong below the normalized model boundary. See the [OpenAI Realtime API guide](https://developers.openai.com/api/docs/guides/realtime) for production connection architectures.
+
+Use the Voice testing components when a test should exercise STT/TTS ordering, streamed transcription cleanup, workflow fragment delivery, or complete Voice pipeline composition without speech providers. Use real audio models and representative audio when transcription quality, generated speech, encoding compatibility, latency, or playback is the subject of the test.
+
+Do not use these utilities to test Responses API or Chat Completions request serialization, authentication headers, provider defaults, HTTP payloads, provider stream chunks, Realtime wire frames, or provider-specific lifecycle behavior. Keep the real adapter and replace or control its network boundary for those tests. With `openai` v3, OpenAI adapter tests should use `httpx2` request, response, transport, and exception types; legacy `httpx` is not a core dependency of the Agents SDK.
+
+## Final checklist
+
+- Script only interactions owned by the normalized model, Sandbox session, Realtime model, or Voice pipeline boundary.
+- Assert important public request or call fields instead of private runner state.
+- Prefer fixed response steps; use responders only for request-dependent behavior.
+- Prefer automatic model streaming; use exact streams only when event-level behavior matters.
+- End each scripted component test with its `assert_complete()` method.
+- Use async context managers for Realtime and Sandbox lifecycle cleanup when the surrounding test owns that lifecycle.
+- Assert structured error fields instead of parsing human-readable messages.
+- Keep provider wire tests on real adapters with controlled network transports.
+
+## Scope and current limitations
+
+The testing modules deliberately do not provide:
+
+- Convenience builders for every normalized model output item. Use `assistant_message()` and `function_call()` for common cases, and pass other normalized items directly.
+- A provider-protocol simulator. Exact model streams use normalized SDK events rather than Responses API or Chat Completions wire chunks.
+- A high-level simulated Realtime server. Tests explicitly match normalized outbound sends and emit the normalized inbound events required by the scenario.
+- Unordered Sandbox or Realtime expectations. Both utilities consume expected steps in one global order.
+- Test-runner-specific matchers, fixtures, implicit timeouts, or automatic teardown.
+- Reset APIs. `ScriptedModel` supports `enqueue()` and `extend()` for an incremental script, but create a new scripted component for an independent scenario.
+
+Use a custom implementation of the corresponding public interface when a test requires malformed streams, controlled suspension or concurrency, exact cancellation, or a lifecycle boundary that the scripted utilities cannot preserve. Document that specialized boundary in the test.
+
+## API reference
+
+- [`agents.testing`](ref/testing.md)
+- [`agents.realtime.testing`](ref/realtime/testing.md)
+- [`agents.voice.testing`](ref/voice/testing.md)
+
+================
 File: docs/tools.md
 ================
 # Tools
@@ -27942,6 +29821,7 @@ The following community and vendor integrations support the tracing API surface 
 -   [Datadog](https://docs.datadoghq.com/llm_observability/instrumentation/auto_instrumentation/?tab=python#openai-agents)
 -   [Latitude](https://docs.latitude.so/telemetry/frameworks/openai-agents)
 -   [DProvenanceKit](https://dprovenance.dev/openai-agents/)
+-   [Tuning Engines](https://github.com/cerebrixos-org/tuning-engines-cli/tree/main/packages/tuning-agents#openai-agents-sdk)
 
 ================
 File: docs/usage.md
