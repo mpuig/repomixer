@@ -1213,6 +1213,142 @@ Now that you have created an agent that's using a remote agent via an A2A server
 - [**A2A Quickstart (Exposing) for Java**](./quickstart-exposing-java.md): Learn how to expose your existing agent so that other agents can use it via the A2A Protocol.
 
 ================
+File: docs/a2a/quickstart-consuming-kotlin.md
+================
+# Quickstart: Consuming a remote agent via A2A
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-kotlin">Kotlin</span><span class="lst-preview">Experimental</span>
+</div>
+
+This quickstart covers the most common starting point for any developer: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
+
+## Overview
+
+This sample demonstrates the **Agent2Agent (A2A)** architecture in the Agent Development Kit (ADK) for Kotlin, showing how a local agent delegates part of a task to an agent running elsewhere.
+
+```text
+┌─────────────────┐         ┌────────────────────────┐
+│   Root Agent    │────────▶│   Remote Prime Agent   │
+│   (Local)       │◀────────│   (localhost:8001)     │
+└─────────────────┘         └────────────────────────┘
+```
+
+- **Root Agent** (`root_agent`): The local orchestrator that delegates to sub-agents
+- **Prime Agent** (`prime_agent`): A remote A2A agent that checks whether a number is prime, running on a separate A2A server
+
+## Add the A2A dependency
+
+A2A support ships in a separate artifact. The A2A SDK client is needed on the
+compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
+to `JdkA2AHttpClient()`:
+
+```kotlin title="build.gradle.kts"
+implementation("com.google.adk:google-adk-kotlin-a2a:0.8.0")
+implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.0.0.Final")
+```
+
+## Start a remote agent server
+
+To consume a remote agent you first need one running. adk-kotlin cannot expose an
+agent over A2A yet, so the server has to come from elsewhere — A2A is a wire
+protocol, so any language will do.
+
+The `a2a_basic` sample in adk-python serves the prime agent this page delegates
+to. From an adk-python checkout:
+
+```bash
+adk api_server --a2a --port 8001 contributing/samples/a2a/a2a_basic/remote_a2a
+```
+
+The A2A protocol requires each agent to publish an **agent card** describing what
+it does, served at the well-known path under that agent's own prefix:
+
+```text
+http://localhost:8001/a2a/check_prime_agent/.well-known/agent-card.json
+```
+
+Check the card is reachable before you continue:
+
+```bash
+curl http://localhost:8001/a2a/check_prime_agent/.well-known/agent-card.json
+```
+
+!!! note "Which servers this client can talk to"
+
+    The Kotlin client reads **A2A 1.0** cards, so the card must carry a
+    `supportedInterfaces` array whose entries each have a `protocolBinding`.
+    Cards written for A2A 0.3 declare a top-level `url` and `preferredTransport`
+    instead, and `A2AAgent` rejects them with
+    `AgentCardResolutionError: Failed to parse agent card`.
+
+    The sample's checked-in `agent.json` is a 0.3-style card, but adk-python does
+    not serve that file verbatim: it parses the card on startup, and under
+    a2a-sdk 1.x that parse promotes `url` and `preferredTransport` into
+    `supportedInterfaces`. adk-python requires `a2a-sdk>=0.3.4,<2`, so a fresh
+    install resolves to 1.x and the card on the wire is A2A 1.0.
+
+    The `a2a_server` sample in adk-java is pinned to the 0.3.x A2A SDK and serves
+    a 0.3 card, so it does not work as the server for this page.
+
+??? note "Serving your own card instead"
+
+    Any server publishing an A2A 1.0 card will do. A minimal card the client
+    accepts, served from `<your-base-url>/.well-known/agent-card.json`:
+
+    ```json title=".well-known/agent-card.json"
+    {
+      "name": "check_prime_agent",
+      "description": "Checks whether numbers are prime.",
+      "version": "1.0.0",
+      "url": "http://localhost:9090",
+      "preferredTransport": "JSONRPC",
+      "capabilities": { "streaming": true },
+      "defaultInputModes": ["text/plain"],
+      "defaultOutputModes": ["application/json"],
+      "skills": [],
+      "supportedInterfaces": [
+        { "protocolBinding": "JSONRPC", "url": "http://localhost:9090" }
+      ]
+    }
+    ```
+
+    Pass that base URL — `http://localhost:9090` — as `agentCardUrl` below.
+
+## Connect to the remote agent
+
+`A2AAgent` fetches that card and reads the remote agent's description from it,
+along with whether the remote supports streaming. The `name` you pass is this
+agent's identifier in your own agent tree, independent of the name the card
+advertises. It is a suspending function, so call it from a coroutine:
+
+```kotlin title="A2AConsumer.kt"
+--8<-- "examples/kotlin/snippets/a2a/A2AConsumer.kt:remote_agent"
+```
+
+If you already hold an `AgentCard` — for example one you resolved yourself, or a
+static card checked into your configuration — there is a non-suspending overload
+that takes it directly, `A2AAgent(name = ..., agentCard = ...)`.
+
+## Use it as a sub-agent
+
+The returned agent is a `BaseAgent`, so it goes into `subAgents` exactly like a
+local one. ADK handles the A2A protocol over the wire:
+
+```kotlin title="A2AConsumer.kt"
+--8<-- "examples/kotlin/snippets/a2a/A2AConsumer.kt:root_agent"
+```
+
+## Next Steps
+
+Exposing a Kotlin agent over A2A is not yet supported; adk-kotlin currently
+provides the consuming side only. To expose an agent, see the quickstarts for
+the other languages:
+
+- [**A2A Quickstart (Exposing) for Python**](./quickstart-exposing.md)
+- [**A2A Quickstart (Exposing) for Java**](./quickstart-exposing-java.md)
+
+================
 File: docs/a2a/quickstart-consuming.md
 ================
 # Quickstart: Consuming a remote agent via A2A
@@ -3625,8 +3761,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:0.5.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:0.8.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -10339,14 +10475,14 @@ these settings, as shown in the following code sample:
 === "Kotlin"
 
     ```kotlin
-    @file:OptIn(ExperimentalContextCachingFeature::class)
-
     import com.google.adk.kt.agents.ContextCacheConfig
     import com.google.adk.kt.agents.LlmAgent
     import com.google.adk.kt.annotations.ExperimentalContextCachingFeature
     import com.google.adk.kt.apps.App
     import com.google.adk.kt.models.Gemini
+    import com.google.adk.kt.types.HttpOptions
     import kotlin.time.Duration.Companion.minutes
+    import kotlin.time.Duration.Companion.seconds
 
     val rootAgent =
         LlmAgent(
@@ -10356,17 +10492,19 @@ these settings, as shown in the following code sample:
         )
 
     // Create the app with context caching configuration
+    @OptIn(ExperimentalContextCachingFeature::class)
     val app =
         App(
             appName = "my-caching-agent-app",
             rootAgent = rootAgent,
             contextCacheConfig =
                 ContextCacheConfig(
-                    // Gemini enforces a hard 4096-token floor of its own, so only a
-                    // value above that has any further effect.
+                    // Gemini applies its own minimum cacheable size, which varies by model
                     minTokens = 8192,
                     ttl = 10.minutes, // Store for up to 10 minutes
                     cacheIntervals = 5, // Refresh after 5 uses
+                    // On timeout the create fails and the request proceeds uncached.
+                    createHttpOptions = HttpOptions(timeout = 10.seconds),
                 ),
         )
     ```
@@ -10388,6 +10526,34 @@ all agents within your app.
     content can be used before it expires. This setting allows you to
     control how frequently the cache is updated, even if the TTL has not
     expired. Defaults to `10`.
+-   **`create_http_options`** (HttpOptions): The HTTP options for the cache
+    creation call, which lets you set a timeout on it. If the call times out,
+    it fails and the request proceeds without caching. Available in Python and
+    Kotlin; defaults to none.
+
+## Check whether the cache is being used
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-kotlin">Kotlin v0.6.0</span>
+</div>
+
+When caching is enabled, an event backed by an LLM response can carry a
+`CacheMetadata` reporting what the cache did for that call. It is null when
+caching is disabled, and also when the call produced no cache information, so
+check for it before reading it. When present it has two states: an **active
+cache**, where `cacheName`, `expireTime` and `invocationsUsed` are all set, and
+a **fingerprint-only** state, where all three are null.
+
+```kotlin
+--8<-- "examples/kotlin/snippets/context/CacheMetadataExample.kt:cache_metadata"
+```
+
+`expireSoon` means the cache expires within about two minutes, or has already
+expired. It is a signal for your own code, not something ADK acts on: ADK keeps
+reusing a cache until it is actually past `expireTime`, has run past
+`cacheIntervals`, or its cached prefix changes.
+
+Token counts are not on `CacheMetadata`; read them from `LlmResponse.usageMetadata`.
 
 ## Next steps
 
@@ -10412,7 +10578,7 @@ File: docs/context/compaction.md
 # Compress agent context for performance
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-typescript">TypeScript v0.6.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.16.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-typescript">TypeScript v0.6.0</span><span class="lst-kotlin">Kotlin v0.7.0</span>
 </div>
 
 As an ADK agent runs it collects *context* information, including user
@@ -10491,10 +10657,10 @@ compaction_config = EventsCompactionConfig(
 ## Configure context compaction
 
 Add context compaction to your agent workflow by adding an Events Compaction
-Configuration setting to the App object (Python/Java) or by configuring `contextCompactors`
+Configuration setting to the App object (Python/Java/Kotlin) or by configuring `contextCompactors`
 on the `LlmAgent` (TypeScript). As part of the
 configuration, you must specify a compaction interval and overlap size (Python/Java)
-or a token threshold and event retention size (TypeScript), as shown
+or a token threshold and event retention size (TypeScript/Kotlin), as shown
 in the following sample code:
 
 === "Python"
@@ -10547,6 +10713,26 @@ in the following sample code:
         }),
       ],
     });
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.apps.App
+    import com.google.adk.kt.summarizer.EventsCompactionConfig
+
+    // tokenThreshold and eventRetentionSize must be set together; either alone throws.
+    // Kotlin also accepts the compactionInterval/overlapSize pair used in the other tabs.
+    val app =
+        App(
+            appName = "my-agent",
+            rootAgent = rootAgent,
+            eventsCompactionConfig =
+                EventsCompactionConfig(
+                    tokenThreshold = 1000, // Compact when the last prompt exceeds 1000 tokens.
+                    eventRetentionSize = 1, // Keep at least 1 raw event.
+                ),
+        )
     ```
 
 Once configured, the ADK `Runner` handles the compaction process in the
@@ -19119,8 +19305,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
     }
     ```
 
@@ -19532,8 +19718,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
 }
 ```
 
@@ -19553,9 +19739,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:0.5.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:0.8.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
     }
 
     kotlin {
@@ -19659,9 +19845,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.5.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:0.5.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.5.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:0.8.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
 }
 ```
 
@@ -21438,7 +21624,6 @@ For information about building advanced pipelines, see
 There are some known limitations with graph-based workflows. They
 are *not compatible* with the following ADK features:
 
--   **Live streaming:** Not supported in graph-based workflows.
 -   **Integrations:** Some third-party
     [integrations](/integrations/) may not be compatible with graph-based
     workflows.
@@ -48725,6 +48910,21 @@ To get detailed logs of agent activity (user messages, model requests/responses,
 --8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:logging_plugin"
 ```
 
+#### Full debug capture to a file
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-kotlin">Kotlin v0.6.0</span>
+</div>
+
+To record the same activity in full, as YAML appended to `adk_debug.yaml` rather than truncated console output, use the `DebugLoggingPlugin`:
+
+```kotlin
+--8<-- "examples/kotlin/snippets/observability/LoggingExamples.kt:debug_logging_plugin"
+```
+
+!!! warning
+    The output file holds raw prompts, tool arguments and session state. Treat it as sensitive.
+
 ### Go programmatic setup
 
 In Go, ADK uses the `google.golang.org/adk/v2/telemetry` package for OpenTelemetry
@@ -54785,7 +54985,7 @@ the storage backend that best suits your needs:
 ### `VertexAiSessionService`
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.7.0</span>
 </div>
 
 * **How it works:** Uses Google Cloud Agent Platform infrastructure via API
@@ -54864,6 +55064,37 @@ the storage backend that best suits your needs:
         sessionService
             .createSession(reasoningEngineAppName, userId, initialState, Optional.of(sessionId))
             .blockingGet();
+    ```
+
+=== "Kotlin"
+
+    `VertexAiSessionService` is JVM-only in ADK Kotlin. It is not available on
+    Android; use it from a server-side agent.
+
+    ```kotlin
+    import com.google.adk.kt.sessions.SessionKey
+    import com.google.adk.kt.sessions.VertexAiSessionService
+    import kotlinx.coroutines.runBlocking
+
+    // The reasoning engine is pinned here, at construction. In the other tabs
+    // the engine is chosen per call, through `app_name`; in Kotlin `appName`
+    // is never parsed for it and is only a label on the session.
+    val sessionService =
+        VertexAiSessionService(
+            project = "your-gcp-project-id",
+            location = "us-central1",
+            // The bare numeric engine id. A full
+            // "projects/.../reasoningEngines/..." resource name is rejected;
+            // project and location are separate arguments.
+            reasoningEngineId = "1234567890",
+        )
+
+    // Session methods are suspend functions; `runBlocking` here is the
+    // counterpart of the Java tab's `.blockingGet()`.
+    val mySession = runBlocking {
+        // A null id lets the service assign one.
+        sessionService.createSession(SessionKey("example-app", "u_123", id = null))
+    }
     ```
 
 For more information on connecting to Google Cloud from ADK agents, see
@@ -55771,6 +56002,26 @@ For example, you can automate this step with a callback:
     ```kotlin
     --8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:auto_save_callback"
     ```
+
+### Write specific events or facts from a callback
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-kotlin">Kotlin v0.7.0</span>
+</div>
+
+The `CallbackContext.addSessionToMemory` method is the default behavior for
+memory and saves the whole session of your agent. When you want finer control,
+`CallbackContext` also offers two more methods: `addEventsToMemory`, for a
+chosen subset of events, and `addMemory`, for facts you construct yourself.
+Both accept optional `customMetadata`, and both fill in the app, user and
+session from the current invocation.
+
+```kotlin
+--8<-- "examples/kotlin/snippets/sessions/MemoryExample.kt:callback_memory_writes"
+```
+
+All three throw `IllegalStateException` if the runner has no memory service
+configured, so they fail at run time rather than at compile time.
 
 ## Extend memory capabilities
 
