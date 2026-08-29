@@ -20442,7 +20442,7 @@ File: docs/graphs/data-handling.md
 # Data handling for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Structuring and managing data between agents and graph-based nodes is critical
@@ -20468,6 +20468,31 @@ receives it as its typed input.
     -   **`message`**: Data intended as a response to a user.
     -   **`state`**: Data automatically persisted across nodes via ***Events***
         throughout an ADK session.
+
+=== "TypeScript"
+
+    In ADK TypeScript v2.0.0, nodes exchange data through events. The key
+    fields for node data handling are:
+
+    -   **`output`**: the value passed to the next node. Return a value
+        directly and ADK wraps it in an event, or set the field explicitly
+        with `createEvent({output})`.
+    -   **`content`**: a message for the user. The runtime renders this
+        field, but the graph does not pass it to the next node.
+    -   **`route`**: the routing keys that select which conditional edge to
+        follow.
+
+    Session state is separate from the event. A node reads and writes state
+    through `ctx.state`, and the accumulated delta is attached to that
+    node's events. State keys can carry a prefix that controls their
+    lifetime and scope:
+
+    | Prefix | Scope |
+    |---|---|
+    | `app:` | Shared across all users and sessions for the app |
+    | `user:` | Tied to the user, shared across their sessions |
+    | `temp:` | Discarded after the current invocation ends |
+    | *(none)* | Persists for the lifetime of the session |
 
 === "Go"
 
@@ -20530,6 +20555,23 @@ Each step in a workflow produces output for its successor.
     ***return*** or ***yield*** command without a parameter passes a `None` value
     to the next node.
 
+=== "TypeScript"
+
+    There are three equivalent ways to produce a node's output: return a
+    value directly, return `createEvent({output})`, or yield events from an
+    async generator to stream progress alongside the result.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/node_output.ts:node-output"
+    ```
+
+    !!! warning "Caution: emit `output` from one event per execution"
+
+        A node can yield any number of events carrying `output`, and ADK
+        does not raise an error in this case. Each event overwrites the
+        previous one, and the successor node receives only the final value.
+        Use `content` for progress messages instead.
+
 === "Go"
 
     **workflow package**: a `FunctionNode` simply returns a typed Go value.
@@ -20572,6 +20614,18 @@ Each step in a workflow produces output for its successor.
         one ***yield*** in a node, having two or more ***yield*** commands with
         an ***Event.output*** results in a runtime error.
 
+=== "TypeScript"
+
+    The `output` field is not limited to text. Any serializable value is
+    passed to the next node, which receives it as a typed object, with no
+    JSON parsing or state reads required. Attaching an `outputSchema` to the
+    producing node, or an `inputSchema` to the consuming node, makes the
+    contract explicit and validates it at runtime:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/structured_output.ts:structured-output"
+    ```
+
 === "Go"
 
     **workflow package**: a `FunctionNode` can return any JSON-serializable
@@ -20600,6 +20654,16 @@ Each step in a workflow produces output for its successor.
         return Event(route="BUG")
     ```
 
+=== "TypeScript"
+
+    The `route` value is independent of `output`, so one event can both
+    select a branch and forward a payload to it. The `DEFAULT_ROUTE` setting
+    catches any value that no other branch matched:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/routing_output.ts:routing-output"
+    ```
+
 === "Go"
 
     **workflow package**: an emitting `FunctionNode` constructs a
@@ -20623,6 +20687,17 @@ Each step in a workflow produces output for its successor.
     async def user_message(node_input: str):
       """Tell user research process is starting."""
       yield Event(message="Beginning research process...")
+    ```
+
+=== "TypeScript"
+
+    A message for the user is the event's `content` field. The runtime
+    renders `content`, but the graph does not pass it to the next node. Use
+    `content` for the user and `output` for the next node. A node can emit
+    both by sending two events, where only one carries `output`:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/user_message.ts:user-message"
     ```
 
 === "Go"
@@ -20679,6 +20754,24 @@ inside tools and callbacks regardless of which agent style you use.
         data* between nodes. Use artifacts or other data persistence mechanisms,
         such as database Tools, to persist large data resources during the life
         cycle of a Workflow.
+
+=== "TypeScript"
+
+    Write state through `ctx.state` rather than returning it. A write is
+    visible to every later node in the same run, and is committed with the
+    writing node's events:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/session_state.ts:session-state"
+    ```
+
+    !!! warning "Caution: `state` data limitations"
+
+        Session state is a lightweight key-value store. Do not use it to
+        move large payloads between nodes; use artifacts or a database tool
+        instead. When only the next node needs a value, pass it along the
+        edge as node `output`. Use state when a value must outlive the run,
+        or be read by a tool, a callback, or `{key}` instruction templating.
 
 === "Go"
 
@@ -20747,6 +20840,24 @@ accepted and produced by any agent node.
     )
     ```
 
+=== "TypeScript"
+
+    Schemas are Zod objects or a genai `Schema`. The location of the schema
+    determines its effect:
+
+    -   The `LlmAgent.outputSchema` option requires the model to answer in
+        that shape.
+    -   The `LlmAgent.inputSchema` option applies only when the agent is
+        exposed as a tool. Inside a graph, set the schema that validates a
+        node's input on the node itself, using `node(agent, {inputSchema})`.
+
+    Agents in a graph must run in `single_turn` mode, which is the default,
+    or `task` mode.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/schemas.ts:schemas"
+    ```
+
 === "Go"
 
     **workflow package**: use `workflow.NewAgentNodeTyped[Input, Output]` to
@@ -20809,6 +20920,23 @@ accepted and produced by any agent node.
     )
     ```
 
+=== "TypeScript"
+
+    Two data-selection forms are available inside an agent instruction:
+
+    -   The `{Class.field}` form reads a field from this node's input.
+    -   The `<Class.field from source_node>` form reads a field from a named
+        predecessor's output. Use this form when several upstream nodes
+        share a field name.
+
+    Both forms are distinct from `{state_key}`, which reads session state.
+    The `Class.` prefix is documentation only; resolution uses the field
+    name after the dot.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/data-handling/structured_access.ts:structured-access"
+    ```
+
 === "Go"
 
     In ADK Go v2.0.0, a `FunctionNode` returns a typed struct and the
@@ -20832,7 +20960,7 @@ File: docs/graphs/dynamic.md
 # Dynamic agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 The ADK framework provides a programmatic way to define workflows as a more
@@ -20897,6 +21025,26 @@ workflow containing a single node with a function:
     keep the written code as simple as possible. This annotation generates wrappers
     that allow the code to be run in the context of an ADK dynamic workflow.
 
+=== "TypeScript"
+
+    TypeScript has no `@node` decorator. Use the `node(fn, options)` factory
+    function instead. The `ctx.runNode()` method is the equivalent of
+    `ctx.run_node()`:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/get_started.ts:get-started"
+    ```
+
+    When you write an orchestrator node, two details affect how you read
+    results and how the workflow behaves after a pause:
+
+    -   The `ctx.runNode()` method resolves to a node result, not to the
+        output value. Read the `.output` property to get the value.
+    -   An orchestrator that calls `ctx.runNode()` must set
+        `rerunOnResume: true`. This setting causes the node body to re-run
+        on resume, so already-finished children are replayed from their
+        checkpoints instead of being executed again.
+
 === "Go"
 
     In Go, `workflow.NewFunctionNode` replaces the `@node` decorator and
@@ -20955,6 +21103,31 @@ run within a workflow.
     functions from an external library, need to create multiple nodes from the
     same function with different configurations, or if you are managing node
     references in a registry for advanced orchestration.
+
+=== "TypeScript"
+
+    There are two ways to build a node: the `node(fn, options)` factory
+    function, and the explicit `new FunctionNode(name, fn, config)`
+    constructor. Use the constructor when you are wrapping a function from
+    another library, need several differently configured nodes from one
+    function, or keep node references in a registry for advanced
+    orchestration.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/nodes.ts:node-forms"
+    ```
+
+    In this code sample, the most important option is `rerunOnResume`, which
+    controls what happens when a workflow resumes after a human-in-the-loop
+    pause:
+
+    -   **`true` (re-entry):** the node body re-runs from the top. Use this
+        setting for any orchestrator that calls `ctx.runNode()`. The body
+        re-executes, and already-completed child activations are skipped
+        automatically.
+    -   **`false` (handoff, the leaf default):** the resume payload is
+        routed to the node's successor as input, bypassing the interrupted
+        node.
 
 === "Go"
 
@@ -21027,6 +21200,16 @@ execution logic (order and paths) for those nodes.
     )
     ```
 
+=== "TypeScript"
+
+    The orchestrator is an async function that awaits `ctx.runNode()` for
+    each child step. Wrap it as a node with `rerunOnResume: true` and use it
+    as the graph's only edge:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/nodes.ts:workflows"
+    ```
+
 === "Go"
 
     `workflow.NewDynamicNode` creates an orchestrator whose body calls
@@ -21095,6 +21278,20 @@ manually read and write session state keys for data transfer.
         return report_text
     ```
 
+=== "TypeScript"
+
+    The `ctx.runNode()` function returns the child's result directly, so
+    there are no session-state keys to read and write to move a value one
+    step downstream. This function accepts any node-like value, including an
+    `LlmAgent`, without wrapping it in `node()` first:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/data_handling.ts:data-handling"
+    ```
+
+    Schemas work the same way as in a graph. Attach them to the nodes you
+    run, as shown in the [sequence route](#sequence-route) section.
+
 === "Go"
 
     In Go, `workflow.NewAgentNode` wraps an `agent.Agent` so it can be
@@ -21134,6 +21331,15 @@ as you can with graph-based workflows.
         report_text = await ctx.run_node(city_report_agent, city_time)
 
         return report_text
+    ```
+
+=== "TypeScript"
+
+    A sequential route awaits `ctx.runNode()` calls one after another. Each
+    call finishes before the next one starts:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/sequence_route.ts:sequence-route"
     ```
 
 === "Go"
@@ -21197,6 +21403,18 @@ workflows offer much more flexibility to define the routing logic you need.
       return code
     ```
 
+=== "TypeScript"
+
+    Dynamic workflows can help keep workflow logic simple by defining an
+    iteration as an ordinary loop rather than a back-edge in a graph. Values
+    are held in local variables, and state is written only where an agent's
+    instruction template needs to read it back. Unlike a graph cycle, the
+    loop is bounded by its loop condition:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/loop_route.ts:loop-route"
+    ```
+
 === "Go"
 
     In Go, the loop is a plain `for` loop inside the dynamic node body. The
@@ -21242,6 +21460,27 @@ Dynamic workflows in ADK can support parallel execution.
         The workflow framework ensures that if a dynamic workflow is resumed,
         only failed or interrupted worker nodes are re-executed, including
         parallel worker nodes.
+
+=== "TypeScript"
+
+    The `ctx.runNode()` method returns a promise, so starting every child
+    before awaiting any of them runs the children concurrently, and
+    `Promise.all` collects the results. Run IDs are assigned in call order,
+    so start the children in a synchronous loop to keep the IDs
+    deterministic across a resume:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/parallel_route.ts:parallel-route"
+    ```
+
+    !!! tip "Tip: prefer the built-in parallel worker"
+
+        To run one node over each item in a list, use
+        `node(worker, {parallelWorker: true, maxParallelWorkers: 4})`. This
+        option performs the fan-out and bounds concurrency, which defaults
+        to 8. Use the manual approach shown above when you need custom
+        scheduling or partial-failure handling. On resume, only failed or
+        interrupted workers re-execute in both cases.
 
 === "Go"
 
@@ -21299,6 +21538,25 @@ Dynamic workflows in ADK can also include human input or human in the loop
 
         Parent nodes in dynamic workflows that call `ctx.run_node` must set
         `rerun_on_resume=True` to handle interruptions properly.
+
+=== "TypeScript"
+
+    The leaf node returns a `RequestInput` to pause the workflow, and keeps
+    the default `rerunOnResume: false` so the reply becomes its output. The
+    orchestrator that calls it must set `rerunOnResume: true`:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/human_input.ts:human-input"
+    ```
+
+    !!! important "Important: check `interruptIds` before deciding"
+
+        The `ctx.runNode()` method does **not** throw an error when a child
+        node interrupts. It returns normally, with the `interruptIds`
+        property of the result populated and the `output` property still
+        `undefined`. Check `interruptIds` before you use the result. An
+        orchestrator that skips this check treats the missing output as an
+        answer and continues with a value the user never supplied.
 
 === "Go"
 
@@ -21377,6 +21635,16 @@ and logically remain the same for the input.
     least one non-numeric character to avoid collisions with these
     auto-generated IDs.
 
+=== "TypeScript"
+
+    Pass a `runId` as a trailing option to `ctx.runNode()`. The ID must
+    contain at least one non-numeric character so it does not collide with
+    the auto-generated sequential IDs:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/dynamic/custom_run_ids.ts:custom-execution-ids"
+    ```
+
 === "Go"
 
     In Go, pass `workflow.WithRunID("order-x")` as a trailing option to
@@ -21393,7 +21661,7 @@ File: docs/graphs/human-input.md
 # Human input for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Being able to request human input for data input, decision verification, or
@@ -21431,6 +21699,23 @@ the input process more predictable and reliable.
     system receives an input from a user. Once the system receives input from the
     user, that input is passed to the next node.
 
+=== "TypeScript"
+
+    In ADK TypeScript v2.0.0, a human input node yields a `RequestInput`.
+    The `step1` node pauses the workflow until the user replies, and the
+    reply is passed to the next node as its input. A human-in-the-loop node
+    does not require a model, which makes the pause deterministic.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/human-input/get_started.ts:get-started"
+    ```
+
+    This implementation shows the default `rerunOnResume: false` handoff:
+    the interrupted node does not re-run. It completes with the user's reply
+    as its output. A node that calls `ctx.runNode()` needs
+    `rerunOnResume: true` instead. For more information, see
+    [human input in dynamic workflows](/graphs/dynamic/#human-input).
+
 === "Go"
 
     In ADK Go v2.0.0, a HITL graph node is built with
@@ -21461,13 +21746,27 @@ the input process more predictable and reliable.
         request.
     -   **`response_schema`:** A data structure the human response must conform to.
 
-    !!! note "Note: Response schema input limitations"
+=== "TypeScript"
 
-        For the **response_schema** setting, the ***RequestInput*** class does not
-        automatically reformat human responses to fit a specified data structure. The
-        human response must be provided in the specified format. For a better user
-        experience, consider providing a user interface to collect structured data
-        or use an Agent node to conform unstructured data to the format required.
+    The `RequestInput` class takes the following configuration options:
+
+    -   **`message`:** Text shown to the user explaining what is being
+        asked.
+    -   **`payload`:** Structured data sent with the prompt, so a client can
+        render additional context.
+    -   **`responseSchema`:** The shape the reply is expected to take. The
+        schema travels on the interrupt as
+        `functionCall.args.response_schema`, which a client reads to render
+        a form for the reply.
+
+    The `rerunOnResume` option on the node controls what happens when the
+    reply arrives:
+
+    -   **`false`** (the leaf default): the reply is routed to the node's
+        successor as input, bypassing the interrupted node.
+    -   **`true`**: the node body re-runs from the top. This setting is
+        required for any node that calls `ctx.runNode()`, so it can deliver
+        cached child results on resume.
 
 === "Go"
 
@@ -21497,6 +21796,13 @@ the input process more predictable and reliable.
         human's reply payload. If your workflow needs structured feedback,
         include a UI or a downstream agent node to validate the response before
         acting on it.
+
+!!! note "Note: Response schema input limitations"
+
+    A response schema does not reformat a human reply to fit the specified
+    structure. The reply must already be in that format. For a better user
+    experience, collect structured data in your client interface, or place an
+    agent node after the pause to convert the reply into the required format.
 
 ## Human input examples
 
@@ -21541,6 +21847,16 @@ The following code examples demonstrate more detailed human input requests.
        )
     ```
 
+=== "TypeScript"
+
+    The following three-node graph builds a structured itinerary, sends it
+    as `payload` with the prompt so a client can render it, and then acts on
+    the user's feedback:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/human-input/payload_and_schema.ts:payload-and-schema"
+    ```
+
 === "Go"
 
     The following code sample shows a three-node graph: a builder node generates
@@ -21582,6 +21898,18 @@ specific tool call.
        yield RequestInput(message=input_message, response_schema=str)
     ```
 
+=== "TypeScript"
+
+    Set `requireConfirmation: true` on a `FunctionTool` to make the agent
+    pause for approval before that tool runs. A graph human-in-the-loop node
+    serves a different purpose: instead of confirming a tool call, it can
+    start the workflow by asking the user for input. The
+    `responseSchema: z.string()` option requests a plain text reply:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/human-input/initial_prompt.ts:initial-prompt"
+    ```
+
 === "Go"
 
     Set `RequireConfirmation: true` in `functiontool.Config` for a static
@@ -21604,7 +21932,7 @@ File: docs/graphs/index.md
 # Graph-based agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Graph-based agent workflows in ADK let you build agents with more precise control,
@@ -21704,6 +22032,20 @@ function, and the final agent reports the information.
     )
     ```
 
+=== "TypeScript"
+
+    In ADK TypeScript v2.0.0, a `Workflow` takes an `edges` array. Each row
+    lists the nodes to run in order. The `node()` function wraps a function,
+    an agent, a tool, or another `Workflow` as a graph node, and sets the
+    node's name and its `inputSchema` and `outputSchema` contracts. Schemas
+    are Zod objects or a genai `Schema`. Each node's return value is passed
+    to the next node as its input, so you do not need to write to session
+    state.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/index/get_started.ts:get-started"
+    ```
+
 === "Go"
 
     In ADK Go v2.0.0, sequential workflows use the graph engine:
@@ -21797,6 +22139,19 @@ translated into a graph-based agent:
     )
     ```
 
+=== "TypeScript"
+
+    In ADK TypeScript v2.0.0, a router node returns an event carrying a
+    `route` value, created with `createEvent({route})`. A second edge row
+    maps each route value to the node that handles it. Setting `route` to an
+    array dispatches to every matching branch, which lets the classifier in
+    this example return more than one category. The `DEFAULT_ROUTE` setting
+    catches any value that no branch matched.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/index/process_pipeline.ts:process-pipeline"
+    ```
+
 === "Go"
 
     In ADK Go v2.0.0, conditional routing uses `workflow.NewEmittingFunctionNode`
@@ -21846,7 +22201,7 @@ File: docs/graphs/routes.md
 # Build graph routes for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 Graph-based workflows in ADK define agent logic as a graph of execution nodes
@@ -21878,6 +22233,25 @@ agents.
         ),
       ],
     )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    export const rootAgent = new Workflow({
+      name: 'routing_workflow',
+      edges: [
+        ['START', processMessage, router],
+        [
+          router,
+          {
+            'output-1': response1,
+            'output-2': response2,
+            'output-3': response3,
+          },
+        ],
+      ],
+    });
     ```
 
 === "Go"
@@ -21936,6 +22310,19 @@ objects.
         return Event(output=input_text_modified)
     ```
 
+=== "TypeScript"
+
+    In ADK TypeScript v2.0.0, the primary node type is a `FunctionNode`,
+    created by passing a function to `node()`. A handler always takes
+    `(ctx, input)` parameters; ADK does not inject values by parameter name.
+    Returning a value directly wraps it in the event's `output` field.
+    Returning `createEvent({output})` is the explicit form, which you need
+    when you also set `route` or `content`:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/function_node.ts:function-node"
+    ```
+
 === "Go"
 
     In ADK Go v2.0.0, the primary node type is `workflow.NewFunctionNode`.
@@ -21979,6 +22366,24 @@ A sequential route runs each node once, in the listed order.
             task_A_node,
             task_B_node,
             task_C_node)]           # 3 nodes run in order
+    ```
+
+=== "TypeScript"
+
+    An `edges` row that starts with `'START'` runs each listed node once, in
+    order, and passes every node's return value to the next node:
+
+    ```typescript
+    edges: [['START', taskANode]]                       // a single node
+    edges: [['START', taskANode, taskBNode, taskCNode]] // three, in order
+    ```
+
+    Listing `'START'` in more than one row creates parallel paths instead.
+    For more information, see
+    [fan out and join](#parallel-tasks-fan-out-and-join-paths).
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/sequence.ts:sequence"
     ```
 
 === "Go"
@@ -22028,6 +22433,19 @@ A sequential route runs each node once, in the listed order.
             ),
         ],
     )
+    ```
+
+=== "TypeScript"
+
+    Branching requires a node that emits a `route` value, and an edge row
+    that maps each route value to the node that handles it. Route values can
+    be strings, numbers, or booleans. The `DEFAULT_ROUTE` setting matches
+    when no other route on the same source node matches. A branch target can
+    be any node-like value: in this example, `taskBNode` is an `LlmAgent`
+    and `taskCNode` is a function.
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/branches.ts:branches"
     ```
 
 === "Go"
@@ -22126,13 +22544,15 @@ before passing results to the next step.
     ]
     ```
 
-    !!! warning "Caution: Stuck JoinNode from incomplete nodes"
+=== "TypeScript"
 
-        The ***JoinNode*** object proceeds only after all its upstream nodes
-        have provided an Event output. If one of the upstream nodes fails to
-        provide output, the JoinNode is stuck and workflow execution stops.
-        Make sure to include failsafe output from any node that outputs to a
-        ***JoinNode***.
+    A `JoinNode` is the fan-in barrier. This logic mechanism waits for every
+    predecessor task to complete, and then passes its successor a record
+    keyed by predecessor node name:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/fan_out_join.ts:fan-out-join"
+    ```
 
 === "Go"
 
@@ -22168,13 +22588,14 @@ before passing results to the next step.
     --8<-- "examples/go/snippets/graphs/routes/main.go:parallel-fan-out"
     ```
 
-    !!! warning "Caution: Stuck JoinNode from incomplete nodes"
+!!! warning "Caution: nodes that feed a JoinNode must produce output"
 
-        `workflow.NewJoinNode` proceeds only after every predecessor node has
-        emitted an `event.Output`. If a predecessor fails without emitting
-        output, the JoinNode is stuck and workflow execution stops. Attach a
-        `RetryConfig` to flaky predecessor nodes to guard against transient
-        failures.
+    A `JoinNode` releases only after all of its predecessor nodes finish.
+    Make sure that every node that feeds a join has an output of its own, and attach a
+    retry configuration to any node that can fail. A predecessor that
+    finishes without an output leaves the join with no value for that
+    branch, and the resulting failure appears downstream, away from the node
+    that caused it.
 
 ## Nested workflows
 
@@ -22214,6 +22635,20 @@ accomplish this goal.
     process traceability. When the nested workflow completes the last node in
     its process, the parent node extracts data from the final leaf nodes and
     emits it as the output of the nested workflow.
+
+=== "TypeScript"
+
+    A `Workflow` is itself a node, so you can use one inside another
+    workflow's edges to encapsulate a reusable sub-process:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/nested_workflow.ts:nested-workflow"
+    ```
+
+    **Nested workflow data output.** While the inner workflow runs, each of
+    its node events bubbles up to the parent for traceability. When it
+    finishes, the output of its terminal node becomes the output of the
+    nested-workflow node.
 
 === "Go"
 
@@ -22279,6 +22714,16 @@ lifecycle on each iteration.
     )
     ```
 
+=== "TypeScript"
+
+    A loop is a back-edge: a downstream node routes back to an earlier node,
+    and the engine re-activates that node with a fresh lifecycle on each
+    iteration. The loop exits when the router selects the terminal branch:
+
+    ```typescript
+    --8<-- "examples/typescript/snippets/graphs/routes/loop_escalation.ts:loop-escalation"
+    ```
+
 === "Go"
 
     The following example uses the graph engine with `workflow.EdgeBuilder`.
@@ -22289,6 +22734,13 @@ lifecycle on each iteration.
     ```go
     --8<-- "examples/go/snippets/graphs/routes/main.go:loop-escalate"
     ```
+
+!!! warning "Caution: unbounded graph cycles"
+
+    A graph cycle is not bounded automatically. Make sure the exit condition
+    eventually becomes true, or express the iteration as a
+    [dynamic workflow](/graphs/dynamic/#loop-route), where the loop runs in
+    your own code and you control its bound.
 
 ================
 File: docs/grounding/google_search_grounding.md
