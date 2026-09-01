@@ -281,13 +281,13 @@ hide:
 # Welcome to ADK 2.0
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
 </div>
 
 ADK 2.0 introduces powerful tools for building sophisticated AI agents, and
 helps you structure agents to execute challenging tasks with more control,
-predictability, and reliability. ADK 2.0 is available for Python and Go and
-includes the following key features:
+predictability, and reliability. ADK 2.0 is available for Python, TypeScript,
+and Go, and includes the following key features:
 
 -   [**Graph-based workflows**](/graphs/): Build deterministic agent
     workflows with more control over how tasks are routed and executed.
@@ -310,6 +310,11 @@ to build agents with ADK 2.0!
 !!! tip "ADK Go v2.0.0 GA release"
 
     ADK Go 2.0 is released for general availability as of June 30, 2026.
+
+!!! tip "ADK TypeScript v2.0.0 GA release"
+
+    ADK TypeScript 2.0 is released for general availability as of
+    August 21, 2026.
 
 ## ADK Python 1.x compatibility
 
@@ -459,6 +464,114 @@ To install the latest version of ADK 1.x, follow these steps:
         source .venv/bin/activate
         ```
 
+## ADK TypeScript 1.x compatibility
+
+ADK TypeScript 2.0 is designed to be compatible with agents developed with ADK
+TypeScript 1.x releases. However, there are a few breaking changes you should be
+aware of before upgrading an ADK TypeScript 1.x project to ADK TypeScript 2.0.
+
+!!! warning "Breaking changes: ADK TypeScript 1.x to 2.0 incompatibilities"
+
+    There are several known incompatibilities and breaking changes introduced
+    with ADK TypeScript v2.0.0. Before upgrading, review these changes and take
+    mitigation steps, if necessary.
+
+The ADK TypeScript 2.0 release introduces the Workflow Runtime, transitioning
+ADK TypeScript from a hierarchical agent executor to a graph-based execution
+engine. In this new architecture, your Agents, Tools, and Functions are
+evaluated as individual *nodes* within a workflow graph. If you are upgrading
+from ADK TypeScript 1.x, review the following breaking changes and migration
+steps.
+
+### Event Schema & Custom Session Storage
+
+ADK TypeScript 2.0 adds four optional fields to the core ***Event*** interface
+to support graph routing, workflow output, and multi-agent isolation:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `output` | `unknown` | The structured output produced by the emitting node. |
+| `route` | `Route` | The route keys emitted by a routing node, used to select the matching outgoing edges. |
+| `nodeInfo` | `NodeInfo` | Workflow-node metadata identifying which node emitted the event. |
+| `isolationScope` | `string` | Restricts which agent contexts see this event in LLM prompt history. |
+
+All four fields are optional, and each serializes under the name shown above.
+
+*   **Custom session storage:** If you have implemented a custom session
+    service, such as one storing sessions in your own SQL or NoSQL database
+    with a rigid schema, your underlying database schema must be updated to
+    accommodate the four new fields. Inserting a 2.0 ***Event*** into a rigid
+    1.x database table causes insertion or deserialization failures. *However,
+    if your custom session service stores events as serialized JSON, you do not
+    need to update your schema.*
+
+**Migration action:** Update your database schemas and downstream client
+validators to expect and store the four new fields on all Event payloads.
+
+### Agent Execution: BaseAgent extends BaseNode
+
+In ADK TypeScript 1.x, `BaseAgent` was a standalone class. In ADK TypeScript
+2.0, `BaseAgent` extends `BaseNode` so that every agent can run as a node in a
+workflow graph. Subclasses now inherit the `rerunOnResume`, `waitForOutput`,
+`retryConfig`, `timeout`, `inputSchema`, `outputSchema`, and `stateSchema`
+members.
+
+*   **Member name collisions:** A subclass that declares its own field using one
+    of these names now collides with the inherited member and fails to compile.
+*   **`description` default value:** The `description` member is now typed
+    `string` and defaults to an empty string. In ADK TypeScript 1.x it was
+    `undefined` when unset, so a check such as
+    `agent.description === undefined` no longer matches.
+
+**Migration action:** Rename any subclass field that collides with an inherited
+member. Replace checks for an `undefined` description with a check for an empty
+string.
+
+### Context: `InvocationContext.agent` is optional
+
+A workflow node can run without an enclosing agent, so the `agent` property of
+`InvocationContext` changed from `BaseAgent` to `BaseAgent | undefined`. Code
+that reads this property without handling `undefined` no longer compiles under
+`strict` mode.
+
+```typescript
+// Before (ADK TypeScript 1.x)
+const name = ctx.agent.name;
+
+// After (ADK TypeScript 2.0), inside an agent's own execution
+const name = requireAgent(ctx).name;
+
+// After (ADK TypeScript 2.0), outside an agent's own execution
+const name = ctx.agent?.name;
+```
+
+**Migration action:** Inside an agent's own execution, call `requireAgent(ctx)`,
+which returns the agent or throws an error that explains the invocation is
+running a node directly. Everywhere else, handle the `undefined` case.
+
+### Deprecated: SequentialAgent, ParallelAgent, and LoopAgent
+
+Constructing a `SequentialAgent`, `ParallelAgent`, or `LoopAgent` now logs a
+deprecation warning once per class, per process. These classes are otherwise
+unchanged and continue to work in ADK TypeScript 2.0.
+
+**Migration action:** No immediate action is required. To stop the warning and
+gain more control over routing, express the same sequence, fan-out, or loop as
+a [graph workflow](/graphs/).
+
+If you encounter additional ADK TypeScript 1.x to ADK 2.0 incompatibilities,
+report them through the
+[issue tracker](https://github.com/google/adk-js/issues/new?template=bug_report.md&labels=v2).
+
+### Installing ADK TypeScript 1.x {#install-ts}
+
+If you want to continue using ADK TypeScript 1.x and are not yet ready to
+upgrade to ADK TypeScript 2.0, pin your dependency to the 1.x release line:
+
+```shell
+npm install @google/adk@^1.6.0
+```
+
 ## ADK Go 1.x compatibility
 
 ADK Go 2.0 is designed to be compatible with agents developed with ADK Go 1.x
@@ -587,12 +700,16 @@ Check out these ADK 2.0 code samples for testing and inspiration:
     -   [**Workflow samples**](https://github.com/google/adk-python/tree/main/contributing/samples/workflows)
     -   [**Collaborative task samples**](https://github.com/google/adk-python/tree/main/contributing/samples/multi_agent)
 
+=== "TypeScript"
+
+    -   [**Workflow samples**](https://github.com/google/adk-js/tree/main/samples/workflows)
+
 === "Go"
 
     -   [**All workflow agents samples**](https://github.com/google/adk-go/tree/main/examples/workflow)
     -   [**Collaborative task sample**](https://github.com/google/adk-go/tree/main/examples/multiagent/collaboration)
 
-Thanks for checking out ADK 2.0! We look forward to your feedback — let us know on [ADK Go](https://github.com/google/adk-go/issues/new) or [ADK Python](https://github.com/google/adk-python/issues/new).
+Thanks for checking out ADK 2.0! We look forward to your feedback — let us know on [ADK Go](https://github.com/google/adk-go/issues/new), [ADK TypeScript](https://github.com/google/adk-js/issues/new) or [ADK Python](https://github.com/google/adk-python/issues/new).
 
 ================
 File: docs/a2a/a2a-extension.md
@@ -6745,10 +6862,10 @@ schema definitions.
     Using `output_schema` with `tools` in the same LLM request is only supported
     by specific models, including [Gemini
     3.0](https://ai.google.dev/gemini-api/docs/function-calling?example=meeting#structured-output).
-    For other models, workarounds using [function
-    tools](https://github.com/google/adk-python/blob/main/src/google/adk/flows/llm_flows/_output_schema_processor.py))
-    in ADK may not work reliably. In such cases, consider using sub-agents that
-    handle output formatting separately.
+    For other models, ADK falls back to a [`set_model_response` function
+    tool](https://github.com/google/adk-python/blob/main/src/google/adk/flows/llm_flows/_output_schema_processor.py)
+    to collect the structured output, which may not work reliably. In such
+    cases, consider using sub-agents that handle output formatting separately.
 
 - **`output_key` (Optional):** Provide a string key. If set, the text content of
   the agent's *final* response will be automatically saved to the session's
@@ -6759,6 +6876,27 @@ schema definitions.
     - In Java: `session.state().put(outputKey, agentResponseText)`
     - In Golang, within a callback handler: `ctx.State().Set(output_key,
       agentResponseText)`
+
+    When `output_schema` is also set, the *parsed* response is stored instead of
+    the text: a `dict` in Python, and a `Map` in Java and Kotlin.
+
+!!! note "Schema validation in Java and Kotlin"
+
+    Java and Kotlin check the response against the *structure* of the schema —
+    `type`, `required`, `nullable`, `anyOf` and `items` (see
+    [`SchemaUtils`](https://github.com/google/adk-kotlin/blob/v0.8.0/core/src/commonMain/kotlin/com/google/adk/kt/SchemaUtils.kt)).
+    Constraint fields such as `pattern`, `minLength` and `minimum` are sent to
+    the model as part of the schema, but ADK does not re-check them, so the
+    model decides whether to honor them. Python validates against a Pydantic
+    model, which does enforce the constraints declared on it.
+
+    Java and Kotlin accept only a top-level object schema; a top-level array or
+    primitive fails validation. Python also supports list and primitive output
+    schemas.
+
+    If the response fails validation, ADK logs the error and stores the raw
+    response string under `output_key` instead of the parsed object (see
+    [`LlmAgent`](https://github.com/google/adk-kotlin/blob/v0.8.0/core/src/commonMain/kotlin/com/google/adk/kt/agents/LlmAgent.kt)).
 
 === "Python"
 
@@ -6844,6 +6982,25 @@ schema definitions.
             .build();
     ```
 
+=== "Kotlin"
+
+    The input and output schema is ADK's own `com.google.adk.kt.types.Schema`,
+    not the same-named type in the GenAI SDK. Starting with ADK Kotlin v0.8.0,
+    the JSON schema includes constraints for the following fields: `pattern`,
+    `minLength`, `maxLength`, `minimum`, `maximum`, `minItems`, `maxItems`,
+    `format`, `nullable`, `default`, `anyOf` and `title`.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:schema_example"
+    ```
+
+    The `format` field accepts only the values the model allows for the field's type. For
+    the accepted values, see the Gemini [`Schema`
+    reference](https://ai.google.dev/api/caching#Schema).
+
+    The `default` field must contain a JSON-native value. ADK's own `Json` serializes one,
+    but a hand-rolled serializer without a contextual `Any` serializer does not.
+
 ### Manage agent context
 
 Control whether the agent receives the prior conversation history.
@@ -6891,6 +7048,12 @@ Control whether the agent receives the prior conversation history.
             // ... other params
             .includeContents(IncludeContents.NONE)
             .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/agents/llm-agent/CapitalAgent.kt:include_contents"
     ```
 
 !!! note "Go v2.0.0: agent execution modes"
@@ -8160,6 +8323,7 @@ In ADK, **Artifacts** represent a crucial mechanism for managing named, versione
 *   **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts`. ADK provides various implementations, such as:
     *   An in-memory service for testing or temporary storage (e.g., `InMemoryArtifactService` in Python, defined in `google.adk.artifacts.in_memory_artifact_service.py`).
     *   A service for persistent storage using Google Cloud Storage (GCS) (e.g., `GcsArtifactService` in Python, defined in `google.adk.artifacts.gcs_artifact_service.py`).
+    *   A service that persists artifacts to a directory on the local filesystem, such as `FileArtifactService` in Kotlin, which takes the base directory as its only argument.
     The chosen service implementation handles versioning automatically when you save data.
 
 ## Why Use Artifacts?
@@ -8219,7 +8383,7 @@ Understanding artifacts involves grasping a few key components: the service that
     * `List versions`: Lists all available version numbers for a specific artifact filename.
     * `List artifact versions` and `Get artifact version`: In Python, these return `ArtifactVersion` metadata, covering the version number, canonical URI, MIME type, creation time and custom metadata, rather than the artifact payload.
 
-* **Configuration:** You provide an instance of an artifact service (e.g., `InMemoryArtifactService`, `GcsArtifactService`) when initializing the `Runner`. The `Runner` then makes this service available to agents and tools via the `InvocationContext`.
+* **Configuration:** You provide an instance of an artifact service when initializing the `Runner`, such as `InMemoryArtifactService`, `GcsArtifactService`, or `FileArtifactService` in Kotlin. The `Runner` then makes this service available to agents and tools via the `InvocationContext`.
 
 === "Python"
 
@@ -10773,8 +10937,8 @@ a compactor object
 
 ### Define a Summarizer {#define-summarizer}
 You can customize the process of context compression by defining a summarizer.
-The `LlmEventSummarizer` (Python/Java) or `LlmSummarizer` (TypeScript) class allows
-you to specify a particular model for summarization.
+The `LlmEventSummarizer` (Python, Java and Kotlin) or `LlmSummarizer` (TypeScript)
+class allows you to specify a particular model for summarization.
 The following code example demonstrates how to define and configure a custom summarizer:
 
 === "Python"
@@ -10855,9 +11019,38 @@ The following code example demonstrates how to define and configure a custom sum
     });
     ```
 
-You can further refine the compactor by modifying its summarizer. In Python and Java,
-customize the `prompt_template` on `LlmEventSummarizer`. In TypeScript, customize
-the `prompt` on `LlmSummarizer`. For more details, see the
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.apps.App
+    import com.google.adk.kt.models.Gemini
+    import com.google.adk.kt.summarizer.EventsCompactionConfig
+    import com.google.adk.kt.summarizer.LlmEventSummarizer
+
+    // Define the AI model to be used for summarization:
+    val summarizationLlm = Gemini(name = "gemini-flash-latest")
+
+    // Create the summarizer with the custom model:
+    val mySummarizer = LlmEventSummarizer(model = summarizationLlm)
+
+    // Configure the App with the custom summarizer and compaction settings:
+    val app =
+        App(
+            appName = "my-agent",
+            rootAgent = rootAgent,
+            eventsCompactionConfig =
+                EventsCompactionConfig(
+                    compactionInterval = 3,
+                    overlapSize = 1,
+                    summarizer = mySummarizer,
+                ),
+        )
+    ```
+
+You can further refine the compactor by modifying its summarizer. In Python, Java
+and Kotlin, customize the prompt template on `LlmEventSummarizer` — the property is
+`prompt_template` in Python, and `promptTemplate` in Java and Kotlin. In TypeScript,
+customize the `prompt` on `LlmSummarizer`. For more details, see the
 [`LlmEventSummarizer` code](https://github.com/google/adk-python/blob/main/src/google/adk/apps/llm_event_summarizer.py#L60) or
 [`LlmSummarizer` code](https://github.com/google/adk-js/blob/main/core/src/context/summarizers/llm_summarizer.ts).
 
@@ -22903,7 +23096,7 @@ File: docs/grounding/grounding_with_search.md
 # Grounding with Search for agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.2.0</span>
 </div>
 
 [Agent Search](/integrations/agent-search/) is a powerful tool for the Agent Development Kit (ADK) that enables AI agents to access information from your private enterprise documents and data repositories. By connecting your agents to indexed enterprise content, you can provide users with answers grounded in your organization's knowledge base.
@@ -22916,12 +23109,12 @@ Before creating a grounded agent, you must have an existing Agent Search Data St
 
 ## Authentication Setup
 
-**Note: Agent Search requires Google Cloud Platform (Agent Platform) authentication. Google AI Studio is not supported for this tool.**
+Agent Search requires your ADK agent to be connected to a Google Cloud project authentication. You can not use a Gemini API Key from Google AI Studio when using this tool. For more information on connecting your ADK agent to Google Cloud projects, see the [Connect to Google Cloud](/get-started/google-cloud/) guide.
 
 * Set up the [gcloud CLI](https://cloud.google.com/vertex-ai/generative-ai/docs/start/quickstarts/quickstart-multimodal#setup-local)
 * Authenticate to Google Cloud, from the terminal by running `gcloud auth login`.
 * For Python, open the **`.env`** file and specify your project ID and location.
-* For Java, ensure your application environment has Google Cloud default credentials configured (`GOOGLE_APPLICATION_CREDENTIALS`).
+* For Java and Kotlin, ensure your application environment has Google Cloud default credentials configured (`GOOGLE_APPLICATION_CREDENTIALS`), and set the variables below in that same environment rather than in a `.env` file.
 
 ```env title=".env"
 GOOGLE_GENAI_USE_ENTERPRISE=TRUE
@@ -22970,6 +23163,32 @@ To enable Grounding with Search, you include the search tool in your agent defin
         .description("Enterprise document search assistant with Agent Search capabilities")
         .tools(VertexAiSearchTool.builder().dataStoreId(DATASTORE_ID).build())
         .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.Gemini
+    import com.google.adk.kt.tools.VertexAiSearchTool
+
+    // Configuration
+    val DATASTORE_ID =
+        "projects/YOUR_PROJECT_ID/locations/global/collections/default_collection/dataStores/YOUR_DATASTORE_ID"
+
+    val rootAgent =
+        LlmAgent(
+            name = "vertex_search_agent",
+            model = Gemini(name = "gemini-flash-latest"),
+            instruction =
+                Instruction(
+                    "Answer questions using Agent Search to find information from internal " +
+                        "documents. Always cite sources when available.",
+                ),
+            description = "Enterprise document search assistant with Agent Search capabilities",
+            tools = listOf(VertexAiSearchTool(dataStoreId = DATASTORE_ID)),
+        )
     ```
 
 ## How Grounding with Search works
@@ -23093,6 +23312,22 @@ Since grounding metadata is provided, you can choose to implement citation displ
             // Optional: Show source count
             if (event.groundingMetadata().isPresent()) {
                 System.out.println("\nBased on " + event.groundingMetadata().get().groundingChunks().size() + " documents");
+            }
+        }
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    events.collect { event ->
+        if (event.isFinalResponse) {
+            println(event.content?.parts?.firstOrNull()?.text)
+
+            // Optional: Show source count
+            val chunks = event.groundingMetadata?.groundingChunks
+            if (!chunks.isNullOrEmpty()) {
+                println("\nBased on ${chunks.size} documents")
             }
         }
     }
@@ -27127,7 +27362,7 @@ catalog_tags: ["observability", "google"]
 # BigQuery Agent Analytics plugin for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span><span class="lst-java">Java v1.5.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span><span class="lst-java">Java v1.5.0</span><span class="lst-kotlin">Kotlin v0.8.0</span>
 </div>
 
 The BigQuery Agent Analytics Plugin significantly enhances Agent Development Kit
@@ -27177,6 +27412,21 @@ The plugin includes three reliability and observability fixes:
     For information on costs, see the [BigQuery
     documentation](https://cloud.google.com/bigquery/pricing?e=48754805&hl=en#data-ingestion-pricing).
 
+??? note "Kotlin support"
+
+    The **Kotlin** plugin logs invocation lifecycle events. It writes an
+    `INVOCATION_STARTING` row when an invocation begins and an
+    `INVOCATION_COMPLETED` row when it ends, and creates the partitioned,
+    clustered events table on first use if it does not already exist.
+
+    Rows are inserted one at a time through `tabledata.insertAll`, synchronously
+    on the invocation path, rather than through the Storage Write API used by
+    Python and Java.
+
+    The following are not implemented in Kotlin: LLM, tool, agent, state, HITL
+    and A2A events; the ADK 2.0 workflow events; automatic view creation; Auto
+    Schema Upgrade; tool provenance; GCS offloading; and drop statistics.
+
 ## Use cases
 
 - **Agent workflow debugging and analysis:** Capture a wide range of *plugin
@@ -27207,6 +27457,10 @@ The following table lists all event types the plugin logs. For detailed payload
 examples, see [Event types and payloads](#event-types). The **View** column
 shows the BigQuery view optionally created when
 [`create_views`](#configuration-options) is enabled (the default).
+
+In **Kotlin**, the plugin logs `INVOCATION_STARTING` and `INVOCATION_COMPLETED`
+only and creates no views, so the other rows and the entire **View** column
+apply to Python and Java.
 
 | Event Type | Captured When | Key Payload Fields | View |
 | --- | --- | --- | --- |
@@ -27311,6 +27565,33 @@ shows the BigQuery view optionally created when
       }
     }
     ```
+
+=== "Kotlin"
+
+    Add the plugin to your agent's `App` object. For prerequisites, see
+    [Prerequisites](#prerequisites). The plugin is JVM-only and ships outside
+    core, so add the integrations artifact:
+
+    ```kotlin title="build.gradle.kts"
+    implementation("com.google.adk:google-adk-kotlin-integrations:0.8.0")
+    ```
+
+    ```kotlin title="BigQueryAnalyticsExample.kt"
+    --8<-- "examples/kotlin/snippets/integrations/BigQueryAnalyticsExample.kt:quickstart"
+    ```
+
+    The plugin creates the events table on first use, so the credentials in
+    scope need permission to create a table in the dataset, not only to insert
+    rows. Set `location` to your dataset's location; it defaults to `"US"`. For
+    the full set of options, see [Configuration
+    options](#configuration-options).
+
+    Logging never fails the turn: if the table cannot be created or a row cannot
+    be inserted, the plugin logs the error and the invocation continues. When
+    rows are missing, enable logging for
+    `com.google.adk.kt.plugins.agentanalytics.BigQueryAgentAnalyticsPlugin` —
+    logs are emitted under that class name, not under the plugin's ADK name
+    (`bigquery_agent_analytics`).
 
 
 ### Run and test agent
@@ -27827,6 +28108,44 @@ account) under which the agent is running needs these Google Cloud roles:
     BigQueryAgentAnalyticsPlugin plugin = new BigQueryAgentAnalyticsPlugin(config);
     ```
 
+=== "Kotlin"
+
+    In Kotlin, all configuration is managed via the `BigQueryLoggerConfig` data
+    class, which the plugin takes as its only required argument.
+
+    #### BigQueryLoggerConfig properties
+
+    | Option | Type | Default | Use when |
+    | --- | --- | --- | --- |
+    | `projectId` | `String` | *(required)* | Select the Google Cloud project |
+    | `datasetId` | `String` | *(required)* | Select the BigQuery dataset |
+    | `enabled` | `Boolean` | `true` | Temporarily disable logging |
+    | `location` | `String` | `"US"` | Match the BigQuery dataset location (for example, `"EU"` or `"us-central1"`) |
+    | `tableName` | `String` | `"agent_events"` | Use a custom table name |
+    | `credentials` | `Credentials?` | `null` | Use explicit service-account credentials instead of [ADC](https://cloud.google.com/docs/authentication/application-default-credentials) |
+
+    The following code sample shows how to define a configuration for the
+    BigQuery Agent Analytics plugin in Kotlin:
+
+    ```kotlin
+    import com.google.adk.kt.plugins.agentanalytics.BigQueryAgentAnalyticsPlugin
+    import com.google.adk.kt.plugins.agentanalytics.BigQueryLoggerConfig
+
+    val config =
+        BigQueryLoggerConfig(
+            projectId = "my-project",
+            datasetId = "my_dataset",
+            location = "EU",
+            tableName = "agent_events",
+        )
+
+    val plugin = BigQueryAgentAnalyticsPlugin(config = config)
+    ```
+
+    The options listed under the **Python** and **Java** tabs, such as batching,
+    content formatting, event allowlists, GCS offloading, and view creation, do
+    not exist in Kotlin.
+
 
 ## Schema and production setup
 
@@ -27853,6 +28172,11 @@ provides a comprehensive reference with example values.
 | **error_message** | `STRING` | `NULLABLE` | Human-readable exception message or stack trace fragment. Populated only when `status` is `ERROR`. | `Error 404: Dataset not found` |
 | **is_truncated** | `BOOLEAN` | `NULLABLE` | `true` if `content` or `attributes` exceeded the BigQuery cell size limit (default 10MB) and were partially dropped. | `false` |
 | **content_parts** | `RECORD` | `REPEATED` | Array of multi-modal segments (Text, Image, Blob). Used when content cannot be serialized as simple JSON (e.g., large binaries or GCS refs). | `[{"mime_type": "text/plain", "text": "hello"}]` |
+
+In **Kotlin**, the plugin creates the table with these same columns but
+populates only `timestamp`, `event_type`, `agent`, `session_id`,
+`invocation_id`, `user_id`, and `content`. The remaining columns are always
+null.
 
 The plugin automatically creates the table if it does not exist. For production,
 you can optionally create the table manually using the DDL below.
@@ -28185,6 +28509,10 @@ updated by tools).
 | `AGENT_COMPLETED` | `{}` |
 | `USER_MESSAGE_RECEIVED` | `{"text_summary": "Help me book a flight."}` |
 | `AGENT_RESPONSE` | `{"response": "Here are the flights..."}` |
+
+In **Kotlin**, the two invocation events carry a summary message instead of an
+empty object: `{"message": "Invocation started"}` and
+`{"message": "Invocation completed"}`.
 
 **AGENT_RESPONSE**
 
@@ -55141,7 +55469,8 @@ Use these parameters to control runtime guardrails and debugging:
 
 - `max_llm_calls`: Caps the total number of LLM calls per run (default: 500).
   Set to 0 or negative for unlimited calls, though this is not recommended for
-  production. Values at or above `sys.maxsize` raises an error.
+  production. Passing your language's largest integer raises an error:
+  `sys.maxsize` in Python, `Int.MAX_VALUE` in Kotlin.
 - `save_input_blobs_as_artifacts`: When `True`, saves input blobs (e.g.,
   uploaded files) as run artifacts for debugging and auditing. Deprecated in
   Python in favor of `SaveFilesAsArtifactsPlugin`.
@@ -55165,7 +55494,7 @@ File: docs/safety/index.md
 # Safety and Security for AI Agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span><span class="lst-java">Java</span><span class="lst-kotlin">Kotlin</span>
 </div>
 
 As AI agents grow in capability, ensuring they operate safely, securely, and align with your brand values is paramount. Uncontrolled agents can pose risks, including executing misaligned or harmful actions, such as data exfiltration, and generating inappropriate content that can impact your brand’s reputation. **Sources of risk include vague instructions, model hallucination, jailbreaks and prompt injections from adversarial users, and indirect prompt injections via tool use.**
@@ -55530,6 +55859,31 @@ Gemini models come with in-built safety mechanisms that can be leveraged to impr
     		},
     	},
     })
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.types.GenerateContentConfig
+    import com.google.adk.kt.types.HarmBlockThreshold
+    import com.google.adk.kt.types.HarmCategory
+    import com.google.adk.kt.types.SafetySetting
+
+    val agent =
+        LlmAgent(
+            // ...
+            generateContentConfig =
+                GenerateContentConfig(
+                    safetySettings =
+                        listOf(
+                            SafetySetting(
+                                category = HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                                threshold = HarmBlockThreshold.OFF,
+                            ),
+                        ),
+                ),
+        )
     ```
 
 * **System instructions for safety**: [System instructions](https://cloud.google.com/vertex-ai/generative-ai/docs/multimodal/safety-system-instructions) for Gemini models on Agent Platform provide direct guidance to the model on how to behave and what type of content to generate. By providing specific instructions, you can proactively steer the model away from generating undesirable content to meet your organization’s unique needs. You can craft system instructions to define content safety guidelines, such as prohibited and sensitive topics, and disclaimer language, as well as brand safety guidelines to ensure the model's outputs align with your brand's voice, tone, values, and target audience.
@@ -56261,7 +56615,7 @@ File: docs/sessions/session/rewind.md
 # Rewind sessions for agents
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.17.0</span><span class="lst-kotlin">Kotlin v0.3.0</span>
 </div>
 
 The ADK session Rewind feature allows you to revert a session to a previous
@@ -56279,36 +56633,44 @@ rewind a session by using the rewind method on a ***Runner*** instance,
 specifying the user, session, and invocation id, as shown in the following code
 snippet:
 
-```python
-# Create runner
-runner = InMemoryRunner(
-    agent=agent.root_agent,
-    app_name=APP_NAME,
-)
+=== "Python"
 
-# Create a session
-session = await runner.session_service.create_session(
-    app_name=APP_NAME, user_id=USER_ID
-)
-# call agent with wrapper function "call_agent_async()"
-await call_agent_async(
-    runner, USER_ID, session.id, "set state color to red"
-)
-# ... more agent calls ...
-events_list = await call_agent_async(
-    runner, USER_ID, session.id, "update state color to blue"
-)
+    ```python
+    # Create runner
+    runner = InMemoryRunner(
+        agent=agent.root_agent,
+        app_name=APP_NAME,
+    )
 
-# get invocation id
-rewind_invocation_id=events_list[1].invocation_id
+    # Create a session
+    session = await runner.session_service.create_session(
+        app_name=APP_NAME, user_id=USER_ID
+    )
+    # call agent with wrapper function "call_agent_async()"
+    await call_agent_async(
+        runner, USER_ID, session.id, "set state color to red"
+    )
+    # ... more agent calls ...
+    events_list = await call_agent_async(
+        runner, USER_ID, session.id, "update state color to blue"
+    )
 
-# rewind invocations (state color: red)
-await runner.rewind_async(
-    user_id=USER_ID,
-    session_id=session.id,
-    rewind_before_invocation_id=rewind_invocation_id,
-)
-```
+    # get invocation id
+    rewind_invocation_id=events_list[1].invocation_id
+
+    # rewind invocations (state color: red)
+    await runner.rewind_async(
+        user_id=USER_ID,
+        session_id=session.id,
+        rewind_before_invocation_id=rewind_invocation_id,
+    )
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/sessions/RewindExample.kt:rewind_session"
+    ```
 
 When you call the ***rewind*** method, all ADK managed session-level resources
 are restored to the state they were in *before* the request you specified with
@@ -57893,7 +58255,7 @@ File: docs/skills/index.md
 # Skills for ADK agents
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v1.2.0</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v1.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 An agent ***Skill*** is a self-contained unit of functionality that an ADK agent
@@ -57909,7 +58271,8 @@ impact on the operating context window of the agent.
     respective ADK GitHub repositories:
     [ADK Python](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills),
     [ADK TypeScript](https://github.com/google/adk-js/issues/new?template=feature_request.md&labels=skills),
-    [ADK Go](https://github.com/google/adk-go/issues/new?template=feature_request.md&labels=skills).
+    [ADK Go](https://github.com/google/adk-go/issues/new?template=feature_request.md&labels=skills),
+    [ADK Kotlin](https://github.com/google/adk-kotlin/issues/new).
 
 ## Get started
 
@@ -57992,6 +58355,15 @@ You can define [skills in code](#inline-skills) or load
 
     For a complete example, see the code sample in
     [skills](https://github.com/google/adk-go/tree/main/examples/skills).
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/skills/SkillsExample.kt:get_started"
+    ```
+
+    For a complete example, see the code sample in
+    [skills](https://github.com/google/adk-kotlin/tree/main/examples/src/main/kotlin/com/google/adk/kt/examples/skills).
 
 !!! note "Check your working directory"
 
@@ -58180,6 +58552,17 @@ You can define Skills within the code of your agent, as shown below.
     }
     ```
 
+=== "Kotlin"
+
+    !!! note
+        ADK Kotlin does not currently provide a standard Source for inline skills.
+        To define skills directly in code, you must implement the `SkillSource`
+        interface yourself, as shown below.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/skills/SkillsExample.kt:inline_skill"
+    ```
+
 !!! note
     The `Source` interface can be backed by any data store (such as a database)
     to support dynamic use cases like live updates and personalization.
@@ -58235,6 +58618,12 @@ You can define Skills within the code of your agent, as shown below.
     }
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/skills/SkillsExample.kt:filesystem_skill"
+    ```
+
 ## Skill processing and validation
 
 When you include skills in your agent, the agent uses a standardized process
@@ -58248,6 +58637,7 @@ Check out these resources for building agents with Skills:
 
 - [Skills in Python - code sample](https://github.com/google/adk-python/tree/main/contributing/samples/environment_and_skills/skills_agent)
 - [Skills in Go - code sample](https://github.com/google/adk-go/tree/main/examples/skills)
+- [Skills in Kotlin - code sample](https://github.com/google/adk-kotlin/tree/main/examples/src/main/kotlin/com/google/adk/kt/examples/skills)
 - Agent Skills [specification documentation](https://agentskills.io/)
 
 ================
@@ -59512,7 +59902,7 @@ File: docs/tools-custom/confirmation.md
 # Get action confirmation for ADK Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-kotlin">Kotlin v0.1.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 Some agent workflows require confirmation for decision making, verification,
@@ -59560,9 +59950,10 @@ agent pattern.
 When your tool only requires a simple `yes` or `no` from the user, you can
 append a confirmation step. In Python, Go, and Java, you can enable this by
 wrapping the tool with the `FunctionTool` class and setting the
-`require_confirmation` parameter (or equivalent) to `True`. In TypeScript, you
-implement this logic manually within the `execute` function using the
-`ToolContext`.
+`require_confirmation` parameter (or equivalent) to `True`. In Kotlin, you set
+`requireConfirmation = true` on the tool function's `@Tool` annotation. In
+TypeScript, you implement this logic manually within the `execute` function
+using the `ToolContext`.
 
 The following examples show how to enable boolean confirmation:
 
@@ -59629,9 +60020,15 @@ The following examples show how to enable boolean confirmation:
         .build();
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/confirmation/ToolConfirmationExample.kt:boolean_confirmation"
+    ```
+
 ### Require confirmation function
 
-You can modify the behavior of the confirmation requirement by using a function that returns a boolean response based on the tool's input. In TypeScript, this is handled by adding conditional logic to your `execute` function.
+You can modify the behavior of the confirmation requirement by using a function that returns a boolean response based on the tool's input. In TypeScript, this is handled by adding conditional logic to your `execute` function. In Kotlin, the `@Tool` annotation's flag is a compile-time constant, so the conditional logic goes inside the tool function.
 
 === "Python"
 
@@ -59708,6 +60105,17 @@ You can modify the behavior of the confirmation requirement by using a function 
         // ...
         .build();
     ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/confirmation/dynamic/ReimbursementTools.kt:dynamic_confirmation"
+    ```
+
+    !!! note
+        The `@Tool` annotation's `requireConfirmation` flag is a compile-time
+        constant, so a threshold is evaluated inside the tool using the
+        `ToolContext`, as in ADK Java.
 
 ## Advanced confirmation {#advanced-confirmation}
 
@@ -59842,6 +60250,12 @@ time off requests for an employee:
             "approved_days", approvedDays
         );
     }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/confirmation/ToolConfirmationExample.kt:advanced_confirmation"
     ```
 
 ## Remote confirmation with REST API {#remote-response}
@@ -60543,6 +60957,11 @@ it's None) into the content of the `FunctionResponse` sent back to the LLM.
     with the response. For more details on using the Resume feature, see [Resume
     stopped agents](/runtime/resume/).
 
+    In **Kotlin**, the runner resolves the invocation from the function
+    response's own call ID, so you do not need to pass `invocationId` to
+    `runAsync`. A response whose ID matches no function call in the session
+    throws instead.
+
 ??? Tip "Applies to only Java ADK"
 
     When passing `ToolContext` with Function Tools, ensure that one of the
@@ -60605,6 +61024,12 @@ it's None) into the content of the `FunctionResponse` sent back to the LLM.
     --8<-- "examples/java/snippets/src/main/java/tools/LongRunningFunctionExample.java:full_code"
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/tools/function-tools/LongRunningTool.kt:call_reimbursement_tool"
+    ```
+
 ??? "Python complete example: File Processing Simulation"
 
     ```python
@@ -60620,6 +61045,15 @@ it's None) into the content of the `FunctionResponse` sent back to the LLM.
   incoming FunctionResponse stream (progress vs. completion) for user updates.
 - **Final return**: The function returns the final result dictionary, which is
   sent in the concluding FunctionResponse to indicate completion.
+- **Kotlin has no `LongRunningFunctionTool` class**: Annotate the function with
+  `@Tool(isLongRunning = true)`, or pass `isLongRunning = true` to a `BaseTool`
+  subclass.
+- **Kotlin turn count**: The tool above returns a value rather than
+  `Unit`, so non-resumable apps send that placeholder to the model and call it a
+  second time, ending turn 1 in an interim reply. A resumable app pauses on the
+  function call with no second model call. Returning `Unit` suppresses the
+  placeholder response entirely, ending the turn on the function call in either
+  mode.
 
 ## Agent-as-a-Tool {#agent-tool}
 
