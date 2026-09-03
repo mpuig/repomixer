@@ -1361,7 +1361,7 @@ compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
 to `JdkA2AHttpClient()`:
 
 ```kotlin title="build.gradle.kts"
-implementation("com.google.adk:google-adk-kotlin-a2a:0.8.0")
+implementation("com.google.adk:google-adk-kotlin-a2a:0.9.0")
 implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.0.0.Final")
 ```
 
@@ -3878,8 +3878,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.9.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:0.9.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -19776,8 +19776,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.9.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.9.0")
     }
     ```
 
@@ -20189,8 +20189,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.9.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.9.0")
 }
 ```
 
@@ -20210,9 +20210,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:0.8.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
+        implementation("com.google.adk:google-adk-kotlin-core:0.9.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:0.9.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:0.9.0")
     }
 
     kotlin {
@@ -20282,7 +20282,7 @@ fun main() {
 ## Run your agent
 
 You can run your ADK agent using the interactive command-line REPL
-or the ADK web user interface provided by `AdkWebServer`. Both options
+or the ADK web user interface provided by `AdkDevServer`. Both options
 allow you to test and interact with your agent.
 
 ### Run with command-line interface
@@ -20316,9 +20316,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:0.8.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:0.8.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-core:0.9.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:0.9.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:0.9.0")
 }
 ```
 
@@ -20327,26 +20327,15 @@ Then create a `WebMain.kt` file alongside your `Main.kt`:
 ```kotlin title="my_agent/src/main/kotlin/com/example/agent/WebMain.kt"
 package com.example.agent
 
-import com.google.adk.kt.artifacts.InMemoryArtifactService
-import com.google.adk.kt.sessions.InMemorySessionService
-import com.google.adk.kt.webserver.AdkWebServer
-import com.google.adk.kt.webserver.loaders.SingleAgentLoader
-import com.google.adk.kt.webserver.telemetry.ApiServerSpanExporter
+import com.google.adk.kt.webserver.AdkServerConfig
+import com.google.adk.kt.webserver.dev.AdkDevServer
 
 fun main() {
-    val agent = HelloTimeAgent.rootAgent
-    val sessionService = InMemorySessionService()
-    val artifactService = InMemoryArtifactService()
+    // inMemory() supplies the agent loader and the session and artifact
+    // services, keeping their state in the process.
+    val server = AdkDevServer(AdkServerConfig.inMemory(HelloTimeAgent.rootAgent))
 
-    val server = AdkWebServer(
-        port = 8080,
-        sessionService = sessionService,
-        artifactService = artifactService,
-        agentLoader = SingleAgentLoader(agent),
-        apiServerSpanExporter = ApiServerSpanExporter(),
-    )
-
-    println("Starting ADK web server on http://localhost:8080...")
+    println("Starting ADK dev server on http://localhost:8080")
     server.start(wait = true)
 }
 ```
@@ -20368,7 +20357,8 @@ upper left corner and type a request.
 !!! warning "Caution: ADK Web for development only"
 
     ADK Web is ***not meant for use in production deployments***. You should
-    use ADK Web for development and debugging purposes only.
+    use ADK Web for development and debugging purposes only. For more
+    information, see ADK [Web Interface](/runtime/web-interface/).
 
 ## Next: Build your agent
 
@@ -27655,7 +27645,7 @@ apply to Python and Java.
     core, so add the integrations artifact:
 
     ```kotlin title="build.gradle.kts"
-    implementation("com.google.adk:google-adk-kotlin-integrations:0.8.0")
+    implementation("com.google.adk:google-adk-kotlin-integrations:0.9.0")
     ```
 
     ```kotlin title="BigQueryAnalyticsExample.kt"
@@ -30901,7 +30891,7 @@ agent using the ADK CLI.
     adk deploy agent_engine \
         --project=$GOOGLE_CLOUD_PROJECT \
         --region=$GOOGLE_CLOUD_LOCATION \
-        --trace_to_cloud \
+        --otel_to_cloud \
         $AGENT_PATH
     ```
 
@@ -31023,13 +31013,30 @@ process, similar to the trace view in the local ADK web UI.
 
 ### Captured attributes
 
-ADK automatically enriches traces with the following attributes to help you
-filter and analyze your agent's behavior:
+The Agent Development Kit (ADK) enriches traces with telemetry attributes to help you filter, monitor, and analyze agent behavior.
 
-- `gen_ai.agent.name`: The name of the agent being executed.
-- `gcp.vertex.agent.invocation_id`: The unique ID of the invocation.
-- `gcp.vertex.agent.event_id`: The ID of the specific event.
-- `gen_ai.conversation.id`: The session ID.
+| Attribute | Description |
+| :--- | :--- |
+| `gen_ai.agent.name` | The name of the agent being executed. |
+| `gcp.vertex.agent.invocation_id` | Unique ID of the invocation. |
+| `gcp.vertex.agent.event_id` | ID of the specific event. |
+| `gen_ai.conversation.id` | The session or conversation ID. |
+| `gcp.vertex.agent.session_id` | The session ID associated with the agent invocation context. |
+| `gcp.vertex.agent.llm_request` | Serialized LLM request containing prompt text and configuration. |
+| `gcp.vertex.agent.llm_response` | Serialized LLM response containing model output. |
+| `gcp.vertex.agent.tool_call_args` | Serialized arguments passed to tool calls. |
+| `gcp.vertex.agent.tool_response` | Serialized result returned by the tool. |
+| `gcp.vertex.agent.data` | Serialized data payloads sent to the agent. |
+
+### Data privacy and payload redaction
+
+To prevent exposing sensitive data and Personally Identifiable Information (PII) in production:
+
+- **Deployment default:** When deploying with `adk deploy agent_engine --otel_to_cloud`, ADK automatically sets `ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS='false'` unless it is already defined in `.env` settings. For other targets like Cloud Run or GKE, set this variable explicitly.
+- **Redacted payloads:** When `ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS` is `'false'` or `'0'`, payload attributes (`gcp.vertex.agent.llm_request`, `gcp.vertex.agent.llm_response`, `gcp.vertex.agent.tool_call_args`, `gcp.vertex.agent.tool_response`, and `gcp.vertex.agent.data`) are replaced with placeholder values, such as `"{}"` or `"N/A"`.
+- **Enabling capture:** To capture full payloads for local testing or debugging, explicitly set `ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS='true'` in your `.env` file or environment variables.
+- **OpenTelemetry message capturing:** Set `OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT='true'` (or `'1'`) to enable logging of prompt and response content in OpenTelemetry events.
+
 
 ## Resources
 
