@@ -26639,9 +26639,9 @@ catalog_tags: ["observability", "evaluation"]
 
 # Arize AX observability for ADK
 
-[Arize AX](https://arize.com/docs/ax) is a production-grade observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing, evaluation, and monitoring capabilities for your Google ADK applications. To get started, sign up for a [free account](https://app.arize.com/auth/join).
+[Arize AX](https://arize.com/products/ax/) is the full-featured AI observability and evaluation platform from [Arize AI](https://arize.com/) for production teams, AI-native companies, and enterprises. It is available as managed cloud or enterprise self-hosted deployment and provides comprehensive tracing, evaluation, and monitoring capabilities for Google ADK applications. To get started, sign up for a [free account](https://app.arize.com/auth/join).
 
-For an open-source, self-hosted alternative, check out [Phoenix](https://arize.com/docs/phoenix).
+For an open-source path for local development, experimentation, or single-container self-hosting, check out the [Arize Phoenix ADK integration](/integrations/phoenix/). Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) show how teams use traces to evaluate agent decisions, tool calls, and model behavior.
 
 ## Overview
 
@@ -39275,7 +39275,9 @@ catalog_tags: ["observability", "evaluation"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[Phoenix](https://arize.com/docs/phoenix) is an open-source, self-hosted observability platform for monitoring, debugging, and improving LLM applications and AI Agents at scale. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://arize.com/phoenix/).
+[Arize Phoenix](https://arize.com/phoenix/) is the open-source observability and evaluation platform from [Arize AI](https://arize.com/) for local development, OSS workflows, and self-hosted tracing. It provides comprehensive tracing and evaluation capabilities for your Google ADK applications. To get started, sign up for a [free account](https://arize.com/phoenix/).
+
+For the full-featured production platform built for AI-native teams and enterprises, use the [Arize AX ADK integration](/integrations/arize-ax/), available as managed cloud or enterprise self-hosted deployment. Arize's [agent evaluation guide](https://arize.com/guides/ai-agent-handbook/agent-evaluation/) and [LLM evaluation guide](https://arize.com/resources/llm-evaluation/) show how traces support evaluation workflows for agents and LLM applications.
 
 
 ## Overview
@@ -51919,18 +51921,22 @@ whether the context window is compressed:
     )
     ```
 
-## Enable streaming
+## Text response options { #enable-streaming }
 
-To control how the agent delivers responses, set the `streaming_mode` parameter:
+You can control how an agent responds in text mode, word-by-word as it is
+generated, or as one full response, with the ***Streaming Mode*** parameter, as
+described below:
 
 - **`StreamingMode.NONE`** (default): The runner returns one complete response
   per turn. Suitable for CLI tools, batch processing, and synchronous workflows.
 - **`StreamingMode.SSE`**: Server-Sent Events streaming. The runner yields
   partial events as the LLM generates, enabling typewriter-style UIs and
   real-time chat displays.
-- **`StreamingMode.BIDI`**: Reserved for bidirectional streaming, but **not
-  used** in the standard `run_async()` path. For bidirectional streaming, use
-  `runner.run_live()` instead.
+
+There is another setting for the ***Streaming Mode*** parameter which enables
+bidirectional streaming of data, including voice input and output. This feature
+requires additional configuration beyond simple agents. For more information
+about this feature, see [Live and Voice Agents](../live/index.md).
 
 Set `support_cfc=True` alongside `StreamingMode.SSE` to enable Compositional
 Function Calling (CFC), which allows the model to dynamically compose and
@@ -51959,7 +51965,6 @@ execute function calls. CFC uses the Live API under the hood.
 
     const config: RunConfig = {
         streamingMode: StreamingMode.SSE,
-        supportCfc: true,
         maxLlmCalls: 150,
     };
     ```
@@ -52090,22 +52095,28 @@ response modalities.
 
 ## Configure live agents
 
-Live (`run_live()`) agent sessions add a set of real-time parameters, including
-`realtime_input_config`, `session_resumption`, `save_live_blob`,
-`tool_thread_pool_config`, `proactivity`, `enable_affective_dialog`, and more. These
-are documented in one place, with per-model support and examples, in the live docs:
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-java">Java</span>
+</div>
 
-- **[Live agent configuration](../live/configuration.md)** — the full `RunConfig`
+ADK agents can support [Live and Voice Agents](../live/index.md) to create
+interactive agent experiences. You configure agents that support this
+functionality using the `runner.run_live()` method.
+Live agent (`run_live()`) sessions add a set of real-time parameters, including
+`realtime_input_config`, `session_resumption`, `save_live_blob`,
+`tool_thread_pool_config`, `proactivity`, `enable_affective_dialog`, and more.
+For more information, see the live agent docs:
+
+- **[Live agent configuration](../live/configuration.md)**: `RunConfig`
   reference for live agents.
-- **[Sessions](../live/sessions.md#session-resumption)** — session resumption
-  and reconnection.
-- **[Configuration: proactivity and affective dialog](../live/configuration.md#proactivity-and-affective-dialog)** —
+- **[Sessions](../live/sessions.md#session-resumption)**: resume and reconnect
+   sessions.
+- **[Configuration: proactivity and affective dialog](../live/configuration.md#proactivity-and-affective-dialog)**:
   native-audio conversational features and the models that support them.
 
 The `tool_thread_pool_config` setting is an exception: it is a runtime concern rather than a
 Live API one, so it stays here. It runs tool executions in a background thread
 pool so the event loop keeps responding to user interruptions.
-
 Not all parameters are available in every language. See the
 [API reference](#api-reference) for language-specific details.
 
@@ -52137,6 +52148,20 @@ Not all parameters are available in every language. See the
             proactiveAudio: true,
         },
     };
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.RunConfig;
+    import com.google.genai.types.AvatarConfig;
+
+    RunConfig config = RunConfig.builder()
+        .avatarConfig(
+            AvatarConfig.builder()
+                .avatarName("PREBUILT_AVATAR_ID")
+                .build())
+        .build();
     ```
 
 ## Configure runtime limits and debugging
