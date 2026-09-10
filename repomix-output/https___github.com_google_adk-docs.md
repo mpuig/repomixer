@@ -3265,7 +3265,7 @@ Create an API key in [Google AI Studio](https://aistudio.google.com/app/apikey).
         .instruction("""
             You are a helpful assistant that can provide current weather.
         """)
-        .tools(FunctionTool.create(this, "getWeather")]    
+        .tools(FunctionTool.create(this, "getWeather"))
         .build();
 
     @Schema(name = "getWeather", 
@@ -3414,7 +3414,7 @@ The following example shows how to use a Gemma 4 vLLM endpoint with ADK agents.
         .instruction("""
             You are a helpful assistant that can provide the current weather.
         """)
-        .tools(FunctionTool.create(this, "getWeather")]    
+        .tools(FunctionTool.create(this, "getWeather"))
         .build();
 
     @Schema(name = "getWeather", 
@@ -6256,14 +6256,14 @@ Finally, you instantiate your `StoryFlowAgent` and use the `Runner` as usual.
     === "Go"
 
         ```go
-        # Full runnable code for the StoryFlowAgent example
+        // Full runnable code for the StoryFlowAgent example
         --8<-- "examples/go/snippets/agents/custom-agent/storyflow_agent.go:full_code"
         ```
 
     === "Java"
 
         ```java
-        # Full runnable code for the StoryFlowAgent example
+        // Full runnable code for the StoryFlowAgent example
         --8<-- "examples/java/snippets/src/main/java/agents/StoryFlowAgentExample.java:full_code"
         ```
 
@@ -7103,6 +7103,7 @@ reasoning and planning before execution. There are two main planners:
     from google.genai import types
 
     my_agent = Agent(
+        name="my_agent",
         model="gemini-flash-latest",
         planner=BuiltInPlanner(
             thinking_config=types.ThinkingConfig(
@@ -7124,6 +7125,7 @@ reasoning and planning before execution. There are two main planners:
     from google.adk.planners import PlanReActPlanner
 
     my_agent = Agent(
+        name="my_agent",
         model="gemini-flash-latest",
         planner=PlanReActPlanner(),
         # ... your tools here
@@ -8166,7 +8168,7 @@ You can use the ***Runner*** class to run your agent workflow using the
 === "Java"
 
     ```java title="AppMain.java"
-    import com.google.adk.agents.Content;
+    import com.google.genai.types.Content;
     import com.google.adk.runner.Runner;
 
     public class AppMain {
@@ -9005,7 +9007,7 @@ The artifact interaction methods are available directly on instances of `Callbac
             public void processLatestReportJava(String userId, String sessionId, String filename) {
                 // Load the latest version by passing Optional.empty() for the version
                 artifactService
-                        .loadArtifact(appName, userId, sessionId, filename, Optional.empty())
+                        .loadArtifact(appName, userId, sessionId, filename)
                         .subscribe(
                                 new MaybeObserver<Part>() {
                                     @Override
@@ -9048,7 +9050,7 @@ The artifact interaction methods are available directly on instances of `Callbac
 
                 // Example: Load a specific version (e.g., version 0)
                 /*
-                artifactService.loadArtifact(appName, userId, sessionId, filename, Optional.of(0))
+                artifactService.loadArtifact(appName, userId, sessionId, filename, 0)
                     .subscribe(part -> {
                         System.out.println("Loaded version 0 of Java artifact '" + filename + "'.");
                     }, throwable -> {
@@ -10627,6 +10629,7 @@ these settings, as shown in the following code sample:
     from google.adk.agents.context_cache_config import ContextCacheConfig
 
     root_agent = Agent(
+      name='my_caching_agent',
       # configure an agent using Gemini 2.0 or higher
     )
 
@@ -10841,7 +10844,8 @@ specific number of workflow events, or invocations, with the current Session.
 # (Optional) Event-based, sliding window as supplementary setting
 compaction_config = EventsCompactionConfig(
     compaction_interval=10,   # Number of turns between standard compactions
-    overlap_size=2,           # Number of events to retain as overlapping context
+    overlap_size=2            # Number of events to retain as overlapping context
+)
 ```
 
 ## Configure context compaction
@@ -11257,6 +11261,8 @@ Here are the primary context flavors you will encounter:
 
         ```go
         import (
+        	"fmt"
+
         	"google.golang.org/adk/v2/agent"
         	"google.golang.org/adk/v2/session"
         )
@@ -11324,7 +11330,11 @@ Here are the primary context flavors you will encounter:
     === "Go"
 
         ```go
-        import "google.golang.org/adk/v2/agent"
+        import (
+        	"fmt"
+
+        	"google.golang.org/adk/v2/agent"
+        )
 
         --8<-- "examples/go/snippets/context/main.go:readonly_context_instruction"
         ```
@@ -11399,6 +11409,8 @@ Here are the primary context flavors you will encounter:
 
         ```go
         import (
+        	"fmt"
+
         	"google.golang.org/adk/v2/agent"
         	"google.golang.org/adk/v2/model"
         )
@@ -11617,9 +11629,10 @@ You'll frequently need to read information stored within the context.
     === "Java"
 
         ```java
-        // Example: In a Tool function
+        import com.google.adk.agents.CallbackContext;
         import com.google.adk.tools.ToolContext;
 
+        // Example: In a Tool function
         public void myTool(ToolContext toolContext) {
             String userPref = (String) toolContext.state().getOrDefault("user_display_preference", "default_mode");
             String apiEndpoint = (String) toolContext.state().get("app:api_endpoint"); // Read app-level state
@@ -11632,8 +11645,6 @@ You'll frequently need to read information stored within the context.
         }
 
         // Example: In a Callback function
-        import com.google.adk.agents.CallbackContext;
-
         public void myCallback(CallbackContext callbackContext) {
             String lastToolResult = (String) callbackContext.state().get("temp:last_api_result"); // Read temporary state
 
@@ -11741,6 +11752,8 @@ You'll frequently need to read information stored within the context.
 
         ```go
         import (
+        	"fmt"
+
         	"google.golang.org/adk/v2/agent"
         	"google.golang.org/genai"
         )
@@ -11932,12 +11945,12 @@ Use artifacts to handle files or large data blobs associated with the session. C
                from google.adk.agents.context import Context # Or ToolContext
                from google.genai import types
 
-               def save_document_reference(context: Context, file_path: str) -> None:
+               async def save_document_reference(context: Context, file_path: str) -> None:
                    # Assume file_path is something like "gs://my-bucket/docs/report.pdf" or "/local/path/to/report.pdf"
                    try:
                        # Create a Part containing the path/URI text
-                       artifact_part = types.Part.from_text(file_path)
-                       version = context.save_artifact("document_to_summarize.txt", artifact_part)
+                       artifact_part = types.Part.from_text(text=file_path)
+                       version = await context.save_artifact("document_to_summarize.txt", artifact_part)
                        print(f"Saved document reference '{file_path}' as artifact version {version}")
                        # Store the filename in state if needed by other tools
                        context.state["temp:doc_artifact_name"] = "document_to_summarize.txt"
@@ -12025,14 +12038,14 @@ Use artifacts to handle files or large data blobs associated with the session. C
             # Assume a 'summarize_text' function exists
             # from my_summarizer_lib import summarize_text
 
-            def summarize_document_tool(tool_context: ToolContext) -> dict:
+            async def summarize_document_tool(tool_context: ToolContext) -> dict:
                 artifact_name = tool_context.state.get("temp:doc_artifact_name")
                 if not artifact_name:
                     return {"error": "Document artifact name not found in state."}
 
                 try:
                     # 1. Load the artifact part containing the path/URI
-                    artifact_part = tool_context.load_artifact(artifact_name)
+                    artifact_part = await tool_context.load_artifact(artifact_name)
                     if not artifact_part or not artifact_part.text:
                         return {"error": f"Could not load artifact or artifact has no text path: {artifact_name}"}
 
@@ -12190,9 +12203,9 @@ Use artifacts to handle files or large data blobs associated with the session. C
         # Example: In a tool function
         from google.adk.tools import ToolContext
 
-        def check_available_docs(tool_context: ToolContext) -> dict:
+        async def check_available_docs(tool_context: ToolContext) -> dict:
             try:
-                artifact_keys = tool_context.list_artifacts()
+                artifact_keys = await tool_context.list_artifacts()
                 print(f"Available artifacts: {artifact_keys}")
                 return {"available_docs": artifact_keys}
             except ValueError as e:
@@ -12436,13 +12449,17 @@ Access relevant information from the past or external sources.
     # Example: Tool using memory search
     from google.adk.tools import ToolContext
 
-    def find_related_info(tool_context: ToolContext, topic: str) -> dict:
+    async def find_related_info(tool_context: ToolContext, topic: str) -> dict:
         try:
-            search_results = tool_context.search_memory(f"Information about {topic}")
-            if search_results.results:
-                print(f"Found {len(search_results.results)} memory results for '{topic}'")
-                # Process search_results.results (which are SearchMemoryResponseEntry)
-                top_result_text = search_results.results[0].text
+            search_results = await tool_context.search_memory(f"Information about {topic}")
+            if search_results.memories:
+                print(f"Found {len(search_results.memories)} memory results for '{topic}'")
+                # Process search_results.memories (which are MemoryEntry objects)
+                top_entry = search_results.memories[0]
+                top_result_text = next(
+                    (part.text for part in (top_entry.content.parts or []) if part.text),
+                    "",
+                )
                 return {"memory_snippet": top_result_text}
             else:
                 return {"message": "No relevant memories found."}
@@ -12461,10 +12478,11 @@ Access relevant information from the past or external sources.
     async function findRelatedInfo(context: Context, topic: string): Promise<Record<string, string>> {
       try {
         const searchResults = await context.searchMemory(`Information about ${topic}`);
-        if (searchResults.results?.length) {
-          console.log(`Found ${searchResults.results.length} memory results for '${topic}'`);
-          // Process searchResults.results
-          const topResultText = searchResults.results[0].text;
+        if (searchResults.memories.length) {
+          console.log(`Found ${searchResults.memories.length} memory results for '${topic}'`);
+          // Process searchResults.memories
+          const topResultText =
+              searchResults.memories[0].content.parts?.[0]?.text ?? '';
           return { memory_snippet: topResultText };
         } else {
           return { message: 'No relevant memories found.' };
@@ -12488,10 +12506,11 @@ Access relevant information from the past or external sources.
       public Single<Map<String, String>> findRelatedInfo(ToolContext context, String topic) {
         return context.searchMemory("Information about " + topic)
             .map(searchResults -> {
-              if (searchResults != null && searchResults.results() != null && !searchResults.results().isEmpty()) {
-                System.out.println("Found " + searchResults.results().size() + " memory results for '" + topic + "'");
-                // Process searchResults.results
-                String topResultText = searchResults.results().get(0).text();
+              if (searchResults != null && !searchResults.memories().isEmpty()) {
+                System.out.println("Found " + searchResults.memories().size() + " memory results for '" + topic + "'");
+                // Process searchResults.memories
+                String topResultText =
+                    searchResults.memories().get(0).content().text();
                 return Map.of("memory_snippet", topResultText);
               } else {
                 return Map.of("message", "No relevant memories found.");
@@ -12517,6 +12536,7 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
     from google.adk.agents import BaseAgent
     from google.adk.agents.invocation_context import InvocationContext
     from google.adk.events import Event
+    from google.genai import types
     from typing import AsyncGenerator
 
     class MyControllingAgent(BaseAgent):
@@ -12530,7 +12550,14 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
             if ctx.session.state.get("critical_error_flag"):
                 print("Critical error detected, ending invocation.")
                 ctx.end_invocation = True # Signal framework to stop processing
-                yield Event(author=self.name, invocation_id=ctx.invocation_id, content="Stopping due to critical error.")
+                yield Event(
+                author=self.name,
+                invocation_id=ctx.invocation_id,
+                content=types.Content(
+                    role="model",
+                    parts=[types.Part(text="Stopping due to critical error.")],
+                ),
+            )
                 return # Stop this agent's execution
 
             # ... Normal agent processing ...
@@ -14504,7 +14531,7 @@ Use the `capital_agent` example defined on the [LLM agents](../agents/llm-agents
             Country string `json:"country" jsonschema:"The country to look up."`
         }
 
-        func getCapitalCity(_ tool.Context, args getCapitalCityArgs) (string, error) {
+        func getCapitalCity(_ agent.Context, args getCapitalCityArgs) (string, error) {
             capitals := map[string]string{
                 "france":  "Paris",
                 "japan":   "Tokyo",
@@ -18319,7 +18346,7 @@ Once you know the event type, access the relevant data:
         if (!responses.isEmpty()) {
             for (FunctionResponse response : responses) {
                 String toolName = response.name().get();
-                Map<String, String> result= response.response().get(); // Check before getting the response
+                Map<String, Object> result = response.response().get(); // Check before getting the response
                 System.out.println("  Tool Result: " + toolName + " -> " + result);
             }
         }
@@ -18371,15 +18398,15 @@ The `event.actions` object signals changes that occurred or should occur. Always
         ```
 
     === "Java"
-        `ConcurrentMap<String, Object> delta = event.actions().stateDelta();`
+        `Map<String, Object> delta = event.actions().stateDelta();`
 
         ```java
-        import java.util.concurrent.ConcurrentMap;
+        import java.util.Map;
         import com.google.adk.events.EventActions;
 
         EventActions actions = event.actions(); // Assuming event.actions() is not null
         if (actions != null && actions.stateDelta() != null && !actions.stateDelta().isEmpty()) {
-            ConcurrentMap<String, Object> stateChanges = actions.stateDelta();
+            Map<String, Object> stateChanges = actions.stateDelta();
             System.out.println("  State changes: " + stateChanges);
             // Update local UI or application state if necessary
         }
@@ -18428,19 +18455,18 @@ The `event.actions` object signals changes that occurred or should occur. Always
         ```
 
     === "Java"
-        `ConcurrentMap<String, Part> artifactChanges = event.actions().artifactDelta();`
+        `Map<String, Integer> artifactChanges = event.actions().artifactDelta();`
 
         ```java
-        import java.util.concurrent.ConcurrentMap;
-        import com.google.genai.types.Part;
+        import java.util.Map;
         import com.google.adk.events.EventActions;
 
         EventActions actions = event.actions(); // Assuming event.actions() is not null
         if (actions != null && actions.artifactDelta() != null && !actions.artifactDelta().isEmpty()) {
-            ConcurrentMap<String, Part> artifactChanges = actions.artifactDelta();
+            Map<String, Integer> artifactChanges = actions.artifactDelta();
             System.out.println("  Artifacts saved: " + artifactChanges);
             // UI might refresh an artifact list
-            // Iterate through artifactChanges.entrySet() to get filename and Part details
+            // Iterate through artifactChanges.entrySet() to get filename and version
         }
         ```
 
@@ -19609,6 +19635,13 @@ set up and running a simple agent in less than 20 minutes.
     Create your first ADK agent with your coding agent.
 
     [:octicons-arrow-right-24: Start with Agents CLI](agents-cli.md) <br>
+
+-   :material-swap-horizontal:{ .lg .middle } **Migrate to ADK**
+
+    ---
+    Migrate existing agents and workflows to ADK with Agents CLI.
+
+    [:octicons-arrow-right-24: Migrate to ADK](migrate.md) <br>
 </div>
 
 To get started with a technical overview check this [link](about.md).
@@ -20377,6 +20410,153 @@ your own agent with our build guides:
 
 - [Build your agent](/tutorials/)
 - [Build ADK agents for Android](https://developer.android.com/ai/adk)
+
+================
+File: docs/get-started/migrate.md
+================
+---
+description: Learn how to migrate existing AI agents, custom agent loops, and workflows to Google Agent Development Kit (ADK) using Agents CLI and your coding assistant.
+---
+
+# Migrate existing agents to ADK
+
+This guide shows you how to migrate an existing agent codebase to Agent Development Kit (ADK) using Agents CLI and your coding agent. Migrating to ADK lets you standardize your agent architecture across multiple languages, use built-in evaluation tools, and deploy directly to Google Cloud.
+
+## Migrate with Agents CLI
+
+Instead of manually rewriting state objects, node graphs, and execution loops line by line, you can use Agents CLI to plan and execute the migration with your coding agent.
+
+Agents CLI installs ADK development skills into coding agents such as Antigravity, Claude Code, Cursor, and Codex. When you open your coding agent in an existing project, it can:
+
+* Analyze your current agent structure, tools, state, and routing rules.
+* Map existing components to native ADK classes and graph workflows.
+* Propose architecture options with trade-offs.
+* Convert tools, agent definitions, and session handling incrementally.
+* Generate evaluation datasets to verify behavior before and after migration.
+
+For more information on using Agents CLI, see the [Agents CLI](https://google.github.io/agents-cli/) documentation.
+
+## Prerequisites
+
+Before starting your migration, make sure you have the following installed:
+
+* Python 3.11 or later
+* The [`uv`](https://docs.astral.sh/uv/getting-started/installation/) package manager
+* A supported coding agent
+
+Install Agents CLI and its ADK skills into your coding agent:
+
+```bash
+uvx google-agents-cli setup
+```
+
+To verify the installation:
+
+```bash
+agents-cli info
+```
+
+## Migration workflow
+
+Follow this process to migrate an existing agent to ADK:
+
+1. [Open your coding agent in the existing project](#open-your-coding-agent-in-the-existing-project)
+2. [Brainstorm the migration plan](#brainstorm-the-migration-plan)
+3. [Map agent patterns to ADK](#map-agent-patterns-to-adk)
+4. [Convert code with evaluation](#convert-code-with-evaluation)
+5. [Verify and evaluate](#verify-and-evaluate)
+
+### Open your coding agent in the existing project
+
+Open your terminal or IDE in the root directory of your existing agent project, and start your coding agent. Confirm that the agent detects the ADK skills installed by Agents CLI.
+
+### Brainstorm a migration plan
+
+Ask your coding agent to inspect your current codebase and brainstorm the target ADK architecture. Since the agent has ADK Skills loaded through Agents CLI, it understands ADK state management, graph workflows, and orchestration patterns. Use a prompt in your coding agent similar to the following:
+
+```text title="Code agent prompt"
+I want to migrate this existing agent codebase to Google Agent Development Kit (ADK).
+Please inspect our current files, state schema, tools, and control flow.
+Propose 2-3 target ADK architecture options with trade-offs, and recommend the cleanest approach.
+Include an evaluation plan to verify behavior using agents-cli eval.
+```
+
+Your coding agent analyzes the following items:
+
+* **Execution flow:** Single tool-calling loop, deterministic graph workflow, dynamic router, or multi-agent team.
+* **Tools:** Functions, parameter signatures, docstrings, and external API calls.
+* **Memory and retrieval:** Knowledge stores, vector search integrations, or conversational memory.
+* **State:** Variables tracked across turns, scratchpad keys, and session storage.
+* **Target classes:** Which ADK classes, such as `Agent` or `Workflow`, fit best.
+* **Evaluation strategy:** How to convert existing test cases into evaluation datasets to benchmark the migrated agent.
+
+Once you review the proposed approaches, approve the architecture that matches your requirements.
+
+### Map agent patterns to ADK
+
+ADK replaces custom dispatch loops and state handlers with declarative classes and graph workflows. Use the following mapping as a guide during migration:
+
+| Existing pattern | ADK equivalent | Description |
+| :--- | :--- | :--- |
+| Custom tool schemas or wrappers | Native Python functions or `FunctionTool` | Plain Python functions with type hints and docstrings. ADK automatically derives tool declarations. |
+| Custom agent loops or runners | `Agent` | Declarative agent definition specifying model, instructions, tools, and sub-agents. |
+| Memory and retrieval | `BaseMemoryService` implementations and retrieval tools | Built-in memory services (`InMemoryMemoryService`, `VertexAiMemoryBankService`, `VertexAiRagMemoryService`) plus retrieval tools for session and document grounding. |
+| State dictionaries or scratchpads | `session.state` via `ToolContext` | Shared, mutable session state accessible inside tools, callbacks, and agent instructions. |
+| Multi-agent workflows and pipelines | `google.adk.workflow.Workflow` | Explicit graph nodes with conditional routes, loops, and parallel branching. |
+| Multi-agent handoffs | `Agent(sub_agents=[...])` | Hierarchical delegation where a coordinator agent delegates to specialized sub-agents. |
+| Remote agent communication | A2A Protocol | Inter-agent communication over HTTP using the Agent-to-Agent standard. |
+
+### Convert code with evaluation
+
+A reliable migration is test-driven. Your coding agent can set up evaluation datasets and test suites alongside the new ADK code to verify that the migrated agent produces the same outcomes as your original implementation.
+
+1. **Set up evaluation test cases:** Have your coding agent convert existing test cases or recorded conversations into evaluation cases under `eval/`.
+2. **Port tools and agent logic:** Replace custom dispatch loops and tool wrappers with typed Python functions and an ADK `Agent` or `Workflow`.
+
+```python
+# agent.py
+from google.adk.agents import Agent
+from google.adk.tools import ToolContext
+
+def lookup_customer(customer_id: str) -> str:
+    """Retrieve account tier and status for a customer."""
+    return "Tier: Premium, Status: Active"
+
+def calculate_discount(amount: float, rate: float = 0.1) -> float:
+    """Calculate discounted total for a transaction."""
+    return amount * (1.0 - rate)
+
+root_agent = Agent(
+    name="customer_support_agent",
+    model="gemini-flash-latest",
+    instruction="Assist customers with account inquiries and discounts using your tools.",
+    tools=[lookup_customer, calculate_discount],
+)
+```
+
+### Verify and evaluate
+
+Run the evaluation suite to compare the migrated agent against your baseline test cases:
+
+```bash
+agents-cli eval run
+```
+
+You can also test queries directly or interactively:
+
+```bash
+# Test a single prompt
+agents-cli run "Look up customer cust_101 and apply a 10% discount on $100."
+
+# Start the interactive web UI
+agents-cli playground
+```
+
+## Next steps
+
+* Read the [Multi-tool agent tutorial](/tutorials/multi-tool-agent/) to learn more about ADK tool patterns.
+* Explore [Graph workflows](/graphs/) for multi-agent routing and state coordination.
+* Deploy your agent using the [Deployment guide](/deploy/).
 
 ================
 File: docs/get-started/python.md
@@ -21675,7 +21855,7 @@ workflows offer much more flexibility to define the routing logic you need.
 
         check_resp = await ctx.run_node(compile_lint_check, code)
 
-      return code
+      yield Event(output=code)
     ```
 
 === "TypeScript"
@@ -26568,7 +26748,7 @@ workflow as a tool for your agent or create a new one.
     To update the `agent.java` file and add the tool to your agent, use the following code:
 
       ```java
-          import com.google.adk.agent.LlmAgent;
+          import com.google.adk.agents.LlmAgent;
           import com.google.adk.tools.BaseTool;
           import com.google.common.collect.ImmutableList;
 
@@ -26595,7 +26775,7 @@ workflow as a tool for your agent or create a new one.
                     // For example, you can start a conversation with the agent.
                 }
             }
-        ```
+      ```
 
 **Note:** To find the list of supported entities and actions for a
         connection, use these Connector APIs: `listActions`, `listEntityTypes`.
@@ -34026,10 +34206,10 @@ public class YourAgentApplication {
         return LlmAgent.builder()
             .name("hello-time-agent")
             .description("Tells the current time in a specified city")
-            .instruction(\"""
+            .instruction("""
                 You are a helpful assistant that tells the current time in a city.
                 Use the 'getCurrentTime' tool for this purpose.
-                \""")
+                """)
             .model("gemini-flash-latest")
             .tools(FunctionTool.create(YourAgentApplication.class, "getCurrentTime"))
             .build();
@@ -35181,7 +35361,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     ```python
     from google.adk.agents import LlmAgent
     from google.adk.code_executors import GkeCodeExecutor
-    from google.adk.code_executors import CodeExecutionInput
+    from google.adk.code_executors.code_execution_utils import CodeExecutionInput
     from google.adk.agents.invocation_context import InvocationContext
 
     # Initialize the executor for Sandbox Mode
@@ -35212,7 +35392,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     ```python
     from google.adk.agents import LlmAgent
     from google.adk.code_executors import GkeCodeExecutor
-    from google.adk.code_executors import CodeExecutionInput
+    from google.adk.code_executors.code_execution_utils import CodeExecutionInput
     from google.adk.agents.invocation_context import InvocationContext
 
     # Initialize the executor for Job Mode
@@ -48500,28 +48680,28 @@ methods, as shown in the following code example:
     from google.adk.plugins.base_plugin import BasePlugin
 
     class CountInvocationPlugin(BasePlugin):
-    """A custom plugin that counts agent and tool invocations."""
+        """A custom plugin that counts agent and tool invocations."""
 
-    def __init__(self) -> None:
-        """Initialize the plugin with counters."""
-        super().__init__(name="count_invocation")
-        self.agent_count: int = 0
-        self.tool_count: int = 0
-        self.llm_request_count: int = 0
+        def __init__(self) -> None:
+            """Initialize the plugin with counters."""
+            super().__init__(name="count_invocation")
+            self.agent_count: int = 0
+            self.tool_count: int = 0
+            self.llm_request_count: int = 0
 
-    async def before_agent_callback(
-        self, *, agent: BaseAgent, callback_context: CallbackContext
-    ) -> None:
-        """Count agent runs."""
-        self.agent_count += 1
-        print(f"[Plugin] Agent run count: {self.agent_count}")
+        async def before_agent_callback(
+            self, *, agent: BaseAgent, callback_context: CallbackContext
+        ) -> None:
+            """Count agent runs."""
+            self.agent_count += 1
+            print(f"[Plugin] Agent run count: {self.agent_count}")
 
-    async def before_model_callback(
-        self, *, callback_context: CallbackContext, llm_request: LlmRequest
-    ) -> None:
-        """Count LLM requests."""
-        self.llm_request_count += 1
-        print(f"[Plugin] LLM request count: {self.llm_request_count}")
+        async def before_model_callback(
+            self, *, callback_context: CallbackContext, llm_request: LlmRequest
+        ) -> None:
+            """Count LLM requests."""
+            self.llm_request_count += 1
+            print(f"[Plugin] LLM request count: {self.llm_request_count}")
     ```
 
 === "TypeScript"
@@ -48907,7 +49087,7 @@ a simple ADK agent.
     	Result string `json:"result"`
     }
 
-    func helloWorld(ctx tool.Context, args helloWorldArgs) (helloWorldResult, error) {
+    func helloWorld(ctx agent.Context, args helloWorldArgs) (helloWorldResult, error) {
     	output := fmt.Sprintf("Hello world: query is [%s]", args.Query)
     	fmt.Println(output)
     	return helloWorldResult{Result: output}, nil
@@ -49434,7 +49614,7 @@ The following code example shows the basic syntax of this callback:
 === "Go"
 
     ```go
-    func (p *MyPlugin) OnToolErrorCallback(ctx tool.Context, t tool.Tool, args map[string]any, err error) (map[string]any, error) {
+    func (p *MyPlugin) OnToolErrorCallback(ctx agent.Context, t tool.Tool, args map[string]any, err error) (map[string]any, error) {
       // Your implementation here
       return nil, nil
     }
@@ -52974,10 +53154,10 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
     	"fmt"
     	"strings"
 
-    	"google.golang.org/adk/v2/tool"
+    	"google.golang.org/adk/v2/agent"
     )
 
-    func query(ctx tool.Context, args QueryArgs) (map[string]any, error) {
+    func query(ctx agent.Context, args QueryArgs) (map[string]any, error) {
     	// Assume 'policy' is retrieved from context, e.g., via session state:
     	policyAny, err := ctx.Session().State().Get("query_tool_policy")
     	if err != nil {
@@ -53036,8 +53216,10 @@ During the tool execution, [**`Tool Context`**](../tools-custom/index.md#tool-co
       public Object query(String query, ToolContext toolContext) {
 
         // Assume 'policy' is retrieved from context, e.g., via session state:
+        @SuppressWarnings("unchecked")
         Map<String, Object> queryToolPolicy =
-            toolContext.invocationContext.session().state().getOrDefault("query_tool_policy", null);
+            (Map<String, Object>)
+                toolContext.invocationContext.session().state().getOrDefault("query_tool_policy", null);
         List<String> actualTables = explainQuery(query);
 
         // --- Placeholder Policy Enforcement ---
@@ -53083,6 +53265,7 @@ Gemini models come with in-built safety mechanisms that can be leveraged to impr
     from google.genai import types
 
     agent = Agent(
+        name="safety_agent",
         # ...
         generate_content_config=types.GenerateContentConfig(
             safety_settings=[
@@ -53236,13 +53419,14 @@ When modifications to the tools to add guardrails aren't possible, the [**`Befor
     import (
     	"fmt"
 
+    	"google.golang.org/adk/v2/agent"
     	"google.golang.org/adk/v2/agent/llmagent"
     	"google.golang.org/adk/v2/tool"
     )
 
     // Hypothetical callback function
     func validateToolParams(
-    	ctx tool.Context,
+    	ctx agent.Context,
     	t tool.Tool,
     	args map[string]any,
     ) (map[string]any, error) {
@@ -56412,7 +56596,7 @@ When adding an authenticated tool to your agent, you need to provide its require
 
 You can configure authentication differently depending on your toolset type, OpenAPI-based or Google API toolsets, and, for services protected by Cloud IAM, whether the service needs an ID token instead of an access token. The following subsections cover each case.
 
-#### Use OpenAPI-based toolsets (`OpenAPIToolset`, `APIHubToolset`, etc.)
+#### Use OpenAPI-based toolsets
 
 Pass the scheme and credential during toolset initialization. The toolset applies them to all generated tools. Here are few ways to create tools with authentication in ADK.
 
@@ -56526,7 +56710,7 @@ Pass the scheme and credential during toolset initialization. The toolset applie
       )
       ```
 
-#### Use Google API toolsets (e.g., `calendar_tool_set`)
+#### Use Google API toolsets
 
 These toolsets often have dedicated configuration methods.
 
@@ -56534,17 +56718,19 @@ Tip: For how to create a Google OAuth Client ID & Secret, see this guide: [Get y
 
 ```py
 # Example: Configuring Google Calendar Tools
-from google.adk.tools.google_api_tool import calendar_tool_set
+from google.adk.tools.google_api_tool import CalendarToolset
 
 client_id = "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com"
 client_secret = "YOUR_GOOGLE_OAUTH_CLIENT_SECRET"
 
+calendar_toolset = CalendarToolset()
+
 # Use the specific configure method for this toolset type
-calendar_tool_set.configure_auth(
-    client_id=oauth_client_id, client_secret=oauth_client_secret
+calendar_toolset.configure_auth(
+    client_id=client_id, client_secret=client_secret
 )
 
-# agent = LlmAgent(..., tools=calendar_tool_set.get_tool('calendar_tool_set'))
+# agent = LlmAgent(..., tools=[calendar_toolset])
 ```
 
 #### Use ID token
@@ -56623,21 +56809,17 @@ The use of this configuration parameter is mutually exclusive, and cannot
 include `credentials`, `client_id`, `client_secret`, or scopes parameters in the same
 configuration block.
 
-Follow this example to configure the key:
+Set the key on the credentials configuration of the toolset you are using. The
+following example uses BigQuery:
 
 ```python
-from google.adk.auth.auth_credential import AuthCredential
-from google.adk.auth.auth_credential import AuthCredentialTypes
+from google.adk.integrations.bigquery import BigQueryCredentialsConfig
 
-# Configure the tool to look for "my_frontend_token" in the session state
-credentials_config = AuthCredential(
-    auth_type=AuthCredentialTypes.GOOGLE_CREDENTIALS,
-    google_credentials_config={
-        # Do not hardcode authentication keys in production code
-        "external_access_token_key": "get_my_frontend_token" 
-    }
+# Configure the toolset to look for "my_frontend_token" in the session state
+credentials_config = BigQueryCredentialsConfig(
+    # Do not hardcode authentication keys in production code
+    external_access_token_key="my_frontend_token"
 )
-
 ```
 
 #### Authentication request flow
@@ -57250,7 +57432,7 @@ The following examples show how to enable boolean confirmation:
         // Set RequireConfirmation to true to require user confirmation
         // for the tool call.
         RequireConfirmation: true,
-    }, func(ctx tool.Context, args ReimburseArgs) (ReimburseResult, error) {
+    }, func(ctx agent.Context, args ReimburseArgs) (ReimburseResult, error) {
         // actual implementation
         return ReimburseResult{Status: "ok"}, nil
     })
@@ -57321,7 +57503,7 @@ You can modify the behavior of the confirmation requirement by using a function 
         RequireConfirmationProvider: func(args ReimburseArgs) bool {
             return args.Amount > 1000
         },
-    }, func(ctx tool.Context, args ReimburseArgs) (ReimburseResult, error) {
+    }, func(ctx agent.Context, args ReimburseArgs) (ReimburseResult, error) {
         // actual implementation
         return ReimburseResult{Status: "ok"}, nil
     })
@@ -57443,7 +57625,7 @@ time off requests for an employee:
 === "Go"
 
     ```go
-    func requestTimeOff(ctx tool.Context, args RequestTimeOffArgs) (map[string]any, error) {
+    func requestTimeOff(ctx agent.Context, args RequestTimeOffArgs) (map[string]any, error) {
         confirmation := ctx.ToolConfirmation()
         if confirmation == nil {
             ctx.RequestConfirmation(
@@ -58724,7 +58906,7 @@ The `tool_context.state` attribute provides direct read and write access to the 
 
 ### **Controlling Agent Flow**
 
-The `tool_context.actions` attribute in Python and TypeScript, `ToolContext.actions()` in Java, and `tool.Context.Actions()` in Go, holds an **EventActions** object. Modifying attributes on this object allows your tool to influence what the agent or framework does after the tool finishes execution.
+The `tool_context.actions` attribute in Python and TypeScript, `ToolContext.actions()` in Java, and `agent.Context.Actions()` in Go, holds an **EventActions** object. Modifying attributes on this object allows your tool to influence what the agent or framework does after the tool finishes execution.
 
 * **`skip_summarization: bool`**: (Default: False) If set to True, instructs the ADK to bypass the LLM call that typically summarizes the tool's output. This is useful if your tool's return value is already a user-ready message.
 
