@@ -20461,7 +20461,7 @@ agents-cli info
 Follow this process to migrate an existing agent to ADK:
 
 1. [Open your coding agent in the existing project](#open-your-coding-agent-in-the-existing-project)
-2. [Brainstorm the migration plan](#brainstorm-the-migration-plan)
+2. [Brainstorm a migration plan](#brainstorm-a-migration-plan)
 3. [Map agent patterns to ADK](#map-agent-patterns-to-adk)
 4. [Convert code with evaluation](#convert-code-with-evaluation)
 5. [Verify and evaluate](#verify-and-evaluate)
@@ -24941,10 +24941,10 @@ approach allows for a secure and simplified agent development experience.
 - A [Google Cloud
   project](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
 - One or more Agent Identity [auth
-  providers](https://cloud.google.com/iam/docs/manage-auth-providers) created in
-  your project
+  providers](https://cloud.google.com/iam/docs/manage-auth-providers-v2) created
+  in your project
 - The caller identity must have the
-  [`iamconnectors.user`](https://docs.cloud.google.com/iam/docs/roles-permissions/iamconnectors#iamconnectors.user)
+  [`agentidentity.user`](https://docs.cloud.google.com/iam/docs/roles-permissions/agentidentity#agentidentity.user)
   role or equivalent permissions
 - Authentication configured via [Application Default
   Credentials](https://docs.cloud.google.com/docs/authentication/application-default-credentials)
@@ -24992,7 +24992,9 @@ from google.adk.tools.mcp_tool import McpToolset
 from google.adk.tools.mcp_tool import StreamableHTTPConnectionParams
 
 auth_scheme = GcpAuthProviderScheme(
-    name="projects/PROJECT_ID/locations/LOCATION/connectors/AUTH_PROVIDER_NAME",
+    # If using the legacy V1 API, the resource name uses 'connectors'
+    # instead of 'authProviders': projects/.../connectors/...
+    name="projects/PROJECT_ID/locations/LOCATION/authProviders/AUTH_PROVIDER_NAME",
     # continue_uri is only needed for 3-legged OAuth flows. This URI receives
     # the redirect after user consent and must be hosted by your application.
     continue_uri=CONTINUE_URI
@@ -25016,15 +25018,15 @@ toolset = McpToolset(
       callback defined earlier in the `GcpAuthProviderScheme`. The agent
       application service must implement this redirect. To finalize issuance,
       your handler must submit a POST request to the credentials endpoint:
-      `https://iamconnectorcredentials.googleapis.com/v1alpha/{connector_name}/credentials:finalize`.
+      `https://agentidentitycredentials.googleapis.com/v1/{auth_provider_name}/credentials:finalize`.
     - After credentials are successfully finalized, the web application should
       resume the agent by sending a FunctionResponse. For a sample
       implementation, refer to the [sample
-      code](https://docs.cloud.google.com/iam/docs/auth-with-3lo#resume-conversation).
+      code](https://docs.cloud.google.com/iam/docs/auth-with-3lo-v2#resume-conversation).
       Unlike the native user consent flow, no authorization code is required to
       resume the agent.
     - For more details, refer to the [sample handler
-      implementation](https://docs.cloud.google.com/iam/docs/auth-with-3lo#validation-endpoint).
+      implementation](https://docs.cloud.google.com/iam/docs/auth-with-3lo-v2#validation-endpoint).
 - **Resume the conversation**: Irrespective of the status of the consent flow
   (successful or unsuccessful), the agent app should resume the agent to
   complete the conversation turn. The ADK automatically determines whether
@@ -25033,9 +25035,9 @@ toolset = McpToolset(
 ## Resources
 
 - [Google Cloud Agent Identity Overview](https://docs.cloud.google.com/iam/docs/agent-identity-overview)
-- [2-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-2lo)
-- [3-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-3lo)
-- [API key auth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-api-key)
+- [2-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-2lo-v2)
+- [3-legged OAuth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-3lo-v2)
+- [API key auth using Google Cloud Agent Identity](https://docs.cloud.google.com/iam/docs/auth-with-api-key-v2)
 - [Sample agent code](https://github.com/google/adk-python/tree/main/src/google/adk/integrations/agent_identity)
 
 ================
@@ -37262,6 +37264,186 @@ Tool | Description
 - [Linear Getting Started Guide](https://linear.app/docs/start-guide)
 
 ================
+File: docs/integrations/livekit.md
+================
+---
+catalog_title: LiveKit
+catalog_description: Put a live voice agent in a WebRTC room or on a phone call
+catalog_icon: /integrations/assets/livekit.png
+catalog_tags: ["connectors"]
+---
+
+# LiveKit runner for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.9.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+ADK provides the `LiveKitRunner` class to allow you to serve your live agents over
+[LiveKit](https://livekit.io/), an open source platform for WebRTC and SIP telephony. This
+integration acts as a transport adapter that handles audio and video capture, playback,
+barge-in, captions, and call control, so your ADK agent can become reachable from a browser,
+a phone, or a game client without any change to the agent.
+
+## Use cases
+
+You can use LiveKit in a variety of use cases, including browser apps, mobile apps, SIP phone calls, games and immersive clients.
+
+### Browser and mobile apps
+
+The agent joins a room as an ordinary participant, so any LiveKit client SDK can talk to it.
+The connector publishes captions and speaking state on the channels LiveKit's own
+components bind to, so those components work against an ADK agent without extra wiring:
+
+| LiveKit resource | What an ADK agent gets |
+| :--- | :--- |
+| [Client SDKs](https://docs.livekit.io/transport/) | Browser, Swift, Android, Flutter, React Native, Unity, C++, Rust, and ESP32 |
+| [UI components](https://github.com/orgs/livekit/repositories?q=components) | Prebuilt voice-assistant widgets for React, SwiftUI, Compose, and Flutter |
+| [Starter apps](https://github.com/livekit-examples) | Working apps per platform, plus the Agents Playground for talking to an agent with no front end at all |
+
+### Phone calls
+
+A SIP caller is an ordinary LiveKit participant, so a phone call reaches the agent once an
+[inbound trunk](https://docs.livekit.io/telephony/accepting-calls/inbound-trunk/) and a
+[dispatch rule](https://docs.livekit.io/telephony/accepting-calls/dispatch-rule/) point at
+your worker.
+
+Caller identity lands in ADK session state before the caller speaks, so a function tool reads
+it like any other state value:
+
+```python
+from google.adk.tools.tool_context import ToolContext
+
+async def greet_by_account(tool_context: ToolContext) -> str:
+  """Looks the caller up before greeting them."""
+  number = tool_context.state.get("livekit_caller_phone_number")  # '+15105550100'
+  if not number:
+    return "I could not see the number you are calling from."
+  return await crm.lookup(number)  # your own customer lookup
+```
+
+The connector buffers keypad entry into a single turn, so a six-digit account number arrives
+as one input instead of six interruptions.
+
+### Games and immersive clients
+
+LiveKit's [Unity SDK](https://github.com/livekit/client-sdk-unity) adds real-time audio,
+video, and data channels to a Unity app, backed by LiveKit Cloud or a server you host. Put an
+ADK agent in the room and a player can hold a conversation with a character that also acts
+on the world, such as a voice-driven NPC or an in-game assistant:
+
+```python
+from google.adk.integrations.livekit import current_call
+from google.adk.tools.tool_context import ToolContext
+
+async def open_the_door(door_id: str, tool_context: ToolContext) -> str:
+  """Opens a door in the game world."""
+  call = current_call(tool_context)
+  return await call.perform_rpc(method="open_door", payload=door_id)
+```
+
+Whatever the client returns becomes the tool result the model narrates, so the agent
+describes what actually happened. On the Unity client, register one RPC method; ADK manages
+the conversation, the tool calls, and the session.
+
+## Get started
+
+- [ADK](https://adk.dev) >= 2.9.0 with the `livekit` extra.
+- Credentials for a [live model](../live/models.md).
+- A LiveKit server, self-hosted or on LiveKit Cloud. Both expose the same API, so the
+  same worker code runs against either. For local development, run `livekit-server --dev`.
+- `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` set in the environment.
+
+```bash
+pip install "google-adk[livekit]" "livekit-agents>=1.4"
+```
+
+Start from the agent you already have. Adding `LiveKitToolset()` gives it call controls such
+as hanging up or transferring a caller. The toolset activates only when there is a call, so
+`adk web` still runs the agent unchanged:
+
+```python
+from google.adk.agents import Agent
+from google.adk.integrations.livekit import LiveKitToolset
+from google.adk.runners import InMemoryRunner
+
+root_agent = Agent(
+    model="gemini-live-2.5-flash-native-audio",
+    name="support_agent",
+    instruction="You help customers troubleshoot their home internet.",
+    tools=[check_line_status, LiveKitToolset()],  # check_line_status is your own tool
+)
+runner = InMemoryRunner(agent=root_agent, app_name="support")
+```
+
+To connect the agent, pass the runner a connected room. In production you run a
+worker, which LiveKit dispatches once per call, and the same code serves a browser and a
+phone.
+
+```python
+from google.adk.integrations.livekit import LiveKitRunner
+from livekit.agents import AgentServer
+from livekit.agents import cli
+from livekit.agents import JobContext
+
+server = AgentServer()
+
+
+@server.rtc_session(agent_name="support")
+async def entrypoint(ctx: JobContext) -> None:
+  """Bridges one dispatched call into the ADK agent."""
+  await ctx.connect()
+  # LiveKit has no ADK user or session ids. The sample reads them from job metadata.
+  await LiveKitRunner(
+      runner=runner, room=ctx.room, user_id="live-user", session_id=ctx.room.name
+  ).start()
+
+
+if __name__ == "__main__":
+  cli.run_app(server)
+```
+
+## Deploy the worker
+
+The worker dials out to the LiveKit server and receives dispatched jobs over that same
+connection, so it needs outbound network access, no public address, and no load balancer.
+Otherwise it is a normal ADK container and deploys the way any ADK agent does. Point the
+entrypoint at your worker module:
+
+```dockerfile
+CMD ["python", "-m", "support_agent.livekit_worker", "start"]
+```
+
+[Agents CLI](../get-started/agents-cli.md) deploys that container to Agent Runtime, Cloud
+Run, or GKE from the `deployment_target` in your `pyproject.toml`. See
+[Deploy with Agents CLI](../deploy/agent-runtime/agents-cli.md), or deploy by hand to
+[Cloud Run](../deploy/cloud-run.md) or [GKE](../deploy/gke.md).
+
+Cloud Run probes `$PORT`, while the worker serves its health endpoint on a fixed port, so
+make the two match. Read the port from the environment when you create the server:
+
+```python
+import os
+
+server = AgentServer(port=int(os.environ["PORT"]))
+```
+
+Deploying with `--port=8081` does the same job, since that is the port the worker uses in
+production. The worker also sits idle between calls, so run with `--no-cpu-throttling` and
+`--min-instances=1` to keep it accepting dispatch.
+
+Each dispatched job runs in its own process, so use a durable
+[session service](../sessions/index.md). The `InMemoryRunner` class persists nothing
+between calls.
+
+## Additional resources
+
+- [LiveKit sample](https://github.com/google/adk-python/tree/main/contributing/samples/integrations/livekit)
+- [Live and voice agents](../live/index.md)
+- [Build a custom server](../live/custom-server.md)
+- [LiveKit documentation](https://docs.livekit.io/)
+
+================
 File: docs/integrations/mailgun.md
 ================
 ---
@@ -42404,6 +42586,11 @@ The `SpannerToolset` provides the following tools:
 - **`get_table_schema`**: Fetches Spanner database table schema and metadata
   information.
 - **`execute_sql`**: Runs a SQL query in Spanner database and fetch the result.
+- **`query_result_mode`**: Determines the format in 
+  which the `execute_sql` tool returns database query results. Setting this 
+  parameter to `QueryResultMode.DICT_LIST` configures the tool to return the 
+  results as a list of dictionaries. Import `QueryResultMode` from
+  `google.adk.tools.spanner.settings`.
 - **`similarity_search`**: Similarity search in Spanner using a text query.
 
 ## Use with agent
@@ -46213,6 +46400,10 @@ Your server exposes a WebSocket; something has to talk to it. During development
 telephony or WebRTC bridge. Whatever you build inherits the same contract, so it is worth
 knowing exactly what `adk web` does and where it stops.
 
+If you need a WebRTC or telephony bridge, ADK provides one. The
+[LiveKit runner](../integrations/livekit.md) serves a live agent into a LiveKit room,
+handling media capture, playback, barge-in, and SIP, so there is no custom server to write.
+
 **What `adk web` handles for you:**
 
 | Capability | What the built-in client does |
@@ -46710,6 +46901,7 @@ your agent code stays the same as the platform evolves.
 
     - [Evaluation](evaluation.md) — score voice conversations before you ship
     - [Build a custom server](custom-server.md)
+    - [LiveKit](../integrations/livekit.md) — WebRTC and telephony without a custom server
     - [Supported models](models.md)
 
 </div>
@@ -48287,6 +48479,57 @@ When metrics are enabled, ADK automatically instruments the agent's lifecycle, w
 | **`gen_ai.invoke_agent.tool_calls`** | Histogram (count) | The number of tool calls made during one agent invocation. | `gen_ai.agent.name` |
 | **`gen_ai.client.operation.duration`** | Histogram (seconds) | The latency of a single model `generate_content` call. | `gen_ai.agent.name`, `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`, `error.type` |
 | **`gen_ai.client.token.usage`** | Histogram (tokens) | Token consumption per model call, split into input and output by `gen_ai.token.type`. | `gen_ai.agent.name`, `gen_ai.operation.name`, `gen_ai.provider.name`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.token.type` |
+
+### Experimental metrics
+
+ADK emits additional telemetry under the `adk.experimental.*` namespace, which covers span attributes as well as the metrics below. Nothing in it is part of an OpenTelemetry semantic convention yet, so names, attributes, and meaning can still change between releases. Explore them freely, and expect to revisit anything long-lived you build on them as the names settle.
+
+The metrics below aggregate token spend and call counts over a whole agent invocation or a whole workflow, the grain above the single model call that `gen_ai.client.*` measures, so you can ask what one turn cost without summing model calls yourself.
+
+They are off by default. To turn them on, set the environment variable:
+
+```bash
+export ADK_EXPERIMENTAL_TELEMETRY=true
+```
+
+You can also opt in per request, which takes precedence over the environment variable:
+
+```python
+from google.adk.agents.run_config import RunConfig
+from google.adk.telemetry import TelemetryConfig
+
+run_config = RunConfig(
+    telemetry=TelemetryConfig(adk_experimental_telemetry_opt_in=True)
+)
+```
+
+When neither is set, none of the metrics below are recorded.
+
+The eight `invoke_workflow` rows need one more thing: telemetry schema v2, which is the default on Vertex AI Agent Engine and off everywhere else. Set `ADK_TELEMETRY_SCHEMA_VERSION_OPT_IN=2` anywhere else, or those rows stay empty. The `invoke_agent` rows are unaffected, and an app built on the `Workflow` engine records per-node datapoints under either version.
+
+| Metric Name | Type | Description | Key Attributes (Dimensions) |
+| :--- | :--- | :--- | :--- |
+| **`adk.experimental.invoke_agent.input_tokens`** | Histogram (tokens) | Input (prompt) tokens summed over one agent invocation, including server-side tool results and cached prompt tokens. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_agent.output_tokens`** | Histogram (tokens) | Output (completion) tokens summed over one agent invocation, including reasoning tokens and the tokens spent emitting tool calls. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_agent.total_tokens`** | Histogram (tokens) | Input plus output tokens for one agent invocation. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_agent.cache_read.input_tokens`** | Histogram (tokens) | Input tokens served from a provider-managed cache, summed over one agent invocation. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_agent.reasoning.output_tokens`** | Histogram (tokens) | Output tokens spent on reasoning (chain-of-thought / extended thinking), summed over one agent invocation. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_agent.tool.input_tokens`** | Histogram (tokens) | Input tokens from server-side tool results the model fed back to itself within one request, such as code execution or search grounding. Zero for client-side function tools. | `gen_ai.agent.name` |
+| **`adk.experimental.invoke_workflow.input_tokens`** | Histogram (tokens) | The `input_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.output_tokens`** | Histogram (tokens) | The `output_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.total_tokens`** | Histogram (tokens) | The `total_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.cache_read.input_tokens`** | Histogram (tokens) | The `cache_read.input_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.reasoning.output_tokens`** | Histogram (tokens) | The `reasoning.output_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.tool.input_tokens`** | Histogram (tokens) | The `tool.input_tokens` above, summed across every agent that ran in one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.inference_calls`** | Histogram (count) | The number of inference (model) calls made across one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+| **`adk.experimental.invoke_workflow.tool_calls`** | Histogram (count) | The number of tool calls made across one workflow invocation. | `adk.experimental.root_agent.name`, `gen_ai.workflow.name`, `gen_ai.workflow.nested` (nested workflows only) |
+
+!!! warning
+    A nested workflow records a datapoint of its own, and its totals are also
+    folded into every workflow enclosing it, so summing an `invoke_workflow`
+    metric across all datapoints double counts.
+
+The `gen_ai.workflow.nested` attribute is set only on nested workflows, so excluding it leaves the outermost workflow alone, and that datapoint covers the whole turn. The workflow metrics carry no agent dimension, since a value spanning a whole workflow cannot be attributed to a single agent. They carry two names instead: `gen_ai.workflow.name` joins to `gen_ai.invoke_workflow.duration`, while `adk.experimental.root_agent.name` identifies the app, and the two disagree when a turn enters at a sub-agent.
 
 ---
 
@@ -60245,14 +60488,19 @@ export const rootAgent = new LlmAgent({
     description: "A helpful assistant for planning travel.",
     tools: [
         new MCPToolset({
-            // Using SseConnectionParams to connect to the remote Grounding Lite service,
-            // mirroring Python's StreamableHTTPConnectionParams.
-            type: "SseConnectionParams",
+            // Grounding Lite is a remote MCP server reached over streamable HTTP,
+            // so the connection is a StreamableHTTPConnectionParams. Custom headers
+            // travel on every request via transportOptions.requestInit; the
+            // transport sets Accept and Content-Type itself, so only the API key
+            // needs to be supplied here.
+            type: "StreamableHTTPConnectionParams",
             url: "https://mapstools.googleapis.com/mcp",
-            headers: {
-                "X-Goog-Api-Key": googleMapsApiKey,
-                "Content-Type": "application/json",
-                "Accept": "application/json, text/event-stream"
+            transportOptions: {
+                requestInit: {
+                    headers: {
+                        "X-Goog-Api-Key": googleMapsApiKey
+                    }
+                }
             }
         })
     ],
@@ -63299,6 +63547,8 @@ To add the ADK docs MCP server to [Antigravity](https://antigravity.google/)
           "args": [
             "--from",
             "mcpdoc",
+            "--with",
+            "mcp<2",
             "mcpdoc",
             "--urls",
             "AgentDevelopmentKit:https://adk.dev/llms.txt",
@@ -63316,7 +63566,7 @@ To add the ADK docs MCP server to
 [Claude Code](https://code.claude.com/docs/en/overview):
 
 ```bash
-claude mcp add adk-docs --transport stdio -- uvx --from mcpdoc mcpdoc --urls AgentDevelopmentKit:https://adk.dev/llms.txt --transport stdio
+claude mcp add adk-docs --transport stdio -- uvx --from mcpdoc --with "mcp<2" mcpdoc --urls AgentDevelopmentKit:https://adk.dev/llms.txt --transport stdio
 ```
 
 ### Cursor
@@ -63336,6 +63586,8 @@ To add the ADK docs MCP server to [Cursor](https://cursor.com/) (requires
           "args": [
             "--from",
             "mcpdoc",
+            "--with",
+            "mcp<2",
             "mcpdoc",
             "--urls",
             "AgentDevelopmentKit:https://adk.dev/llms.txt",
@@ -63346,6 +63598,10 @@ To add the ADK docs MCP server to [Cursor](https://cursor.com/) (requires
       }
     }
     ```
+
+!!! note "MCP version setting" 
+    The `mcp<2` constraint setting keeps `mcpdoc` compatible with the MCP 1.x 
+    FastMCP API it currently uses.
 
 ### Other Tools
 
