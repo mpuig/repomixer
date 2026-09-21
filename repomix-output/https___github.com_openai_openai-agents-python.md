@@ -26232,6 +26232,14 @@ When a handoff occurs, it's as though the new agent takes over the conversation,
 
 Nested handoff history is available as an opt-in beta and is disabled by default while we stabilize it. When you enable [`RunConfig.nest_handoff_history`][agents.run.RunConfig.nest_handoff_history], the runner compacts summarizable history into ordered assistant summary segments while preserving lossless message items in their original positions. Each generated summary segment uses the `<CONVERSATION HISTORY>` wrapper, and later handoffs flatten earlier generated segments before rebuilding the ordered transcript. Sessions, `RunState`, and `RunResult.to_input_list()` track exact message occurrences moved into this SDK-default history so those occurrences are not appended twice; separate identical messages are still preserved. You can provide your own mapping function via [`RunConfig.handoff_history_mapper`][agents.run.RunConfig.handoff_history_mapper] to return the exact list of input items for the next agent instead of using the built-in segmentation. The opt-in applies only when neither the handoff's `input_filter` nor the active run's `RunConfig.handoff_input_filter` is set, so existing code that already customizes the payload (including the examples in this repository) keeps its current behavior without changes. You can override the nesting behaviour for a single handoff by passing `nest_handoff_history=True` or `False` to [`handoff(...)`][agents.handoffs.handoff], which sets [`Handoff.nest_handoff_history`][agents.handoffs.Handoff.nest_handoff_history]. If you just need to change the wrapper text for generated summary segments, call [`set_conversation_history_wrappers`][agents.handoffs.set_conversation_history_wrappers] before running your agents. Call [`reset_conversation_history_wrappers`][agents.handoffs.reset_conversation_history_wrappers] before a later run when you need to restore the default wrappers.
 
+Nested handoff history changes how the transcript is represented; it does not redact sensitive data. Tool-call arguments and tool outputs can remain in the generated assistant summary even when the corresponding structured tool items are no longer forwarded separately. Treat the receiving agent and its model provider as recipients of the forwarded history.
+
+For client-managed history, use an explicit [`input_filter`][agents.handoffs.Handoff.input_filter] or [`RunConfig.handoff_input_filter`][agents.run.RunConfig.handoff_input_filter] to select or redact the content that the receiving agent may see. If a custom filter also calls `nest_handoff_history`, sanitize `input_history`, `pre_handoff_items`, and `new_items` before that call. The helper builds nested history from those three fields and ignores any existing `input_items` override. Filtering only `input_items` can therefore leave excluded tool content in the generated summary.
+
+If the filter must preserve the original `new_items` for session history, the filter can instead call `nest_handoff_history` and sanitize the returned `input_history` before returning the nested result. Clearing or replacing only `input_items` after nesting does not remove content already included in `input_history`.
+
+Server-managed conversations (`conversation_id`, `previous_response_id`, or `auto_previous_response_id`) do not support handoff input filters; use a separate run with explicitly selected input when the receiving agent must not inherit that server-managed history. Do not reuse the original `conversation_id` or `previous_response_id` in that separate run.
+
 If both the handoff and the active [`RunConfig.handoff_input_filter`][agents.run.RunConfig.handoff_input_filter] define a filter, the per-handoff [`input_filter`][agents.handoffs.Handoff.input_filter] takes precedence for that specific handoff.
 
 !!! note
@@ -26253,6 +26261,8 @@ handoff_obj = handoff(
 ```
 
 1. This will automatically remove all tool-related items from the history when `FAQ agent` is called.
+
+`remove_all_tools` removes structured tool items. It does not redact tool arguments or results already copied into ordinary messages or nested-history summaries. Use a custom input filter to remove or redact those message contents when needed.
 
 ## Recommended prompts
 
@@ -26452,7 +26462,7 @@ To use streaming in a run that may pause for approvals, call `Runner.run_streame
 - **Streaming approvals**: `examples/agent_patterns/human_in_the_loop_stream.py` shows how to drain `stream_events()` and then approve pending tool calls before resuming with `Runner.run_streamed(agent, state)`.
 - **Custom rejection text**: `examples/agent_patterns/human_in_the_loop_custom_rejection.py` shows how to combine run-level `tool_error_formatter` with per-call `rejection_message` overrides when approvals are rejected.
 - **Agent as tool approvals**: `Agent.as_tool(..., needs_approval=...)` applies the same interruption flow when delegated agent tasks need review. Nested interruptions still surface on the outer run, so resume the original top-level agent rather than the nested one.
-- **Local shell and apply_patch tools**: `ShellTool` and `ApplyPatchTool` also support `needs_approval`. Use `state.approve(interruption, always_approve=True)` or `state.reject(..., always_reject=True)` to cache the decision for future calls to that tool during the rest of the run. For automatic decisions, provide `on_approval` (see `examples/tools/shell.py`); for manual decisions, handle interruptions (see `examples/tools/shell_human_in_the_loop.py`). Hosted shell environments do not support `needs_approval` or `on_approval`; see the [tools guide](tools.md).
+- **Local shell and apply_patch tools**: `ShellTool` and `ApplyPatchTool` also support `needs_approval`. Use `state.approve(interruption, always_approve=True)` or `state.reject(..., always_reject=True)` to cache the decision for future calls to that tool during the rest of the run. To resolve approval inside a callback, provide `on_approval`; `examples/tools/shell.py` demonstrates an interactive callback that prompts the operator by default. For an automatic policy that rejects every shell call, set `needs_approval=True` and `on_approval=lambda _context, _item: {"approve": False, "reason": "Disabled by policy"}` on `ShellTool`. To let the application review a paused run instead, handle interruptions (see `examples/tools/shell_human_in_the_loop.py`). Hosted shell environments do not support `needs_approval` or `on_approval`; see the [tools guide](tools.md).
 - **Local MCP servers**: Use `require_approval` on `MCPServerStdio` / `MCPServerSse` / `MCPServerStreamableHttp` to gate MCP tool calls (see `examples/mcp/get_all_mcp_tools_example/main.py` and `examples/mcp/tool_filter_example/main.py`).
 - **Hosted MCP servers**: Set `tool_config={"require_approval": "always"}` on `HostedMCPTool` to force HITL, optionally providing `on_approval_request` to auto-approve or reject (see `examples/hosted_mcp/human_in_the_loop.py` and `examples/hosted_mcp/on_approval.py`). Use `"never"` for trusted servers (`examples/hosted_mcp/simple.py`).
 - **Sessions and memory**: Pass a session to `Runner.run` so approvals and conversation history survive multiple turns. SQLite and OpenAI Conversations session variants are in `examples/memory/memory_session_hitl_example.py` and `examples/memory/openai_session_hitl_example.py`.
@@ -26461,6 +26471,25 @@ To use streaming in a run that may pause for approvals, call `Runner.run_streame
 ## Long-running approvals
 
 `RunState` is designed to be durable. Use `state.to_json()` or `state.to_string()` to store pending work in a database or queue and recreate it later with `RunState.from_json(...)` or `RunState.from_string(...)`.
+
+### Keep approval state on the server
+
+Serialized `RunState` contains execution state, including approval decisions, pending tool calls, and tool arguments. The SDK restores this state; `RunState.from_json()` and `RunState.from_string()` do not authenticate the snapshot or the person submitting it. Only deserialize snapshots from trusted storage, or snapshots whose complete integrity and ownership the application has verified. A schema check or a tool-call fingerprint does not authenticate a snapshot.
+
+For browser or mobile approval interfaces, keep the complete snapshot in application-controlled server storage. Send the reviewer only the tool details that the reviewer is authorized to see and opaque identifiers for the pending decisions. Treat tool names and arguments as untrusted display content and escape them when rendering HTML.
+
+When a decision arrives, the server must:
+
+1. Authenticate the reviewer using the application's session or authentication middleware. Do not take the reviewer's identity from the approval request body.
+2. Authorize that reviewer to act on the stored run and the selected pending calls. Possession of a run ID or decision ID is not authorization.
+3. Validate the submitted decision identifiers and boolean decisions against the pending requests stored on the server. Load the server-owned snapshot and obtain the pending items with `state.get_interruptions()`; do not accept replacement tool calls, arguments, approval records, or serialized state from the client.
+4. Apply `state.approve(...)` or `state.reject(...)` to those server-owned items, then resume the run. Coordinate consumption of each pending request with storage so concurrent or replayed submissions cannot resume the same snapshot twice. In shared storage, use an atomic owner-checked transition before starting resumed execution.
+
+The [server-side approval example](https://github.com/openai/openai-agents-python/blob/main/examples/agent_patterns/human_in_the_loop_server.py) demonstrates this pattern with a CLI client simulation and a store confined to one event loop in one process. It requires one decision for every pending call in a batch. The example consumes a request before deserialization and resumed execution, so failures and cancellations also consume the request. A production application must provide authentication, request protections, storage retention, and recovery that reconciles tool side effects before retrying; this example is not a deployable HTTP service.
+
+Replacing `context` with `context_override`, setting `strict_context=True`, or removing only the serialized approval records does not make an untrusted snapshot safe. Other fields still control resumed execution. If an application transports the complete snapshot through a client, the application must verify its integrity, bind it to the authorized user and run, and prevent replay before deserialization. Such verification does not encrypt the snapshot or hide its contents from the client.
+
+### Serialization options
 
 Useful serialization options:
 
@@ -30451,6 +30480,16 @@ To customize this default setup, to send traces to alternative or additional bac
 1. [`add_trace_processor()`][agents.tracing.add_trace_processor] lets you add an **additional** trace processor that will receive traces and spans as they are ready. This lets you do your own processing in addition to sending traces to OpenAI's backend.
 2. [`set_trace_processors()`][agents.tracing.set_trace_processors] lets you **replace** the default processors with your own trace processors. This means traces will not be sent to the OpenAI backend unless you include a `TracingProcessor` that does so.
 
+### Redaction before export
+
+Trace processors are independent observers. The default provider catches a processor's callback exceptions and continues calling the other registered processors. A redaction processor registered before an exporter therefore does not prevent that exporter from receiving data if redaction fails. Adding a processor with `add_trace_processor()` also leaves the default OpenAI exporter registered.
+
+When export depends on successful redaction, keep redaction and delivery inside the same application-owned exporter. Use `set_trace_processors()` to replace the default processors with a `BatchTraceProcessor` configured with that exporter. The exporter should copy the serialized payloads, redact the copies, and pass only the redacted results to the destination. If serialization, copying, or redaction fails, discard the batch before invoking the destination. Log a fixed failure message without the payload, exception text, or traceback.
+
+The [trace redaction example](https://github.com/openai/openai-agents-python/blob/main/examples/basic/trace_redaction.py) demonstrates this composition using existing tracing APIs. The example prints only event categories and trace/span linkage IDs to the local console; it makes no API calls. Its allowlist omits names, metadata, errors, and span data. Caller-supplied IDs must contain no sensitive information, or the application must map those IDs to safe values. This diagnostic output is not the OpenAI tracing ingest schema; an application sending data to a backend must supply a redaction policy and destination compatible with that backend.
+
+The redactor and destination are trusted application code. They must not independently log or send the original data. The batch processor can invoke the exporter during background export, explicit flush, or shutdown, so callbacks must be safe to use from those execution contexts. A failed batch is dropped; subsequent batches can still be exported. Replacement affects future processor callbacks and does not erase data already buffered by a previously registered processor. Configure the replacement before creating traces or running agents.
+
 
 ## Tracing with non-OpenAI models
 
@@ -30526,6 +30565,7 @@ The following community and vendor integrations support the tracing API surface 
 -   [Latitude](https://docs.latitude.so/telemetry/frameworks/openai-agents)
 -   [DProvenanceKit](https://dprovenance.dev/openai-agents/)
 -   [Tuning Engines](https://github.com/cerebrixos-org/tuning-engines-cli/tree/main/packages/tuning-agents#openai-agents-sdk)
+-   [Laminar](https://laminar.sh/docs/tracing/integrations/openai-agents-sdk)
 
 ================
 File: docs/usage.md
