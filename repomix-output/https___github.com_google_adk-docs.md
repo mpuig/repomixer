@@ -3211,7 +3211,7 @@ File: docs/agents/models/google-gemma.md
 ADK agents can use the [Google Gemma](https://ai.google.dev/gemma/docs) family of generative AI models that offer a
 wide range of capabilities. ADK supports many Gemma features,
 including [Tool Calling](/tools-custom/)
-and [Structured Output](/agents/llm-agents/#structuring-data-input_schema-output_schema-output_key).
+and [Structured Output](/agents/llm-agents/#data-handling).
 
 You can use Gemma 4 through the [Gemini API](https://ai.google.dev/gemini-api/docs),
 or with one of many self-hosting options on Google Cloud:
@@ -39026,7 +39026,7 @@ catalog_tags: ["data","mcp"]
 # MongoDB MCP tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
 The [MongoDB MCP Server](https://github.com/mongodb-js/mongodb-mcp-server)
@@ -39144,6 +39144,97 @@ using natural language.
         });
 
         export { rootAgent };
+        ```
+
+=== "Go"
+
+    === "Local MCP Server"
+
+        ```go
+        package main
+
+        import (
+        	"context"
+        	"log"
+        	"os"
+        	"os/exec"
+
+        	"github.com/modelcontextprotocol/go-sdk/mcp"
+        	"google.golang.org/genai"
+
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/cmd/launcher"
+        	"google.golang.org/adk/v2/cmd/launcher/full"
+        	"google.golang.org/adk/v2/model/gemini"
+        	"google.golang.org/adk/v2/tool"
+        	"google.golang.org/adk/v2/tool/mcptoolset"
+        )
+
+        // For database access, use a connection string:
+        const connectionString = "mongodb://localhost:27017/myDatabase"
+
+        // For Atlas management, use API credentials:
+        // const atlasClientID = "YOUR_ATLAS_CLIENT_ID"
+        // const atlasClientSecret = "YOUR_ATLAS_CLIENT_SECRET"
+
+        func main() {
+        	ctx := context.Background()
+
+        	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+        		APIKey: os.Getenv("GOOGLE_API_KEY"),
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the model: %v", err)
+        	}
+
+        	args := []string{
+        		"-y", "mongodb-mcp-server",
+        		"--readOnly", // Remove for write operations
+        	}
+
+        	server := exec.CommandContext(ctx, "npx", args...)
+        	// Forward only what npx needs, plus the MongoDB credentials. The parent
+        	// environment may hold unrelated secrets, such as the GOOGLE_API_KEY above.
+        	server.Env = []string{
+        		// For database access, use:
+        		"MDB_MCP_CONNECTION_STRING=" + connectionString,
+        		// For Atlas management, use:
+        		// "MDB_MCP_API_CLIENT_ID=" + atlasClientID,
+        		// "MDB_MCP_API_CLIENT_SECRET=" + atlasClientSecret,
+        	}
+        	for _, k := range []string{
+        		"PATH", "HOME", // POSIX
+        		"APPDATA", "LOCALAPPDATA", "TEMP", "USERPROFILE", // Windows
+        	} {
+        		if v, ok := os.LookupEnv(k); ok {
+        			server.Env = append(server.Env, k+"="+v)
+        		}
+        	}
+
+        	mongodb, err := mcptoolset.New(mcptoolset.Config{
+        		Transport: &mcp.CommandTransport{Command: server},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the MongoDB tool set: %v", err)
+        	}
+
+        	rootAgent, err := llmagent.New(llmagent.Config{
+        		Model:       model,
+        		Name:        "mongodb_agent",
+        		Instruction: "Help users query and manage MongoDB databases",
+        		Toolsets:    []tool.Toolset{mongodb},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the agent: %v", err)
+        	}
+
+        	l := full.NewLauncher()
+        	cfg := &launcher.Config{AgentLoader: agent.NewSingleLoader(rootAgent)}
+        	if err := l.Execute(ctx, cfg, os.Args[1:]); err != nil {
+        		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        	}
+        }
         ```
 
 ## Available tools
@@ -39676,7 +39767,7 @@ catalog_tags: ["mcp"]
 # Notion MCP tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
 The [Notion MCP Server](https://github.com/makenotion/notion-mcp-server)
@@ -39777,6 +39868,81 @@ language.
         });
 
         export { rootAgent };
+        ```
+
+=== "Go"
+
+    === "Local MCP Server"
+
+        ```go
+        package main
+
+        import (
+        	"context"
+        	"log"
+        	"os"
+        	"os/exec"
+
+        	"github.com/modelcontextprotocol/go-sdk/mcp"
+        	"google.golang.org/genai"
+
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/cmd/launcher"
+        	"google.golang.org/adk/v2/cmd/launcher/full"
+        	"google.golang.org/adk/v2/model/gemini"
+        	"google.golang.org/adk/v2/tool"
+        	"google.golang.org/adk/v2/tool/mcptoolset"
+        )
+
+        const notionToken = "YOUR_NOTION_TOKEN"
+
+        func main() {
+        	ctx := context.Background()
+
+        	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+        		APIKey: os.Getenv("GOOGLE_API_KEY"),
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the model: %v", err)
+        	}
+
+        	server := exec.CommandContext(ctx, "npx", "-y", "@notionhq/notion-mcp-server")
+        	// Forward only what npx needs, plus the Notion token. The parent environment
+        	// may hold unrelated secrets, such as the GOOGLE_API_KEY read above.
+        	server.Env = []string{"NOTION_TOKEN=" + notionToken}
+        	for _, k := range []string{
+        		"PATH", "HOME", // POSIX
+        		"APPDATA", "LOCALAPPDATA", "TEMP", "USERPROFILE", // Windows
+        	} {
+        		if v, ok := os.LookupEnv(k); ok {
+        			server.Env = append(server.Env, k+"="+v)
+        		}
+        	}
+
+        	notion, err := mcptoolset.New(mcptoolset.Config{
+        		Transport: &mcp.CommandTransport{Command: server},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the Notion tool set: %v", err)
+        	}
+
+        	rootAgent, err := llmagent.New(llmagent.Config{
+        		Model:       model,
+        		Name:        "notion_agent",
+        		Instruction: "Help users get information from Notion",
+        		Toolsets:    []tool.Toolset{notion},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the agent: %v", err)
+        	}
+
+        	l := full.NewLauncher()
+        	cfg := &launcher.Config{AgentLoader: agent.NewSingleLoader(rootAgent)}
+        	if err := l.Execute(ctx, cfg, os.Args[1:]); err != nil {
+        		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        	}
+        }
         ```
 
 ## Available tools
@@ -40258,12 +40424,11 @@ catalog_tags: ["data"]
 </div>
 
 The [`adk-perseus-vault-memory`](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
-integration connects your ADK agent to
-[Perseus Vault](https://github.com/Perseus-Computing-LLC/perseus-vault), a
-persistent, cross-session memory backend. Backed by a single Rust binary with an
-embedded SQLite database, it requires **zero cloud dependencies**, and everything
-runs locally. Memory is encrypted at rest with AES-256-GCM, and search combines
-FTS5 keyword matching with dense vector retrieval.
+integration connects your ADK agent to Perseus Vault, a persistent,
+cross-session memory backend. Backed by a single Rust binary with an embedded
+SQLite database, it requires **zero cloud dependencies**, and everything runs
+locally. Memory is encrypted at rest with AES-256-GCM, and search combines FTS5
+keyword matching with dense vector retrieval.
 
 ## Use cases
 
@@ -40279,23 +40444,8 @@ FTS5 keyword matching with dense vector retrieval.
 ## Prerequisites
 
 - Python 3.10+
-- The `perseus-vault` binary (see [Installation](#installation))
+- The `perseus-vault` binary already installed. See [Perseus Computing Vault](https://perseus.observer/vault/) for availability and instructions.
 - `google-adk>=1.0.0`
-
-## Installation
-
-Install the Python package:
-
-```bash
-pip install adk-perseus-vault-memory
-```
-
-Then install the `perseus-vault` binary: download the build for your platform
-from the
-[releases page](https://github.com/Perseus-Computing-LLC/perseus-vault/releases)
-and place it on your `PATH`. The service looks for `perseus-vault` by default, or
-pass `vault_binary="/absolute/path/to/perseus-vault"` to
-`PerseusVaultMemoryService`.
 
 ## Use with agent
 
@@ -40392,7 +40542,6 @@ session = await runner.session_service.create_session(
 
 - [adk-perseus-vault-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
 - [adk-perseus-vault-memory on PyPI](https://pypi.org/project/adk-perseus-vault-memory/)
-- [Perseus Vault (backing service)](https://github.com/Perseus-Computing-LLC/perseus-vault)
 - [Perseus Context integration](/integrations/perseus/)
 
 ================
@@ -40413,12 +40562,10 @@ catalog_tags: ["data", "mcp"]
 
 The [`adk-perseus-context`](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
 integration injects a deterministically compiled context into your ADK agent's
-system instruction. It is powered by
-[Perseus](https://github.com/Perseus-Computing-LLC/perseus), an open-source
-context compiler: Perseus resolves directives like `@file`, `@search`, and
-`@memory` into one byte-stable context string at inference time, with no
-retrieval index, no embeddings, and no extra LLM round-trip. Everything runs
-locally.
+system instruction. It is powered by Perseus, an open-source context compiler:
+Perseus resolves directives like `@file`, `@search`, and `@memory` into one
+byte-stable context string at inference time, with no retrieval index, no
+embeddings, and no extra LLM round-trip. Everything runs locally.
 
 Perseus is a context compiler, not a memory or RAG backend. For persistent
 cross-session memory, pair it with its companion, [Perseus Vault](/integrations/perseus-vault/).
@@ -40563,7 +40710,6 @@ agent = Agent(
 
 - [adk-perseus-context on GitHub](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
 - [adk-perseus-context on PyPI](https://pypi.org/project/adk-perseus-context/)
-- [Perseus (context engine)](https://github.com/Perseus-Computing-LLC/perseus)
 - [Perseus Vault Memory integration](/integrations/perseus-vault/)
 
 ================
