@@ -5341,62 +5341,52 @@ search:
 ---
 # OpenAI Agents SDK
 
-!!! note "중요 공지"
-
-    Agents SDK는 **기능 개발이 완료된 상태**입니다. 유지 관리, 보안 수정, 치명적 버그 수정 및 호환성 관련 작업은 계속되지만, 주요 신규 기능은 계획되어 있지 않습니다. 새로운 에이전트 애플리케이션에는 관리형 Codex 하네스에서 실행되는 **[Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart)**를 권장합니다.
-
-    기존 애플리케이션에서는 Agents SDK를 계속 사용할 수 있습니다. Agents API가 아직 지원하지 않는 기능이 필요한 신규 애플리케이션의 경우, SDK는 단기적인 선택지가 될 수 있습니다.
-
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)는 애플리케이션 코드에서 에이전트 워크플로를 구축하기 위한 오픈 소스 프레임워크입니다. [Swarm](https://github.com/openai/swarm/tree/main)을 기반으로 하며, 가드레일과 기본 제공 트레이싱을 통해 경량 멀티 에이전트 오케스트레이션을 프로덕션 애플리케이션에 도입합니다.
-
-SDK는 애플리케이션에서 에이전트 루프를 실행하고 MCP 서버 도구를 포함한 모델 호출과 도구 실행을 조정합니다. 세션은 여러 실행에 걸쳐 대화 컨텍스트를 유지하며, 사람의 승인을 통해 애플리케이션이 검토를 위해 도구 실행을 일시 중지할 수 있습니다. 핵심 기본 구성요소는 다음과 같습니다.
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)를 사용하면 추상화를 최소화한 가볍고 사용하기 쉬운 패키지로 에이전트 기반 AI 앱을 구축할 수 있습니다. 이는 이전의 에이전트 실험 프로젝트인 [Swarm](https://github.com/openai/swarm/tree/main)을 프로덕션 환경에 사용할 수 있도록 개선한 버전입니다. Agents SDK는 매우 적은 수의 기본 구성 요소로 이루어져 있습니다.
 
 -   **에이전트**: 지침과 도구를 갖춘 LLM
--   **Agents as tools / 핸드오프**: 에이전트가 특정 작업을 다른 에이전트에게 위임할 수 있도록 하는 기능
--   **가드레일**: 에이전트 입력과 출력의 검증을 지원하는 기능
+-   **Agents as tools / 핸드오프**: 에이전트가 특정 작업을 다른 에이전트에 위임할 수 있도록 하는 기능
+-   **가드레일**: 에이전트의 입력과 출력을 검증할 수 있도록 하는 기능
 
-이러한 기본 구성요소를 Python과 결합하여 여러 단계로 구성된 워크플로를 조정할 수 있습니다. 기본 제공 **트레이싱**을 사용하면 이러한 워크플로를 시각화하고 디버깅하며 평가할 수 있습니다. SDK는 지연 시간이 짧은 음성 상호작용을 위한 [실시간 에이전트](realtime/guide.md)와 파일 및 명령으로 작업하기 위한 [샌드박스 에이전트](sandbox_agents.md)도 지원합니다.
+이러한 기본 구성 요소를 Python과 함께 사용하면 도구와 에이전트 간의 복잡한 관계를 표현할 수 있으며, 가파른 학습 곡선 없이 실제 애플리케이션을 구축할 수 있습니다. 또한 SDK에는 에이전트 기반 흐름을 시각화하고 디버깅할 뿐만 아니라 평가하고 애플리케이션에 맞게 모델을 파인튜닝할 수도 있는 **트레이싱** 기능이 내장되어 있습니다.
 
-## Agents SDK 사용 이유 {#why-use-the-agents-sdk}
+## Agents SDK를 사용하는 이유 {#why-use-the-agents-sdk}
 
-SDK에는 다음과 같은 두 가지 핵심 설계 원칙이 있습니다.
+SDK는 다음 두 가지 설계 원칙을 따릅니다.
 
-1. 사용할 가치가 있을 만큼 충분한 기능을 제공하면서도, 빠르게 익힐 수 있도록 기본 구성요소의 수를 최소화합니다.
-2. 별도의 설정 없이도 원활하게 작동하면서, 동작을 원하는 대로 세밀하게 맞춤 설정할 수 있습니다.
+1. 사용할 가치가 있을 만큼 충분한 기능을 제공하면서도, 빠르게 배울 수 있도록 기본 구성 요소의 수를 최소화합니다.
+2. 별도의 설정 없이도 원활하게 작동하면서, 필요한 동작을 정확하게 맞춤 설정할 수 있습니다.
 
 SDK의 주요 기능은 다음과 같습니다.
 
--   **에이전트**: 지침, 도구, 가드레일, 핸드오프와 작업이 완료될 때까지 계속 실행되는 기본 제공 루프를 사용해 에이전트를 구축합니다.
--   **샌드박스 에이전트**: 실제 격리된 워크스페이스에서 전문 에이전트를 실행합니다. 샌드박스 에이전트는 매니페스트로 정의된 파일, 샌드박스 클라이언트 선택 및 재개 가능한 샌드박스 세션을 지원합니다.
--   **실시간 에이전트**: `gpt-realtime-2.1`, 자동 인터럽션(중단 처리) 감지, 컨텍스트 관리, 가드레일 등을 활용해 강력한 음성 에이전트를 구축합니다.
--   **음성 에이전트**: 음성 텍스트 변환, 에이전트 워크플로 및 텍스트 음성 변환을 결합한 음성 파이프라인을 구축합니다.
--   **파이썬 우선**: 새로운 추상화를 학습할 필요 없이 기본 제공 언어 기능을 사용하여 에이전트를 오케스트레이션하고 연결합니다.
--   **Agents as tools / 핸드오프**: 여러 에이전트 간에 작업을 조정하고 위임하기 위한 강력한 메커니즘입니다.
--   **가드레일**: 에이전트 실행과 동시에 입력 검증 및 안전 검사를 병렬로 수행하고, 검사를 통과하지 못하면 즉시 실패 처리합니다.
+-   **에이전트**: 지침, 도구, 가드레일, 핸드오프와 작업이 완료될 때까지 계속 실행되는 내장 루프를 사용하여 에이전트를 구축합니다.
+-   **샌드박스 에이전트**: 실제 격리된 워크스페이스에서 전문 에이전트를 실행합니다. 샌드박스 에이전트는 매니페스트에 정의된 파일, 샌드박스 클라이언트 선택, 재개 가능한 샌드박스 세션을 지원합니다.
+-   **실시간 에이전트**: `gpt-realtime-2.1`, 자동 인터럽션 감지, 컨텍스트 관리, 가드레일 등을 활용하여 강력한 음성 에이전트를 구축합니다.
+-   **음성 에이전트**: 음성 텍스트 변환, 에이전트 워크플로, 텍스트 음성 변환을 결합한 음성 파이프라인을 구축합니다.
+-   **파이썬 우선**: 새로운 추상화를 학습할 필요 없이 내장된 언어 기능을 사용하여 에이전트를 오케스트레이션하고 연결합니다.
+-   **Agents as tools / 핸드오프**: 여러 에이전트 간의 작업을 조율하고 위임하는 강력한 메커니즘입니다.
+-   **가드레일**: 에이전트 실행과 병렬로 입력 검증 및 안전성 검사를 수행하고, 검사를 통과하지 못하면 즉시 실패 처리합니다.
 -   **함수 도구**: 자동 스키마 생성과 Pydantic 기반 검증을 통해 모든 Python 함수를 도구로 변환합니다.
--   **MCP 서버 도구 호출**: 원격 MCP 도구를 함수 도구와 함께 에이전트에 제공하는 기본 제공 통합 기능입니다.
+-   **MCP 서버 도구 호출**: 원격 MCP 도구를 함수 도구와 함께 에이전트에 제공하는 내장 통합 기능입니다.
 -   **세션**: 에이전트 루프 내에서 작업 컨텍스트를 유지하기 위한 영구 메모리 계층입니다.
--   **휴먼인더루프 (HITL)**: 에이전트 실행 중 사람을 참여시키기 위한 기본 제공 메커니즘입니다.
--   **트레이싱**: 워크플로를 시각화하고 디버깅하며 모니터링하기 위한 기본 제공 트레이싱으로, OpenAI의 평가, 미세 조정 및 증류 도구 모음을 지원합니다.
+-   **휴먼인더루프 (HITL)**: 에이전트 실행 중 사람이 참여할 수 있도록 하는 내장 메커니즘입니다.
+-   **트레이싱**: 워크플로를 시각화하고 디버깅하며 모니터링하기 위한 내장 트레이싱 기능으로, OpenAI의 평가, 파인튜닝, 증류 도구 모음을 지원합니다.
 
-## Agents SDK와 Responses API 비교 {#agents-sdk-or-responses-api}
-
-새로운 에이전트 애플리케이션은 [Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart)로 시작하는 것이 좋습니다. 아래 비교는 자체 애플리케이션 코드에서 에이전트 워크플로를 실행해야 하는 경우에 적용됩니다.
+## Agents SDK와 Responses API의 선택 {#agents-sdk-or-responses-api}
 
 SDK는 OpenAI 모델에 기본적으로 Responses API를 사용하지만, 모델 호출을 더 높은 수준의 런타임으로 래핑합니다.
 
 다음과 같은 경우 Responses API를 직접 사용합니다.
 
--   루프, 도구 디스패치 및 상태 처리를 직접 관리하려는 경우
--   워크플로의 실행 시간이 짧고 주된 목적이 모델 응답을 반환하는 것인 경우
+-   루프, 도구 디스패치, 상태 처리를 직접 관리하려는 경우
+-   워크플로가 단기적으로 실행되며 주로 모델의 응답을 반환하는 경우
 
 다음과 같은 경우 Agents SDK를 사용합니다.
 
 -   런타임에서 턴, 도구 실행, 가드레일, 핸드오프 또는 세션을 관리하도록 하려는 경우
--   에이전트가 결과물을 생성하거나 조정된 여러 단계에 걸쳐 동작해야 하는 경우
+-   에이전트가 결과물을 생성하거나 조율된 여러 단계에 걸쳐 작동해야 하는 경우
 -   [샌드박스 에이전트](sandbox_agents.md)를 통해 실제 워크스페이스 또는 재개 가능한 실행이 필요한 경우
 
-전체 애플리케이션에 하나만 선택할 필요는 없습니다. 많은 애플리케이션에서 관리형 워크플로에는 SDK를 사용하고, 더 낮은 수준의 실행 경로에는 Responses API를 직접 호출합니다.
+전체 애플리케이션에서 하나만 선택할 필요는 없습니다. 많은 애플리케이션이 관리형 워크플로에는 SDK를 사용하고, 저수준 경로에는 Responses API를 직접 호출합니다.
 
 ## 설치 {#installation}
 
@@ -5425,26 +5415,26 @@ print(result.final_output)
 export OPENAI_API_KEY=sk-...
 ```
 
-## 시작 지점 {#start-here}
+## 시작 안내 {#start-here}
 
--   [빠른 시작](quickstart.md)을 통해 첫 번째 텍스트 기반 에이전트를 구축합니다.
+-   [빠른 시작](quickstart.md)에서 첫 번째 텍스트 기반 에이전트를 구축합니다.
 -   그런 다음 [에이전트 실행](running_agents.md#choose-a-memory-strategy)에서 턴 간 상태를 유지할 방법을 결정합니다.
--   작업이 실제 파일, 저장소 또는 에이전트별로 격리된 워크스페이스 상태에 의존한다면 [샌드박스 에이전트 빠른 시작](sandbox_agents.md)을 참조하세요.
--   핸드오프와 관리자 방식 오케스트레이션 중에서 선택하려면 [에이전트 오케스트레이션](multi_agent.md)을 참조하세요.
+-   작업이 실제 파일, 리포지토리 또는 에이전트별로 격리된 워크스페이스 상태에 의존한다면 [샌드박스 에이전트 빠른 시작](sandbox_agents.md)을 읽어 보세요.
+-   핸드오프와 관리자 스타일 오케스트레이션 중 하나를 선택하려면 [에이전트 오케스트레이션](multi_agent.md)을 읽어 보세요.
 
 ## 경로 선택 {#choose-your-path}
 
-수행하려는 작업은 알고 있지만 해당 작업을 설명하는 페이지를 모르는 경우 이 표를 사용하세요.
+수행하려는 작업은 알지만 어느 페이지에서 설명하는지 모를 때 이 표를 사용하세요.
 
 | 목표 | 시작 지점 |
 | --- | --- |
 | 첫 번째 텍스트 에이전트를 구축하고 전체 실행 과정 확인 | [빠른 시작](quickstart.md) |
 | 함수 도구, 호스티드 툴 또는 Agents as tools 추가 | [도구](tools.md) |
 | 실제 격리된 워크스페이스에서 코딩, 검토 또는 문서 에이전트 실행 | [샌드박스 에이전트 빠른 시작](sandbox_agents.md) 및 [샌드박스 클라이언트](sandbox/clients.md) |
-| 핸드오프와 관리자 방식 오케스트레이션 중 선택 | [에이전트 오케스트레이션](multi_agent.md) |
+| 핸드오프와 관리자 스타일 오케스트레이션 중 선택 | [에이전트 오케스트레이션](multi_agent.md) |
 | 턴 간 메모리 유지 | [에이전트 실행](running_agents.md#choose-a-memory-strategy) 및 [세션](sessions/index.md) |
 | OpenAI 모델, WebSocket 전송 또는 OpenAI 이외의 제공업체 사용 | [모델](models/index.md) |
-| 출력, 실행 항목, 인터럽션(중단 처리) 및 재개 상태 검토 | [결과](results.md) |
+| 출력, 실행 항목, 인터럽션(중단 처리), 재개 상태 검토 | [결과](results.md) |
 | `gpt-realtime-2.1`를 사용하여 지연 시간이 짧은 음성 에이전트 구축 | [실시간 에이전트 빠른 시작](realtime/quickstart.md) 및 [실시간 전송](realtime/transport.md) |
 | 음성 텍스트 변환 / 에이전트 / 텍스트 음성 변환 파이프라인 구축 | [음성 파이프라인 빠른 시작](voice/quickstart.md) |
 
@@ -20736,62 +20726,52 @@ search:
 ---
 # OpenAI Agents SDK
 
-!!! note "重要通知"
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python)让您能够使用一个轻量、易用且仅包含极少抽象概念的软件包，构建智能体式 AI 应用。它是我们之前智能体实验项目[Swarm](https://github.com/openai/swarm/tree/main)的生产就绪升级版。Agents SDK 仅包含一小组基础组件：
 
-    Agents SDK 已**功能完备**。维护、安全修复、关键错误修复和兼容性工作仍将继续，但目前没有开发重大新功能的计划。对于新的智能体应用，我们推荐使用**[Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart)**，它运行由托管服务提供的 Codex 执行框架。
+-   **智能体**，即配备了指令和工具的 LLM
+-   **Agents as tools / 任务转移**，允许智能体将特定任务委派给其他智能体
+-   **安全防护措施**，用于验证智能体的输入和输出
 
-    现有应用可以继续使用 Agents SDK。对于需要 Agents API 尚未支持的功能的新应用，SDK 仍可作为短期选择。
+这些基础组件与 Python 结合使用时，足以表达工具与智能体之间的复杂关系，让您无需经历陡峭的学习曲线即可构建实际应用。此外，SDK 还内置了**追踪**功能，让您能够可视化和调试智能体流程、对其进行评估，甚至针对您的应用微调模型。
 
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) 是一个开源框架，用于在应用代码中构建智能体工作流。它基于 [Swarm](https://github.com/openai/swarm/tree/main) 构建，通过安全防护措施和内置追踪，将轻量级多智能体编排引入生产应用。
-
-SDK 会在您的应用中运行智能体循环，协调模型调用和工具执行，包括 MCP 服务器工具。会话可在多次运行之间保留对话上下文，而人工审批机制可让您的应用暂停工具执行以供审核。核心基础组件包括：
-
--   **智能体**：配备 instructions 和 tools 的 LLM
--   **Agents as tools / 任务转移**：允许智能体针对特定任务将工作委派给其他智能体
--   **安全防护措施**：支持验证智能体的输入和输出
-
-您可以结合使用这些基础组件与 Python 来协调多步骤工作流。内置**追踪**可帮助您可视化、调试和评估这些工作流。SDK 还支持用于低延迟语音交互的[实时智能体](realtime/guide.md)，以及用于处理文件和命令的[沙箱智能体](sandbox_agents.md)。
-
-## 使用 Agents SDK 的理由 {#why-use-the-agents-sdk}
+## Agents SDK 的使用理由 {#why-use-the-agents-sdk}
 
 SDK 遵循两项核心设计原则：
 
-1. 提供足够丰富且值得使用的功能，同时将基础组件控制在足够少的数量，以便快速掌握。
+1. 提供足以带来使用价值的功能，同时将基础组件控制在较少数量，以便快速学习。
 2. 开箱即用，同时允许您精确自定义具体行为。
 
-SDK 的主要功能包括：
+以下是 SDK 的主要功能：
 
--   **智能体**：使用 instructions、工具、安全防护措施、任务转移和内置循环来构建智能体；该循环会持续运行，直至任务完成。
--   **沙箱智能体**：在真正隔离的工作区内运行专家智能体。沙箱智能体支持由清单定义的文件、沙箱客户端选择，以及可恢复的沙箱会话。
--   **实时智能体**：使用 `gpt-realtime-2.1`、自动中断检测、上下文管理、安全防护措施等功能构建强大的语音智能体。
+-   **智能体**：使用指令、工具、安全防护措施、任务转移以及持续运行直至任务完成的内置循环来构建智能体。
+-   **沙箱智能体**：在真正隔离的工作区中运行专项智能体。沙箱智能体支持由清单定义的文件、沙箱客户端选择，以及可恢复的沙箱会话。
+-   **实时智能体**：使用`gpt-realtime-2.1`、自动中断检测、上下文管理、安全防护措施等功能构建强大的语音智能体。
 -   **语音智能体**：构建结合语音转文本、智能体工作流和文本转语音的语音管线。
--   **Python 优先**：使用内置语言功能编排和串联智能体，而无需学习新的抽象概念。
--   **Agents as tools / 任务转移**：用于在多个智能体之间协调和委派工作的强大机制。
--   **安全防护措施**：与智能体执行并行开展输入验证和安全检查，并在检查未通过时立即终止。
--   **函数工具**：通过自动生成模式和基于 Pydantic 的验证，将任意 Python 函数转换为工具。
--   **MCP 服务器工具调用**：内置集成，可将远程 MCP 工具与函数工具一起提供给智能体。
+-   **Python 优先**：使用内置语言特性编排和串联智能体，无需学习新的抽象概念。
+-   **Agents as tools / 任务转移**：一种在多个智能体之间协调和委派工作的强大机制。
+-   **安全防护措施**：在执行智能体的同时并行运行输入验证和安全检查，并在检查未通过时快速失败。
+-   **函数工具**：通过自动生成模式和由 Pydantic 提供支持的验证，将任意 Python 函数转换为工具。
+-   **MCP 服务器工具调用**：内置集成，可同时向智能体提供远程 MCP 工具和函数工具。
 -   **会话**：用于在智能体循环中维护工作上下文的持久化记忆层。
--   **人在回路**：在智能体运行期间引入人工参与的内置机制。
+-   **人在回路中**：用于在智能体运行期间引入人工参与的内置机制。
 -   **追踪**：用于可视化、调试和监控工作流的内置追踪功能，并支持 OpenAI 的评估、微调和蒸馏工具套件。
 
 ## Agents SDK 与 Responses API 的选择 {#agents-sdk-or-responses-api}
 
-对于新的智能体应用，请从 [Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart) 开始。以下比较适用于需要在自己的应用代码中运行智能体工作流的情况。
-
-对于 OpenAI 模型，SDK 默认使用 Responses API，但会通过更高级别的运行时封装模型调用。
+对于 OpenAI 模型，SDK 默认使用 Responses API，但它会将模型调用封装在更高层级的运行时中。
 
 以下情况适合直接使用 Responses API：
 
--   您希望自行掌控循环、工具分发和状态处理
--   您的工作流生命周期较短，并且主要用于返回模型响应
+-   您希望自行掌控循环、工具分派和状态处理
+-   您的工作流生命周期较短，主要目标是返回模型响应
 
 以下情况适合使用 Agents SDK：
 
 -   您希望由运行时管理轮次、工具执行、安全防护措施、任务转移或会话
--   您的智能体需要生成产物，或通过多个协调步骤执行操作
--   您需要真实工作区，或需要通过[沙箱智能体](sandbox_agents.md)实现可恢复执行
+-   您的智能体需要生成产物，或通过多个协调步骤完成操作
+-   您需要通过[沙箱智能体](sandbox_agents.md)获得真实工作区或可恢复执行能力
 
-您不必在整个应用中只选择其中一种。许多应用会使用 SDK 管理工作流，同时针对更底层的路径直接调用 Responses API。
+您无需在整个应用中只选择一种方式。许多应用会使用 SDK 管理工作流，同时针对较低层级的执行路径直接调用 Responses API。
 
 ## 安装 {#installation}
 
@@ -20814,33 +20794,33 @@ print(result.final_output)
 # Infinite loop's dance.
 ```
 
-（_运行此示例时，请确保已设置 `OPENAI_API_KEY` 环境变量_）
+（_运行此代码时，请确保已设置`OPENAI_API_KEY`环境变量_）
 
 ```bash
 export OPENAI_API_KEY=sk-...
 ```
 
-## 入门指南 {#start-here}
+## 入门 {#start-here}
 
 -   通过[快速入门](quickstart.md)构建您的第一个文本智能体。
--   然后在[运行智能体](running_agents.md#choose-a-memory-strategy)中决定如何跨轮次维护状态。
--   如果任务依赖真实文件、代码仓库或按智能体隔离的工作区状态，请阅读[沙箱智能体快速入门](sandbox_agents.md)。
--   如果您需要在任务转移与管理器式编排之间做出选择，请阅读[智能体编排](multi_agent.md)。
+-   然后在[运行智能体](running_agents.md#choose-a-memory-strategy)中决定如何跨轮次传递状态。
+-   如果任务依赖真实文件、仓库或每个智能体独立的隔离工作区状态，请阅读[沙箱智能体快速入门](sandbox_agents.md)。
+-   如果您正在任务转移与管理器式编排之间进行选择，请阅读[智能体编排](multi_agent.md)。
 
 ## 路径选择 {#choose-your-path}
 
-如果您清楚自己想完成的工作，但不知道应查看哪个页面，请参考下表。
+当您明确想完成的工作，但不确定应该参阅哪个页面时，请使用此表。
 
 | 目标 | 入门页面 |
 | --- | --- |
 | 构建第一个文本智能体并查看一次完整运行 | [快速入门](quickstart.md) |
-| 添加函数工具、托管工具或 Agents as tools | [工具](tools.md) |
-| 在真正隔离的工作区中运行编码、审核或文档智能体 | [沙箱智能体快速入门](sandbox_agents.md)和[沙箱客户端](sandbox/clients.md) |
-| 在任务转移与管理器式编排之间做出选择 | [智能体编排](multi_agent.md) |
+| 添加函数工具、托管工具或 agents as tools | [工具](tools.md) |
+| 在真正隔离的工作区中运行编码、审查或文档智能体 | [沙箱智能体快速入门](sandbox_agents.md)和[沙箱客户端](sandbox/clients.md) |
+| 在任务转移与管理器式编排之间进行选择 | [智能体编排](multi_agent.md) |
 | 跨轮次保留记忆 | [运行智能体](running_agents.md#choose-a-memory-strategy)和[会话](sessions/index.md) |
 | 使用 OpenAI 模型、WebSocket 传输或非 OpenAI 提供商 | [模型](models/index.md) |
-| 审核输出、运行项、中断和恢复状态 | [结果](results.md) |
-| 使用 `gpt-realtime-2.1` 构建低延迟语音智能体 | [实时智能体快速入门](realtime/quickstart.md)和[实时传输](realtime/transport.md) |
+| 检查输出、运行项、中断和恢复状态 | [结果](results.md) |
+| 使用`gpt-realtime-2.1`构建低延迟语音智能体 | [实时智能体快速入门](realtime/quickstart.md)和[实时传输](realtime/transport.md) |
 | 构建语音转文本 / 智能体 / 文本转语音管线 | [语音管线快速入门](voice/quickstart.md) |
 
 ================
@@ -26440,6 +26420,8 @@ agent = Agent(
 
 `needs_approval` is available on [`function_tool`][agents.tool.function_tool], [`Agent.as_tool`][agents.agent.Agent.as_tool], [`ShellTool`][agents.tool.ShellTool], and [`ApplyPatchTool`][agents.tool.ApplyPatchTool]. Local MCP servers also support approvals through `require_approval` on [`MCPServerStdio`][agents.mcp.server.MCPServerStdio], [`MCPServerSse`][agents.mcp.server.MCPServerSse], and [`MCPServerStreamableHttp`][agents.mcp.server.MCPServerStreamableHttp]. Hosted MCP servers support approvals via [`HostedMCPTool`][agents.tool.HostedMCPTool] with `tool_config={"require_approval": "always"}` and an optional `on_approval_request` callback. Shell and apply_patch tools accept an `on_approval` callback if you want to auto-approve or auto-reject without surfacing an interruption.
 
+For local `ShellTool` and `ApplyPatchTool`, approval is opt-in: `needs_approval` defaults to `False`. An `on_approval` callback alone does not enable approval. Set `needs_approval=True` or a callable approval policy as well; the SDK invokes the callback only for calls that require approval and have no existing approval decision. See [approval for local shell and file edits](tools.md#approval-for-local-shell-and-file-edits) for execution responsibilities and example configurations.
+
 ## How the approval flow works
 
 1. When the model emits a tool call, the runner evaluates its approval rule (`needs_approval`, `require_approval`, or the hosted MCP equivalent).
@@ -26624,21 +26606,13 @@ File: docs/index.md
 ================
 # OpenAI Agents SDK
 
-!!! note "Important notice"
-
-    The Agents SDK is **feature complete**. Maintenance, security fixes, critical bug fixes, and compatibility work continue, but major new features are not planned. For new agent applications, we recommend the **[Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart)**, which runs a managed Codex harness.
-
-    You can continue using the Agents SDK for existing applications. For new applications that require capabilities the Agents API does not yet support, the SDK remains a short-term option.
-
-The [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) is an open-source framework for building agent workflows in application code. It builds on [Swarm](https://github.com/openai/swarm/tree/main), bringing lightweight multi-agent orchestration into production applications with guardrails and built-in tracing.
-
-The SDK runs the agent loop in your application, coordinating model calls and tool execution, including MCP server tools. Sessions preserve conversation context across runs, and human approvals let your application pause tool execution for review. The core primitives are:
+The [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) enables you to build agentic AI apps in a lightweight, easy-to-use package with very few abstractions. It's a production-ready upgrade of our previous experimentation for agents, [Swarm](https://github.com/openai/swarm/tree/main). The Agents SDK has a very small set of primitives:
 
 -   **Agents**, which are LLMs equipped with instructions and tools
 -   **Agents as tools / Handoffs**, which allow agents to delegate to other agents for specific tasks
 -   **Guardrails**, which enable validation of agent inputs and outputs
 
-You can combine these primitives with Python to coordinate multi-step workflows. Built-in **tracing** helps you visualize, debug, and evaluate those workflows. The SDK also supports [Realtime agents](realtime/guide.md) for low-latency voice interactions and [Sandbox agents](sandbox_agents.md) for working with files and commands.
+In combination with Python, these primitives are powerful enough to express complex relationships between tools and agents, and allow you to build real-world applications without a steep learning curve. In addition, the SDK comes with built-in **tracing** that lets you visualize and debug your agentic flows, as well as evaluate them and even fine-tune models for your application.
 
 ## Why use the Agents SDK
 
@@ -26663,8 +26637,6 @@ Here are the main features of the SDK:
 -   **Tracing**: Built-in tracing for visualizing, debugging, and monitoring workflows, with support for the OpenAI suite of evaluation, fine-tuning, and distillation tools.
 
 ## Agents SDK or Responses API?
-
-For new agent applications, start with the [Agents API](https://developers.openai.com/api/docs/guides/agents-api/quickstart). The comparison below applies when you need to run the agent workflow in your own application code.
 
 The SDK uses the Responses API by default for OpenAI models, but it wraps model calls in a higher-level runtime.
 
@@ -29760,6 +29732,16 @@ Local runtime tools require you to supply implementations:
 -   Local shell skills are available with `ShellTool(environment={"type": "local", "skills": [...]})`.
 
 Shell action timeouts use positive integer milliseconds for a finite timeout. The SDK treats both `0` and `None` as no explicit timeout before calling a local `ShellTool` executor because zero does not have a portable meaning across executor implementations; other values are rejected before executor invocation. This is specific to the timeout field: `max_output_length=0` remains a supported request for empty captured output.
+
+### Approval for local shell and file edits
+
+Local `ShellTool` and `ApplyPatchTool` default to `needs_approval=False`. With this setting, the SDK can invoke your executor or editor without requesting approval. Your implementation determines where commands run or files change and must enforce the intended resource permissions and isolation; SDK approval does not provide a sandbox.
+
+For commands or file edits that require review, set `needs_approval=True` on the tool, or provide a callable policy that returns `True` for calls that require approval. Without an `on_approval` callback, the run pauses before invoking the executor or editor and returns pending requests in `result.interruptions`. Approve or reject those requests through `RunState`, then resume the run as described in the [human-in-the-loop guide](human_in_the_loop.md).
+
+To decide immediately in application code, set both `needs_approval` and `on_approval`. The SDK invokes `on_approval` only when the call requires approval and has no existing approval decision; setting the callback alone does not enable approval. See `examples/tools/shell.py` for a CLI prompt and `examples/tools/shell_human_in_the_loop.py` for manual interruption handling. The `examples/tools/apply_patch.py` example instead prompts inside its editor before changing files.
+
+Keep `needs_approval=False` when your application intentionally authorizes automatic execution, for example through an executor that enforces your sandbox policy. Hosted shell environments do not support the SDK's local `needs_approval` or `on_approval` settings.
 
 ### ComputerTool and the Responses computer tool
 
