@@ -2833,7 +2833,9 @@ Integrate Apigee's governance into your agent's workflow by instantiating the
         # The proxy URL of your deployed Apigee proxy including the base path
         proxy_url=f"https://{APIGEE_PROXY_URL}",
         # Pass necessary authentication/authorization headers (like an API key)
-        custom_headers={"foo": "bar"}
+        custom_headers={"foo": "bar"},
+        # Optional: Pass google-auth credentials if the proxy requires additional OAuth scopes
+        # credentials=my_credentials
     )
 
     # Pass the configured model wrapper to your LlmAgent
@@ -6921,7 +6923,7 @@ schema definitions.
     by specific models, including [Gemini
     3.0](https://ai.google.dev/gemini-api/docs/function-calling?example=meeting#structured-output).
     For other models, ADK falls back to a [`set_model_response` function
-    tool](https://github.com/google/adk-python/blob/main/src/google/adk/flows/llm_flows/_output_schema_processor.py)
+    tool](https://github.com/google/adk-python/blob/main/src/google/adk/tools/set_model_response_tool.py)
     to collect the structured output, which may not work reliably. In such
     cases, consider using sub-agents that handle output formatting separately.
 
@@ -13674,6 +13676,8 @@ You should have a Google Cloud project. You need to know your:
   2. Project location, for example: "us-central1"
   3. Service account, for example: "1234567890-compute@developer.gserviceaccount.com"
   4. GOOGLE_API_KEY
+
+You must also have the Google Cloud CLI (`gcloud`) installed.
 
 ## Secret
 
@@ -23946,7 +23950,7 @@ The A2UI repository includes ADK sample agents you can run immediately:
 - [A2UI specification](https://a2ui.org/)
 - [A2UI GitHub repository](https://github.com/a2ui-project/a2ui)
 - [A2UI Python SDK (`a2ui-agent-sdk`)](https://pypi.org/project/a2ui-agent-sdk/)
-- [Agent development guide](https://github.com/a2ui-project/a2ui/blob/main/agent_sdks/python/a2ui_agent/agent_development.md)
+- [Agent development guide](https://github.com/a2ui-project/a2ui/blob/main/python/a2ui_agent/agent_development.md)
 - [Component gallery](https://a2ui.org/reference/components/)
 - [A2A protocol](https://a2a-protocol.org)
 
@@ -25602,7 +25606,7 @@ catalog_tags: ["mcp"]
 # AgentMail MCP tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
 The [AgentMail MCP Server](https://github.com/agentmail-to/agentmail-mcp)
@@ -25697,6 +25701,81 @@ language.
         });
 
         export { rootAgent };
+        ```
+
+=== "Go"
+
+    === "Local MCP Server"
+
+        ```go
+        package main
+
+        import (
+        	"context"
+        	"log"
+        	"os"
+        	"os/exec"
+
+        	"github.com/modelcontextprotocol/go-sdk/mcp"
+        	"google.golang.org/genai"
+
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/cmd/launcher"
+        	"google.golang.org/adk/v2/cmd/launcher/full"
+        	"google.golang.org/adk/v2/model/gemini"
+        	"google.golang.org/adk/v2/tool"
+        	"google.golang.org/adk/v2/tool/mcptoolset"
+        )
+
+        const agentmailAPIKey = "YOUR_AGENTMAIL_API_KEY"
+
+        func main() {
+        	ctx := context.Background()
+
+        	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+        		APIKey: os.Getenv("GOOGLE_API_KEY"),
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the model: %v", err)
+        	}
+
+        	server := exec.CommandContext(ctx, "npx", "-y", "agentmail-mcp")
+        	// Forward only what npx needs, plus the AgentMail key. The parent environment
+        	// may hold unrelated secrets, such as the GOOGLE_API_KEY read above.
+        	server.Env = []string{"AGENTMAIL_API_KEY=" + agentmailAPIKey}
+        	for _, k := range []string{
+        		"PATH", "HOME", // POSIX
+        		"APPDATA", "LOCALAPPDATA", "TEMP", "USERPROFILE", // Windows
+        	} {
+        		if v, ok := os.LookupEnv(k); ok {
+        			server.Env = append(server.Env, k+"="+v)
+        		}
+        	}
+
+        	agentmail, err := mcptoolset.New(mcptoolset.Config{
+        		Transport: &mcp.CommandTransport{Command: server},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the AgentMail tool set: %v", err)
+        	}
+
+        	rootAgent, err := llmagent.New(llmagent.Config{
+        		Model:       model,
+        		Name:        "agentmail_agent",
+        		Instruction: "Help users manage email inboxes and send messages",
+        		Toolsets:    []tool.Toolset{agentmail},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the agent: %v", err)
+        	}
+
+        	l := full.NewLauncher()
+        	cfg := &launcher.Config{AgentLoader: agent.NewSingleLoader(rootAgent)}
+        	if err := l.Execute(ctx, cfg, os.Args[1:]); err != nil {
+        		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        	}
+        }
         ```
 
 ## Available tools
@@ -34383,6 +34462,151 @@ allowing your agent to recall user preferences and conversations.
     using Agent Platform express mode
 
 ================
+File: docs/integrations/filesretrieval.md
+================
+---
+catalog_title: Files Retrieval Tool
+catalog_description: Index and search local documents using vector similarity search
+catalog_icon: /integrations/assets/filesretrieval.png
+catalog_tags: ["google", "data"]
+---
+
+# Files Retrieval tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
+</div>
+
+The `FilesRetrieval` tool lets your ADK agent index and query local documents
+using retrieval-augmented generation (RAG). It builds a LlamaIndex
+`VectorStoreIndex` over a directory you specify, using Google's
+Gemini embedding model. Your agent can then retrieve
+relevant excerpts from local text files, Markdown documents, and source files
+to ground its answers in project-specific context.
+
+## Use cases
+
+- **Codebase and Documentation Search**: Retrieve relevant functions, design notes and documentation from a local repository to answer technical questions.
+- **Local Knowledge Base Grounding**: Index internal markdown files, technical specifications, and guides straight from your own filesystem, without first loading them into a hosted document store. Document content is sent to the configured embedding model for indexing, so review the data handling terms for Google AI Studio or Agent Platform before indexing sensitive material.
+- **Context-Augmented Assistance**: Retrieve relevant domain-specific data from reports, logs, or text files to ground agent responses in verified source material.
+
+## Prerequisites
+
+The `FilesRetrieval` tool indexes documents with LlamaIndex, which ADK does not install by default. Install the extra that provides it:
+
+```bash
+pip install "google-adk[extensions]"
+```
+
+Then configure credentials for either Google AI Studio or Agent Platform:
+
+=== "Google AI Studio"
+
+    Generate an API key in [Google AI Studio](https://aistudio.google.com/) and set the environment variable:
+
+    ```bash
+    export GOOGLE_API_KEY="your-api-key"
+    ```
+
+=== "Agent Platform"
+
+    Configure Agent Platform access with your Google Cloud credentials:
+
+    ```bash
+    export GOOGLE_GENAI_USE_ENTERPRISE=TRUE
+    export GOOGLE_CLOUD_PROJECT="your-project-id"
+    export GOOGLE_CLOUD_LOCATION="<global | us | eu>"
+    ```
+
+!!! note
+    
+    For production, pass the GA model explicitly with `embedding_model=GoogleGenAIEmbedding(model_name="gemini-embedding-2", embed_batch_size=1)`. For more information, see [Gemini Embedding](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/embedding-2). For more information on connecting your ADK agent to Google Cloud resources
+    and services, see the Google Cloud [Connection Guide](/get-started/google-cloud/). 
+    
+    
+## Use with agent
+
+This example configures `FilesRetrieval` for a local data directory and
+attaches it to an ADK agent. Before running it, create a `data/` directory next to your agent module and add the `.txt` or `.md` files you want indexed: `FilesRetrieval` loads and embeds the entire directory when it is constructed, so the directory must already exist, and the content is re-indexed each time the agent module is imported.
+
+```python
+import os
+from google.adk.agents import Agent
+from google.adk.tools.retrieval.files_retrieval import FilesRetrieval
+
+# Path to the directory containing your source documents
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+# Initialize the FilesRetrieval tool
+files_retrieval = FilesRetrieval(
+    name="search_documents",
+    description=(
+        "Search through local documentation files to find relevant"
+        " information. Use this tool when the user asks questions about"
+        " architecture, project structure, or tools."
+    ),
+    input_dir=DATA_DIR,
+)
+
+# Create an agent equipped with the retrieval tool
+root_agent = Agent(
+    model="gemini-flash-latest",
+    name="files_retrieval_agent",
+    instruction=(
+        "You are a helpful assistant that answers questions based on local"
+        " documentation files. Always use the search_documents tool to retrieve"
+        " relevant context before generating your answer."
+    ),
+    tools=[files_retrieval],
+)
+```
+
+## Available tools
+
+The `FilesRetrieval` class is a tool. Once attached with `tools=[...]`, the agent sees one function, which takes a single `query` string parameter:
+
+Tool | Description
+---- | -----------
+`search_documents` | Performs semantic vector search over documents in the indexed directory and returns the most relevant content chunk for a given natural language query. Rename it with the `name` parameter.
+
+## Configuration
+
+The `FilesRetrieval` constructor accepts the following parameters:
+
+Parameter | Type | Required | Default | Description
+--------- | ---- | -------- | ------- | -----------
+`name` | `str` | **Yes** | — | Unique identifier for the tool, used by the model for function calling.
+`description` | `str` | **Yes** | — | Explanation of when and how the agent should invoke the retrieval tool.
+`input_dir` | `str` | **Yes** | — | Local filesystem directory path containing the documents to load and index.
+`embedding_model` | `Optional[BaseEmbedding]` | No | `None` | Custom LlamaIndex `BaseEmbedding` instance. When omitted, defaults to `GoogleGenAIEmbedding(model_name="gemini-embedding-2-preview", embed_batch_size=1)`.
+
+### Custom embedding models
+
+You can customize the embedding model by passing an instance conforming to LlamaIndex's `BaseEmbedding` interface:
+
+```python
+from google.adk.tools.retrieval.files_retrieval import FilesRetrieval
+from llama_index.embeddings.google_genai import GoogleGenAIEmbedding
+
+custom_embedding = GoogleGenAIEmbedding(
+    model_name="gemini-embedding-2",
+    embed_batch_size=1,
+)
+
+files_retrieval = FilesRetrieval(
+    name="search_documents",
+    description="Search local knowledge base files.",
+    input_dir=os.path.join(os.path.dirname(__file__), "data"),
+    embedding_model=custom_embedding,
+)
+```
+
+## Additional resources
+
+- [Using VectorStoreIndex (LlamaIndex)](https://docs.llamaindex.ai/en/stable/module_guides/indexing/vector_store_index/)
+- [llama-index-embeddings-google-genai on PyPI](https://pypi.org/project/llama-index-embeddings-google-genai/)
+
+================
 File: docs/integrations/firestore-session-service.md
 ================
 ---
@@ -34953,12 +35177,12 @@ trace ingestion from ADK for agent runs,
 tool calls, and model requests.
 
 For more information, see Galileo’s
-[Google ADK integration](https://v2docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk)
+[Google ADK integration](https://docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk)
 docs.
 
 ## Prerequisites
 
-- A [Galileo API key](https://v2docs.galileo.ai/references/faqs/find-keys#galileo-api-key)
+- A [Galileo API key](https://docs.galileo.ai/references/faqs/find-keys#galileo-api-key)
 - A Galileo Project and Log stream
 - A [Gemini API Key](https://aistudio.google.com/app/apikey)
 
@@ -35072,7 +35296,7 @@ Select your Project and inspect the traces and spans in your Log Stream.
 
 ## Resources
 
-- [Galileo Google ADK Integration Documentation](https://v2docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk):
+- [Galileo Google ADK Integration Documentation](https://docs.galileo.ai/sdk-api/third-party-integrations/opentelemetry-and-openinference/google-adk):
 Official documentation for integrating a Google ADK project
 with Galileo using OpenTelemetry and OpenInference.
 - [Google ADK + OpenTelemetry Example Project](https://github.com/rungalileo/sdk-examples/tree/main/python/agent/google-adk):
@@ -37517,7 +37741,7 @@ catalog_tags: ["mcp"]
 # Mailgun MCP tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript</span><span class="lst-go">Go</span>
 </div>
 
 The [Mailgun MCP Server](https://github.com/mailgun/mailgun-mcp-server) connects
@@ -37611,6 +37835,84 @@ natural language.
         });
 
         export { rootAgent };
+        ```
+
+=== "Go"
+
+    === "Local MCP Server"
+
+        ```go
+        package main
+
+        import (
+        	"context"
+        	"log"
+        	"os"
+        	"os/exec"
+
+        	"github.com/modelcontextprotocol/go-sdk/mcp"
+        	"google.golang.org/genai"
+
+        	"google.golang.org/adk/v2/agent"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/cmd/launcher"
+        	"google.golang.org/adk/v2/cmd/launcher/full"
+        	"google.golang.org/adk/v2/model/gemini"
+        	"google.golang.org/adk/v2/tool"
+        	"google.golang.org/adk/v2/tool/mcptoolset"
+        )
+
+        const mailgunAPIKey = "YOUR_MAILGUN_API_KEY"
+
+        func main() {
+        	ctx := context.Background()
+
+        	model, err := gemini.NewModel(ctx, "gemini-flash-latest", &genai.ClientConfig{
+        		APIKey: os.Getenv("GOOGLE_API_KEY"),
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the model: %v", err)
+        	}
+
+        	server := exec.CommandContext(ctx, "npx", "-y", "@mailgun/mcp-server")
+        	// Forward only what npx needs, plus the Mailgun key. The parent environment
+        	// may hold unrelated secrets, such as the GOOGLE_API_KEY read above.
+        	server.Env = []string{
+        		"MAILGUN_API_KEY=" + mailgunAPIKey,
+        		// "MAILGUN_API_REGION=eu", // Optional: defaults to "us"
+        	}
+        	for _, k := range []string{
+        		"PATH", "HOME", // POSIX
+        		"APPDATA", "LOCALAPPDATA", "TEMP", "USERPROFILE", // Windows
+        	} {
+        		if v, ok := os.LookupEnv(k); ok {
+        			server.Env = append(server.Env, k+"="+v)
+        		}
+        	}
+
+        	mailgun, err := mcptoolset.New(mcptoolset.Config{
+        		Transport: &mcp.CommandTransport{Command: server},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the Mailgun tool set: %v", err)
+        	}
+
+        	rootAgent, err := llmagent.New(llmagent.Config{
+        		Model:       model,
+        		Name:        "mailgun_agent",
+        		Instruction: "Help users send emails and manage their Mailgun account",
+        		Toolsets:    []tool.Toolset{mailgun},
+        	})
+        	if err != nil {
+        		log.Fatalf("Failed to create the agent: %v", err)
+        	}
+
+        	l := full.NewLauncher()
+        	cfg := &launcher.Config{AgentLoader: agent.NewSingleLoader(rootAgent)}
+        	if err := l.Execute(ctx, cfg, os.Args[1:]); err != nil {
+        		log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+        	}
+        }
         ```
 
 ## Available tools
@@ -49920,8 +50222,15 @@ immediately:
     Plugin that provides global instructions functionality at the App level.
 *   [**Save Files as Artifacts**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/save_files_as_artifacts_plugin.py):
     Saves files included in user messages as Artifacts.
-*   [**Logging**](https://github.com/google/adk-python/blame/main/src/google/adk/plugins/logging_plugin.py):
+*   [**Auto Tracing**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/auto_tracing_plugin.py):
+    Wraps the functions in your agent's own packages in OpenTelemetry spans.
+*   [**Multimodal Tool Results**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/multimodal_tool_results_plugin.py):
+    Lets function tools return content parts directly to the model.
+*   [**Logging**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/logging_plugin.py):
     Log important information at each agent workflow callback point.
+
+Check out the [ADK Integrations](/integrations/) page for more native and 
+third party plugins for your agents.
 
 ## Define and register Plugins
 
@@ -55206,19 +55515,57 @@ For more information on connecting to Google Cloud from ADK agents, see
 * **How it works:** Connects to a relational database (e.g., PostgreSQL, MySQL,
   SQLite) to store session data persistently in tables.
 * **Persistence:** Yes. Data survives application restarts.
-* **Requires:** A configured database and the `db` extra, installed with
-  `pip install google-adk[db]`.
+* **Requires:** A configured database. In Python, also the `db` extra,
+  installed with `pip install google-adk[db]`. In Go, a
+  [GORM](https://gorm.io/) driver for your database.
 * **Best for:** Applications needing reliable, persistent storage that you
   manage yourself.
 
-```py
-from google.adk.sessions import DatabaseSessionService
-# Example using a local SQLite file:
-# Note: The implementation requires an async database driver.
-# For SQLite, use 'sqlite+aiosqlite' instead of 'sqlite' to ensure async compatibility.
-db_url = "sqlite+aiosqlite:///./my_agent_data.db"
-session_service = DatabaseSessionService(db_url=db_url)
-```
+=== "Python"
+
+    ```py
+    from google.adk.sessions import DatabaseSessionService
+    # Example using a local SQLite file:
+    # Note: The implementation requires an async database driver.
+    # For SQLite, use 'sqlite+aiosqlite' instead of 'sqlite' to ensure async compatibility.
+    db_url = "sqlite+aiosqlite:///./my_agent_data.db"
+    session_service = DatabaseSessionService(db_url=db_url)
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "log"    
+        "github.com/glebarez/sqlite"
+        "gorm.io/gorm"
+
+        "google.golang.org/adk/v2/session/database"
+    )
+
+    // Example using a local SQLite file. Any GORM dialector works, for
+    // example gorm.io/driver/postgres for PostgreSQL.
+    sessionService, err := database.NewSessionService(sqlite.Open("my_agent_data.db"), &gorm.Config{})
+    if err != nil {
+        log.Fatal(err)
+    }
+    // Creates the tables and adds any columns a newer ADK release needs.
+    // Run it every time the application starts.
+    if err := database.AutoMigrate(sessionService); err != nil {
+        log.Fatal(err)
+    }
+    ```
+
+    !!! warning "Run `AutoMigrate` on every startup"
+
+        The Go session service does not create or update its tables. Call
+        `database.AutoMigrate` each time your application starts, before it
+        serves traffic. It creates missing tables and columns and does not
+        drop existing ones, so a database keeps working after an ADK upgrade
+        adds a column. It can also change the type of an existing column to
+        match what ADK expects. If you manage the schema yourself instead of
+        running `AutoMigrate`, add the new columns before deploying the ADK
+        release that introduces them. Otherwise, writes to that table fail.
 
 #### Concurrency and locking
 
@@ -60167,7 +60514,7 @@ The following examples show how to enable boolean confirmation:
     # This implementation method requires minimal code, but is limited to simple
     # approvals from the user or confirming system. For a complete example of this
     # approach, see the following code sample for a more detailed example:
-    # https://github.com/google/adk-python/blob/main/contributing/samples/human_tool_confirmation/agent.py
+    # https://github.com/google/adk-python/blob/main/contributing/samples/hitl/human_tool_confirmation/agent.py
     ```
 
 === "TypeScript"
