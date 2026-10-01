@@ -9774,7 +9774,7 @@ my_agent = Agent(
     # If OPENAI_DEFAULT_MODEL=gpt-5.6-sol is set, passing only model_settings works.
     # It's also fine to pass a GPT-5 model name explicitly:
     model="gpt-5.6-sol",
-    model_settings=ModelSettings(reasoning=Reasoning(effort="high"), verbosity="low")
+    model_settings=ModelSettings(reasoning=Reasoning(effort="high"), verbosity="low"),
 )
 ```
 
@@ -9978,6 +9978,7 @@ from agents.decorators import tool
 from agents.extensions.experimental.hosted_multi_agent import get_hosted_agent_metadata
 from agents.tool_context import ToolContext
 
+
 @tool
 def lookup_document(ctx: ToolContext[Any], section: str) -> str:
     metadata = get_hosted_agent_metadata(ctx)
@@ -10039,7 +10040,7 @@ set_tracing_disabled(disabled=True)
 client = AsyncOpenAI(api_key="Api_Key", base_url="Base URL of Provider")
 model = OpenAIChatCompletionsModel(model="Model_Name", openai_client=client)
 
-agent= Agent(name="Helping Agent", instructions="You are a Helping Agent", model=model)
+agent = Agent(name="Helping Agent", instructions="You are a Helping Agent", model=model)
 ```
 
 !!! note
@@ -10066,15 +10067,14 @@ from agents import Agent, Runner, AsyncOpenAI, OpenAIChatCompletionsModel
 spanish_agent = Agent(
     name="Spanish agent",
     instructions="You only speak Spanish.",
-    model="gpt-5-mini", # (1)!
+    model="gpt-5-mini",  # (1)!
 )
 
 english_agent = Agent(
     name="English agent",
     instructions="You only speak English",
-    model=OpenAIChatCompletionsModel( # (2)!
-        model="gpt-5-nano",
-        openai_client=AsyncOpenAI()
+    model=OpenAIChatCompletionsModel(  # (2)!
+        model="gpt-5-nano", openai_client=AsyncOpenAI()
     ),
 )
 
@@ -10084,6 +10084,7 @@ triage_agent = Agent(
     handoffs=[spanish_agent, english_agent],
     model="gpt-5.6-sol",
 )
+
 
 async def main():
     result = await Runner.run(triage_agent, input="Hola, ¿cómo estás?")
@@ -10673,9 +10674,7 @@ The session also adds each response's usage to the shared [`RunContextWrapper.us
 from agents.realtime import RealtimeModelUsageEvent
 
 async for event in session:
-    if event.type == "raw_model_event" and isinstance(
-        event.data, RealtimeModelUsageEvent
-    ):
+    if event.type == "raw_model_event" and isinstance(event.data, RealtimeModelUsageEvent):
         response_usage = event.data.usage
         print("Response tokens:", response_usage.total_tokens)
         print("Input modalities:", event.data.input_tokens_details)
@@ -13872,7 +13871,8 @@ def build_agent(model: str) -> SandboxAgent[None]:
                 "repo": LocalDir(src=HOST_REPO_DIR),
             }
         ),
-        capabilities=Capabilities.default() + [
+        capabilities=Capabilities.default()
+        + [
             Skills(
                 lazy_from=LocalDirLazySkillSource(
                     # This is a host path read by the SDK process.
@@ -14418,28 +14418,18 @@ agent = Agent(
 
 # Create an advanced session
 session = AdvancedSQLiteSession(
-    session_id="conversation_123",
-    db_path="conversations.db",
-    create_tables=True
+    session_id="conversation_123", db_path="conversations.db", create_tables=True
 )
 
 # First conversation turn
-result = await Runner.run(
-    agent,
-    "What city is the Golden Gate Bridge in?",
-    session=session
-)
+result = await Runner.run(agent, "What city is the Golden Gate Bridge in?", session=session)
 print(result.final_output)  # "San Francisco"
 
 # IMPORTANT: Store usage data
 await session.store_run_usage(result)
 
 # Continue conversation
-result = await Runner.run(
-    agent,
-    "What state is it in?",
-    session=session
-)
+result = await Runner.run(agent, "What state is it in?", session=session)
 print(result.final_output)  # "California"
 await session.store_run_usage(result)
 ```
@@ -14452,24 +14442,19 @@ from agents.extensions.memory import AdvancedSQLiteSession
 # Basic initialization
 session = AdvancedSQLiteSession(
     session_id="my_conversation",
-    create_tables=True  # Auto-create advanced tables
+    create_tables=True,  # Auto-create advanced tables
 )
 
 # With persistent storage
 session = AdvancedSQLiteSession(
-    session_id="user_123",
-    db_path="conversations.db",
-    create_tables=True
+    session_id="user_123", db_path="conversations.db", create_tables=True
 )
 
 # With custom logger
 import logging
+
 logger = logging.getLogger("my_app")
-session = AdvancedSQLiteSession(
-    session_id="session_456",
-    create_tables=True,
-    logger=logger
-)
+session = AdvancedSQLiteSession(session_id="session_456", create_tables=True, logger=logger)
 ```
 
 ### Parameters
@@ -14516,9 +14501,9 @@ branch_usage = await session.get_session_usage(branch_id="main")
 turn_usage = await session.get_turn_usage()
 for turn_data in turn_usage:
     print(f"Turn {turn_data['user_turn_number']}: {turn_data['total_tokens']} tokens")
-    if turn_data['input_tokens_details']:
+    if turn_data["input_tokens_details"]:
         print(f"  Input details: {turn_data['input_tokens_details']}")
-    if turn_data['output_tokens_details']:
+    if turn_data["output_tokens_details"]:
         print(f"  Output details: {turn_data['output_tokens_details']}")
 
 # Get usage for specific turn
@@ -14543,16 +14528,10 @@ branch_id = await session.create_branch_from_turn(2)
 print(f"Created branch: {branch_id}")
 
 # Create a branch with custom name
-branch_id = await session.create_branch_from_turn(
-    2, 
-    branch_name="alternative_path"
-)
+branch_id = await session.create_branch_from_turn(2, branch_name="alternative_path")
 
 # Create branch by searching for content
-branch_id = await session.create_branch_from_content(
-    "weather", 
-    branch_name="weather_focus"
-)
+branch_id = await session.create_branch_from_content("weather", branch_name="weather_focus")
 ```
 
 Branch IDs are unique for the lifetime of a session ID. Deleting a branch or clearing the session removes its conversation data but does not make previously used branch IDs available again; use a new name when creating another branch.
@@ -14564,7 +14543,9 @@ Branch IDs are unique for the lifetime of a session ID. Deleting a branch or cle
 branches = await session.list_branches()
 for branch in branches:
     current = " (current)" if branch["is_current"] else ""
-    print(f"{branch['branch_id']}: {branch['user_turns']} turns, {branch['message_count']} messages{current}")
+    print(
+        f"{branch['branch_id']}: {branch['user_turns']} turns, {branch['message_count']} messages{current}"
+    )
 
 # Switch between branches
 await session.switch_to_branch("main")
@@ -14588,22 +14569,14 @@ await session.store_run_usage(result)
 branch_id = await session.create_branch_from_turn(2, "weather_focus")
 
 # Continue in new branch with different question
-result = await Runner.run(
-    agent, 
-    "What are the main tourist attractions in Paris?", 
-    session=session
-)
+result = await Runner.run(agent, "What are the main tourist attractions in Paris?", session=session)
 await session.store_run_usage(result)
 
 # Switch back to main branch
 await session.switch_to_branch("main")
 
 # Continue original conversation
-result = await Runner.run(
-    agent, 
-    "How expensive is it to visit?", 
-    session=session
-)
+result = await Runner.run(agent, "How expensive is it to visit?", session=session)
 await session.store_run_usage(result)
 ```
 
@@ -14742,6 +14715,7 @@ from cryptography.fernet import Fernet
 from agents import Agent, Runner, SQLiteSession
 from agents.extensions.memory import EncryptedSession
 
+
 async def main():
     agent = Agent("Assistant")
     encryption_key = Fernet.generate_key().decode("ascii")
@@ -14752,13 +14726,14 @@ async def main():
             session_id="user-123",
             underlying_session=underlying_session,
             encryption_key=encryption_key,
-            ttl=600  # 10 minutes
+            ttl=600,  # 10 minutes
         )
 
         result = await Runner.run(agent, "Hello", session=session)
         print(result.final_output)
     finally:
         underlying_session.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -14788,7 +14763,7 @@ session = EncryptedSession(
     session_id="user-123",
     underlying_session=underlying_session,
     encryption_key=encryption_key,
-    ttl=600
+    ttl=600,
 )
 ```
 
@@ -14806,7 +14781,7 @@ session = EncryptedSession(
     session_id="user-123",
     underlying_session=underlying_session,
     encryption_key=encryption_key,
-    ttl=3600  # 1 hour in seconds
+    ttl=3600,  # 1 hour in seconds
 )
 
 # Items expire after 1 day
@@ -14814,7 +14789,7 @@ session = EncryptedSession(
     session_id="user-123",
     underlying_session=underlying_session,
     encryption_key=encryption_key,
-    ttl=86400  # 24 hours in seconds
+    ttl=86400,  # 24 hours in seconds
 )
 ```
 
@@ -14834,9 +14809,7 @@ encryption_key = os.environ["SESSION_ENCRYPTION_KEY"]
 underlying = SQLiteSession("user-123", "conversations.db")
 
 session = EncryptedSession(
-    session_id="user-123",
-    underlying_session=underlying,
-    encryption_key=encryption_key
+    session_id="user-123", underlying_session=underlying, encryption_key=encryption_key
 )
 ```
 
@@ -14857,15 +14830,11 @@ encryption_key = os.environ["SESSION_ENCRYPTION_KEY"]
 
 # Create encrypted SQLAlchemy session
 underlying = SQLAlchemySession.from_url(
-    "user-123",
-    url="postgresql+asyncpg://user:pass@localhost/db",
-    create_tables=True
+    "user-123", url="postgresql+asyncpg://user:pass@localhost/db", create_tables=True
 )
 
 session = EncryptedSession(
-    session_id="user-123",
-    underlying_session=underlying,
-    encryption_key=encryption_key
+    session_id="user-123", underlying_session=underlying, encryption_key=encryption_key
 )
 ```
 
@@ -14944,18 +14913,18 @@ import asyncio
 from agents import Agent, Runner
 from agents.extensions.memory import SQLAlchemySession
 
+
 async def main():
     agent = Agent("Assistant")
-    
+
     # Create session using database URL
     session = SQLAlchemySession.from_url(
-        "user-123",
-        url="sqlite+aiosqlite:///:memory:",
-        create_tables=True
+        "user-123", url="sqlite+aiosqlite:///:memory:", create_tables=True
     )
-    
+
     result = await Runner.run(agent, "Hello", session=session)
     print(result.final_output)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -14971,22 +14940,20 @@ from agents import Agent, Runner
 from agents.extensions.memory import SQLAlchemySession
 from sqlalchemy.ext.asyncio import create_async_engine
 
+
 async def main():
     # Create your database engine
     engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
-    
+
     agent = Agent("Assistant")
-    session = SQLAlchemySession(
-        "user-456",
-        engine=engine,
-        create_tables=True
-    )
-    
+    session = SQLAlchemySession("user-456", engine=engine, create_tables=True)
+
     result = await Runner.run(agent, "Hello", session=session)
     print(result.final_output)
-    
+
     # Clean up
     await engine.dispose()
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -15152,7 +15119,6 @@ The result of a voice pipeline run is a [`StreamedAudioResult`][agents.voice.res
 Terminal pipeline errors are raised while the application consumes [`StreamedAudioResult.stream()`][agents.voice.result.StreamedAudioResult.stream]. If the speech-to-text transcription session fails to close after an otherwise clean run, the stream raises that close error instead of waiting indefinitely. If the turn has already failed and closing the transcription session also fails, the stream preserves the original turn error as the primary error.
 
 ```python
-
 result = await pipeline.run(input)
 
 async for event in result.stream():
@@ -15272,6 +15238,7 @@ We'll set up a simple voice pipeline, using [`SingleAgentVoiceWorkflow`][agents.
 
 ```python
 from agents.voice import SingleAgentVoiceWorkflow, VoicePipeline
+
 pipeline = VoicePipeline(workflow=SingleAgentVoiceWorkflow(agent))
 ```
 
@@ -15297,7 +15264,6 @@ player.start()
 async for event in result.stream():
     if event.type == "voice_stream_event_audio":
         player.write(event.data)
-
 ```
 
 ## Put it all together
@@ -25138,10 +25104,12 @@ The most common properties of an agent are:
 from agents import Agent
 from agents.decorators import tool
 
+
 @tool
 def get_weather(city: str) -> str:
     """returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
+
 
 agent = Agent(
     name="Haiku agent",
@@ -25189,6 +25157,7 @@ from dataclasses import dataclass
 
 from agents import Agent, GenerateDynamicPromptData, Runner
 
+
 @dataclass
 class PromptContext:
     prompt_id: str
@@ -25221,9 +25190,11 @@ Read the [context guide](context.md) for the full `RunContextWrapper` surface, s
 ```python
 from dataclasses import dataclass
 
+
 @dataclass
 class Purchase:
     id: str
+
 
 @dataclass
 class UserContext:
@@ -25234,6 +25205,7 @@ class UserContext:
     async def fetch_purchases(self) -> list[Purchase]:
         # implement your logic here
         return []
+
 
 agent = Agent[UserContext](
     ...,
@@ -25253,6 +25225,7 @@ class CalendarEvent(BaseModel):
     name: str
     date: str
     participants: list[str]
+
 
 agent = Agent(
     name="Calendar extractor",
@@ -25298,7 +25271,7 @@ customer_facing_agent = Agent(
         refund_agent.as_tool(
             tool_name="refund_expert",
             tool_description="Handles refund questions and requests.",
-        )
+        ),
     ],
 )
 ```
@@ -25331,9 +25304,8 @@ In most cases, you can provide instructions when you create the agent. However, 
 ```python
 from agents import Agent, RunContextWrapper
 
-def dynamic_instructions(
-    context: RunContextWrapper[UserContext], agent: Agent[UserContext]
-) -> str:
+
+def dynamic_instructions(context: RunContextWrapper[UserContext], agent: Agent[UserContext]) -> str:
     return f"The user's name is {context.context.name}. Help them with their questions."
 
 
@@ -25426,16 +25398,18 @@ When you are using OpenAI Responses tool search, named tool choices are more lim
 from agents import Agent, ModelSettings
 from agents.decorators import tool
 
+
 @tool
 def get_weather(city: str) -> str:
     """Returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
 
+
 agent = Agent(
     name="Weather Agent",
     instructions="Retrieve weather details.",
     tools=[get_weather],
-    model_settings=ModelSettings(tool_choice="get_weather")
+    model_settings=ModelSettings(tool_choice="get_weather"),
 )
 ```
 
@@ -25450,16 +25424,18 @@ The `tool_use_behavior` parameter in the `Agent` configuration controls how tool
 from agents import Agent
 from agents.decorators import tool
 
+
 @tool
 def get_weather(city: str) -> str:
     """Returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
 
+
 agent = Agent(
     name="Weather Agent",
     instructions="Retrieve weather details.",
     tools=[get_weather],
-    tool_use_behavior="stop_on_first_tool"
+    tool_use_behavior="stop_on_first_tool",
 )
 ```
 
@@ -25470,21 +25446,24 @@ from agents import Agent
 from agents.agent import StopAtTools
 from agents.decorators import tool
 
+
 @tool
 def get_weather(city: str) -> str:
     """Returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
+
 
 @tool
 def sum_numbers(a: int, b: int) -> int:
     """Adds two numbers."""
     return a + b
 
+
 agent = Agent(
     name="Stop At Stock Agent",
     instructions="Get weather or sum numbers.",
     tools=[get_weather, sum_numbers],
-    tool_use_behavior=StopAtTools(stop_at_tool_names=["get_weather"])
+    tool_use_behavior=StopAtTools(stop_at_tool_names=["get_weather"]),
 )
 ```
 
@@ -25496,32 +25475,30 @@ from agents.agent import ToolsToFinalOutputResult
 from agents.decorators import tool
 from typing import List, Any
 
+
 @tool
 def get_weather(city: str) -> str:
     """Returns weather info for the specified city."""
     return f"The weather in {city} is sunny"
 
+
 def custom_tool_handler(
-    context: RunContextWrapper[Any],
-    tool_results: List[FunctionToolResult]
+    context: RunContextWrapper[Any], tool_results: List[FunctionToolResult]
 ) -> ToolsToFinalOutputResult:
     """Processes tool results to decide final output."""
     for result in tool_results:
         if result.output and "sunny" in result.output:
             return ToolsToFinalOutputResult(
-                is_final_output=True,
-                final_output=f"Final weather: {result.output}"
+                is_final_output=True, final_output=f"Final weather: {result.output}"
             )
-    return ToolsToFinalOutputResult(
-        is_final_output=False,
-        final_output=None
-    )
+    return ToolsToFinalOutputResult(is_final_output=False, final_output=None)
+
 
 agent = Agent(
     name="Weather Agent",
     instructions="Retrieve weather details.",
     tools=[get_weather],
-    tool_use_behavior=custom_tool_handler
+    tool_use_behavior=custom_tool_handler,
 )
 ```
 
@@ -25655,9 +25632,7 @@ You can also pass the full registration object:
 ```python
 from agents import OpenAIAgentRegistrationConfig, set_default_openai_agent_registration
 
-set_default_openai_agent_registration(
-    OpenAIAgentRegistrationConfig(harness_id="your-harness-id")
-)
+set_default_openai_agent_registration(OpenAIAgentRegistrationConfig(harness_id="your-harness-id"))
 ```
 
 If no SDK default is set, providers that use the SDK's OpenAI backend fall back to the `OPENAI_AGENT_HARNESS_ID` environment variable. When a harness ID is configured, the SDK adds it to trace metadata as `agent_harness_id` unless that key is already present in `RunConfig.trace_metadata`.
@@ -25681,7 +25656,9 @@ from agents import (
     set_tracing_export_api_key,
 )
 
-custom_client = AsyncOpenAI(base_url="https://your-openai-compatible-endpoint.example/v1", api_key="provider-key")
+custom_client = AsyncOpenAI(
+    base_url="https://your-openai-compatible-endpoint.example/v1", api_key="provider-key"
+)
 set_default_openai_client(custom_client, use_for_tracing=False)
 
 set_tracing_export_api_key("sk-tracing")
@@ -25751,7 +25728,7 @@ Alternatively, you can customize the logs by adding handlers, filters, formatter
 ```python
 import logging
 
-logger = logging.getLogger("openai.agents") # or openai.agents.tracing for the Tracing logger
+logger = logging.getLogger("openai.agents")  # or openai.agents.tracing for the Tracing logger
 
 # To make all logs show up
 logger.setLevel(logging.DEBUG)
@@ -25851,15 +25828,18 @@ from dataclasses import dataclass
 from agents import Agent, RunContextWrapper, Runner
 from agents.decorators import tool
 
+
 @dataclass
 class UserInfo:  # (1)!
     name: str
     uid: int
 
+
 @tool
 async def fetch_user_age(wrapper: RunContextWrapper[UserInfo]) -> str:  # (2)!
     """Fetch the age of the user. Call this function to get user's age information."""
     return f"The user {wrapper.context.name} is 47 years old"
+
 
 async def main():
     user_info = UserInfo(name="John", uid=123)
@@ -25877,6 +25857,7 @@ async def main():
 
     print(result.final_output)  # (5)!
     # The user John is 47 years old.
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -25902,18 +25883,26 @@ from agents import Agent
 from agents.decorators import tool
 from agents.tool_context import ToolContext
 
+
 class WeatherContext(BaseModel):
     user_id: str
+
 
 class Weather(BaseModel):
     city: str = Field(description="The city name")
     temperature_range: str = Field(description="The temperature range in Celsius")
     conditions: str = Field(description="The weather conditions")
 
+
 @tool
-def get_weather(ctx: ToolContext[WeatherContext], city: Annotated[str, "The city to get the weather for"]) -> Weather:
-    print(f"[debug] Tool context: (name: {ctx.tool_name}, call_id: {ctx.tool_call_id}, args: {ctx.tool_arguments})")
+def get_weather(
+    ctx: ToolContext[WeatherContext], city: Annotated[str, "The city to get the weather for"]
+) -> Weather:
+    print(
+        f"[debug] Tool context: (name: {ctx.tool_name}, call_id: {ctx.tool_call_id}, args: {ctx.tool_arguments})"
+    )
     return Weather(city=city, temperature_range="14-20C", conditions="Sunny with wind.")
+
 
 agent = Agent(
     name="Weather Agent",
@@ -26060,11 +26049,13 @@ from agents import (
 )
 from agents.decorators import input_guardrail
 
+
 class MathHomeworkOutput(BaseModel):
     is_math_homework: bool
     reasoning: str
 
-guardrail_agent = Agent( # (1)!
+
+guardrail_agent = Agent(  # (1)!
     name="Guardrail check",
     instructions="Check if the user is asking you to do their math homework.",
     output_type=MathHomeworkOutput,
@@ -26072,13 +26063,13 @@ guardrail_agent = Agent( # (1)!
 
 
 @input_guardrail
-async def math_guardrail( # (2)!
+async def math_guardrail(  # (2)!
     ctx: RunContextWrapper[None], agent: Agent, input: str | list[TResponseInputItem]
 ) -> GuardrailFunctionOutput:
     result = await Runner.run(guardrail_agent, input, context=ctx.context)
 
     return GuardrailFunctionOutput(
-        output_info=result.final_output, # (3)!
+        output_info=result.final_output,  # (3)!
         tripwire_triggered=result.final_output.is_math_homework,
     )
 
@@ -26088,6 +26079,7 @@ agent = Agent(  # (4)!
     instructions="You are a customer support agent. You help customers with their questions.",
     input_guardrails=[math_guardrail],
 )
+
 
 async def main():
     # This should trip the guardrail
@@ -26116,18 +26108,23 @@ from agents import (
     Runner,
 )
 from agents.decorators import output_guardrail
-class MessageOutput(BaseModel): # (1)!
+
+
+class MessageOutput(BaseModel):  # (1)!
     response: str
 
-class MathOutput(BaseModel): # (2)!
+
+class MathOutput(BaseModel):  # (2)!
     reasoning: str
     is_math: bool
+
 
 guardrail_agent = Agent(
     name="Guardrail check",
     instructions="Check if the output includes any math.",
     output_type=MathOutput,
 )
+
 
 @output_guardrail
 async def math_guardrail(  # (3)!
@@ -26140,12 +26137,14 @@ async def math_guardrail(  # (3)!
         tripwire_triggered=result.final_output.is_math,
     )
 
-agent = Agent( # (4)!
+
+agent = Agent(  # (4)!
     name="Customer support agent",
     instructions="You are a customer support agent. You help customers with their questions.",
     output_guardrails=[math_guardrail],
     output_type=MessageOutput,
 )
+
 
 async def main():
     # This should trip the guardrail
@@ -26172,6 +26171,7 @@ from agents import (
     ToolGuardrailFunctionOutput,
 )
 from agents.decorators import tool, tool_input_guardrail, tool_output_guardrail
+
 
 @tool_input_guardrail
 def block_secrets(data):
@@ -26256,8 +26256,10 @@ The [`handoff()`][agents.handoffs.handoff] helper always transfers control to th
 ```python
 from agents import Agent, handoff, RunContextWrapper
 
+
 def on_handoff(ctx: RunContextWrapper[None]):
     print("Handoff called")
+
 
 agent = Agent(name="My agent")
 
@@ -26278,11 +26280,14 @@ from pydantic import BaseModel
 
 from agents import Agent, handoff, RunContextWrapper
 
+
 class EscalationData(BaseModel):
     reason: str
 
+
 async def on_handoff(ctx: RunContextWrapper[None], input_data: EscalationData):
     print(f"Escalation agent called with reason: {input_data.reason}")
+
 
 agent = Agent(name="Escalation agent")
 
@@ -26350,7 +26355,7 @@ agent = Agent(name="FAQ agent")
 
 handoff_obj = handoff(
     agent=agent,
-    input_filter=handoff_filters.remove_all_tools, # (1)!
+    input_filter=handoff_filters.remove_all_tools,  # (1)!
 )
 ```
 
@@ -26817,6 +26822,7 @@ import asyncio
 
 from agents import Agent, HostedMCPTool, Runner
 
+
 async def main() -> None:
     agent = Agent(
         name="Assistant",
@@ -26838,6 +26844,7 @@ async def main() -> None:
         "Which language is the repository openai/openai-agents-python written in?",
     )
     print(result.final_output)
+
 
 asyncio.run(main())
 ```
@@ -26868,10 +26875,12 @@ from agents import MCPToolApprovalFunctionResult, MCPToolApprovalRequest
 
 SAFE_TOOLS = {"read_wiki_structure", "read_wiki_contents", "ask_question"}
 
+
 def approve_tool(request: MCPToolApprovalRequest) -> MCPToolApprovalFunctionResult:
     if request.data.name in SAFE_TOOLS:
         return {"approve": True}
     return {"approve": False, "reason": "Escalate to a human reviewer"}
+
 
 agent = Agent(
     name="Assistant",
@@ -26923,6 +26932,7 @@ from agents import Agent, Runner
 from agents.mcp import MCPServerStreamableHttp
 from agents.model_settings import ModelSettings
 
+
 async def main() -> None:
     token = os.environ["MCP_SERVER_TOKEN"]
     async with MCPServerStreamableHttp(
@@ -26944,6 +26954,7 @@ async def main() -> None:
 
         result = await Runner.run(agent, "Add 7 and 22.")
         print(result.final_output)
+
 
 asyncio.run(main())
 ```
@@ -27018,7 +27029,6 @@ When an MCP result uses its content blocks, the SDK forwards text content as tex
 If the MCP server implements the HTTP with SSE transport, instantiate [`MCPServerSse`][agents.mcp.server.MCPServerSse]. Apart from the transport, the API is identical to the Streamable HTTP server.
 
 ```python
-
 from agents import Agent, Runner
 from agents.model_settings import ModelSettings
 from agents.mcp import MCPServerSse
@@ -27144,10 +27154,12 @@ from agents.mcp import MCPServerStdio, ToolFilterContext
 
 samples_dir = Path("/path/to/files")
 
+
 async def context_aware_filter(context: ToolFilterContext, tool) -> bool:
     if context.agent.name == "Code Reviewer" and tool.name.startswith("danger_"):
         return False
     return True
+
 
 async with MCPServerStdio(
     params={
@@ -27396,9 +27408,11 @@ agent = Agent(
     instructions="You answer history questions clearly and concisely.",
 )
 
+
 async def main():
     result = await Runner.run(agent, "When did the Roman Empire fall?")
     print(result.final_output)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -27787,9 +27801,11 @@ The SDK provides `run_demo_loop` for quick, interactive testing of an agent's be
 import asyncio
 from agents import Agent, run_demo_loop
 
+
 async def main() -> None:
     agent = Agent(name="Assistant", instructions="You are a helpful assistant.")
     await run_demo_loop(agent)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -27904,9 +27920,7 @@ def raw_field(item, name):
 raw_type = raw_field(item, "type")
 caller = raw_field(item, "caller")
 caller_id = (
-    caller.get("caller_id")
-    if isinstance(caller, Mapping)
-    else getattr(caller, "caller_id", None)
+    caller.get("caller_id") if isinstance(caller, Mapping) else getattr(caller, "caller_id", None)
 )
 ```
 
@@ -28046,6 +28060,7 @@ You can run agents via the [`Runner`][agents.run.Runner] class. You have 3 optio
 
 ```python
 from agents import Agent, Runner
+
 
 async def main():
     agent = Agent(name="Assistant", instructions="You are a helpful assistant")
@@ -28346,6 +28361,7 @@ You can manually manage conversation history using the [`RunResultBase.to_input_
 ```python
 from agents import Agent, Runner, trace
 
+
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
@@ -28369,6 +28385,7 @@ For a simpler approach, you can use [Sessions](sessions/index.md) to automatical
 
 ```python
 from agents import Agent, Runner, SQLiteSession, trace
+
 
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
@@ -28414,6 +28431,7 @@ from openai import AsyncOpenAI
 
 client = AsyncOpenAI()
 
+
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
 
@@ -28433,6 +28451,7 @@ Another option is **response chaining**, where each turn links explicitly to the
 
 ```python
 from agents import Agent, Runner
+
 
 async def main():
     agent = Agent(name="Assistant", instructions="Reply very concisely.")
@@ -28483,10 +28502,12 @@ The return value must be a [`ModelInputData`][agents.run.ModelInputData] object.
 from agents import Agent, Runner, RunConfig
 from agents.run import CallModelData, ModelInputData
 
+
 def drop_old_messages(data: CallModelData[None]) -> ModelInputData:
     # Keep only the last 5 items and preserve existing instructions.
     trimmed = data.model_data.input[-5:]
     return ModelInputData(input=trimmed, instructions=data.model_data.instructions)
+
 
 agent = Agent(name="Assistant", instructions="Answer concisely.")
 result = Runner.run_sync(
@@ -28705,7 +28726,8 @@ def build_agent(model: str) -> SandboxAgent[None]:
                 "repo": LocalDir(src=HOST_REPO_DIR),
             }
         ),
-        capabilities=Capabilities.default() + [
+        capabilities=Capabilities.default()
+        + [
             Skills(
                 lazy_from=LocalDirLazySkillSource(
                     # This is a host path read by the SDK process.
@@ -28778,6 +28800,7 @@ For example, this will output the text generated by the LLM token-by-token.
 import asyncio
 from openai.types.responses import ResponseTextDeltaEvent
 from agents import Agent, Runner
+
 
 async def main():
     agent = Agent(
@@ -28862,6 +28885,7 @@ import asyncio
 import random
 from agents import Agent, ItemHelpers, Runner
 from agents.decorators import tool
+
 
 @tool
 def how_many_jokes() -> int:
@@ -28961,9 +28985,7 @@ from agents.testing import ScriptedModel, assistant_message
 
 @pytest.mark.asyncio
 async def test_fixed_response() -> None:
-    model = ScriptedModel(
-        [[assistant_message("Paris is the capital of France.")]]
-    )
+    model = ScriptedModel([[assistant_message("Paris is the capital of France.")]])
     agent = Agent(name="Geography assistant", model=model)
 
     result = await Runner.run(
@@ -29016,10 +29038,7 @@ async def test_tool_workflow() -> None:
     assert result.final_output == "It is sunny in Tokyo."
     assert len(model.calls) == 2
     assert model.last_call is not None
-    assert any(
-        item.get("type") == "function_call_output"
-        for item in model.last_call.input
-    )
+    assert any(item.get("type") == "function_call_output" for item in model.last_call.input)
     model.assert_complete()
 ```
 
@@ -29377,9 +29396,7 @@ async def test_voice_pipeline() -> None:
     pcm = pcm16_samples([0, 100, -100, 0])
     tts = ScriptedTTSModel([TTSResult([pcm])])
     pipeline = VoicePipeline(
-        workflow=SingleAgentVoiceWorkflow(
-            Agent(name="Voice assistant", model=model)
-        ),
+        workflow=SingleAgentVoiceWorkflow(Agent(name="Voice assistant", model=model)),
         stt_model=stt,
         tts_model=tts,
         config={"tracing_disabled": True, "tts_settings": {"buffer_size": 1}},
@@ -29543,8 +29560,11 @@ agent = Agent(
     ],
 )
 
+
 async def main():
-    result = await Runner.run(agent, "Find recent images and supporting text about the Golden Gate Bridge at sunset.")
+    result = await Runner.run(
+        agent, "Find recent images and supporting text about the Golden Gate Bridge at sunset."
+    )
     print(result.final_output)
 ```
 
@@ -29773,7 +29793,10 @@ from agents.editor import ApplyPatchResult, ApplyPatchOperation, ApplyPatchEdito
 class NoopComputer(AsyncComputer):
     environment = "browser"
     dimensions = (1024, 768)
-    async def screenshot(self): return ""
+
+    async def screenshot(self):
+        return ""
+
     async def click(self, x, y, button): ...
     async def double_click(self, x, y): ...
     async def scroll(self, x, y, scroll_x, scroll_y): ...
@@ -29785,9 +29808,14 @@ class NoopComputer(AsyncComputer):
 
 
 class NoopEditor(ApplyPatchEditor):
-    async def create_file(self, op: ApplyPatchOperation): return ApplyPatchResult(status="completed")
-    async def update_file(self, op: ApplyPatchOperation): return ApplyPatchResult(status="completed")
-    async def delete_file(self, op: ApplyPatchOperation): return ApplyPatchResult(status="completed")
+    async def create_file(self, op: ApplyPatchOperation):
+        return ApplyPatchResult(status="completed")
+
+    async def update_file(self, op: ApplyPatchOperation):
+        return ApplyPatchResult(status="completed")
+
+    async def delete_file(self, op: ApplyPatchOperation):
+        return ApplyPatchResult(status="completed")
 
 
 async def run_shell(request):
@@ -29834,6 +29862,7 @@ class Location(TypedDict):
     lat: float
     long: float
 
+
 @tool  # (1)!
 async def fetch_weather(location: Location) -> str:
     # (2)!
@@ -29869,7 +29898,6 @@ for tool in agent.tools:
         print(tool.description)
         print(json.dumps(tool.params_json_schema, indent=2))
         print()
-
 ```
 
 1.  You can use any Python types as arguments to your functions, and the function can be sync or async.
@@ -29972,7 +30000,6 @@ from pydantic import BaseModel
 from agents import RunContextWrapper, FunctionTool
 
 
-
 def do_some_work(data: str) -> str:
     return "done"
 
@@ -30021,14 +30048,18 @@ from typing import Annotated
 from pydantic import Field
 from agents.decorators import tool
 
+
 # Default-based form
 @tool
 def score_a(score: int = Field(..., ge=0, le=100, description="Score from 0 to 100")) -> str:
     return f"Score recorded: {score}"
 
+
 # Annotated form
 @tool
-def score_b(score: Annotated[int, Field(..., ge=0, le=100, description="Score from 0 to 100")]) -> str:
+def score_b(
+    score: Annotated[int, Field(..., ge=0, le=100, description="Score from 0 to 100")],
+) -> str:
     return f"Score recorded: {score}"
 ```
 
@@ -30100,21 +30131,24 @@ from agents import RunContextWrapper
 from agents.decorators import tool
 from typing import Any
 
+
 def my_custom_error_function(context: RunContextWrapper[Any], error: Exception) -> str:
     """A custom function to provide a user-friendly error message."""
     print(f"A tool call failed with the following error: {error}")
     return "An internal server error occurred. Please try again later."
 
+
 @tool(failure_error_function=my_custom_error_function)
 def get_user_profile(user_id: str) -> str:
     """Fetches a user profile from a mock API.
-     This function demonstrates a 'flaky' or failing API call.
+    This function demonstrates a 'flaky' or failing API call.
     """
     if user_id == "user_123":
         return "User profile for user_123 successfully retrieved."
     else:
-        raise ValueError(f"Could not retrieve profile for user_id: {user_id}. API returned an error.")
-
+        raise ValueError(
+            f"Could not retrieve profile for user_id: {user_id}. API returned an error."
+        )
 ```
 
 If you are manually creating a `FunctionTool` object, then you must handle errors inside the `on_invoke_tool` function.
@@ -30156,6 +30190,7 @@ orchestrator_agent = Agent(
     ],
 )
 
+
 async def main():
     result = await Runner.run(orchestrator_agent, input="Say 'Hello, how are you?' in Spanish.")
     print(result.final_output)
@@ -30181,12 +30216,7 @@ async def run_my_agent() -> str:
 
     agent = Agent(name="My agent", instructions="...")
 
-    result = await Runner.run(
-        agent,
-        input="...",
-        max_turns=5,
-        run_config=...
-    )
+    result = await Runner.run(agent, input="...", max_turns=5, run_config=...)
 
     return str(result.final_output)
 ```
@@ -30291,12 +30321,15 @@ import asyncio
 from agents import Agent, AgentBase, Runner, RunContextWrapper
 from pydantic import BaseModel
 
+
 class LanguageContext(BaseModel):
     language_preference: str = "french_spanish"
+
 
 def french_enabled(ctx: RunContextWrapper[LanguageContext], agent: AgentBase) -> bool:
     """Enable French for French+Spanish preference."""
     return ctx.context.language_preference == "french_spanish"
+
 
 # Create specialized agents
 spanish_agent = Agent(
@@ -30331,10 +30364,12 @@ orchestrator = Agent(
     ],
 )
 
+
 async def main():
     context = LanguageContext(language_preference="french_spanish")
     result = await Runner.run(orchestrator, "How are you?", context=context)
     print(result.final_output)
+
 
 asyncio.run(main())
 ```
@@ -30535,10 +30570,11 @@ Sometimes, you might want multiple calls to `run()` to be part of a single trace
 ```python
 from agents import Agent, Runner, trace
 
+
 async def main():
     agent = Agent(name="Joke generator", instructions="Tell funny jokes.")
 
-    with trace("Joke workflow"): # (1)!
+    with trace("Joke workflow"):  # (1)!
         first_result = await Runner.run(agent, "Tell me a joke")
         second_result = await Runner.run(agent, f"Rate this joke: {first_result.final_output}")
         print(f"Joke: {first_result.final_output}")
@@ -30848,9 +30884,11 @@ from agents.decorators import tool
 from agents.mcp.server import MCPServerStdio
 from agents.extensions.visualization import draw_graph
 
+
 @tool
 def get_weather(city: str) -> str:
     return f"The weather in {city} is sunny."
+
 
 spanish_agent = Agent(
     name="Spanish agent",
