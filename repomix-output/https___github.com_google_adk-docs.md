@@ -2351,6 +2351,657 @@ Now that you have created an agent that's exposing a remote agent via an A2A ser
 - [**A2A Quickstart (Consuming)**](./quickstart-consuming.md): Learn how your agent can use other agents using the A2A Protocol.
 
 ================
+File: docs/agents/models/google-gemini/deferred-schedule.md
+================
+# Deferred scheduling with Gemini models
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.10.0</span><span class="lst-preview">Preview</span>
+</div>
+
+Agent workloads have different latency needs. An interactive assistant must
+answer immediately, but a summarization job, a bulk evaluation run, or a
+document-processing pipeline can wait for capacity. Deferred scheduling lets
+ADK agents queue those model calls to run on off-peak capacity instead
+of competing for interactive capacity.
+
+You can request deferred scheduling per run, using the `service_tier` setting
+of `RunConfig`. The setting is part of the run configuration rather than the
+model or the agent, so one agent definition can serve both interactive requests
+and batch workloads.
+
+!!! example "Preview: Deferred capacity requires allowlisted access"
+
+    This Google Cloud feature is a Preview capability, 
+    and running requests on deferred capacity requires an allowlist for 
+    your Google Cloud project. For more information, see 
+    [Autonomous agent scheduling](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/efficiency/autonomous-scheduling).
+
+## Get started
+
+Deferred scheduling requires a Gemini model configured with the
+Google Cloud for Gemini [Interactions API](index.md#interactions-api). Set
+`use_interactions_api=True` on the model, then pass
+`RunConfig(service_tier=ServiceTier.DEFERRED)` when you run the agent,
+as shown in the following example:
+
+=== "Python"
+
+    ```python
+    import asyncio
+
+    from google.adk.agents import LlmAgent
+    from google.adk.agents import RunConfig
+    from google.adk.apps import App
+    from google.adk.models import ServiceTier
+    from google.adk.models.google_llm import Gemini
+    from google.adk.runners import InMemoryRunner
+    from google.genai import types
+
+    root_agent = LlmAgent(
+        name='batch_agent',
+        model=Gemini(
+            model='gemini-flash-latest',
+            use_interactions_api=True,  # Required for deferred scheduling
+        ),
+        instruction='Process input documents and produce summaries.',
+    )
+
+    app = App(name='batch_app', root_agent=root_agent)
+    runner = InMemoryRunner(app=app)
+
+
+    async def main() -> None:
+      session = await runner.session_service.create_session(
+          app_name=app.name,
+          user_id='user_123',
+          session_id='session_456',
+      )
+
+      # Request off-peak capacity for every model call in this run.
+      run_config = RunConfig(service_tier=ServiceTier.DEFERRED)
+
+      async for event in runner.run_async(
+          user_id='user_123',
+          session_id=session.id,
+          new_message=types.Content(
+              role='user',
+              parts=[types.Part.from_text(
+                  text='Summarize quarterly performance metrics.'
+              )],
+          ),
+          run_config=run_config,
+      ):
+        if event.content and event.content.parts:
+          for part in event.content.parts:
+            if part.text:
+              print(part.text)
+
+
+    asyncio.run(main())
+    ```
+
+The runner submits the model call, waits for the queued work to finish, and then
+yields the response event. Your code consumes events exactly as it does for a
+standard run.
+
+!!! warning "The run appears to hang while it waits"
+
+    The `run_async()` method yields no events while the request sits in the
+    queue. How long that takes depends on backend load, and ADK applies no
+    upper bound. In a web UI or a terminal, the delay looks like a hang. Show a
+    progress indicator, or set a
+    [client deadline](#set-a-client-side-deadline).
+
+To confirm that the tier took effect, check your application logs for these
+messages:
+
+| Log message | Level | Meaning |
+| :--- | :--- | :--- |
+| `Using service_tier from run_config: deferred` | `DEBUG` | ADK applied the tier to the request. |
+| `Interaction <id> is queued; waiting for the result.` | `INFO` | The backend accepted the work into the queue. |
+| `Interaction <id> reached status completed.` | `INFO` | The result is ready. |
+| `run_config.service_tier=... has no effect for agent <name>` | `WARNING` | ADK dropped the tier. See [Troubleshooting](#troubleshooting). |
+
+## How deferred scheduling works
+
+Standard model requests are synchronous. ADK sends the request and the model
+returns a response on the same connection. When you enable deferred scheduling
+by setting `ServiceTier.DEFERRED`, ADK marks the request for background
+execution and the backend queues it, returning an interaction ID immediately
+instead of a result.
+
+ADK then waits for that result, checking the queued work with exponential
+backoff and absorbing transient read failures until it reaches a final status.
+It converts that result to a normal response event and yields it. This loop is
+internal: it does not surface interaction IDs, and you do not need to write any
+retrieval code. It does add a few seconds of polling delay on top of the queue
+wait, so deferred scheduling should not be used for short, latency-sensitive
+calls.
+
+The following properties of the wait affect how you design your agent:
+
+*   **ADK sets no client-side deadline.** The backend's completion timeout on
+    the interaction is the only bound on the wait. To stop sooner, see
+    [Set a client-side deadline](#set-a-client-side-deadline).
+*   **Each model turn queues separately.** In an agent that calls tools, every
+    turn creates its own interaction, so total latency is the sum of every
+    turn's queue wait rather than a single wait for the run.
+
+## Configuration options
+
+The `service_tier` setting of `RunConfig` selects the capacity pool for every
+model call in a run:
+
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `service_tier` | `Optional[ServiceTier \| str]` | `None` | Serving tier for the model calls of this run. |
+
+The `ServiceTier` enum defines the following tiers:
+
+*   `ServiceTier.DEFERRED`: Queues the call to run on off-peak capacity. The
+    call waits for room instead of failing when capacity is tight. No other
+    tier changes how ADK executes the request, and it cannot be combined with
+    streaming.
+*   `ServiceTier.FLEX`: Best-effort capacity at a lower cost, with no latency
+    guarantee.
+*   `ServiceTier.STANDARD`: The default tier.
+*   `ServiceTier.PRIORITY`: Reserved capacity for latency-sensitive calls.
+
+Leaving `service_tier` unset omits the field from the request entirely, which is
+equivalent to `ServiceTier.STANDARD`. The `ServiceTier` enum subclasses `str`,
+so you can pass a plain string such as `'deferred'` in place of an enum member.
+The string form also lets you use a tier the backend supports before ADK
+defines a constant for it.
+
+## Advanced usage
+
+The following sections describe how to bound the wait time for a deferred run
+with a client-side deadline and how to request deferred scheduling when serving
+an agent over HTTP.
+
+### Set a client-side deadline {#set-a-client-side-deadline}
+
+A deferred request waits for off-peak capacity, and its duration depends on
+backend load. To cap the total elapsed time, wrap the run in an
+`asyncio.timeout()`, which requires Python 3.11 or later:
+
+=== "Python"
+
+    ```python
+    import asyncio
+    import logging
+
+    from google.adk.agents import RunConfig
+    from google.adk.models import ServiceTier
+    from google.genai import types
+
+    logger = logging.getLogger(__name__)
+
+    # Continues from the Get started example, reusing runner and session.
+    message = types.Content(
+        role='user',
+        parts=[types.Part.from_text(text='Generate a quarterly summary.')],
+    )
+    run_config = RunConfig(service_tier=ServiceTier.DEFERRED)
+
+    try:
+      async with asyncio.timeout(300):
+        async for event in runner.run_async(
+            user_id='user_123',
+            session_id=session.id,
+            new_message=message,
+            run_config=run_config,
+        ):
+          if event.content and event.content.parts:
+            for part in event.content.parts:
+              if part.text:
+                print(part.text)
+    except TimeoutError:
+      logger.error('Deferred run exceeded the 300 second client deadline.')
+    ```
+
+!!! danger "Client deadlines do not cancel requests"
+
+    Timing out stops ADK from polling for the result, but does not stop the
+    backend. The queued request runs to completion and consumes billed usage,
+    and you cannot retrieve its output afterward. Treat a timed-out turn as
+    forfeited, and do not use a client deadline to limit usage.
+
+### Request deferred scheduling over HTTP
+
+An agent you serve with `adk api_server` accepts `service_tier` in the request
+body of the `/run` and `/run_sse` endpoints:
+
+```json
+{
+  "app_name": "batch_app",
+  "user_id": "user_123",
+  "session_id": "session_456",
+  "new_message": {
+    "role": "user",
+    "parts": [{"text": "Summarize batch results."}]
+  },
+  "service_tier": "deferred"
+}
+```
+
+For `/run_sse` requests, you must also set `"streaming": false`. Combining
+`"service_tier": "deferred"` with `"streaming": true` returns HTTP 422.
+An HTTP request holds the connection open for the whole queue wait, which makes
+the hosting platform's request timeout the effective limit on a deferred run:
+
+*   **Raise proxy and ingress timeouts.** Load balancers and ingress
+    controllers close long-running backend connections by default. Check the
+    limits for your platform, such as the
+    [Cloud Run request timeout](https://cloud.google.com/run/docs/configuring/request-timeout),
+    and raise them to cover your expected queue wait.
+*   **A client disconnect cancels retrieval, not execution.** When the
+    connection closes, the server cancels its polling task. The queued request
+    still runs and still consumes billed usage, and you lose its output.
+
+For deferred workloads that may wait a long time, deploy to
+[Agent Runtime](/deploy/agent-runtime/) on Google Cloud Agent Platform instead.
+Agent Runtime runs the invocation in a managed container and does not hold an
+HTTP connection open for it.
+
+## Limitations
+
+The following limitations apply to deferred scheduling:
+
+*   **Allowlisted access:** Deferred capacity requires an allowlist for your
+    Google Cloud project.
+*   **Gemini and the Interactions API only:** Deferred scheduling works only
+    with a `Gemini` model that sets `use_interactions_api=True`. Any other
+    model, including a custom `BaseLlm` subclass, ignores the tier.
+*   **Not compatible with streaming:** Constructing
+    `RunConfig(service_tier=ServiceTier.DEFERRED, streaming_mode=StreamingMode.SSE)`
+    raises a `pydantic.ValidationError`.
+*   **`ManagedAgent` class ignores the tier:** It runs its own interaction
+    loop and never reads `service_tier`.
+*   **No resumption across restarts:** ADK does not persist in-flight
+    interaction IDs, and offers no way to reattach a run to a queued
+    interaction. If the client process stops, ADK abandons the pending work and
+    the next run creates a new interaction.
+
+## Troubleshooting
+
+The following sections describe some common issues when using deferred
+scheduling, and how to resolve them.
+
+### ADK ignores the tier and the run still succeeds
+
+If the agent's model is not a `Gemini` instance with
+`use_interactions_api=True`, ADK drops the tier, logs a warning once per run,
+and executes the call on standard capacity. The run succeeds, so the log is the
+only signal:
+
+```text
+run_config.service_tier=... has no effect for agent <name>: its model does not
+use the interactions API, which is the only path with a serving tier. Set
+use_interactions_api=True on the model to apply the tier.
+```
+
+The warning is intentional. In a multi-agent run, only some agents may be on the
+Interactions API, so an unusable tier warns rather than raises. Search your logs
+for `has no effect for agent` to find models that need
+`use_interactions_api=True`.
+
+### OpenAI `service_tier` field
+
+The `OpenAIResponsesLlm` class also has a `service_tier` field. It is an
+unrelated setting: you set it on the model rather than on the run, and
+`RunConfig.service_tier` does not feed it. Setting one has no effect on the
+other.
+
+## Additional resources
+
+*   [Gemini Interactions API](index.md#interactions-api)
+*   [Runtime Configuration](/runtime/runconfig/)
+*   [Interactions API code sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api)
+
+================
+File: docs/agents/models/google-gemini/index.md
+================
+# Google Gemini models for ADK agents
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+</div>
+
+ADK supports the Google Gemini family of generative AI models that provide a
+powerful set of models with a wide range of features. ADK provides support for many
+Gemini features, including
+[Code Execution](/integrations/code-execution/),
+[Google Search](/integrations/google-search/),
+[Context caching](/context/caching/),
+[Computer use](/integrations/computer-use/)
+and the [Interactions API](#interactions-api).
+
+## Get started
+
+The following code examples show a basic implementation for using Gemini models
+in your agents:
+
+=== "Python"
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    # --- Example using a stable Gemini Flash model ---
+    agent_gemini_flash = LlmAgent(
+        # Use the latest stable Flash model identifier
+        model="gemini-flash-latest",
+        name="gemini_flash_agent",
+        instruction="You are a fast and helpful Gemini assistant.",
+        # ... other agent parameters
+    )
+    ```
+
+=== "TypeScript"
+
+    ```typescript
+    import {LlmAgent} from '@google/adk';
+
+    // --- Example #2: using a powerful Gemini Pro model with API Key in model ---
+    export const rootAgent = new LlmAgent({
+      name: 'hello_time_agent',
+      model: 'gemini-flash-latest',
+      description: 'Gemini flash agent',
+      instruction: `You are a fast and helpful Gemini assistant.`,
+    });
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model/gemini"
+    	"google.golang.org/genai"
+    )
+
+    --8<-- "examples/go/snippets/agents/models/models.go:gemini-example"
+    ```
+
+=== "Java"
+
+    ```java
+    // --- Example #1: using a stable Gemini Flash model with ENV variables---
+    LlmAgent agentGeminiFlash =
+        LlmAgent.builder()
+            // Use the latest stable Flash model identifier
+            .model("gemini-flash-latest") // Set ENV variables to use this model
+            .name("gemini_flash_agent")
+            .instruction("You are a fast and helpful Gemini assistant.")
+            // ... other agent parameters
+            .build();
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.Gemini
+
+    // --- Example using a stable Gemini Flash model ---
+    val agentGeminiFlash = LlmAgent(
+        // Use the latest stable Flash model identifier
+        name = "gemini_flash_agent",
+        model = Gemini(name = "gemini-flash-latest"),
+        instruction = Instruction("You are a fast and helpful Gemini assistant."),
+        // ... other agent parameters
+    )
+    ```
+
+??? note "Note: Gemini model selector `gemini-flash-latest`"
+
+    Most code examples in ADK documentation use `gemini-flash-latest` to select the
+    [latest available](https://ai.google.dev/gemini-api/docs/models#latest)
+    Gemini Flash version. However, if you access Gemini from a regional endpoint,
+    such as `us-central1`, this selection string may not work. In that case,
+    use a specific model version string from the
+    [Gemini models](https://ai.google.dev/gemini-api/docs/models) page or
+    Google Cloud [Gemini models](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models) list.
+
+## Gemini model authentication
+
+When using an AI model through a service, such as the Gemini API or Gemini
+Enterprise Agent Platform on Google Cloud, you must provide an API key or
+authenticate with the service. The most direct way to provide this information
+is to use environment variables or an `.env` file. The following examples show
+the most common way to configure an agent for use with the Gemini API or Gemini
+Enterprise Agent Platform.
+
+=== "Gemini API"
+
+    ```
+    # .env configuration file
+    GOOGLE_API_KEY="PASTE_YOUR_GEMINI_API_KEY_HERE"
+    ```
+
+=== "Google Cloud Agent Platform"
+
+    ```
+    # .env configuration file
+    GOOGLE_CLOUD_PROJECT=your-project-id
+    GOOGLE_CLOUD_LOCATION=location-code        # example: us-central1
+    GOOGLE_GENAI_USE_ENTERPRISE=True
+    ```
+
+For more details on connecting ADK agents to Google Cloud hosted models and services,
+including Gemini Enterprise Agent Platform, see the
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/) guide.
+
+## Voice and video streaming support
+
+In order to use voice/video streaming in ADK, you will need to use Gemini
+models that support the Live API. You can find the **model ID(s)** that
+support the Gemini Live API in the documentation:
+
+- [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
+- [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
+
+## Gemini Interactions API {#interactions-api}
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
+</div>
+
+The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
+is an alternative to the ***generateContent*** inference API, which provides
+stateful conversation capabilities, allowing you to chain interactions using a
+`previous_interaction_id` instead of sending the full conversation history with
+each request. Using this feature can be more efficient for long conversations.
+
+You can enable the Interactions API by setting the `use_interactions_api=True`
+parameter in the Gemini model configuration, as shown in the following code
+snippet:
+
+=== "Python"
+
+    ```python
+    from google.adk.agents.llm_agent import Agent
+    from google.adk.models.google_llm import Gemini
+    from google.adk.tools.google_search_tool import GoogleSearchTool
+
+    root_agent = Agent(
+        model=Gemini(
+            model="gemini-flash-latest",
+            use_interactions_api=True,  # Enable Interactions API
+        ),
+        name="interactions_test_agent",
+        tools=[
+            GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
+            get_current_weather,  # Custom function tool
+        ],
+    )
+    ```
+
+For a complete code sample, see the
+[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api).
+
+Enabling the Interactions API also lets you choose a serving tier for each run.
+For details on queuing model calls to run on off-peak capacity, see
+[Deferred scheduling](deferred-schedule.md).
+
+### Known limitations
+
+The Interactions API **does not** support mixing custom function calling tools with
+built-in tools, such as the
+[Google Search](/integrations/google-search/),
+tool, within the same agent. You can work around this limitation by configuring the
+built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
+parameter:
+
+=== "Python"
+
+    ```python
+    # Use bypass_multi_tools_limit=True to convert google_search to a function tool
+    GoogleSearchTool(bypass_multi_tools_limit=True)
+    ```
+
+In this example, this option converts the built-in `google_search` to a function
+calling tool (via `GoogleSearchAgentTool`), which allows it to work alongside
+custom function tools.
+
+## Troubleshooting
+
+### Error Code 429 - RESOURCE_EXHAUSTED
+
+This error usually happens if the number of your requests exceeds the capacity allocated to process requests.
+
+To mitigate this, you can do one of the following:
+
+1.  Request higher quota limits for the model you are trying to use.
+
+2.  Enable client-side retries. Retries allow the client to automatically retry the request after a delay, which can help if the quota issue is temporary.
+
+    There are two ways you can set retry options:
+
+    **Option 1:** Set retry options on the Agent as a part of `generate_content_config`.
+
+    You would use this option if you are passing the model as a name string and
+    letting ADK create the model adapter for you.
+
+    === "Python"
+
+        ```python
+        from google.genai import types
+
+        # ...
+
+        root_agent = Agent(
+            model='gemini-flash-latest',
+            # ...
+            generate_content_config=types.GenerateContentConfig(
+                # ...
+                http_options=types.HttpOptions(
+                    # ...
+                    retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+                    # ...
+                ),
+                # ...
+            ),
+        )
+        ```
+
+    === "Java"
+
+        ```java
+        import com.google.adk.agents.LlmAgent;
+        import com.google.genai.types.GenerateContentConfig;
+        import com.google.genai.types.HttpOptions;
+        import com.google.genai.types.HttpRetryOptions;
+
+        // ...
+
+        LlmAgent rootAgent = LlmAgent.builder()
+            .model("gemini-flash-latest")
+            // ...
+            .generateContentConfig(GenerateContentConfig.builder()
+                // ...
+                .httpOptions(HttpOptions.builder()
+                    // ...
+                    .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                    // ...
+                    .build())
+                // ...
+                .build())
+            .build();
+        ```
+
+    **Option 2:** Retry options on this model adapter.
+
+    You would use this option if you were instantiating the instance of adapter
+    by yourself.
+
+    === "Python"
+
+        ```python
+        from google.genai import types
+
+        # ...
+
+        agent = Agent(
+            model=Gemini(
+            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
+            )
+        )
+        ```
+
+    === "Java"
+
+        ```java
+        import com.google.adk.agents.LlmAgent;
+        import com.google.adk.models.Gemini;
+        import com.google.genai.Client;
+        import com.google.genai.types.HttpOptions;
+        import com.google.genai.types.HttpRetryOptions;
+
+        // ...
+
+        LlmAgent agent = LlmAgent.builder()
+            .model(Gemini.builder()
+                .modelName("gemini-flash-latest")
+                .apiClient(Client.builder()
+                    .httpOptions(HttpOptions.builder()
+                        .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                        .build())
+                    .build())
+                .build())
+            .build();
+        ```
+
+    === "Kotlin"
+
+        In Kotlin, you can achieve this by creating the `Client` instance yourself and passing it to the `Gemini` constructor.
+
+        ```kotlin
+        import com.google.adk.kt.agents.LlmAgent
+        import com.google.adk.kt.models.Gemini
+        import com.google.genai.Client
+        import com.google.genai.types.HttpOptions
+        import com.google.genai.types.HttpRetryOptions
+
+        val client = Client.builder()
+            .apiKey("YOUR_API_KEY")
+            .httpOptions(HttpOptions.builder()
+                .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
+                .build())
+            .build()
+
+        val model = Gemini(client = client, name = "gemini-flash-latest")
+
+        val agent = LlmAgent(
+            name = "my_agent",
+            model = model
+            // ...
+        )
+        ```
+
+================
 File: docs/agents/models/agent-platform.md
 ================
 # Agent Platform hosted models for ADK agents
@@ -2916,343 +3567,6 @@ async def test_client():
 if __name__ == "__main__":
     asyncio.run(test_client())
 ```
-
-================
-File: docs/agents/models/google-gemini.md
-================
-# Google Gemini models for ADK agents
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
-</div>
-
-ADK supports the Google Gemini family of generative AI models that provide a
-powerful set of models with a wide range of features. ADK provides support for many
-Gemini features, including
-[Code Execution](/integrations/code-execution/),
-[Google Search](/integrations/google-search/),
-[Context caching](/context/caching/),
-[Computer use](/integrations/computer-use/)
-and the [Interactions API](#interactions-api).
-
-## Get started
-
-The following code examples show a basic implementation for using Gemini models
-in your agents:
-
-=== "Python"
-
-    ```python
-    from google.adk.agents import LlmAgent
-
-    # --- Example using a stable Gemini Flash model ---
-    agent_gemini_flash = LlmAgent(
-        # Use the latest stable Flash model identifier
-        model="gemini-flash-latest",
-        name="gemini_flash_agent",
-        instruction="You are a fast and helpful Gemini assistant.",
-        # ... other agent parameters
-    )
-    ```
-
-=== "TypeScript"
-
-    ```typescript
-    import {LlmAgent} from '@google/adk';
-
-    // --- Example #2: using a powerful Gemini Pro model with API Key in model ---
-    export const rootAgent = new LlmAgent({
-      name: 'hello_time_agent',
-      model: 'gemini-flash-latest',
-      description: 'Gemini flash agent',
-      instruction: `You are a fast and helpful Gemini assistant.`,
-    });
-    ```
-
-=== "Go"
-
-    ```go
-    import (
-    	"google.golang.org/adk/v2/agent/llmagent"
-    	"google.golang.org/adk/v2/model/gemini"
-    	"google.golang.org/genai"
-    )
-
-    --8<-- "examples/go/snippets/agents/models/models.go:gemini-example"
-    ```
-
-=== "Java"
-
-    ```java
-    // --- Example #1: using a stable Gemini Flash model with ENV variables---
-    LlmAgent agentGeminiFlash =
-        LlmAgent.builder()
-            // Use the latest stable Flash model identifier
-            .model("gemini-flash-latest") // Set ENV variables to use this model
-            .name("gemini_flash_agent")
-            .instruction("You are a fast and helpful Gemini assistant.")
-            // ... other agent parameters
-            .build();
-    ```
-
-=== "Kotlin"
-
-    ```kotlin
-    import com.google.adk.kt.agents.Instruction
-    import com.google.adk.kt.agents.LlmAgent
-    import com.google.adk.kt.models.Gemini
-
-    // --- Example using a stable Gemini Flash model ---
-    val agentGeminiFlash = LlmAgent(
-        // Use the latest stable Flash model identifier
-        name = "gemini_flash_agent",
-        model = Gemini(name = "gemini-flash-latest"),
-        instruction = Instruction("You are a fast and helpful Gemini assistant."),
-        // ... other agent parameters
-    )
-    ```
-
-??? note "Note: Gemini model selector `gemini-flash-latest`"
-
-    Most code examples in ADK documentation use `gemini-flash-latest` to select the
-    [latest available](https://ai.google.dev/gemini-api/docs/models#latest)
-    Gemini Flash version. However, if you access Gemini from a regional endpoint,
-    such as `us-central1`, this selection string may not work. In that case,
-    use a specific model version string from the
-    [Gemini models](https://ai.google.dev/gemini-api/docs/models) page or
-    Google Cloud [Gemini models](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models) list.
-
-## Gemini model authentication
-
-When using an AI model through a service, such as the Gemini API or Gemini
-Enterprise Agent Platform on Google Cloud, you must provide an API key or
-authenticate with the service. The most direct way to provide this information
-is to use environment variables or an `.env` file. The following examples show
-the most common way to configure an agent for use with the Gemini API or Gemini
-Enterprise Agent Platform.
-
-=== "Gemini API"
-
-    ```
-    # .env configuration file
-    GOOGLE_API_KEY="PASTE_YOUR_GEMINI_API_KEY_HERE"
-    ```
-
-=== "Google Cloud Agent Platform"
-
-    ```
-    # .env configuration file
-    GOOGLE_CLOUD_PROJECT=your-project-id
-    GOOGLE_CLOUD_LOCATION=location-code        # example: us-central1
-    GOOGLE_GENAI_USE_ENTERPRISE=True
-    ```
-
-For more details on connecting ADK agents to Google Cloud hosted models and services,
-including Gemini Enterprise Agent Platform, see the
-[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/) guide.
-
-## Voice and video streaming support
-
-In order to use voice/video streaming in ADK, you will need to use Gemini
-models that support the Live API. You can find the **model ID(s)** that
-support the Gemini Live API in the documentation:
-
-- [Google AI Studio: Gemini Live API](https://ai.google.dev/gemini-api/docs/models#live-api)
-- [Agent Platform: Gemini Live API](https://cloud.google.com/vertex-ai/generative-ai/docs/live-api)
-
-## Gemini Interactions API {#interactions-api}
-
-<div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.21.0</span>
-</div>
-
-The Gemini [Interactions API](https://ai.google.dev/gemini-api/docs/interactions)
-is an alternative to the ***generateContent*** inference API, which provides
-stateful conversation capabilities, allowing you to chain interactions using a
-`previous_interaction_id` instead of sending the full conversation history with
-each request. Using this feature can be more efficient for long conversations.
-
-You can enable the Interactions API by setting the `use_interactions_api=True`
-parameter in the Gemini model configuration, as shown in the following code
-snippet:
-
-=== "Python"
-
-    ```python
-    from google.adk.agents.llm_agent import Agent
-    from google.adk.models.google_llm import Gemini
-    from google.adk.tools.google_search_tool import GoogleSearchTool
-
-    root_agent = Agent(
-        model=Gemini(
-            model="gemini-flash-latest",
-            use_interactions_api=True,  # Enable Interactions API
-        ),
-        name="interactions_test_agent",
-        tools=[
-            GoogleSearchTool(bypass_multi_tools_limit=True),  # Converted to function tool
-            get_current_weather,  # Custom function tool
-        ],
-    )
-    ```
-
-For a complete code sample, see the
-[Interactions API sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api).
-
-### Known limitations
-
-The Interactions API **does not** support mixing custom function calling tools with
-built-in tools, such as the
-[Google Search](/integrations/google-search/),
-tool, within the same agent. You can work around this limitation by configuring the
-built-in tool to operate as a custom tool using the `bypass_multi_tools_limit`
-parameter:
-
-=== "Python"
-
-    ```python
-    # Use bypass_multi_tools_limit=True to convert google_search to a function tool
-    GoogleSearchTool(bypass_multi_tools_limit=True)
-    ```
-
-In this example, this option converts the built-in `google_search` to a function
-calling tool (via `GoogleSearchAgentTool`), which allows it to work alongside
-custom function tools.
-
-## Troubleshooting
-
-### Error Code 429 - RESOURCE_EXHAUSTED
-
-This error usually happens if the number of your requests exceeds the capacity allocated to process requests.
-
-To mitigate this, you can do one of the following:
-
-1.  Request higher quota limits for the model you are trying to use.
-
-2.  Enable client-side retries. Retries allow the client to automatically retry the request after a delay, which can help if the quota issue is temporary.
-
-    There are two ways you can set retry options:
-
-    **Option 1:** Set retry options on the Agent as a part of `generate_content_config`.
-
-    You would use this option if you are passing the model as a name string and
-    letting ADK create the model adapter for you.
-
-    === "Python"
-
-        ```python
-        from google.genai import types
-
-        # ...
-
-        root_agent = Agent(
-            model='gemini-flash-latest',
-            # ...
-            generate_content_config=types.GenerateContentConfig(
-                # ...
-                http_options=types.HttpOptions(
-                    # ...
-                    retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
-                    # ...
-                ),
-                # ...
-            ),
-        )
-        ```
-
-    === "Java"
-
-        ```java
-        import com.google.adk.agents.LlmAgent;
-        import com.google.genai.types.GenerateContentConfig;
-        import com.google.genai.types.HttpOptions;
-        import com.google.genai.types.HttpRetryOptions;
-
-        // ...
-
-        LlmAgent rootAgent = LlmAgent.builder()
-            .model("gemini-flash-latest")
-            // ...
-            .generateContentConfig(GenerateContentConfig.builder()
-                // ...
-                .httpOptions(HttpOptions.builder()
-                    // ...
-                    .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
-                    // ...
-                    .build())
-                // ...
-                .build())
-            .build();
-        ```
-
-    **Option 2:** Retry options on this model adapter.
-
-    You would use this option if you were instantiating the instance of adapter
-    by yourself.
-
-    === "Python"
-
-        ```python
-        from google.genai import types
-
-        # ...
-
-        agent = Agent(
-            model=Gemini(
-            retry_options=types.HttpRetryOptions(initial_delay=1, attempts=2),
-            )
-        )
-        ```
-
-    === "Java"
-
-        ```java
-        import com.google.adk.agents.LlmAgent;
-        import com.google.adk.models.Gemini;
-        import com.google.genai.Client;
-        import com.google.genai.types.HttpOptions;
-        import com.google.genai.types.HttpRetryOptions;
-
-        // ...
-
-        LlmAgent agent = LlmAgent.builder()
-            .model(Gemini.builder()
-                .modelName("gemini-flash-latest")
-                .apiClient(Client.builder()
-                    .httpOptions(HttpOptions.builder()
-                        .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
-                        .build())
-                    .build())
-                .build())
-            .build();
-        ```
-
-    === "Kotlin"
-
-        In Kotlin, you can achieve this by creating the `Client` instance yourself and passing it to the `Gemini` constructor.
-
-        ```kotlin
-        import com.google.adk.kt.agents.LlmAgent
-        import com.google.adk.kt.models.Gemini
-        import com.google.genai.Client
-        import com.google.genai.types.HttpOptions
-        import com.google.genai.types.HttpRetryOptions
-
-        val client = Client.builder()
-            .apiKey("YOUR_API_KEY")
-            .httpOptions(HttpOptions.builder()
-                .retryOptions(HttpRetryOptions.builder().initialDelay(1.0).attempts(2).build())
-                .build())
-            .build()
-
-        val model = Gemini(client = client, name = "gemini-flash-latest")
-
-        val agent = LlmAgent(
-            name = "my_agent",
-            model = model
-            // ...
-        )
-        ```
 
 ================
 File: docs/agents/models/google-gemma.md
@@ -4203,44 +4517,111 @@ File: docs/agents/models/openai.md
 
 You can use OpenAI models with ADK. How you connect depends on the language:
 
-- **Go — native support:** ADK Go provides a direct `openaimodel` package that implements the `model.LLM` interface, targeting the OpenAI Responses API. [Get started](#get-started).
+- **Go — native support:** ADK Go provides a direct `openaimodel` package that implements the `model.LLM` interface, targeting the OpenAI Responses API or the [Chat Completions API](#chat-completions-api). [Get started](#get-started).
 - **Python — via LiteLLM:** ADK Python accesses OpenAI models (and many other providers) through the LiteLLM connector. See [LiteLLM](/agents/models/litellm/).
 
 ## Get started
 
-The `openaimodel` package provides a client for interacting with OpenAI's API. It implements the `model.LLM` interface, making it compatible with providers that expose the OpenAI Responses API surface.
+The `openaimodel` package provides a client for interacting with OpenAI's API. It implements the `model.LLM` interface and uses the OpenAI Responses API by default, or the [Chat Completions API](#chat-completions-api) when `ClientConfig.API` selects it.
 The following code example shows a basic implementation for using OpenAI models in your agents:
 
 === "Go"
 
-    ```go
-    import (
-    	"context"
-    	"log"
+    === "Responses API"
 
-    	"github.com/openai/openai-go/v3"
-    	"google.golang.org/adk/v2/agent/llmagent"
-    	"google.golang.org/adk/v2/model/openaimodel"
-    )
+        ```go
+        import (
+        	"context"
+        	"log"
 
-    // Instantiate the model
-    llm, err := openaimodel.NewModel(context.Background(), openai.ChatModelGPT4oMini, &openaimodel.ClientConfig{})
-    if err != nil {
-      log.Fatal(err)
-    }
+        	"github.com/openai/openai-go/v3"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/model/openaimodel"
+        )
 
-    // Create the agent
-    agent, err := llmagent.New(llmagent.Config{
-      Name:        "openai_agent",
-      Model:       llm,
-      Instruction: "You are a helpful AI assistant.",
-    })
-    if err != nil {
-      log.Fatal(err)
-    }
-    ```
+        // Instantiate the model
+        llm, err := openaimodel.NewModel(context.Background(), openai.ChatModelGPT4oMini, &openaimodel.ClientConfig{})
+        if err != nil {
+          log.Fatal(err)
+        }
 
-For a complete, runnable sample, see [examples/openai/](https://github.com/google/adk-go/tree/main/examples/openai) in the ADK Go repository.
+        // Create the agent
+        agent, err := llmagent.New(llmagent.Config{
+          Name:        "openai_agent",
+          Model:       llm,
+          Instruction: "You are a helpful AI assistant.",
+        })
+        if err != nil {
+          log.Fatal(err)
+        }
+        ```
+
+        For a complete, runnable sample, see [examples/openai/responses/](https://github.com/google/adk-go/tree/main/examples/openai/responses) in the ADK Go repository.
+
+    === "Chat Completions API"
+
+        Requires ADK Go v2.5.0 or later.
+
+        ```go
+        import (
+        	"context"
+        	"log"
+        	"os"
+
+        	"github.com/openai/openai-go/v3"
+        	"google.golang.org/adk/v2/agent/llmagent"
+        	"google.golang.org/adk/v2/model/openaimodel"
+        )
+
+        // Instantiate the model on the Chat Completions API
+        llm, err := openaimodel.NewModel(context.Background(), openai.ChatModelGPT4oMini, &openaimodel.ClientConfig{
+          APIKey: os.Getenv("OPENAI_API_KEY"),
+          API:    openaimodel.APIChatCompletions,
+        })
+        if err != nil {
+          log.Fatal(err)
+        }
+
+        // Create the agent
+        agent, err := llmagent.New(llmagent.Config{
+          Name:        "openai_agent",
+          Model:       llm,
+          Instruction: "You are a helpful AI assistant.",
+        })
+        if err != nil {
+          log.Fatal(err)
+        }
+        ```
+
+        For a complete, runnable sample, see [examples/openai/completions/](https://github.com/google/adk-go/tree/main/examples/openai/completions) in the ADK Go repository.
+
+## Chat Completions API {#chat-completions-api}
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.5.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+By default, `openaimodel` sends requests to the OpenAI
+[Responses API](https://platform.openai.com/docs/api-reference/responses)
+(`POST /v1/responses`). Nearly every OpenAI-compatible provider implements the
+[Chat Completions API](https://platform.openai.com/docs/api-reference/chat)
+(`POST /v1/chat/completions`), and some implement only that one. To use it, set
+the `API` field of `ClientConfig` to `openaimodel.APIChatCompletions`, as the
+Chat Completions API tab under [Get started](#get-started) shows. Agents, tools,
+and the runner work the same way with either API.
+
+!!! warning "Set the API key for other providers"
+
+    To reach another OpenAI-compatible provider, set `BaseURL` to its endpoint
+    and `APIKey` to its key. When `APIKey` is empty, the `openai-go` SDK falls
+    back to the `OPENAI_API_KEY` environment variable and sends that key to
+    `BaseURL`.
+
+The two APIs support the same features, with these differences:
+
+- **Generation settings:** `StopSequences`, `FrequencyPenalty`, `PresencePenalty`, and `Seed` are sent to the Chat Completions API. The Responses API has no equivalent fields and returns an error for them.
+- **Reasoning output:** The Chat Completions API does not return reasoning text, so responses contain no thought parts, and `ThinkingConfig.IncludeThoughts` is ignored. Reasoning effort and reasoning-token counts work with both APIs.
+- **Output token limit:** `MaxOutputTokens` is sent as `max_completion_tokens`. Some compatible servers honor only the older `max_tokens` field, so the limit has no effect there.
 
 ## Supported features
 
@@ -4255,7 +4636,7 @@ For a complete, runnable sample, see [examples/openai/](https://github.com/googl
 - **Text only** — multimodal input (images, audio, files) is not supported.
 - **Function tools only** — built-in tools (Google Search, code execution, etc.) are not supported.
 - **Structured output uses OpenAI strict mode** — every field declared in an `OutputSchema` is treated as required.
-- Some `GenerateContentConfig` options return an error rather than being silently ignored: `TopK`, stop sequences, multiple candidates, frequency/presence penalties, request labels, and safety settings.
+- Some `GenerateContentConfig` options return an error rather than being silently ignored: `TopK`, multiple candidates, request labels, and safety settings. The Responses API also rejects stop sequences, frequency/presence penalties, and seed, which the [Chat Completions API](#chat-completions-api) supports.
 
 ## Configuration options
 
@@ -4265,6 +4646,7 @@ The `ClientConfig` provides several options for configuring the client:
 - `BaseURL`: Custom endpoint URL, which can be useful for OpenAI-compatible endpoints.
 - `HTTPClient`: A custom `*http.Client`.
 - `Options`: Advanced `openai-go` request options (`[]option.RequestOption`).
+- `API`: The OpenAI API to call: `openaimodel.APIResponses` (the default) or `openaimodel.APIChatCompletions`. See [Chat Completions API](#chat-completions-api).
 
 If `APIKey` or `BaseURL` are left empty, they will automatically fall back to the `OPENAI_API_KEY` and `OPENAI_BASE_URL` environment variables, handled by the default behavior of the underlying `openai-go` SDK.
 
@@ -4272,7 +4654,7 @@ If `APIKey` or `BaseURL` are left empty, they will automatically fall back to th
 
 When using OpenAI models, you must provide an API key to authenticate with the OpenAI API. The most direct way to provide this information is to use environment variables or an `.env` file.
 
-The `openaimodel` package also supports OpenAI-compatible endpoints (such as local models served via Ollama, LM Studio, or vLLM) by configuring the base URL.
+The `openaimodel` package also supports OpenAI-compatible endpoints (such as local models served via Ollama, LM Studio, or vLLM) by configuring the base URL. If the endpoint does not serve the Responses API, also set `API` to `openaimodel.APIChatCompletions`, as described in [Chat Completions API](#chat-completions-api).
 
 === "OpenAI API"
 
@@ -12583,6 +12965,38 @@ Access relevant information from the past or external sources.
     }
     ```
 
+### Render UI Widgets
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.27.0</span>
+</div>
+
+To send rich UI components (such as MCP App iframes) to the client alongside
+agent responses, use `context.render_ui_widget()`.
+
+=== "Python"
+
+    ```python
+    from google.adk.events.ui_widget import UiWidget
+    from google.adk.tools import ToolContext
+
+    def render_styled_widget(color: str, context: ToolContext) -> str:
+        """Render a UI widget utilizing the user-specified color."""
+        
+        widget = UiWidget(
+            id="my_status_dashboard",
+            provider="mcp",
+            payload={
+                "resource_uri": "ui://analytics/status",
+                "tool": {"name": "get_system_status"},
+                "tool_args": {"theme_color": color} # Dynamically passed from user interaction
+            }
+        )
+        
+        context.render_ui_widget(widget)
+        return f"Widget successfully rendered with color: {color}"
+    ```
+
 ### Advanced: Direct `InvocationContext` Usage
 
 <div class="language-support-tag">
@@ -12712,6 +13126,7 @@ Setting `ctx.end_invocation = True` is a way to gracefully stop the entire reque
 *   **State for Data Flow:** `context.state` is the primary way to share data, remember preferences, and manage conversational memory *within* an invocation. Use prefixes (`app:`, `user:`, `temp:`) thoughtfully when using persistent storage.
 *   **Artifacts for Files:** Use `context.save_artifact` and `context.load_artifact` for managing file references (like paths or URIs) or larger data blobs. Store references, load content on demand.
 *   **Tracked Changes:** Modifications to state or artifacts made via context methods are automatically linked to the current step's `EventActions` and handled by the `SessionService`.
+*   **UI Rendering:** Use `context.render_ui_widget(widget)` to send rich UI components (like MCP App iframes) to the client.
 *   **Start Simple:** Focus on `state` and basic artifact usage first. Explore authentication, memory, and advanced `InvocationContext` fields (like those for live streaming) as your needs become more complex.
 
 By understanding and effectively using these context objects, you can build more sophisticated, stateful, and capable agents with ADK.
@@ -15333,6 +15748,25 @@ Criterion                                | Description                          
 `multi_turn_trajectory_quality_v1`       | Evaluates the overall trajectory of the conversation      | No              | No               | Yes            | Yes
 `multi_turn_tool_use_quality_v1`         | Evaluates function calls made during a conversation       | No              | No               | Yes            | Yes
 
+## Efficiency criteria
+
+The following four criteria measure how expensive an agent is to run. They 
+differ from other criteria in a few ways. They are *informational* in that
+they report a value, but never pass or fail an eval case, and their status 
+is always `INFORMATIONAL`. They are also *always on*, in that they are
+reported for every eval without appearing in `EvalConfig`, and cannot be turned
+off. There is nothing to configure on them, and a threshold set on one is
+rejected rather than ignored, so a config never carries a dead setting.
+
+Criterion                 | What it reports                               | Unit
+:------------------------ | :-------------------------------------------- | :------
+`tool_call_count_v1`      | Number of tool calls the agent made           | count
+`inference_call_count_v1` | Number of model calls the agent made          | count
+`token_usage_v1`          | Tokens consumed by the model in an invocation | tokens
+`invocation_duration_v1`  | Wall-clock time an invocation took            | seconds
+
+The four are documented individually below, after the quality criteria.
+
 ## tool_trajectory_avg_score
 
 This criterion compares the sequence of tools called by the agent against a list
@@ -16156,7 +16590,152 @@ Example `EvalConfig` entry:
 
 The criterion returns a score between 0.0 and 1.0. Scores closer to 1.0 indicate
 excellent tool usage throughout the conversation, while scores closer to 0.0
-indicate poor
+indicate poor tool usage.
+
+## tool_call_count_v1
+
+This criterion reports the number of tool (function) calls the agent made.
+
+### When To Use This Criterion?
+
+You do not need to enable it. Use it to see whether a change made the agent
+call more tools than before -- for example after editing an instruction or
+swapping a model.
+
+### Details
+
+The count is derived per invocation from the agent's tool call trajectory. The
+value reported for the eval case is the average across its invocations, and
+the per-invocation counts are reported alongside it.
+
+### How To Use This Criterion?
+
+Nothing to configure. Supplying a threshold is an error rather than a no-op.
+
+### Output And How To Interpret
+
+A non-negative number; lower means fewer tool calls. It never passes or fails,
+so it does not affect the eval case's status.
+
+## inference_call_count_v1
+
+This criterion reports the number of inference (model) calls the agent made.
+
+### When To Use This Criterion?
+
+You do not need to enable it. Use it as a proxy for how many reasoning steps
+or retries a turn took; a jump usually means the agent is looping or
+re-planning. Read alongside `token_usage_v1` it separates the two ways a turn
+gets expensive: more calls, or a larger context per call.
+
+### Details
+
+Every model response recorded for an invocation counts as one call, including
+the one that produced the final response. The value reported for the eval
+case is the average across its invocations.
+
+An eval invocation spans a whole turn, and every sub-agent that runs during
+that turn shares its invocation id, so the count covers the whole turn rather
+than any one agent.
+
+### How To Use This Criterion?
+
+Nothing to configure. Supplying a threshold is an error rather than a no-op.
+
+### Output And How To Interpret
+
+A non-negative number; lower means fewer model calls. Reports no value (n/a)
+when the run did not capture model-call data.
+
+## token_usage_v1
+
+This criterion reports the tokens consumed by the model across an invocation.
+
+### When To Use This Criterion?
+
+You do not need to enable it. Use it to catch a change that leaves quality
+flat while moving token spend -- a longer instruction, a model swap, or a
+thinking budget change.
+
+### Details
+
+The token counts reported by each model call are summed per invocation, and
+the value reported for the eval case is the average across its invocations.
+
+The score is the total. Every token count is reported alongside it as a
+breakdown, and the counts nest, each containing the ones under it:
+
+```
+total_tokens
+  input_tokens
+    prompt_tokens
+      cached_tokens
+    tool_use_tokens
+  output_tokens
+    candidates_tokens
+    reasoning_tokens
+```
+
+The `total_tokens` value is derived from `input_tokens` plus `output_tokens` rather
+than taken from the backend's own reported total, so it always agrees with
+the breakdown.
+
+A count reads n/a, never 0, when the backend did not report it.
+
+### How To Use This Criterion?
+
+Nothing to configure. Supplying a threshold is an error rather than a no-op.
+To track one count in particular -- reasoning tokens, say -- read it from the
+breakdown in the CLI output or from `token_usage_details` in the result JSON.
+
+### Output And How To Interpret
+
+A non-negative number of tokens; lower means fewer tokens used. Reports no
+value (n/a) when the model backend does not report usage metadata -- Vertex AI
+and AI Studio Gemini report it; support varies across other backends.
+
+## invocation_duration_v1
+
+This criterion reports the wall-clock seconds an invocation took.
+
+### When To Use This Criterion?
+
+You do not need to enable it. Use it to see how long a turn takes end to end,
+keeping in mind that it is a single measurement and moves with model-server
+load -- compare distributions across runs rather than two individual numbers.
+
+### Details
+
+The duration is measured while the agent runs, from the user message going in
+to the last event coming out, so it includes the final model call, tool
+execution and post-processing. The user simulator's own turnaround is
+excluded: that is the eval harness's cost, not the agent's. Values are rounded
+to milliseconds. The value reported for the eval case is the average across
+its invocations.
+
+It is measured rather than derived from event timestamps, which cannot give
+the answer: an event is stamped when it is constructed, which for a model
+call is before the request is sent, so a span between such stamps omits the
+last call entirely.
+
+An eval invocation spans a whole turn, and every sub-agent that runs during
+that turn shares its invocation id, so the duration covers the whole turn
+rather than any one agent.
+
+### How To Use This Criterion?
+
+Nothing to configure. Supplying a threshold is an error rather than a no-op.
+
+### Output And How To Interpret
+
+A duration in seconds; lower is faster. Reports no value (n/a) when the eval
+did not perform the inference itself, for example when the invocations were
+read back from a stored session.
+
+To judge whether a change actually made the agent slower, read
+`inference_call_count_v1` and the token counts alongside it: those are
+deterministic for a given input and model, so a real change moves them,
+while wall-clock time moves on its own.
 
 ================
 File: docs/evaluate/custom_metrics.md
@@ -17276,6 +17855,17 @@ Here is a summary of all the available criteria:
 *   **multi_turn_tool_use_quality_v1**: Evaluates function calls made during a
     conversation.
 
+The following are *efficiency* criteria. They report a value but never pass or
+fail an eval case, and they are reported for every eval without being listed in
+`EvalConfig`:
+
+*   **tool_call_count_v1**: Number of tool calls made.
+*   **inference_call_count_v1**: Number of model calls made.
+*   **token_usage_v1**: Tokens consumed, with a per-type breakdown reported
+    alongside the total.
+*   **invocation_duration_v1**: Wall-clock seconds the turn took, measured
+    while the agent ran.
+
 !!! note
 
     Some criteria (such as response quality, safety, and multi-turn quality)
@@ -17336,6 +17926,12 @@ Choose criteria based on your evaluation goals:
 *   **Evaluate tool usage in multi-turn workflows:** Use
     `multi_turn_tool_use_quality_v1` to assess the quality, relevance, and
     correctness of tool or function calls made across multiple turns.
+*   **Track how expensive an agent is:** The efficiency criteria
+    (`tool_call_count_v1`, `inference_call_count_v1`, `token_usage_v1`,
+    `invocation_duration_v1`) are reported automatically, with no
+    configuration and no extra model calls. Compare them across runs to catch
+    a change that keeps quality flat but doubles token usage. They never fail
+    an eval, so they add no new failure mode to a CI/CD run.
 
 In addition, criteria which require information on expected agent tool use
 and/or responses are not supported in combination with
@@ -26705,6 +27301,21 @@ To create an Application Integration Toolset for Integration Connectors, follow 
 
     * You can provide a service account to be used instead of default credentials by generating a [Service Account Key](https://cloud.google.com/iam/docs/keys-create-delete#creating), and providing the right [Application Integration and Integration Connector IAM roles](#prerequisites) to the service account.
     * To find the list of supported entities and actions for a connection, use the Connectors APIs: [listActions](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listActions) or [listEntityTypes](https://cloud.google.com/integration-connectors/docs/reference/rest/v1/projects.locations.connections.connectionSchemaMetadata/listEntityTypes).
+    * To use custom workflows, override the default `ExecuteConnection` integration with the `connection_template_override` parameter.
+
+        !!! note "Language Support"
+            This parameter requires **Python SDK v1.21.0** or higher.
+
+      ```py
+      from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+
+      connector_tool = ApplicationIntegrationToolset(
+          project="YOUR_PROJECT_ID",
+          location="YOUR_LOCATION", # e.g., "us-central1"
+          connection="YOUR_CONNECTION_NAME",
+          connection_template_override="YOUR_CUSTOM_INTEGRATION_NAME",
+      )
+      ```
 
 
     `ApplicationIntegrationToolset` supports `auth_scheme` and `auth_credential` for **dynamic OAuth2 authentication** for Integration Connectors. To use it, create a tool similar to this in the `tools.py` file:
@@ -54486,6 +55097,11 @@ Use these parameters to control runtime guardrails and debugging:
   Python in favor of `SaveFilesAsArtifactsPlugin`.
 - `custom_metadata`: A `dict[str, Any]` of arbitrary metadata attached to the
   invocation, useful for tracing or logging.
+- `service_tier`: Selects the serving capacity for the run's model calls. ADK
+  Python only, and applies only to Gemini models that use the Interactions API.
+  `ServiceTier.DEFERRED` queues each model call to run on off-peak capacity and
+  cannot be combined with `StreamingMode.SSE`. See
+  [Deferred scheduling](/agents/models/google-gemini/deferred-schedule/).
 
 ## API reference
 
