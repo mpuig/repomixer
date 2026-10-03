@@ -1361,8 +1361,8 @@ compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
 to `JdkA2AHttpClient()`:
 
 ```kotlin title="build.gradle.kts"
-implementation("com.google.adk:google-adk-kotlin-a2a:1.0.0")
-implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.0.0.Final")
+implementation("com.google.adk:google-adk-kotlin-a2a:1.3.0")
+implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.3.2.Final")
 ```
 
 ## Start a remote agent server
@@ -4247,8 +4247,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.0.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:1.0.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:1.3.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -14564,12 +14564,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>1.6.0</version>
+             <version>1.11.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>1.6.0</version>
+             <version>1.11.0</version>
           </dependency>
         </dependencies>
 
@@ -18481,7 +18481,7 @@ Key fields:
     in the `google-adk[eval]` extra) and access to the Cloud Text-to-Speech API.
 
 See the sample at
-[`contributing/samples/live/live_non_blocking_tool_agent`](https://github.com/google/adk-python/tree/main/contributing/samples/live/live_non_blocking_tool_agent)
+[`contributing/samples/live/non_blocking_tool_agent`](https://github.com/google/adk-python/tree/main/contributing/samples/live/non_blocking_tool_agent)
 for a complete, runnable live eval configuration.
 
 ================
@@ -20437,13 +20437,13 @@ across supported languages. For a guided introduction, start with the
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.6.0</version>
+                <version>1.11.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.6.0</version>
+                <version>1.11.0</version>
             </dependency>
         </dependencies>
 
@@ -20458,8 +20458,8 @@ across supported languages. For a guided introduction, start with the
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:1.6.0'
-        implementation 'com.google.adk:google-adk-dev:1.6.0'
+        implementation 'com.google.adk:google-adk:1.11.0'
+        implementation 'com.google.adk:google-adk-dev:1.11.0'
     }
     ```
 
@@ -20480,8 +20480,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.0.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.0.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
     }
     ```
 
@@ -20597,7 +20597,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.6.0</version>
+        <version>1.11.0</version>
     </dependency>
 </dependencies>
 ```
@@ -20632,13 +20632,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.6.0</version>
+                <version>1.11.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.6.0</version>
+                <version>1.11.0</version>
             </dependency>
         </dependencies>
 
@@ -20893,8 +20893,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.0.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.0.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
 }
 ```
 
@@ -20914,9 +20914,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.0.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:1.0.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.0.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:1.3.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
     }
 
     kotlin {
@@ -21020,9 +21020,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.0.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:1.0.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.0.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:1.3.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
 }
 ```
 
@@ -28625,7 +28625,7 @@ The `pyarrow` dependency is no longer included in the general `gcp` extra. If
     core, so add the integrations artifact:
 
     ```kotlin title="build.gradle.kts"
-    implementation("com.google.adk:google-adk-kotlin-integrations:1.0.0")
+    implementation("com.google.adk:google-adk-kotlin-integrations:1.3.0")
     ```
 
     ```kotlin title="BigQueryAnalyticsExample.kt"
@@ -35255,7 +35255,7 @@ ADK provides a native integration for managing persistent agent session states u
 
     Use the same version for both `google-adk` and
     `google-adk-firestore-session-service` to guarantee compatibility. The
-    examples below use `1.6.0`; check for the latest ADK version and use it in
+    examples below use `1.11.0`; check for the latest ADK version and use it in
     both dependencies.
 
 Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
@@ -35269,13 +35269,13 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.6.0</version>
+        <version>1.11.0</version>
     </dependency>
     <!-- Firestore Session Service -->
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk-firestore-session-service</artifactId>
-        <version>1.6.0</version>
+        <version>1.11.0</version>
     </dependency>
 </dependencies>
 ```
@@ -35285,9 +35285,9 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
 ```gradle
 dependencies {
     // ADK Core
-    implementation 'com.google.adk:google-adk:1.6.0'
+    implementation 'com.google.adk:google-adk:1.11.0'
     // Firestore Session Service
-    implementation 'com.google.adk:google-adk-firestore-session-service:1.6.0'
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.11.0'
 }
 ```
 
@@ -46348,7 +46348,7 @@ Replace your existing pom.xml with the following.
     <auto-value.version>1.11.0</auto-value.version>
     <!-- Main class for exec-maven-plugin -->
     <exec.mainClass>samples.liveaudio.LiveAudioRun</exec.mainClass>
-    <google-adk.version>1.6.0</google-adk.version>
+    <google-adk.version>1.11.0</google-adk.version>
   </properties>
 
   <dependencyManagement>
@@ -47870,7 +47870,7 @@ instead of only reading what it said.
 
 ## Sample
 
-The [`live_workflow` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/live_workflow)
+The [`workflow` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/workflow)
 is a complete voice eval you can run: three live agents in a graph workflow, a tool call in
 the middle, and an eval set and `test_config.json` wired up with all three rubric criteria.
 
@@ -49071,7 +49071,7 @@ report_tool.response_scheduling = types.FunctionResponseScheduling.WHEN_IDLE
 
 The agent stays free while the tool runs, answers whatever else the user brings up, and folds
 the result in when it is ready. A runnable example ships as the
-[`live_non_blocking_tool_agent` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/live_non_blocking_tool_agent).
+[`non_blocking_tool_agent` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/non_blocking_tool_agent).
 
 !!! note "Requires Python 2.4+"
 
@@ -49351,7 +49351,7 @@ root_agent = Workflow(
 Serve this with `adk web` and start a live session, or pass it to `Runner.run_live()`.
 The runner detects a `Workflow` root and drives it over the live connection; you consume
 one event stream across all nodes. See the runnable
-[`live_workflow` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/live_workflow)
+[`workflow` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/workflow)
 for a three-stage voice intake flow with typed handoffs and a live eval set.
 
 **Every agent that speaks needs `mode='task'` or `mode='chat'`.** As a node in a workflow, an
