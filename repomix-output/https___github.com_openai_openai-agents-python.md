@@ -13543,6 +13543,8 @@ Use manifest entries for the material the agent needs before work begins:
 
 </div>
 
+`GitRepo` requires the `git` executable on `PATH` inside the sandbox where the repository is materialized. For `UnixLocalSandboxClient`, install Git on the local machine. For Docker or hosted sandbox clients, include Git in the sandbox image or environment before applying the manifest. Installing the Python SDK does not install Git.
+
 `Dir` creates a directory inside the sandbox workspace from synthetic children or as an output location; it does not read from the host filesystem. Use `LocalDir` when an existing host directory should be copied into the sandbox workspace.
 
 `LocalFile.src` and `LocalDir.src` are resolved against the SDK process working directory by default. The source must stay under that base directory unless it is covered by `extra_path_grants`. This keeps local source materialization inside the same host-path trust boundary as the rest of the sandbox manifest.
@@ -26738,6 +26740,8 @@ Before wiring an MCP server into an agent decide where the tool calls should exe
 | Launch a local process and communicate over stdin/stdout                             | **stdio MCP servers** via [`MCPServerStdio`][agents.mcp.server.MCPServerStdio] |
 
 The sections below walk through each option, how to configure it, and when to prefer one transport over another.
+
+For a remote MCP server, obtain the endpoint URL and authentication requirements from the server provider's documentation. You can also find published servers in the [official MCP Registry](https://registry.modelcontextprotocol.io/). Configure the SDK with the provider's MCP endpoint URL, which may differ from the provider's website URL.
 
 ## MCP Python SDK v1 and v2
 
