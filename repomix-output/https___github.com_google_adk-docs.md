@@ -1361,7 +1361,7 @@ compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
 to `JdkA2AHttpClient()`:
 
 ```kotlin title="build.gradle.kts"
-implementation("com.google.adk:google-adk-kotlin-a2a:1.3.0")
+implementation("com.google.adk:google-adk-kotlin-a2a:1.3.1")
 implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.3.2.Final")
 ```
 
@@ -4247,8 +4247,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:1.3.1")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -5110,7 +5110,7 @@ Consider a simplified code development pipeline:
 * **Code Reviewer Agent:**  An LLM Agent that reviews the generated code for errors, style issues, and adherence to best practices.  It receives the output of the Code Writer Agent.
 * **Code Refactorer Agent:** An LLM Agent that takes the reviewed code, and the reviewer's comments, and refactors it to improve quality and address issues.
 
-Using a `SequentialAgent` makes it simple to define this exection flow, as shown
+Using a `SequentialAgent` makes it simple to define this execution flow, as shown
 in the following code snippet:
 
 ```py
@@ -20536,8 +20536,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
     }
     ```
 
@@ -20949,8 +20949,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
 }
 ```
 
@@ -20970,9 +20970,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:1.3.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
+        implementation("com.google.adk:google-adk-kotlin-webserver:1.3.1")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
     }
 
     kotlin {
@@ -21076,9 +21076,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:1.3.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-webserver:1.3.1")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
 }
 ```
 
@@ -28681,7 +28681,7 @@ The `pyarrow` dependency is no longer included in the general `gcp` extra. If
     core, so add the integrations artifact:
 
     ```kotlin title="build.gradle.kts"
-    implementation("com.google.adk:google-adk-kotlin-integrations:1.3.0")
+    implementation("com.google.adk:google-adk-kotlin-integrations:1.3.1")
     ```
 
     ```kotlin title="BigQueryAnalyticsExample.kt"
@@ -46295,7 +46295,7 @@ public class ScienceTeacherAgent {
     return LlmAgent.builder()
         .name("science-app")
         .description("Science teacher agent")
-        .model("...") // Pleaase fill in the latest model id for live API
+        .model("...") // Please fill in the latest model id for live API
         .instruction("""
             You are a helpful science teacher that explains
             science concepts to kids and teenagers.
@@ -49129,9 +49129,9 @@ The agent stays free while the tool runs, answers whatever else the user brings 
 the result in when it is ready. A runnable example ships as the
 [`non_blocking_tool_agent` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/non_blocking_tool_agent).
 
-!!! note "Requires Python 2.4+"
+!!! note "Requires ADK Python 2.4 or higher"
 
-    `response_scheduling` was added in adk-python 2.4, and support is per model. See
+    The `response_scheduling` feature was added in adk-python 2.4, and support is per model. See
     [Supported models](models.md#live-models).
 
 `response_scheduling` also controls *when* a finished result reaches the user:
