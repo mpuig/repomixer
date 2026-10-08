@@ -40041,6 +40041,213 @@ policy block from a real answer.
 - [Guardrails for live agents](../live/guardrails.md)
 
 ================
+File: docs/integrations/model-consult.md
+================
+---
+catalog_title: Model Consult
+catalog_description: Escalate hard reasoning from fast executors to stronger advisor models
+catalog_tags: ["resilience", "observability"]
+---
+
+# Model Consult tool for ADK
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.11.0</span>
+</div>
+
+Agents that use a single model face a tradeoff. A fast, low-cost model keeps routine steps quick and less resource intensive, but may be less well suited for thorough analysis and decisions on complex tasks. In contrast, a stronger model handles complex decisions well but increases the response time and resource costs for each agent step.
+
+Model Consult lets an agent use the benefits of both. The agent runs on a fast executor model, and when it reaches a decision it cannot resolve confidently, it calls the Model Consult tool to get guidance from a stronger advisor model. The agent then continues the task itself, using its own tools. The agent uses the stronger model only for the steps that need it, and if a consultation fails or the consultation budget is spent, the agent keeps working with the information it already has.
+
+## Use cases
+
+- **Cost optimization**: Run an agent's routine orchestration and tool loops on a lower-cost model, and have the agent consult a stronger model only for the steps that need it.
+- **Policy reconciliation**: Let an agent escalate complex, multi-clause policy decisions to a frontier model, then act on the guidance with its own tools.
+- **Loop rescue**: Help an agent break out of a repetitive loop by having it consult a stronger model when it emits the same tool call repeatedly.
+
+## Prerequisites
+
+- ADK Python v2.11.0 or later.
+- Access to two models: a lower-cost executor model and a stronger advisor model, such as Gemini Flash and Gemini Pro hosted on Google Cloud.
+- Model credentials configured for ADK: either a Google Cloud project with the Vertex AI API enabled, or a Gemini API key.
+
+## Installation
+
+Model Consult is a native tool included directly in the ADK Python package.
+
+```bash
+pip install "google-adk>=2.11.0"
+```
+
+## Use with agent
+
+Attach `ModelConsultTool` to an `Agent` alongside your domain tools, such as the example `lookup_order` function below. The tool registers the `model_consult` function declaration and appends a default escalation policy to the executor's system instruction, giving the agent clear rules on when and how to consult the advisor.
+
+```python
+from google.adk.agents import Agent
+from google.adk.tools import ModelConsultTool
+
+def lookup_order(order_id: str) -> dict[str, str]:
+    """Looks up order status by identifier."""
+    return {"order_id": order_id, "status": "held_for_fraud_review"}
+
+root_agent = Agent(
+    model="gemini-flash-latest",
+    name="support_executor",
+    instruction=(
+        "You are an order support assistant. Resolve customer issues using"
+        " your tools."
+    ),
+    tools=[
+        lookup_order,
+        ModelConsultTool(
+            model="gemini-pro-latest",  # Advisor model
+            max_uses=2,
+            session_max_uses=5,
+            thinking_level="high",
+        ),
+    ],
+)
+```
+
+In this example:
+
+* The `support_executor` agent runs on a fast model (`gemini-flash-latest`) and attempts to resolve the user's issue using its `lookup_order` tool.
+* The executor model determines when to call `model_consult`. In default setup, the executors are instructed to call `model_consult` before committing to a decision, when stuck, and before declaring a task done.
+* `ModelConsultTool` intercepts the call, verifies the max\_uses budget, and packages the current session events along with the `lookup_order` tool's description into a single advisor consultation.
+* The advisor model evaluates the context and returns structured text guidance, allowing the `support_executor` to resume control, execute any recommended tools, and finish the turn.
+
+
+## Available tools
+
+Tool | Description
+---- | -----------
+`model_consult` | Escalates the session history and a specific question to a stronger advisor model to get structured guidance.
+
+## How it works
+
+When the executor calls `model_consult`, `ModelConsultTool` performs four steps and returns a structured dictionary to the executor:
+
+1. **Budget verification** — `ModelConsultTool` checks the per-turn counter against `max_uses` and the session-wide counter against `session_max_uses`. If either cap has been reached, the tool returns `"status": "limit_reached"` immediately without calling the advisor model, and instructs the executor to proceed with the information already gathered.
+2. **Context handover** — `ModelConsultTool` packages the consultation into a single `role='user'` `types.Content` message. When `include_agent_instruction` and `include_tool_inventory` are `True`, the message begins with the resolved executor instruction and sibling tool inventory. Next, `ModelConsultTool` converts the non-partial, non-rewound events in `Session.events` according to `ModelConsultContextConfig`, labeling text parts by speaker and flattening prior tool calls and tool responses into readable text summaries while excluding any in-flight `model_consult` call. Finally, `ModelConsultTool` appends a handoff part containing the active agent name, the executor's question, and any extra `context` string passed by the executor.
+3. **Tool-less advisor call** — `ModelConsultTool` calls the configured advisor `BaseLlm` with tool calling disabled and the default advisor system instruction, or a custom `advisor_instruction` when provided. Because tool declarations are excluded from the advisor request, the advisor cannot execute tools or produce side effects on its own; it can only return text guidance naming which tools the executor should invoke next and with what arguments.
+4. **Structured tool response** — `ModelConsultTool` never raises an exception back into the agent loop. Instead, it returns a dictionary with a `status` value, as described in [Response status values](#response-status-values).
+
+### Response status values
+
+The `status` field of the dictionary that `model_consult` returns has one of the following values:
+
+| Status | Returned when | Fields | Consultation budget |
+| --- | --- | --- | --- |
+| `ok` | The advisor returns guidance. | `guidance`, `advisor_model`, `thinking_level`, `consults`, `usage`, `latency_ms` | Increments the per-turn and session counters. |
+| `limit_reached` | `max_uses` or `session_max_uses` is already exhausted. The advisor model is not called. | `message`, `consults` | Not consumed. |
+| `error` | The advisor call times out, fails, or produces no visible text. | `error`, `message`, `advisor_model`, `consults` | Not consumed. |
+| `invalid_request` | `question` is empty or whitespace-only. | `message` | Not consumed. |
+
+A successful consultation returns the following dictionary structure. The token counts and latency shown are illustrative, not representative measurements:
+
+```json
+{
+    "status": "ok",
+    "guidance": "1. Call lookup_order with order_id='ORD-42'.",
+    "advisor_model": "gemini-3.1-pro-preview",
+    "thinking_level": "high",
+    "consults": {
+        "used_this_turn": 1,
+        "max_uses": 2,
+        "used_this_session": 1,
+        "session_max_uses": 5,
+        "remaining": 1
+    },
+    "usage": {
+        "prompt_tokens": 612,
+        "output_tokens": 184,
+        "thoughts_tokens": 320,
+        "total_tokens": 1116
+    },
+    "latency_ms": 842.5
+}
+```
+
+## Best practices
+
+Model Consult works without extra configuration. Use these practices to improve results:
+
+* Enable thinking on the executor model.
+* Keep the default escalation policy, or steer the escalation policy in executor prompts for your use cases.
+
+### Enable thinking on the executor
+
+The executor decides when to call `model_consult`, so it makes better decisions when it can reason. Enable thinking on the executor model. For example, use a lighter model with dynamic thinking.
+
+### Customize when the executor consults the advisor
+
+An `ModelConsultTool` object adds an escalation policy to the executor's system instruction. By default, the policy tells the executor to call `model_consult` before it commits to a decision, when it is stuck, and before it declares a task done. These cover the planning, diagnosing, and reviewing triggers in the following table.
+
+To replace the default policy, pass your own text in `executor_instruction`. To remove the policy, pass an empty string (`""`).
+
+```python
+ModelConsultTool(
+    executor_instruction=(
+        "Call model_consult before your first response, and whenever a"
+        " tool call fails for a reason you cannot explain."
+    ),
+)
+```
+
+### Common consultation triggers
+
+The following table lists common reasons to consult the advisor, with triggers that you can add to `executor_instruction`.
+
+| Reason | Why it helps | Example triggers |
+| --- | --- | --- |
+| Plan | A wrong interpretation or approach early in a task affects every later step and wastes time and tokens. | * Before the first response.<br>* After the executor gathers facts and before it starts the main work.<br>* When the request proposes a solution, to ask how to verify it.<br>* When several approaches or interpretations are possible and no evidence favors one.<br>* For request types that you know are difficult. |
+| Diagnose | A failure or contradiction means that one of the executor's assumptions is wrong. | * A tool call fails or returns an unexpected result, and the executor cannot explain why.<br>* The executor repeats the same tool call, or a close variation, without new information.<br>* The executor reverses its own work.<br>* Two sources or tool results disagree.<br>* The executor concludes that the request is wrong. |
+| Review | Checking the result against the requirements finds errors and gaps before the user does. | * Before the final answer.<br>* After the executor completes a substantial part of a complex task. |
+
+## Configuration options
+
+The `ModelConsultTool` object configures advisor model selection, consultation budgets, and prompt overrides, while `ModelConsultContextConfig` controls how session events are formatted and bounded before handover.
+
+### ModelConsultTool options
+
+The `ModelConsultTool` class accepts the following constructor arguments:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `model` | `str` \| `BaseLlm` | `'gemini-3.1-pro-preview'` | Advisor model name resolved through ADK's model registry, or a pre-configured `BaseLlm` instance. The default is a preview model and is subject to change. |
+| `max_uses` | `int` | `None` | Maximum successful consultations per user turn. `None` means no per-turn cap. |
+| `session_max_uses` | `int` | `None` | Maximum successful consultations across the entire session. `None` means no session-wide cap. |
+| `thinking_level` | `str` \| `types.ThinkingLevel` | `'high'` | Reasoning effort for the advisor model: `'minimal'`, `'low'`, `'medium'`, `'high'`, a `types.ThinkingLevel` enum value, or `'off'`, `'none'`, or `None` to leave thinking unset. |
+| `max_output_tokens` | `int` | `None` | Optional cap on advisor output tokens, covering both visible output and thinking tokens on reasoning models. |
+| `timeout_seconds` | `float` | `None` | Per-call wall-clock timeout in seconds. `None` means no tool-level timeout. |
+| `context_config` | `ModelConsultContextConfig` | `None` | Controls how session history is packaged and bounded for the advisor. |
+| `executor_instruction` | `str` | `None` | Overrides the default escalation policy automatically appended to the executor's `system_instruction`. Pass `""` to disable automatic injection. |
+| `advisor_instruction` | `str` | `None` | Overrides the default system instruction sent to the advisor model. |
+| `description` | `str` | `None` | Overrides the default tool description shown to the executor model. |
+| `include_agent_instruction` | `bool` | `True` | Forwards the executor agent's own instruction to the advisor so guidance respects the executor's constraints. |
+| `include_tool_inventory` | `bool` | `True` | Includes the names and descriptions of the executor's other tools in the advisor consultation prompt. |
+| `generate_content_config` | `types.GenerateContentConfig` | `None` | Base generation config cloned per advisor call, such as `temperature` or `safety_settings`. |
+| `name` | `str` | `'model_consult'` | Tool name exposed to the executor model. |
+
+### ModelConsultContextConfig options
+
+`ModelConsultContextConfig` controls how `Session.events` is converted into the advisor's input contents:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `include_session` | `bool` | `True` | Sends the converted `Session.events` history when `True`, or omits prior session events when `False`. |
+| `max_events` | `int` | `None` | Keeps at most this many of the most recent non-partial session events before character budgeting. `None` keeps all events. |
+| `max_chars` | `int` | `200000` | Character budget across all handed-over session turns. `None` disables the character budget. |
+| `max_part_chars` | `int` | `4000` | Per-part character cap on rendered tool calls, tool results, and code blocks, with plain text parts allowed eight times this cap. |
+| `include_media` | `bool` | `True` | Forwards inline media and file references to the advisor model when `True`, or replaces them with text placeholders when `False`. Set to `False` if session media should not be sent to the advisor model. |
+| `include_thoughts` | `bool` | `False` | Includes the executor's internal thought parts in the advisor handover when `True`. |
+
+## Additional resources
+
+* [Model Consult Unit Guide](https://github.com/google/adk-python/blob/main/docs/guides/tools/model_consult/model_consult_tool/index.md)
+
+================
 File: docs/integrations/mongodb.md
 ================
 ---
@@ -50858,7 +51065,8 @@ Some typical applications of Plugins are as follows:
 An ADK Plugin extends the `BasePlugin` class and contains one or more
 `callback` methods, indicating where in the agent lifecycle the Plugin should be
 executed. You integrate Plugins into an agent by registering them in your
-agent's `Runner` class. For more information on how and where you can trigger
+agent's `Runner` class, or in Python in your `App` object. For more
+information on how and where you can trigger
 Plugins in your agent application, see
 [Plugin callback hooks](#plugin-callback-hooks).
 
@@ -50866,7 +51074,8 @@ Plugin functionality builds on
 [Callbacks](../callbacks/index.md), which is a key design
 element of the ADK's extensible architecture. While a typical Agent Callback is
 configured on a *single agent, a single tool* for a *specific task*, a Plugin is
-registered *once* on the `Runner` and its callbacks apply *globally* to every
+registered *once*, on the `Runner` or in Python on the `App`, and its
+callbacks apply *globally* to every
 agent, tool, and LLM call managed by that runner. Plugins let you package
 related callback functions together to be used across a workflow. This makes
 Plugins an ideal solution for implementing features that cut across your entire
@@ -50895,6 +51104,15 @@ immediately:
     Lets function tools return content parts directly to the model.
 *   [**Logging**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/logging_plugin.py):
     Log important information at each agent workflow callback point.
+*   [**Debug Logging**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/debug_logging_plugin.py):
+    Captures complete debug information for each invocation to a YAML file.
+*   [**Reflect and Retry Model**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/_reflect_retry_model_plugin.py):
+    Asks the model to try again when a response ends with an error, such as a
+    malformed function call.
+*   [**Tool Call Integrity**](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/_tool_call_integrity_plugin.py):
+    Signs each function call stored in the session with a secret key, and runs
+    a tool only when its call's signature verifies. Tools that run as workflow
+    nodes are not checked.
 
 Check out the [ADK Integrations](/integrations/) page for more native and 
 third party plugins for your agents.
@@ -51095,16 +51313,25 @@ of the agent.
 ### Register Plugin class
 
 Integrate your Plugin class by registering it during your agent initialization
-as part of your `Runner` class, using the `plugins` parameter. You can specify
-multiple Plugins with this parameter. The following code example shows how to
-register the `CountInvocationPlugin` plugin defined in the previous section with
-a simple ADK agent.
+as part of your `Runner` class, or in Python your `App` object, using the
+`plugins` parameter. You can specify multiple Plugins with this parameter. The
+following code example shows how to register the `CountInvocationPlugin` plugin
+defined in the previous section with a simple ADK agent.
+
+!!! note "Python: Use `App(plugins=...)` and not `Runner(plugins=...)`"
+
+    In Python, the `plugins` parameter of `Runner` and `InMemoryRunner` is
+    deprecated and raises a `DeprecationWarning`. Set `plugins` on an
+    [`App`](../apps/index.md) instead and pass that `App` to the runner as
+    `InMemoryRunner(app=app)`. Passing both `plugins` and `app` raises a
+    `ValueError`.
 
 === "Python"
 
     ```py
     from google.adk.runners import InMemoryRunner
     from google.adk import Agent
+    from google.adk.apps import App
     from google.adk.tools.tool_context import ToolContext
     from google.genai import types
     import asyncio
@@ -51115,25 +51342,27 @@ a simple ADK agent.
     async def hello_world(tool_context: ToolContext, query: str):
         print(f'Hello world: query is [{query}]')
 
-        root_agent = Agent(
-            model='gemini-flash-latest',
-            name='hello_world',
-            description='Prints hello world with user query.',
-            instruction="""Use hello_world tool to print hello world and user query.
-            """,
-            tools=[hello_world],
-        )
+    root_agent = Agent(
+        model='gemini-flash-latest',
+        name='hello_world',
+        description='Prints hello world with user query.',
+        instruction="""Use hello_world tool to print hello world and user query.
+        """,
+        tools=[hello_world],
+    )
+
+    app = App(
+        name='test_app_with_plugin',
+        root_agent=root_agent,
+
+        # Add your plugin here. You can add multiple plugins.
+        plugins=[CountInvocationPlugin()],
+    )
 
     async def main():
         """Main entry point for the agent."""
         prompt = 'hello world'
-        runner = InMemoryRunner(
-            agent=root_agent,
-            app_name='test_app_with_plugin',
-
-            # Add your plugin here. You can add multiple plugins.
-            plugins=[CountInvocationPlugin()],
-        )
+        runner = InMemoryRunner(app=app)
 
         # The rest is the same as starting a regular ADK runner.
         session = await runner.session_service.create_session(
@@ -51410,6 +51639,17 @@ a simple ADK agent.
     --8<-- "examples/kotlin/snippets/plugins/CountInvocationPlugin.kt:register_plugin"
     ```
 
+In Python, you can also load a Plugin without changing your agent code by
+passing its import path to `adk web` or `adk api_server` with the
+`--extra_plugins` option. ADK adds it after any Plugins your `App` registers.
+Pass a class only if its constructor accepts a `name` argument; otherwise,
+pass a Plugin instance defined at module level. Repeat the option to load more
+than one Plugin.
+
+```shell
+adk web --extra_plugins=google.adk.plugins.LoggingPlugin /path/to/agents
+```
+
 ### Run the agent with the Plugin
 
 Run the plugin as you typically would. The following shows how to run the
@@ -51488,6 +51728,22 @@ executed. Furthermore, if a Plugin-level agent callback returns any value, and
 not an empty (`None`) response, the Agent, Model, or Tool-level callback is *not
 executed* (skipped).
 
+In Python, keep the following behavior in mind when you register more than one
+Plugin:
+
+-   **Order:** ADK runs each callback in the order the Plugins appear in the
+    `plugins` list, and stops at the first Plugin that returns a value other
+    than `None`.
+-   **Names:** Each Plugin needs a unique `name`. Two Plugins with the same
+    name raise a `ValueError` when the `Runner` is created, so give each
+    instance of the same class its own name.
+-   **Exceptions:** An exception raised in a Plugin callback reaches your code
+    as a `RuntimeError`, with the original exception as its `__cause__`.
+    The `on_agent_error_callback` and `on_run_error_callback` hooks behave
+    differently:
+    ADK runs them on every Plugin and logs an exception raised in them instead
+    of raising it.
+
 The Plugin design establishes a hierarchy of code execution and separates
 global concerns from local agent logic. A Plugin is the stateful *module* you
 build, such as `PerformanceMonitoringPlugin`, while the callback hooks are the
@@ -51495,7 +51751,7 @@ specific *functions* within that module that get executed. This architecture
 differs fundamentally from standard Agent Callbacks in these critical ways:
 
 -   **Scope:** Plugin hooks are *global*. You register a Plugin once on the
-    `Runner`, and its hooks apply universally to every Agent, Model, and Tool
+    `Runner`, or in Python on the `App`, and its hooks apply universally to every Agent, Model, and Tool
     it manages. In contrast, Agent Callbacks are *local*, configured
     individually on a specific agent instance.
 -   **Execution Order:** Plugins have *precedence*. For any given event, the
@@ -51535,7 +51791,8 @@ state of a single agent.</td>
     </tr>
     <tr>
       <td><strong>Configuration</strong></td>
-      <td>Configure once on the <code>Runner</code>.</td>
+      <td>Configure once on the <code>Runner</code>, or in Python on the
+<code>App</code>.</td>
       <td>Configure individually on each <code>BaseAgent</code> instance.</td>
     </tr>
     <tr>
@@ -51551,9 +51808,10 @@ state of a single agent.</td>
 You define when a Plugin is called with the callback functions to define in
 your Plugin class. Callbacks are available when a user message is received,
 before and after an `Runner`, `Agent`, `Model`, or `Tool` is called, for
-`Events`, and when a `Model`, or `Tool` error occurs. These callbacks include,
-and take precedence over, the any callbacks defined within your Agent, Model,
-and Tool classes.
+`Events`, and when a `Model`, or `Tool` error occurs. In Python, error
+callbacks also run when an `Agent` raises an exception and when the run itself
+fails. These callbacks include, and take precedence over, any callbacks
+defined within your Agent, Model, and Tool classes.
 
 The following diagram illustrates callback points where you can attach and run
 Plugin functionality during your agents workflow:
@@ -51570,6 +51828,7 @@ more detail.
 -   [Agent execution callbacks](#agent-execution-callbacks)
 -   [Model callbacks](#model-callbacks)
 -   [Tool callbacks](#tool-callbacks)
+-   [Event callbacks](#event-callbacks)
 -   [Runner end callbacks](#runner-end-callbacks)
 
 ### User Message callbacks
@@ -51641,6 +51900,8 @@ logic begins.
 -   **Purpose:** Global setup or initialization before the invocation runs.
 -   **Flow Control:** Return a `types.Content` object to **halt execution**:
     the `Runner` exits early and ends the run with that content as the result.
+    In Python, this early exit applies to every root agent, including an
+    `LlmAgent` or a `Workflow`.
     Return `None` to proceed normally.
 
 The following code example shows the basic syntax of this callback:
@@ -51687,7 +51948,10 @@ The following code example shows the basic syntax of this callback:
 before the agent's main work begins. The main work encompasses the agent's
 entire process for handling the request, which could involve calling models or
 tools. After the agent has finished all its steps and prepared a result, the
-`after_agent_callback` runs.
+`after_agent_callback` runs. In Python, if the agent's run raises an exception,
+`on_agent_error_callback(*, agent, callback_context, error)` runs instead of
+`after_agent_callback`. That callback only observes the failure: its return
+value is ignored and the original exception is still raised.
 
 **Caution:** Plugins that implement these callbacks are executed *before* the
 Agent-level callbacks are executed. Furthermore, if a Plugin-level agent
@@ -51701,23 +51965,22 @@ see
 ### Model callbacks
 
 Model callbacks **(`before_model`, `after_model`, `on_model_error`)** happen
-before and after a Model object executes. The Plugins feature also supports a
-callback in the event of an error, as detailed below:
+before and after a Model object executes, or when the model call fails, as
+detailed below:
 
 -   If an agent needs to call an AI model, `before_model_callback` runs first.
 -   If the model call is successful, `after_model_callback` runs next.
 -   If the model call fails with an exception, the `on_model_error_callback`
     is triggered instead, allowing for graceful recovery.
 
-**Caution:** Plugins that implement the **`before_model`** and  `**after_model`
-**callback methods are executed *before* the Model-level callbacks are executed.
+**Caution:** Plugins that implement the **`before_model`** and **`after_model`**
+callback methods are executed *before* the Model-level callbacks are executed.
 Furthermore, if a Plugin-level model callback returns anything other than a
 `None` or null response, the Model-level callback is *not executed* (skipped).
 
 #### Model on error callback details
 
-The on error callback for Model objects is only supported by the Plugins
-feature works as follows:
+The on error callback for Model objects works as follows:
 
 -   **When It Runs:** When an exception is raised during the model call.
 -   **Common Use Cases:** Graceful error handling, logging the specific
@@ -51730,7 +51993,7 @@ feature works as follows:
 
 **Note**: If the execution of the Model object returns a `LlmResponse`, the
 system resumes the execution flow, and `after_model_callback` will be triggered
-normally.****
+normally.
 
 The following code example shows the basic syntax of this callback:
 
@@ -51781,9 +52044,8 @@ The following code example shows the basic syntax of this callback:
 ### Tool callbacks
 
 Tool callbacks **(`before_tool`, `after_tool`, `on_tool_error`)** for Plugins
-happen before or after the execution of a tool, or when an error occurs. The
-Plugins feature also supports a callback in the event of an error, as detailed
-below:\
+happen before or after the execution of a tool, or when an error occurs, as
+detailed below:
 
 -   When an agent executes a Tool, `before_tool_callback` runs first.
 -   If the tool executes successfully, `after_tool_callback` runs next.
@@ -51799,8 +52061,7 @@ is *not executed* (skipped).
 
 #### Tool on error callback details
 
-The on error callback for Tool objects is only supported by the Plugins feature
-works as follows:
+The on error callback for Tool objects works as follows:
 
 -   **When It Runs:** When an exception is raised during the execution of a
     tool's `run` method.
@@ -51871,8 +52132,10 @@ before it's streamed to the client.
     to the user. An agent's run may produce multiple events.
 -   **Purpose:** Useful for modifying or enriching events (e.g., adding
     metadata) or for triggering side effects based on specific events.
--   **Flow Control:** Return an `Event` object to **replace** the original
-    event.
+-   **Flow Control:** Return an `Event` object to **override** the original
+    event. In Python, ADK merges your event onto the original: only the fields
+    you set are applied, and `id`, `invocation_id`, and `timestamp` always come
+    from the original event.
 
 The following code example shows the basic syntax of this callback:
 
@@ -51935,7 +52198,7 @@ The following code example shows the basic syntax of this callback:
     ```py
     async def after_run_callback(
         self, *, invocation_context: InvocationContext
-    ) -> Optional[None]:
+    ) -> None:
     ```
 
 === "TypeScript"
@@ -51963,6 +52226,18 @@ The following code example shows the basic syntax of this callback:
       // Your implementation here
     }
     ```
+
+In Python, ADK notifies your Plugin of two more lifecycle events:
+
+-   **`on_run_error_callback(*, invocation_context, error)`**: Runs instead of
+    `after_run_callback` when the run fails with an unhandled exception. This
+    callback only observes the failure: its return value is ignored and the
+    original exception is still raised.
+-   **`close()`**: Runs once per Plugin when you close the `Runner` with
+    `await runner.close()`, not once per run. Use it to release resources the
+    Plugin owns, such as an HTTP client or a metrics exporter. Each `close()`
+    call is bounded by the runner's `plugin_close_timeout`, five seconds by
+    default.
 
 ## Next steps
 
@@ -58014,8 +58289,15 @@ You can define [skills in code](#inline-skills) or load
     from google.adk.tools import skill_toolset
 
     weather_skill = load_skill_from_dir(
-        pathlib.Path(__file__).parent / "skills" / "weather_skill"
+        pathlib.Path(__file__).parent / "skills" / "weather-skill"
     )
+
+    def get_weather_tool(city: str) -> dict:
+        """Retrieves the current weather report for a specified city."""
+        return {
+            "status": "success",
+            "report": f"The weather in {city} is sunny with a temperature of 25°C.",
+        }
 
     my_skill_toolset = skill_toolset.SkillToolset(
         skills=[weather_skill],
@@ -58089,9 +58371,12 @@ You can define [skills in code](#inline-skills) or load
     For a complete example, see the code sample in
     [skills](https://github.com/google/adk-kotlin/tree/main/examples/src/main/kotlin/com/google/adk/kt/examples/skills).
 
-!!! note "Check your working directory"
+!!! note "Check where `skills/` is resolved from"
 
-        Ensure that 'skills/' directory exist in your current working directory and contains the sub-directories for the Skills you want to use in your agent.
+    The Python and TypeScript examples above resolve `skills/` relative to the
+    directory holding the agent source file, so place `skills/` next to that
+    file. The Go and Kotlin examples pass a relative `skills` path, which
+    resolves relative to the current working directory instead.
 
 ## Skill structure
 
@@ -58142,6 +58427,10 @@ meets the following requirements:
 *   **description**:
     *   Must not be empty.
     *   Must be 1024 characters or less.
+
+!!! note "Directory must match the name"
+    
+    When loading a skill from the filesystem, the directory name must match the **name** in the front matter, or loading fails.
 
 ### Skills directory structure
 
