@@ -452,7 +452,7 @@ To install the latest version of ADK 1.x, follow these steps:
         .venv\Scripts\activate.bat
         ```
 
-    === "Windows Powershell"
+    === "Windows PowerShell"
 
         ```console
         .venv\Scripts\Activate.ps1
@@ -1361,7 +1361,7 @@ compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
 to `JdkA2AHttpClient()`:
 
 ```kotlin title="build.gradle.kts"
-implementation("com.google.adk:google-adk-kotlin-a2a:1.3.1")
+implementation("com.google.adk:google-adk-kotlin-a2a:1.4.0")
 implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.3.2.Final")
 ```
 
@@ -4247,8 +4247,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:1.4.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -5475,8 +5475,8 @@ build highly specific and complex agentic workflows.
     `BaseAgent` have been superseded
 
     by more flexible workflow structures, including
-    [graph-based workflows](/workflows/graphs/) and
-    [dynamic workflows](/workflows/dynamic/). You should
+    [graph-based workflows](/graphs/) and
+    [dynamic workflows](/graphs/dynamic/). You should
     evaluate the capabilities of these workflow mechanisms
     ***before*** building a custom agent for your
     target workflow.
@@ -5507,9 +5507,9 @@ method calls other sub-agents, manages state, and handles events.
 
 ### Why build Custom Agents?
 
-After reviewing exising ADK [agent workflow](/workflows/) approaches and architectures,
+After reviewing existing ADK [agent workflow](/workflows/) approaches and architectures,
 you may want to consider building a custom workflow agent if those mechanisms cannot
-meet one or more of following requirements for your project:
+meet one or more of the following requirements for your project:
 
 * **Conditional Logic:** Executing different sub-agents or taking different paths based on runtime conditions or the results of previous steps.
 * **Complex State Management:** Implementing intricate logic for maintaining and updating state throughout the workflow beyond simple sequential passing.
@@ -14115,7 +14115,7 @@ To proceed, confirm that your agent code is configured as follows:
     3. Your go.mod and go.sum files are present in your project directory to manage
        dependencies.
 
-    Refer to the following section for more details. You can also find a [sample app](https://github.com/google/adk-docs/tree/main/examples/go/cloud-run) in the Github repo.
+    Refer to the following section for more details. You can also find a [sample app](https://github.com/google/adk-docs/tree/main/examples/go/cloud-run) in the GitHub repo.
 
 === "Java"
 
@@ -14123,7 +14123,7 @@ To proceed, confirm that your agent code is configured as follows:
     2. Your agent variable is global and follows the format `public static final BaseAgent ROOT_AGENT`.
     3. Your agent definition is present in a static class method.
 
-    Refer to the following section for more details. You can also find a [sample app](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run) in the Github repo.
+    Refer to the following section for more details. You can also find a [sample app](https://github.com/google/adk-docs/tree/main/examples/java/cloud-run) in the GitHub repo.
 
 
 ## Environment variables
@@ -14620,12 +14620,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>1.11.0</version>
+             <version>1.12.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>1.11.0</version>
+             <version>1.12.0</version>
           </dependency>
         </dependencies>
 
@@ -15495,7 +15495,7 @@ You'll need the service URL provided after deployment.
 
     If you deployed your agent with the UI enabled:
 
-    You can test your agent by simply navigating to the kubernetes service URL in your web browser.
+    You can test your agent by simply navigating to the Kubernetes service URL in your web browser.
 
     The ADK dev UI allows you to interact with your agent, manage sessions, and view execution details directly in the browser.
 
@@ -15868,7 +15868,7 @@ type, a score of 1.0 is awarded for that invocation, otherwise the score is 0.0.
 The final value is the average of these scores across all invocations in the
 eval case.
 
-The comparison can be done using one of following match types:
+The comparison can be done using one of the following match types:
 
 *   **`EXACT`**: Requires a perfect match between the actual and expected tool
     calls, with no extra or missing tool calls.
@@ -17566,7 +17566,7 @@ This approach involves creating individual test files, each representing a singl
 -   `Expected Intermediate Agent Responses`: These are the natural language
     responses that the agent (or sub-agents) generates as it moves towards
     generating a final answer. These natural language responses are usually an
-    artifact of an multi-agent system, where your root agent depends on sub-agents to achieve a goal. These intermediate responses, may or may not be of
+    artifact of a multi-agent system, where your root agent depends on sub-agents to achieve a goal. These intermediate responses, may or may not be of
     interest to the end user, but for a developer/owner of the system, are of
     critical importance, as they give you the confidence that the agent went
     through the right path to generate final response.
@@ -18012,10 +18012,10 @@ For details on how to set up an eval with user simulation, see
 
 As a developer, you can evaluate your agents using the ADK in the following ways:
 
-- **Web-based UI (**`adk web`**):** Evaluate agents interactively through a web-based interface.
-- **Programmatically (**`pytest`**)**: Integrate evaluation into your testing pipeline using `pytest` and test files.
-- **Command Line Interface (**`adk eval`**):** Run evaluations on an existing evaluation set file directly from the command line.
-- **Conformance Testing** (**`adk conformance`**):** Execute automated tests against your baseline files to detect unexpected deviations or regressions.
+- **Web-based UI** (`adk web`): Evaluate agents interactively through a web-based interface.
+- **Programmatically** (`pytest`): Integrate evaluation into your testing pipeline using `pytest` and test files.
+- **Command Line Interface** (`adk eval`): Run evaluations on an existing evaluation set file directly from the command line.
+- **Conformance Testing** (`adk conformance`): Execute automated tests against your baseline files to detect unexpected deviations or regressions.
 
 ### Run evaluations via the web UI
 
@@ -18130,7 +18130,7 @@ adk eval \
 Here are the details for each command line argument:
 
 * `AGENT_MODULE_FILE_PATH`: The path to the agent directory, not a file, whose `__init__.py` exposes a module by the name "agent". "agent" module contains a `root_agent`.
-* `EVAL_SET_FILE_PATH_OR_ID`: The path to evaluations file(s), or the id of an eval set managed by ADK and created with `adk eval_set create`. You can specify one or more of either, but you cannot mix file paths and eval set ids in the same command. For each eval set, all evals run by default. If you want to run only specific evals from a eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name or id, demarcated by a colon `:` .
+* `EVAL_SET_FILE_PATH_OR_ID`: The path to evaluations file(s), or the id of an eval set managed by ADK and created with `adk eval_set create`. You can specify one or more of either, but you cannot mix file paths and eval set ids in the same command. For each eval set, all evals run by default. If you want to run only specific evals from an eval set, first create a comma separated list of eval names and then add that as a suffix to the eval set file name or id, demarcated by a colon `:` .
 * For example: `sample_eval_set_file.json:eval_1,eval_2,eval_3`
   `This will only run eval_1, eval_2 and eval_3 from sample_eval_set_file.json`
 * `CONFIG_FILE_PATH`: The path to the config file.
@@ -20493,13 +20493,13 @@ across supported languages. For a guided introduction, start with the
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.11.0</version>
+                <version>1.12.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.11.0</version>
+                <version>1.12.0</version>
             </dependency>
         </dependencies>
 
@@ -20514,8 +20514,8 @@ across supported languages. For a guided introduction, start with the
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:1.11.0'
-        implementation 'com.google.adk:google-adk-dev:1.11.0'
+        implementation 'com.google.adk:google-adk:1.12.0'
+        implementation 'com.google.adk:google-adk-dev:1.12.0'
     }
     ```
 
@@ -20536,8 +20536,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
+        implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
     }
     ```
 
@@ -20653,7 +20653,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.11.0</version>
+        <version>1.12.0</version>
     </dependency>
 </dependencies>
 ```
@@ -20688,13 +20688,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.11.0</version>
+                <version>1.12.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.11.0</version>
+                <version>1.12.0</version>
             </dependency>
         </dependencies>
 
@@ -20949,8 +20949,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
 }
 ```
 
@@ -20970,9 +20970,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
-        implementation("com.google.adk:google-adk-kotlin-webserver:1.3.1")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
+        implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:1.4.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
     }
 
     kotlin {
@@ -21076,9 +21076,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.3.1")
-    implementation("com.google.adk:google-adk-kotlin-webserver:1.3.1")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:1.4.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
 }
 ```
 
@@ -21503,7 +21503,7 @@ npm install -D @google/adk-devtools
 ### Define the agent code
 
 Create the code for a basic agent, including a simple implementation of an ADK
-[Function Tool](/tools-custom/function-tools/), called `getCurrentTime`.
+[Function Tool](/tools-custom/function-tools/), called `get_current_time`.
 Create an `agent.ts` file in your project directory and add the following code:
 
 ```typescript title="my-agent/agent.ts"
@@ -21527,7 +21527,7 @@ export const rootAgent = new LlmAgent({
   model: 'gemini-flash-latest',
   description: 'Tells the current time in a specified city.',
   instruction: `You are a helpful assistant that tells the current time in a city.
-                Use the 'getCurrentTime' tool for this purpose.`,
+                Use the 'get_current_time' tool for this purpose.`,
   tools: [getCurrentTime],
 });
 ```
@@ -23976,7 +23976,7 @@ Grounding is the process that connects your agent to real-time information from 
 
 This diagram illustrates the step-by-step process of how a user query results in a grounded response.
 
-![](../assets/google_search_grd_dataflow.png)
+![Google Search grounding data flow](../assets/google_search_grd_dataflow.png)
 
 ### Detailed Description
 
@@ -26609,10 +26609,10 @@ By integrating AgentOps, ADK developers can significantly enhance their ability 
 
 ## Further Information
 
-To get started, [create an AgentOps account](http://app.agentops.ai). For feature requests or bug reports, please reach out to the AgentOps team on the [AgentOps Repo](https://github.com/AgentOps-AI/agentops).
+To get started, [create an AgentOps account](https://app.agentops.ai). For feature requests or bug reports, please reach out to the AgentOps team on the [AgentOps Repo](https://github.com/AgentOps-AI/agentops).
 
 ### Extra links
-🐦 [X](http://x.com/agentopsai)   •   📢 [Discord](https://discord.gg/UgJyyxx7uc)   •   🖇️ [AgentOps Dashboard](http://app.agentops.ai)   •   📙 [Documentation](http://docs.agentops.ai)
+🐦 [X](https://x.com/agentopsai)   •   📢 [Discord](https://discord.gg/UgJyyxx7uc)   •   🖇️ [AgentOps Dashboard](https://app.agentops.ai)   •   📙 [Documentation](https://docs.agentops.ai)
 
 ================
 File: docs/integrations/agentphone.md
@@ -28681,7 +28681,7 @@ The `pyarrow` dependency is no longer included in the general `gcp` extra. If
     core, so add the integrations artifact:
 
     ```kotlin title="build.gradle.kts"
-    implementation("com.google.adk:google-adk-kotlin-integrations:1.3.1")
+    implementation("com.google.adk:google-adk-kotlin-integrations:1.4.0")
     ```
 
     ```kotlin title="BigQueryAnalyticsExample.kt"
@@ -33055,7 +33055,7 @@ to be able to use the Computer Use Toolset.
         .venv\Scripts\activate.bat
         ```
 
-    === "Windows Powershell"
+    === "Windows PowerShell"
 
         ```console
         .venv\Scripts\Activate.ps1
@@ -33085,7 +33085,7 @@ To set up the required software libraries for the Computer Use Toolset:
 ## Use the tool
 
 Use the Computer Use Toolset by adding it as a tool to your agent. When you
-configure the tool, you must provide a implementation of the `BaseComputer`
+configure the tool, you must provide an implementation of the `BaseComputer`
 class which defines an interface for an agent to use a computer. In the
 following example, the `PlaywrightComputer` class is defined for this purpose.
 You can find the code for this implementation in `playwright.py` file of the
@@ -35612,7 +35612,7 @@ ADK provides a native integration for managing persistent agent session states u
 
     Use the same version for both `google-adk` and
     `google-adk-firestore-session-service` to guarantee compatibility. The
-    examples below use `1.11.0`; check for the latest ADK version and use it in
+    examples below use `1.12.0`; check for the latest ADK version and use it in
     both dependencies.
 
 Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
@@ -35626,13 +35626,13 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.11.0</version>
+        <version>1.12.0</version>
     </dependency>
     <!-- Firestore Session Service -->
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk-firestore-session-service</artifactId>
-        <version>1.11.0</version>
+        <version>1.12.0</version>
     </dependency>
 </dependencies>
 ```
@@ -35642,9 +35642,9 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
 ```gradle
 dependencies {
     // ADK Core
-    implementation 'com.google.adk:google-adk:1.11.0'
+    implementation 'com.google.adk:google-adk:1.12.0'
     // Firestore Session Service
-    implementation 'com.google.adk:google-adk-firestore-session-service:1.11.0'
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.12.0'
 }
 ```
 
@@ -41516,7 +41516,7 @@ language.
 
 ## Available tools
 
-Tool <img width="200px"/> | Description
+Tool | Description
 ---- | -----------
 `notion-search` | Search across your Notion workspace and connected tools like Slack, Google Drive, and Jira. Falls back to basic workspace search if AI features aren’t available.
 `notion-fetch` | Retrieves content from a Notion page or database by its URL
@@ -46946,7 +46946,7 @@ Replace your existing pom.xml with the following.
     <auto-value.version>1.11.0</auto-value.version>
     <!-- Main class for exec-maven-plugin -->
     <exec.mainClass>samples.liveaudio.LiveAudioRun</exec.mainClass>
-    <google-adk.version>1.11.0</google-adk.version>
+    <google-adk.version>1.12.0</google-adk.version>
   </properties>
 
   <dependencyManagement>
@@ -47498,7 +47498,7 @@ entirely on your local machine. Select `google_search_agent`.
 
 ### Try with voice and video
 
-To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the the following questions in voice. The agent will use the google_search tool to get the latest information to answer those questions. You will hear the answer in voice in real-time.
+To try with voice, reload the web browser, click the microphone button to enable the voice input, and ask the following questions in voice. The agent will use the google_search tool to get the latest information to answer those questions. You will hear the answer in voice in real-time.
 
 * What is the weather in New York?
 * What is the time in New York?
@@ -52190,6 +52190,7 @@ The following code example shows the basic syntax of this callback:
         invocation_context: InvocationContext,
         user_message: types.Content,
     ) -> Optional[types.Content]:
+        ...
     ```
 
 === "TypeScript"
@@ -52247,6 +52248,7 @@ The following code example shows the basic syntax of this callback:
     async def before_run_callback(
         self, *, invocation_context: InvocationContext
     ) -> Optional[types.Content]:
+        ...
     ```
 
 === "TypeScript"
@@ -52342,6 +52344,7 @@ The following code example shows the basic syntax of this callback:
         llm_request: LlmRequest,
         error: Exception,
     ) -> Optional[LlmResponse]:
+        ...
     ```
 
 === "TypeScript"
@@ -52421,6 +52424,7 @@ The following code example shows the basic syntax of this callback:
         tool_context: ToolContext,
         error: Exception,
     ) -> Optional[dict]:
+        ...
     ```
 
 === "TypeScript"
@@ -52480,6 +52484,7 @@ The following code example shows the basic syntax of this callback:
     async def on_event_callback(
         self, *, invocation_context: InvocationContext, event: Event
     ) -> Optional[Event]:
+        ...
     ```
 
 === "TypeScript"
@@ -52534,6 +52539,7 @@ The following code example shows the basic syntax of this callback:
     async def after_run_callback(
         self, *, invocation_context: InvocationContext
     ) -> None:
+        ...
     ```
 
 === "TypeScript"
@@ -60334,7 +60340,7 @@ File: docs/tools-custom/mcp-tools/index.md
 # Model Context Protocol tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">Typescript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The **Model Context Protocol (MCP)** is an open standard for connecting generative AI models to external data sources, tools, and systems. Think of it as a universal connection mechanism that simplifies how LLMs obtain context, execute actions, and interact with various systems.
@@ -61667,7 +61673,7 @@ except Exception as e:
 **Step 7: Return Tool Result**
 
 * After a successful API call, process the result into a dictionary format that is useful for the LLM.
-* **Crucially, include a**  along with the data.
+* **Crucially, include a**  `status` field along with the data.
 
 ```py
 # Inside your tool function, after successful API call
@@ -66361,7 +66367,7 @@ applications with ADK. Explore our collection below and happy building:
 
     ---
 
-    Build an multi-agent workflow including agent delegation,
+    Build a multi-agent workflow including agent delegation,
     session management, and safety callbacks.
 
     [:octicons-arrow-right-24: Build an agent team](/tutorials/agent-team/)
@@ -67287,7 +67293,7 @@ parent after completing a task.
 When using this self-managed agent team approach, the subagents are assigned an
 operating ***mode*** to manage their behavior and limit their scope of work.
 These ***modes*** set general behavior guidelines for subagents and create more
-predictable and reliable mulit-agent workflows. The following settings are
+predictable and reliable multi-agent workflows. The following settings are
 available for collaboration modes:
 
 -   ***Chat***: Full user interaction, manual return to parent agent
@@ -68604,6 +68610,8 @@ hide:
 
 <!-- FAQ Section -->
 {{% include '_includes/homepage/_faq.md' %}}
+
+</div>
 
 <script>
 function initHomepage() {
