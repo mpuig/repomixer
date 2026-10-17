@@ -602,20 +602,18 @@ paths in your Go source files and your `go.mod` file.
 all import statements in your source files from `google.golang.org/adk/...` to
 `google.golang.org/adk/v2/...`.
 
-### Agent Execution: Agent interface changes
+### Agent Execution: Custom Agents
 
-In ADK Go 1.x, agents implemented the `agent.Agent` interface by providing a
-`Run` method. In ADK Go 2.0, agents are evaluated as individual *nodes* within
-the new Workflow Graph engine.
+In ADK Go 2.0, agents can also run as individual *nodes* within the new
+Workflow Graph engine. Custom agents keep working as they did in 1.x: you pass a
+`Run` function to `agent.New`, and ADK calls it with an
+`agent.InvocationContext` and runs the agent's before and after callbacks
+around it. The `agent.Agent` interface keeps the same `Run` signature.
 
-*   **Execution driver custom overrides:** Custom agent types that override
-    internal execution behavior may no longer work as expected. The Workflow
-    Graph engine manages execution scheduling and event emission, and custom
-    implementations that bypass these mechanisms are silently ignored.
-
-**Migration action:** Move custom execution logic into standardized
-`BeforeAgentCallback` and `AfterAgentCallback` hooks to safely inject custom
-logic into the execution lifecycle.
+**Migration action:** No change to how you create or register a custom agent.
+Code inside `Run` still needs the import path change above and any other
+changes on this page, such as the new `session.NewEvent` signature. See
+[Custom agents](/agents/custom-agents/).
 
 ### Event Construction: `session.NewEvent` signature change
 
@@ -1183,7 +1181,7 @@ In the Go ADK, the agent card is generated dynamically when you expose an agent 
 
 #### How it works
 
-The main agent uses `remoteagent.New` to consume the remote agent (`prime_agent` in our example). As you can see below, it requires the `Name`, `Description`, and the `AgentCardSource` URL.
+The main agent uses `remoteagent.NewA2A` from the `google.golang.org/adk/v2/agent/remoteagent/v2` package to consume the remote agent (`prime_agent` in our example). As you can see below, it sets the `Name`, an optional `Description`, and an `AgentCardProvider`. `NewA2A` requires either a static `AgentCard` or an `AgentCardProvider`, and `remoteagent.NewAgentCardProvider` creates a provider from a URL or a local file path. The older `google.golang.org/adk/v2/agent/remoteagent` package, without the `/v2` suffix, is deprecated.
 
 ```go title="a2a_basic/main.go"
 --8<-- "examples/go/a2a_basic/main.go:new-prime-agent"
@@ -4965,6 +4963,15 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
         --8<-- "examples/java/snippets/src/main/java/agents/workflow/LoopAgentExample.java:init"
         ```
 
+!!! tip "Global instructions for all agents"
+
+    Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
+    on your `App` ([Python](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py), 
+    [TypeScript](https://github.com/google/adk-js/blob/main/core/src/plugins/global_instruction_plugin.ts), 
+    [Java](https://github.com/google/adk-java/blob/main/core/src/main/java/com/google/adk/plugins/GlobalInstructionPlugin.java)) 
+    or the `GlobalInstruction` parameter on your agent 
+    ([Go](https://github.com/google/adk-go/blob/main/agent/llmagent/llmagent.go)).
+
 ================
 File: docs/agents/workflow-agents/parallel-agents.md
 ================
@@ -5053,6 +5060,15 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
          --8<-- "examples/java/snippets/src/main/java/agents/workflow/ParallelResearchPipeline.java:full_code"
         ```
 
+!!! tip "Global instructions for all agents"
+
+    Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
+    on your `App` ([Python](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py), 
+    [TypeScript](https://github.com/google/adk-js/blob/main/core/src/plugins/global_instruction_plugin.ts), 
+    [Java](https://github.com/google/adk-java/blob/main/core/src/main/java/com/google/adk/plugins/GlobalInstructionPlugin.java)) 
+    or the `GlobalInstruction` parameter on your agent 
+    ([Go](https://github.com/google/adk-go/blob/main/agent/llmagent/llmagent.go)).
+
 ================
 File: docs/agents/workflow-agents/sequential-agents.md
 ================
@@ -5117,7 +5133,7 @@ in the following code snippet:
 SequentialAgent(sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAgent])
 ```
 
-This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](/agents/llm-agents/##data-handling)**.
+This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](/agents/llm-agents/#data-handling)**.
 
 ???+ "Code"
 
@@ -5141,13 +5157,22 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
         --8<-- "examples/java/snippets/src/main/java/agents/workflow/SequentialAgentExample.java:init"
         ```
 
+!!! tip "Global instructions for all agents"
+
+    Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
+    on your `App` ([Python](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py), 
+    [TypeScript](https://github.com/google/adk-js/blob/main/core/src/plugins/global_instruction_plugin.ts), 
+    [Java](https://github.com/google/adk-java/blob/main/core/src/main/java/com/google/adk/plugins/GlobalInstructionPlugin.java)) 
+    or the `GlobalInstruction` parameter on your agent 
+    ([Go](https://github.com/google/adk-go/blob/main/agent/llmagent/llmagent.go)).
+
 ================
 File: docs/agents/config.md
 ================
 # Build agents with Agent Config
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 The ADK Agent Config feature lets you build an ADK workflow without writing
@@ -5195,7 +5220,7 @@ the Agent Config files.
 To set up ADK for use with Agent Config:
 
 1.  Install the ADK Python libraries by following the
-    [Installation](/get-started/installation/#python)
+    [Installation](/get-started/installation/)
     instructions. *Python is currently required.* For more information, see the
     [Known limitations](#known-limitations).
 1.  Verify that ADK is installed by running the following command in your
@@ -5209,7 +5234,7 @@ To set up ADK for use with Agent Config:
     If the `adk` command fails to run and the version is not listed in step 2, make
     sure your Python environment is active. Execute `source .venv/bin/activate` in
     your terminal on Mac and Linux. For other platform commands, see the
-    [Installation](/get-started/installation/#python)
+    [Installation](/get-started/installation/)
     page.
 
 ### Build an agent
@@ -5539,7 +5564,7 @@ The core of any custom agent is the method where you define its unique asynchron
 
 === "Go"
 
-    In Go, you implement the `Run` method as part of a struct that satisfies the `agent.Agent` interface. The actual logic is typically a method on your custom agent struct.
+    In Go, you create a custom agent by passing a `Run` function to `agent.New` in an `agent.Config`. You can't implement the `agent.Agent` interface directly, because it includes an unexported method. The actual logic is typically a method on your custom agent struct, which you pass as `Run`.
 
     *   **Signature:** `Run(ctx agent.InvocationContext) iter.Seq2[*session.Event, error]`
     *   **Iterator:** The `Run` method returns an iterator (`iter.Seq2`) that yields events and errors. This is the standard way to handle streaming results from an agent's execution.
@@ -7032,6 +7057,8 @@ tells the agent:
     To apply shared rules or a consistent personality to *all* 
     agents in your system, use `GlobalInstructionPlugin` instead of 
     the deprecated `global_instruction` parameter.
+     For ADK Go set `GlobalInstruction` or
+    `GlobalInstructionProvider` on `llmagent.Config`.
 
 ## Equip the agent with tools
 
@@ -7340,6 +7367,8 @@ schema definitions.
     response string under `output_key` instead of the parsed object (see
     [`LlmAgent`](https://github.com/google/adk-kotlin/blob/v1.0.0/core/src/commonMain/kotlin/com/google/adk/kt/agents/LlmAgent.kt)).
 
+
+
 === "Python"
 
     The input and output schema is typically a `Pydantic` BaseModel.
@@ -7520,11 +7549,18 @@ Control whether the agent receives the prior conversation history.
     a workflow node. For more information on composing agents in graph-based
     workflows, see [Graph-based agent workflows](/graphs/).
 
+    An agent that runs as a `ModeSingleTurn` node, such as a workflow node,
+    sees only the current turn, as if `IncludeContents` were
+    `IncludeContentsNone`. Since ADK Go v2.4.0, you can keep the conversation
+    history by setting `IncludeContents` to `llmagent.IncludeContentsDefault`
+    explicitly. Earlier versions ignore that setting for single-turn nodes.
+
 ### Configure a planner
 
 <div class="language-support-tag" title="">
    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
 </div>
+
 
 **`planner` (Optional):** Assign a `BasePlanner` instance to enable multi-step
 reasoning and planning before execution. There are two main planners:
@@ -7784,7 +7820,8 @@ the following:
   v2.0.0, use `workflow.NewAgentNode` to wrap any LLM agent as a workflow node.
 - **Multi-agent systems:** Advanced strategies for agent interaction, including
   agent transfer (`disallow_transfer_to_parent`, `disallow_transfer_to_peers`),
-  and consistent identity and rules for every agent in your app (`GlobalInstructionPlugin`). See [Multi-agent
+  and consistent identity and rules for every agent in your app
+  (`GlobalInstructionPlugin`, or `GlobalInstruction` in Go). See [Multi-agent
   workflows](/workflows/) and [collaborative agent
   teams](/workflows/collaboration/).
 
@@ -10427,9 +10464,9 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 ## LLM Interaction Callbacks
 
-These callbacks are specific to `LlmAgent` and provide hooks around the interaction with the Large Language Model. In Python, `LlmAgent` also accepts an `on_model_error_callback`, which runs when the model call raises an exception. If it returns an `LlmResponse`, the exception is suppressed and that response is used instead.
+These callbacks are specific to `LlmAgent` and provide hooks around the interaction with the Large Language Model. In Python, `LlmAgent` also accepts an `on_model_error_callback`, which runs when the model call raises an exception. If it returns an `LlmResponse`, the exception is suppressed and that response is used instead. In Go, set `OnModelErrorCallbacks` on `llmagent.Config`. These callbacks run when the model call returns an error. If a callback returns a non-nil `*model.LLMResponse` and a nil error, that response is used instead. If it returns an error, that error replaces the original one.
 
-The model callbacks also run in a live bidirectional session, where the callbacks fire at different points in the turn and blocking has different effects than in a request-response flow. See [Guardrails for live agents](../live/guardrails.md).
+The model callbacks also run in a live bidirectional session, where the callbacks fire at different points in the turn and blocking has different effects than in a request-response flow. See [Guardrails for live agents](../live/guardrails.md). In Go, model callbacks, including `OnModelErrorCallbacks`, don't run in a live session.
 
 ### Before Model Callback
 
@@ -10508,7 +10545,7 @@ If the callback returns `None` (or a `Maybe.empty()` object in Java), the LLM co
 
 ## Tool Execution Callbacks
 
-These callbacks are also specific to `LlmAgent` and trigger around the execution of tools that the LLM might request, including `FunctionTool` and `AgentTool`. In Python, `LlmAgent` also accepts an `on_tool_error_callback`, which runs when the tool raises an exception. If it returns a `dict`, the exception is suppressed and that `dict` value is used as the tool result.
+These callbacks are also specific to `LlmAgent` and trigger around the execution of tools that the LLM might request, including `FunctionTool` and `AgentTool`. In Python, `LlmAgent` also accepts an `on_tool_error_callback`, which runs when the tool raises an exception. If it returns a `dict`, the exception is suppressed and that `dict` value is used as the tool result. In Go, set `OnToolErrorCallbacks` on `llmagent.Config`. These callbacks run when a tool call fails, except for errors from streaming tools. If a callback returns a non-nil `map[string]any` and a nil error, that map is used as the tool result. If it returns an error, that error replaces the original one.
 
 ### Before Tool Callback
 
@@ -11864,7 +11901,8 @@ Here are the primary context flavors you will encounter:
     - Direct `user_content` access.
 
 !!! note
-  In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by the `Context` type.
+
+    In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by the `Context` type.
 
     === "Python"
 
@@ -17860,17 +17898,17 @@ Because the background data (like LLM requests and tool calls) is complex, you s
 
 1. Start your ADK web server with the recording plugin turned on:
 
-```shell
-adk web -v --extra_plugins=google.adk.cli.plugins.recordings_plugin.RecordingsPlugin /path/to/agents
-```
+    ```shell
+    adk web -v --extra_plugins=google.adk.cli.plugins.recordings_plugin.RecordingsPlugin /path/to/agents
+    ```
 
-   2. Next, open a new terminal window and tell ADK to create the baseline files based on your spec.yaml:
+2. Next, open a new terminal window and tell ADK to create the baseline files based on your spec.yaml:
 
-```shell
-adk conformance record tests/category/test_name none
-```
+    ```shell
+    adk conformance record tests/category/test_name none
+    ```
 
-   The trailing streaming-mode argument is required. Use `none` to record `generated-recordings.yaml` and `generated-session.yaml`, or `sse` to record `generated-recordings-sse.yaml` and `generated-session-sse.yaml` instead. The `bidi` mode is not supported for recording.
+    The trailing streaming-mode argument is required. Use `none` to record `generated-recordings.yaml` and `generated-session.yaml`, or `sse` to record `generated-recordings-sse.yaml` and `generated-session-sse.yaml` instead. The `bidi` mode is not supported for recording.
 
 This automatically runs the scenario, records all the interactions, and saves the generated-recordings.yaml and generated-session.yaml files exactly where they need to be.
 
@@ -23337,6 +23375,15 @@ that can include agents, Tools, your code, and even additional workflow agents.
 For information about building advanced pipelines, see
 [Build graph routes for workflow agents](/graphs/routes/).
 
+!!! tip "Global instructions for all agents"
+
+    Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
+    on your `App` ([Python](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py), 
+    [TypeScript](https://github.com/google/adk-js/blob/main/core/src/plugins/global_instruction_plugin.ts), 
+    [Java](https://github.com/google/adk-java/blob/main/core/src/main/java/com/google/adk/plugins/GlobalInstructionPlugin.java)) 
+    or the `GlobalInstruction` parameter on your agent 
+    ([Go](https://github.com/google/adk-go/blob/main/agent/llmagent/llmagent.go)).
+
 ## Known limitations {#known-limitations}
 
 There are some known limitations with graph-based workflows. They
@@ -26149,7 +26196,7 @@ For Google MCP servers, authentication headers are automatically passed in.
       "global", "us-central1".
     - `header_provider` (Callable, optional): A callable that takes a
       ReadonlyContext and returns a dictionary of custom headers to be included in
-      requests made by the [McpToolset](/tools-custom/mcp-tools/#mcptoolset-class)
+      requests made by the [McpToolset](/tools-custom/mcp-tools/#direct-mcp-tool-integration-mcptoolset)
       that `get_mcp_toolset` returns, to the target MCP server. These headers do
       not affect calls to the Agent Registry API itself, and they do not affect
       requests made by
@@ -41972,9 +42019,9 @@ specific tool identifiers.
 
 ## Additional resources
 
-- [PayPal MCP Server Documentation](https://docs.paypal.ai/developer/tools/ai/mcp-quickstart)
+- [PayPal MCP Server Documentation](https://github.com/paypal/paypal-mcp-server#paypal-model-context-protocol)
 - [PayPal MCP Server Repository](https://github.com/paypal/paypal-mcp-server)
-- [PayPal Agent Tools Reference](https://docs.paypal.ai/developer/tools/ai/agent-tools-ref)
+- [PayPal Agent Tools Reference](https://github.com/paypal/paypal-mcp-server#available-tools)
 
 ================
 File: docs/integrations/perseus-vault.md
@@ -52670,6 +52717,19 @@ Use the following command to start the ADK web interface:
     and `webui` are required to use the web interface together; either can be
     omitted if you only need the API or UI independently.
 
+    The `AgentLoader` field of `launcher.Config` sets which agents the
+    launcher serves. To serve several agents from one launcher, create it with
+    `agent.NewMultiLoader`. Each agent is listed as a separate app that you can
+    select in the web interface. Agent names must be unique:
+
+    ```go
+    loader, err := agent.NewMultiLoader(rootAgent, otherAgent)
+    if err != nil {
+        log.Fatalf("Failed to create agent loader: %v", err)
+    }
+    config := &launcher.Config{AgentLoader: loader}
+    ```
+
 === "Java"
 
     Make sure to update the port number.
@@ -55312,7 +55372,7 @@ Agent to support a workflow Resume.
 
 The following example shows the required code modifications to the example
 StoryFlowAgent class shown in the
-[Custom Agents](/agents/custom-agents/#full-code-example)
+[Custom Agents](/agents/custom-agents/#storyflow-agent-code-listing)
 guide:
 
 ```python
@@ -59858,38 +59918,38 @@ To test your custom server, you need to build an ADK agent that acts as a client
 
 1. Set up your agent in a new directory such as `./adk_agent_samples/mcp_client_agent/`. Create an `agent.py` file and include an `__init__.py` alongside it to make it discoverable.
 
-```python
-from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool import McpToolset
-from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
-from mcp import StdioServerParameters
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
+    from mcp import StdioServerParameters
 
-# IMPORTANT: Provide the absolute path to the server script you built previously
-MCP_SERVER_SCRIPT = "/path/to/your/my_adk_mcp_server.py"
+    # IMPORTANT: Provide the absolute path to the server script you built previously
+    MCP_SERVER_SCRIPT = "/path/to/your/my_adk_mcp_server.py"
 
-root_agent = LlmAgent(
-    model='gemini-flash-latest',
-    name='web_reader_mcp_client_agent',
-    instruction="Use the 'load_web_page' tool to fetch content from a URL provided by the user.",
-    tools=[
-        McpToolset(
-            connection_params=StdioConnectionParams(
-                server_params=StdioServerParameters(
-                    command='python3', 
-                    args=[MCP_SERVER_SCRIPT], 
+    root_agent = LlmAgent(
+        model='gemini-flash-latest',
+        name='web_reader_mcp_client_agent',
+        instruction="Use the 'load_web_page' tool to fetch content from a URL provided by the user.",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command='python3', 
+                        args=[MCP_SERVER_SCRIPT], 
+                    )
                 )
             )
-        )
-    ],
-)
-```
+        ],
+    )
+    ```
 
 2. Navigate to your agent's parent directory in the terminal:
 
-```bash
-cd ./adk_agent_samples
-adk web
-```
+    ```bash
+    cd ./adk_agent_samples
+    adk web
+    ```
 
 3. Open the ADK Web UI and select the web_reader_mcp_client_agent.
 4. Test the connection with a prompt such as: *Load the content from "https://example.com"*.
@@ -60479,7 +60539,6 @@ This example sets up an ADK agent that connects to a local MCP file system serve
     - Interact with the Agent: select `filesystem_assistant` from the drop-down menu and prompt the Agent with commands: *List files in the current directory* or *What is the content of another_file.md?*
 
     ![MCP with ADK Web - FileSystem Example](../../assets/adk-tool-mcp-filesystem-adk-web-demo.png)
-    ```
 
 === "TypeScript"
 
@@ -60630,7 +60689,8 @@ Unlike the previous local process example, this pattern connects your agent to a
         ],
     )
     ```
-    **Step 2**: Set environment variable before running `adk web`, set you Google API key in your terminal
+
+    **Step 2**: Set environment variable before running `adk web`, set your Google API key in your terminal
       
       ```bash
       export GOOGLE_MAPS_API_KEY="YOUR_ACTUAL_GOOGLE_MAPS_API_KEY"
@@ -60670,7 +60730,7 @@ Unlike the previous local process example, this pattern connects your agent to a
             }),
         ],
     });
-     ``` 
+    ```
      
 ---
 
@@ -63376,9 +63436,9 @@ Think of the tools as a specialized toolkit that the agent's intelligent core (t
 ADK offers flexibility by supporting several types of tools:
 
 1. **[Function Tools](/tools-custom/function-tools/):** Tools created by you, tailored to your specific application's needs.
-    * **[Functions/Methods](/tools-custom/function-tools/#1-function-tool):** Define standard synchronous functions or methods in your code (e.g., Python def).
-    * **[Agents-as-Tools](/tools-custom/function-tools/#3-agent-as-a-tool):** Use another, potentially specialized, agent as a tool for a parent agent.
-    * **[Long Running Function Tools](/tools-custom/function-tools/#2-long-running-function-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
+    * **[Functions/Methods](/tools-custom/function-tools/#function-tool):** Define standard synchronous functions or methods in your code (e.g., Python def).
+    * **[Agents-as-Tools](/tools-custom/function-tools/#agent-tool):** Use another, potentially specialized, agent as a tool for a parent agent.
+    * **[Long Running Function Tools](/tools-custom/function-tools/#long-run-tool):** Support for tools that perform asynchronous operations or take significant time to complete.
 2. **[Built-in Tools](/integrations/):** Ready-to-use tools provided by the framework for common tasks.
         Examples: Google Search, Code Execution, Retrieval-Augmented Generation (RAG).
 3. **Third-Party Tools:** Integrate tools seamlessly from popular external libraries.
@@ -67418,6 +67478,15 @@ each mode:
 
 **Table 1.** Comparison of ADK Collaboration agent ***mode*** behavior and
 limitations.
+
+!!! tip "Global instructions for all agents"
+
+    Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
+    on your `App` ([Python](https://github.com/google/adk-python/blob/main/src/google/adk/plugins/global_instruction_plugin.py), 
+    [TypeScript](https://github.com/google/adk-js/blob/main/core/src/plugins/global_instruction_plugin.ts), 
+    [Java](https://github.com/google/adk-java/blob/main/core/src/main/java/com/google/adk/plugins/GlobalInstructionPlugin.java)) 
+    or the `GlobalInstruction` parameter on your agent 
+    ([Go](https://github.com/google/adk-go/blob/main/agent/llmagent/llmagent.go)).
 
 ## Operating considerations
 
