@@ -1276,12 +1276,12 @@ In Java, rather than manually generating requests, ADK relies on the official A2
 
 ### 1. Getting the Sample Code { #getting-the-sample-code }
 
-The native sample matching this quickstart workflow in Java can be found in the `adk-java` source code under `contrib/samples/a2a_basic`.
+The native sample matching this quickstart workflow in Java can be found in the `adk-java` source code under `examples/a2a_basic`.
 
-You can navigate to the [**`a2a_basic`** sample](https://github.com/google/adk-java/tree/main/contrib/samples/a2a_basic):
+You can navigate to the [**`a2a_basic`** sample](https://github.com/google/adk-java/tree/main/examples/a2a_basic):
 
 ```bash
-cd contrib/samples/a2a_basic
+cd examples/a2a_basic
 ```
 
 ### 2. Start the Remote Prime Agent server { #start-the-remote-prime-agent-server }
@@ -1290,7 +1290,7 @@ To show how your ADK agent can consume a remote agent via A2A, you'll first need
 
 ```bash
 # In adk-java root, start the pre-configured Quarkus remote service on port 9090
-./mvnw -f contrib/samples/a2a_server/pom.xml quarkus:dev
+./mvnw -f examples/a2a_server/pom.xml quarkus:dev
 ```
 
 Once running successfully, the agent will be accessible via HTTP endpoints locally.
@@ -1306,7 +1306,7 @@ For an ADK Java webservice, the agent card is generally accessible dynamically u
 In another terminal, you can run the client agent:
 
 ```bash
-./mvnw -f contrib/samples/a2a_basic/pom.xml exec:java -Dexec.args="http://localhost:9090"
+./mvnw -f examples/a2a_basic/pom.xml exec:java -Dexec.args="http://localhost:9090"
 ```
 
 #### How it works
@@ -1799,7 +1799,7 @@ In Go, you expose an agent by using the A2A launcher, which dynamically generate
 └─────────────────┘                             └───────────────────────────────┘
 ```
 
-The sample consists of :
+The sample consists of:
 
 - **Remote Prime Agent** (`remote_a2a/check_prime_agent/main.go`): This is the agent that you want to expose so that other agents can use it via A2A. It is an agent that handles prime number checking. It becomes exposed using the A2A launcher.
 - **Root Agent** (`main.go`): A simple agent that is just calling the remote prime agent.
@@ -1939,10 +1939,10 @@ Using Quarkus, you map your agent into an A2A execution endpoint without manuall
 
 ### 1. Getting the Sample Code { #getting-the-sample-code }
 
-The fastest way to get started is by checking the standalone Quarkus app inside the `contrib/samples/a2a_server` folder within the [**`adk-java`** repo](https://github.com/google/adk-java).
+The fastest way to get started is by checking the standalone Quarkus app inside the `examples/a2a_server` folder within the [**`adk-java`** repo](https://github.com/google/adk-java).
 
 ```bash
-cd contrib/samples/a2a_server
+cd examples/a2a_server
 ```
 
 ### 2. How it works
@@ -1960,7 +1960,7 @@ The app handles incoming JSON-RPC calls over HTTP mounted on `/a2a/remote/v1/mes
 Within the native ADK structure, you can run the Quarkus dev mode task:
 
 ```bash
-./mvnw -f contrib/samples/a2a_server/pom.xml quarkus:dev
+./mvnw -f examples/a2a_server/pom.xml quarkus:dev
 ```
 
 Once executed, Quarkus automatically hosts your A2A compliant REST paths. A manual `curl` allows you to immediately smoke test the payload using native A2A specifications:
@@ -2054,7 +2054,7 @@ After:
 └────────────────┘
 ```
 
-The sample consists of :
+The sample consists of:
 
 - **Remote Hello World Agent** (`remote_a2a/hello_world/agent.py`): This is the agent that you want to expose so that other agents can use it via A2A. It is an agent that handles dice rolling and prime number checking. It becomes exposed using the `to_a2a()` function and is served using `uvicorn`.
 - **Root Agent** (`agent.py`): A simple agent that is just calling the remote Hello World agent.
@@ -5476,7 +5476,7 @@ limitations:
 ## Next steps
 
 For ideas on what to build, see the
-[sample agent configs](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C//+root_agent.yaml&type=code)
+[sample agent configs](https://github.com/search?q=repo:google/adk-python+path:/%5Econtributing%5C/samples%5C/.*%5C/root_agent%5C.yaml$/&type=code)
 in the `adk-python` repository. For detailed information on the syntax and settings supported by
 the Agent Config format, see the
 [Agent Config syntax reference](/api-reference/agentconfig/).
@@ -6756,10 +6756,10 @@ to combine and orchestrate multiple agents and code execution tasks.
 Building an agent with just a model, instructions, and tools is a great place
 to start for most developers. As your agent grows in capability and complexity,
 you are likely to want to break up the capabilities of your agent application
-in order to better manage its behavior, work within model operating context limits,
-and modularize your code to keep it manageable. ADK agent ***Workflow*** architectures
-allow you to evolve an agent from a monolithic structure to more modular code and
-project structures.
+in order to better manage its behavior, work within model operating context
+limits, and modularize your code to keep it manageable. ADK agent ***Workflow***
+architectures allow you to evolve an agent from a monolithic structure to more
+modular code and project structures.
 
 ## Grow from single agent to workflows
 
@@ -6774,8 +6774,8 @@ project, or as you discover limitations of a single-agent approach, such as:
   does not reliably complete all instructions, or perform them with the required
   level of quality or speed.
 * **Context limitations:** You may discover that the amount of data required to
-  perform an agent task exceeds the context window limitations of the AI model you
-  are using.
+  perform an agent task exceeds the context window limitations of the AI model
+  you are using.
 * **Agent code modularity:** As the complexity and organization of your agent
   code grows, you may want to break up the agent capabilities to make your code
   more manageable or enable re-use of agent code for other agent projects.
@@ -6824,6 +6824,10 @@ features:
     Hook into specific events during an agent's execution lifecycle to add
     logging, monitoring, or custom side-effects without altering core agent
     logic.
+
+*   [**Service registration**](service-registration.md):
+    Register custom backend services for sessions, artifacts, memory, and
+    Agent2Agent (A2A) task stores.
 
 ## Next Steps
 
@@ -8141,6 +8145,127 @@ usage](#basic-usage) for the full runner setup.
     ```
 
 ================
+File: docs/agents/service-registration.md
+================
+# Service registration
+
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.34.0</span>
+</div>
+
+Extend ADK runtime capabilities by registering custom services for sessions,
+artifacts, memory, and Agent2Agent (A2A) task stores. Registering custom
+services allows you to integrate your own backend systems and storage providers
+into your agents.
+
+Register custom services using either of the following methods:
+
+*   **`services.yaml`**: A YAML configuration file for services that instantiate
+    with simple constructors.
+*   **`services.py`**: A Python script for services that require custom
+    initialization or complex logic.
+
+## Register services with `services.yaml`
+
+Use a `services.yaml` or `services.yml` file to register services that
+instantiate with a simple constructor (for example, `MyService(uri="...")`).
+Place this file in the agent directory (for `adk run`) or the agents root
+directory (for `adk web` and `adk api_server`).
+
+Define your custom services in `services.yaml`:
+
+```yaml
+services:
+  - scheme: mysession
+    type: session
+    class: my_custom_package.modules.MyCustomSessionService
+  - scheme: myartifact
+    type: artifact
+    class: my_custom_package.storage.MyCustomArtifactService
+  - scheme: mymemory
+    type: memory
+    class: my_custom_package.modules.MyCustomMemoryService
+  - scheme: mytaskstore
+    type: task_store
+    class: my_custom_package.tasks.MyCustomTaskStore
+```
+
+The `services.yaml` file supports the following properties:
+
+*   `scheme`: The URI scheme that triggers the custom service (for example,
+    `mysession://`).
+*   `type`: The type of service, which can be `session`, `artifact`, `memory`,
+    or `task_store`.
+*   `class`: The fully qualified class name of the service implementation.
+
+## Register services with `services.py`
+
+Use a `services.py` file, placed in the same location as `services.yaml`, for
+complex initialization or when you require more control over the service
+creation process.
+
+Register custom `session`, `artifact`, and `memory` services in `services.py`:
+
+```python
+from google.adk.cli.service_registry import get_service_registry
+from my_custom_package.modules import MyCustomSessionService
+from my_custom_package.storage import MyCustomArtifactService
+from my_custom_package.memory import MyCustomMemoryService
+
+def my_session_factory(uri: str, **kwargs):
+    # Add your custom logic here.
+    return MyCustomSessionService(uri=uri, **kwargs)
+
+def my_artifact_factory(uri: str, **kwargs):
+    """Factory function to instantiate a custom artifact service."""
+    return MyCustomArtifactService(uri=uri, **kwargs)
+
+def my_memory_factory(uri: str, **kwargs):
+    """Factory function to instantiate a custom memory service."""
+    return MyCustomMemoryService(uri=uri, **kwargs)
+
+# Retrieve the registry.
+registry = get_service_registry()
+
+# Register session, artifact, and memory services.
+registry.register_session_service("mysession", my_session_factory)
+registry.register_artifact_service("myartifact", my_artifact_factory)
+registry.register_memory_service("mymemory", my_memory_factory)
+```
+
+The example script performs the following tasks:
+
+1.  Import `get_service_registry` to retrieve the service registry instance.
+2.  Define factory functions (such as `my_session_factory`) that take a URI and
+    keyword arguments, and return an instance of the custom service.
+3.  Use `register_session_service`, `register_artifact_service`, and
+    `register_memory_service` to register the factory functions with the
+    desired schemes (such as `mysession`).
+
+## Load services
+
+When you run your agent with ADK command-line tools (`adk run`, `adk web`, or
+`adk api_server`), ADK automatically discovers and loads custom services from
+`services.yaml` (or `services.yml`) and `services.py`.
+
+### Discovery locations
+
+ADK locates configuration files based on the command you run:
+
+*   **`adk run`**: Discovers service files in the agent directory.
+*   **`adk web` and `adk api_server`**: Discover service files in the agents
+    root directory passed to the command.
+
+### Loading order and precedence
+
+When both `services.yaml` and `services.py` are present in the target directory:
+
+1.  **Loading order**: ADK loads `services.yaml` first, followed by
+    `services.py`.
+2.  **Precedence**: If a service with the same scheme is defined in both files,
+    the definition in `services.py` takes precedence.
+
+================
 File: docs/api-reference/java/legal/dejavufonts.md
 ================
 ## DejaVu fonts v2.37
@@ -9048,7 +9173,7 @@ Understanding artifacts involves grasping a few key components: the service that
 * **Retrieval:**
   * `load_artifact(..., version=None)` (default): Retrieves the *latest* available version of the artifact.
   * `load_artifact(..., version=N)`: Retrieves the specific version `N`.
-* **Listing Versions:** The `list_versions` method (on the service, not context) can be used to find all existing version numbers for an artifact.
+* **Listing Versions:** The `list_versions` method (on the service, not context) can be used to find all existing version numbers for an artifact. For ADK Go, call `Versions` on the `artifact.Service`.
 
 ### Namespacing (Session vs. User)
 
@@ -10375,7 +10500,10 @@ These callbacks are available on *any* agent that inherits from `BaseAgent` (inc
 
 **When:** Called *immediately before* the agent's `_run_async_impl` (or `_run_live_impl`) method is executed. It runs after the agent's `InvocationContext` is created but *before* its core logic begins.
 
-**Purpose:** Ideal for setting up resources or state needed only for this specific agent's run, performing validation checks on the session state (callback\_context.state) before execution starts, logging the entry point of the agent's activity, or potentially modifying the invocation context before the core logic uses it.
+**Purpose:** Validate the session state through the callback context,
+log the start of the agent's run, or return content to skip the agent's core
+logic. In ADK Python, changes made through `callback_context.state` are tracked in
+`callback_context.actions.state_delta`.
 
 
 ??? "Code"
@@ -13753,10 +13881,10 @@ File: docs/deploy/agent-runtime/index.md
 Google Cloud Agent Platform
 [Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 is a set of modular services that help developers scale and govern agents in
-production. The Agent Runtime runtime enables you to deploy agents in production
+production. Agent Runtime enables you to deploy agents in production
 with end-to-end managed infrastructure so you can focus on creating intelligent
 and impactful agents. When you deploy an ADK agent to Agent Runtime, your code
-runs in the *Agent Runtime runtime* environment, which is part of the larger set
+runs in the *Agent Runtime* environment, which is part of the larger set
 of agent services provided by the Agent Runtime product.
 
 This guide includes the following deployment paths, which serve different
@@ -13764,7 +13892,7 @@ purposes:
 
 *   **[Standard deployment](/deploy/agent-runtime/deploy/)**: Follow
     this standard deployment path if you want to carefully manage deploying an ADK agent to the Agent
-    Runtime runtime. This deployment path uses Cloud Console, ADK command line
+    Runtime. This deployment path uses Cloud Console, ADK command line
     interface, and provides step-by-step instructions. This path is recommended
     for users who are already familiar with configuring Google Cloud projects,
     and users preparing for production deployments.
@@ -13775,7 +13903,7 @@ purposes:
     for your ADK agent. You need a Google Cloud project with billing enabled.
     Agents CLI in Agent Platform helps you deploy ADK projects quickly and it
     includes advanced service configurations that extend the core capabilities of
-    the Agent Runtime runtime for more mature use cases.
+    Agent Runtime for more mature use cases.
 
 !!! note "Agent Runtime service on Google Cloud"
 
@@ -13816,7 +13944,7 @@ File: docs/deploy/agent-runtime/test.md
 These instructions explain how to test an ADK agent deployed to the
 [Agent Runtime](https://cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/overview)
 runtime environment. Before using these instructions, you need to have completed
-the deployment of your agent to the Agent Runtime runtime environment using one
+the deployment of your agent to the Agent Runtime environment using one
 of the [available methods](/deploy/agent-runtime/). This guide shows you
 how to view, interact, and test your deployed agent through the Google Cloud
 Console, and interact with the agent using REST API calls or the Agent Platform SDK
@@ -14305,6 +14433,7 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
     * `--memory_service_uri TEXT`: (Optional) The URI of the memory service, for example: `rag://<rag_corpus_id>`, `agentengine://<agent_engine>`, or `memory://`.
     * `--port INTEGER`: (Optional) The port number the ADK API server will listen on within the container. Defaults to 8000.
     * `--with_ui`: (Optional) If included, deploys the ADK dev UI alongside the agent API server. By default, only the API server is deployed.
+    * `--with_cloud_run_sandbox`: (Optional) Enables the Cloud Run sandbox for code execution. Disabled by default. When enabled, ADK uses `gcloud beta run deploy` with `--sandbox-launcher`.
     * `--temp_folder TEXT`: (Optional) Specifies a directory for storing intermediate files generated during the deployment process. Defaults to a timestamped folder in the system's temporary directory. *(Note: This option is generally not needed unless troubleshooting issues).*
     * `--help`: Show the help message and exit.
 
@@ -18439,11 +18568,11 @@ The below `EvalConfig` shows the default user simulator configuration:
     placeholders using
     [Jinja](https://jinja.palletsprojects.com/en/stable/templates/#) syntax (*do
     not substitute values in advance!*):
-    *   `{{ stop_signal }}` : text to be generated when the user simulator
+    *   `{{ stop_signal }}`: text to be generated when the user simulator
         decides that the conversation is over.
-    *   `{{ conversation_plan }}` : the overall plan for the conversation that
+    *   `{{ conversation_plan }}`: the overall plan for the conversation that
         the user simulator must follow.
-    *   `{{ conversation_history }}` : the conversation between the user and the
+    *   `{{ conversation_history }}`: the conversation between the user and the
         agent so far.
     *   You can also access the `UserPersona` object through the `{{ persona }}`
         placeholder.
@@ -31453,6 +31582,14 @@ These are a set of tools aimed to provide integration with BigQuery, namely:
 
 They are packaged in the toolset `BigQueryToolset`.
 
+!!! tip "Location setting"
+
+    To select a BigQuery location, pass a `BigQueryToolConfig(location="US")`
+    from `google.adk.integrations.bigquery.config` as the toolset's
+    `bigquery_tool_config`. Choose a [location](https://cloud.google.com/bigquery/docs/locations)
+    that matches your dataset; leaving it unset lets BigQuery determine
+    the location.
+
 ## Authentication
 
 The `BigQueryToolset` supports several authentication mechanisms through `BigQueryCredentialsConfig`.
@@ -32898,7 +33035,7 @@ Code Execution tool with your ADK agents:
 The Agent Runtime Code Execution tool has the following parameters. You must set
 one of the following resource parameters:
 
--   **`sandbox_resource_name`** : A sandbox resource path to an
+-   **`sandbox_resource_name`**: A sandbox resource path to an
     existing sandbox environment it uses for each tool call. The expected
 string format is as follows:
     ```
@@ -46042,7 +46179,11 @@ catalog_tags: ["observability"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[W&B Weave](https://weave-docs.wandb.ai/) provides a powerful platform for logging and visualizing model calls. By integrating Google ADK with Weave, you can track and analyze your agent's performance and behavior using OpenTelemetry (OTEL) traces.
+[W&B Weave](https://docs.coreweave.com/products/wandb/weave) provides a powerful platform for logging and visualizing model calls. By integrating Google ADK with Weave, you can track and analyze your agent's performance and behavior using OpenTelemetry (OTEL) traces.
+
+For grouped agent conversations, turns, and tool details, use the
+[CoreWeave Agent Lens integration](https://docs.coreweave.com/products/agent-lens/integrations/google-adk). The guide below
+keeps the classic Weave Calls exporter and its existing workflow.
 
 ## Prerequisites
 
@@ -46162,11 +46303,11 @@ By following these steps, you can effectively integrate Google ADK with Weave, e
 
 ## Resources
 
-- **[Send OpenTelemetry Traces to Weave](https://weave-docs.wandb.ai/guides/tracking/otel)** - Comprehensive guide on configuring OTEL with Weave, including authentication and advanced configuration options.
+- **[Send OpenTelemetry Traces to Weave](https://docs.coreweave.com/products/wandb/weave/guides/tracking/otel)** - Comprehensive guide on configuring OTEL with Weave, including authentication and advanced configuration options.
 
-- **[Navigate the Trace View](https://weave-docs.wandb.ai/guides/tracking/trace-tree)** - Learn how to effectively analyze and debug your traces in the Weave UI, including understanding trace hierarchies and span details.
+- **[Navigate the Trace View](https://docs.coreweave.com/products/wandb/weave/guides/tracking/trace-tree)** - Learn how to effectively analyze and debug your traces in the Weave UI, including understanding trace hierarchies and span details.
 
-- **[Weave Integrations](https://weave-docs.wandb.ai/guides/integrations/)** - Explore other framework integrations and see how Weave can work with your entire AI stack.
+- **[Weave Integrations](https://docs.coreweave.com/products/wandb/weave/guides/integrations/)** - Explore other framework integrations and see how Weave can work with your entire AI stack.
 
 ================
 File: docs/integrations/windsor-ai.md
@@ -49385,10 +49526,11 @@ identifiers, or `run_live()` raises `ValueError: Session not found`.
 
 ## LiveRequestQueue
 
-`LiveRequestQueue` is your channel for sending messages to the agent. Every message is a
+[`LiveRequestQueue`](../api-reference/python/google-adk.html#google.adk.agents.LiveRequestQueue)
+is your channel for sending messages to the agent. Every message is a
 `LiveRequest`, a single container for the different kinds of input:
 
-```python title='Reference: <a href="../api-reference/python/google-adk.html#google.adk.agents.LiveRequestQueue">LiveRequestQueue</a>'
+```python title='Reference: LiveRequestQueue'
 class LiveRequest(BaseModel):
     content: Optional[Content] = None            # Text and structured data
     blob: Optional[Blob] = None                  # Audio/video bytes
@@ -49445,12 +49587,13 @@ thread; to feed it from another thread, use `loop.call_soon_threadsafe()`.
 
 ## The run_live() loop
 
-`run_live()` is an async generator. It yields `Event` objects the moment they are generated,
+[`run_live()`](../api-reference/python/google-adk.html#google.adk.runners.Runner.run_live) is an async
+generator. It yields `Event` objects the moment they are generated,
 with no buffering or polling, while you send new input concurrently through the queue. That
 concurrency is what makes interruption work: the agent can be speaking while the user starts
 talking over it.
 
-```python title='Reference: <a href="../api-reference/python/google-adk.html#google.adk.runners.Runner.run_live">Runner.run_live()</a>'
+```python title='Reference: Runner.run_live()'
 async for event in runner.run_live(
     user_id=user_id,
     session_id=session_id,
@@ -50431,7 +50574,7 @@ You can set the logging level for your ADK agent using standard logging controls
     If using the Go launcher, you can also enable GCP export via the CLI flag:
 
     ```bash
-    go run main.go web -otel_to_cloud
+    go run main.go web -otel_to_cloud api
     ```
 
 === "Kotlin"
@@ -51644,7 +51787,6 @@ methods, as shown in the following code example:
     	"fmt"
 
     	"google.golang.org/adk/v2/agent"
-    	"google.golang.org/adk/v2/agent/llmagent"
     	"google.golang.org/adk/v2/model"
     	"google.golang.org/adk/v2/plugin"
         "google.golang.org/genai"
@@ -51671,7 +51813,7 @@ methods, as shown in the following code example:
     /**
      * Count agent runs.
      */
-    func (p *CountInvocationPlugin) BeforeAgentCallback(ctx agent.CallbackContext) (*genai.Content, error) {
+    func (p *CountInvocationPlugin) BeforeAgentCallback(ctx agent.Context) (*genai.Content, error) {
     	p.AgentCount++
     	fmt.Printf("[Plugin] Agent run count: %d\n", p.AgentCount)
     	return nil, nil
@@ -51680,7 +51822,7 @@ methods, as shown in the following code example:
     /**
      * Count LLM requests.
      */
-    func (p *CountInvocationPlugin) BeforeModelCallback(ctx agent.CallbackContext, req *model.LLMRequest) (*model.LLMResponse, error) {
+    func (p *CountInvocationPlugin) BeforeModelCallback(ctx agent.Context, req *model.LLMRequest) (*model.LLMResponse, error) {
     	p.LlmRequestCount++
     	fmt.Printf("[Plugin] LLM request count: %d\n", p.LlmRequestCount)
     	return nil, nil
@@ -52425,7 +52567,7 @@ The following code example shows the basic syntax of this callback:
 === "Go"
 
     ```go
-    func (p *MyPlugin) OnModelErrorCallback(ctx agent.CallbackContext, req *model.LLMRequest, err error) (*model.LLMResponse, error) {
+    func (p *MyPlugin) OnModelErrorCallback(ctx agent.Context, req *model.LLMRequest, err error) (*model.LLMResponse, error) {
       // Your implementation here
       return nil, nil
     }
@@ -52631,6 +52773,27 @@ In Python, ADK notifies your Plugin of two more lifecycle events:
     Plugin owns, such as an HTTP client or a metrics exporter. Each `close()`
     call is bounded by the runner's `plugin_close_timeout`, five seconds by
     default.
+
+In Go, set `CloseFunc` in `plugin.Config` to release resources the Plugin
+owns, such as a buffered exporter that must flush before the process exits.
+The `Runner` doesn't call it for you: call the Plugin's `Close` method when
+your application shuts down. ADK Go doesn't enforce
+`runner.PluginConfig.CloseTimeout`, so bound any slow cleanup inside
+`CloseFunc` itself.
+
+```go
+p, err := plugin.New(plugin.Config{
+	Name: "my_plugin",
+	CloseFunc: func() error {
+		// Flush buffers and release clients here.
+		return nil
+	},
+})
+if err != nil {
+	log.Fatal(err)
+}
+defer p.Close()
+```
 
 ## Next steps
 
@@ -53634,9 +53797,9 @@ The output should appear similar to:
     
     !!! note "Go: default port and path prefix"
 
-    The Go API server defaults to port **8080** (not 8000) and serves all
-    REST endpoints under the **`/api`** path prefix by default. Adjust all
-    example `curl` commands below accordingly:
+        The Go API server defaults to port **8080** (not 8000) and serves all
+        REST endpoints under the **`/api`** path prefix by default. Adjust all
+        example `curl` commands below accordingly:
 
     | Python/TypeScript/Java | Go |
     |---|---|
@@ -57776,29 +57939,48 @@ For example, you can automate this step with a callback:
 
 === "Go"
 
+    In ADK Go, agent callbacks don't have access to the memory service. Save
+    the session from a Plugin's `AfterRunCallback` instead, and register the
+    Plugin on the runner together with the memory service:
+
     ```go
     import (
-        "context"
+        "log"
+
         "google.golang.org/adk/v2/agent"
         "google.golang.org/adk/v2/agent/llmagent"
-        "google.golang.org/adk/v2/session"
+        "google.golang.org/adk/v2/plugin"
+        "google.golang.org/adk/v2/runner"
         "google.golang.org/adk/v2/tool"
         "google.golang.org/adk/v2/tool/loadmemorytool"
     )
 
-    func autoSaveSessionToMemoryCallback(ctx agent.CallbackContext, s session.Session) (*genai.Content, error) {
-        if err := ctx.Memory().AddSessionToMemory(context.Background(), s); err != nil {
-            return nil, err
-        }
-        return nil, nil
-    }
+    autoSavePlugin, _ := plugin.New(plugin.Config{
+        Name: "auto_save_session_to_memory",
+        AfterRunCallback: func(ctx agent.InvocationContext) {
+            if m := ctx.Memory(); m != nil {
+                if err := m.AddSessionToMemory(ctx, ctx.Session()); err != nil {
+                    log.Printf("failed to save session to memory: %v", err)
+                }
+            }
+        },
+    })
 
-    agent, _ := llmagent.New(llmagent.Config{
-        Model:               model,
-        Name:                "Generic_QA_Agent",
-        Instruction:         "Answer the user's questions",
-        Tools:               []tool.Tool{loadmemorytool.New()},
-        AfterAgentCallbacks: []agent.AfterAgentCallback{autoSaveSessionToMemoryCallback},
+    rootAgent, _ := llmagent.New(llmagent.Config{
+        Model:       model,
+        Name:        "Generic_QA_Agent",
+        Instruction: "Answer the user's questions",
+        Tools:       []tool.Tool{loadmemorytool.New()},
+    })
+
+    r, _ := runner.New(runner.Config{
+        AppName:        "my_app",
+        Agent:          rootAgent,
+        SessionService: sessionService,
+        MemoryService:  memoryService,
+        PluginConfig: runner.PluginConfig{
+            Plugins: []*plugin.Plugin{autoSavePlugin},
+        },
     })
     ```
 
@@ -62347,17 +62529,17 @@ requirements:
 
     !!! note "Note: Confirmation with Resume feature"
 
-    If your ADK agent workflow is configured with the
-    [Resume](/runtime/resume/) feature, you also must include
-    the Invocation ID (`invocation_id`) parameter with the confirmation
-    response. The Invocation ID you provide must be the same invocation
-    that generated the confirmation request, otherwise the system
-    starts a new invocation with the confirmation response. If your
-    agent uses the Resume feature, consider including the Invocation ID
-    as a parameter with your confirmation request, so it can be
-    included with the response. For more details on using the Resume
-    feature, see
-    [Resume stopped agents](/runtime/resume/).
+        If your ADK agent workflow is configured with the
+        [Resume](/runtime/resume/) feature, you also must include
+        the Invocation ID (`invocation_id`) parameter with the confirmation
+        response. The Invocation ID you provide must be the same invocation
+        that generated the confirmation request, otherwise the system
+        starts a new invocation with the confirmation response. If your
+        agent uses the Resume feature, consider including the Invocation ID
+        as a parameter with your confirmation request, so it can be
+        included with the response. For more details on using the Resume
+        feature, see
+        [Resume stopped agents](/runtime/resume/).
 
 ## Known limitations {#known-limitations}
 
