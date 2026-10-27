@@ -13343,6 +13343,129 @@ The table below summarizes which remote storage entries each backend can mount d
 
 For more runnable examples, browse [examples/sandbox/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox) for local, coding, memory, handoff, and agent-composition patterns, and [examples/sandbox/extensions/](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/extensions) for hosted sandbox clients.
 
+## External providers
+
+Applications can supply a sandbox client from a separately installed package through `SandboxRunConfig(client=...)`. See [Build a sandbox provider](custom-providers.md) for the authoring contract and a runnable external-package example.
+
+================
+File: docs/sandbox/custom-providers.md
+================
+# Build a sandbox provider
+
+You can distribute a sandbox client in your own Python package. Applications import your client and pass an instance to `SandboxRunConfig(client=...)`. The SDK does not need to import your package, add it to `agents.extensions.sandbox`, or discover it through Python entry points.
+
+This guide describes sandbox execution providers, not model providers. The outer `Runner` still owns model turns, approvals, handoffs, and run history. Your client and session implement the execution environment.
+
+## Start with a working external package
+
+The [external provider example](https://github.com/openai/openai-agents-python/tree/main/examples/sandbox/external_provider) is a separately installable distribution with its own `pyproject.toml`, import package, and runnable demo. It implements `ExampleDockerClient` by composing the SDK's `DockerSandboxClient`. The example demonstrates the packaging and client boundary using real Docker execution; it is not a new container engine or a published third-party service.
+
+After installing the example package, construct the client in application code:
+
+```python
+import docker
+from example_docker_provider import ExampleDockerClient, ExampleDockerOptions
+
+from agents import RunConfig
+from agents.sandbox import SandboxRunConfig
+from agents.sandbox.sandboxes.docker import DockerSandboxClient
+
+connection = docker.from_env()
+client = ExampleDockerClient(DockerSandboxClient(connection))
+run_config = RunConfig(
+    sandbox=SandboxRunConfig(
+        client=client,
+        options=ExampleDockerOptions(image="python:3.14-slim"),
+    ),
+)
+# Pass run_config to Runner.run(...).
+# Close connection after all runs using this client have finished.
+```
+
+The [demo](https://github.com/openai/openai-agents-python/blob/main/examples/sandbox/external_provider/src/example_docker_provider/demo.py) shows the complete `try`/`finally` connection lifecycle. It uses a real container with `ScriptedModel`, so the demo needs no model API key or model request. The runner creates and cleans up the sandbox session. The application closes the Docker connection that the application created.
+
+The example requires a typed `ExampleDockerOptions` instance. Dictionary options passed to `SandboxRunConfig` are parsed according to the client’s backend ID, which remains `docker` here; the adapter rejects the resulting Docker options before creating a session. It also rejects unknown fields on its own options model. An adapter must preserve accepted settings or reject unsupported inputs before delegation, especially settings that control isolation. Use `DockerSandboxClient` directly for Docker networking and other advanced options.
+
+Use composition when an existing backend already implements your runtime. Return the delegate's `SandboxSession` unchanged, and delegate serialization and resume to the same backend. The example retains `backend_id = "docker"` and Docker's state type because the underlying session remains a Docker session. It does not introduce an independent persisted state format or claim additional isolation.
+
+## Implement a new execution runtime
+
+A backend for a different runtime, such as a micro-VM service, needs its own client and session implementation. The relevant interfaces are exported from `agents.sandbox.session`:
+
+| Interface | Responsibility |
+| --- | --- |
+| `BaseSandboxClient` | Create, resume, and delete sessions; serialize and deserialize backend state. |
+| `BaseSandboxClientOptions` | Validate provider-specific creation options and support typed JSON parsing. |
+| `BaseSandboxSession` | Execute commands, access files, manage the runtime lifecycle, and persist or hydrate workspace contents. |
+| `SandboxSessionState` | Represent the provider identity and workspace state needed for resume. |
+| `SandboxSession` | Wrap a backend session with the SDK's instrumentation and dependency lifecycle. |
+
+Implement `create`, `resume`, `delete`, and `deserialize_session_state` on your client. Give a genuinely new runtime a distinct, stable `backend_id`; the runner checks this identity when restoring its saved sandbox state. Keep credentials, SDK connections, and trusted executable selection on the live client rather than in model-visible options or serialized state.
+
+`create` receives `manifest`, `snapshot`, and your `options` object. Preserve their meaning instead of silently ignoring inputs. Validate unsupported options before allocating resources where possible, and clean up resources if creation fails. Return an instrumented `SandboxSession`, not a bare backend session. Existing clients use the base client's `_wrap_session` hook to preserve dependency cloning and instrumentation; an adapter that delegates to an existing client should reuse the returned wrapper instead of wrapping it again.
+
+A new `BaseSandboxSession` must implement the abstract command, file, status, and archive methods: `_exec_internal`, `read`, `write`, `running`, `persist_workspace`, and `hydrate_workspace`. Abstract-method completeness alone does not make a working backend. The session must also implement the appropriate startup and shutdown hooks for its runtime, satisfy the commands used by enabled capabilities and inherited helpers, and enforce its filesystem and process boundaries. Consult the [session implementation](https://github.com/openai/openai-agents-python/blob/main/src/agents/sandbox/session/base_sandbox_session.py) and a comparable backend before choosing which operations to inherit.
+
+Underscored base-class hooks are implementation coupling: pin and test the SDK versions your package supports. Do not copy private helpers from another backend or assume that changing only its command executor gives your runtime the same filesystem, persistence, or isolation semantics. In particular, host filesystem access inherited from a local backend needs a separate trust-boundary assessment for a VM backend.
+
+State the capabilities your backend supports. Reject unsupported PTY sessions, users, exposed ports, mounts, or manifest entries explicitly instead of executing them on the host as a fallback. Translate provider failures into the SDK's sandbox error types while preserving useful error codes and retryability without exposing credentials or raw sensitive responses.
+
+## Registration happens when types are imported
+
+Client selection and serialized-type registration are separate operations:
+
+- Applications select the client by passing an instance to `SandboxRunConfig`. There is no global client factory or entry-point discovery step.
+- `BaseSandboxClientOptions` subclasses register automatically from a non-empty `type` default when Python defines the class.
+- `SandboxSessionState` subclasses register automatically when their `type` field has a `Literal` annotation and a non-empty string default.
+
+For a new runtime, define stable type identifiers owned by your package. The following declarations illustrate the type-registration mechanism; they do not implement a runnable backend:
+
+```python
+from typing import Literal
+
+from agents.sandbox.session import BaseSandboxClientOptions, SandboxSessionState
+
+
+class AcmeOptions(BaseSandboxClientOptions):
+    type: Literal["acme_microvm"] = "acme_microvm"
+    image: str
+
+
+class AcmeState(SandboxSessionState):
+    type: Literal["acme_microvm"] = "acme_microvm"
+    provider_session_id: str
+```
+
+Import these classes in every process that parses their serialized values, including resume workers. For example, importing the external example package makes `BaseSandboxClientOptions.parse({"type": "example_docker", "image": "python:3.14-slim"})` return `ExampleDockerOptions`. Installing a distribution alone does not execute those imports. Do not modify the registries directly. Choose identifiers that do not collide with SDK or other package types; do not rely on collision handling as validation of your package's identity.
+
+The external Docker example needs only a new options type. Its session state remains `DockerSandboxSessionState`, which the delegate imports and understands. A package's distribution name, import name, options type, and execution backend ID serve different purposes and need not match.
+
+## Preserve lifecycle and resume semantics
+
+When an application supplies `client=`, the runner owns the session it creates or resumes. The runner starts the session, uses its capabilities, persists snapshot-backed workspace contents during cleanup, and invokes the backend cleanup paths. Your client must release resources it owns without deleting caller-owned resources. Cleanup must tolerate partial startup and repeated calls.
+
+When an application supplies a live `session=`, the application owns that session. The runner can use the session but does not take over its full lifetime. Document how callers close sessions and how callers close live provider connections. See [session lifecycle](guide.md#sandbox-lifecycle) for both usage patterns.
+
+Provider session state and workspace snapshots are different. State identifies or describes an execution environment that can be resumed. A snapshot contains workspace data that can seed a new environment. Resume should reconnect to the existing environment when possible, or reconstruct it from the saved snapshot if your backend supports that behavior. Do not overwrite an injected or resumed workspace with fresh creation inputs.
+
+Use the client's serialization/deserialization path when restoring a backend session. Generic `SandboxSessionState.parse` selects a registered type; it does not authenticate a remote session or authorize host paths, credentials, mount access, or network policy. Preserve the SDK's handling of persisted grants and mount authority, and require trusted application configuration to rebind authority when necessary. Document which serialized fields survive across package upgrades, and test that supported saved states remain usable.
+
+For per-command VMs, specify which files survive the next command, whether guest-installed packages persist, and whether background processes can survive. A warm VM image and an SDK workspace snapshot are not interchangeable.
+
+## Package and test the integration
+
+Keep provider code in your own import namespace and declare `openai-agents` plus any runtime client library as package dependencies. The example declares `openai-agents[docker]>=0.24.0,<0.25.0`. Treat that as the example's compatibility range, not a guarantee that every provider works across that range without testing. Do not publish into the `agents` namespace or require an SDK fork just to expose your client.
+
+Before distributing your provider:
+
+1. Build and install the distribution into a clean environment. Import it outside your source directory and run an application using `SandboxRunConfig(client=...)`.
+2. Test options parsing and state serialization in a fresh interpreter after importing the package. Test unsupported and malformed inputs as well as a valid round trip.
+3. Exercise the public `Runner` path with `ScriptedModel`: fresh client-owned sessions, application-owned live sessions, and persisted Runner resume. Verify resource cleanup after success, tool errors, timeout, cancellation, and partial startup.
+4. Test workspace snapshot restore and supported file operations. Use framework mocks or the SDK's scripted test helpers for deterministic orchestration checks, while retaining real runtime tests for provider behavior.
+5. Run real isolation, filesystem, network, and process tests on each supported runtime/platform combination. Mock tests cannot establish those properties. For a delegating adapter, reuse the underlying runtime contract and test that the adapter preserves it.
+
+The example README contains install and demo commands. The example intentionally leaves a new VM implementation, security policy, and runtime-specific compatibility promises to the provider author.
+
 ================
 File: docs/sandbox/guide.md
 ================
@@ -26642,6 +26765,14 @@ The [server-side approval example](https://github.com/openai/openai-agents-pytho
 
 Replacing `context` with `context_override`, setting `strict_context=True`, or removing only the serialized approval records does not make an untrusted snapshot safe. Other fields still control resumed execution. If an application transports the complete snapshot through a client, the application must verify its integrity, bind it to the authorized user and run, and prevent replay before deserialization. Such verification does not encrypt the snapshot or hide its contents from the client.
 
+### Recovering after a crash
+
+Approval permits a tool call to execute; it does not guarantee exactly-once execution. If a tool performs an external action and the process stops before the application stores the updated run state, resuming from the older approved snapshot can execute the tool again. For example, a payment can complete even though the saved snapshot has no record of the payment result.
+
+For tools with consequential side effects, the application should assign a stable idempotency key to each logical action and pass that key to a destination that atomically prevents duplicate effects. Reuse the same key and action parameters across retries, and respect the destination's key retention period and retry rules. An approval decision or a local completion flag alone cannot make the external action and the saved run state one atomic operation.
+
+If destination-enforced idempotency is unavailable or no longer valid, reconcile the outcome with the destination before retrying. A missing result in an ordinary lookup is not proof that retrying is safe: reads can lag, and an earlier request can still complete. Retry only after authoritative reconciliation establishes that no earlier attempt performed the action or can still perform it. If the outcome remains uncertain, the application should record it as unknown and avoid automatic replay.
+
 ### Serialization options
 
 Useful serialization options:
@@ -27015,13 +27146,16 @@ asyncio.run(main())
 
 The constructor accepts additional options:
 
-- `client_session_timeout_seconds` controls MCP ClientSession read timeouts. Positive finite values representable by `datetime.timedelta` and at least one microsecond set a finite timeout; `None` and `0` disable it. Other values are rejected when the server is constructed.
+- `client_session_timeout_seconds` controls MCP ClientSession read timeouts and defaults to `5` seconds on `MCPServerStdio`, `MCPServerSse`, and `MCPServerStreamableHttp`. Positive finite values representable by `datetime.timedelta` and at least one microsecond set a finite timeout; `None` and `0` disable it. Other values are rejected when the server is constructed.
 - `use_structured_content` toggles whether `tool_result.structured_content` is preferred over textual output.
 - `max_retry_attempts` and `retry_backoff_seconds_base` add automatic retries for `list_tools()` and `call_tool()`.
+- `retry_backoff_seconds_max` caps the delay between retries in seconds; `None` (the default) leaves exponential backoff uncapped.
+- `max_list_pages` limits successful pages per automatic `list_tools()` or `list_prompts()` call. `None` (the default) applies no page limit. With a positive integer limit, completion on the final permitted page succeeds; further continuation raises `UserError` without returning or caching a partial list.
 - `tool_filter` lets you expose only a subset of tools (see [Tool filtering](#tool-filtering)).
 - `require_approval` enables human-in-the-loop approval policies on local MCP tools.
 - `failure_error_function` customizes model-visible MCP tool failure messages; set it to `None` to raise errors instead.
 - `tool_meta_resolver` injects per-call MCP `_meta` payloads before `call_tool()`.
+- `custom_data_extractor` receives `MCPToolCustomDataContext` and returns SDK-only custom data for emitted MCP tool output items.
 
 ### Approval policies for local MCP servers
 
@@ -27131,6 +27265,7 @@ async with MCPServerStdio(
         "command": "npx",
         "args": ["-y", "@modelcontextprotocol/server-filesystem", str(samples_dir)],
     },
+    client_session_timeout_seconds=30,
 ) as server:
     agent = Agent(
         name="Assistant",
@@ -27140,6 +27275,12 @@ async with MCPServerStdio(
     result = await Runner.run(agent, "List the files available to you.")
     print(result.final_output)
 ```
+
+!!! tip "Package runner cold starts"
+
+    Package runners such as `npx -y` and `uvx` may download packages before the MCP server starts. Install the package before connecting to avoid spending connection setup time on these downloads.
+
+    The example increases `client_session_timeout_seconds` to allow more time for initialization and subsequent session requests. With MCP Python SDK v1, this can also accommodate package downloads during initialization. With MCP Python SDK v2, the initial `server/discover` request has a separate timeout that this setting does not change. Preinstall the package for slow v2 cold starts; increasing the session timeout alone does not control every stage of connection setup.
 
 ## 5. MCP server manager
 
@@ -28910,6 +29051,36 @@ If you are manually continuing from [`result.to_input_list(mode="normalized")`][
 -   If new user input arrives before that unfinished run resumes, convert the drained result with `result.to_state()`, call [`state.add_input(...)`][agents.run_state.RunState.add_input], and resume from the state. The runner admits the staged input immediately before the next model call; see [Add input before resuming](results.md#add-input-before-resuming).
 -   If a streamed run stopped for tool approval, do not treat that as a new turn. Finish draining the stream, inspect `result.interruptions`, and resume from `result.to_state()` instead.
 -   Use [`RunConfig.session_input_callback`][agents.run.RunConfig.session_input_callback] to customize how retrieved session history and the new user input are merged before the next model call. If you rewrite new-turn items there, the rewritten version is what gets persisted for that turn.
+
+### Stop when your event consumer exits early
+
+The background run and the event consumer have separate lifetimes. If your application breaks out of the `async for` loop over events, raises an exception while handling an event, or cancels the consumer while it is handling an event, the run can continue making model and tool calls. Closing the event iterator with `aclose()` alone waits for the run to finish; it does not request cancellation. Cancellation while the consumer is awaiting the next event does request cancellation of the run, so do not rely on where cancellation happens to stop unwanted work.
+
+When one consumer owns the run, explicitly cancel on early exit and wait for cleanup. In this example, `agent` is your agent and `forward(event)` is your application's asynchronous event handler:
+
+```python
+from agents import Runner
+
+result = Runner.run_streamed(agent, input="Please tell me 5 jokes.")
+events = result.stream_events()
+exhausted = False
+try:
+    async for event in events:
+        await forward(event)
+    else:
+        exhausted = True
+finally:
+    if not exhausted:
+        result.cancel()
+        await events.aclose()
+        # Use a fresh iterator in case cancellation already closed the original.
+        async for _event in result.stream_events():
+            pass
+```
+
+Normal exhaustion leaves the result unchanged. An early `break`, a handler exception, or consumer cancellation enters the cleanup block. `cancel()` requests cancellation; consuming the cleanup stream runs the SDK's stream cleanup path. Neither `result.is_complete` nor finishing the cleanup stream guarantees that every asynchronous finalizer inside a tool has finished. Applications that depend on those finalizers must track and await tool cleanup separately.
+
+This example assumes one consumer and cooperative asynchronous tools. A further cancellation during cleanup can interrupt the cleanup block, and a cleanup failure can replace the original exception. Applications that must handle those cases need a supervised cleanup task and an explicit error-handling policy. Cancellation cannot undo tool effects that have already happened.
 
 ## Run item events and agent events
 
