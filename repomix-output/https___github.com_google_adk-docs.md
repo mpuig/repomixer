@@ -4980,7 +4980,7 @@ File: docs/agents/workflow-agents/parallel-agents.md
 # Parallel template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The ***ParallelAgent*** class is a [template workflow](/agents/workflow-agents/)
@@ -5060,6 +5060,11 @@ These research tasks are independent.  Using a `ParallelAgent` allows them to ru
     === "Java"
         ```java
          --8<-- "examples/java/snippets/src/main/java/agents/workflow/ParallelResearchPipeline.java:full_code"
+        ```
+
+    === "Kotlin"
+        ```kotlin
+         --8<-- "examples/kotlin/snippets/agents/workflow-agents/ParallelAgentWebResearch.kt:init"
         ```
 
 !!! tip "Global instructions for all agents"
@@ -8643,7 +8648,7 @@ File: docs/apps/index.md
 # App workflow management class
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-java">Java v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v1.4.0</span><span class="lst-java">Java v0.1.0</span>
 </div>
 
 The ***App*** class is a top-level container for an entire Agent Development Kit
@@ -8717,6 +8722,26 @@ sample code:
     )
     ```
 
+=== "TypeScript"
+
+    ```typescript title="agent.ts"
+    import {App, LlmAgent} from '@google/adk';
+
+    export const rootAgent = new LlmAgent({
+      model: 'gemini-flash-latest',
+      name: 'greeter_agent',
+      description: 'An agent that provides a friendly greeting.',
+      instruction: 'Reply with Hello, World!',
+    });
+
+    export const app = new App({
+      name: 'agents',
+      rootAgent: rootAgent,
+      // Optionally include App-level features:
+      // plugins, resumabilityConfig
+    });
+    ```
+
 === "Java"
 
     ```java title="AgentConfiguration.java"
@@ -8774,6 +8799,33 @@ You can use the ***Runner*** class to run your agent workflow using the
 
     ```
 
+=== "TypeScript"
+
+    ```typescript title="main.ts"
+    import {InMemoryRunner, isFinalResponse, stringifyContent} from '@google/adk';
+    import {app} from './agent.js'; // import code from agent.ts
+
+    // Set a Runner using the imported application object
+    const runner = new InMemoryRunner({app});
+
+    async function main() {
+      try {
+        for await (const event of runner.runEphemeral({
+          userId: 'user',
+          newMessage: {role: 'user', parts: [{text: 'Hello there!'}]},
+        })) {
+          if (isFinalResponse(event) && event.content) {
+            console.log(`Response: ${stringifyContent(event)}`);
+          }
+        }
+      } catch (e) {
+        console.error(`An error occurred during agent execution: ${e}`);
+      }
+    }
+
+    main();
+    ```
+
 === "Java"
 
     ```java title="AppMain.java"
@@ -8810,6 +8862,14 @@ You can use the ***Runner*** class to run your agent workflow using the
 
     ```console
     python3 main.py
+    ```
+
+=== "TypeScript"
+
+    Run your App agent with the `main.ts` code using the following command:
+
+    ```console
+    npx tsx main.ts
     ```
 
 === "Java"
@@ -46893,6 +46953,306 @@ Tool | Description
 - [ZoomInfo Developer Documentation](https://docs.zoominfo.com/)
 
 ================
+File: docs/live/architectures/cascade.md
+================
+# Cascaded architecture
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.13.0</span><span class="lst-preview">Experimental</span>
+</div>
+
+In a cascaded architecture, `CascadeLive` chains streaming speech-to-text (STT), a text-reasoning LLM, and streaming text-to-speech (TTS). Audio flows through three stages in sequence: speech recognition transcribes user audio to text, the LLM reasons over text and calls tools, and speech synthesis converts the streamed text reply into audio.
+
+You configure `CascadeLive` on the agent's `model` parameter, so your [`Runner.run_live()`](../sessions.md#the-run_live-loop) loop, request queue, tools, callbacks, and workflows stay unchanged. The same agent also works with `Runner.run_async()` for text-only requests, bypassing the speech stages and calling the inner text model directly.
+
+For a comparison with native speech-to-speech models, see [Choose a voice architecture](index.md).
+
+## Configure a cascaded agent
+
+Pass a `CascadeLive` instance to `Agent` with a text LLM, a speech-to-text provider, and a text-to-speech provider:
+
+=== "Gemini"
+
+    `GeminiSTT` and `GeminiTTS` in `google.adk.live` use your existing Google credentials and require no extra packages.
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.live import CascadeLive, GeminiSTT, GeminiTTS
+    from google.genai import types
+
+    root_agent = Agent(
+        name="voice_assistant",
+        model=CascadeLive(
+            model="gemini-3.8-flash",
+            stt=GeminiSTT(),
+            tts=GeminiTTS(speech_config="Kore"),
+        ),
+        instruction=(
+            "You are a voice assistant. Keep answers to one or two short "
+            "sentences and end every sentence with punctuation. Write numbers, "
+            "symbols, and abbreviations as spoken words."
+        ),
+        tools=[...],
+        generate_content_config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.LOW
+            ),
+        ),
+    )
+    ```
+
+=== "ElevenLabs"
+
+    Install the ElevenLabs extra (`pip install "google-adk[elevenlabs]"`) and set `ELEVENLABS_API_KEY` in your environment.
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.integrations.eleven_labs import ElevenLabsSTT, ElevenLabsTTS
+    from google.adk.live import CascadeLive
+    from google.genai import types
+
+    root_agent = Agent(
+        name="voice_assistant",
+        model=CascadeLive(
+            model="gemini-3.8-flash",
+            stt=ElevenLabsSTT(),
+            tts=ElevenLabsTTS(),
+        ),
+        instruction=(
+            "You are a voice assistant. Keep answers to one or two short "
+            "sentences and end every sentence with punctuation. Write numbers, "
+            "symbols, and abbreviations as spoken words."
+        ),
+        tools=[...],
+        generate_content_config=types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.LOW
+            ),
+        ),
+    )
+    ```
+
+Two settings on the agent directly affect voice latency and synthesis quality:
+
+- **Minimize model thinking**: Model thinking runs before the first response token is emitted and adds directly to time-to-first-audio. Set a low thinking level (or a zero thinking budget on models that use token budgets) in `generate_content_config`.
+- **Prompt for sentence punctuation and no abbreviations**: Built-in TTS providers split text at sentence boundaries so the first sentence starts playing before the LLM finishes its full reply. An abbreviation in the first sentence such as `Dr. Smith` can trigger an early split, and unpunctuated output buffers longer before playback starts.
+
+Run the agent with `adk web` or drive it with [`Runner.run_live()`](../sessions.md#the-run_live-loop). A complete runnable example with both Gemini and ElevenLabs speech providers is available in the [`cascade` sample](https://github.com/google/adk-python/tree/main/contributing/samples/live/cascade).
+
+## How it works
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant STT as Speech-to-Text
+    participant LLM as Text LLM
+    participant TTS as Text-to-Speech
+
+    Client->>STT: Stream user audio
+    STT-->>Client: Partial input transcription
+    STT->>LLM: Final user transcript
+    LLM->>TTS: Streamed text tokens
+    TTS-->>Client: Synthesized audio chunks
+    TTS-->>Client: Spoken output transcription
+```
+
+### Captions and turn detection
+
+- **Live captions replace rather than append**: While the user speaks, interim transcripts arrive on `event.input_transcription`. Unlike native audio models that stream incremental word fragments, each interim update in cascaded mode holds the full utterance hypothesis so far, so your client should replace the displayed caption rather than append to it.
+- **Custom vocabulary and client-controlled VAD**: Server voice activity detection (VAD) is enabled by default. To supply domain vocabulary or control turn boundaries from the client (such as push-to-talk) with `GeminiSTT`, pass `audio_transcription_config` or disable automatic activity detection and call [`send_activity_start()` and `send_activity_end()`](../sessions.md#liverequestqueue):
+
+```python
+from google.adk.live import GeminiSTT
+from google.genai import types
+
+stt = GeminiSTT(
+    audio_transcription_config=types.AudioTranscriptionConfig(
+        language_codes=["en-US"],
+        custom_vocabulary=["Cymbal Direct", "Altostrat"],
+    ),
+    activity_detection=types.AutomaticActivityDetection(disabled=True),
+)
+```
+
+### Barge-in truncates history to what the user heard
+
+TTS providers synthesize upcoming sentences faster than real-time playback, so when a user interrupts mid-reply, the client buffer often holds audio the user has not heard yet.
+
+When an interruption occurs, `CascadeLive` halts synthesis and LLM generation, emits an interrupted event so the client stops playback, and estimates how much audio actually played on the client. Only the words the user heard are saved to session history and the final `output_transcription`, so subsequent turns never reference unspoken text.
+
+## Custom speech transforms
+
+To integrate another speech provider or inspect text between stages, subclass `LiveIngress` (for speech-to-text) or `LiveEgress` (for text-to-speech) from `google.adk.live`:
+
+- `LiveIngress` reads the incoming audio stream and yields speech-start, partial-transcript, and turn-finished events (`UserSpeechStarted`, `PartialTranscript`, `UserTurnFinished`).
+- `LiveEgress` reads the streamed LLM text deltas and yields synthesized audio chunks and spoken transcript events (`AudioChunk`, `AgentSpokenOutput`) until completion or cancellation.
+
+Because LLM output is plain text before synthesis, you can wrap any `LiveEgress` to redact or transform text before a single audio frame is generated:
+
+```python
+import asyncio
+from typing import AsyncGenerator, AsyncIterator
+from google.adk.live import EgressEvent, LiveEgress
+
+
+class RedactingTTS(LiveEgress):
+    """Redacts sensitive patterns from streamed LLM text before synthesis."""
+
+    def __init__(self, inner_tts: LiveEgress, redact_fn):
+        self._tts = inner_tts
+        self._redact = redact_fn
+
+    async def __call__(
+        self, text: AsyncIterator[str], *, cancel: asyncio.Event
+    ) -> AsyncGenerator[EgressEvent, None]:
+        async def sanitized_text() -> AsyncGenerator[str, None]:
+            async for delta in text:
+                yield self._redact(delta)
+
+        async for event in self._tts(sanitized_text(), cancel=cancel):
+            yield event
+```
+
+## Considerations and limitations
+
+- **Silence-based turn detection**: Server VAD ends a user turn after a silence threshold, so a long mid-sentence pause can split an utterance into two turns. Adjust the silence threshold on the STT provider or use client-controlled activity signals.
+- **Avoid speaking during synchronous tool execution**: If a user finishes speaking while a synchronous tool call is still running, the new user turn lands between the tool call and its response, causing subsequent model requests in that session to fail.
+- **Client echo cancellation**: Use browser or hardware acoustic echo cancellation (AEC) or headphones so speaker output is not picked up by the microphone as a false user interruption.
+
+================
+File: docs/live/architectures/index.md
+================
+# Choose a voice architecture
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.13.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+ADK supports two voice architectures under `Runner.run_live()`:
+
+- **[Speech-to-speech](speech-to-speech.md)**: A single native audio model processes speech input, reasoning, and speech output end to end over the Gemini Live API. Best when lowest latency, vocal emotion, or live video input matter most.
+- **[Cascade](cascade.md)**: Chains speech-to-text (STT), any text-reasoning LLM, and text-to-speech (TTS) in sequence. Best when frontier text reasoning, modular speech providers, or pre-synthesis text guardrails matter most.
+
+Both architectures use the same ADK runtime. Your session loop, request queue, event stream, tools, callbacks, and workflows stay identical, and switching architectures only changes the `model` on your agent:
+
+=== "Speech-to-speech"
+
+    ```python
+    from google.adk.agents import Agent
+
+    root_agent = Agent(
+        name="voice_assistant",
+        model="gemini-live-2.5-flash-native-audio",
+        instruction="You are a helpful voice assistant.",
+        tools=[...],
+    )
+    ```
+
+=== "Cascade"
+
+    ```python
+    from google.adk.agents import Agent
+    from google.adk.live import CascadeLive, GeminiSTT, GeminiTTS
+
+    root_agent = Agent(
+        name="voice_assistant",
+        model=CascadeLive(
+            model="gemini-3.8-flash",
+            stt=GeminiSTT(),
+            tts=GeminiTTS(speech_config="Kore"),
+        ),
+        instruction="You are a helpful voice assistant.",
+        tools=[...],
+    )
+    ```
+
+## Architecture comparison
+
+```mermaid
+flowchart LR
+    subgraph S2S["Speech-to-speech"]
+        direction LR
+        U1["User Audio"] --> M1["Native Audio Live Model"] --> A1["Agent Audio"]
+    end
+    subgraph CAS["Cascade"]
+        direction LR
+        U2["User Audio"] --> STT["Speech-to-Text"] --> LLM["Text LLM"] --> TTS["Text-to-Speech"] --> A2["Agent Audio"]
+    end
+```
+
+| Dimension | Speech-to-speech | Cascade |
+| :--- | :--- | :--- |
+| **End-to-end latency** | Lowest (single model pass) | Moderate (serial stages overlapped via streaming and sentence prefetching) |
+| **Reasoning model** | Native audio Live models only ([Supported models](../models.md)) | Any text LLM (Gemini Flash, Gemini Pro, or third-party models) |
+| **Speech providers** | Built-in Gemini Live voices | Modular (Gemini, ElevenLabs, or custom STT/TTS providers) |
+| **Vocal nuance** | Hears tone and emotion directly; native prosody | STT converts speech to text; TTS synthesizes sentence by sentence |
+| **Video input** | Supported (live camera and screen frames) | Not supported (audio and text only) |
+| **Text guardrails** | Screens transcriptions alongside audio generation | Full text boundary between stages; can inspect or modify text before synthesis |
+| **Text-only execution (`run_async`)** | Not supported | Supported (uses the inner text LLM directly) |
+| **SDK support** | Python, Java | Python (Experimental) |
+
+================
+File: docs/live/architectures/speech-to-speech.md
+================
+# Speech-to-speech architecture
+
+<div class="language-support-tag">
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+</div>
+
+In a speech-to-speech architecture, a single multimodal model processes incoming audio, executes reasoning and tool calls, and generates spoken audio directly over a persistent [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) connection, without converting the speech to text between the input and output..
+
+For a comparison with chained STT-LLM-TTS pipelines, see [Choose a voice architecture](index.md).
+
+## Configure a speech-to-speech agent
+
+Pass a supported [native audio Live model](../models.md#live-models) to your agent:
+
+=== "Python"
+
+    ```python
+    import os
+    from google.adk.agents import Agent
+
+    root_agent = Agent(
+        name="voice_assistant",
+        model=os.getenv("DEMO_AGENT_MODEL", "gemini-live-2.5-flash-native-audio"),
+        instruction="You are a helpful voice assistant.",
+        tools=[...],
+    )
+    ```
+
+=== "Java"
+
+    ```java
+    import com.google.adk.agents.LlmAgent;
+
+    LlmAgent rootAgent =
+        LlmAgent.builder()
+            .name("voice_assistant")
+            .model("gemini-live-2.5-flash-native-audio")
+            .instruction("You are a helpful voice assistant.")
+            .build();
+    ```
+
+Run the agent with `adk web` or pass it to [`Runner.run_live()`](../sessions.md#the-run_live-loop).
+
+## Capabilities specific to speech-to-speech
+
+The following capabilities apply specifically to native audio models:
+
+- **Live video and image input**: Stream live camera or screen frames alongside audio so the agent can see what the user is showing. See [Audio and video](../audio-video.md#images-and-video).
+- **Affective dialog and proactive audio**: Supported native audio models can adapt their spoken tone to the user's emotional expression and decide when to speak or stay silent. See [Proactivity and affective dialog](../configuration.md#proactivity-and-affective-dialog).
+- **Stateful session resumption and context compression**: Because the Live API holds conversation state in a stateful WebSocket session, ADK supports automatic [session resumption](../sessions.md#session-resumption) across connection timeouts and [context window compression](../sessions.md#context-window-compression) for long-running sessions.
+- **Session-level voice and VAD controls**: Configure voice selection and automatic voice activity detection (VAD) at the session level through [`RunConfig`](../configuration.md) or on the model instance.
+
+## Considerations and limitations
+
+- **Fixed model selection**: Speech-to-speech requires a model that supports the Gemini Live API ([Supported models](../models.md#live-models)). To use standard Gemini text models or third-party LLMs in a live voice session, use the [Cascaded architecture](cascade.md).
+- **Audio-only output**: Native audio models output audio only and do not run under `Runner.run_async()`. Read [audio transcriptions](../configuration.md#audio-transcription) when you need the text of the conversation.
+- **Guardrails evaluate transcriptions alongside audio**: Because the model generates audio directly without an intermediate text stage, [conversation validation callbacks](../guardrails.md#conversation-validation) screen input and output transcriptions rather than intercepting text before synthesis. If you must filter or redact text before audio is generated, use [Cascade](cascade.md#custom-speech-transforms).
+
+================
 File: docs/live/get-started/index.md
 ================
 # Get started with live agents
@@ -47863,7 +48223,9 @@ different configurations.
 
 `RunConfig` is not live-specific; [Runtime configuration](../runtime/runconfig.md) documents
 the full class and the fields that apply to `run_async()`. What follows is the subset that
-matters under `run_live()`, plus the voice-facing settings that only exist in a live session.
+matters under `run_live()` for native audio models. For agents using the
+[cascaded architecture](architectures/cascade.md#configure-a-cascaded-agent), configure voice and
+turn detection on the speech providers instead.
 
 ## RunConfig Parameter Quick Reference
 
@@ -48272,8 +48634,9 @@ run_config = RunConfig(
 Both behaviors are probabilistic and make responses less predictable, so leave them off for
 formal or high-precision contexts and while debugging.
 
-Both settings are model-dependent: Gemini 2.5 Flash Live supports them, Gemini 3.1 Flash
-Live does not, and leaving them set is the most common failure when moving to 3.1. See
+Both settings are model-dependent: Gemini 2.5 Flash Live supports them, but the Gemini 3.1
+Flash Live and Gemini 3.8 Live models do not. ADK doesn't send these settings to Gemini 3.x
+Live models, so leaving them set has no effect. See
 [Per-model feature support](models.md#per-model-feature-support).
 
 ================
@@ -48836,6 +49199,27 @@ async for event in runner.run_live(...):
 
 Without handling `interrupted`, already-buffered audio keeps playing over the user.
 
+### Interaction status
+
+Some models send `turn_complete` more than once per request. For those models,
+`event.interaction_status` (`interactionStatus` over `/run_live`) is `IN_PROGRESS` until the
+model finishes, then `IDLE`. It's `None` for other models, so fall back to `turn_complete`:
+
+```python
+from google.genai import types
+
+async for event in runner.run_live(...):
+    if event.turn_complete and event.interaction_status in (
+        None,
+        types.InteractionStatus.IDLE,
+    ):
+        enable_microphone()     # the model has finished the request
+```
+
+!!! note "Requires ADK Python 2.8 or higher"
+
+    The `interaction_status` field was added in adk-python 2.8.
+
 ## Handling errors
 
 Errors surface on `event.error_code` and `event.error_message`. The one decision to make is
@@ -49032,7 +49416,8 @@ def block_output(
 Returning an `LlmResponse` from an output callback immediately halts model generation and
 delivers your replacement message to the user. For spoken turns where the model already
 began processing the input, ADK clears the current turn so refused content does not remain
-in conversational context.
+in conversational context. In a [cascaded architecture](architectures/cascade.md#custom-speech-transforms),
+you can also filter or redact streamed text before speech synthesis runs.
 
 ## Tool guardrails
 
@@ -49104,9 +49489,9 @@ accept text, audio, and video input and reply with text or speech.
 
 A live agent is an ADK agent, built with the same agent, tool, and session abstractions you
 use everywhere else. You describe the agent's behavior; ADK manages the real-time connection,
-tool execution, and session state underneath. Today that connection runs on the
-[Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api); ADK handles the wiring so
-your agent code stays the same as the platform evolves.
+tool execution, and session state underneath. You can run a live agent end-to-end on the
+[Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) with a [speech-to-speech](architectures/speech-to-speech.md)
+model, or chain speech-to-text, any text LLM, and text-to-speech in a [cascaded pipeline](architectures/cascade.md).
 
 <div class="video-grid">
   <div class="video-item">
@@ -49134,6 +49519,7 @@ your agent code stays the same as the platform evolves.
     - [Start here](get-started/index.md) — pick a language and build one
     - Jump straight to [Python](get-started/streaming-python.md) or
       [Java](get-started/streaming-java.md)
+    - [Choose an architecture](architectures/index.md): [speech-to-speech](architectures/speech-to-speech.md) or [cascade](architectures/cascade.md)
 
 -   :material-book-open-variant: **Building**
 
@@ -49244,32 +49630,98 @@ File: docs/live/models.md
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span>
 </div>
 
-Live agents require a model that can hold a bidirectional connection; a standard Gemini
-model will not. For the models ADK supports outside live agents, and for non-Gemini
-providers, see [Models for agents](../agents/models/index.md).
+Live agents run in one of two [voice architectures](architectures/index.md) under `run_live()`:
 
-## Live models
+- **[Speech-to-speech](architectures/speech-to-speech.md)**: A single native audio Live model handles audio input and audio output directly over a bidirectional connection.
+- **[Cascade](architectures/cascade.md)**: Chains speech-to-text, any text LLM, and text-to-speech in sequence.
 
-Live agents run on models that take audio in and produce audio out, end to end, with no
-intermediate text-to-speech stage. That is what gives them human-like speech with natural
-prosody, and it is what a standard Gemini model cannot do over a bidirectional connection.
+## Native audio models { #live-models }
+
+Native audio models take audio in and produce audio out end to end, with no intermediate text-to-speech stage. That gives them natural prosody over a single bidirectional connection.
 
 | Model | AI Studio | Agent Platform |
 |-------|-----------|----------------|
 | Gemini 2.5 Flash Live | `gemini-2.5-flash-native-audio-preview-12-2025` (Preview) | `gemini-live-2.5-flash-native-audio` (GA) |
 | Gemini 3.1 Flash Live | `gemini-3.1-flash-live-preview` (Preview) | Not available |
+| Gemini 3.8 Live | `gemini-3.8-live` (GA) | `gemini-3.8-live` (GA) |
+| Gemini 3.8 Live Extended Thinking | `gemini-3.8-live-extended-thinking` (GA) | Not available |
 
-Gemini 2.5 Flash Live is one model with a different ID on each backend; the features are the
-same either way. `gemini-live-2.5-flash-native-audio` is ADK's `LlmAgent.DEFAULT_LIVE_MODEL`,
-the only Live model that is publicly available, and the model used in this section's examples.
+Gemini 2.5 Flash Live is one model with a different ID on each backend; the
+features are the same either way. ADK's `LlmAgent.DEFAULT_LIVE_MODEL` is
+`gemini-live-2.5-flash-native-audio`, which is also the model used in this
+section's examples.
 
-Gemini 3.1 Flash Live is the newer model and is lower latency, but it is AI Studio only and
-it drops features that 2.5 has — see [Per-model feature support](#per-model-feature-support)
-before you switch.
+Gemini 3.1 Flash Live is available only on AI Studio and does not support
+non-blocking tools. For details, see
+[Per-model feature support](#per-model-feature-support) and the
+[Gemini 3.1 Flash Live model page](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview).
+
+Gemini 3.8 Live runs on both backends. Gemini 3.8 Live Extended Thinking adds
+background reasoning, is available only on AI Studio, and requires changes to
+your agent, which are listed in
+[Per-model feature support](#per-model-feature-support). To compare the two
+models, see the Gemini 3.8 Live model page for
+[AI Studio](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live) or
+[Agent Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/3-8-live),
+and the
+[Gemini 3.8 Live Extended Thinking model page](https://ai.google.dev/gemini-api/docs/models/gemini-3.8-live-extended-thinking).
+
+These models produce **audio only** and detect the conversation language automatically. They do not
+support the `TEXT` response modality, so to get text alongside speech you use
+[audio transcription](configuration.md#audio-transcription). Voice selection, transcription, and turn
+detection are covered in [Configuration](configuration.md).
+
+### Per-model feature support
+
+A few ADK settings behave differently depending on which model you are running:
+
+| Feature | Gemini 2.5 Flash Live | Gemini 3.1 Flash Live | Gemini 3.8 Live | Gemini 3.8 Live Extended Thinking |
+|---|---|---|---|---|
+| [Proactivity and affective dialog](configuration.md#proactivity-and-affective-dialog) | Opt-in via `RunConfig` | `RunConfig` settings ignored | `RunConfig` settings ignored | `RunConfig` settings ignored |
+| [Non-blocking tools](tools.md#non-blocking-tools) | Supported | Not supported | Supported | Required on every tool (see below) |
+| [`response_scheduling`](tools.md#non-blocking-tools) on tools | Supported | Not supported | Supported | Not supported |
+| [End of the model's response](events.md#interaction-status) | `turn_complete` | `turn_complete` | `turn_complete` | `interaction_status` is `IDLE` (see below) |
+
+When moving from 2.5 to a newer model, iterate over `event.content.parts`
+instead of reading `parts[0]`, because a single server event can carry several
+parts. Turn coverage can also include all detected audio activity and video
+frames, which changes token costs if you stream video continuously. See the
+upstream
+[migration notes](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview#migrating-from-gemini-25-flash-live).
+
+Each model's page in the [AI Studio](https://ai.google.dev/gemini-api/docs/models)
+and
+[Agent Platform](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/google-models)
+documentation covers model-level behavior, such as supported thinking levels. In
+ADK, you set thinking through the agent's
+`generate_content_config.thinking_config`.
+
+Gemini 3.8 Live Extended Thinking requires ADK Python 2.10 or higher and two
+changes to your agent:
+
+- **Non-blocking tools**: Set `behavior = types.Behavior.NON_BLOCKING` on every
+  tool, and leave `response_scheduling` unset. See
+  [Non-blocking tools](tools.md#non-blocking-tools).
+- **Interaction status**: Because `turn_complete` can arrive several times per
+  request, read `event.interaction_status` (`interactionStatus` over
+  `/run_live`), which is `IN_PROGRESS` while the model is still working on the
+  request and `IDLE` once it has finished. See
+  [Interaction status](events.md#interaction-status).
+
+## Cascaded models
+
+In a [cascaded architecture](architectures/cascade.md), the reasoning stage accepts any text model in [Models for agents](../agents/models/index.md). For the speech stages, ADK supports the following Gemini speech models:
+
+| Stage | Model |
+|-------|-------|
+| **Speech-to-text (`GeminiSTT`)** | `gemini-3.5-transcribe-live` |
+| **Text-to-speech (`GeminiTTS`)** | `gemini-3.8-flash-lite-tts`, `gemini-3.8-flash-tts` |
+
+`CascadeLive` also includes built-in adapters for [ElevenLabs models](https://elevenlabs.io/docs/overview/models) (`ElevenLabsSTT`, `ElevenLabsTTS`) and supports any other speech provider through [custom transforms](architectures/cascade.md#custom-speech-transforms).
 
 ## Choosing a backend
 
-Live models are reached through one of two backends. ADK talks to both with the same code;
+Gemini models are reached through one of two backends. ADK talks to both with the same code;
 you switch with environment variables, so you can develop on one and deploy on the other.
 
 | | AI Studio | Agent Platform |
@@ -49284,41 +49736,13 @@ Switch with the `GOOGLE_GENAI_USE_ENTERPRISE` environment variable (`FALSE` for 
 `TRUE` for Agent Platform); no code changes. See the
 [quickstarts](get-started/streaming-python.md) for setup.
 
-!!! note "Agent Platform: the `global` location is not supported"
+!!! note "Agent Platform: the `global` location is not supported for Live API models"
 
-    Live models are not available at `GOOGLE_CLOUD_LOCATION=global`. Use a regional
+    Live API models are not available at `GOOGLE_CLOUD_LOCATION=global`. Use a regional
     endpoint such as `us-central1`, `us-east1`, or `asia-northeast1`, and check it against
     the endpoint-locations table in
     [Agent Platform locations](https://docs.cloud.google.com/gemini-enterprise-agent-platform/resources/locations)
     before deploying.
-
-These models produce audio directly, with natural prosody, and detect the conversation
-language on their own. What you configure on top — voices, transcription, turn detection —
-is described in [Configuration](configuration.md).
-
-One property is fixed at the model level: Live models produce **audio only**. They do not
-support the `TEXT` response modality, so to get text alongside speech you use
-[audio transcription](configuration.md#audio-transcription).
-
-### Per-model feature support
-
-A few `RunConfig` and tool settings depend on which model you are running:
-
-| Feature | Gemini 2.5 Flash Live | Gemini 3.1 Flash Live |
-|---|---|---|
-| [Proactivity and affective dialog](configuration.md#proactivity-and-affective-dialog) | Opt-in via `RunConfig` | Not supported |
-| [`response_scheduling`](tools.md#non-blocking-tools) on tools | Supported | Not supported; function calling is synchronous, so the model stays silent until you return the tool response |
-| Thinking control | `thinking_budget` | `thinking_level` (`minimal`, `low`, `medium`, `high`) |
-
-!!! warning "Moving from 2.5 to 3.1"
-
-    Leaving `RunConfig.proactivity` or `RunConfig.enable_affective_dialog` set is the most
-    common upgrade failure — remove them. Two more differences bite client code: a single
-    server event can now carry several content parts at once, so iterate over
-    `event.content.parts` instead of reading `parts[0]`; and turn coverage now defaults to
-    including all detected audio activity and video frames, which changes token costs if you
-    stream video continuously. See the upstream
-    [migration notes](https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-live-preview#migrating-from-gemini-25-flash-live).
 
 ## Platform limits and quotas
 
@@ -49378,8 +49802,11 @@ agent = Agent(
 # AI Studio
 DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 
-# AI Studio, if you do not need proactivity, affective dialog, or non-blocking tools
-# DEMO_AGENT_MODEL=gemini-3.1-flash-live-preview
+# AI Studio or Agent Platform
+# DEMO_AGENT_MODEL=gemini-3.8-live
+
+# AI Studio, for multi-step reasoning and slow tools
+# DEMO_AGENT_MODEL=gemini-3.8-live-extended-thinking
 
 # Agent Platform
 # DEMO_AGENT_MODEL=gemini-live-2.5-flash-native-audio
@@ -49416,7 +49843,7 @@ DEMO_AGENT_MODEL=gemini-2.5-flash-native-audio-preview-12-2025
 
 **Selecting the right model:**
 
-1. **Choose a backend**: AI Studio for prototyping, Agent Platform for production. This picks the ID column in the table above, and on Agent Platform it settles the model too — Gemini 2.5 Flash Live is the only Live model there
+1. **Choose a backend**: AI Studio for prototyping, Agent Platform for production. This picks the ID column in the table above, and on Agent Platform it narrows the choice to Gemini 2.5 Flash Live and Gemini 3.8 Live
 2. **Check current availability**: Refer to the model table above and the official documentation
 3. **Configure environment variable**: Set the model name in your `.env` file and read it from there when constructing the agent
 
@@ -49839,7 +50266,7 @@ runs. ADK gives you two ways to do that, plus plain blocking for the fast case:
 | Your situation | Use | How |
 |---|---|---|
 | Tool returns in under a second | **Blocking** (the default) | A normal `return` tool |
-| Long wait with nothing to narrate | **[Non-blocking tool](#non-blocking-tools)** | Set `response_scheduling` on the tool |
+| Long wait with nothing to narrate | **[Non-blocking tool](#non-blocking-tools)** | Set `response_scheduling` or `behavior` on the tool |
 | Long wait worth narrating | **[Streaming tool](#streaming-tools)** | `yield` progress from an async generator |
 
 ## Non-blocking tools
@@ -49878,6 +50305,20 @@ the result in when it is ready. A runnable example ships as the
 | `WHEN_IDLE` | Waits for a natural pause | Reports and lookups, the usual choice |
 | `INTERRUPT` | Delivers immediately | Alarms, failures, "the transfer failed" |
 | `SILENT` | Enters context, announced only if relevant | Background info the model may use later |
+
+### Setting `behavior` explicitly
+
+You can also mark a tool non-blocking with the `behavior` field. When set, it takes
+precedence over `response_scheduling`:
+
+```python
+report_tool = FunctionTool(export_report)
+report_tool.behavior = types.Behavior.NON_BLOCKING
+```
+
+!!! note "Requires ADK Python 2.10 or higher"
+
+    The `behavior` field was added in adk-python 2.10.
 
 ## Streaming tools
 
