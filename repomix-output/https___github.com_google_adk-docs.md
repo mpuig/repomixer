@@ -1361,7 +1361,7 @@ compile classpath as well, because `A2AAgent`'s `httpClient` parameter defaults
 to `JdkA2AHttpClient()`:
 
 ```kotlin title="build.gradle.kts"
-implementation("com.google.adk:google-adk-kotlin-a2a:1.4.0")
+implementation("com.google.adk:google-adk-kotlin-a2a:1.5.0")
 implementation("org.a2aproject.sdk:a2a-java-sdk-client:1.3.2.Final")
 ```
 
@@ -4247,8 +4247,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
-    implementation("com.google.adk:google-adk-kotlin-litertlm:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.5.0")
+    implementation("com.google.adk:google-adk-kotlin-litertlm:1.5.0")
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:0.13.1")
     // other dependencies...
 }
@@ -20768,8 +20768,8 @@ across supported languages. For a guided introduction, start with the
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.5.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.5.0")
     }
     ```
 
@@ -21181,8 +21181,8 @@ An ADK Kotlin agent project requires the following dependencies in your
 
 ```kotlin title="my_agent/build.gradle.kts (partial)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.5.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.5.0")
 }
 ```
 
@@ -21202,9 +21202,9 @@ dependencies {
     }
 
     dependencies {
-        implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
-        implementation("com.google.adk:google-adk-kotlin-webserver:1.4.0")
-        ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
+        implementation("com.google.adk:google-adk-kotlin-core:1.5.0")
+        implementation("com.google.adk:google-adk-kotlin-webserver:1.5.0")
+        ksp("com.google.adk:google-adk-kotlin-processor:1.5.0")
     }
 
     kotlin {
@@ -21308,9 +21308,9 @@ to your `build.gradle.kts`:
 
 ```kotlin title="my_agent/build.gradle.kts (add to dependencies)"
 dependencies {
-    implementation("com.google.adk:google-adk-kotlin-core:1.4.0")
-    implementation("com.google.adk:google-adk-kotlin-webserver:1.4.0")
-    ksp("com.google.adk:google-adk-kotlin-processor:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-core:1.5.0")
+    implementation("com.google.adk:google-adk-kotlin-webserver:1.5.0")
+    ksp("com.google.adk:google-adk-kotlin-processor:1.5.0")
 }
 ```
 
@@ -28922,7 +28922,7 @@ The `pyarrow` dependency is no longer included in the general `gcp` extra. If
     core, so add the integrations artifact:
 
     ```kotlin title="build.gradle.kts"
-    implementation("com.google.adk:google-adk-kotlin-integrations:1.4.0")
+    implementation("com.google.adk:google-adk-kotlin-integrations:1.5.0")
     ```
 
     ```kotlin title="BigQueryAnalyticsExample.kt"
@@ -42241,7 +42241,7 @@ catalog_tags: ["data"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-The [`adk-perseus-vault-memory`](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
+The [`adk-perseus-vault-memory`](https://pypi.org/project/adk-perseus-vault-memory/)
 integration connects your ADK agent to Perseus Vault, a persistent,
 cross-session memory backend. Backed by a single Rust binary with an embedded
 SQLite database, it requires **zero cloud dependencies**, and everything runs
@@ -42358,7 +42358,6 @@ session = await runner.session_service.create_session(
 
 ## Resources
 
-- [adk-perseus-vault-memory on GitHub](https://github.com/Perseus-Computing-LLC/adk-mimir-memory)
 - [adk-perseus-vault-memory on PyPI](https://pypi.org/project/adk-perseus-vault-memory/)
 - [Perseus Context integration](/integrations/perseus/)
 
@@ -42378,7 +42377,7 @@ catalog_tags: ["data", "mcp"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-The [`adk-perseus-context`](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
+The [`adk-perseus-context`](https://pypi.org/project/adk-perseus-context/)
 integration injects a deterministically compiled context into your ADK agent's
 system instruction. It is powered by Perseus, an open-source context compiler:
 Perseus resolves directives like `@file`, `@search`, and `@memory` into one
@@ -42526,7 +42525,6 @@ agent = Agent(
 
 ## Resources
 
-- [adk-perseus-context on GitHub](https://github.com/Perseus-Computing-LLC/adk-perseus-context)
 - [adk-perseus-context on PyPI](https://pypi.org/project/adk-perseus-context/)
 - [Perseus Vault Memory integration](/integrations/perseus-vault/)
 
