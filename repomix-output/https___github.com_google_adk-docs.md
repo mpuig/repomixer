@@ -2362,8 +2362,10 @@ File: docs/agents/models/google-gemini/deferred-schedule.md
 Agent workloads have different latency needs. An interactive assistant must
 answer immediately, but a summarization job, a bulk evaluation run, or a
 document-processing pipeline can wait for capacity. Deferred scheduling lets
-ADK agents queue those model calls to run on off-peak capacity instead
-of competing for interactive capacity.
+ADK agents queue the model calls for those workloads to run on off-peak
+capacity at a
+[discounted rate](https://cloud.google.com/gemini-enterprise-agent-platform/generative-ai/pricing),
+instead of competing for interactive capacity.
 
 You can request deferred scheduling per run, using the `service_tier` setting
 of `RunConfig`. The setting is part of the run configuration rather than the
@@ -2372,9 +2374,9 @@ and batch workloads.
 
 !!! example "Preview: Deferred capacity requires allowlisted access"
 
-    This Google Cloud feature is a Preview capability, 
-    and running requests on deferred capacity requires an allowlist for 
-    your Google Cloud project. For more information, see 
+    This Google Cloud feature is a Preview capability,
+    and running requests on deferred capacity requires an allowlist for
+    your Google Cloud project. For more information, see
     [Autonomous agent scheduling](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/efficiency/autonomous-scheduling).
 
 ## Get started
@@ -2449,8 +2451,8 @@ standard run.
 
     The `run_async()` method yields no events while the request sits in the
     queue. How long that takes depends on backend load, and ADK applies no
-    upper bound. In a web UI or a terminal, the delay looks like a hang. Show a
-    progress indicator, or set a
+    upper bound. In a web UI or a terminal, the application appears
+    unresponsive during the delay. Show a progress indicator, or set a
     [client deadline](#set-a-client-side-deadline).
 
 To confirm that the tier took effect, check your application logs for these
@@ -2473,7 +2475,8 @@ instead of a result.
 
 ADK then waits for that result, checking the queued work with exponential
 backoff and absorbing transient read failures until it reaches a final status.
-It converts that result to a normal response event and yields it. This loop is
+It converts that result to a normal response event and yields it. If 5
+consecutive reads fail, ADK raises the error from the last read. This loop is
 internal: it does not surface interaction IDs, and you do not need to write any
 retrieval code. It does add a few seconds of polling delay on top of the queue
 wait, so deferred scheduling should not be used for short, latency-sensitive
@@ -2500,7 +2503,7 @@ model call in a run:
 The `ServiceTier` enum defines the following tiers:
 
 *   `ServiceTier.DEFERRED`: Queues the call to run on off-peak capacity. The
-    call waits for room instead of failing when capacity is tight. No other
+    call waits for room instead of failing when capacity is limited. No other
     tier changes how ADK executes the request, and it cannot be combined with
     streaming.
 *   `ServiceTier.FLEX`: Best-effort capacity at a lower cost, with no latency
@@ -2545,20 +2548,21 @@ backend load. To cap the total elapsed time, wrap the run in an
     )
     run_config = RunConfig(service_tier=ServiceTier.DEFERRED)
 
-    try:
-      async with asyncio.timeout(300):
-        async for event in runner.run_async(
-            user_id='user_123',
-            session_id=session.id,
-            new_message=message,
-            run_config=run_config,
-        ):
-          if event.content and event.content.parts:
-            for part in event.content.parts:
-              if part.text:
-                print(part.text)
-    except TimeoutError:
-      logger.error('Deferred run exceeded the 300 second client deadline.')
+    async def run_with_deadline(runner, session) -> None:
+      try:
+        async with asyncio.timeout(300):
+          async for event in runner.run_async(
+              user_id='user_123',
+              session_id=session.id,
+              new_message=message,
+              run_config=run_config,
+          ):
+            if event.content and event.content.parts:
+              for part in event.content.parts:
+                if part.text:
+                  print(part.text)
+      except TimeoutError:
+        logger.error('Deferred run exceeded the 300 second client deadline.')
     ```
 
 !!! danger "Client deadlines do not cancel requests"
@@ -8269,201 +8273,6 @@ When both `services.yaml` and `services.py` are present in the target directory:
     `services.py`.
 2.  **Precedence**: If a service with the same scheme is defined in both files,
     the definition in `services.py` takes precedence.
-
-================
-File: docs/api-reference/java/legal/dejavufonts.md
-================
-## DejaVu fonts v2.37
-
-### DejaVu License
-<pre>
-Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
-Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)
-
-
-Bitstream Vera Fonts Copyright
-------------------------------
-
-Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is
-a trademark of Bitstream, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of the fonts accompanying this license ("Fonts") and associated
-documentation files (the "Font Software"), to reproduce and distribute the
-Font Software, including without limitation the rights to use, copy, merge,
-publish, distribute, and/or sell copies of the Font Software, and to permit
-persons to whom the Font Software is furnished to do so, subject to the
-following conditions:
-
-The above copyright and trademark notices and this permission notice shall
-be included in all copies of one or more of the Font Software typefaces.
-
-The Font Software may be modified, altered, or added to, and in particular
-the designs of glyphs or characters in the Fonts may be modified and
-additional glyphs or characters may be added to the Fonts, only if the fonts
-are renamed to names not containing either the words "Bitstream" or the word
-"Vera".
-
-This License becomes null and void to the extent applicable to Fonts or Font
-Software that has been modified and is distributed under the "Bitstream
-Vera" names.
-
-The Font Software may be sold as part of a larger software package but no
-copy of one or more of the Font Software typefaces may be sold by itself.
-
-THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT,
-TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL BITSTREAM OR THE GNOME
-FOUNDATION BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING
-ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE
-FONT SOFTWARE.
-
-Except as contained in this notice, the names of Gnome, the Gnome
-Foundation, and Bitstream Inc., shall not be used in advertising or
-otherwise to promote the sale, use or other dealings in this Font Software
-without prior written authorization from the Gnome Foundation or Bitstream
-Inc., respectively. For further information, contact: fonts at gnome dot
-org.
-
-Arev Fonts Copyright
-------------------------------
-
-Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of the fonts accompanying this license ("Fonts") and
-associated documentation files (the "Font Software"), to reproduce
-and distribute the modifications to the Bitstream Vera Font Software,
-including without limitation the rights to use, copy, merge, publish,
-distribute, and/or sell copies of the Font Software, and to permit
-persons to whom the Font Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright and trademark notices and this permission notice
-shall be included in all copies of one or more of the Font Software
-typefaces.
-
-The Font Software may be modified, altered, or added to, and in
-particular the designs of glyphs or characters in the Fonts may be
-modified and additional glyphs or characters may be added to the
-Fonts, only if the fonts are renamed to names not containing either
-the words "Tavmjong Bah" or the word "Arev".
-
-This License becomes null and void to the extent applicable to Fonts
-or Font Software that has been modified and is distributed under the
-"Tavmjong Bah Arev" names.
-
-The Font Software may be sold as part of a larger software package but
-no copy of one or more of the Font Software typefaces may be sold by
-itself.
-
-THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
-OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL
-TAVMJONG BAH BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
-DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
-OTHER DEALINGS IN THE FONT SOFTWARE.
-
-Except as contained in this notice, the name of Tavmjong Bah shall not
-be used in advertising or otherwise to promote the sale, use or other
-dealings in this Font Software without prior written authorization
-from Tavmjong Bah. For further information, contact: tavmjong @ free
-. fr.
-
-TeX Gyre DJV Math
------------------
-Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
-
-Math extensions done by B. Jackowski, P. Strzelczyk and P. Pianowski
-(on behalf of TeX users groups) are in public domain.
-
-Letters imported from Euler Fraktur from AMSfonts are (c) American
-Mathematical Society (see below).
-Bitstream Vera Fonts Copyright
-Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera
-is a trademark of Bitstream, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of the fonts accompanying this license ("Fonts") and associated
-documentation
-files (the "Font Software"), to reproduce and distribute the Font Software,
-including without limitation the rights to use, copy, merge, publish,
-distribute,
-and/or sell copies of the Font Software, and to permit persons  to whom
-the Font Software is furnished to do so, subject to the following
-conditions:
-
-The above copyright and trademark notices and this permission notice
-shall be
-included in all copies of one or more of the Font Software typefaces.
-
-The Font Software may be modified, altered, or added to, and in particular
-the designs of glyphs or characters in the Fonts may be modified and
-additional
-glyphs or characters may be added to the Fonts, only if the fonts are
-renamed
-to names not containing either the words "Bitstream" or the word "Vera".
-
-This License becomes null and void to the extent applicable to Fonts or
-Font Software
-that has been modified and is distributed under the "Bitstream Vera"
-names.
-
-The Font Software may be sold as part of a larger software package but
-no copy
-of one or more of the Font Software typefaces may be sold by itself.
-
-THE FONT SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT,
-TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL BITSTREAM OR THE GNOME
-FOUNDATION
-BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL,
-SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN
-ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR
-INABILITY TO USE
-THE FONT SOFTWARE OR FROM OTHER DEALINGS IN THE FONT SOFTWARE.
-Except as contained in this notice, the names of GNOME, the GNOME
-Foundation,
-and Bitstream Inc., shall not be used in advertising or otherwise to promote
-the sale, use or other dealings in this Font Software without prior written
-authorization from the GNOME Foundation or Bitstream Inc., respectively.
-For further information, contact: fonts at gnome dot org.
-
-AMSFonts (v. 2.2) copyright
-
-The PostScript Type 1 implementation of the AMSFonts produced by and
-previously distributed by Blue Sky Research and Y&Y, Inc. are now freely
-available for general use. This has been accomplished through the
-cooperation
-of a consortium of scientific publishers with Blue Sky Research and Y&Y.
-Members of this consortium include:
-
-Elsevier Science IBM Corporation Society for Industrial and Applied
-Mathematics (SIAM) Springer-Verlag American Mathematical Society (AMS)
-
-In order to assure the authenticity of these fonts, copyright will be
-held by
-the American Mathematical Society. This is not meant to restrict in any way
-the legitimate use of the fonts, such as (but not limited to) electronic
-distribution of documents containing these fonts, inclusion of these fonts
-into other public domain or commercial font collections or computer
-applications, use of the outline data to create derivative fonts and/or
-faces, etc. However, the AMS does require that the AMS copyright notice be
-removed from any derivative versions of the fonts which have been altered in
-any way. In addition, to ensure the fidelity of TeX documents using Computer
-Modern fonts, Professor Donald Knuth, creator of the Computer Modern faces,
-has requested that any alterations which yield different font metrics be
-given a different name.
-
-</pre>
 
 ================
 File: docs/api-reference/java/legal/jquery.md
