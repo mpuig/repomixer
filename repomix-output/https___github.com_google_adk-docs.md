@@ -11629,7 +11629,7 @@ File: docs/context/index.md
 # Agent context
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 In the Agent Development Kit (ADK), *context* refers to the crucial bundle of information available to your agent and its tools during specific operations. Think of it as the necessary background knowledge and resources needed to handle a current task or conversation turn effectively.
@@ -11736,6 +11736,14 @@ The central piece holding all this information together for a single, complete u
     }
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.runners.InMemoryRunner
+
+    --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:conceptual_runner_example"
+    ```
+
 ## Types of context
 
 ADK uses the `Context` class as the central mechanism to manage an agent's environment, state, and resources. While `Context` serves as the foundational base for all agent interactions, it manifests in specialized "flavors" designed to provide the right balance of capabilities and permissions depending on where they are used in the agent's execution flow.
@@ -11832,6 +11840,18 @@ Here are the primary context flavors you will encounter:
         }
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.agents.BaseAgent
+        import com.google.adk.kt.agents.InvocationContext
+        import com.google.adk.kt.events.Event
+        import kotlinx.coroutines.flow.Flow
+        import kotlinx.coroutines.flow.flow
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:invocation_context_agent"
+        ```
+
 ### `ReadonlyContext`
 - **Where Used:** Provided in scenarios where only read access to basic information is needed and mutation is disallowed (e.g., `InstructionProvider` functions). It's also the base class for other contexts.
 - **Purpose:** Offers a safe, read-only view of fundamental contextual details.
@@ -11893,6 +11913,16 @@ Here are the primary context flavors you will encounter:
         }
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.agents.ReadonlyContext
+        import com.google.adk.kt.types.Content
+        import com.google.adk.kt.types.Part
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:readonly_context_instruction"
+        ```
+
 ### `CallbackContext` and `Context`
 
 - **Where Used:** Passed as `callback_context` to agent lifecycle callbacks (`before_agent_callback`, `after_agent_callback`) and model interaction callbacks (`before_model_callback`, `after_model_callback`).
@@ -11906,78 +11936,89 @@ Here are the primary context flavors you will encounter:
 
     In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by the `Context` type.
 
-    === "Python"
+=== "Python"
 
-        ```python
-        # Example: Callback receiving Context (CallbackContext is unified into Context)
-        from google.adk.agents.context import Context
-        from google.adk.models import LlmRequest
-        from google.genai import types
-        from typing import Optional
+    ```python
+    # Example: Callback receiving Context (CallbackContext is unified into Context)
+    from google.adk.agents.context import Context
+    from google.adk.models import LlmRequest
+    from google.genai import types
+    from typing import Optional
 
-        def my_before_model_cb(context: Context, request: LlmRequest) -> Optional[types.Content]:
-            # Read/Write state example
-            call_count = context.state.get("model_calls", 0)
-            context.state["model_calls"] = call_count + 1 # Modify state (tracks delta)
+    def my_before_model_cb(context: Context, request: LlmRequest) -> Optional[types.Content]:
+        # Read/Write state example
+        call_count = context.state.get("model_calls", 0)
+        context.state["model_calls"] = call_count + 1 # Modify state (tracks delta)
 
-            # Optionally load an artifact
-            # config_part = context.load_artifact("model_config.json")
-            print(f"Preparing model call #{call_count + 1} for invocation {context.invocation_id}")
-            return None # Allow model call to proceed
-        ```
+        # Optionally load an artifact
+        # config_part = context.load_artifact("model_config.json")
+        print(f"Preparing model call #{call_count + 1} for invocation {context.invocation_id}")
+        return None # Allow model call to proceed
+    ```
 
-    === "TypeScript"
+=== "TypeScript"
 
-        ```typescript
-        // Pseudocode: Callback receiving Context
-        import { Context, LlmRequest } from '@google/adk';
-        import { Content } from '@google/genai';
+    ```typescript
+    // Pseudocode: Callback receiving Context
+    import { Context, LlmRequest } from '@google/adk';
+    import { Content } from '@google/genai';
 
-        function myBeforeModelCb(context: Context, request: LlmRequest): Content | undefined {
-          // Read/Write state example
-          const callCount = (context.state.get('model_calls') as number) || 0;
-          context.state.set('model_calls', callCount + 1); // Modify state
+    function myBeforeModelCb(context: Context, request: LlmRequest): Content | undefined {
+      // Read/Write state example
+      const callCount = (context.state.get('model_calls') as number) || 0;
+      context.state.set('model_calls', callCount + 1); // Modify state
 
-          // Optionally load an artifact
-          // const configPart = await context.loadArtifact('model_config.json');
-          console.log(`Preparing model call #${callCount + 1} for invocation ${context.invocationId}`);
-          return undefined; // Allow model call to proceed
-        }
-        ```
+      // Optionally load an artifact
+      // const configPart = await context.loadArtifact('model_config.json');
+      console.log(`Preparing model call #${callCount + 1} for invocation ${context.invocationId}`);
+      return undefined; // Allow model call to proceed
+    }
+    ```
 
-    === "Go"
+=== "Go"
 
-        ```go
-        import (
-        	"fmt"
+    ```go
+    import (
+      "fmt"
 
-        	"google.golang.org/adk/v2/agent"
-        	"google.golang.org/adk/v2/model"
-        )
+      "google.golang.org/adk/v2/agent"
+      "google.golang.org/adk/v2/model"
+    )
 
-        --8<-- "examples/go/snippets/context/main.go:callback_context_callback"
-        ```
+    --8<-- "examples/go/snippets/context/main.go:callback_context_callback"
+    ```
 
-    === "Java"
+=== "Java"
 
-        ```java
-        // Example: Callback receiving CallbackContext
-        import com.google.adk.agents.CallbackContext;
-        import com.google.adk.models.LlmRequest;
-        import com.google.adk.models.LlmResponse;
-        import io.reactivex.rxjava3.core.Maybe;
+    ```java
+    // Example: Callback receiving CallbackContext
+    import com.google.adk.agents.CallbackContext;
+    import com.google.adk.models.LlmRequest;
+    import com.google.adk.models.LlmResponse;
+    import io.reactivex.rxjava3.core.Maybe;
 
-        public Maybe<LlmResponse> myBeforeModelCb(CallbackContext callbackContext, LlmRequest request) {
-            // Read/Write state example
-            int callCount = (int) callbackContext.state().getOrDefault("model_calls", 0);
-            callbackContext.state().put("model_calls", callCount + 1); // Modify state (tracks delta)
+    public Maybe<LlmResponse> myBeforeModelCb(CallbackContext callbackContext, LlmRequest request) {
+        // Read/Write state example
+        int callCount = (int) callbackContext.state().getOrDefault("model_calls", 0);
+        callbackContext.state().put("model_calls", callCount + 1); // Modify state (tracks delta)
 
-            // Optionally load an artifact
-            // Maybe<Part> configPart = callbackContext.loadArtifact("model_config.json");
-            System.out.println("Preparing model call " + (callCount + 1) + " for invocation " + callbackContext.invocationId());
-            return Maybe.empty(); // Allow model call to proceed
-        }
-        ```
+        // Optionally load an artifact
+        // Maybe<Part> configPart = callbackContext.loadArtifact("model_config.json");
+        System.out.println("Preparing model call " + (callCount + 1) + " for invocation " + callbackContext.invocationId());
+        return Maybe.empty(); // Allow model call to proceed
+    }
+    ```
+
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.CallbackContext
+    import com.google.adk.kt.callbacks.CallbackChoice
+    import com.google.adk.kt.models.LlmRequest
+    import com.google.adk.kt.models.LlmResponse
+
+    --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:callback_context_callback"
+    ```
 
 ### `ToolContext`
 - **Where Used:** Passed as `tool_context` to the functions backing `FunctionTool`s and to tool execution callbacks (`before_tool_callback`, `after_tool_callback`).
@@ -12083,7 +12124,15 @@ Here are the primary context flavors you will encounter:
         }
         ```
 
-Understanding these different context objects and when to use them is key to effectively managing state, accessing services, and controlling the flow of your ADK application. The next section will detail common tasks you can perform using these contexts.
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.tools.ToolContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:tool_context_tool"
+        ```
+
+Understanding these different context objects and when to use them is key to effectively managing state, accessing services, and controlling the flow of your ADK application.
 
 
 ## Common tasks using context
@@ -12195,6 +12244,17 @@ You'll frequently need to read information stored within the context.
         }
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.agents.CallbackContext
+        import com.google.adk.kt.tools.ToolContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:accessing_state_tool"
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:accessing_state_callback"
+        ```
+
 *   **Get current identifiers:** Useful for logging or custom logic based on the current operation.
 
     === "Python"
@@ -12246,6 +12306,14 @@ You'll frequently need to read information stored within the context.
             String functionCallId = toolContext.functionCallId().orElse("N/A"); // Specific to ToolContext
             System.out.println("Log: Invocation= " + invId + " Agent= " + agentName + " FunctionCallID= " + functionCallId);
         }
+        ```
+
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.tools.ToolContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:accessing_ids"
         ```
 
 *   **Access the initial user input:** Refer back to the message that started the current invocation.
@@ -12316,6 +12384,14 @@ You'll frequently need to read information stored within the context.
                 System.out.println("This invocation started with user input: " + initialText);
             }
         }
+        ```
+
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.agents.CallbackContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:accessing_initial_user_input"
         ```
 
 ### Manage state
@@ -12414,6 +12490,17 @@ State is crucial for memory and data flow. When you modify state using `Callback
         }
         ```
 
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.tools.ToolContext
+        import java.util.UUID
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:passing_data_tool1"
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:passing_data_tool2"
+        ```
+
 *   **Update user preferences:**
 
     === "Python"
@@ -12466,6 +12553,14 @@ State is crucial for memory and data flow. When you modify state using `Callback
             System.out.println("Set user preference '" + preference + "' to '" + value + "'");
             return Map.of("status", "Preference updated");
         }
+        ```
+
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.tools.ToolContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:updating_preferences"
         ```
 
 *   **State prefixes:** While basic state is session-specific, prefixes like `app:` and `user:` can be used with persistent `SessionService` implementations (like `DatabaseSessionService` or `VertexAiSessionService`) to indicate broader scope (app-wide or user-wide across sessions). `temp:` can denote data only relevant within the current invocation.
@@ -12565,6 +12660,15 @@ Use artifacts to handle files or large data blobs associated with the session. C
                // Example usage:
                // saveDocumentReference(context, "gs://my-bucket/docs/report.pdf")
                ```
+
+        === "Kotlin"
+
+            ```kotlin
+            import com.google.adk.kt.agents.CallbackContext
+            import com.google.adk.kt.types.Part
+
+            --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:artifacts_save_ref"
+            ```
 
     2.  **Summarizer Tool:** Load the artifact to get the path/URI, read the actual document content using appropriate libraries, summarize, and return the result.
 
@@ -12735,6 +12839,16 @@ Use artifacts to handle files or large data blobs associated with the session. C
             }
             ```
 
+        === "Kotlin"
+
+            ```kotlin
+            import com.google.adk.kt.tools.ToolContext
+            import java.io.File
+            import java.io.FileNotFoundException
+
+            --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:artifacts_summarize"
+            ```
+
 *   **List Artifacts:** Discover what files are available.
 
     === "Python"
@@ -12795,6 +12909,14 @@ Use artifacts to handle files or large data blobs associated with the session. C
                 return Map.of("error", "Artifact service error: " + e);
             }
         }
+        ```
+
+    === "Kotlin"
+
+        ```kotlin
+        import com.google.adk.kt.tools.ToolContext
+
+        --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:artifacts_list"
         ```
 
 ### Handle tool authentication
@@ -12978,7 +13100,7 @@ Securely manage API keys or other credentials needed by tools.
 ### Leveraging Memory
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Access relevant information from the past or external sources.
@@ -13061,6 +13183,14 @@ Access relevant information from the past or external sources.
     }
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.tools.ToolContext
+
+    --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:memory_search"
+    ```
+
 ### Render UI Widgets
 
 <div class="language-support-tag">
@@ -13096,10 +13226,10 @@ agent responses, use `context.render_ui_widget()`.
 ### Advanced: Direct `InvocationContext` Usage
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
-While most interactions happen via `CallbackContext` or `ToolContext`, sometimes the agent's core logic (`_run_async_impl`/`_run_live_impl`) needs direct access.
+While most interactions happen via `CallbackContext` or `ToolContext`, sometimes the agent's core logic needs direct access, such as `_run_async_impl` or `_run_live_impl` in Python, or `runAsyncImpl` in TypeScript, Java, and Kotlin.
 
 === "Python"
 
@@ -13214,7 +13344,22 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
     }
     ```
 
-Setting `ctx.end_invocation = True` is a way to gracefully stop the entire request-response cycle from within the agent or its callbacks/tools (via their respective context objects which also have access to modify the underlying `InvocationContext`'s flag).
+=== "Kotlin"
+
+    ```kotlin
+    import com.google.adk.kt.agents.BaseAgent
+    import com.google.adk.kt.agents.InvocationContext
+    import com.google.adk.kt.events.Event
+    import com.google.adk.kt.types.Content
+    import com.google.adk.kt.types.Part
+    import com.google.adk.kt.types.Role
+    import kotlinx.coroutines.flow.Flow
+    import kotlinx.coroutines.flow.flow
+
+    --8<-- "examples/kotlin/snippets/context/ContextExamples.kt:advanced_invocation_context"
+    ```
+
+Setting the end-of-invocation flag to **True** is a way to gracefully stop the entire request-response cycle from within the agent or its callbacks or tools via their respective context objects, which also have access to modify the underlying `InvocationContext`'s flag. Specifically,  use `ctx.end_invocation = True` in Python, `ctx.endInvocation = true` in TypeScript, `ctx.setEndInvocation(true)` in Java, or `context.isEndOfInvocation = true` or `context.endInvocation()` in Kotlin.
 
 ## Key Takeaways & Best Practices
 
@@ -14661,12 +14806,12 @@ unless you specify it as deployment setting, such as the `--with_ui` option for
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk</artifactId>
-             <version>1.12.0</version>
+             <version>1.14.0</version>
           </dependency>
           <dependency>
              <groupId>com.google.adk</groupId>
              <artifactId>google-adk-dev</artifactId>
-             <version>1.12.0</version>
+             <version>1.14.0</version>
           </dependency>
         </dependencies>
 
@@ -20534,13 +20679,13 @@ across supported languages. For a guided introduction, start with the
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.12.0</version>
+                <version>1.14.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.12.0</version>
+                <version>1.14.0</version>
             </dependency>
         </dependencies>
 
@@ -20555,8 +20700,8 @@ across supported languages. For a guided introduction, start with the
 
     ```title="build.gradle"
     dependencies {
-        implementation 'com.google.adk:google-adk:1.12.0'
-        implementation 'com.google.adk:google-adk-dev:1.12.0'
+        implementation 'com.google.adk:google-adk:1.14.0'
+        implementation 'com.google.adk:google-adk-dev:1.14.0'
     }
     ```
 
@@ -20694,7 +20839,7 @@ An ADK agent project requires this dependency in your
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.12.0</version>
+        <version>1.14.0</version>
     </dependency>
 </dependencies>
 ```
@@ -20729,13 +20874,13 @@ additional settings with the following configuration code:
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk</artifactId>
-                <version>1.12.0</version>
+                <version>1.14.0</version>
             </dependency>
             <!-- The ADK dev web UI to debug your agent -->
             <dependency>
                 <groupId>com.google.adk</groupId>
                 <artifactId>google-adk-dev</artifactId>
-                <version>1.12.0</version>
+                <version>1.14.0</version>
             </dependency>
         </dependencies>
 
@@ -22912,7 +23057,7 @@ the input process more predictable and reliable.
 
 === "TypeScript"
 
-    In ADK TypeScript v2.0.0, a human input node yields a `RequestInput`.
+    In ADK TypeScript, a human input node yields a `RequestInput`.
     The `step1` node pauses the workflow until the user replies, and the
     reply is passed to the next node as its input. A human-in-the-loop node
     does not require a model, which makes the pause deterministic.
@@ -22929,20 +23074,18 @@ the input process more predictable and reliable.
 
 === "Go"
 
-    In ADK Go v2.0.0, a HITL graph node is built with
-    `workflow.NewEmittingFunctionNode` and `workflow.ResumeOrRequestInput`.
-    This is the direct equivalent of Python's `RequestInput` node:
-
-    -   On the **first pass**, `workflow.ResumeOrRequestInput` emits a
-        `session.RequestInput` event (surfaced as `Event.RequestedInput`) and
-        returns `ErrNodeInterrupted`, pausing the workflow.
-    -   After the human replies, the node is **re-invoked from the top**
-        (`RerunOnResume: &true`) and `ResumeOrRequestInput` returns the reply
-        payload, which flows as typed input to the next node via `event.Output`.
+    In ADK Go, a human input node emits a request with
+    `workflow.NewRequestInputEvent` and returns `workflow.ErrNodeInterrupted`.
+    The `step1` node pauses the workflow until the user replies. The node does
+    not run again. The reply becomes its output and is passed to the next node.
 
     ```go
-    --8<-- "examples/go/snippets/graphs/human-input/main.go:graph-hitl-get-started"
+    --8<-- "examples/go/snippets/graphs/human-input/main.go:graph-hitl-handoff"
     ```
+
+    A node that needs to run again after the reply sets `RerunOnResume` and
+    calls `workflow.ResumeOrRequestInput` instead. For more information, see
+    [human input in dynamic workflows](/graphs/dynamic/#human-input).
 
 ## Configuration options
 
@@ -22992,21 +23135,17 @@ the input process more predictable and reliable.
     -   **`Payload`** (`any`): Optional structured data sent alongside the
         prompt so the client can render additional context. Equivalent to
         Python's `payload` parameter.
+    -   **`ResponseSchema`** (`*jsonschema.Schema`): Optional JSON schema the
+        reply must conform to. Equivalent to Python's `response_schema`
+        parameter.
 
-    `workflow.NodeConfig.RerunOnResume` controls what happens on resume:
+    The `workflow.NodeConfig.RerunOnResume` field controls what happens on resume:
 
     -   **`&true`**: the node body is re-run from the top; `ResumeOrRequestInput`
         returns the human's reply on the second pass. Required for nodes that
         use `ResumeOrRequestInput`.
     -   **`&false`** or **`nil`** (leaf default): the reply is routed to the
         node's successor as input, bypassing the interrupted node.
-
-    !!! note "Note: Structured response from the client"
-
-        ADK Go does not automatically parse or validate the structure of the
-        human's reply payload. If your workflow needs structured feedback,
-        include a UI or a downstream agent node to validate the response before
-        acting on it.
 
 !!! note "Note: Response schema input limitations"
 
@@ -36927,7 +37066,7 @@ session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 
 ## Manage Memory with `VertexAiMemoryBankService` {#memory-bank}
 
-[`VertexAiMemoryBankService`](/sessions/memory.md#memory-bank)
+[`VertexAiMemoryBankService`](/sessions/memory/#memory-bank)
 is compatible with Agent Platform express mode API Keys. You can instead initialize
 the memory object without any project or location.
 
@@ -37146,7 +37285,7 @@ ADK provides a native integration for managing persistent agent session states u
 
     Use the same version for both `google-adk` and
     `google-adk-firestore-session-service` to guarantee compatibility. The
-    examples below use `1.12.0`; check for the latest ADK version and use it in
+    examples below use `1.14.0`; check for the latest ADK version and use it in
     both dependencies.
 
 Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
@@ -37160,13 +37299,13 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk</artifactId>
-        <version>1.12.0</version>
+        <version>1.14.0</version>
     </dependency>
     <!-- Firestore Session Service -->
     <dependency>
         <groupId>com.google.adk</groupId>
         <artifactId>google-adk-firestore-session-service</artifactId>
-        <version>1.12.0</version>
+        <version>1.14.0</version>
     </dependency>
 </dependencies>
 ```
@@ -37176,9 +37315,9 @@ Add the following dependencies to your `pom.xml` (Maven) or `build.gradle`
 ```gradle
 dependencies {
     // ADK Core
-    implementation 'com.google.adk:google-adk:1.12.0'
+    implementation 'com.google.adk:google-adk:1.14.0'
     // Firestore Session Service
-    implementation 'com.google.adk:google-adk-firestore-session-service:1.12.0'
+    implementation 'com.google.adk:google-adk-firestore-session-service:1.14.0'
 }
 ```
 
@@ -37334,7 +37473,7 @@ catalog_tags: ["observability", "evaluation"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
-[Freeplay](https://freeplay.ai/) provides an end-to-end workflow for building
+[Freeplay](https://app.freeplay.ai/) provides an end-to-end workflow for building
 and optimizing AI agents, and it can be integrated with ADK. With Freeplay your
 whole team can easily collaborate to iterate on agent instructions (prompts),
 experiment with and compare different models and agent changes, run evals both
@@ -37366,7 +37505,7 @@ full sample ADK agent repo
 
 ### Create a Freeplay Account
 
-Sign up for a free [Freeplay account](https://freeplay.ai/signup).
+Sign up for a free [Freeplay account](https://app.freeplay.ai/signup).
 
 After creating an account, you can define the following environment variables:
 
@@ -37520,7 +37659,7 @@ is a code example for executing a batch test on Freeplay with ADK.
 
 ## Sign up now
 
-Go to [Freeplay](https://freeplay.ai/) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
+Go to [Freeplay](https://app.freeplay.ai/signup) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
 
 ================
 File: docs/integrations/future-agi.md
@@ -49169,7 +49308,7 @@ File: docs/live/architectures/speech-to-speech.md
     <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-In a speech-to-speech architecture, a single multimodal model processes incoming audio, executes reasoning and tool calls, and generates spoken audio directly over a persistent [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) connection, without converting the speech to text between the input and output..
+In a speech-to-speech architecture, a single multimodal model processes incoming audio, executes reasoning and tool calls, and generates spoken audio directly over a persistent [Gemini Live API](https://ai.google.dev/gemini-api/docs/live-api) connection, without converting the speech to text between the input and output.
 
 For a comparison with chained STT-LLM-TTS pipelines, see [Choose a voice architecture](index.md).
 
@@ -49468,7 +49607,7 @@ Replace your existing pom.xml with the following.
     <auto-value.version>1.11.0</auto-value.version>
     <!-- Main class for exec-maven-plugin -->
     <exec.mainClass>samples.liveaudio.LiveAudioRun</exec.mainClass>
-    <google-adk.version>1.12.0</google-adk.version>
+    <google-adk.version>1.14.0</google-adk.version>
   </properties>
 
   <dependencyManagement>
@@ -50186,7 +50325,7 @@ File: docs/live/configuration.md
 `RunConfig` is where you shape a live session: how the agent sounds, how it transcribes
 speech, when it decides a turn is over, how much history it keeps, and what limits it runs
 under. You pass it to
-[`Runner.run_live()`](https://google.github.io/adk-docs/api-reference/python/), and it
+[`Runner.run_live()`](../api-reference/python/google-adk.html#google.adk.runners.Runner.run_live), and it
 applies to that session only. Two users of the same agent can run with completely
 different configurations.
 
@@ -61252,7 +61391,7 @@ File: docs/skills/index.md
 # Skills for ADK agents
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v1.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span><span class="lst-preview">Experimental</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.25.0</span><span class="lst-typescript">TypeScript v0.6.1</span><span class="lst-go">Go v1.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 An agent ***Skill*** is a self-contained unit of functionality that an ADK agent
@@ -61262,13 +61401,11 @@ instructions, resources, and tools required for a task, based on the
 The structure of a Skill allows it to be loaded incrementally to minimize the
 impact on the operating context window of the agent.
 
-!!! example "Experimental"
+!!! example "Experimental in TypeScript and Kotlin"
     
-    The Skills feature is experimental. We welcome your feedback via the
-    respective ADK GitHub repositories:
-    [ADK Python](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=skills),
+    The Skills feature is experimental in ADK TypeScript and ADK Kotlin. We
+    welcome your feedback via the respective ADK repositories:
     [ADK TypeScript](https://github.com/google/adk-js/issues/new?template=feature_request.md&labels=skills),
-    [ADK Go](https://github.com/google/adk-go/issues/new?template=feature_request.md&labels=skills),
     [ADK Kotlin](https://github.com/google/adk-kotlin/issues/new).
 
 ## Get started
