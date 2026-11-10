@@ -8457,7 +8457,7 @@ File: docs/apps/index.md
 # App workflow management class
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v1.4.0</span><span class="lst-java">Java v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v1.4.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v0.4.0</span>
 </div>
 
 The ***App*** class is a top-level container for an entire Agent Development Kit
@@ -8574,6 +8574,32 @@ sample code:
         .build();
     ```
 
+=== "Kotlin"
+
+    ```kotlin title="Agent.kt"
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.apps.App
+    import com.google.adk.kt.models.Gemini
+
+    val rootAgent =
+        LlmAgent(
+            model = Gemini(name = "gemini-flash-latest"),
+            name = "greeter_agent",
+            description = "An agent that provides a friendly greeting.",
+            instruction = Instruction("Reply with Hello, World!"),
+        )
+
+    val app =
+        App(
+            appName = "agents",
+            rootAgent = rootAgent,
+            // Optionally include App-level features:
+            // plugins, resumabilityConfig, eventsCompactionConfig,
+            // contextCacheConfig
+        )
+    ```
+
 !!! tip "Recommended: Use `app` variable name"
 
     In your agent project code, set your ***App*** object to the variable name
@@ -8659,6 +8685,36 @@ You can use the ***Runner*** class to run your agent workflow using the
     }
     ```
 
+=== "Kotlin"
+
+    ```kotlin title="Main.kt"
+    import com.google.adk.kt.runners.InMemoryRunner
+    import com.google.adk.kt.types.Content
+    import com.google.adk.kt.types.Role
+    import kotlinx.coroutines.runBlocking
+
+    // Set a Runner using the application object defined in Agent.kt
+    val runner = InMemoryRunner(app = app)
+
+    fun main() =
+        runBlocking {
+            try {
+                runner
+                    .runAsync(
+                        userId = "user",
+                        sessionId = "session-1",
+                        newMessage = Content.fromText(Role.USER, "Hello there!"),
+                    ).collect { event ->
+                        if (event.isFinalResponse && event.content != null) {
+                            println("Response: ${event.contentText()}")
+                        }
+                    }
+            } catch (e: Exception) {
+                println("An error occurred during agent execution: $e")
+            }
+        }
+    ```
+
 !!! note "Version requirement for `Runner.run_debug()` "
 
     The `Runner.run_debug()` command requires ADK Python v1.18.0 or higher.
@@ -8684,6 +8740,14 @@ You can use the ***Runner*** class to run your agent workflow using the
 === "Java"
 
     Run your App agent with the `AppMain.java` code using your build tool (e.g. Gradle `application` plugin):
+
+    ```console
+    ./gradlew run
+    ```
+
+=== "Kotlin"
+
+    Run your App agent with the `Main.kt` code using your build tool, such as the Gradle `application` plugin:
 
     ```console
     ./gradlew run
@@ -13741,6 +13805,26 @@ such as:
     ├── go.sum
     └── main.go
     ``` 
+
+    Your `main.go` must run your agent with the launcher from the
+    `google.golang.org/adk/v2/cmd/launcher/agentengine` package instead of
+    `full.NewLauncher()`, passing it the Agent Runtime resource ID from the
+    `GOOGLE_CLOUD_AGENT_ENGINE_ID` environment variable:
+
+    ```go
+    import "google.golang.org/adk/v2/cmd/launcher/agentengine"
+
+    // ...
+
+    l := agentengine.NewLauncher(os.Getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID"))
+    if err = l.Execute(ctx, config, os.Args[1:]); err != nil {
+        log.Fatalf("Run failed: %v\n\n%s", err, l.CommandLineSyntax())
+    }
+    ```
+
+    For a complete example, see
+    [examples/agentengine](https://github.com/google/adk-go/tree/v2.5.0/examples/agentengine)
+    in the ADK Go repository.
     
 
 
@@ -13799,8 +13883,11 @@ For `region`, you can find a list of the supported regions on the
     -p, --project_name string       GCP Project Name
     -r, --region string             GCP Region
     -d, --source_dir string         Directory to archive, defaults to current working directory
+        --agent_engine_id string    ID of the Agent Engine instance to update if it exists
     ```
 
+    To redeploy to an existing Agent Runtime instance instead of creating a new
+    one, pass its `RESOURCE_ID` with `--agent_engine_id`.
 
 ### Deploy command output
 
@@ -13943,7 +14030,9 @@ Depending on what programming language you use, additional libraries may be incl
 
 === "Go"
 
-    The deployment with Go *does* include the dedicated ADK API server.
+    The deployment with Go includes the ADK `agentengine` launcher, which serves
+    the Agent Runtime `:query` and `:streamQuery` methods. It *does not* include
+    the ADK API server or the ADK web user interface.
 
 ================
 File: docs/deploy/agent-runtime/test.md
@@ -21908,8 +21997,9 @@ Each step in a workflow produces output for its successor.
     Use the ***return*** syntax when outputting ***Event*** data that does not
     require additional processing. When emitting data that requires additional
     processing, or if you are generating more than one data item, you can use
-    more than one ***yield*** command. Each ***yield*** call adds to a list of
-    data objects on the Event which is passed to the next node of a graph. A
+    more than one ***yield*** command. Each ***yield*** call emits a separate
+    ***Event***, but only one of those events may carry an `output`, and that
+    single value is what the next node of the graph receives. A
     ***return*** or ***yield*** command without a parameter passes a `None` value
     to the next node.
 
@@ -22090,7 +22180,7 @@ inside tools and callbacks regardless of which agent style you use.
           },
       )
 
-    async def task_attempt_node(node_input: Content, attempts: int):
+    async def task_attempt_node(node_input, attempts: int):
       yield Event(
           state={
               "attempts": attempts + 1,
@@ -22098,7 +22188,7 @@ inside tools and callbacks regardless of which agent style you use.
       )
 
     async def read_state_node(ctx: Context):
-      print(f"attempts state: {ctx.state}") # attempts state: attempts: 1
+      print(f"attempts state: {ctx.state['attempts']}") # attempts state: 1
 
     root_agent = Workflow(
         name="root_agent",
@@ -22167,6 +22257,8 @@ accepted and produced by any agent node.
     ***BaseModel*** to constrain any agent's input and output:
 
     ```python
+    from datetime import date
+
     from google.adk import Agent
     from pydantic import BaseModel
 
@@ -22175,6 +22267,16 @@ accepted and produced by any agent node.
         destination: str      # Airport code "CDG"
         departure_date: date  # date(2026, 3, 15)
         passengers: int = 1   # Number of passengers
+
+    class Flight(BaseModel):
+        carrier: str
+        price: float
+
+    def search_flights_api(
+        origin: str, destination: str, departure_date: date, passengers: int
+    ) -> list[dict]:
+        """Look up flights with your own flight-search provider."""
+        ...
 
     class FlightSearchOutput(BaseModel):
         flights: list[Flight]
@@ -22238,45 +22340,42 @@ accepted and produced by any agent node.
 
 === "Python"
 
-    Use the curly-brace `{ }` syntax to select properties from the input
-    schema, or `< >` to select a property and also qualify it by the name
-    of the source node:
+    Use `input_schema` on an agent to validate the structured output of the
+    preceding node and deliver it as the agent's input. Refer to the fields of
+    that input by name in the instruction:
 
     ```python
     class CityTime(BaseModel):
         time_info: str  # time information
         city: str       # city name
 
-    def lookup_time_function(city: str):
+    def lookup_time_function(node_input: str):
         """Simulate returning the current time in the specified city."""
-        return Event(output=CityTime(time_info='10:10 AM', city=city))
+        return Event(output=CityTime(time_info='10:10 AM', city=node_input))
 
     city_report_agent = Agent(
         name="city_report_agent",
         model="gemini-flash-latest",
         input_schema=CityTime,
-
-        # data selection based on class and parameter
-        # instruction="""
-        #     Return a sentence in the following format:
-        #     It is {CityTime.time_info} in {CityTime.city} right now.
-        # """,
-
-        # more restrictive data selection based on source node name
         instruction="""
-            Return a sentence in the following format:
-            It is <CityTime.time_info from lookup_time_function> in
-            <CityTime.city from lookup_time_function> right now.
+            You receive a CityTime with time_info and city fields. Reply with a
+            single sentence stating that it is that time in that city right now.
         """,
     )
 
     root_agent = Workflow(
         name="root_agent",
         edges=[
-            (START, city_generator_agent, lookup_time_function, city_report_agent)
+            ("START", city_generator_agent, lookup_time_function, city_report_agent)
         ],
     )
     ```
+
+    The curly-brace `{key}` placeholders that an `instruction` supports are
+    substituted from *session state*, not from the node input, so a
+    placeholder such as `{CityTime.time_info}` is left in the prompt verbatim.
+    To template a value into an instruction, write it to state first, with
+    `output_key` or `Event(state=...)`, and reference it as `{time_info}`.
 
 === "TypeScript"
 
@@ -22301,9 +22400,9 @@ accepted and produced by any agent node.
     framework serializes it into `Event.Output`. The successor `AgentNode`
     receives the struct as its user content — the fields are available to the
     agent's `Instruction` without any `{key}` template syntax. This is the
-    direct equivalent of Python's `input_schema=CityTime` with
-    `{CityTime.time_info}` template placeholders: the struct fields are
-    delivered as typed input rather than looked up by name from state.
+    direct equivalent of Python's `input_schema=CityTime`: in both languages
+    the struct fields are delivered as typed input rather than looked up by
+    name from state.
 
     ```go
     --8<-- "examples/go/snippets/graphs/data-handling/main.go:structured-output"
@@ -22445,15 +22544,18 @@ run within a workflow.
     ***@node*** annotation:
 
     ```python
+    from typing import Any
+
+    from google.adk.workflow import FunctionNode
+
     # base function
-    def my_function_node(node_input: Any):
+    def hello_world(node_input: Any):
         return "Hello World"
 
     # FunctionNode wrapper with options
-    success_node = FunctionNode(
-        my_function_node,
-        name="hello",
-        rerun_on_resume=True,
+    my_function_node = FunctionNode(
+        func=hello_world,
+        name="hello_node",
     )
     ```
 
@@ -22582,9 +22684,9 @@ execution logic (order and paths) for those nodes.
 ## Data handling
 
 When using dynamic workflows with ADK, passing data is simpler than
-[graph-based workflows](/graphs/) because `workflow.RunNode` returns the
-child node's output directly as a typed Go value — eliminating the need to
-manually read and write session state keys for data transfer.
+[graph-based workflows](/graphs/) because running a child node returns that
+node's output directly to the caller — eliminating the need to manually read
+and write session state keys for data transfer.
 
 === "Python"
 
@@ -22593,9 +22695,9 @@ manually read and write session state keys for data transfer.
     from google.adk.workflow import node
 
     @node(rerun_on_resume=True)
-    async def editorial_workflow(ctx: Context, user_request: str):
+    async def editorial_workflow(ctx: Context, node_input: str):
         # Agent Node generates output
-        raw_draft = await ctx.run_node(draft_agent, user_request)
+        raw_draft = await ctx.run_node(draft_agent, node_input)
 
         # Function Node formats text
         formatted_text = await ctx.run_node(format_function_node, raw_draft)
@@ -22617,9 +22719,9 @@ manually read and write session state keys for data transfer.
         city: str       # city name
 
     @node
-    def city_time_function(city: str):
+    def city_time_function(node_input: str):
         """Simulate returning the current time in a specified city."""
-        return CityTime(time_info="10:10 AM", city=city)
+        return CityTime(time_info="10:10 AM", city=node_input)
 
     city_report_agent = Agent(
         name="city_report_agent",
@@ -22628,7 +22730,7 @@ manually read and write session state keys for data transfer.
         instruction="""output the data provided by the previous node.""",
     )
 
-    @node # workflow node
+    @node(rerun_on_resume=True) # workflow node
     async def city_workflow(ctx: Context):
         city_time = await ctx.run_node(city_time_function, "Paris")
         report_text = await ctx.run_node(city_report_agent, city_time)
@@ -22682,7 +22784,7 @@ as you can with graph-based workflows.
     function node, and a second agent:
 
     ```python
-    @node # workflow node
+    @node(rerun_on_resume=True) # workflow node
     async def city_workflow(ctx: Context):
         city = await ctx.run_node(city_generator_agent)
         city_time = await ctx.run_node(city_time_function, city)
@@ -22732,7 +22834,7 @@ workflows offer much more flexibility to define the routing logic you need.
     )
 
     @node(name="lint_reviewer")
-    async def compile_lint_check(ctx: Context, code: str):
+    async def compile_lint_check(ctx: Context, node_input: str):
         # Simulate API call or lint check
         class Response:
             findings = ""
@@ -22745,9 +22847,9 @@ workflows offer much more flexibility to define the routing logic you need.
             Based on compile & lint review: {findings}""",
     )
 
-    @node # workflow node
-    async def code_workflow(ctx: Context, user_request: str):
-      code = await ctx.run_node(coder_agent, user_request)
+    @node(rerun_on_resume=True) # workflow node
+    async def code_workflow(ctx: Context, node_input: str):
+      code = await ctx.run_node(coder_agent, node_input)
       check_resp = await ctx.run_node(compile_lint_check, code)
 
       while check_resp.findings:
@@ -22793,18 +22895,23 @@ Dynamic workflows in ADK can support parallel execution.
     import asyncio
     from typing import Any
     from google.adk import Context
-    from google.adk.workflow import BaseNode, node
+    from google.adk.workflow import node
+
+
+    @node
+    def worker_node(node_input: Any):
+        """Processes a single item."""
+        return f"done {node_input}"
 
 
     @node(rerun_on_resume=True)
-    async def parallel_supervisor(
-        ctx: Context, node_input: list[Any], real_node: BaseNode
-    ):
-        """Runs a worker node in parallel for each item in the input list."""
+    async def parallel_supervisor(ctx: Context, node_input: list[Any]):
+        """Runs worker_node in parallel for each item in the input list."""
         tasks = []
         for item in node_input:
-            # ctx.run_node returns a future. Append instead of awaiting immediately.
-            tasks.append(ctx.run_node(real_node, item))
+            # ctx.run_node returns a coroutine. Append instead of awaiting
+            # immediately, and use a sub-branch to isolate each run's events.
+            tasks.append(ctx.run_node(worker_node, item, use_sub_branch=True))
 
         # Collect all results in parallel
         results = await asyncio.gather(*tasks)
@@ -22966,9 +23073,22 @@ and logically remain the same for the input.
     from typing import Any
     import asyncio
 
+    class Product(BaseModel):
+      sku: str
+      quantity: int
+
     class Order(BaseModel):
       order_id: str
       cart_items: list[Product]
+
+    async def get_orders() -> list[Order]:
+      """Fetch the orders to process from your own data source."""
+      ...
+
+    @node
+    async def process_order(node_input: Order):
+      """Processes a single order."""
+      return f"processed {node_input.order_id}"
 
     @node(rerun_on_resume=True)
     async def process_all_orders(ctx: Context, node_input: Any):
@@ -23228,24 +23348,38 @@ specific tool call.
 
 === "Python"
 
-    The following code sample shows how to construct a ***RequestInput*** object
-    in a workflow node, including a ***response schema***:
+    Wrap the tool with ***FunctionTool*** and set `require_confirmation=True`
+    for a static yes/no approval before the tool runs, or call
+    `tool_context.request_confirmation()` from inside the tool for a custom
+    hint message. ADK only rejects the call for you on the
+    `require_confirmation=True` path, so a tool that asks for its own
+    confirmation must check both: `tool_context.tool_confirmation` to ask
+    once, then `tool_confirmation.confirmed` to handle a rejection:
 
     ```python
-    async def initial_prompt(ctx: Context):
-       """Ask the user for itinerary information"""
-       input_message = """
-           This is an interactive concierge workflow tasked with making you a great
-           itinerary for you in your city of choice. If you give some details about
-           yourself or what you are generally looking for I can better personalize
-           your itinerary.
-           For example, input your:
-               City (Required),
-               Age,
-               Hobby,
-               Example of attraction you liked
-       """
-       yield RequestInput(message=input_message, response_schema=str)
+    from google.adk.agents import Agent
+    from google.adk.tools import FunctionTool, ToolContext
+
+    def book_flight(flight_id: str) -> str:
+       """Books the selected flight."""
+       ...
+
+    def refund(amount: float, tool_context: ToolContext) -> str:
+       """Refunds an order."""
+       if not tool_context.tool_confirmation:
+           tool_context.request_confirmation(
+               hint=f"Approve a refund of {amount}?"
+           )
+           return "Waiting for approval."
+       elif not tool_context.tool_confirmation.confirmed:
+           return "Refund rejected by user."
+       ...
+
+    root_agent = Agent(
+       name="concierge",
+       model="gemini-flash-latest",
+       tools=[FunctionTool(book_flight, require_confirmation=True), refund],
+    )
     ```
 
 === "TypeScript"
@@ -23275,6 +23409,10 @@ specific tool call.
     ```go
     --8<-- "examples/go/snippets/graphs/human-input/main.go:hitl-with-hint"
     ```
+
+For the full tool-confirmation workflow, including dynamic confirmation and how
+the client replies, see
+[Get action confirmation for ADK Tools](/tools-custom/confirmation/).
 
 ================
 File: docs/graphs/index.md
@@ -23362,8 +23500,9 @@ function, and the final agent reports the information.
         name="city_report_agent",
         model="gemini-flash-latest",
         input_schema=CityTime,
-        instruction="""Output following line:
-        It is {CityTime.time_info} in {CityTime.city} right now.""",
+        instruction="""You receive a CityTime with time_info and city fields.
+        Output a single line stating that it is that time in that city right
+        now.""",
     )
 
     def completed_message_function(node_input: str):
@@ -23877,7 +24016,7 @@ File: docs/graphs/routes.md
 # Build graph routes for agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span><span class="lst-kotlin">Kotlin v1.5.0</span>
 </div>
 
 Graph-based workflows in ADK define agent logic as a graph of execution nodes
@@ -23956,6 +24095,18 @@ agents.
     })
     ```
 
+=== "Kotlin"
+
+    ```kotlin
+    val rootAgent = workflow("routing_workflow") {
+        chain(Start, processMessage, router).route {
+            "output-1" then response1
+            "output-2" then response2
+            "output-3" then response3
+        }
+    }
+    ```
+
 The advantage of using a graph-based agent workflow is the significant increase
 in control, predictability, and reliability over prompt-based agents. By
 defining the overall process workflow in code, you gain more control over how
@@ -24012,6 +24163,19 @@ objects.
     --8<-- "examples/go/snippets/graphs/routes/main.go:function-node"
     ```
 
+=== "Kotlin"
+
+    In ADK Kotlin, the `node()` factory creates a `FunctionNode` from a
+    suspending block that takes `(context, input)` and returns the node's
+    output. The type arguments set the input and output port types, and the
+    successor node receives the returned value as its typed input. The
+    workflow APIs are experimental, so the file opts in with
+    `@file:OptIn(ExperimentalWorkflowApi::class)`:
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/FunctionNode.kt:function-node"
+    ```
+
 For more information about transferring data between nodes, see
 [Data handling for agent workflows](/graphs/data-handling/).
 
@@ -24022,9 +24186,10 @@ overview of the common routing patterns.
 
 !!! caution "Caution: Workflow agent limitations"
 
-    You can add ***LlmAgents*** to graph-based workflows. However, they must
-    be configured for single-turn or task mode. For more information about
-    agent modes, see
+    You can add ***LlmAgents*** to graph-based workflows. An agent used as a
+    graph node defaults to `single_turn` mode; a `chat` mode agent is only
+    allowed directly after `START`, because it consumes conversational history
+    rather than a node input. For more information about agent modes, see
     [Build collaborative agent teams](/workflows/collaboration/#mode-configuration-and-behaviors).
 
 ### Route sequences
@@ -24070,6 +24235,17 @@ A sequential route runs each node once, in the listed order.
 
     ```go
     --8<-- "examples/go/snippets/graphs/routes/main.go:sequential-nodes"
+    ```
+
+=== "Kotlin"
+
+    Inside a `workflow { }` block, `chain(Start, taskANode, taskBNode,
+    taskCNode)` connects the nodes in order, and `Start.then(taskANode)` runs
+    a single node. Each node's return value is delivered to the next node as
+    its input:
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/Sequence.kt:sequence"
     ```
 
 ### Route branches and conditional execution
@@ -24188,6 +24364,19 @@ A sequential route runs each node once, in the listed order.
         with an `Escalate`-based exit — see the
         [loop and escalation example](#loop-and-escalation-exit) below.
 
+=== "Kotlin"
+
+    A node selects a route by setting `context.routes`, and a `route { }`
+    block maps each route value to the node that handles it. Route values
+    can be strings (`Route.Tag`), integers (`Route.Num`), or booleans
+    (`Route.Flag`). An `otherwise(node)` entry matches when no other route on
+    the same source node matches. A branch target can be any node: in this
+    example, `taskBNode` is an `LlmAgent` and `taskCNode` is a function node.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/Branches.kt:branches"
+    ```
+
 ## Parallel tasks: fan out and join paths
 
 You can create graphs that split execution across multiple, parallel nodes, and
@@ -24264,6 +24453,17 @@ before passing results to the next step.
     --8<-- "examples/go/snippets/graphs/routes/main.go:parallel-fan-out"
     ```
 
+=== "Kotlin"
+
+    `then(a, b, c)` fans out to nodes that run concurrently, and `joinTo`
+    connects them to a `JoinNode`. The join waits for every predecessor to
+    complete, and then passes its successor a map keyed by predecessor node
+    name:
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/FanOutJoin.kt:fan-out-join"
+    ```
+
 !!! warning "Caution: nodes that feed a JoinNode must produce output"
 
     A `JoinNode` releases only after all of its predecessor nodes finish.
@@ -24309,8 +24509,14 @@ accomplish this goal.
     transmits data to the next node in the nested workflow's graph *and* the
     system bubbles up the Event for that node to the parent workflow for
     process traceability. When the nested workflow completes the last node in
-    its process, the parent node extracts data from the final leaf nodes and
+    its process, the parent node extracts data from the final leaf node and
     emits it as the output of the nested workflow.
+
+    A workflow must have at most *one* terminal node that produces output. If
+    two or more terminal nodes produce output, for example the ends of two
+    parallel branches, the workflow fails with a `ValueError`. Merge those
+    branches with a ***JoinNode*** so the graph ends in a single terminal
+    output.
 
 === "TypeScript"
 
@@ -24355,6 +24561,17 @@ accomplish this goal.
     --8<-- "examples/go/snippets/graphs/routes/main.go:nested-workflows"
     ```
 
+=== "Kotlin"
+
+    A `Workflow` is itself a node, so you can use one inside another
+    workflow's edges to encapsulate a reusable sub-process. When the inner
+    workflow finishes, the output of its terminal node becomes the output of
+    the nested-workflow node:
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/NestedWorkflow.kt:nested-workflow"
+    ```
+
 ## Loop and escalation exit
 
 A loop repeats a set of steps until a termination condition is met. In Python
@@ -24371,24 +24588,28 @@ lifecycle on each iteration.
 
 
     def router(node_input: str):
-        """Route to task B or C based on node_input."""
+        """Exit the loop when the task is done, otherwise iterate again."""
         if condition(node_input):
-            return Event(route="RUN_TASK_C")
-        return Event(route="RUN_TASK_B")
+            return Event(route="DONE")
+        return Event(route="RETRY")
 
     root_agent = Workflow(
-        name="routing_workflow",
+        name="looping_workflow",
         edges=[
             ("START", task_A_node, router),
             (router,
               {
-                "RUN_TASK_B": task_B_node,
-                "RUN_TASK_C": task_C_node,
+                # Back-edge: re-runs task_A_node for another iteration.
+                "RETRY": task_A_node,
+                "DONE": final_task_node,
               },
             ),
         ],
     )
     ```
+
+    A cycle must contain at least one routed, or conditional, edge. A cycle
+    made only of unconditional edges is rejected when the `Workflow` is built.
 
 === "TypeScript"
 
@@ -24409,6 +24630,17 @@ lifecycle on each iteration.
 
     ```go
     --8<-- "examples/go/snippets/graphs/routes/main.go:loop-escalate"
+    ```
+
+=== "Kotlin"
+
+    A loop is a back-edge: `refine.then(critic)` routes a downstream node back
+    to an earlier one, and the engine re-activates that node with a fresh
+    lifecycle on each iteration. The loop exits when the critic selects the
+    `DONE` route:
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/routes/LoopEscalation.kt:loop-escalation"
     ```
 
 !!! warning "Caution: unbounded graph cycles"
@@ -29374,7 +29606,7 @@ LIMIT 20;
         from google.adk.plugins.bigquery_agent_analytics_plugin import BigQueryAgentAnalyticsPlugin, BigQueryLoggerConfig
         from google.adk.agents import Agent
         from google.adk.models.google_llm import Gemini
-        from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+        from google.adk.integrations.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 
 
         # --- OpenTelemetry note (no setup required for BQAA) ---
@@ -31064,11 +31296,9 @@ updated by tools).
 
 !!! note "Built-in redaction"
 
-    Python replaces `temp:` state values with `[REDACTED]`. Go removes top-level
-    lowercase `temp:` entries from `state_delta` before logging and emits no
-    `STATE_DELTA` row if nothing remains. Other `temp:` values in structured
-    content and attributes are replaced with `[REDACTED]`. See [Built-in
-    redaction](#built-in-redaction) for details.
+    State keys prefixed with `temp:` are automatically redacted to `[REDACTED]`
+    in the logged `state_delta`. See [Built-in redaction](#built-in-redaction)
+    for details on redacted key names and state scopes.
 
 ```json
 {
@@ -31857,7 +32087,7 @@ from google.adk.plugins.bigquery_agent_analytics_plugin import (
     BigQueryAgentAnalyticsPlugin,
     BigQueryLoggerConfig,
 )
-from google.adk.tools.bigquery import BigQueryToolset, BigQueryCredentialsConfig
+from google.adk.integrations.bigquery import BigQueryToolset, BigQueryCredentialsConfig
 
 # --- Configuration ---
 PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT", "your-gcp-project-id")
@@ -33074,6 +33304,15 @@ They are packaged in the toolset `BigQueryToolset`.
     that matches your dataset; leaving it unset lets BigQuery determine
     the location.
 
+## Installation
+
+The BigQuery tools depend on Google Cloud client libraries that are not part of
+the base `google-adk` install. Install them with the `gcp` extra:
+
+```bash
+pip install "google-adk[gcp]"
+```
+
 ## Authentication
 
 The `BigQueryToolset` supports several authentication mechanisms through `BigQueryCredentialsConfig`.
@@ -33199,6 +33438,17 @@ They are packaged in the toolset `BigtableToolset`.
 
 !!! example "Experimental"
     This feature is experimental and may be updated in future releases.
+
+## Installation
+
+The Bigtable tools depend on Google Cloud client libraries that are not part of
+the base `google-adk` install. Install them with the `gcp` extra:
+
+```bash
+pip install "google-adk[gcp]"
+```
+
+## Use with agent
 
 ```py
 --8<-- "examples/python/snippets/tools/built-in-tools/bigtable.py"
@@ -34653,15 +34903,20 @@ catalog_tags: ["code", "google"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `built_in_code_execution` tool enables the agent to execute code,
-specifically when using Gemini 2 and higher models. This allows the model to
-perform tasks like calculations, data manipulation, or running small scripts.
+The Code execution functionality in the Gemini API allows the model to perform
+tasks like calculations, data manipulation, or running small scripts. This
+function is available using Gemini 2 and higher models. 
 
 !!! warning "Warning: Single tool per agent limitation"
 
     This tool can only be used ***by itself*** within an agent instance.
     For more information about this limitation and workarounds, see
     [Limitations for ADK tools](/tools/limitations/#one-tool-one-agent).
+
+## Get started
+
+The following code examples show the basic implementation of this functionality
+in an ADK agent:
 
 === "Python"
 
@@ -36744,7 +36999,7 @@ The ***LocalEnvironment*** class supports the following parameters:
     more details, see [File persistence](#file-persistence).
 -   **env_vars**: (optional) A dictionary of environment variables to be set
     for the execution context.
-- **max_output chars**: (optional) A parameter to use with `EnvironmentToolset` to limit the maximum number of characters returned from file reads or command executions. This helps prevent large file contents or command outputs from exceeding the agent's context window limit.
+-   **max_output chars**: (optional) A parameter to use with `EnvironmentToolset` to limit the maximum number of characters returned from file reads or command executions. This helps prevent large file contents or command outputs from exceeding the agent's context window limit.
 
 The following code sample shows how to set these options for a
 ***LocalEnvironment*** object:
@@ -37066,7 +37321,7 @@ session_service = VertexAiSessionService(agent_engine_id=APP_ID)
 
 ## Manage Memory with `VertexAiMemoryBankService` {#memory-bank}
 
-[`VertexAiMemoryBankService`](/sessions/memory/#memory-bank)
+The [`VertexAiMemoryBankService`](/sessions/memory/#memory-bank) class
 is compatible with Agent Platform express mode API Keys. You can instead initialize
 the memory object without any project or location.
 
@@ -38533,7 +38788,7 @@ with the GKE Code Executor tool:
 [deployment_rbac.yaml](https://github.com/google/adk-python/blob/main/contributing/samples/integrations/gke_agent_sandbox/deployment_rbac.yaml)
 sample.
     - **Sandbox Mode:** Permissions to create, get, watch, and delete **SandboxClaim** and **Sandbox** resources within the namespace where the Agent Sandbox is deployed.
-- Install the client library with the appropriate extras: `pip install google-adk[gke]`
+- Install the client library with the appropriate extras: `pip install google-adk[extensions]`
 
 ## Configuration parameters
 
@@ -38563,6 +38818,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     from google.adk.code_executors import GkeCodeExecutor
     from google.adk.code_executors.code_execution_utils import CodeExecutionInput
     from google.adk.agents.invocation_context import InvocationContext
+    from google.adk.sessions import InMemorySessionService, Session
 
     # Initialize the executor for Sandbox Mode
     # Namespace should have RBAC for SandboxClaims and Sandbox
@@ -38574,7 +38830,12 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     )
 
     # Example direct execution:
-    ctx = InvocationContext()
+    # InvocationContext requires session_service, invocation_id and session.
+    ctx = InvocationContext(
+        session_service=InMemorySessionService(),
+        invocation_id="demo-invocation",
+        session=Session(id="demo-session", app_name="demo", user_id="demo-user"),
+    )
     result = gke_sandbox_executor.execute_code(ctx, CodeExecutionInput(code="print('Hello from Sandbox Mode')"))
     print(result.stdout)
 
@@ -38594,6 +38855,7 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     from google.adk.code_executors import GkeCodeExecutor
     from google.adk.code_executors.code_execution_utils import CodeExecutionInput
     from google.adk.agents.invocation_context import InvocationContext
+    from google.adk.sessions import InMemorySessionService, Session
 
     # Initialize the executor for Job Mode
     # Namespace should have RBAC for Jobs, ConfigMaps, Pods, Logs
@@ -38606,7 +38868,12 @@ The `GkeCodeExecutor` can be configured with the following parameters:
     )
 
     # Example direct execution:
-    ctx = InvocationContext()
+    # InvocationContext requires session_service, invocation_id and session.
+    ctx = InvocationContext(
+        session_service=InMemorySessionService(),
+        invocation_id="demo-invocation",
+        session=Session(id="demo-session", app_name="demo", user_id="demo-user"),
+    )
     result = gke_executor.execute_code(ctx, CodeExecutionInput(code="print('Hello from Job Mode')"))
     print(result.stdout)
 
@@ -39596,7 +39863,7 @@ catalog_tags: ["search","google"]
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
 </div>
 
-The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini 2 models. For further details of the tool, see [Understanding Google Search grounding](/grounding/google_search_grounding/).
+The `google_search` tool allows the agent to perform web searches using Google Search. The `google_search` tool is only compatible with Gemini models. For further details of the tool, see [Understanding Google Search grounding](/grounding/google_search_grounding/).
 
 !!! warning "Additional requirements when using the `google_search` tool"
     When you use grounding with Google Search, and you receive Search suggestions in your response, you must display the Search suggestions in production and in your applications.
@@ -46802,6 +47069,15 @@ The `SpannerToolset` provides the following tools:
   `google.adk.tools.spanner.settings`.
 - **`similarity_search`**: Similarity search in Spanner using a text query.
 
+## Installation
+
+The Spanner tools depend on Google Cloud client libraries that are not part of
+the base `google-adk` install. Install them with the `gcp` extra:
+
+```bash
+pip install "google-adk[gcp]"
+```
+
 ## Use with agent
 
 ```py
@@ -46822,6 +47098,7 @@ The following example configures a Spanner table as a vector store and wires the
 `vector_store_similarity_search` tool into a RAG agent:
 
 ```py
+import google.auth
 from google.adk.agents import LlmAgent
 from google.adk.tools.spanner import SpannerCredentialsConfig, SpannerToolset
 from google.adk.tools.spanner.settings import (
@@ -46852,8 +47129,10 @@ my_tool_settings = SpannerToolSettings(
     vector_store_settings=my_vector_store_settings,
 )
 
-# 2. Initialize the Spanner toolset
-credentials_config = SpannerCredentialsConfig()
+# 2. Initialize the Spanner toolset. SpannerCredentialsConfig requires
+# credentials, an external access token key, or a client ID and secret.
+credentials, _ = google.auth.default()
+credentials_config = SpannerCredentialsConfig(credentials=credentials)
 my_spanner_toolset = SpannerToolset(
     credentials_config=credentials_config,
     spanner_tool_settings=my_tool_settings,
@@ -58543,7 +58822,9 @@ Use these parameters to control runtime guardrails and debugging:
   `sys.maxsize` in Python, `Int.MAX_VALUE` in Kotlin.
 - `save_input_blobs_as_artifacts`: When `True`, saves input blobs (e.g.,
   uploaded files) as run artifacts for debugging and auditing. Deprecated in
-  Python in favor of `SaveFilesAsArtifactsPlugin`.
+  Python in favor of `SaveFilesAsArtifactsPlugin`. In Go, set the
+  `SaveInputBlobsAsArtifacts` field of `agent.RunConfig` to `true`. The runner
+  needs an artifact service for the setting to take effect.
 - `custom_metadata`: A `dict[str, Any]` of arbitrary metadata attached to the
   invocation, useful for tracing or logging.
 - `service_tier`: Selects the serving capacity for the run's model calls. ADK
@@ -61798,11 +62079,13 @@ agent workflow. This page lists these tool limitations and workarounds, if avail
 
 ## One tool per agent limitation {#one-tool-one-agent}
 
-!!! note "ONLY for Search in ADK Python v1.15.0 and lower"
+!!! note "ADK Python: the built-in Search workaround is opt-in"
 
-    This limitation only applies to the use of Google Search and Agent Search
-    tools in ADK Python v1.15.0 and lower. ADK Python release v1.16.0 and higher
-    provides a built-in workaround to remove this limitation.
+    ADK Python v1.16.0 and higher can bypass this limitation for the Google
+    Search and Agent Search tools, but not by default. You must construct the
+    tool yourself with `bypass_multi_tools_limit=True`; the shared
+    `google_search` instance exported from `google.adk.tools` leaves the flag
+    off. See Workaround #2 below.
 
 In general, you can use more than one tool in an agent, but use of specific
 tools within an agent excludes the use of any other tools in that agent. The
@@ -61868,7 +62151,7 @@ other tools, within a single agent, is ***not supported***:
     )
     ```
 
-### Workaround #1: AgentTool.create() method
+### Workaround #1: wrap the agent in an AgentTool
 
 <div class="language-support-tag">
   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-typescript">TypeScript (v0.6.1+)</span><span class="lst-java">Java</span><span class="lst-kotlin">Kotlin v0.1.0</span>
@@ -62000,6 +62283,13 @@ to use built-in tools with other tools by using multiple agents:
     --8<-- "examples/kotlin/snippets/tools/LimitationsWorkaround.kt:workaround_1"
     ```
 
+In ADK Python, an `AgentTool` does not pass the wrapped agent's grounding
+metadata back to the calling agent. Set `propagate_grounding_metadata=True` on
+the `AgentTool` to store that metadata in session state under the
+`temp:_adk_grounding_metadata` key. ADK attaches it to the parent agent's own
+response only when the parent has a tool named `google_search_agent`, which is
+the tool that Workaround #2 below creates for you.
+
 ### Workaround #2: bypass_multi_tools_limit
 
 <div class="language-support-tag">
@@ -62012,11 +62302,18 @@ as shown in the
 [built_in_multi_tools](https://github.com/google/adk-python/tree/main/contributing/samples/tools/built_in_multi_tools).
 sample agent.
 
+Set the flag on a tool instance you construct yourself, for example
+`GoogleSearchTool(bypass_multi_tools_limit=True)` imported from
+`google.adk.tools.google_search_tool`. The shared `google_search` instance
+exported from `google.adk.tools` leaves the flag off. The bypass takes effect
+when the agent has more than one entry in its `tools` list, or can transfer
+control to another agent.
+
 !!! warning
 
-    Built-in tools cannot be used within a sub-agent, with the exception of
-    `GoogleSearchTool` and `VertexAiSearchTool` in ADK Python because of the
-    workaround mentioned above.
+    Built-in tools cannot be used within a sub-agent. In ADK Python,
+    `GoogleSearchTool` and `VertexAiSearchTool` are an exception only when the
+    sub-agent constructs the tool with `bypass_multi_tools_limit=True`.
 
 For example, the following approach that uses built-in tools within sub-agents
 is **not supported**:
@@ -62830,11 +63127,11 @@ connection modes depending on deployment architecture:
   must be instantiated synchronously in `agent.py` rather than inside an async 
   factory function.
 * **Session Persistence and restoration:** `McpToolset` supports serialization 
-  via `getstate` and `setstate`. While session state is preserved across 
+  via `__getstate__` and `__setstate__`. While session state is preserved across 
   lifecycle events, MCP socket/stdio connections are re-initialized dynamically 
   when the agent process restores.
 * **Cleanup Management:** When running outside `adk web` in custom runtimes, 
-  explicit teardown via `toolset.close()` or an exit stack ensures that 
+  explicit teardown via `await toolset.close()` or `await runner.close()` ensures that 
   background server subprocesses and network connections are terminated cleanly.
 
 ================
@@ -63151,7 +63448,7 @@ Choose your connection type based on your scaling and infrastructure needs.
 Follow these core guidelines when deploying agents with MCP tools to production environments.
 
 ### Connection lifecycle
-*   Clean up MCP connections properly using standard exit stack patterns.
+*   Close the `Runner` (`await runner.close()`) to clean up every `McpToolset` on its agent tree.
 *   Configure appropriate timeouts for connection establishment and requests.
 *   Implement retry logic to handle transient connection failures gracefully.
 
@@ -63163,6 +63460,7 @@ Follow these core guidelines when deploying agents with MCP tools to production 
 ### Security
 !!! important "Security Best Practices"
     *   Use strict authentication headers for all remote MCP connections.
+    *   Prefer `header_provider` or `auth_credential` over a static `headers` dict for per-user or refreshable credentials.
     *   Restrict network access tightly between ADK agents and MCP servers.
     *   Filter MCP tools using `tool_filter` to strictly limit exposed functionality.
     *   Validate all MCP tool inputs to prevent prompt or command injection attacks.
@@ -63267,7 +63565,7 @@ the other implementations are covered in their specific pages.
    
 ### Direct MCP Tool integration (McpToolset)
 
-The `McpToolset` class can be directly added to your agent's tools list; this class enables seamless connection to an MCP server, discovery of its tools, and making them available for your agent to use. On initialization, `McpToolset` establishes and manages the connection to the MCP server. It also handles graceful connection shutdown when the agent or process terminates.
+The `McpToolset` class can be directly added to your agent's tools list; this class enables seamless connection to an MCP server, discovery of its tools, and making them available for your agent to use. `McpToolset` manages the connection to the MCP server. Constructing the toolset does not connect; it opens the session the first time it is used, such as when the agent asks it for its tools. It also handles graceful connection shutdown when the agent or process terminates.
 Use `McpToolset` to import tools from an external MCP server into your ADK `LlmAgent`.
 
 #### Example: Local Stdio Transport (FileSystem MCP)
@@ -63770,15 +64068,18 @@ agent, and the security of the environment where the agent is running.
 
 ## Framework components
 
-Within the ADK framework, the ***AuthScheme*** and ***AuthCredential*** are the
-key components for handling authentication methods and managing credential data:
+Within the ADK framework, the ***AuthScheme***, ***AuthCredential***, and
+***BaseCredentialService*** are the key components for handling authentication
+methods and managing credential data:
 
 *   ***AuthScheme***: Defines *how* an API expects authentication credentials,
     such as an API Key in a header or an OAuth 2.0 Bearer token. ADK supports
     the same types of authentication schemes as OpenAPI 3.0 and uses specific
     classes for credential types, including ***APIKey***, ***HTTPBearer***,
-    ***OAuth2***, and ***OpenIdConnectWithConfig***. For more details on each
-    OpenAPI credential type, see
+    ***OAuth2***, and ***OpenIdConnectWithConfig***. The first three are the
+    OpenAPI models imported from `fastapi.openapi.models`; only
+    ***OpenIdConnectWithConfig*** is defined by ADK in `google.adk.auth`. For
+    more details on each OpenAPI credential type, see
     [OpenAPI doc: Authentication](https://swagger.io/docs/specification/v3_0/authentication/).
 
 *   ***AuthCredential***: Holds the *initial* information needed to *start* the
@@ -63786,6 +64087,16 @@ key components for handling authentication methods and managing credential data:
     Secret, or an API key value. An instance of this class includes an
     **auth_type**, such as `API_KEY`, `OAUTH2`, `SERVICE_ACCOUNT`, specifying
     the credential type.
+
+*   ***BaseCredentialService***: Controls *where* ADK stores a credential once
+    it has been exchanged. Pass an implementation to the runner with
+    `Runner(credential_service=...)`; ADK provides `InMemoryCredentialService`
+    in `google.adk.auth.credential_service.in_memory_credential_service` and
+    `SessionStateCredentialService` in
+    `google.adk.auth.credential_service.session_state_credential_service`.
+    If you store credentials in session state, make sure your session storage
+    is encrypted at rest and not exposed to untrusted clients. This component
+    is experimental and may change in future releases.
 
 The general authentication flow involves providing these details when
 configuring a tool. ADK then attempts to automatically exchange the initial
@@ -63824,7 +64135,7 @@ Here is a quick guide to authentication for key ADK toolsets:
 *   [***ApplicationIntegrationToolset***](/integrations/application-integration/):
     Set `auth_scheme` and `auth_credential` during initialization, *if* the API
     requires authentication.
-*   [***GoogleApiToolset***](/integrations/google-api-toolsets/):
+*   [***Google Apps Toolset***](/integrations/google-api-toolsets/):
     Use this toolset's specific authentication method.
 
 For more authentication details for other pre-built tools and integrations
@@ -63834,7 +64145,7 @@ see the [ADK Integrations](/integrations) catalog.
 
 ## Build agentic applications with authenticated tools
 
-This section focuses on using pre-existing tools (like those from `RestApiTool/ OpenAPIToolset`, `APIHubToolset`, `GoogleApiToolSet`) that require authentication within your agentic application. Your main responsibility is configuring the tools and handling the client-side part of interactive authentication flows (if required by the tool).
+This section focuses on using pre-existing tools (like those from `RestApiTool/ OpenAPIToolset`, `APIHubToolset`, `Google Apps Toolset`) that require authentication within your agentic application. Your main responsibility is configuring the tools and handling the client-side part of interactive authentication flows (if required by the tool).
 
 ### Configure tools with authentication
 
@@ -64076,7 +64387,7 @@ sample_toolset = OpenAPIToolset(
 
 ##### ServiceAccount configuration parameters
 
-* `service_account_credential` (Optional): Provide the path or dict for your service account JSON key file. Use this if you are running locally or outside of Google Cloud.
+* `service_account_credential` Provide a `ServiceAccountCredential` object, or a dict holding the contents of your service account JSON key file. Use this if you are running locally or outside of Google Cloud. This setting is required unless `use_default_credential` is set to `True`. 
   
 * `use_default_credential` (Optional): Set to True to use Application Default Credentials (ADC). Recommended if your agent is already running within Google Cloud, for example on Cloud Run or Cloud Functions, as it avoids the need for local key files.
   
@@ -64084,11 +64395,14 @@ sample_toolset = OpenAPIToolset(
   
 * `audience` (Required if use_id_token=True): The URL of the service you are calling, for example, `https://my-service.run.app`. This is a security binding that ensures the token is valid only for that specific destination.
   
-* `scopes` (Optional): Use it only when requesting Access Tokens for Google Cloud APIs, like Drive or BigQuery. You do not need to set this if you are using ID tokens for private service authentication.
+* `scopes` Use this setting when requesting Access Tokens for Google Cloud APIs, like Drive or BigQuery. Required when requesting an Access Token with `service_account_credential`. You do not need to set this if you are using ID tokens for private service authentication. With `use_default_credential=True`, `scopes` defaults to the broad `cloud-platform` scope; for production deployments, set only the scopes your tool needs.: 
 
-!!! tip "Pair `use_id_token` with `audience`"
+!!! warning "Pair `use_id_token` with `audience`"
 
-    Always use `use_id_token=True` and `audience` together. If you provide one without the other, the ADK will raise an error to prevent accidental misconfiguration.
+    Always use `use_id_token=True` and `audience` together. If you set
+    `use_id_token=True` without an `audience`, ADK raises an error. If you set
+    `audience` on its own, ADK silently ignores the `audience` security binding
+    and requests an Access Token instead of an ID token.
 
 #### Use external access tokens
 
@@ -64098,6 +64412,9 @@ a frontend application, instead of starting a new authentication flow.
 When configured, the credential manager skips standard OAuth flows. Instead, 
 retrieves the key in the agent's `tool_context.state` and directly uses the 
 token for authentication.
+Set this field on the credentials config of a Google service toolset, such as
+`BigQueryCredentialsConfig`, `SpannerCredentialsConfig`,
+`PubSubCredentialsConfig`, or `GCSCredentialsConfig`.
 The use of this configuration parameter is mutually exclusive, and cannot
 include `credentials`, `client_id`, `client_secret`, or scopes parameters in the same
 configuration block.
@@ -64107,12 +64424,14 @@ following example uses BigQuery:
 
 ```python
 from google.adk.integrations.bigquery import BigQueryCredentialsConfig
+from google.adk.integrations.bigquery import BigQueryToolset
 
 # Configure the toolset to look for "my_frontend_token" in the session state
 credentials_config = BigQueryCredentialsConfig(
     # Do not hardcode authentication keys in production code
     external_access_token_key="my_frontend_token"
 )
+bigquery_toolset = BigQueryToolset(credentials_config=credentials_config)
 ```
 
 #### Authentication request flow
@@ -64357,7 +64676,7 @@ if auth_request_function_call_id and auth_config:
 * It uses the information in the updated `AuthConfig` (including the callback URL containing the code) to perform the OAuth **token exchange** with the provider's token endpoint, obtaining the access token (and possibly refresh token).
 * ADK internally makes these tokens available by setting them in the session state.
 * ADK **automatically retries** the original tool call (the one that initially failed due to missing auth).
-* This time, the tool finds the valid tokens (via `tool_context.get_auth_response()`) and successfully executes the authenticated API call.
+* This time, the tool finds the valid tokens (via `tool_context.get_auth_response(auth_config)`) and successfully executes the authenticated API call.
 * The agent receives the actual result from the tool and generates its final response to the user.
 
 ---
@@ -64370,6 +64689,13 @@ The sequence diagram of auth response flow, where the ***Agent Client*** sends b
 
 This section focuses on implementing the authentication logic *inside* your custom Python function when creating a new ADK Tool. We will implement a `FunctionTool` as an example.
 
+!!! tip "Automatic credential handling"
+
+    The experimental `AuthenticatedFunctionTool` in
+    `google.adk.tools.authenticated_function_tool` takes an `AuthConfig` and
+    passes the ready-to-use credential to your function as a `credential`
+    argument.
+
 ### Prerequisites
 
 Your function signature *must* include [`tool_context: ToolContext`](../tools-custom/index.md#tool-context). ADK automatically injects this object, providing access to state and auth mechanisms.
@@ -64378,7 +64704,7 @@ Your function signature *must* include [`tool_context: ToolContext`](../tools-cu
 from google.adk.tools import FunctionTool, ToolContext
 from typing import Dict
 
-def my_authenticated_tool_function(param1: str, ..., tool_context: ToolContext) -> dict:
+def my_authenticated_tool_function(param1: str, tool_context: ToolContext) -> dict:
     # ... your logic ...
     pass
 
@@ -64392,7 +64718,7 @@ Implement the following steps inside your function:
 
 **Step 1: Check for Cached & Valid Credentials:**
 
-Inside your tool function, first check if valid credentials (e.g., access/refresh tokens) are already stored from a previous run in this session. Credentials for the current sessions should be stored in `tool_context.invocation_context.session.state` (a dictionary of state) Check existence of existing credentials by checking `tool_context.invocation_context.session.state.get(credential_name, None)`.
+Inside your tool function, first check if valid credentials, such as access or refresh tokens, are already stored from a previous run in this session. Store credentials for the current session in `tool_context.state`, a dictionary of state. Check for existing credentials with `tool_context.state.get(credential_name, None)`.
 
 ```py
 from google.oauth2.credentials import Credentials
@@ -64429,7 +64755,7 @@ else:
 
 **Step 2: Check for Auth Response from Client**
 
-* If Step 1 didn't yield valid credentials, check if the client just completed the interactive flow by calling `exchanged_credential = tool_context.get_auth_response()`.
+* If Step 1 did not yield valid credentials, check if the client just completed the interactive flow by calling `exchanged_credential = tool_context.get_auth_response(auth_config)`.
 * This returns the updated `exchanged_credential` object sent back by the client (containing the callback URL in `auth_response_uri`).
 
 ```py
@@ -64463,11 +64789,12 @@ If no valid credentials (Step 1.) and no auth response (Step 2.) are found, the 
 ```py
 # Use auth_scheme and auth_credential configured in the tool.
 
-  tool_context.request_credential(AuthConfig(
-    auth_scheme=auth_scheme,
-    raw_auth_credential=auth_credential,
-  ))
-  return {'pending': true, 'message': 'Awaiting user authentication.'}
+def my_authenticated_tool_function(tool_context: ToolContext) -> dict:
+    tool_context.request_credential(AuthConfig(
+        auth_scheme=auth_scheme,
+        raw_auth_credential=auth_credential,
+    ))
+    return {'pending': True, 'message': 'Awaiting user authentication.'}
 
 # By setting request_credential, ADK detects a pending authentication event. It pauses execution and ask end user to login.
 ```
@@ -65154,8 +65481,9 @@ Parameters determine the data your tool expects to receive when called. You can 
 
     A parameter is considered **required** if it has a type hint but **no
     default value**. The LLM must provide a value for this argument when it
-    calls the tool. The parameter's description is taken from the function's
-    docstring.
+    calls the tool. ADK does not emit a per-parameter description: the whole
+    docstring becomes the tool's single top-level `description`, so describe
+    each parameter there.
 
     ???+ "Example: Required Parameters"
         ```python
@@ -65249,10 +65577,11 @@ Parameters determine the data your tool expects to receive when called. You can 
 
 === "Python"
 
-    A parameter is considered **optional** if you provide a **default value**.
-    This is the standard Python way to define optional arguments. You can also
-    mark a parameter as optional using `typing.Optional[SomeType]` or the `|
-    None` syntax (Python 3.10+).
+    A parameter is considered **optional** only if you provide a **default
+    value**. This approach is the standard Python way to define optional arguments.
+    Annotating a parameter with `typing.Optional[SomeType]` or the `| None`
+    syntax (Python 3.10+) does **not** make it optional on its own: without a
+    default value, the parameter stays required.
 
     Use defaults only for values that are truly optional. Do not add defaults
     for information the model should derive from the user request or ask the
@@ -65348,10 +65677,10 @@ Parameters determine the data your tool expects to receive when called. You can 
 
 ##### Optional parameters with `typing.Optional`
 
-You can also mark a parameter as optional using `typing.Optional[SomeType]` or
-the `| None` syntax (Python 3.10+). This signals that the parameter can be
-`None`. When combined with a default value of `None`, it behaves as a standard
-optional parameter.
+Use `typing.Optional[SomeType]` or the `| None` syntax (Python 3.10+) to signal
+that the parameter can be `None`. Combine it with a default value of `None` to
+get a standard optional parameter; the annotation alone leaves the parameter
+required.
 
 ???+ "Example: `typing.Optional`"
     === "Python"
@@ -65371,6 +65700,36 @@ optional parameter.
             if bio:
                 return {"status": "success", "message": f"Profile for {username} created with a bio."}
             return {"status": "success", "message": f"Profile for {username} created."}
+        ```
+
+##### Pydantic model parameters
+
+Annotate a parameter with a `pydantic.BaseModel` subclass, or with
+`list[Model]`, `Optional[Model]`, or a union of models. ADK nests the model's
+schema inside the tool declaration and converts the object the LLM supplies into
+an instance of your class before your function runs.
+
+???+ "Example: Pydantic model parameter"
+    === "Python"
+
+        ```python
+        import pydantic
+
+        class UserProfile(pydantic.BaseModel):
+            """A user's profile."""
+
+            name: str
+            age: int
+
+        def create_user(profile: UserProfile):
+            """
+            Creates a user account.
+
+            Args:
+                profile (UserProfile): The profile to create the account from.
+            """
+            # 'profile' receives a UserProfile instance, not a dict.
+            return {"status": "success", "name": profile.name}
         ```
 
 ##### Variadic parameters (`*args` and `**kwargs`)
@@ -65919,7 +66278,7 @@ it's None) into the content of the `FunctionResponse` sent back to the LLM.
     --8<-- "examples/kotlin/snippets/tools/function-tools/LongRunningTool.kt:call_reimbursement_tool"
     ```
 
-??? "Python complete example: File Processing Simulation"
+??? "Python complete example: Reimbursement Approval"
 
     ```python
     --8<-- "examples/python/snippets/tools/function-tools/human_in_the_loop.py"
@@ -65927,13 +66286,16 @@ it's None) into the content of the `FunctionResponse` sent back to the LLM.
 
 #### Key aspects of this example
 
-- **`LongRunningFunctionTool`**: Wraps the supplied method/function; the
-  framework handles sending yielded updates and the final return value as
-  sequential FunctionResponses.
-- **Agent instruction**: Directs the LLM to use the tool and understand the
-  incoming FunctionResponse stream (progress vs. completion) for user updates.
-- **Final return**: The function returns the final result dictionary, which is
-  sent in the concluding FunctionResponse to indicate completion.
+- **`LongRunningFunctionTool`**: Wraps the supplied method/function and marks it
+  as long running. The framework calls the function once, like any other
+  function tool, and does not consume values yielded from a generator.
+- **Agent instruction**: Directs the LLM to use the tool and to interpret the
+  progress and completion FunctionResponses that the agent client sends
+  afterwards, for user updates.
+- **Initial return**: Whatever the function returns is sent as the first
+  FunctionResponse, and a function that returns nothing or an empty value emits
+  none. Every later progress or completion update is a FunctionResponse sent by
+  the agent client.
 - **Kotlin has no `LongRunningFunctionTool` class**: Annotate the function with
   `@Tool(isLongRunning = true)`, or pass `isLongRunning = true` to a `BaseTool`
   subclass.
@@ -65999,6 +66361,14 @@ To use an agent as a tool, wrap the agent with the `AgentTool` class.
     ```kotlin
     AgentTool(agent = agentB)
     ```
+
+!!! note "Python: consider a `single_turn` sub-agent"
+
+    For standard inline delegation in ADK Python, prefer setting
+    `mode="single_turn"` on a sub-agent and attaching it with
+    `sub_agents=[...]` rather than wrapping it in `AgentTool`. ADK exposes the
+    sub-agent as a tool and runs it inline in the parent's session. See [Agent
+    collaboration](/workflows/collaboration/).
 
 ### Customize your agent tool
 
@@ -66277,11 +66647,13 @@ The **ToolContext** provides access to several key pieces of information and con
 
 * `actions: EventActions`: Influence the agent's subsequent actions after the tool runs (e.g., skip summarization, transfer to another agent).
 
-* `function_call_id: str`: The unique identifier assigned by the framework to this specific invocation of the tool. Useful for tracking and correlating with authentication responses. This can also be helpful when multiple tools are called within a single model response.
+* `function_call_id: str | None`: The unique identifier assigned by the framework to this specific invocation of the tool. Useful for tracking and correlating with authentication responses. This can also be helpful when multiple tools are called within a single model response.
 
-* `function_call_event_id: str`: This attribute provides the unique identifier of the **event** that triggered the current tool call. This can be useful for tracking and logging purposes.
+* `invocation_id: str`: The unique identifier of the current invocation.
 
-* `auth_response: Any`: Contains the authentication response/credentials if an authentication flow was completed before this tool call.
+* `agent_name: str`: The name of the agent that is running.
+
+* `get_auth_response(auth_config)`: Returns the authentication credentials if an authentication flow was completed before this tool call.
 
 * Access to Services: Methods to interact with configured services like Artifacts and Memory.
 
@@ -66360,11 +66732,11 @@ The `tool_context.state` attribute provides direct read and write access to the 
 
 The `tool_context.actions` attribute in Python and TypeScript, `ToolContext.actions()` in Java, and `agent.Context.Actions()` in Go, holds an **EventActions** object. Modifying attributes on this object allows your tool to influence what the agent or framework does after the tool finishes execution.
 
-* **`skip_summarization: bool`**: (Default: False) If set to True, instructs the ADK to bypass the LLM call that typically summarizes the tool's output. This is useful if your tool's return value is already a user-ready message.
+* **`skip_summarization: bool`**: (Default: None) If set to True, instructs the ADK to bypass the LLM call that typically summarizes the tool's output. This is useful if your tool's return value is already a user-ready message.
 
 * **`transfer_to_agent: str`**: Set this to the name of another agent. The framework will halt the current agent's execution and **transfer control of the conversation to the specified agent**. This allows tools to dynamically hand off tasks to more specialized agents.
 
-* **`escalate: bool`**: (Default: False) Setting this to True signals that the current agent cannot handle the request and should pass control up to its parent agent (if in a hierarchy). In a LoopAgent, setting **escalate=True** in a sub-agent's tool will terminate the loop.
+* **`escalate: bool`**: (Default: None) Setting this to True signals that the current agent cannot handle the request and should pass control up to its parent agent (if in a hierarchy). In a LoopAgent, setting **escalate=True** in a sub-agent's tool terminates the loop.
 
 #### Example
 
@@ -66413,17 +66785,15 @@ This example illustrates how a tool, through EventActions in its ToolContext, ca
 
 ToolContext provides mechanisms for tools interacting with authenticated APIs. If your tool needs to handle authentication, you might use the following:
 
-* **`auth_response`** (in Python): Contains credentials (e.g., a token) if authentication was already handled by the framework before your tool was called (common with RestApiTool and OpenAPI security schemes). In TypeScript, this is retrieved via the getAuthResponse() method.
+* **`request_credential(auth_config: AuthConfig)`** (in Python) or **`requestCredential(authConfig: AuthConfig)`** (in TypeScript): Call this method if your tool determines authentication is needed but credentials are not available. This signals the framework to start an authentication flow based on the provided auth_config.
 
-* **`request_credential(auth_config: dict)`** (in Python) or **`requestCredential(authConfig: AuthConfig)`** (in TypeScript): Call this method if your tool determines authentication is needed but credentials aren't available. This signals the framework to start an authentication flow based on the provided auth_config.
-
-* **`get_auth_response()`** (in Python) or **`getAuthResponse(authConfig: AuthConfig)`** (in TypeScript): Call this in a subsequent invocation (after request_credential was successfully handled) to retrieve the credentials the user provided.
+* **`get_auth_response(auth_config: AuthConfig)`** (in Python) or **`getAuthResponse(authConfig: AuthConfig)`** (in TypeScript): Call this in a subsequent invocation (after request_credential was successfully handled) to retrieve the credentials the user provided. It returns an `AuthCredential`, or `None` if no credential is available yet.
 
 For detailed explanations of authentication flows, configuration, and examples, please refer to the dedicated Tool Authentication documentation page.
 
 ### **Context-Aware Data Access Methods**
 
-These methods provide convenient ways for your tool to interact with persistent data associated with the session or user, managed by configured services.
+These methods provide convenient ways for your tool to interact with persistent data associated with the session or user, managed by configured services. In Python, all of the artifact and memory methods below are `async`, so your tool function must be an `async def` and `await` them.
 
 * **`list_artifacts()`** (in Python) or **`listArtifacts()`** (in Java and TypeScript): Returns a list of filenames (or keys) for all artifacts currently stored for the session via the artifact_service. Artifacts are typically files (images, documents, etc.) uploaded by the user or generated by tools/agents.
 
@@ -66705,6 +67075,14 @@ Any class acting as a toolset in ADK should implement the `BaseToolset` abstract
 
 *   **`async def close(self) -> None:`**
     This asynchronous method is called by the ADK framework when the toolset is no longer needed, for example, when an agent server is shutting down or the `Runner` is being closed. Implement this method to perform any necessary cleanup, such as closing network connections, releasing file handles, or cleaning up other resources managed by the toolset.
+
+In Python, the base `__init__` also takes two keyword-only options that your subclass should pass through with `super().__init__(...)`:
+
+*   **`tool_filter`:**
+    A list of tool names, or a `ToolPredicate` callable.
+
+*   **`tool_name_prefix`:**
+    A prefix for the toolset's tool names. When a prefix is set, ADK exposes each of the toolset's tools to the LLM as `<prefix>_<tool_name>`.
 
 ### Using Toolsets with Agents
 
@@ -70407,6 +70785,15 @@ Agent Development Kit (ADK), including code examples. These patterns are useful
 across a broad set of applications and you should evaluate and test them against
 your project requirements before committing to a full implementation.
 
+!!! note "Python and TypeScript: template workflow agents are deprecated"
+
+    In Python and TypeScript, `SequentialAgent`, `ParallelAgent`, and
+    `LoopAgent` are deprecated: constructing one emits a deprecation
+    warning, and the classes are scheduled for removal in a future
+    release. The examples below still run. For new code, express these
+    patterns with a [graph-based workflow](/graphs/); note that a
+    `Workflow` cannot yet be used as an `LlmAgent` sub-agent.
+
 ## Coordinator and dispatcher
 
 * **Structure:** A central [`LlmAgent`](/agents/llm-agents/) (Coordinator) manages several specialized `sub_agents`.
@@ -71191,7 +71578,7 @@ your project requirements before committing to a full implementation.
     * **Interaction:** Can be implemented using a custom **Tool** that pauses execution and sends a request to an external system (e.g., a UI, ticketing system) waiting for human input. The tool then returns the human's response to the agent.
     * **Workflow:** Could use **LLM-Driven Delegation** (`transfer_to_agent`) targeting a conceptual "Human Agent" that triggers the external workflow, or use the custom tool within an `LlmAgent`.
     * **State/Callbacks:** State can hold task details for the human; callbacks can manage the interaction flow.
-    * **Note:** ADK doesn't have a built-in "Human Agent" type, so this requires custom integration.
+    * **Note:** ADK has no *Human Agent* agent type, but you do not have to build the pause yourself: yield a `RequestInput` event from a [graph workflow node](/graphs/human-input/), or enable [tool confirmation](/tools-custom/confirmation/#boolean-confirmation) on a `FunctionTool` for a yes/no approval. To supply a custom hint or collect structured data, use [advanced confirmation](/tools-custom/confirmation/#advanced-confirmation) inside the tool. See those pages for per-language support.
 
 === "Python"
 
