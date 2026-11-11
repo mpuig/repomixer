@@ -779,13 +779,16 @@ Example AgentExtension block:
 ================
 File: docs/a2a/index.md
 ================
-# ADK with Agent2Agent (A2A) Protocol
+# Agent2Agent (A2A) Protocol for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-go">Go</span><span class="lst-java">Java</span>
 </div>
 
 With Agent Development Kit (ADK), you can build complex multi-agent systems where different agents need to collaborate and interact using [Agent2Agent (A2A) Protocol](https://a2a-protocol.org/)! This section provides a comprehensive guide to building powerful multi-agent systems where agents can communicate and collaborate securely and efficiently.
+
+!!! example "Experimental in Go and Java"
+    A2A support is experimental in ADK Go, ADK Java, and ADK Kotlin.
 
 Navigate through the guides below to learn about ADK's A2A capabilities:
 
@@ -1471,7 +1474,7 @@ File: docs/a2a/quickstart-consuming.md
 # Quickstart: Consuming a remote agent via A2A
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
 This quickstart covers the most common starting point for any developer: **"There is a remote agent, how do I let my ADK agent use it via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
@@ -2005,7 +2008,7 @@ File: docs/a2a/quickstart-exposing.md
 # Quickstart: Exposing a remote agent via A2A
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python</span>
 </div>
 
 This quickstart covers the most common starting point for any developer: **"I have an agent. How do I expose it so that other agents can use my agent via A2A?"**. This is crucial for building complex multi-agent systems where different agents need to collaborate and interact.
@@ -2294,14 +2297,6 @@ You can inject a list of `execute_interceptors` to add middleware logic to the `
 *   **`before_agent`**: Executed before the agent starts processing the request. It allows you to inspect or modify the incoming `RequestContext`.
 *   **`after_event`**: Executed *after* an ADK event is converted to an A2A event. Allows you to mutate the outgoing event before it is enqueued, or return `None` to filter out and drop the event entirely.
 *   **`after_agent`**: Executed after the agent finishes and the final event is prepared. Use this to inspect or modify the terminal status event (e.g., `completed` or `failed`) before it is sent.
-
-!!! tip "Suppress experimental warnings"
-
-    ADK_SUPPRESS_A2A_EXPERIMENTAL_FEATURE_WARNINGS environment variable can be set to true to suppress warnings related to experimental A2A features. This is useful for developers who are knowingly using these features and wish to have cleaner logs:
-
-    ```bash
-    export ADK_SUPPRESS_A2A_EXPERIMENTAL_FEATURE_WARNINGS=true
-    ```
 
 ### Manage the application lifecycle
 
@@ -4511,18 +4506,18 @@ File: docs/agents/models/openai.md
 # OpenAI models for ADK agents
 
 <div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.1.0</span><span class="lst-preview">Experimental</span>
+   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.1.0</span><span class="lst-kotlin">Kotlin v1.4.0</span>
 </div>
-
-!!! example "Experimental"
-
-    The `openaimodel` package is experimental and its behavior may change or be removed in the future. We welcome your
-		[feedback](https://github.com/google/adk-go/issues/new?template=feature_request.md)!
 
 You can use OpenAI models with ADK. How you connect depends on the language:
 
 - **Go — native support:** ADK Go provides a direct `openaimodel` package that implements the `model.LLM` interface, targeting the OpenAI Responses API or the [Chat Completions API](#chat-completions-api). [Get started](#get-started).
 - **Python — via LiteLLM:** ADK Python accesses OpenAI models (and many other providers) through the LiteLLM connector. See [LiteLLM](/agents/models/litellm/).
+- **Kotlin — native support:** ADK Kotlin provides a `ChatCompletions` model in `com.google.adk.kt.models.openai` that targets the OpenAI Chat Completions API. [Get started](#get-started).
+
+!!! example "Experimental in Go"
+
+    The OpenAI model support feature is experimental in ADK Go. It may have limitations and its behavior may change.
 
 ## Get started
 
@@ -4599,10 +4594,31 @@ The following code example shows a basic implementation for using OpenAI models 
 
         For a complete, runnable sample, see [examples/openai/completions/](https://github.com/google/adk-go/tree/main/examples/openai/completions) in the ADK Go repository.
 
+=== "Kotlin"
+
+	```kotlin
+	import com.google.adk.kt.agents.Instruction
+	import com.google.adk.kt.agents.LlmAgent
+	import com.google.adk.kt.models.openai.ChatCompletions
+
+	// Instantiate the model on the Chat Completions API
+	val llm = ChatCompletions(name = "gpt-4o-mini", apiKey = System.getenv("OPENAI_API_KEY"))
+
+	// Create the agent
+	val agent =
+	  LlmAgent(
+		name = "openai_agent",
+		model = llm,
+		instruction = Instruction("You are a helpful AI assistant."),
+	  )
+	```
+
+	For a complete, runnable sample, see [examples/.../chatcompletions/](https://github.com/google/adk-kotlin/tree/v1.5.0/examples/src/main/kotlin/com/google/adk/kt/examples/chatcompletions) in the ADK Kotlin repository.
+
 ## Chat Completions API {#chat-completions-api}
 
 <div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.5.0</span><span class="lst-preview">Experimental</span>
+   <span class="lst-supported">Supported in ADK</span><span class="lst-go">Go v2.5.0</span><span class="lst-kotlin">Kotlin v1.4.0</span><span class="lst-preview">Experimental</span>
 </div>
 
 By default, `openaimodel` sends requests to the OpenAI
@@ -4889,7 +4905,7 @@ File: docs/agents/workflow-agents/loop-agents.md
 # Loop template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The ***LoopAgent*** class is a [template workflow](/agents/workflow-agents/) agent
@@ -4967,6 +4983,11 @@ In this setup, the `LoopAgent` would manage the iterative process.  The `CriticA
     === "Java"
         ```java
         --8<-- "examples/java/snippets/src/main/java/agents/workflow/LoopAgentExample.java:init"
+        ```
+
+    === "Kotlin"
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/agents/workflow-agents/LoopAgentDocImprovAgent.kt:init"
         ```
 
 !!! tip "Global instructions for all agents"
@@ -5086,7 +5107,7 @@ File: docs/agents/workflow-agents/sequential-agents.md
 # Sequential template workflow agent
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.1.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 The ***SequentialAgent*** class is a [template workflow](/agents/workflow-agents/)
@@ -5168,6 +5189,11 @@ This ensures the code is written, *then* reviewed, and *finally* refactored, in 
         --8<-- "examples/java/snippets/src/main/java/agents/workflow/SequentialAgentExample.java:init"
         ```
 
+    === "Kotlin"
+        ```kotlin
+        --8<-- "examples/kotlin/snippets/agents/workflow-agents/SequentialAgentExample.kt:init"
+        ```
+
 !!! tip "Global instructions for all agents"
 
     Apply consistent rules across your workflow using the `GlobalInstructionPlugin` 
@@ -5183,7 +5209,7 @@ File: docs/agents/config.md
 # Build agents with Agent Config
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-java">Java v0.3.0</span>
 </div>
 
 The ADK Agent Config feature lets you build an ADK workflow without writing
@@ -5205,10 +5231,10 @@ information on the syntax and settings supported by the Agent Config format,
 see the
 [Agent Config syntax reference](/api-reference/agentconfig/).
 
-!!! example "Experimental"
-    The Agent Config feature is experimental and has some
-    [known limitations](#known-limitations). We welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=agent%20config)!
+!!! example "Experimental in Java"
+    The Agent Config feature is experimental in ADK Java. For all languages,
+    see the [known limitations](#known-limitations). We welcome your
+    [feedback](https://github.com/google/adk-java/issues/new?template=feature_request.md&labels=agent%20config)!
 
 ## Get started
 
@@ -5454,8 +5480,7 @@ deployment guides.
 
 ## Known limitations {#known-limitations}
 
-The Agent Config feature is experimental and includes the following
-limitations:
+The Agent Config feature has the following limitations:
 
 -   **Model support:** Only Gemini models are currently supported.
     Integration with third-party models is in progress.
@@ -17358,11 +17383,6 @@ The Environment Simulation integrates with ADK's tool execution pipeline via the
 hook or the [plugin system](/plugins/), so no
 changes to your agent code are required.
 
-```
-The Environment Simulation is an experimental feature. Its API may change in future
-releases.
-```
-
 ## How it works
 
 While [User Simulation](/evaluate/user-sim/)
@@ -23420,7 +23440,7 @@ File: docs/graphs/index.md
 # Graph-based agent workflows
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span><span class="lst-typescript">TypeScript v2.0.0</span><span class="lst-go">Go v2.0.0</span><span class="lst-kotlin">Kotlin v1.5.0</span>
 </div>
 
 Graph-based agent workflows in ADK let you build agents with more precise control,
@@ -23434,6 +23454,10 @@ deterministic tools and code.
 **Figure 1.** A graph-based agent design for flight upgrades, combining workflow
 nodes of different types, including Functions, human input, Tools, and LLM
 capabilities.
+
+!!! example "Experimental in Kotlin"
+
+    The Graph-based agent workflow feature is experimental in ADK Kotlin. It may have limitations and its behavior may change.
 
 Prebuilt ADK [template workflows](/agents/workflow-agents/),
 such as [Sequential Agents](/agents/workflow-agents/sequential-agents/),
@@ -23521,7 +23545,7 @@ function, and the final agent reports the information.
 
 === "TypeScript"
 
-    In ADK TypeScript v2.0.0, a `Workflow` takes an `edges` array. Each row
+    In ADK TypeScript, a `Workflow` takes an `edges` array. Each row
     lists the nodes to run in order. The `node()` function wraps a function,
     an agent, a tool, or another `Workflow` as a graph node, and sets the
     node's name and its `inputSchema` and `outputSchema` contracts. Schemas
@@ -23535,7 +23559,7 @@ function, and the final agent reports the information.
 
 === "Go"
 
-    In ADK Go v2.0.0, sequential workflows use the graph engine:
+    In ADK Go, sequential workflows use the graph engine:
     `workflow.NewFunctionNode` wraps each step, and `workflow.Chain` wires
     the nodes into a sequential `edges` slice. The framework automatically
     passes each node's typed return value to the next node via
@@ -23544,6 +23568,19 @@ function, and the final agent reports the information.
 
     ```go
     --8<-- "examples/go/snippets/graphs/index/main.go:sequential-get-started"
+    ```
+
+=== "Kotlin"
+
+    In ADK Kotlin, the `workflow` builder declares the graph's edges,
+    and `chain` connects `Start` and each node in order. An `LlmAgent` is a
+    node, so it goes straight into the graph. The `node()` function wraps a
+    code step as a typed node and can set its `inputSchema` and
+    `outputSchema` contracts. Each node's output is passed to the next node
+    as its input, so you do not need to write to session state.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/index/GetStarted.kt:get-started"
     ```
 
 This sample code demonstrates how you can assemble a simple, sequential
@@ -23627,7 +23664,7 @@ translated into a graph-based agent:
 
 === "TypeScript"
 
-    In ADK TypeScript v2.0.0, a router node returns an event carrying a
+    In ADK TypeScript, a router node returns an event carrying a
     `route` value, created with `createEvent({route})`. A second edge row
     maps each route value to the node that handles it. Setting `route` to an
     array dispatches to every matching branch, which lets the classifier in
@@ -23640,7 +23677,7 @@ translated into a graph-based agent:
 
 === "Go"
 
-    In ADK Go v2.0.0, conditional routing uses `workflow.NewEmittingFunctionNode`
+    In ADK Go, conditional routing uses `workflow.NewEmittingFunctionNode`
     to set `event.Routes` and `workflow.StringRoute` edges to dispatch to the
     matching handler — the direct equivalent of Python's `router` function and
     dict dispatch. `workflow.Concat` merges the chain and the conditional edges
@@ -23648,6 +23685,18 @@ translated into a graph-based agent:
 
     ```go
     --8<-- "examples/go/snippets/graphs/index/main.go:process-pipeline"
+    ```
+
+=== "Kotlin"
+
+    In ADK Kotlin, a router node selects its routes by setting
+    `context.routes`, and a `route { }` block maps each route value to the
+    node that handles it. Selecting more than one route dispatches to every
+    matching branch, which lets the classifier in this example return more
+    than one category.
+
+    ```kotlin
+    --8<-- "examples/kotlin/snippets/graphs/index/ProcessPipeline.kt:process-pipeline"
     ```
 
 This sample code demonstrates how you can compose a sequence of agents to
@@ -23676,7 +23725,7 @@ are *not compatible* with the following ADK features:
 
 !!! note "Go: graph workflow API"
 
-    The `workflow` package in ADK Go v2.0.0 is the direct equivalent of the
+    The `workflow` package in ADK Go is the direct equivalent of the
     Python `Workflow` class. Use `workflow.NewFunctionNode` and
     `workflow.NewAgentNode` to define nodes, `workflow.Chain` or
     `workflow.Concat` with `[]workflow.Edge` to wire them, and
@@ -23685,10 +23734,12 @@ are *not compatible* with the following ADK features:
     `workflow.BoolRoute` matched against `event.Routes`. Fan-in is handled by
     `workflow.NewJoinNode`.
 
-    For advanced routing patterns and fan-out/join examples, see
-    [Build graph routes for workflow agents](/graphs/routes/). For prebuilt
-    higher-level alternatives (sequential, parallel, loop), see
-    [Prebuilt workflow agents](/agents/workflow-agents/).
+## Next steps
+
+For advanced routing patterns and fan-out/join examples, see
+[Build graph routes for workflow agents](/graphs/routes/). For prebuilt
+higher-level alternatives (sequential, parallel, loop), see
+[Prebuilt workflow agents](/agents/workflow-agents/).
 
 ================
 File: docs/graphs/retry.md
@@ -33421,7 +33472,7 @@ catalog_tags: ["data", "google"]
 # Bigtable tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.12.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.12.0</span>
 </div>
 
 These are a set of tools aimed to provide integration with Bigtable, namely:
@@ -33435,9 +33486,6 @@ These are a set of tools aimed to provide integration with Bigtable, namely:
 * **`execute_sql`**: Runs a SQL query in Bigtable table and fetch the result.
 
 They are packaged in the toolset `BigtableToolset`.
-
-!!! example "Experimental"
-    This feature is experimental and may be updated in future releases.
 
 ## Installation
 
@@ -36909,7 +36957,7 @@ catalog_tags: ["code", "google"]
 # Environment Toolsets for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.29.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.29.0</span>
 </div>
 
 Some types of tasks, particularly coding and file operations, require an agent
@@ -36920,11 +36968,6 @@ and execute shell commands. The Environment Toolset is designed as a general
 framework for configuring and using local or remote execution environments with
 ADK agents. ADK provides a [***LocalEnvironment***](#local-environment)
 implementation for use with the Environment Toolset framework.
-
-!!! example "Experimental"
-    The Environment Toolset feature is experimental and may be updated.
-    We welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md)!
 
 ## Get started
 
@@ -45561,15 +45604,12 @@ catalog_tags: ["google"]
 # Google Cloud Pub/Sub tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.22.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.22.0</span>
 </div>
 
 The `PubSubToolset` allows agents to interact with
 [Google Cloud Pub/Sub](https://cloud.google.com/pubsub)
 service to publish, pull, and acknowledge messages.
-
-!!! example "Experimental"
-    This feature is experimental and may be updated in future releases.
 
 ## Prerequisites
 
@@ -47038,16 +47078,13 @@ catalog_tags: ["data","google"]
 # Google Cloud Spanner tool for ADK
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.11.0</span>
 </div>
 
 [Google Cloud Spanner](https://cloud.google.com/spanner) is a fully managed,
 distributed database with support for SQL and vector search. The ADK Spanner
 tools let your agent explore database schemas, run SQL queries, and perform
 vector similarity search against your Spanner data.
-
-!!! example "Experimental"
-    This feature is experimental and may be updated in future releases.
 
 ## Available tools
 
@@ -56136,6 +56173,10 @@ When a trigger endpoint receives an event, it:
     go run event_processing_agent.go web api pubsub
     ```
 
+    For the Go server, use
+    `http://localhost:8080/api/apps/event_processor/trigger/pubsub` as the URL
+    in the following request.
+
 **2. Send a test event:**
 
 ```bash
@@ -56309,7 +56350,17 @@ during bursts of events.
 
     | Setting | Default | Flag |
     | :------ | :------ | :------------------- |
-    | Max concurrent invocations | 10 | `--trigger_max_concurrent_runs` |
+    | Max concurrent invocations | 100 | `--trigger_max_concurrent_runs` |
+
+    By default, ADK Go allows 100 concurrent invocations and ADK Python
+    allows 10.
+
+    !!! note "Pub/Sub trigger concurrency in ADK Go"
+
+        ADK Go v2.3.0 through v2.5.0 don't apply
+        `--trigger_max_concurrent_runs` to Pub/Sub triggers, so Pub/Sub events
+        run without a concurrency limit. To limit Pub/Sub concurrency, use
+        ADK Go v2.6.0 or higher.
 
 When the concurrency limit is reached, incoming requests are queued and processed
 as slots become available. Concurrency control is per process. If you deploy
@@ -56326,7 +56377,7 @@ semaphore.
 === "Go"
 
     ```bash
-    go run event_processing_agent.go web api pubsub --trigger_max_concurrent_runs=5
+    go run event_processing_agent.go web api eventarc --trigger_max_concurrent_runs=5
     ```
 
 ### Automatic retry with backoff
@@ -56349,7 +56400,10 @@ request is retried with exponential backoff and jitter.
     | :------ | :------ | :------------------- |
     | Max retry attempts | 3 | `--trigger_max_retries` |
     | Base backoff delay | 1.0s | `--trigger_base_delay` |
-    | Max backoff delay | 30.0s | `--trigger_max_delay` |
+    | Max backoff delay | 10.0s | `--trigger_max_delay` |
+
+    By default, ADK Go caps the backoff delay at 10 seconds and ADK Python
+    caps it at 30 seconds.
 
 If all retries are exhausted, the endpoint returns HTTP 500, signaling
 Pub/Sub or Eventarc to retry delivery at a higher level.
@@ -56436,17 +56490,24 @@ deploying ambient agents with trigger endpoints.
 
 === "Go"
 
-    Deploy your agent to Cloud Run with triggers enabled using the corresponding trigger flag (all the settings are prefixed with trigger type)
+    Deploy your agent to Cloud Run with the `adkgo` CLI and a flag for each
+    trigger:
 
     ```bash
-    adk deploy cloud_run \
-      --project=$GOOGLE_CLOUD_PROJECT \
-      --region=$GOOGLE_CLOUD_LOCATION \
+    ./adkgo deploy cloudrun \
+      -p $GOOGLE_CLOUD_PROJECT \
+      -r $GOOGLE_CLOUD_LOCATION \
+      -s $SERVICE_NAME \
+      -e ./main.go \
       --pubsub \
-      --pubsub_max_concurrent_runs=5 \
       --eventarc \
       --eventarc_max_concurrent_runs=5
     ```
+
+    ADK Go serves trigger endpoints under the `/api` path prefix, so point
+    push subscriptions and Eventarc triggers at
+    `/api/apps/{app_name}/trigger/pubsub` and
+    `/api/apps/{app_name}/trigger/eventarc`.
 
 After deployment, connect the appropriate GCP infrastructure to your agent's
 trigger endpoint:
@@ -64996,7 +65057,7 @@ File: docs/tools-custom/confirmation.md
 # Get action confirmation for ADK Tools
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-kotlin">Kotlin v0.1.0</span><span class="lst-preview">Experimental</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.14.0</span><span class="lst-typescript">TypeScript v0.2.0</span><span class="lst-go">Go v0.3.0</span><span class="lst-kotlin">Kotlin v0.1.0</span>
 </div>
 
 Some agent workflows require confirmation for decision making, verification,
@@ -65014,11 +65075,10 @@ an ADK Tool in the following ways:
     structured data responses, you can configure a tool with a text
     prompt to explain the confirmation and an expected response.
 
-!!! example "Experimental"
-    The Tool Confirmation feature is experimental and has some
+!!! example "Experimental in TypeScript, Go, and Kotlin"
+    The Tool Confirmation feature is experimental in ADK TypeScript, ADK Go,
+    and ADK Kotlin. For all languages, see the
     [known limitations](#known-limitations).
-    We welcome your
-    [feedback](https://github.com/google/adk-python/issues/new?template=feature_request.md&labels=tool%20confirmation)!
 
 You can configure how a request is communicated to a user, and the system can
 also use [remote responses](#remote-response) sent via the ADK
@@ -65740,126 +65800,6 @@ are **ignored by the ADK framework** when generating the tool schema for the
 LLM. The LLM will not be aware of them and cannot pass arguments to them. It's
 best to rely on explicitly defined parameters for all data you expect from the
 LLM.
-
-##### Configure JSON schema tool declarations
-
-ADK for Python generates JSON schemas from your function signatures using Pydantic for model function declarations. This feature (`JSON_SCHEMA_FOR_FUNC_DECL`) is **enabled by default**.
-
-!!! example "Experimental"
-    
-    JSON schema tool declarations (`JSON_SCHEMA_FOR_FUNC_DECL`) are an
-    experimental feature of ADK for Python. The feature is enabled by default,
-    but its behavior and API may change, and ADK emits an `[EXPERIMENTAL]`
-    warning while it is active.
-
-###### Option 1: Configure via Command Line
-
-Set the appropriate environment variable in your terminal before launching your agent process:
-
-=== "macOS/Linux"
-
-    ```bash
-    export ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL=1
-    ```
-    
-=== "Windows (Command Prompt)"
-
-    ```cmd
-    set ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL=1
-    ```
-    
-=== "Windows (PowerShell)"
-
-    ```powershell
-    $env:ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL="1"
-    ```
-
-To disable JSON schema generation and fall back to the previous `Schema`-based declaration behavior:
-
-=== "macOS/Linux"
-
-    ```bash
-    export ADK_DISABLE_JSON_SCHEMA_FOR_FUNC_DECL=1
-    ```
-
-=== "Windows (Command Prompt)"
-
-    ```cmd
-    set ADK_DISABLE_JSON_SCHEMA_FOR_FUNC_DECL=1
-    ```
-
-=== "Windows (PowerShell)"
-
-    ```powershell
-    $env:ADK_DISABLE_JSON_SCHEMA_FOR_FUNC_DECL="1"
-    ```
-
-###### Option 2: Configure in Python
-
-Use ADK's `override_feature_enabled` function before creating tools and agents:
-
-```python
-import asyncio
-from google.adk.features import FeatureName, override_feature_enabled
-from google.adk.agents import Agent
-from google.adk.tools import FunctionTool
-
-# The feature is enabled by default, so pass False to fall back to the previous behavior:
-override_feature_enabled(FeatureName.JSON_SCHEMA_FOR_FUNC_DECL, False)
-
-def get_current_weather(location: str, unit: str = "celsius") -> str:
-    """Get the current weather for a given location.
-    
-    Args:
-        location: The city and state, e.g. San Francisco, CA
-        unit: Temperature unit ('celsius' or 'fahrenheit')
-    """
-    return f"Weather in {location}: 22° {unit.capitalize()}"
-
-async def main():
-    weather_tool = FunctionTool(func=get_current_weather)
-    
-    agent = Agent(
-        model="gemini-2.5-flash",
-        name="my_agent",
-        instruction="You are a helpful assistant.",
-        tools=[weather_tool]
-    )
-    # Execution logic here
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-Alternatively, set the environment variable in your script before initializing agent components:
-
-```python
-import os
-import asyncio
-
-os.environ["ADK_ENABLE_JSON_SCHEMA_FOR_FUNC_DECL"] = "1"
-
-from google.adk.agents import Agent
-from google.adk.tools import FunctionTool
-
-def get_current_weather(location: str) -> str:
-    """Get the current weather for a given location."""
-    return f"Weather in {location}: 20°C"
-
-async def main():
-    weather_tool = FunctionTool(func=get_current_weather)
-    
-    agent = Agent(
-        model="gemini-2.5-flash",
-        name="my_agent",
-        instruction="You are a helpful assistant.",
-        tools=[weather_tool]
-    )
-    # Execution logic here
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
 
 #### Context injection
 
