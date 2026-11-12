@@ -3129,161 +3129,14 @@ supported by Agent Platform) results in an endpoint that can be used directly.
 ## Anthropic Claude on Agent Platform {#anthropic-claude}
 
 <div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-java">Java v0.1.0</span>
+    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.2.0</span><span class="lst-typescript">TypeScript v2.4.0</span><span class="lst-go">Go v2.7.0</span><span class="lst-java">Java v0.1.0</span><span class="lst-kotlin">Kotlin v1.4.0</span>
 </div>
 
 Some providers, like Anthropic, make their models available directly through
-Agent Platform.
-
-**Example:**
-
-=== "Python"
-
-    **Integration Method:** Uses the direct model string (e.g.,
-    `"claude-3-sonnet@20240229"`).
-
-    **How Resolution Works:** ADK's registry automatically recognizes `gemini-*`
-    strings and standard Agent Platform endpoint strings
-    (`projects/.../locations/.../endpoints/...`) and routes them via the `google-genai`
-    library. Claude model strings matching `claude-3-*` or `claude-*-4*` route
-    to the `Claude` wrapper class the same way. For a Claude model identifier
-    that does not match those patterns, import `Claude` from
-    `google.adk.models` and pass an instance instead of a string:
-    `LlmAgent(model=Claude(model="..."), ...)`.
-
-    **Setup:**
-
-    1. **Agent Platform Environment:** Ensure the consolidated Agent Platform setup (ADC, Env
-       Vars, `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`) is complete.
-
-    2. **Install Provider Library:** Install the necessary client library configured
-       for Agent Platform.
-
-        ```shell
-        pip install "anthropic[vertex]"
-        ```
-
-    3. **Create the Agent:** Pass the Claude model string to `LlmAgent`:
-
-       ```python
-       from google.adk.agents import LlmAgent
-       from google.genai import types
-
-       # --- Example Agent using Claude 3 Sonnet on Agent Platform ---
-
-       # Standard model name for Claude 3 Sonnet on Agent Platform
-       claude_model_vertexai = "claude-3-sonnet@20240229"
-
-       agent_claude_vertexai = LlmAgent(
-           model=claude_model_vertexai, # Pass the direct model string
-           name="claude_vertexai_agent",
-           instruction="You are an assistant powered by Claude 3 Sonnet on Agent Platform.",
-           generate_content_config=types.GenerateContentConfig(max_output_tokens=4096),
-           # ... other agent parameters
-       )
-       ```
-
-=== "Java"
-
-    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with an Agent Platform backend.
-
-    **Why Direct Instantiation?** The Java ADK's `LlmRegistry` primarily handles Gemini models by default. For third-party models like Claude on Agent Platform, you directly provide an instance of the ADK's wrapper class (e.g., `Claude`) to the `LlmAgent`. This wrapper class is responsible for interacting with the model via its specific client library, configured for Agent Platform.
-
-    **Setup:**
-
-    1.  **Agent Platform Environment:**
-        *   Ensure your Google Cloud project and region are correctly set up.
-        *   **Application Default Credentials (ADC):** Make sure ADC is configured correctly in your environment. This is typically done by running `gcloud auth application-default login`. The Java client libraries use these credentials to authenticate with Agent Platform. Follow the [Google Cloud Java documentation on ADC](https://cloud.google.com/java/docs/reference/google-auth-library/latest/com.google.auth.oauth2.GoogleCredentials#com_google_auth_oauth2_GoogleCredentials_getApplicationDefault__) for detailed setup.
-
-    2.  **Provider Library Dependencies:**
-        *   **Third-Party Client Libraries (Often Transitive):** The ADK core library often includes the necessary client libraries for common third-party models on Agent Platform (like Anthropic's required classes) as **transitive dependencies**. This means you might not need to explicitly add a separate dependency for the Anthropic Vertex SDK in your `pom.xml` or `build.gradle`.
-
-    3.  **Instantiate and Configure the Model:**
-        When creating your `LlmAgent`, instantiate the `Claude` class (or the equivalent for another provider) and configure its `VertexBackend`.
-
-    ```java
-    import com.anthropic.client.AnthropicClient;
-    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-    import com.anthropic.vertex.backends.VertexBackend;
-    import com.google.adk.agents.LlmAgent;
-    import com.google.adk.models.Claude; // ADK's wrapper for Claude
-    import com.google.auth.oauth2.GoogleCredentials;
-    import java.io.IOException;
-
-    // ... other imports
-
-    public class ClaudeVertexAiAgent {
-
-        public static LlmAgent createAgent() throws IOException {
-            // Model name for Claude 3 Sonnet on Agent Platform (or other versions)
-            String claudeModelVertexAi = "claude-3-7-sonnet"; // Or any other Claude model
-
-            // Configure the AnthropicOkHttpClient with the VertexBackend
-            AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-                .backend(
-                    VertexBackend.builder()
-                        .region("us-east5") // Specify your Agent Platform region
-                        .project("your-gcp-project-id") // Specify your GCP Project ID
-                        .googleCredentials(GoogleCredentials.getApplicationDefault())
-                        .build())
-                .build();
-
-            // Instantiate LlmAgent with the ADK Claude wrapper
-            LlmAgent agentClaudeVertexAi = LlmAgent.builder()
-                .model(new Claude(claudeModelVertexAi, anthropicClient)) // Pass the Claude instance
-                .name("claude_vertexai_agent")
-                .instruction("You are an assistant powered by Claude 3 Sonnet on Agent Platform.")
-                // .generateContentConfig(...) // Optional: Add generation config if needed
-                // ... other agent parameters
-                .build();
-
-            return agentClaudeVertexAi;
-        }
-
-        public static void main(String[] args) {
-            try {
-                LlmAgent agent = createAgent();
-                System.out.println("Successfully created agent: " + agent.name());
-                // Here you would typically set up a Runner and Session to interact with the agent
-            } catch (IOException e) {
-                System.err.println("Failed to create agent: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-    }
-    ```
-
-### Adaptive thinking
-
-<div class="language-support-tag">
-    <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.34.0</span>
-</div>
-
-Newer Claude models support *adaptive* extended thinking, where the model chooses
-its reasoning depth itself rather than using a fixed token budget. On the native
-Claude path, a negative `thinking_budget` maps to adaptive thinking.
-
-The recommended way to control reasoning depth is the `effort` field on
-`AnthropicGenerateContentConfig`:
-
-```python
-from google.adk.agents import LlmAgent
-from google.adk.models import AnthropicGenerateContentConfig
-
-agent = LlmAgent(
-    model="claude-sonnet-4@20250514",  # Your Agent Platform Claude model ID.
-    name="claude_reasoning_agent",
-    instruction="You are a helpful assistant.",
-    generate_content_config=AnthropicGenerateContentConfig(
-        effort="high",  # One of: "low", "medium", "high", "xhigh", "max".
-    ),
-)
-```
-
-*   The standard `thinking_config.thinking_level` is not supported for Claude.
-    Setting it on `AnthropicGenerateContentConfig` raises a validation error; on
-    a plain `types.GenerateContentConfig` it is ignored with a warning. Use
-    `effort` instead.
+Agent Platform. To set up and use Claude models on Agent Platform, including
+extended thinking and prompt caching, see
+[Connect through Agent Platform](/agents/models/anthropic/#connect-through-agent-platform)
+in the Claude models guide.
 
 ## Open Models on Agent Platform {#open-models}
 
@@ -3329,112 +3182,601 @@ Agent Platform offers a curated selection of open-source models, such as Meta Ll
 ================
 File: docs/agents/models/anthropic.md
 ================
-# Claude models for ADK agents
+# Use Anthropic Claude models with ADK
 
 <div class="language-support-tag">
-   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-java">Java v0.2.0</span>
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v0.1.0</span><span class="lst-typescript">TypeScript v2.4.0</span><span class="lst-go">Go v2.7.0</span><span class="lst-java">Java v0.2.0</span><span class="lst-kotlin">Kotlin v1.4.0</span>
 </div>
 
-You can use Anthropic's Claude models with ADK in both Python and Java. Choose
-the path that matches your language and backend below.
+You can use Anthropic's Claude models as the model for your Agent Development
+Kit (ADK) agents. The framework provides Claude model classes that translate ADK requests,
+tools, and responses into calls to Claude, so you can build agents with Claude
+the same way you build them with Gemini, allowing you to:
 
-## Python
+-   Run an agent on Claude while keeping your ADK tools, sessions, and
+    callbacks unchanged.
+-   Combine Claude and Gemini agents in one multi-agent system, and choose
+    the model for each agent based on its task.
+-   Give Claude more reasoning time on complex tasks with extended thinking.
 
-You can use Claude models from Python in the following ways:
+You can reach Claude through the **Anthropic API**, using an
+Anthropic API key, or **Google Cloud**, using your Google Cloud
+project and credentials. For help choosing, see [Choose a backend](#choose-a-backend).
 
-- **Native, on Agent Platform:** Pass a Claude model string directly; ADK's
-  registry routes it to the `Claude` wrapper. See [Anthropic Claude on Agent
-  Platform](/agents/models/agent-platform/#anthropic-claude).
-- **Direct Anthropic API, via LiteLLM:** Use the `LiteLlm` connector with an
-  Anthropic API key. See
-  [LiteLLM](/agents/models/litellm/#anthropic-thinking-blocks).
+## Get started
 
-## Java
+The following examples create an agent that calls Claude through the Anthropic
+API. Before you run them, get an API key from the
+[Anthropic Console](https://console.anthropic.com/) and set it as an
+environment variable. In production, store the key in a secret manager rather
+than in source code or shell history:
 
-In Java, you can integrate Claude models directly using an Anthropic API key or
-an Agent Platform backend with the ADK `Claude` wrapper class. You can also
-access Claude through Google Cloud Agent Platform services; see [Third-Party
-Models on Agent Platform](/agents/models/agent-platform/#anthropic-claude).
-
-### Get started
-
-The following code examples show a basic implementation for using Claude models
-in your agents:
-
-```java
-public static LlmAgent createAgent() {
-
-  AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-      .apiKey("ANTHROPIC_API_KEY")
-      .build();
-
-  Claude claudeModel = new Claude(
-      "claude-sonnet-4-6", anthropicClient
-  );
-
-  return LlmAgent.builder()
-      .name("claude_direct_agent")
-      .model(claudeModel)
-      .instruction("You are a helpful AI assistant powered by Anthropic Claude.")
-      .build();
-}
+```shell
+export ANTHROPIC_API_KEY="YOUR_ANTHROPIC_API_KEY"
 ```
 
-### Prerequisites
+=== "Python"
 
-- **Dependencies:** The Java ADK's `com.google.adk.models.Claude` wrapper relies
-  on classes from Anthropic's official Java SDK, typically included as
-  *transitive dependencies*. For more information, see the [Anthropic Java
-  SDK](https://github.com/anthropics/anthropic-sdk-java).
-- **Anthropic API key:** Obtain an API key from Anthropic, and securely manage
-  it using a secret manager.
+    Install ADK with the Anthropic SDK:
 
-### Example implementation
+    ```shell
+    pip install "google-adk[extensions]"
+    ```
 
-Instantiate `com.google.adk.models.Claude`, providing the desired Claude model
-name and an `AnthropicOkHttpClient` configured with your API key. Then, pass the
-`Claude` instance to your `LlmAgent`, as shown in the following example:
+    Create an `AnthropicLlm` instance and pass it to your agent. It reads your
+    API key from the `ANTHROPIC_API_KEY` environment variable. The
+    `AnthropicLlm` class is available in ADK Python v1.20.0 and later.
 
-```java
-import com.anthropic.client.AnthropicClient;
-import com.google.adk.agents.LlmAgent;
-import com.google.adk.models.Claude;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient; // From Anthropic's SDK
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.models.anthropic_llm import AnthropicLlm
 
-public class DirectAnthropicAgent {
+    root_agent = LlmAgent(
+        name="claude_agent",
+        model=AnthropicLlm(model="claude-sonnet-4-6"),
+        instruction="You are a helpful assistant.",
+    )
+    ```
 
-  private static final String CLAUDE_MODEL_ID = "claude-sonnet-4-6"; // Or your preferred Claude model
+=== "TypeScript"
 
-  public static LlmAgent createAgent() {
+    In TypeScript, Claude is available through Google Cloud Agent Platform only. 
+    Install the ADK integrations package and the Anthropic SDKs:
 
-    // It's recommended to load sensitive keys from a secure config
-    AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
-        .apiKey("ANTHROPIC_API_KEY")
-        .build();
+    ```shell
+    npm install @google/adk @google/adk-integrations @anthropic-ai/sdk @anthropic-ai/vertex-sdk
+    ```
 
-    Claude claudeModel = new Claude(
-        CLAUDE_MODEL_ID,
-        anthropicClient
-    );
+    Complete the [Agent Platform setup](#connect-through-agent-platform), then
+    create a `Claude` instance and pass it to your agent:
 
-    return LlmAgent.builder()
-        .name("claude_direct_agent")
-        .model(claudeModel)
-        .instruction("You are a helpful AI assistant powered by Anthropic Claude.")
-        // ... other LlmAgent configurations
-        .build();
-  }
+    ```typescript
+    import {LlmAgent} from '@google/adk';
+    import {Claude} from '@google/adk-integrations';
 
-  public static void main(String[] args) {
-    try {
-      LlmAgent agent = createAgent();
-      System.out.println("Successfully created direct Anthropic agent: " + agent.name());
-    } catch (IllegalStateException e) {
-      System.err.println("Error creating agent: " + e.getMessage());
+    export const rootAgent = new LlmAgent({
+      name: 'claude_agent',
+      model: new Claude({model: 'claude-sonnet-4-6@default'}),
+      instruction: 'You are a helpful assistant.',
+    });
+    ```
+
+=== "Go"
+
+    !!! example "Experimental"
+
+        The `anthropicmodel` package is experimental. Its API and behavior may
+        have limitations and it is not recommended for production use.
+
+    Create a model with `anthropicmodel.NewModel` and pass it to your agent.
+    When `APIKey` is empty, the model reads your key from the
+    `ANTHROPIC_API_KEY` environment variable.
+
+    ```go
+    import (
+    	"context"
+    	"log"
+
+    	"google.golang.org/adk/v2/agent/llmagent"
+    	"google.golang.org/adk/v2/model/anthropicmodel"
+    )
+
+    llm, err := anthropicmodel.NewModel(context.Background(), "claude-sonnet-4-6", anthropicmodel.ClientConfig{
+    	Backend: anthropicmodel.BackendAnthropic,
+    })
+    if err != nil {
+    	log.Fatal(err)
     }
-  }
-}
-```
+
+    agent, err := llmagent.New(llmagent.Config{
+    	Name:        "claude_agent",
+    	Model:       llm,
+    	Instruction: "You are a helpful assistant.",
+    })
+    if err != nil {
+    	log.Fatal(err)
+    }
+    ```
+
+    For a complete, runnable sample, see
+    [examples/anthropic/](https://github.com/google/adk-go/tree/main/examples/anthropic)
+    in the ADK Go repository.
+
+=== "Java"
+
+    The ADK Java core library includes the
+    [Anthropic Java SDK](https://github.com/anthropics/anthropic-sdk-java) as a
+    dependency. Create an `AnthropicClient`, wrap it in a `Claude` instance,
+    and pass that to your agent:
+
+    ```java
+    import com.anthropic.client.AnthropicClient;
+    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Claude;
+
+    public class ClaudeAgent {
+
+      public static LlmAgent createAgent() {
+        AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+            .apiKey(System.getenv("ANTHROPIC_API_KEY"))
+            .build();
+
+        return LlmAgent.builder()
+            .name("claude_agent")
+            .model(new Claude("claude-sonnet-4-6", anthropicClient))
+            .instruction("You are a helpful assistant.")
+            .build();
+      }
+    }
+    ```
+
+=== "Kotlin"
+
+    Add the ADK Anthropic integration to your Gradle build. This module is
+    JVM-only.
+
+    ```kotlin
+    implementation("com.google.adk:google-adk-kotlin-integrations-anthropic:1.5.0")
+    ```
+
+    Create a `Claude` instance and pass it to your agent. When you omit
+    `apiKey`, the model reads your key from the `ANTHROPIC_API_KEY` environment
+    variable.
+
+    ```kotlin
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.anthropic.Claude
+
+    val rootAgent =
+      LlmAgent(
+        name = "claude_agent",
+        model = Claude(name = "claude-sonnet-4-6"),
+        instruction = Instruction("You are a helpful assistant."),
+      )
+    ```
+
+## Choose a backend
+
+Choose a backend based on where you manage billing, access, and quotas:
+
+-   **Anthropic API:** Use this backend if you already have an Anthropic
+    account and manage Claude usage there. You authenticate with an Anthropic
+    API key.
+-   **Google Cloud:** Use this backend if your application runs
+    on Google Cloud, or you want Claude usage governed by your Google Cloud
+    project's IAM permissions, quotas, and billing. You
+    authenticate with Application Default Credentials (ADC), and you don't
+    manage a separate API key.
+
+The following table shows how each language selects a backend:
+
+| Language   | Anthropic API                                       | Agent Platform                                                       |
+| :--------- | :-------------------------------------------------- | :------------------------------------------------------------------- |
+| Python     | `AnthropicLlm` instance                             | `Claude` instance, or a `claude-*` model string                      |
+| TypeScript | Not supported                                       | `Claude` instance, or a `claude-*` string after registering `Claude` |
+| Go         | `ClientConfig.Backend` set to `BackendAnthropic`    | `ClientConfig.Backend` set to `BackendVertex`                        |
+| Java       | `Claude` with an `AnthropicClient` using an API key | `Claude` with an `AnthropicClient` using a `VertexBackend`           |
+| Kotlin     | `Claude(name, apiKey)`                              | `Claude(name, vertexCredentials)`                                    |
+
+!!! warning "Python model strings use Google Cloud Agent Platform"
+
+    In Python, a bare `claude-*` model string, such as
+    `model="claude-sonnet-4-6"`, routes to the Agent Platform backend and
+    requires Google Cloud project settings. To use the Anthropic API from
+    Python, pass an `AnthropicLlm` instance instead of a string.
+
+## Connect through Google Cloud
+
+To use Claude through Google Cloud, set up your Google Cloud environment:
+
+1.  Enable the Claude models you want to use in
+    [Model Garden](https://console.cloud.google.com/vertex-ai/model-garden)
+    for your Google Cloud project.
+2.  Set up Application Default Credentials:
+
+    ```shell
+    gcloud auth application-default login
+    ```
+
+3.  Set your project and a region where the model is available, such as
+    `global` or `us-east5`:
+
+    ```shell
+    export GOOGLE_CLOUD_PROJECT="your-project-id"
+    export GOOGLE_CLOUD_LOCATION="global"
+    ```
+
+For more details on connecting ADK to Google Cloud, see
+[Connect to Google Cloud and Agent Platform](/get-started/google-cloud/).
+
+The following examples create an agent that calls Claude through Google
+Cloud:
+
+=== "Python"
+
+    Pass a Claude model string to your agent. ADK routes `claude-*` strings to
+    the `Claude` class, which reads `GOOGLE_CLOUD_PROJECT` and
+    `GOOGLE_CLOUD_LOCATION`.
+
+    ```python
+    from google.adk.agents import LlmAgent
+
+    root_agent = LlmAgent(
+        name="claude_agent",
+        model="claude-sonnet-4-6",
+        instruction="You are a helpful assistant.",
+    )
+    ```
+
+    ADK Python v2.9.0 and later routes every `claude-*` model string to
+    `Claude`. In earlier versions, if ADK doesn't recognize a model string,
+    pass an instance instead: `model=Claude(model="claude-sonnet-4-6")`, with
+    `Claude` imported from `google.adk.models`.
+
+=== "TypeScript"
+
+    Register `Claude` once at startup so any agent can reference a `claude-*`
+    model string by name:
+
+    ```typescript
+    import {LLMRegistry, LlmAgent} from '@google/adk';
+    import {Claude} from '@google/adk-integrations';
+
+    LLMRegistry.register(Claude);
+
+    export const rootAgent = new LlmAgent({
+      name: 'claude_agent',
+      model: 'claude-sonnet-4-6@default',
+      instruction: 'You are a helpful assistant.',
+    });
+    ```
+
+=== "Go"
+
+    Set `Backend` to `BackendVertex`. When `Project` and `Location` are empty,
+    the model reads `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION`, and
+    uses ADC for credentials.
+
+    ```go
+    llm, err := anthropicmodel.NewModel(ctx, "claude-sonnet-4-6", anthropicmodel.ClientConfig{
+    	Backend: anthropicmodel.BackendVertex,
+    })
+    if err != nil {
+    	log.Fatal(err)
+    }
+    ```
+
+=== "Java"
+
+    Configure the `AnthropicClient` with a `VertexBackend`:
+
+    ```java
+    import com.anthropic.client.AnthropicClient;
+    import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+    import com.anthropic.vertex.backends.VertexBackend;
+    import com.google.adk.agents.LlmAgent;
+    import com.google.adk.models.Claude;
+    import com.google.auth.oauth2.GoogleCredentials;
+    import java.io.IOException;
+
+    public class ClaudeAgentPlatformAgent {
+
+      public static LlmAgent createAgent() throws IOException {
+        AnthropicClient anthropicClient = AnthropicOkHttpClient.builder()
+            .backend(
+                VertexBackend.builder()
+                    .project("your-project-id")
+                    .region("global")
+                    .googleCredentials(GoogleCredentials.getApplicationDefault())
+                    .build())
+            .build();
+
+        return LlmAgent.builder()
+            .name("claude_agent")
+            .model(new Claude("claude-sonnet-4-6", anthropicClient))
+            .instruction("You are a helpful assistant.")
+            .build();
+      }
+    }
+    ```
+
+=== "Kotlin"
+
+    Pass `VertexCredentials` to the `Claude` constructor. Unset values fall back
+    to `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, and ADC.
+
+    ```kotlin
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.VertexCredentials
+    import com.google.adk.kt.models.anthropic.Claude
+
+    val rootAgent =
+      LlmAgent(
+        name = "claude_agent",
+        model = Claude(name = "claude-sonnet-4-6", vertexCredentials = VertexCredentials()),
+        instruction = Instruction("You are a helpful assistant."),
+      )
+    ```
+
+## Configure extended thinking
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v1.34.0</span><span class="lst-go">Go v2.7.0</span><span class="lst-kotlin">Kotlin v1.4.0</span>
+</div>
+
+Extended thinking lets Claude reason through a problem before it responds,
+which can help on multi-step tasks such as planning, analysis, and choosing
+between tools. You configure it with the `thinking_budget` field of
+the standard thinking configuration:
+
+| `thinking_budget` | Behavior |
+| :--- | :--- |
+| Negative, such as `-1` | **Adaptive thinking.** Claude chooses how much to reason for each request. |
+| `0` | **No thinking.** Claude responds without extended thinking. |
+| Positive | **Manual thinking.** Claude uses up to this many tokens to reason. For minimum and maximum budgets, see Anthropic's extended thinking documentation. |
+
+Use adaptive thinking unless you need a fixed token budget. Some newer Claude
+models accept only adaptive thinking; see Anthropic's extended thinking 
+documentation for the model you use. When you set a thinking configuration, 
+you must set a `thinking_budget` value.
+
+To control how much reasoning effort Claude spends, set the **effort** level:
+`low`, `medium`, `high`, `xhigh`, or `max`. Claude doesn't support the
+standard `thinking_level` setting; use effort instead. While thinking or effort
+is active, ADK doesn't send `temperature`, `top_p`, or `top_k` to Claude.
+
+=== "Python"
+
+    Set `effort` on `AnthropicGenerateContentConfig`, available in ADK Python
+    v2.4.0 and later:
+
+    ```python
+    from google.adk.agents import LlmAgent
+    from google.adk.models import AnthropicGenerateContentConfig
+    from google.genai import types
+
+    root_agent = LlmAgent(
+        name="claude_reasoning_agent",
+        model="claude-sonnet-4-6",
+        instruction="You are a helpful assistant.",
+        generate_content_config=AnthropicGenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=-1),
+            effort="high",
+        ),
+    )
+    ```
+
+    Setting `thinking_level` on `AnthropicGenerateContentConfig` raises a
+    validation error. On a plain `types.GenerateContentConfig`, ADK ignores it
+    and logs a warning.
+
+=== "Go"
+
+    Set the thinking budget on the agent's `GenerateContentConfig`, and the
+    effort level on the model's `ClientConfig`:
+
+    ```go
+    llm, err := anthropicmodel.NewModel(ctx, "claude-sonnet-4-6", anthropicmodel.ClientConfig{
+    	Effort: anthropicmodel.EffortHigh,
+    })
+    if err != nil {
+    	log.Fatal(err)
+    }
+
+    agent, err := llmagent.New(llmagent.Config{
+    	Name:        "claude_reasoning_agent",
+    	Model:       llm,
+    	Instruction: "You are a helpful assistant.",
+    	GenerateContentConfig: &genai.GenerateContentConfig{
+    		ThinkingConfig: &genai.ThinkingConfig{ThinkingBudget: genai.Ptr[int32](-1)},
+    	},
+    })
+    ```
+
+=== "Kotlin"
+
+    Set the thinking budget on the agent's `GenerateContentConfig`, and the
+    effort level on the `Claude` constructor:
+
+    ```kotlin
+    import com.anthropic.models.messages.OutputConfig
+    import com.google.adk.kt.agents.Instruction
+    import com.google.adk.kt.agents.LlmAgent
+    import com.google.adk.kt.models.anthropic.Claude
+    import com.google.adk.kt.types.GenerateContentConfig
+    import com.google.adk.kt.types.ThinkingConfig
+
+    val rootAgent =
+      LlmAgent(
+        name = "claude_reasoning_agent",
+        model = Claude(name = "claude-sonnet-4-6", effort = OutputConfig.Effort.HIGH),
+        instruction = Instruction("You are a helpful assistant."),
+        generateContentConfig =
+          GenerateContentConfig(thinkingConfig = ThinkingConfig(thinkingBudget = -1)),
+      )
+    ```
+
+ADK returns Claude's reasoning as thought parts in the response, and preserves
+thinking blocks and their signatures across tool calls within a turn,
+as the Anthropic API requires.
+
+## Advanced applications
+
+ADK supports some advanced uses of Anthropic models, including prompt caching
+and accessing models through the LiteLLM library.
+
+### Cache prompts
+
+<div class="language-support-tag">
+   <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.8.0</span><span class="lst-go">Go v2.7.0</span><span class="lst-kotlin">Kotlin v1.4.0</span>
+</div>
+
+Agents with long instructions or many tools send the same prompt prefix on
+every request. Claude prompt caching stores that prefix so later requests
+reuse it, which can reduce cost and latency. ADK places cache breakpoints on the
+tool declarations, the system instruction, and the latest conversation
+content.
+
+Anthropic supports a 5-minute cache lifetime, which is the default, and a 1-hour
+cache lifetime. Use the 1-hour lifetime when requests to the same agent are
+usually more than 5 minutes apart. For more information, see Anthropic's 
+[prompt caching](https://docs.claude.com/en/docs/build-with-claude/prompt-caching)
+documentation.
+
+=== "Python"
+
+    Set a `ContextCacheConfig` on your `App`. A `ttl_seconds` value of 3600 or
+    more selects the 1-hour cache. For more on this configuration, see
+    [Context caching](/context/caching/).
+
+    ```python
+    from google.adk.agents.context_cache_config import ContextCacheConfig
+    from google.adk.apps.app import App
+
+    app = App(
+        name="claude_caching_app",
+        root_agent=root_agent,
+        context_cache_config=ContextCacheConfig(
+            min_tokens=2048,  # Skip caching for short prompts.
+            ttl_seconds=600,
+        ),
+    )
+    ```
+
+=== "Go"
+
+    Set `PromptCache` on the model's `ClientConfig`. Set `TTL` to
+    `PromptCacheTTL1h` to select the 1-hour cache.
+
+    ```go
+    llm, err := anthropicmodel.NewModel(ctx, "claude-sonnet-4-6", anthropicmodel.ClientConfig{
+    	PromptCache: &anthropicmodel.PromptCacheConfig{TTL: anthropicmodel.PromptCacheTTL5m},
+    })
+    ```
+
+=== "Kotlin"
+
+    Set a `ContextCacheConfig` on your `App`. A `ttl` of one hour or more
+    selects the 1-hour cache.
+
+    ```kotlin
+    @OptIn(ExperimentalContextCachingFeature::class)
+    import com.google.adk.kt.agents.ContextCacheConfig
+    import com.google.adk.kt.apps.App
+    import kotlin.time.Duration.Companion.minutes
+
+    val app =
+      App(
+        appName = "claude_caching_app",
+        rootAgent = rootAgent,
+        contextCacheConfig = ContextCacheConfig(minTokens = 2048, ttl = 10.minutes),
+      )
+    ```
+
+### Use Claude through LiteLLM
+
+In Python, you can also reach Claude through the `LiteLlm` connector with an
+`anthropic/` model string. Use this path if your application already routes
+models through LiteLLM. For setup, see
+[LiteLLM](/agents/models/litellm/#anthropic-thinking-blocks).
+
+## Configuration options
+
+The Claude model classes accept the following options:
+
+=== "Python"
+
+    These options apply to both `AnthropicLlm` and `Claude`.
+
+    | Option | Type | Default | Description |
+    | :--- | :--- | :--- | :--- |
+    | `model` | `str` | `"claude-sonnet-4-20250514"` (`AnthropicLlm`), `"claude-3-5-sonnet-v2@20241022"` (`Claude`) | The Claude model ID. |
+    | `max_tokens` | `int` | `8192` | Maximum output tokens when the request sets no `max_output_tokens`. |
+    | `client` | `AsyncAnthropic` or `AsyncAnthropicVertex` | `None` | A preconfigured Anthropic client. The `Claude` class requires an `AsyncAnthropicVertex` client. |
+
+=== "TypeScript"
+
+    | Option | Type | Default | Description |
+    | :--- | :--- | :--- | :--- |
+    | `model` | `string` | `'claude-sonnet-4-6@default'` | The Claude model ID on Agent Platform. |
+    | `maxTokens` | `number` | `8192` | Maximum output tokens when the request sets no `maxOutputTokens`. |
+
+=== "Go"
+
+    Selected `ClientConfig` fields:
+
+    | Option | Type | Default | Description |
+    | :--- | :--- | :--- | :--- |
+    | `Backend` | `Backend` | `BackendAnthropic` | The serving backend: `BackendAnthropic` or `BackendVertex`. |
+    | `APIKey` | `string` | `ANTHROPIC_API_KEY` | Anthropic API key for `BackendAnthropic`. |
+    | `Project` | `string` | `GOOGLE_CLOUD_PROJECT` | Google Cloud project for `BackendVertex`. |
+    | `Location` | `string` | `GOOGLE_CLOUD_LOCATION` | Google Cloud region for `BackendVertex`. |
+    | `MaxTokens` | `int` | `8192` | Maximum output tokens when the request sets no `MaxOutputTokens`. |
+    | `MaxRetries` | `*int` | `2` | Number of retries the Anthropic SDK makes for failed requests. |
+    | `Effort` | `Effort` | Model default | Reasoning effort level. |
+    | `PromptCache` | `*PromptCacheConfig` | `nil` | Enables prompt caching when set. |
+
+    For the full list, see the
+    [`anthropicmodel` package reference](https://pkg.go.dev/google.golang.org/adk/v2/model/anthropicmodel).
+
+=== "Java"
+
+    | Option | Type | Default | Description |
+    | :--- | :--- | :--- | :--- |
+    | `modelName` | `String` | Required | The Claude model ID. |
+    | `anthropicClient` | `AnthropicClient` | Required | The Anthropic client, configured for the Anthropic API or a `VertexBackend`. |
+    | `maxTokens` | `int` | `8192` | Maximum output tokens for each request. |
+
+=== "Kotlin"
+
+    | Option | Type | Default | Description |
+    | :--- | :--- | :--- | :--- |
+    | `name` | `String` | Required | The Claude model ID. |
+    | `apiKey` | `String?` | `ANTHROPIC_API_KEY` | Anthropic API key. Selects the Anthropic API backend. |
+    | `vertexCredentials` | `VertexCredentials` | None | Project, location, and credentials. Selects the Agent Platform backend. |
+    | `client` | `AnthropicClient` | None | A preconfigured Anthropic client, used instead of `apiKey` or `vertexCredentials`. |
+    | `maxTokens` | `Int` | `8192` | Maximum output tokens when the request sets none. |
+    | `effort` | `OutputConfig.Effort?` | `null` | Reasoning effort level. |
+
+## Limitations
+
+-   **Live API:** Claude models don't support ADK bidirectional streaming with
+    the Live API.
+-   **TypeScript:** The `Claude` class returns complete responses without
+    streaming, and accepts text, function call, and function response parts
+    only. For the full list, see the
+    [Claude integration guide](https://github.com/google/adk-js/blob/main/docs/guides/integrations/models/anthropic_llm/index.md#limitations).
+
+## Next steps
+
+-   [Agent Platform hosted models](/agents/models/agent-platform/): Use other
+    models deployed on Agent Platform.
+-   [LiteLLM](/agents/models/litellm/): Connect to models from other
+    providers.
+-   [Context caching](/context/caching/): Learn more about cache settings.
 
 ================
 File: docs/agents/models/apigee.md
@@ -4099,8 +4441,7 @@ in the LiteRT-LM GitHub repository.
 
 Before you start the server, you need to download a model. You'll need a
 _Hugging Face_ user access token to download a LiteRT-LM model using `lit`. You
-can get a token for your _Hugging Face_ account
-[here](https://huggingface.co/settings/tokens).
+can get an [access token](https://huggingface.co/settings/tokens) on the _Hugging Face_ website.
 
 To see a list of models available for download, use the `lit list` command:
 
@@ -4850,11 +5191,10 @@ sub-agents. Template workflow agents are specialized components designed for
 orchestrating the execution flow of sub-agents. Their primary role is to manage
 how and when other agents run, defining the control flow of a process.
 
-!!! note "Alternative: graph-based workflows"
+!!! warning "Deprecated: Use graph-based workflows"
 
-    Starting in ADK 2.0 for Python and Go, template workflows have been superseded
-
-    by more flexible workflow structures, including
+    In ADK Python, TypeScript, Go, and Kotlin, template workflows have been 
+    superseded by more flexible workflow structures, including
     [graph-based workflows](/graphs/) and
     [dynamic workflows](/graphs/dynamic/).
     These workflow architectures provide more control, flexibility
@@ -4918,11 +5258,10 @@ its sub-agents. The sub-agents within the defined loop may or may not utilize AI
 models, but the overall execution of those sub-agents is ultimately managed by
 the ***LoopAgent*** object you define.
 
-!!! note "Alternative: graph-based workflows"
+!!! warning "Deprecated: Use graph-based workflows"
 
-    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
-
-    by more flexible workflow structures, including
+    In ADK Python, TypeScript, Go, and Kotlin, template workflows have been 
+    superseded by more flexible workflow structures, including
     [graph-based workflows](/graphs/) and
     [dynamic workflows](/graphs/dynamic/).
 
@@ -4945,8 +5284,8 @@ When the `LoopAgent`'s `Run Async` method is called, it performs the following a
 
     _Crucially_, the `LoopAgent` itself does _not_ inherently decide when to stop looping. You _must_ implement a termination mechanism to prevent infinite loops.  Common strategies include:
 
-    * **Max Iterations**: Set a maximum number of iterations in the `LoopAgent`. **The loop will terminate after that many iterations**.
-    * **Escalation from sub-agent**: Design one or more sub-agents to evaluate a condition (e.g., "Is the document quality good enough?", "Has a consensus been reached?").  If the condition is met, the sub-agent can signal termination (e.g., by raising a custom event, setting a flag in a shared context, or returning a specific value).
+    * **Max Iterations**: Set a maximum number of iterations in the `LoopAgent`. **The loop will terminate after that many iterations**. In Python, `max_iterations` defaults to `None`, which means the loop only stops on escalation.
+    * **Escalation from sub-agent**: Design one or more sub-agents to evaluate a condition (e.g., "Is the document quality good enough?", "Has a consensus been reached?").  If the condition is met, the sub-agent signals termination by emitting an event whose actions set `escalate` to true. In Python, a custom agent yields an `Event` with `actions=EventActions(escalate=True)`, while a callback sets `callback_context.actions.escalate = True` and a tool sets `tool_context.actions.escalate = True`. The built-in `exit_loop` tool sets that flag for you.
 
 ![Loop Agent](/assets/loop-agent.png)
 
@@ -4958,10 +5297,10 @@ Imagine a scenario where you want to iteratively improve a document:
 * **Critic Agent:** An `LlmAgent` that critiques the draft, identifying areas for improvement.
 
     ```py
-    LoopAgent(sub_agents=[WriterAgent, CriticAgent], max_iterations=5)
+    LoopAgent(name="RefinementLoop", sub_agents=[WriterAgent, CriticAgent], max_iterations=5)
     ```
 
-In this setup, the `LoopAgent` would manage the iterative process.  The `CriticAgent` could be **designed to return a "STOP" signal when the document reaches a satisfactory quality level**, preventing further iterations. Alternatively, the `max iterations` parameter could be used to limit the process to a fixed number of cycles, or external logic could be implemented to make stop decisions. The **loop would run at most five times**, ensuring the iterative refinement doesn't continue indefinitely.
+In this setup, the `LoopAgent` would manage the iterative process.  The `CriticAgent` could be **given an escalation tool such as `exit_loop`, which it calls once the document reaches a satisfactory quality level**, preventing further iterations. Alternatively, the `max_iterations` parameter could be used to limit the process to a fixed number of cycles, or external logic could be implemented to make stop decisions. The **loop would run at most five times**, ensuring the iterative refinement doesn't continue indefinitely.
 
 ???+ "Full Code"
 
@@ -5025,11 +5364,10 @@ sub-agents. The sub-agents specified in the parallel execution set may or may
 not utilize AI models, but the overall execution of those sub-agents is
 ultimately managed by the ***ParallelAgent*** object you define.
 
-!!! note "Alternative: graph-based workflows"
+!!! warning "Deprecated: Use graph-based workflows"
 
-    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
-
-    by more flexible workflow structures, including
+    In ADK Python, TypeScript, Go, and Kotlin, template workflows have been 
+    superseded by more flexible workflow structures, including
     [graph-based workflows](/graphs/) and
     [dynamic workflows](/graphs/dynamic/).
 
@@ -5038,14 +5376,14 @@ ultimately managed by the ***ParallelAgent*** object you define.
 When the `ParallelAgent`'s `run_async()` method is called:
 
 1. **Concurrent Execution:** It initiates the `run_async()` method of *each* sub-agent present in the `sub_agents` list *concurrently*.  This means all the agents start running at (approximately) the same time.
-2. **Independent Branches:**  Each sub-agent operates in its own execution branch.  There is ***no* automatic sharing of conversation history or state between these branches** during execution.
-3. **Result Collection:** The `ParallelAgent` manages the parallel execution and, typically, provides a way to access the results from each sub-agent after they have completed (e.g., through a list of results or events). The order of results may not be deterministic.
+2. **Independent Branches:**  Each sub-agent operates in its own execution branch, and there is ***no* automatic sharing of conversation history between these branches** during execution. A sub-agent sees only the events on its own branch. Session state is shared: all branches run against the same session, so a value one sub-agent writes, for example through `output_key`, is visible to the other branches and to later agents.
+3. **Result Collection:** The `ParallelAgent` merges the sub-agents' event streams and yields each event as it is produced; it does not gather the results into a list you can read afterwards. Because the branches interleave, the event order is not deterministic. To use a sub-agent's result, read it from the shared session state, for example the key it was given through `output_key`.
 
 ### Independent Execution and State Management
 
 It's *crucial* to understand that sub-agents within a `ParallelAgent` run independently.  If you *need* communication or data sharing between these agents, you must implement it explicitly.  Possible approaches include:
 
-* **Shared `InvocationContext`:** You could pass a shared `InvocationContext` object to each sub-agent.  This object could act as a shared data store.  However, you'd need to manage concurrent access to this shared context carefully (e.g., using locks) to avoid race conditions.
+* **Shared session state:** All branches run against the same session, so give each sub-agent an `output_key` and read those keys from a later agent's instruction. Because the branches run concurrently, do not rely on one branch reading a key another branch is still writing.
 * **External State Management:**  Use an external database, message queue, or other mechanism to manage shared state and facilitate communication between agents.
 * **Post-Processing:** Collect results from each branch, and then implement logic to coordinate data afterwards.
 
@@ -5060,10 +5398,10 @@ Imagine researching multiple topics simultaneously:
 3. **Researcher Agent 3:**  An `LlmAgent` that researches "carbon capture methods."
 
     ```py
-    ParallelAgent(sub_agents=[ResearcherAgent1, ResearcherAgent2, ResearcherAgent3])
+    ParallelAgent(name="ParallelWebResearchAgent", sub_agents=[ResearcherAgent1, ResearcherAgent2, ResearcherAgent3])
     ```
 
-These research tasks are independent.  Using a `ParallelAgent` allows them to run concurrently, potentially reducing the total research time significantly compared to running them sequentially. The results from each agent would be collected separately after they finish.
+These research tasks are independent.  Using a `ParallelAgent` allows them to run concurrently, potentially reducing the total research time significantly compared to running them sequentially. To use each agent's result afterwards, give it an `output_key` and read that key from session state.
 
 ???+ "Full Code"
 
@@ -5120,11 +5458,10 @@ sequential execution set may or may not utilize AI models, but the overall
 execution of those sub-agents is ultimately managed by the ***SequentialAgent***
 object you define.
 
-!!! note "Alternative: graph-based workflows"
+!!! warning "Deprecated: Use graph-based workflows"
 
-    Starting in ADK 2.0 for Python and Go, templated workflows have been superseded
-
-    by more flexible workflow structures, including
+    In ADK Python, TypeScript, Go, and Kotlin, template workflows have been 
+    superseded by more flexible workflow structures, including
     [graph-based workflows](/graphs/) and
     [dynamic workflows](/graphs/dynamic/).
 
@@ -5162,7 +5499,7 @@ Using a `SequentialAgent` makes it simple to define this execution flow, as show
 in the following code snippet:
 
 ```py
-SequentialAgent(sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAgent])
+SequentialAgent(name="CodePipelineAgent", sub_agents=[CodeWriterAgent, CodeReviewerAgent, CodeRefactorerAgent])
 ```
 
 This ensures the code is written, *then* reviewed, and *finally* refactored, in a strict, dependable order. **The output from each sub-agent is passed to the next by storing them in state via [Output Key](/agents/llm-agents/#data-handling)**.
@@ -5250,9 +5587,11 @@ details on what you must install and configure before you can run agents with
 the Agent Config files.
 
 !!! note
-    The Agent Config feature currently only supports Gemini models. For more
-    information about additional; functional restrictions, see
-    [Known limitations](#known-limitations).
+    The `model:` key of an Agent Config takes a model name string, such as a
+    Gemini model name. To use a model that needs constructor arguments, such as
+    `LiteLlm`, construct a `BaseLlm` instance in Python and reference it from
+    the `model_code:` key. For more information about additional functional
+    restrictions, see [Known limitations](#known-limitations).
 
 To set up ADK for use with Agent Config:
 
@@ -5482,8 +5821,15 @@ deployment guides.
 
 The Agent Config feature has the following limitations:
 
--   **Model support:** Only Gemini models are currently supported.
-    Integration with third-party models is in progress.
+-   **Model support:** The `model:` key only accepts a model name string. To use
+    a model that needs constructor arguments, such as `LiteLlm`, construct it in
+    Python and reference it from the `model_code:` key, which takes a mapping whose `name:` sub-key is
+    the fully qualified name of the `BaseLlm` instance:
+
+        model_code:
+          name: my_library.clients.my_litellm
+
+    The `model:` and `model_code:` keys cannot both be set.
 -   **Programming language:** The Agent Config feature currently supports
     Python and Java code for tools and other functionality requiring programming code.
 -   **ADK Tool support:** The following ADK tools are supported by the Agent
@@ -5589,6 +5935,7 @@ The core of any custom agent is the method where you define its unique asynchron
       * **Signature:** `async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:`
       * **Asynchronous Generator:** It must be an `async def` function and return an `AsyncGenerator`. This allows it to `yield` events produced by sub-agents or its own logic back to the runner.
       * **`ctx` (InvocationContext):** Provides access to crucial runtime information, most importantly `ctx.session.state`, which is the primary way to share data between steps orchestrated by your custom agent.
+      * **Live audio and video runs:** The `_run_async_impl` method only covers non-live runs (`run_async()`). To support `run_live()`, also override `_run_live_impl`, which has the same signature. Without that override, live runs raise `NotImplementedError`.
 
 === "TypeScript"
 
@@ -5766,7 +6113,7 @@ The core of any custom agent is the method where you define its unique asynchron
 
 Typically, a custom agent orchestrates other agents (like `LlmAgent`, `LoopAgent`, etc.).
 
-* **Initialization:** You usually pass instances of these sub-agents into your custom agent's constructor and store them as instance fields/attributes (e.g., `this.story_generator = story_generator_instance` or `self.story_generator = story_generator_instance`). This makes them accessible within the custom agent's core asynchronous execution logic (such as: `_run_async_impl` method).
+* **Initialization:** You usually pass instances of these sub-agents into your custom agent's constructor and store them as instance fields/attributes (e.g., `this.story_generator = story_generator_instance` or `self.story_generator = story_generator_instance`). This makes them accessible within the custom agent's core asynchronous execution logic (such as: `_run_async_impl` method). In Python, `BaseAgent` is a Pydantic model configured with `extra='forbid'`, so declare each sub-agent you keep as an annotated class-level field, such as `story_generator: LlmAgent`, and pass it to `super().__init__(...)`. Assigning an undeclared attribute in `__init__` raises a `ValueError`.
 * **Sub Agents List:** When initializing the `BaseAgent` using it's `super()` constructor, you should pass a `sub agents` list. This list tells the ADK framework about the agents that are part of this custom agent's immediate hierarchy. It's important for framework features like lifecycle management, introspection, and potentially future routing capabilities, even if your core execution logic (`_run_async_impl`) calls the agents directly via `self.xxx_agent`. Include the agents that your custom logic directly invokes at the top level.
 * **State:** As mentioned, `ctx.session.state` is the standard way sub-agents (especially `LlmAgent`s using `output key`) communicate results back to the orchestrator and how the orchestrator passes necessary inputs down.
 
@@ -5796,12 +6143,25 @@ The foundation for structuring multi-agent systems is the parent-child relations
 
     ```python
     # Conceptual Example: Defining Hierarchy
+    from typing import AsyncGenerator
+
     from google.adk.agents import LlmAgent, BaseAgent
+    from google.adk.agents.invocation_context import InvocationContext
+    from google.adk.events import Event
+
+
+    # A custom non-LLM agent must implement _run_async_impl; instantiating
+    # BaseAgent directly raises NotImplementedError when it runs.
+    class TaskExecutor(BaseAgent):
+        async def _run_async_impl(
+            self, ctx: InvocationContext
+        ) -> AsyncGenerator[Event, None]:
+            yield Event(author=self.name)
 
 
     # Define individual agents
     greeter = LlmAgent(name="Greeter", model="gemini-flash-latest")
-    task_doer = BaseAgent(name="TaskExecutor") # Custom non-LLM agent
+    task_doer = TaskExecutor(name="TaskExecutor") # Custom non-LLM agent
 
 
     # Create parent agent and assign children via sub_agents
@@ -5912,6 +6272,13 @@ The foundation for structuring multi-agent systems is the parent-child relations
 ### Workflow agents as orchestrators
 
 ADK includes specialized agents derived from `BaseAgent` that don't perform tasks themselves but orchestrate the execution flow of their `sub_agents`.
+
+!!! note "Deprecated in Python and TypeScript"
+
+    In Python and TypeScript, `SequentialAgent`, `ParallelAgent`, and
+    `LoopAgent` are deprecated in favor of `Workflow`: constructing one emits a
+    deprecation warning, and the classes will be removed in a future release.
+    A `Workflow` cannot be used as an `LlmAgent` sub-agent.
 
 * **[`SequentialAgent`](workflow-agents/sequential-agents.md):** Executes its `sub_agents` one after another in the order they are listed.
     * **Context:** Passes the *same* [`InvocationContext`](../runtime/index.md) sequentially, allowing agents to easily pass results via shared state.
@@ -6182,7 +6549,7 @@ Agents within a system often need to exchange data or trigger actions in one ano
 
 The most fundamental way for agents operating within the same invocation (and thus sharing the same [`Session`](/sessions/session/) object via the `InvocationContext`) to communicate passively.
 
-* **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). State changes are tracked via [`CallbackContext`](../callbacks/index.md).
+* **Mechanism:** One agent (or its tool/callback) writes a value (`context.state['data_key'] = processed_data`), and a subsequent agent reads it (`data = context.state.get('data_key')`). In Python, [`CallbackContext`](../callbacks/index.md) and `ToolContext` are the same delta-aware context class, and every write to `context.state` is recorded as a `state_delta` on the event the agent emits.
 * **Convenience:** The `output_key` property on [`LlmAgent`](llm-agents.md) automatically saves the agent's final response text (or structured output) to the specified state key.
 * **Nature:** Asynchronous, passive communication. Ideal for pipelines orchestrated by `SequentialAgent` or passing data across `LoopAgent` iterations.
 * **See Also:** [State Management](../sessions/state.md)
@@ -6401,7 +6768,7 @@ Allows an [`LlmAgent`](llm-agents.md) to treat another `BaseAgent` instance as a
             prompt = ctx.session.state.get("image_prompt", "default prompt")
             # ... generate image bytes ...
             image_bytes = b"..."
-            yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(image_bytes, "image/png")]))
+            yield Event(author=self.name, content=types.Content(parts=[types.Part.from_bytes(data=image_bytes, mime_type="image/png")]))
 
 
     image_agent = ImageGeneratorAgent()
@@ -6915,8 +7282,8 @@ First, you need to establish what the agent *is* and what it's *for*.
   `name` is crucial for internal operations, especially in multi-agent systems
   where agents need to refer to or delegate tasks to each other. Choose a
   descriptive name that reflects the agent's function (e.g.,
-  `customer_support_router`, `billing_inquiry_agent`). Avoid reserved names like
-  `user`.
+  `customer_support_router`, `billing_inquiry_agent`). In Python, the name must
+  be a valid Python identifier, and ADK rejects the reserved name `user`.
 
 - **`description` (Optional, Recommended for Multi-Agent):** Provide a concise
   summary of the agent's capabilities. This description is primarily used by
@@ -6924,11 +7291,16 @@ First, you need to establish what the agent *is* and what it's *for*.
   Make it specific enough to differentiate it from peers (e.g., "Handles
   inquiries about current billing statements," not just "Billing agent").
 
-- **`model` (Required):** Specify the underlying LLM that will power this
-  agent's reasoning. This is a string identifier like `"gemini-flash-latest"`.
-  The choice of model impacts the agent's capabilities, cost, and performance.
-  See the [Models](/agents/models/) page for available options and
-  considerations.
+- **`model` (Optional in Python):** Specify the underlying LLM that will power
+  this agent's reasoning. This is either a string identifier like
+  `"gemini-flash-latest"` or a `BaseLlm` instance. If you omit `model`, the
+  agent inherits the model of its nearest `LlmAgent` ancestor, skipping over any
+  parent that is not an `LlmAgent`, such as a `SequentialAgent`,
+  `ParallelAgent`, `LoopAgent`, or custom `BaseAgent`. If no
+  ancestor sets a model, the agent falls back to the built-in default model
+  described in [Configure a default model](#configure-a-default-model). The
+  choice of model impacts the agent's capabilities, cost, and performance. See
+  the [Models](/agents/models/) page for available options and considerations.
 
 === "Python"
 
@@ -7030,7 +7402,7 @@ tells the agent:
     1. Identify the country name from the user's query.
     2. Use the `get_capital_city` tool to find the capital.
     3. Respond clearly to the user, stating the capital city.
-    Example Query: "What's the capital of {country}?"
+    Example Query: "What's the capital of France?"
     Example Response: "The capital of France is Paris."
     """,
         # tools will be added next
@@ -7050,7 +7422,7 @@ tells the agent:
             1. Identify the country name from the user's query.
             2. Use the \`getCapitalCity\` tool to find the capital.
             3. Respond clearly to the user, stating the capital city.
-            Example Query: "What's the capital of {country}?"
+            Example Query: "What's the capital of France?"
             Example Response: "The capital of France is Paris."
             `,
         // tools will be added next
@@ -7079,7 +7451,7 @@ tells the agent:
                 1. Identify the country name from the user's query.
                 2. Use the `get_capital_city` tool to find the capital.
                 3. Respond clearly to the user, stating the capital city.
-                Example Query: "What's the capital of {country}?"
+                Example Query: "What's the capital of France?"
                 Example Response: "The capital of France is Paris."
                 """)
             // tools will be added next
@@ -7117,9 +7489,12 @@ calculations, fetch real-time data, or execute specific actions.
       In Kotlin, you can use the `@Tool` annotation to automatically generate a
       `FunctionTool` at compile-time.
     - An instance of a class inheriting from `BaseTool`.
-    - An instance of another agent (`AgentTool`, enabling agent-to-agent
-      delegation - see [Custom agent
-      workflows](/agents/custom-agents/#delegation)).
+    - An `AgentTool` wrapping another agent, enabling agent-to-agent
+      delegation. For more information, see
+      [Custom agent workflows](/agents/custom-agents/#delegation).
+      In Python, prefer setting `mode='single_turn'` on the agent and adding it
+      to `sub_agents`, which exposes it as an inline tool automatically, and
+      avoid using the `AgentTool(agent=...)` syntax directly.
 
 The LLM uses the function/tool names, descriptions (from docstrings or the
 `description` field), and parameter schemas to decide which tool to call based
@@ -7248,7 +7623,11 @@ You can adjust how the underlying AI model generates responses using
 - **`generate_content_config` (Optional):** Pass an instance of
   [`google.genai.types.GenerateContentConfig`](https://googleapis.github.io/python-genai/genai.html#genai.types.GenerateContentConfig)
   to control parameters like `temperature` (randomness), `max_output_tokens`
-  (response length), `top_p`, `top_k`, and safety settings.
+  (response length), `top_p`, `top_k`, and safety settings. In Python, ADK
+  raises a `ValueError` if `generate_content_config` sets `tools`,
+  `system_instruction`, `response_schema`, or `http_options.base_url`. Set the
+  first three through the agent's `tools`, `instruction`, and `output_schema`
+  fields instead, and set the base URL on the model or its client.
 
 === "Python"
 
@@ -7356,9 +7735,10 @@ provides mechanisms to define expected input and desired output formats using
 schema definitions.
 
 - **`input_schema` (Optional):** Define a schema representing the expected input
-  structure. If set, the user message content passed to this agent *must* be a
-  JSON string conforming to this schema. Your instructions should guide the user
-  or preceding agent accordingly.
+  structure when this agent is invoked *as a tool*. In Python, `AgentTool`
+  validates the calling agent's arguments against the schema and passes the
+  result as this agent's input. The schema does not apply to user messages sent
+  directly to the agent.
 
 - **`output_schema` (Optional):** Define a schema representing the desired
   output structure. If set, the agent's final response *must* be a JSON string
@@ -7369,28 +7749,34 @@ schema definitions.
     - `dict`
     - `google.genai.types.Schema`
 
-!!! warning "Warning: Using `output_schema` with `tools`"
+!!! note "Using `output_schema` with `tools`"
 
-    Using `output_schema` with `tools` in the same LLM request is only supported
-    by specific models, including [Gemini
-    3.0](https://ai.google.dev/gemini-api/docs/function-calling?example=meeting#structured-output).
-    For other models, ADK falls back to a [`set_model_response` function
+    In Python, ADK supports `output_schema` and `tools` on the same agent: the
+    tools stay available while the agent works, and the schema applies only to
+    the final response. Some models accept both in one request, such as Gemini
+    models on Google Cloud and `LiteLlm` models whose provider supports response
+    schemas, and ADK passes them through directly. For other models, ADK adds a
+    [`set_model_response` function
     tool](https://github.com/google/adk-python/blob/main/src/google/adk/tools/set_model_response_tool.py)
-    to collect the structured output, which may not work reliably. In such
-    cases, consider using sub-agents that handle output formatting separately.
+    and instructs the model to return its final answer through that tool, which
+    may not work reliably. In such cases, consider using sub-agents that handle
+    output formatting separately.
 
-- **`output_key` (Optional):** Provide a string key. If set, the text content of
-  the agent's *final* response will be automatically saved to the session's
-  state dictionary under this key. This is useful for passing results between
-  agents or steps in a workflow.
+- **`output_key` (Optional):** Provide a string key. If set, the agent's *final*
+  response will be automatically saved to the session's state dictionary under
+  this key. This is useful for passing results between agents or steps in a
+  workflow.
     - In Python, this might look like: `session.state[output_key] =
-      agent_response_text`
+      agent_response_text`. If `output_schema` is also set, ADK parses the
+      response against the schema first and stores the parsed value rather than
+      the response text. A `BaseModel` schema is stored as a `dict`, and a
+      `list[BaseModel]` schema is stored as a `list[dict]`.
     - In Java: `session.state().put(outputKey, agentResponseText)`
     - In Golang, within a callback handler: `ctx.State().Set(output_key,
       agentResponseText)`
 
-    When `output_schema` is also set, the *parsed* response is stored instead of
-    the text: a `dict` in Python, and a `Map` in Java and Kotlin.
+    In Java and Kotlin, when `output_schema` is also set, the *parsed* response
+    is stored as a `Map` instead of the text.
 
 !!! note "Schema validation in Java and Kotlin"
 
@@ -7427,7 +7813,7 @@ schema definitions.
         instruction="""You are a Capital Information Agent. Given a country, respond ONLY with a JSON object containing the capital. Format: {"capital": "capital_name"}""",
         output_schema=CapitalOutput, # Enforce JSON output
         output_key="found_capital"  # Store result in state['found_capital']
-        # Cannot use tools=[get_capital_city] effectively here
+        # tools=[...] may be combined with output_schema; see the note above
     )
     ```
 
@@ -7772,7 +8158,9 @@ agent = LlmAgent(
 
 # Session and Runner
 session_service = InMemorySessionService()
-session = session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+session = asyncio.run(
+    session_service.create_session(app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID)
+)
 runner = Runner(agent=agent, app_name=APP_NAME, session_service=session_service)
 
 # Agent Interaction
@@ -7782,7 +8170,7 @@ def call_agent(query):
 
     for event in events:
         print(f"\nDEBUG EVENT: {event}\n")
-        if event.is_final_response() and event.content:
+        if event.is_final_response() and event.content and event.content.parts:
             final_answer = event.content.parts[0].text.strip()
             print("\n🟢 FINAL ANSWER\n", final_answer, "\n")
 
@@ -7907,6 +8295,10 @@ back into your ADK flow. Managed agents provide several built-in advantages:
   provision or secure.
 - **No client-side function declarations:** Server-side tools are configured on
   the managed agent, so you don't declare or execute them locally.
+- **Composable as an inline tool:** Set `mode='single_turn'` and add the managed
+  agent to a parent `LlmAgent`'s `sub_agents`. ADK then exposes it as an inline
+  single-turn tool automatically, which is the recommended alternative to wrapping
+  it in `AgentTool`.
 
 ## When to use managed agents vs. building your own
 
@@ -7915,7 +8307,8 @@ mostly a trade-off between out-of-the-box power and fine-grained control.
 
 - **Managed agents** give you a powerful agent out of the box, but with limited
   flexibility. The toolset is predefined and server-side, the agent runs only in
-  the managed environment, and client-side or MCP tools are not supported.
+  the managed environment, and client-executed tools are not supported, though
+  server-side remote MCP servers are.
 - **ADK agents** (such as [`LlmAgent`](/agents/llm-agents/)) give you
   fine-grained control over the model, instructions, tools (including custom
   function tools and MCP tools), and where execution happens.
@@ -8010,9 +8403,10 @@ than in your ADK process.
 ### Local session vs. remote state
 
 `ManagedAgent` keeps almost no state locally. The ADK session persists only two
-values on the events it emits: the `previous_interaction_id` and the sandbox
+values on the events it emits: the `interaction_id` and the sandbox
 `environment_id`. On each new turn the agent recovers both by scanning prior
-session events, then reuses them so the conversation and its sandbox continue.
+session events, then sends them back to the backend so the conversation and its
+sandbox continue.
 
 Everything else lives server-side. The Managed Agents API owns the sandbox
 environment and the full interaction history, and that remote interaction, not
@@ -8027,7 +8421,10 @@ state; it never re-sends prior turns.
   Managed Agents API is currently served only from the `global` location.
   Regional endpoints raise an error.
 - **Server-side tools only:** Client-executed tools (Python functions,
-  callables) and MCP tools are not supported and raise a `NotImplementedError`.
+  callables) and raw `types.Tool` MCP configs (`types.Tool.mcp_servers`) are not
+  supported and raise a `NotImplementedError`. Server-side remote MCP servers
+  are supported: declare them as `google.adk.tools.RemoteMcpServer` specs in
+  `tools`.
 - **Streaming only:** The agent uses streaming interactions (`stream=True`).
   Background-polling execution and strictly non-streaming connections are not
   yet fully supported.
@@ -8038,9 +8435,15 @@ state; it never re-sends prior turns.
 ## Next steps
 
 - **Samples:** [Managed Agent
-  Basic](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/basic)
-  and [Managed Agent Code
-  Execution](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/code_execution).
+  Basic](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/basic),
+  [Managed Agent Code
+  Execution](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/code_execution),
+  [Managed Agent Remote
+  MCP](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/remote_mcp),
+  [Managed Agent Single
+  Turn](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/single_turn),
+  and [Managed Agent System
+  Instruction](https://github.com/google/adk-python/tree/main/contributing/samples/managed_agent/system_instruction).
 - **Backend documentation:** [Gemini API
   Agents](https://ai.google.dev/gemini-api/docs/agents) and [Agent Platform
   Managed
@@ -20255,7 +20658,7 @@ File: docs/get-started/go.md
 This guide shows you how to get up and running with Agent Development Kit
 for Go. Before you start, make sure you have the following installed:
 
-*   Go 1.25 or later
+*   Go 1.26.10 or higher
 *   ADK Go v2.0.0 or later
 
 !!! tip "What's new in ADK Go 2.0"
@@ -20656,7 +21059,7 @@ set up and running a simple agent in less than 20 minutes.
     [:octicons-arrow-right-24: Migrate to ADK](migrate.md) <br>
 </div>
 
-To get started with a technical overview check this [link](about.md).
+To get started, see the [Technical Overview](about.md).
 
 ================
 File: docs/get-started/installation.md
@@ -20719,7 +21122,8 @@ across supported languages. For a guided introduction, start with the
 
 === "Go"
 
-    **Prerequisites:** Go 1.25 or later is required for ADK Go v2.0.0.
+    **Prerequisites:** Go 1.26.10 or higher is required for ADK Go v2.7.0 and
+    higher.
 
     **Create a new Go module**
 
@@ -37797,9 +38201,8 @@ your team can contribute.
 
 ## Getting Started
 
-Below is a guide for getting started with Freeplay and ADK. You can also find a
-full sample ADK agent repo
-[here](https://github.com/228Labs/freeplay-google-demo).
+Below is a guide for getting started with Freeplay and ADK. You can also find the
+complete [code sample](https://github.com/228Labs/freeplay-google-demo) in the ADK agent repo.
 
 ### Create a Freeplay Account
 
@@ -37952,12 +38355,12 @@ experiments) at both the
 This allows you to compare multiple different models or prompt changes and
 quantify changes head to head across your full agent execution.
 
-[Here](https://github.com/freeplayai/freeplay-google-demo/blob/main/examples/example_test_run.py)
-is a code example for executing a batch test on Freeplay with ADK.
+For a complete implementation, see the batch test [code example](https://github.com/freeplayai/freeplay-google-demo/blob/main/examples/example_test_run.py)
+for executing a batch test on Freeplay with ADK.
 
 ## Sign up now
 
-Go to [Freeplay](https://app.freeplay.ai/signup) to sign up for an account, and check out a full Freeplay <> ADK Integration [here](https://github.com/freeplayai/freeplay-google-demo/tree/main)
+Go to [Freeplay](https://app.freeplay.ai/signup) to sign up for an account, and check out the full [Freeplay <> ADK integration](https://github.com/freeplayai/freeplay-google-demo/tree/main) demo.
 
 ================
 File: docs/integrations/future-agi.md
@@ -50657,7 +51060,7 @@ This table provides a quick reference for the `RunConfig` parameters that matter
 
 | Parameter | Type | Purpose | Reference |
 |-----------|------|---------|-----------|
-| **response_modalities** | list[str] | Output format. Live agents must use `AUDIO` — Live models do not accept `TEXT` | [Details](#response-modes) |
+| **response_modalities** | list[Modality] | Output format. Live agents must use `AUDIO` — Live models do not accept `TEXT` | [Details](#response-modes) |
 | **streaming_mode** | StreamingMode | Chunked or single-shot delivery on the `run_async()` path; not read by `run_live()` | [Details](#streamingmode-bidi-or-sse) |
 | **session_resumption** | SessionResumptionConfig | Enable automatic reconnection | [Details](sessions.md#session-resumption) |
 | **context_window_compression** | ContextWindowCompressionConfig | Unlimited session duration | [Details](sessions.md#context-window-compression) |
@@ -50703,7 +51106,8 @@ The `response_modalities` setting controls the output format, and a session gets
 agents the value is always `["AUDIO"]`**, because every
 [Live model](models.md#live-models) ADK supports accepts no other modality.
 ADK fills this in for you when you leave it unset, so most live applications never touch the
-field.
+field. The field is typed `list[Modality]` and also accepts the plain strings used
+throughout these examples.
 
 !!! warning "Migrating from `response_modalities=["TEXT"]`"
 
@@ -51589,15 +51993,19 @@ The `partial` flag distinguishes an incremental chunk from the merged result:
 - `partial=True`: only the new text since the last event.
 - `partial=False`: the full merged text for this segment.
 
-ADK accumulates the chunks for you (`StreamingResponseAggregator`), so a `partial=False`
-event already holds the sum of the preceding `partial=True` chunks. If you do not need a
-live typing effect, ignore the partials and act only on `partial=False`.
+ADK accumulates the chunks for you inside the live connection
+([`GeminiLlmConnection.receive()`](https://github.com/google/adk-python/blob/main/src/google/adk/models/gemini_llm_connection.py)),
+so a `partial=False` event already holds the sum of the preceding `partial=True` chunks. If
+you do not need a live typing effect, ignore the partials and act only on `partial=False`.
+
+Each of these flags is `Optional[bool]` and defaults to `None`, so test whether the flag is
+truthy rather than comparing it to `False`:
 
 ```text
-Event 1: partial=True,  text="Hello",       turn_complete=False
-Event 2: partial=True,  text=" world",      turn_complete=False
-Event 3: partial=False, text="Hello world", turn_complete=False
-Event 4: partial=False, text="",            turn_complete=True
+Event 1: partial=True,  text="Hello",       turn_complete=None
+Event 2: partial=True,  text=" world",      turn_complete=None
+Event 3: partial=False, text="Hello world", turn_complete=None
+Event 4: partial=None,  content=None,       turn_complete=True
 ```
 
 A `partial=False` condition can occur several times per turn (once per sentence, for example), and
@@ -52367,7 +52775,9 @@ live_request_queue = LiveRequestQueue()
 
 `user_id` and `session_id` are arbitrary strings you define; ADK generates a UUID if you
 pass `session_id=None`. The session must exist before you call `run_live()` with the same
-identifiers, or `run_live()` raises `ValueError: Session not found`.
+identifiers, or `run_live()` raises `SessionNotFoundError`, a subclass of `ValueError`.
+Construct the runner with `Runner(..., auto_create_session=True)` to have ADK create a
+missing session instead of raising.
 
 !!! warning "One queue per session"
 
@@ -52387,7 +52797,10 @@ class LiveRequest(BaseModel):
     blob: Optional[Blob] = None                  # Audio/video bytes
     activity_start: Optional[ActivityStart] = None  # Manual turn start
     activity_end: Optional[ActivityEnd] = None      # Manual turn end
+    audio_stream_end: bool = False               # No more audio is coming
     close: bool = False                          # Graceful termination
+    partial: bool = False                        # Content does not end the turn
+    state_delta: Optional[dict[str, Any]] = None # Session state to apply
 ```
 
 `content` and `blob` are mutually exclusive. Use the convenience methods rather than building
@@ -52465,7 +52878,7 @@ event types it yields and how to handle them, see [Events](events.md).
 | Manual close | `live_request_queue.close()` | Yes |
 | Workflow complete | Last agent in a live workflow calls `task_completed()` | Yes |
 | Session timeout | Live API duration limit reached (without compression) | Connection closed |
-| Early exit | `end_invocation` set by a tool or callback | Yes |
+| Early exit | `end_invocation` set on the invocation context, for example by a `before_agent_callback` that returns content | Yes |
 | Error | Connection failure or unhandled exception | No |
 
 Always call `close()` when the session ends, even on error. Skipping it leaves the Live API
@@ -52934,19 +53347,24 @@ in and out of frame.
 
 ## Tool execution context
 
-A tool or callback receives an `InvocationContext` for state, history, and artifacts. It
-works the same as in any ADK agent — see [Agent context](../context/index.md) — with one
-difference that matters live: **one `InvocationContext` spans the entire `run_live()` loop**,
-created when you call `run_live()` and living across every agent and every turn until the
-session ends. In a request/response agent an invocation is a single turn; in a live session
-it is the whole conversation.
+<div class="language-support-tag">
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.0.0</span>
+</div>
+
+A tool receives a `ToolContext`, and a callback a `CallbackContext`, for state, history, and
+artifacts. Both work the same as in any ADK agent — see
+[Agent context](../context/index.md) — with one difference that matters live: **the
+underlying `InvocationContext` spans the entire `run_live()` loop**, created when you call
+`run_live()` and living across every agent and every turn until the session ends. In a
+request/response agent an invocation is a single turn; in a live session it is the whole
+conversation.
 
 Two fields come up most in live tools:
 
 | Field | What it gives you |
 | :---- | :---- |
-| `context.run_config` | The session's [configuration](configuration.md) — response modalities, transcription, limits |
-| `context.end_invocation` | Set to `True` to terminate the whole streaming session immediately |
+| `tool_context.run_config` | The session's [configuration](configuration.md) — response modalities, transcription, limits |
+| `tool_context.state` | Session state; mutate it directly and ADK persists the change |
 
 ================
 File: docs/live/workflows.md
@@ -67506,7 +67924,7 @@ This tutorial is structured for interactive notebook environments like Google Co
 
 **Alternative: Using ADK's Built-in Tools (Web UI / CLI / API Server)**
 
-If you prefer a setup that handles the runner and session management automatically using ADK's standard tools, you can find the equivalent code structured for that purpose [here](https://github.com/google/adk-docs/tree/main/examples/python/tutorial/agent_team/adk_tutorial). That version is designed to be run directly with commands like `adk web` (for a web UI), `adk run` (for CLI interaction), or `adk api_server` (to expose an API). Please follow the `README.md` instructions provided in that alternative resource.
+If you prefer a setup that handles the runner and session management automatically using ADK's standard tools, you can find the [equivalent code](https://github.com/google/adk-docs/tree/main/examples/python/tutorial/agent_team/adk_tutorial) for that purpose. That version is designed to be run directly with commands like `adk web` (for a web UI), `adk run` (for CLI interaction), or `adk api_server` (to expose an API). Please follow the `README.md` instructions provided in that alternative resource.
 
 ---
 
@@ -71739,7 +72157,7 @@ A conceptual example of using a `CustomPolicyEngine` to require user confirmatio
     });
     ```
 
-    You can find the full code sample [here](https://github.com/google/adk-docs/blob/main/examples/typescript/snippets/agents/workflow-agents/hitl_confirmation_agent.ts).
+    For a complete implementation, see the [code sample](https://github.com/google/adk-docs/blob/main/examples/typescript/snippets/agents/workflow-agents/hitl_confirmation_agent.ts).
 
 ================
 File: docs/index.md
