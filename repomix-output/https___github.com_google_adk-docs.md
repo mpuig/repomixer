@@ -11590,6 +11590,11 @@ The ADK Context Caching feature allows you to cache request data with generative
 AI models that support it, including Gemini 2.0 and higher models. This document
 explains how to configure and use this feature.
 
+!!! example "Experimental"
+    The `ContextCacheConfig` class is experimental and its API or behavior may
+    change in future releases. In Python, constructing one emits a warning; in
+    Kotlin, it requires `@OptIn(ExperimentalContextCachingFeature::class)`.
+
 ## Configure context caching
 
 You configure the context caching feature at the ADK `App` object level,
@@ -11683,17 +11688,18 @@ The `ContextCacheConfig` class has the following settings that control how
 caching works for your agent. When you configure these settings, they apply to
 all agents within your app.
 
--   **`min_tokens`** (int): The minimum number of tokens required in a request
-    to enable caching. This setting allows you to avoid the overhead of caching
-    for very small requests where the performance benefit would be negligible.
-    Defaults to `0`.
+-   **`min_tokens`** (int): The minimum number of tokens required to enable
+    caching. This setting allows you to avoid the overhead of caching for very
+    small requests where the performance benefit would be negligible. ADK
+    compares the setting against the previous request's prompt token count, so
+    the first request in a session is never cached. Defaults to `0`.
 -   **`ttl_seconds`** (int): The time-to-live (TTL) for the cache in seconds.
     This setting determines how long the cached content is stored before it is
-    refreshed. Defaults to `1800` (30 minutes).
+    refreshed. Must be greater than `0`. Defaults to `1800` (30 minutes).
 -   **`cache_intervals`** (int): The maximum number of times the same cached
     content can be used before it expires. This setting allows you to
     control how frequently the cache is updated, even if the TTL has not
-    expired. Defaults to `10`.
+    expired. Must be between `1` and `100`. Defaults to `10`.
 -   **`create_http_options`** (HttpOptions): The HTTP options for the cache
     creation call, which lets you set a timeout on it. If the call times out,
     it fails and the request proceeds without caching. Available in Python and
@@ -11758,8 +11764,11 @@ increasing processing time and slowing down responses. ADK Context
 Compaction feature is designed to reduce the size of context as an agent
 is running by summarizing older session history—including instructions, inputs, and model responses. By maintaining a compact context window, this process **optimizes latency and reduces costs** while ensuring the agent retains access to essential recent interactions.
 
-Compaction is integrated directly into SingleFlow via the `CompactionRequestProcessor`, 
-allowing automatic event compaction based on the rules you set in the `EventsCompactionConfig`.
+Compaction runs automatically based on the rules you set in the
+`EventsCompactionConfig`. Token-based compaction is checked before a model call
+in SingleFlow via the `CompactionRequestProcessor`, and again in the `Runner`
+after each invocation. Sliding-window compaction runs in the `Runner` after each
+invocation completes.
 
 ## Choose your strategy
 
@@ -11814,13 +11823,13 @@ The Context Compaction feature uses a *sliding window* approach for collecting
 and summarizing agent workflow event data within a
 [Session](/sessions/session/). When you configure this feature in your
 agent, it summarizes data from older events once it reaches a threshold of a
-specific number of workflow events, or invocations, with the current Session.
+specific number of new invocations within the current Session.
 
 ```python
-# (Optional) Event-based, sliding window as supplementary setting
+# (Optional) Invocation-based, sliding window as supplementary setting
 compaction_config = EventsCompactionConfig(
-    compaction_interval=10,   # Number of turns between standard compactions
-    overlap_size=2            # Number of events to retain as overlapping context
+    compaction_interval=10,   # Number of new invocations between standard compactions
+    overlap_size=2,           # Number of prior invocations to retain as overlapping context
 )
 ```
 
@@ -11928,12 +11937,14 @@ in the following sample code:
     ```
 
 Once configured, the ADK `Runner` handles the compaction process in the
-background each time the session reaches the interval.
+background each time the session reaches the interval. In Python, pass the configured `App`
+to the runner, as in `Runner(app=app, session_service=...)`; creating the `App`
+alone does not enable compaction.
 
 ## Example of context compaction
 
 If you set `compaction_interval` to 3 and `overlap_size` to 1, the event data is
-compressed upon completion of events 3, 6, 9, and so on. The overlap setting
+compressed upon completion of invocations 3, 6, 9, and so on. The overlap setting
 increases size of the second summary compression, and each summary afterwards,
 as shown in Figure 1.
 
@@ -11943,22 +11954,23 @@ and overlap of 1.
 
 With this example configuration, the context compression tasks happen as follows:
 
-1.  **Event 3 completes**: All 3 events are compressed into a summary
-1.  **Event 6 completes**: Events 3 to 6 are compressed, including the overlap
-    of 1 prior event
-1.  **Event 9 completes**: Events 6 to 9 are compressed, including the overlap
-    of 1 prior event
+1.  **Invocation 3 completes**: All 3 invocations are compressed into a summary
+1.  **Invocation 6 completes**: Invocations 3 to 6 are compressed, including the
+    overlap of 1 prior invocation
+1.  **Invocation 9 completes**: Invocations 6 to 9 are compressed, including the
+    overlap of 1 prior invocation
 
 ## Configuration settings
 
 The configuration settings for this feature control how frequently event data is compressed
 and how much data is retained as the agent workflow runs. Optionally, you can configure
-a compactor object
+a compactor object.
 
-*   **`compaction_interval`**: Set the number of completed events that triggers compaction
-    of the prior event data.
-*   **`overlap_size`**: Set how many of the previously compacted events are included in a
-    newly compacted context set.
+*   **`compaction_interval`**: Set the number of completed new user-initiated
+    invocations that triggers compaction of the prior event data. Must be greater
+    than `0`, and must be set together with `overlap_size`.
+*   **`overlap_size`**: Set how many of the previously compacted invocations are
+    included in a newly compacted context set.
 *   **`summarizer`**: (Optional) Define a summarizer object including a specific AI model
     to use for summarization. For more information, see
     [Define a Summarizer](#define-summarizer).
@@ -12163,7 +12175,7 @@ The central piece holding all this information together for a single, complete u
         session_id="session456",
         new_message=user_message
     ):
-        print(event.stringify_content())
+        print(event.content)
 
     # As a developer, you work with the context objects provided in method arguments.
     ```
@@ -12248,10 +12260,10 @@ Here are the primary context flavors you will encounter:
 
 - **`Context`**: Used in agent lifecycle and model callbacks. It provides a robust set of features for reading/writing session state, managing artifacts, and injecting data into the memory service.
 
-- **`ToolContext`**: Tailored for tool execution and tool-related callbacks. In addition to the capabilities of Context, it includes specialized methods for authentication flows, memory searching, and artifact discovery.
+- **`ToolContext`**: Used in tool execution and tool-related callbacks. The tool-oriented methods (`request_credential`, `request_confirmation`) work only while a tool call is in progress, and `function_call_id` is `None` outside one.
 
 !!! note
-    **About compatibility**: In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by the `Context` type. The `CallbackContext` class is maintained as an alias for `Context` to ensure backward compatibility. While you may encounter `CallbackContext` in existing codebases, **you should use the `Context` class** for all new development to take advantage of the full, unified feature set.
+    **About compatibility**: In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by the `Context` type. In Python both names are aliases of `Context` itself, kept for backward compatibility. While you may encounter `CallbackContext` or `ToolContext` in existing codebases, **you should use the `Context` class** for all new development to take advantage of the full, unified feature set.
 
 ### `InvocationContext`
 - **Where Used:** Received as the `ctx` argument directly within an agent's core implementation methods (`_run_async_impl`, `_run_live_impl`).
@@ -12264,7 +12276,7 @@ Here are the primary context flavors you will encounter:
         ```python
         # Agent implementation receiving InvocationContext
         from google.adk.agents import BaseAgent
-        from google.adk.agents.invocation_context import InvocationContext
+        from google.adk.agents import InvocationContext
         from google.adk.events import Event
         from typing import AsyncGenerator
 
@@ -12347,7 +12359,7 @@ Here are the primary context flavors you will encounter:
 ### `ReadonlyContext`
 - **Where Used:** Provided in scenarios where only read access to basic information is needed and mutation is disallowed (e.g., `InstructionProvider` functions). It's also the base class for other contexts.
 - **Purpose:** Offers a safe, read-only view of fundamental contextual details.
-- **Key Contents:** `invocation_id`, `agent_name`, and a read-only *view* of the current `state`.
+- **Key Contents:** `invocation_id`, `agent_name`, `user_id`, `user_content`, `session`, `run_config`, `get_credential(key)` (Python), and a read-only *view* of the current `state`.
 
     === "Python"
 
@@ -12421,7 +12433,7 @@ Here are the primary context flavors you will encounter:
 - **Purpose:** Facilitates inspecting and modifying state, interacting with artifacts, and accessing invocation details *specifically within callbacks*.
 - **Key Capabilities (Adds to `ReadonlyContext`):**
     - **Mutable `state` Property:** Allows reading and writing to session state. Changes made here (`callback_context.state['key'] = value`) are tracked and associated with the event generated by the framework after the callback.
-    - **Artifact Methods:** `load_artifact(filename)` and `save_artifact(filename, part)` methods for interacting with the configured `artifact_service`.
+    - **Artifact Methods:** `load_artifact(filename)` and `save_artifact(filename, part)` methods for interacting with the configured `artifact_service` (both `async` in Python).
     - Direct `user_content` access.
 
 !!! note
@@ -12514,12 +12526,13 @@ Here are the primary context flavors you will encounter:
 
 ### `ToolContext`
 - **Where Used:** Passed as `tool_context` to the functions backing `FunctionTool`s and to tool execution callbacks (`before_tool_callback`, `after_tool_callback`).
-- **Purpose:** Provides everything `CallbackContext` does, plus specialized methods essential for tool execution, like handling authentication, searching memory, and listing artifacts.
-- **Key Capabilities (Adds to `CallbackContext`):**
-    - **Authentication Methods:** `request_credential(auth_config)` to trigger an auth flow, and `get_auth_response(auth_config)` to retrieve credentials provided by the user/system.
-    - **Artifact Listing:** `list_artifacts()` to discover available artifacts in the session.
-    - **Memory Search:** `search_memory(query)` to query the configured `memory_service`.
-    - **`function_call_id` Property:** Identifies the specific function call from the LLM that triggered this tool execution, crucial for linking authentication requests or responses back correctly.
+- **Purpose:** Exposes the methods essential for tool execution, like handling authentication, searching memory, and listing artifacts. In Python these members are available on any `Context` object, because `CallbackContext` and `ToolContext` are aliases of it. The members marked tool-only below raise `ValueError` unless a tool call is in progress. `ReadonlyContext` and `InvocationContext` do not have them.
+- **Key Capabilities:**
+    - **Authentication Methods:** `request_credential(auth_config)` *(tool-only)* to trigger an auth flow, and `get_auth_response(auth_config)` to retrieve credentials provided by the user/system.
+    - **Tool Confirmation:** `request_confirmation(hint=..., payload=...)` *(tool-only)* to pause a tool call and ask the user to confirm before it proceeds.
+    - **Artifact Listing:** `list_artifacts()` to discover available artifacts in the session (`async` in Python).
+    - **Memory Search:** `search_memory(query)` to query the configured `memory_service` (`async` in Python).
+    - **`function_call_id` Property:** Identifies the specific function call from the LLM that triggered this tool execution (`None` when no tool call is in progress), crucial for linking authentication requests or responses back correctly.
     - **`actions` Property:** Direct access to the `EventActions` object for this step, allowing the tool to signal state changes, auth requests, etc.
 
     === "Python"
@@ -12543,9 +12556,10 @@ Here are the primary context flavors you will encounter:
             # Use the API key...
             print(f"Tool executing for query '{query}' using API key. Invocation: {tool_context.invocation_id}")
 
-            # Optionally search memory or list artifacts
-            # relevant_docs = tool_context.search_memory(f"info related to {query}")
-            # available_files = tool_context.list_artifacts()
+            # Optionally search memory or list artifacts (both are async, so declare
+            # the tool function `async def`)
+            # relevant_docs = await tool_context.search_memory(f"info related to {query}")
+            # available_files = await tool_context.list_artifacts()
 
             return {"result": f"Data for {query} fetched."}
         ```
@@ -12654,10 +12668,11 @@ You'll frequently need to read information stored within the context.
             # ... rest of tool logic ...
 
         # Example: In a Callback function
-        from google.adk.agents.context import Context
+        from google.adk.agents import Context
 
-        def my_callback(context: Context, **kwargs):
-            last_tool_result = context.state.get("temp:last_api_result") # Read temporary state
+        # The framework passes callbacks by keyword first, so use this canonical parameter name.
+        def my_callback(callback_context: Context, **kwargs):
+            last_tool_result = callback_context.state.get("temp:last_api_result") # Read temporary state
             if last_tool_result:
                 print(f"Found temporary result from last tool: {last_tool_result}")
             # ... callback logic ...
@@ -12814,12 +12829,13 @@ You'll frequently need to read information stored within the context.
 
         ```python
         # Example: In a Callback
-        from google.adk.agents.context import Context
+        from google.adk.agents import Context
 
-        def check_initial_intent(context: Context, **kwargs):
+        # The framework passes callbacks by keyword first, so use this canonical parameter name.
+        def check_initial_intent(callback_context: Context, **kwargs):
             initial_text = "N/A"
-            if context.user_content and context.user_content.parts:
-                initial_text = context.user_content.parts[0].text or "Non-text input"
+            if callback_context.user_content and callback_context.user_content.parts:
+                initial_text = callback_context.user_content.parts[0].text or "Non-text input"
 
             print(f"This invocation started with user input: '{initial_text}'")
 
@@ -13069,7 +13085,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
 
                ```python
                # Example: In a callback or initial tool
-               from google.adk.agents.context import Context # Or ToolContext
+               from google.adk.agents import Context # Or ToolContext
                from google.genai import types
 
                async def save_document_reference(context: Context, file_path: str) -> None:
@@ -13087,7 +13103,7 @@ Use artifacts to handle files or large data blobs associated with the session. C
                        print(f"Unexpected error saving artifact reference: {e}")
 
                # Example usage:
-               # save_document_reference(context, "gs://my-bucket/docs/report.pdf")
+               # await save_document_reference(context, "gs://my-bucket/docs/report.pdf")
                ```
 
         === "TypeScript"
@@ -13728,7 +13744,7 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
     ```python
     # Example: Inside agent's _run_async_impl
     from google.adk.agents import BaseAgent
-    from google.adk.agents.invocation_context import InvocationContext
+    from google.adk.agents import InvocationContext
     from google.adk.events import Event
     from google.genai import types
     from typing import AsyncGenerator
@@ -13745,13 +13761,13 @@ While most interactions happen via `CallbackContext` or `ToolContext`, sometimes
                 print("Critical error detected, ending invocation.")
                 ctx.end_invocation = True # Signal framework to stop processing
                 yield Event(
-                author=self.name,
-                invocation_id=ctx.invocation_id,
-                content=types.Content(
-                    role="model",
-                    parts=[types.Part(text="Stopping due to critical error.")],
-                ),
-            )
+                    author=self.name,
+                    invocation_id=ctx.invocation_id,
+                    content=types.Content(
+                        role="model",
+                        parts=[types.Part.from_text(text="Stopping due to critical error.")],
+                    ),
+                )
                 return # Stop this agent's execution
 
             # ... Normal agent processing ...
@@ -13855,9 +13871,9 @@ Setting the end-of-invocation flag to **True** is a way to gracefully stop the e
 
 ## Key Takeaways & Best Practices
 
-*   **Use the Right Context:** Always use the most specific context object provided (`ToolContext` in tools/tool-callbacks, `CallbackContext` in agent/model-callbacks, `ReadonlyContext` where applicable). Use the full `InvocationContext` (`ctx`) directly in `_run_async_impl` / `_run_live_impl` only when necessary.
+*   **Use the Right Context:** Use the context object you are handed. In Python and TypeScript, `CallbackContext` and `ToolContext` have been replaced by `Context`, so prefer `Context` in new code; `ReadonlyContext` is the restricted view you get where mutation is disallowed. Use the full `InvocationContext` (`ctx`) directly in `_run_async_impl` / `_run_live_impl` only when necessary.
 *   **State for Data Flow:** `context.state` is the primary way to share data, remember preferences, and manage conversational memory *within* an invocation. Use prefixes (`app:`, `user:`, `temp:`) thoughtfully when using persistent storage.
-*   **Artifacts for Files:** Use `context.save_artifact` and `context.load_artifact` for managing file references (like paths or URIs) or larger data blobs. Store references, load content on demand.
+*   **Artifacts for Files:** Use `context.save_artifact` and `context.load_artifact`, which are `async` in Python and must be awaited, for managing file references (like paths or URIs) or larger data blobs. Store references, load content on demand.
 *   **Tracked Changes:** Modifications to state or artifacts made via context methods are automatically linked to the current step's `EventActions` and handled by the `SessionService`.
 *   **UI Rendering:** Use `context.render_ui_widget(widget)` to send rich UI components (like MCP App iframes) to the client.
 *   **Start Simple:** Focus on `state` and basic artifact usage first. Explore authentication, memory, and advanced `InvocationContext` fields (like those for live streaming) as your needs become more complex.
