@@ -2351,7 +2351,7 @@ File: docs/agents/models/google-gemini/deferred-schedule.md
 # Deferred scheduling with Gemini models
 
 <div class="language-support-tag">
-  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.10.0</span><span class="lst-preview">Preview</span>
+  <span class="lst-supported">Supported in ADK</span><span class="lst-python">Python v2.10.0</span>
 </div>
 
 Agent workloads have different latency needs. An interactive assistant must
@@ -2366,13 +2366,6 @@ You can request deferred scheduling per run, using the `service_tier` setting
 of `RunConfig`. The setting is part of the run configuration rather than the
 model or the agent, so one agent definition can serve both interactive requests
 and batch workloads.
-
-!!! example "Preview: Deferred capacity requires allowlisted access"
-
-    This Google Cloud feature is a Preview capability,
-    and running requests on deferred capacity requires an allowlist for
-    your Google Cloud project. For more information, see
-    [Autonomous agent scheduling](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/efficiency/autonomous-scheduling).
 
 ## Get started
 
@@ -2608,8 +2601,6 @@ HTTP connection open for it.
 
 The following limitations apply to deferred scheduling:
 
-*   **Allowlisted access:** Deferred capacity requires an allowlist for your
-    Google Cloud project.
 *   **Gemini and the Interactions API only:** Deferred scheduling works only
     with a `Gemini` model that sets `use_interactions_api=True`. Any other
     model, including a custom `BaseLlm` subclass, ignores the tier.
@@ -2655,6 +2646,7 @@ other.
 
 ## Additional resources
 
+*   [Autonomous agent scheduling](https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/efficiency/autonomous-scheduling)
 *   [Gemini Interactions API](index.md#interactions-api)
 *   [Runtime Configuration](/runtime/runconfig/)
 *   [Interactions API code sample](https://github.com/google/adk-python/tree/main/contributing/samples/models/interactions_api)
@@ -11790,32 +11782,54 @@ Add token-based compaction to your agent workflow by adding an `EventsCompaction
 - **`token_threshold`**: The safety limit of tokens that automatically triggers tail-retention compaction once reached.
 - **`event_retention_size`**: The number of recent events/interactions kept in "raw" un-compacted format when compaction is triggered. This maintains immediate conversational context and pronoun resolution.
 
-To implement this in your project, use the following configuration:
+To implement token-based compaction in your project, use the following configuration:
 
-```python
-# 1. Correct the import path to use the google.adk namespace
-from google.adk.apps.app import App, EventsCompactionConfig
-from google.adk.agents import Agent
+=== "Python"
 
-# 2. Initialize your root agent (required for App setup)
-root_agent = Agent(
-    name="my_root_agent",
-    description="Main coordinating agent for the workflow."
-)
+    ```python
+    # 1. Correct the import path to use the google.adk namespace
+    from google.adk.apps.app import App, EventsCompactionConfig
+    from google.adk.agents import Agent
 
-# 3. Token-based configuration: Activates the priority/pre-call layer
-compaction_config = EventsCompactionConfig(
-    token_threshold=4000,     # Triggers compaction when actual token count exceeds this
-    event_retention_size=5    # Number of recent raw events to keep intact when token limit is hit
-)
+    # 2. Initialize your root agent (required for App setup)
+    root_agent = Agent(
+        name="my_root_agent",
+        description="Main coordinating agent for the workflow."
+    )
 
-# 4. Register with required name and root_agent fields, and the config object
-app = App(
-    name="my_compacting_agent_app",
-    root_agent=root_agent,
-    events_compaction_config=compaction_config
-)
-```
+    # 3. Token-based configuration: Activates the priority/pre-call layer
+    compaction_config = EventsCompactionConfig(
+        token_threshold=4000,     # Triggers compaction when actual token count exceeds this
+        event_retention_size=5    # Number of recent raw events to keep intact when token limit is hit
+    )
+
+    # 4. Register with required name and root_agent fields, and the config object
+    app = App(
+        name="my_compacting_agent_app",
+        root_agent=root_agent,
+        events_compaction_config=compaction_config
+    )
+    ```
+
+=== "Go"
+
+    ```go
+    import (
+        "google.golang.org/adk/v2/runner"
+        "google.golang.org/adk/v2/session/compaction"
+    )
+
+    // Set both fields, or runner.New returns an error.
+    r, err := runner.New(runner.Config{
+        AppName:        "my_compacting_agent_app",
+        Agent:          rootAgent,
+        SessionService: sessionService,
+        Compaction: &compaction.Config{
+            TokenThreshold:     4000, // Compact once the prompt reaches this many tokens.
+            EventRetentionSize: 5,    // Number of recent raw events to keep intact.
+        },
+    })
+    ```
 
 ## Sliding window compaction
 
@@ -11936,10 +11950,8 @@ in the following sample code:
     })
     ```
 
-Once configured, the ADK `Runner` handles the compaction process in the
-background each time the session reaches the interval. In Python, pass the configured `App`
-to the runner, as in `Runner(app=app, session_service=...)`; creating the `App`
-alone does not enable compaction.
+Once configured, the ADK `Runner` handles the compaction process each time the
+session reaches the configured interval or token threshold.
 
 ## Example of context compaction
 
