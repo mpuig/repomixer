@@ -4983,13 +4983,18 @@ The two APIs support the same features, with these differences:
 - Structured output via `OutputSchema` (JSON schema)
 - Reasoning models (e.g. o-series), including reasoning-token accounting
 - Token logprobs
+- Tool choice via `ToolConfig.FunctionCallingConfig`: the `AUTO`, `NONE`, and `ANY` modes
+- Processing tier via `ServiceTier`, in ADK Go v2.4.0 and higher
+- Request timeout via `HTTPOptions.Timeout`, in ADK Go v2.4.0 and higher
 
 ## Limitations
 
-- **Text only** — multimodal input (images, audio, files) is not supported.
+* **No audio or video input** — ADK Go returns an error for these media types.
 - **Function tools only** — built-in tools (Google Search, code execution, etc.) are not supported.
 - **Structured output uses OpenAI strict mode** — every field declared in an `OutputSchema` is treated as required.
-- Some `GenerateContentConfig` options return an error rather than being silently ignored: `TopK`, multiple candidates, request labels, and safety settings. The Responses API also rejects stop sequences, frequency/presence penalties, and seed, which the [Chat Completions API](#chat-completions-api) supports.
+- **Function tools don't use strict mode** — In ADK Go v2.5.0 and higher, ADK sends function tools with OpenAI strict schema validation off. Optional parameters stay optional, but the model's tool-call arguments might not match the declared schema. Validate tool arguments before acting on them.
+- **Reasoning isn't carried across turns** — In ADK Go v2.5.0 and higher, ADK doesn't send reasoning from earlier turns back to the model on either API, so reasoning informs only the turn that produced it.
+- Some `GenerateContentConfig` options return an error rather than being silently ignored: `TopK`, multiple candidates, request labels, and safety settings. The Responses API also rejects stop sequences, frequency/presence penalties, and seed, which the [Chat Completions API](#chat-completions-api) supports. In ADK Go v2.4.0 and higher, other settings that have no OpenAI equivalent also return an error. The [Go API reference](https://pkg.go.dev/google.golang.org/adk/v2/model/openaimodel) lists which settings are sent, rejected, or ignored.
 
 ## Configuration options
 
@@ -15870,7 +15875,7 @@ Use the `capital_agent` example defined on the [LLM agents](../agents/llm-agents
 
         ```dockerfile title="Dockerfile"
         # Stage 1: Build the Go binary
-        FROM golang:1.25 AS builder
+        FROM golang:1.26 AS builder
         WORKDIR /app
 
         COPY go.mod go.sum ./
@@ -15887,8 +15892,19 @@ Use the `capital_agent` example defined on the [LLM agents](../agents/llm-agents
         EXPOSE 8080
 
         # Start the API server and web UI
-        CMD ["/app/capital_agent", "web", "-port", "8080", "api", "webui"]
+        CMD ["/app/capital_agent", "web", "-host", "0.0.0.0", "-port", "8080", "api", "webui"]
         ```
+
+!!! note
+    The `-host 0.0.0.0` flag makes the server listen on all network
+    interfaces so that the Kubernetes Service can reach it. In ADK Go
+    v2.5.0 and higher, the web launcher listens only on `127.0.0.1` by
+    default. ADK Go v2.0.0 through v2.4.0 listen on all interfaces and don't
+    accept the `-host` flag, so remove it if you use one of those versions.
+
+    **Security:** The ADK web interface served by the `webui` sublauncher
+    is intended for development, not for public production endpoints.
+
 
 ### Build the container image
 
@@ -16265,7 +16281,7 @@ You'll need the service URL provided after deployment.
         | `$APP_URL/run_sse` | `$APP_URL/api/run_sse` |
 
         The prefix can be changed at startup with `-path_prefix` on the `api`
-        subcommand, e.g. `CMD ["/app/capital_agent", "web", "-port", "8080", "api", "-path_prefix", ""]`
+        subcommand. For example, `CMD ["/app/capital_agent", "web", "-host", "0.0.0.0", "-port", "8080", "api", "-path_prefix", ""]`
         removes the prefix entirely.
 
     #### List available apps
@@ -56343,7 +56359,7 @@ browser to use the web interface:
     !!! note "Go flags differ from Python/TypeScript"
 
         The Go web launcher does not use the same flags as `adk web` in Python
-        or TypeScript. Options like `--host`, `--session_service_uri`,
+        or TypeScript. Options like `--session_service_uri`,
         `--artifact_service_uri`, and `--reload` are not available. Session and
         artifact services are configured in Go code when constructing the
         `launcher.Config`, not via command-line flags.
@@ -56355,21 +56371,30 @@ browser to use the web interface:
 
     | Flag | Description | Default |
     |------|-------------|---------|
+    | `-host` | Host binding address. Use `0.0.0.0` to listen on all interfaces, such as inside a container (ADK Go v2.5.0 and higher; earlier releases listen on all interfaces). | `127.0.0.1` |
     | `-port` | Port for the HTTP server | `8080` |
     | `-write-timeout` | Timeout for writing HTTP responses | `15s` |
     | `-read-timeout` | Timeout for reading HTTP requests | `15s` |
     | `-idle-timeout` | Keep-alive idle connection timeout | `60s` |
     | `-shutdown-timeout` | Graceful shutdown wait time | `15s` |
     | `-otel_to_cloud` | Export OpenTelemetry data to GCP | `false` |
+    | `-h2c` | Serve cleartext HTTP/2 with prior knowledge. Don't expose it to untrusted networks (ADK Go v2.2.0 and higher). | `false` |
+    | `-max_request_body_size` | Maximum request body size in bytes (ADK Go v2.5.0 and higher). | 10 MiB |
 
     **`api` subcommand flags** (passed after `api`):
 
     | Flag | Description | Default |
     |------|-------------|---------|
-    | `-webui_address` | WebUI origin allowed for CORS | `localhost:8080` |
+    | `-webui_address` | Origin of the ADK web interface as seen from the browser, allowed for CORS. In ADK Go v2.5.0 and higher, the REST API also refuses other cross-origin browser requests with HTTP 403. The value `*` allows any origin and turns off this check and the DNS rebinding check, so don't use it on a publicly accessible service. | `localhost:8080` |
     | `-path_prefix` | URL path prefix for the REST API | `/api` |
     | `-sse-write-timeout` | Timeout for SSE (streaming) responses | `120s` |
     | `-trace_capacity` | Max in-memory traces to retain | `10000` |
+    | `-include_debug_api` | Serve the debug trace and agent graph endpoints that the Traces and agent structure panels in the web interface need. Don't enable it in production (ADK Go v2.3.0 and higher). | `false` |
+
+    In ADK Go v2.5.0 and higher, the `-host` and `-webui_address` values also
+    help mitigate DNS rebinding for the REST API. When `-host` is a loopback
+    address, the REST API refuses requests whose `Host` header is neither
+    loopback nor the host in `-webui_address` with HTTP 403.
 
     **`webui` subcommand flags** (passed after `webui`):
 
